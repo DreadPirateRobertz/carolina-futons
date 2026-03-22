@@ -9,12 +9,16 @@
  * @requires backend/utils/sanitize
  *
  * @setup
- * Uses existing CMS collections: Orders (Wix Stores), InventoryLevels.
- * No new collections required.
+ * Existing CMS collections used: Orders (Wix Stores), InventoryLevels, ProductAnalytics, Reviews.
+ * New collections (CF-ej3t):
+ *   ViewerCount — productId (text), viewCount (number), lastSold24h (number), updatedAt (date)
+ *   RateLimitSessions — productId (text), sessionToken (text), createdAt (date)
+ * Create both manually in Wix CMS before deploying.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const LOW_STOCK_THRESHOLD = 5;
 const RECENT_PURCHASE_HOURS = 48;
@@ -34,7 +38,7 @@ const MIN_REVIEW_COUNT = 5;
 
 /**
  * Get social proof notifications for a product.
- * Returns up to 3 notification objects, prioritized by type.
+ * Returns up to 4 notification objects, prioritized by type.
  *
  * @function getProductSocialProof
  * @param {string} productId - The product ID
@@ -127,7 +131,7 @@ export const getCategorySocialProof = webMethod(
 
       const slug = sanitize(categorySlug, 100);
 
-      // Get low stock products in this category
+      // Get low stock products (site-wide — category filter not yet implemented)
       const lowStockResult = await wixData.query('InventoryLevels')
         .le('quantity', LOW_STOCK_THRESHOLD)
         .gt('quantity', 0)
@@ -169,6 +173,130 @@ export const getSocialProofConfig = webMethod(
   () => getConfig()
 );
 
+// ── ViewerCount webMethods (CF-ej3t) ─────────────────────────────────
+
+const VIEWER_COLLECTION      = 'ViewerCount';
+const RATE_LIMIT_COLLECTION  = 'RateLimitSessions';
+const RATE_LIMIT_TTL_MS      = 60000; // 60 seconds
+
+/**
+ * Get viewer count and recent sales count for a product.
+ * Returns zeros on any CMS error (fail-safe — callers must hide badges
+ * rather than showing stale/incorrect data).
+ *
+ * @function getViewerCount
+ * @param {string} productId
+ * @returns {Promise<{ viewCount: number, lastSold24h: number }>}
+ * @permission Anyone
+ */
+export const getViewerCount = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    if (!productId) return { viewCount: 0, lastSold24h: 0 };
+    const id = validateId(productId, 50);
+    if (!id) return { viewCount: 0, lastSold24h: 0 };
+    try {
+      const result = await wixData.query(VIEWER_COLLECTION)
+        .eq('productId', id)
+        .find();
+      if (!result.items || result.items.length === 0) {
+        return { viewCount: 0, lastSold24h: 0 };
+      }
+      const record = result.items[0];
+      return {
+        viewCount:   Math.max(0, record.viewCount   || 0),
+        lastSold24h: Math.max(0, record.lastSold24h || 0),
+      };
+    } catch (err) {
+      logError('socialProof.getViewerCount', err);
+      return { viewCount: 0, lastSold24h: 0 };
+    }
+  }
+);
+
+/**
+ * Increment the viewer count for a product by 1.
+ * Upserts the ViewerCount record; creates it on first call with lastSold24h: 0
+ * (lastSold24h is managed separately by the order-processing pipeline).
+ *
+ * Enforces a server-side 60s cooldown per (productId, sessionToken) via the
+ * RateLimitSessions CMS collection. If sessionToken is omitted, the server-side
+ * check is skipped (client-side sessionStorage rate limiting still applies).
+ *
+ * NOTE: The read-then-write is not atomic (Wix Data has no native atomic increment).
+ * Concurrent calls for the same product can lose increments. Viewer counts are
+ * decorative-only — best-effort accuracy is acceptable for this use case.
+ *
+ * Returns { ok: true } on success, { ok: false } on error or rate-limited.
+ *
+ * @function incrementViewerCount
+ * @param {string} productId
+ * @param {string} [sessionToken] - Client session token for server-side rate limiting
+ * @returns {Promise<{ ok: boolean }>}
+ * @permission Anyone
+ */
+export const incrementViewerCount = webMethod(
+  Permissions.Anyone,
+  async (productId, sessionToken) => {
+    if (!productId) return { ok: false };
+    const id = validateId(productId, 50);
+    if (!id) return { ok: false };
+
+    // Server-side rate limiting: reject duplicate increments within TTL window
+    if (sessionToken) {
+      const token = sanitize(sessionToken, 100);
+      if (token) {
+        try {
+          const cutoff = new Date(Date.now() - RATE_LIMIT_TTL_MS);
+          const rateCheck = await wixData.query(RATE_LIMIT_COLLECTION)
+            .eq('productId', id)
+            .eq('sessionToken', token)
+            .ge('createdAt', cutoff)
+            .find();
+          if (rateCheck.items?.length > 0) {
+            return { ok: false }; // within cooldown window
+          }
+          await wixData.insert(RATE_LIMIT_COLLECTION, {
+            productId: id,
+            sessionToken: token,
+            createdAt: new Date(),
+          });
+        } catch (err) {
+          logError('socialProof.incrementViewerCount.rateLimit', err);
+          // Non-fatal: if rate limit check fails, proceed with increment
+        }
+      }
+    }
+
+    try {
+      const result = await wixData.query(VIEWER_COLLECTION)
+        .eq('productId', id)
+        .find();
+
+      const now = new Date();
+      if (result.items?.length > 0) {
+        const existing = result.items[0];
+        await wixData.update(VIEWER_COLLECTION, {
+          ...existing,
+          viewCount: (existing.viewCount || 0) + 1,
+          updatedAt: now,
+        });
+      } else {
+        await wixData.insert(VIEWER_COLLECTION, {
+          productId: id,
+          viewCount:   1,
+          lastSold24h: 0,
+          updatedAt:   now,
+        });
+      }
+      return { ok: true };
+    } catch (err) {
+      logError('socialProof.incrementViewerCount', err);
+      return { ok: false };
+    }
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 function getConfig() {
@@ -205,6 +333,7 @@ async function getRecentPurchases(productId) {
     }
     return purchases;
   } catch (err) {
+    logError('socialProof.getRecentPurchases', err);
     return [];
   }
 }
@@ -221,6 +350,7 @@ async function getStockLevel(productId) {
     const total = result.items.reduce((sum, v) => sum + (v.quantity || 0), 0);
     return total;
   } catch (err) {
+    logError('socialProof.getStockLevel', err);
     return null;
   }
 }
@@ -234,6 +364,7 @@ async function getApproxViewCount(productId) {
       .count();
     return result || 0;
   } catch (err) {
+    logError('socialProof.getApproxViewCount', err);
     return 0;
   }
 }
@@ -271,6 +402,7 @@ async function getReviewCount(productId) {
 
     return { count: items.length, averageRating: avg };
   } catch (err) {
+    logError('socialProof.getReviewCount', err);
     return { count: 0, averageRating: 0 };
   }
 }
