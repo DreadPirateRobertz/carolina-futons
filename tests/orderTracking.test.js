@@ -276,6 +276,52 @@ describe('lookupOrder', () => {
   });
 });
 
+// ── lookupOrder rate limiting ────────────────────────────────────────
+
+describe('lookupOrder — rate limiting', () => {
+  beforeEach(() => {
+    // Reset rate limit collection before each test — the top-level beforeEach
+    // does not seed TrackingRateLimit, so stale seeds from prior tests persist.
+    __seed('TrackingRateLimit', []);
+  });
+
+  it('returns success:false when rate limit exceeded', async () => {
+    // Key is compound: email + ':' + orderNumber (prevents rotating-address bypass)
+    __seed('TrackingRateLimit', [{
+      _id: 'rl-1',
+      key: 'jane@example.com:10042',
+      count: 10,
+      windowStart: Date.now() - 1000,
+    }]);
+    const result = await lookupOrder('10042', 'jane@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many/i);
+  });
+
+  it('allows lookupOrder when under the rate limit', async () => {
+    // Empty TrackingRateLimit (seeded by scoped beforeEach above) — order resolves
+    const result = await lookupOrder('10042', 'jane@example.com');
+    expect(result.success).toBe(true);
+  });
+
+  it('blocks order 10042 but allows order 10043 with the same email', async () => {
+    // Exhaust the limit for order 10042 only — compound key isolates per-order buckets
+    __seed('TrackingRateLimit', [{
+      _id: 'rl-1',
+      key: 'jane@example.com:10042',
+      count: 10,
+      windowStart: Date.now() - 1000,
+    }]);
+    const blocked = await lookupOrder('10042', 'jane@example.com');
+    expect(blocked.success).toBe(false);
+    expect(blocked.error).toMatch(/too many/i);
+
+    // 10043 has no rate limit record — should be allowed (order not found, but not rate limited)
+    const allowed = await lookupOrder('10043', 'jane@example.com');
+    expect(allowed.error).not.toMatch(/too many/i);
+  });
+});
+
 // ── lookupOrder with delivered status ───────────────────────────────
 
 describe('lookupOrder delivered status', () => {
