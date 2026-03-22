@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { trackShipment } from 'backend/ups-shipping.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Status display mapping ──────────────────────────────────────────
 
@@ -177,6 +178,11 @@ export const subscribeToNotifications = webMethod(
 
       if (!cleanOrderNumber || !cleanEmail || !validateEmail(cleanEmail)) {
         return { success: false, error: 'Valid order number and email required' };
+      }
+
+      const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { max: 5 });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 hour.' };
       }
 
       // Verify the order exists and email matches
