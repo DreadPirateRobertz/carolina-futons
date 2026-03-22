@@ -41,6 +41,8 @@ vi.mock('backend/ups-shipping.web', () => ({
   }),
 }));
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 vi.mock('backend/wwex-freight.web', () => ({
   shouldUseLTL: vi.fn().mockReturnValue(false),
   getLTLRates: vi.fn().mockResolvedValue({ success: true, rates: [
@@ -282,17 +284,16 @@ describe('_resolveProfile', () => {
     expect(profile).toBeNull();
   });
 
-  it('returns null (and warns) when CMS query throws', async () => {
+  it('calls logError and returns null when CMS query throws', async () => {
+    const { logError } = await import('backend/utils/errorHandler');
     __setQueryError('ProductShippingProfiles', new Error('CMS unavailable'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const profile = await _resolveProfile('prod-abc');
     expect(profile).toBeNull();
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ProductShippingProfiles lookup failed'),
-      'prod-abc',
-      expect.any(String)
+    expect(logError).toHaveBeenCalledWith(
+      'shippingIntelligence._resolveProfile',
+      expect.any(Error),
+      { productId: 'prod-abc' }
     );
-    warnSpy.mockRestore();
   });
 
   it('returns first item only when multiple records match', async () => {
