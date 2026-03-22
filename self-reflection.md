@@ -81,3 +81,28 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - WWEX_ACCOUNT_NUMBER stored in Wix Secrets Manager (all 3 WWEX creds now live)
 - Editor guides: HTML updated — Bundle Builder actual nicknames + Q&A Widget section
 - 5-agent reviews run: #673, #679, #681, #686, #687, #688 (6 PRs this wave)
+
+## Session 2026-03-22 (wave 5 — post-third-compaction)
+
+### What worked well
+- 5-agent review on #689 caught CRITICAL: 'OrderLookupRateLimit' is a new collection name that doesn't exist in Wix CMS. checkRateLimit fails open — rate limit would silently never enforce in production. Good catch before merge.
+- Multiple agents giving conflicting verdicts on #689 collection name — adjudicated by reading the source directly (grep for existing usage). Always verify agent disagreements against the code.
+- #687 TrendingSearches merged cleanly after miquella rebased — notified dallas + closed CF-ts4n promptly so hicks (mobile) could unblock immediately.
+- Parallel 5-agent launches on #689, #681, #687 during GitHub API downtime prep — ready to act immediately when GitHub recovered.
+
+### Gaps
+- GitHub API had two intermittent outages this wave — no fallback strategy. Should use `curl -H "Authorization: Bearer $(gh auth token)"` as a fallback when `gh` CLI fails, rather than waiting and retrying blindly.
+- RAM at ~0.6GB free — should alert mayor earlier when system is resource-constrained. Stale logs in godfrey's .playwright-mcp dir are bloat from March 14–16.
+- PR #681 RecentlyViewed had 4 issues (including CRITICAL Cart Page repeater ordering) that rennala's round 2 didn't catch. Should have requested round 2 specifically call out the Cart Page integration pattern.
+
+### Pattern notes
+- When a hotfix PR uses a new CMS collection name vs existing ones: always verify the collection exists in Wix CMS. checkRateLimit fails open by design — a missing collection is a silent security bypass, not a noisy error.
+- Agent disagreements on the same code (here: collection name) should be resolved by reading the source directly, not by weighing which agent sounds more confident.
+- GitHub API flakiness pattern: DNS resolves (ping works, curl google works) but api.github.com refuses connections. Not a local network issue — likely transient GitHub API overload. Wait 15–30s and retry once; if still failing, notify mayor and work on non-GitHub tasks.
+
+### Metrics (this wave)
+- PRs merged: #687 (CF-ts4n TrendingSearches) — 1 PR
+- PRs blocked (reviews posted): #689 (collection name + broken test), #681 (CRITICAL repeater order + 3 majors), #688 (setTimeout race), #673 (still conflicting)
+- New PRs in queue: #690 (CF-cffy godfrey), #691 (CF-o0va radahn), #692 (CF-wzkm rennala)
+- Crew dispatched: miquella→CF-drka (catalog rename), nudges sent to radahn, rennala, godfrey, ghoul
+- Beads created: CF-drka (catalog rename P1)
