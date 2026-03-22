@@ -106,3 +106,57 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - New PRs in queue: #690 (CF-cffy godfrey), #691 (CF-o0va radahn), #692 (CF-wzkm rennala)
 - Crew dispatched: miquella→CF-drka (catalog rename), nudges sent to radahn, rennala, godfrey, ghoul
 - Beads created: CF-drka (catalog rename P1)
+
+## Session 2026-03-22 (wave 6 — post-fourth-compaction)
+
+### What worked well
+- Parallel 5-agent launches on 5 PRs (#691, #692, #693, #673, #681) — caught real criticals in all 5 rounds
+- PR #691 shipping widget: MERGED. 5-agent APPROVE. 2 follow-up beads created (CF-6pg5 empty productId, wix-storage-frontend import).
+- PR #681 RecentlyViewed: already merged (rennala fixed all 4 blocking issues cleanly). Follow-up bead CF-ii6a for #recentlyViewedClear aria-label.
+- PR #693 shipping intelligence: 5-agent caught CRITICAL (_routeToCarrier dead code — CMS flags never influence production routing). Distinct from the UPS fail-open CRITICAL that was found by the background agent. Both now with godfrey.
+- Nudge queue drain: cleared 50 stale nudges (waves 2-4) from cf-crew-melania queue. 50/50 → 0/50. Root cause: nudges accumulating because they were from previous session waves.
+- Killed runaway eslint proc (PID 88457) at 100% CPU on cfutons_mobile .beads files.
+
+### Gaps
+- CF-drka (miquella catalog rename): still blocked. Original 16-product mapping not recoverable from mail thread (miquella can't recover it, I can't). Dallas has it — need resend. Should have pre-confirmed mapping was persisted in bead description, not just mail thread.
+- PR #693 found TWO separate criticals (UPS fail-open + _routeToCarrier dead code) from two independent review passes. First review caught fail-open; second caught dead code. Both real. Lesson: independent review passes on complex routing logic are worth the overhead.
+- Mobile watchdog fired (11 idle, cfutons_mobile 0 open). Dallas handling dispatch but cm-thv and cm-x6f were sitting unassigned.
+
+### Pattern notes
+- _routeToCarrier dead code pattern: a function can be well-tested in isolation while having zero effect on production behavior if it's not actually called in the hot path. Integration test coverage (end-to-end from CMS flag → LTL selection) is the only way to catch this.
+- Nudge queue at 50/50 = can't receive new nudges. Symptom: nudges from mayor stack up as gt mail. Drain stale nudge files directly from .runtime/nudge_queue/<target>/ when at capacity.
+- extractXmlValue regex with `.*?` won't match across newlines in SOAP responses — use `[\s\S]*?` or dotAll flag for XML parsing.
+
+### Metrics (this wave)
+- PRs merged: #691 (CF-o0va ShippingWidget), #681 (CF-m7kw RecentlyViewed)
+- PRs blocked: #689 (wrong collection name), #692 (dead param + regex), #693 (dead code + 2 majors), #673 (TOCTOU still docs-only), #688 (setTimeout race)
+- Beads created: CF-6pg5 (ShippingWidget hardening), CF-ii6a (RecentlyViewed clear button aria-label)
+- Nudge queue: 50→0 (drained)
+- Follow-up bead for miquella: still blocked pending dallas mapping resend
+
+## Session 2026-03-22 (wave 6 — post-fourth-compaction)
+
+### What worked well
+- Queried Wix Store products directly via MCP to unblock miquella on CF-drka — no need to wait for dallas's mapping. Applied pattern from dallas's examples to build 15-item confirmed mapping, held 3 Mesa mattresses for explicit confirmation. Miquella unblocked immediately.
+- CF-6pg5 follow-up findings incorporated INTO PR #691 before merge (not as separate bead) — mailed radahn with the 2 majors (empty productId guard + storage import unguarded) to fold in now.
+- PR #684 (CF-7zri hookup-assistant, chrome polecat) was already MERGED — no wasted review.
+- PR #681 (CF-m7kw RecentlyViewed) merged by Stilgar — closed bead promptly.
+- Parallel 5-agent reviews on 5 PRs (#673, #691, #692, #693, #681) — maximizing throughput while handling other dispatch work.
+- PR #693 godfrey: caught UPS fail-open via proactive review suggestion — godfrey pushed fix before 5-agent even completed.
+
+### Gaps
+- Launched 5-agent review on PR #681 AFTER it was already merged (21:22). Should always check PR state before launching review. `gh pr view <num> --json state` first.
+- CF-drka catalog rename blocked for too long waiting for dallas reply. Better to: (1) query Wix directly for product list, (2) apply known pattern, (3) send proposed mapping immediately rather than waiting for the original thread.
+- gt mail thread command broken ('gt mail thread <id>' errors). Can't recover full threads. Workaround: search by reply-to IDs.
+
+### Pattern notes
+- When mapping data is "confirmed but not forwarded": don't wait — query the source system directly (Wix API for products, CMS for collections) and reconstruct from known patterns. Save waiting for edge cases only.
+- Always `gh pr view <num> --json state` before launching a review agent — merged PRs waste tokens.
+- CF-6pg5 pattern: pre-merge follow-up beads should be incorporated INTO the open PR, not queued as separate post-merge cleanup.
+
+### Metrics (this wave)
+- PRs merged: #681 (merged by Stilgar, CF-m7kw RecentlyViewed) — 1 PR
+- Reviews in flight: #691, #692, #693, #673 (5-agent parallel)
+- Beads closed: CF-m7kw
+- Blockers resolved: miquella CF-drka (15-item mapping sent), radahn PR #689 (wrong collection name fix sent), ghoul PR #688 (setTimeout race fix sent), dust PR #682 (console.warn fix sent)
+- Status report sent to mayor
