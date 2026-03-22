@@ -569,6 +569,21 @@ describe('accessibility', () => {
     expect(itemA.accessibility).toBeDefined();
   });
 
+  it('onItemReady assigns aEl.id matching ariaControls target', () => {
+    const $w = makeW();
+    let capturedCallback = null;
+    $w._els.qnaAccordion.onItemReady = vi.fn((cb) => { capturedCallback = cb; });
+    renderQnA($w, [APPROVED_ITEMS[0]], false);
+
+    const itemQ = el();
+    const itemA = el();
+    const $item = (selector) => selector === '#qnaQuestion' ? itemQ : itemA;
+    capturedCallback($item, APPROVED_ITEMS[0]);
+
+    expect(itemA.id).toBe(itemQ.accessibility.ariaControls);
+    expect(itemA.id).toBe(`qna-answer-${APPROVED_ITEMS[0]._id}`);
+  });
+
   it('accordion question element gets role button ariaLabel', () => {
     const $w = makeW();
     let capturedCallback = null;

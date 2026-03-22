@@ -159,7 +159,8 @@ async function initProductPage() {
           const { items, hasMore } = await m.loadQnA(productId);
           m.renderQnA($w, items, hasMore);
           $w('#qnaLoadMore').onClick(async () => {
-            const page = Math.ceil(($w('#qnaAccordion').data || []).length / 5);
+            const data = $w('#qnaAccordion').data;
+            const page = Math.ceil((Array.isArray(data) ? data : []).length / 5);
             await m.loadMore($w, productId, page);
           });
           $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, productId));

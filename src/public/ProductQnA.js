@@ -35,14 +35,14 @@ export async function loadQnA(productId) {
  */
 export function renderQnA($w, items, hasMore) {
   if (items.length === 0) {
-    try { $w('#qnaSection').hide(); } catch (e) {}
-    try { $w('#qnaEmpty').show(); } catch (e) {}
-    try { $w('#qnaLoadMore').hide(); } catch (e) {}
+    try { $w('#qnaSection').hide(); } catch (e) { console.error('[ProductQnA] hide qnaSection failed:', e); }
+    try { $w('#qnaEmpty').show(); } catch (e) { console.error('[ProductQnA] show qnaEmpty failed:', e); }
+    try { $w('#qnaLoadMore').hide(); } catch (e) { console.error('[ProductQnA] hide qnaLoadMore failed:', e); }
     return;
   }
 
-  try { $w('#qnaSection').show(); } catch (e) {}
-  try { $w('#qnaEmpty').hide(); } catch (e) {}
+  try { $w('#qnaSection').show(); } catch (e) { console.error('[ProductQnA] show qnaSection failed:', e); }
+  try { $w('#qnaEmpty').hide(); } catch (e) { console.error('[ProductQnA] hide qnaEmpty failed:', e); }
 
   // Accordion repeater — onItemReady MUST precede .data assignment
   try {
@@ -62,7 +62,7 @@ export function renderQnA($w, items, hasMore) {
     } else {
       $w('#qnaLoadMore').hide();
     }
-  } catch (e) {}
+  } catch (e) { console.error('[ProductQnA] qnaLoadMore visibility failed:', e); }
 }
 
 /**
@@ -225,6 +225,7 @@ function _renderItem($item, itemData) {
   // Answer text + collapsed by default
   try {
     const aEl = $item('#qnaAnswer');
+    aEl.id = answerId; // must match ariaControls target on the question element
     aEl.text = itemData.answer || '';
     aEl.accessibility = aEl.accessibility || {};
     aEl.accessibility.role = 'region';
