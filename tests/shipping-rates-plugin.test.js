@@ -150,8 +150,9 @@ describe('getShippingRates', () => {
       },
     });
     const codes = result.shippingRates.map(r => r.code);
-    expect(codes).toContain('local-delivery');
-    expect(codes).toContain('white-glove');
+    // 22201 → zip3=222 in zone4 (VA in zone4.states) → local-delivery-zone4
+    expect(codes).toContain('local-delivery-zone4');
+    expect(codes).toContain('white-glove-zone4');
   });
 
   it('does NOT add local delivery for FL (excluded — was falsely included by old zip-range check)', async () => {
@@ -159,6 +160,30 @@ describe('getShippingRates', () => {
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
         address: { postalCode: '33101', city: 'Miami', subdivision: 'FL', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('does NOT add local delivery for AL (excluded — was falsely included by old zip-range check)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '35004', city: 'Moody', subdivision: 'AL', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('does NOT add local delivery for MS (excluded — was falsely included by old zip-range check)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '39530', city: 'Biloxi', subdivision: 'MS', country: 'US' },
       },
     });
     const codes = result.shippingRates.map(r => r.code);
@@ -174,8 +199,9 @@ describe('getShippingRates', () => {
       },
     });
     const codes = result.shippingRates.map(r => r.code);
-    expect(codes).toContain('local-delivery');
-    expect(codes).toContain('white-glove');
+    // 29201 → zip3=292 in zone3 (SC in zone3.states), US-SC strips to SC
+    expect(codes).toContain('local-delivery-zone3');
+    expect(codes).toContain('white-glove-zone3');
   });
 
   it('does NOT add local pickup for non-local zip codes', async () => {
