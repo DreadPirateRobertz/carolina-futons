@@ -52,3 +52,32 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Follow-up beads created: CF-of4v (P1 WCAG), CF-d5dq (P2 stale slot)
 - Editor guides: updated with CF+ Upgrade Prompt Modal, Comparison Tray, Continue Shopping nicknames (both MD + HTML)
 - Crew dispatched: radahn → CF-wigv (Swatch Filter), godfrey → #658 mapping fix, miquella+rennala status-checked
+
+## Session 2026-03-22 (wave 4 — post-second-compaction)
+
+### What worked well
+- Parallel agent orchestration: launched 5-agent reviews on 5 PRs simultaneously (#673, #679, #681, #686, #687, #688) while handling other dispatch/merge/bead work — no idle time
+- Bundle Builder HTML guide update: caught that the spec names in HTML were stale vs actual implementation in Bundle.js. Updated HTML to match real element IDs from merged PR #677. This is the right process — verify against actual merged code, not the original spec.
+- Shipping intelligence layer bead creation: read the full spec (231 lines), correctly split work into 3 parallel tracks (godfrey=UPS+CMS, rennala=WWEX SOAP, radahn=widget), and dispatched godfrey+radahn immediately.
+- PR #679 aria-current fix: 5-agent found the exact line — `i <= active` should only set ariaCurrent when `i === active`. Nudge was precise with exact code fix. Radahn applied it correctly.
+- Element name correction to radahn: caught that my bead spec used different element names than the HTML guide (shippingEstimateWidget vs shippingEstimateSection, etc.). Sent correction nudge immediately. HTML guide is source of truth.
+
+### Gaps
+- Mailed chrome/dust polecats with useSessionTimer.ts fix but their sessions don't exist — had to fall back to gt mail. Should check session existence before gt nudge (use gt mail for polecats by default since they're ephemeral).
+- PR #687 got a merge conflict because I merged #686 (Q&A consolidation) to main while miquella's TrendingSearches branch was in-flight. Should check branch dependency before merging to avoid creating conflicts for other open PRs.
+- HTML guide spec names vs actual implementation names: the Bundle Builder section had old spec names. This gap existed since PR #677 merged earlier in session. I should have updated HTML immediately after #677 merged, not hours later. Standing order compliance.
+
+### Pattern notes
+- `gt nudge <target>` fails with "session not found" for polecats — they're ephemeral, sessions may not exist. Always use `gt mail send` for polecats.
+- Wix Secrets Manager API nested body format: `{"secret": {"name": ..., "value": ...}}` — not flat.
+- CI shows "no checks reported" when a PR branch has a conflict (CONFLICTING state) — CI won't run on conflicting branches. Check `gh pr view --json mergeable` when CI seems missing.
+- Self-reflection should be written DURING session waves, not deferred to end. Pattern: write after major bead wave completes.
+
+### Metrics (this wave)
+- PRs merged: #679, #681, #684, #685, #686 (5 PRs, 5 beads closed: CF-vp8k, CF-m7kw, CF-mjvo, CF-pgux, CF-qa8c)
+- Orphaned polecat PRs handled: #682/#683 (2 criticals each, fixes mailed), #684/#685 (clean, merged)
+- Beads created: CF-cffy (shipping intelligence UPS), CF-wzkm (WWEX SOAP), CF-o0va (product page widget)
+- Crew dispatched: godfrey→CF-cffy, radahn→CF-o0va, rennala→CF-wzkm (queued)
+- WWEX_ACCOUNT_NUMBER stored in Wix Secrets Manager (all 3 WWEX creds now live)
+- Editor guides: HTML updated — Bundle Builder actual nicknames + Q&A Widget section
+- 5-agent reviews run: #673, #679, #681, #686, #687, #688 (6 PRs this wave)
