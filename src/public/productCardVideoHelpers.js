@@ -3,16 +3,15 @@
 // Video data derived from videoPageHelpers.js — single source of truth.
 import { getVideoData } from 'public/videoPageHelpers.js';
 
-const WIX_VIDEO_BASE = 'https://video.wixstatic.com/video';
-
 /**
- * Product slug → Wix Media video ID, derived from videoPageHelpers.js.
+ * Product slug → full video URL, derived from videoPageHelpers.js.
+ * Uses the pre-built videoUrl from buildVideoEntry — single source of truth.
  * Only Wix-hosted videos with a productSlug are eligible for card hover-play.
  */
 export const PRODUCT_CARD_VIDEOS = Object.fromEntries(
   getVideoData()
     .filter(v => v.source === 'wix' && v.productSlug)
-    .map(v => [v.productSlug, v.videoUri])
+    .map(v => [v.productSlug, v.videoUrl])
 );
 
 /**
@@ -21,12 +20,12 @@ export const PRODUCT_CARD_VIDEOS = Object.fromEntries(
  * @returns {string|null}
  */
 export function getCardVideoUrl(slug) {
-  const id = slug ? PRODUCT_CARD_VIDEOS[slug] : null;
-  if (!id) {
+  const url = slug ? PRODUCT_CARD_VIDEOS[slug] : null;
+  if (!url) {
     if (slug) console.warn(`[ProductCardVideo] No video found for slug: ${slug}`);
     return null;
   }
-  return `${WIX_VIDEO_BASE}/${id}/1080p/mp4/file.mp4`;
+  return url;
 }
 
 /**

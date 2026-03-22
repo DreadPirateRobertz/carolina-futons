@@ -28,26 +28,32 @@ function mockEl(overrides = {}) {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('PRODUCT_CARD_VIDEOS', () => {
-  it('has entry for asheville-futon-frame', () => {
-    expect(PRODUCT_CARD_VIDEOS['asheville-futon-frame']).toBe('e04e89_c2e8bedf07c74b249894fffffc0564b7');
+  it('has entry for asheville-futon-frame (full URL)', () => {
+    expect(PRODUCT_CARD_VIDEOS['asheville-futon-frame']).toBe(
+      `${WIX_BASE}/e04e89_c2e8bedf07c74b249894fffffc0564b7/1080p/mp4/file.mp4`
+    );
   });
 
-  it('has entry for sedona-futon-frame', () => {
-    expect(PRODUCT_CARD_VIDEOS['sedona-futon-frame']).toBe('e04e89_8483b56d2ef5417c95242c821934e2b2');
+  it('has entry for sedona-futon-frame (full URL)', () => {
+    expect(PRODUCT_CARD_VIDEOS['sedona-futon-frame']).toBe(
+      `${WIX_BASE}/e04e89_8483b56d2ef5417c95242c821934e2b2/1080p/mp4/file.mp4`
+    );
   });
 
-  it('has entry for alpine-futon-frame', () => {
-    expect(PRODUCT_CARD_VIDEOS['alpine-futon-frame']).toBe('e04e89_dba4fc2f08ee4a42906dcb76bcb9b31a');
+  it('has entry for alpine-futon-frame (full URL)', () => {
+    expect(PRODUCT_CARD_VIDEOS['alpine-futon-frame']).toBe(
+      `${WIX_BASE}/e04e89_dba4fc2f08ee4a42906dcb76bcb9b31a/1080p/mp4/file.mp4`
+    );
   });
 
-  it('has at least 3 entries', () => {
-    expect(Object.keys(PRODUCT_CARD_VIDEOS).length).toBeGreaterThanOrEqual(3);
+  it('has exactly 7 entries (Wix-hosted videos with productSlug on this branch)', () => {
+    expect(Object.keys(PRODUCT_CARD_VIDEOS).length).toBe(7);
   });
 
-  it('all IDs are non-empty strings', () => {
-    for (const [slug, id] of Object.entries(PRODUCT_CARD_VIDEOS)) {
-      expect(typeof id, `${slug} id`).toBe('string');
-      expect(id.length, `${slug} id length`).toBeGreaterThan(0);
+  it('all values are valid Wix video URLs', () => {
+    for (const [slug, url] of Object.entries(PRODUCT_CARD_VIDEOS)) {
+      expect(typeof url, `${slug} url`).toBe('string');
+      expect(url, `${slug} url`).toMatch(/^https:\/\/video\.wixstatic\.com\/video\/.+\/1080p\/mp4\/file\.mp4$/);
     }
   });
 });
