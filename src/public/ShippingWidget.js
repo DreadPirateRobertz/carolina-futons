@@ -25,6 +25,7 @@ import { logError } from 'backend/errorMonitoring.web';
 
 const STORAGE_KEY = 'cf_zip';
 const ORIGIN_TEXT = 'Ships from Hendersonville, NC';
+const NOOP_STORAGE = { getItem: () => null, setItem: () => {} };
 
 // ── Validation ───────────────────────────────────────────────────────────────
 
@@ -70,11 +71,11 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
 
   // Dynamic import guarded: if wix-storage-frontend is unavailable (e.g. outside
   // Wix runtime) fall back to a no-op stub so zip caching degrades gracefully.
-  const NOOP_STORAGE = { getItem: () => null, setItem: () => {} };
   let storage;
   try {
     storage = opts.storage ?? (await import('wix-storage-frontend').then(m => m.local));
-  } catch {
+  } catch (err) {
+    console.warn('[ShippingWidget] wix-storage-frontend unavailable, zip caching disabled:', err?.message);
     storage = NOOP_STORAGE;
   }
 
@@ -82,7 +83,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
   if (originEl) originEl.text = ORIGIN_TEXT;
 
   let savedZip = null;
-  try { savedZip = storage.getItem(STORAGE_KEY); } catch { /* storage unavailable */ }
+  try { savedZip = storage.getItem(STORAGE_KEY); } catch (err) { console.warn('[ShippingWidget] getItem failed:', err?.message); }
   const zipInput = safeGet($wFn, '#shippingZipInput');
   if (zipInput && savedZip) zipInput.value = savedZip;
 
@@ -122,7 +123,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
       }
 
       renderResults($wFn, result);
-      try { storage.setItem(STORAGE_KEY, zip); } catch { /* storage unavailable — zip caching degrades gracefully */ }
+      try { storage.setItem(STORAGE_KEY, zip); } catch (err) { console.warn('[ShippingWidget] setItem failed:', err?.message); }
 
       const optionsSection = safeGet($wFn, '#shippingOptionsSection');
       if (optionsSection) optionsSection.show();

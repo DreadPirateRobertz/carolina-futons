@@ -461,6 +461,16 @@ describe('initShippingWidget', () => {
     expect($w.__els['#shippingCalculateBtn'].onClick).not.toHaveBeenCalled();
   });
 
+  it('calls logError and skips wiring when productId is undefined', async () => {
+    const storage = makeStorage();
+    const $w = makeWixEnv();
+    await initShippingWidget($w, undefined, { storage });
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'ShippingWidget.init' }),
+    );
+    expect($w.__els['#shippingCalculateBtn'].onClick).not.toHaveBeenCalled();
+  });
+
   // ── storage degradation ──────────────────────────────────────────────
 
   it('renders rates and shows options even when storage throws on every call', async () => {
@@ -475,6 +485,20 @@ describe('initShippingWidget', () => {
     await handler();
     expect(getShippingEstimate).toHaveBeenCalledWith('prod-1', '28701');
     expect($w.__els['#shippingOptionsSection'].show).toHaveBeenCalled();
+  });
+
+  it('renders rates and does not show error when only setItem throws after success', async () => {
+    getShippingEstimate.mockResolvedValue(BASE_RESULT);
+    const partialStorage = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(() => { throw new Error('quota exceeded'); }),
+    };
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage: partialStorage });
+    const handler = $w.__els['#shippingCalculateBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#shippingOptionsSection'].show).toHaveBeenCalled();
+    expect($w.__els['#shippingErrorText'].show).not.toHaveBeenCalled();
   });
 
   // ── null safety ─────────────────────────────────────────────────────
