@@ -252,6 +252,11 @@ export const unsubscribeFromNotifications = webMethod(
         return { success: false, error: 'Order number and email required' };
       }
 
+      const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { max: 10 });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 hour.' };
+      }
+
       const existing = await wixData.query('TrackingNotifications')
         .eq('orderNumber', cleanOrderNumber)
         .eq('email', cleanEmail)

@@ -1,11 +1,12 @@
 /**
  * @file orderTrackingRateLimit.test.js
- * @description CF-xqzs: Rate limiting for orderTracking.subscribeToNotifications.
+ * @description CF-xqzs + CF-8mwd: Rate limiting for orderTracking subscribe/unsubscribe.
  *
  * Covers:
  *  - checkRateLimit opts.max override (5/hr vs default 3/hr)
  *  - subscribeToNotifications: first call allowed, count increments, blocked at 5,
  *    window reset allows re-subscription, fail-open on DB error, per-email isolation
+ *  - unsubscribeFromNotifications: blocked at 10/hr per email, fail-open on DB error
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -20,7 +21,7 @@ import {
   RATE_LIMIT_MAX,
   RATE_LIMIT_WINDOW_MS,
 } from '../src/backend/utils/rateLimit.js';
-import { subscribeToNotifications } from '../src/backend/orderTracking.web.js';
+import { subscribeToNotifications, unsubscribeFromNotifications } from '../src/backend/orderTracking.web.js';
 
 const NOW = 1_700_000_000_000; // fixed clock for checkRateLimit direct tests
 const TRACKING_RATE_COLLECTION = 'TrackingRateLimit';
@@ -178,6 +179,68 @@ describe('subscribeToNotifications — rate limiting', () => {
     __seed('Stores/Orders', []);
     __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5)]);
     const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
+  });
+});
+
+// ── unsubscribeFromNotifications rate limiting ────────────────────────────────
+//
+// unsubscribeFromNotifications is lower risk than subscribe (update not insert)
+// so rate is 10/hr per email — generous enough for normal use, blocks abuse.
+
+describe('unsubscribeFromNotifications — rate limiting', () => {
+  function seedSubscription(email = 'buyer@example.com', orderNumber = 'ORD-001') {
+    __seed('TrackingNotifications', [{
+      _id: 'tn-1',
+      email,
+      orderNumber,
+      enabled: true,
+    }]);
+  }
+
+  it('allows first unsubscribe (no rate limit record)', async () => {
+    seedSubscription();
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(true);
+  });
+
+  it('allows up to 10 unsubscribes per hour per email (count=9 < max)', async () => {
+    seedSubscription();
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 9)]);
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(true);
+  });
+
+  it('blocks the 11th unsubscribe attempt within the hour', async () => {
+    seedSubscription();
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 10)]);
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
+  });
+
+  it('resets after the 1-hour window expires and allows again', async () => {
+    seedSubscription();
+    // epoch (0) is always > 1 hour ago — forces window reset
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 10, 0)]);
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(true);
+  });
+
+  it('fails open (allows) when the rate limit DB check throws', async () => {
+    seedSubscription();
+    __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
+    expect(result.success).toBe(true);
+    warnSpy.mockRestore();
+  });
+
+  it('rate limit check uses lowercase-normalized email key', async () => {
+    seedSubscription();
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 10)]);
+    const result = await unsubscribeFromNotifications('ORD-001', 'BUYER@EXAMPLE.COM');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });
