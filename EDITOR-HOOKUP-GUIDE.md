@@ -2158,19 +2158,30 @@ All major pages now have both backend and frontend code. The following are in de
 
 ---
 
-## BUNDLE BUILDER (Sprint 5 — `/bundle`)
+## BUNDLE BUILDER (Sprint 5 — `/bundle`) ✅ MERGED PR #677 2026-03-22
 
-**Backend:** `bundleBuilder.web.js` (extended with `calculateBundleQuote`)
+**Backend:** `bundleBuilder.web.js` / `bundleService.web.js`
+**Frontend:** `src/pages/Bundle.js`
 
-### Main Layout
-`bundleSection` (Box), `bundleProductsRepeater` (Repeater), `bundleAddProductBtn` (Button), `bundleSummarySection` (Box), `bundleSubtotalText` (Text), `bundleShippingSection` (Box), `bundleTotalText` (Text), `bundleCheckoutBtn` (Button), `bundleEmptyState` (Box), `bundleErrorText` (Text)
+### Page-level Elements
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `bundleHeroSection` | Box | Page hero wrapper |
+| `bundleProductRepeater` | Repeater | ⚠️ Product picker grid — `onItemReady` BEFORE `.data` |
+| `bundleSummarySection` | Box | Right-rail summary panel |
+| `bundleSummaryRepeater` | Repeater | ⚠️ Selected items list — `onItemReady` BEFORE `.data` |
+| `bundleTotalPrice` | Text | Shows `$X.XX` — NaN-guarded |
+| `bundleDiscountBadge` | Box/Text | Discount % badge, hidden when no discount |
+| `bundleAddToCartBtn` | Button | Adds full bundle to cart |
+| `bundleEmptyState` | Box | Shown when no products loaded |
+| `bundleError` | Text | Error message display |
+| `bundleLoader` | Box | Loading spinner overlay |
 
-**↳ Inside `bundleProductsRepeater`:** `bundleItemName` (Text), `bundleItemPrice` (Text), `bundleItemQty` (Input), `bundleItemRemoveBtn` (Button), `bundleItemImage` (Image)
+**↳ Inside `bundleProductRepeater`:** `bundleProductName` (Text), `bundleProductPrice` (Text), `bundleProductImage` (Image), `bundleSelectBtn` (Button — `aria-pressed` toggles), `bundleSelectedBadge` (Box — visible when selected)
 
-### Product Selector ⚠️ REPEATER
-`bundlePickerSection` (Box), `bundlePickerRepeater` (Repeater), `bundlePickerSearchInput` (Input)
+**↳ Inside `bundleSummaryRepeater`:** `bundleSummaryName` (Text), `bundleSummaryPrice` (Text), `bundleSummaryRemoveBtn` (Button)
 
-**↳ Inside `bundlePickerRepeater`:** `bundlePickerItemName` (Text), `bundlePickerItemPrice` (Text), `bundlePickerAddBtn` (Button), `bundlePickerImage` (Image)
+**Accessibility note:** `bundleSelectBtn` uses `aria-pressed` (`'true'`/`'false'`) — Wix sets this via `accessibility.ariaPressed`. Screen readers announce selection state automatically.
 
 ---
 
@@ -2220,6 +2231,27 @@ All major pages now have both backend and frontend code. The following are in de
 
 ---
 
+## PRODUCT Q&A WIDGET (Sprint 5 — Product Detail Page) ✅ MERGED PR #678 2026-03-22
+
+**Frontend:** `src/public/ProductQnA.js` — accordion Q&A, customer submit form, paginated load
+**Note:** Replaces legacy `ProductQA.js` (#qa* IDs). Use only #qna* IDs below. Consolidation bead CF-qa8c queued.
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `qnaSection` | Box | Container — hidden until items load |
+| `qnaAccordion` | Repeater | ⚠️ `onItemReady` BEFORE `.data` |
+| `qnaEmpty` | Text | Shown when no approved Q&A |
+| `qnaLoadMore` | Button | Pagination — hidden when all loaded |
+| `qnaQuestion` | Text | Inside repeater — question text (accordion trigger) |
+| `qnaAnswer` | Text | Inside repeater — answer (collapsible panel, needs `id` matching `aria-controls`) |
+| `qnaQuestionInput` | TextInput | Ask-a-question input |
+| `qnaSubmitBtn` | Button | Submit question |
+| `qnaThankYou` | Text | Hidden — shown on successful submit |
+
+**Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
+
+---
+
 ## CMS COLLECTIONS — Sprint 5 New Collections
 
 | Collection | Purpose | Key Fields |
@@ -2238,7 +2270,9 @@ All major pages now have both backend and frontend code. The following are in de
 | Room Planner | ✅ Frontend + backend complete (S1–S7) | — |
 | Gift Cards | ✅ Frontend + backend complete | — |
 | Local SEO | ✅ Frontend + backend complete | S2 (schema + FAQ) in progress |
-| Bundle Builder | 🔲 Backend exists, frontend pending | `/bundle` — Sprint 5 |
-| Customer Room Gallery | 🔲 Not started | `/rooms` — Sprint 5 |
+| Bundle Builder | ✅ Frontend + backend complete | PR #677 merged 2026-03-22 |
+| Live Inventory + Low Stock | ✅ Frontend + backend complete | PR #676 merged 2026-03-22 |
+| Product Q&A Widget | ✅ Frontend + backend complete | PR #678 merged 2026-03-22 |
+| Customer Room Gallery | 🔄 In review PR #673 — onItemReady fix pending | `/rooms` — Sprint 5 |
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Charcoal | `#2C2C2C` | Body text |
