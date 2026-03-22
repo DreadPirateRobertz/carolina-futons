@@ -69,7 +69,8 @@ export const products = {
 
   getProduct: vi.fn(async (id) => {
     if (_queryError) throw _queryError;
-    return _products.find(p => p._id === id) || null;
+    const allProducts = _pages.flat();
+    return allProducts.find(p => p._id === id) || null;
   }),
 
   updateProductFields: vi.fn(async (id, fields) => {
