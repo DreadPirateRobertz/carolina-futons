@@ -147,6 +147,7 @@ async function initProductPage() {
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
+      { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
       { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); await m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
@@ -284,6 +285,23 @@ async function initFlashSaleUrgency() {
   }
 }
 
+
+// ── Financing Badge (CF-et8y) ─────────────────────────────────────────
+
+function initFinancingBadge($w, product) {
+  if (!product || typeof product.price !== 'number') {
+    try { $w('#financingBadge').hide(); } catch (e) {}
+    return;
+  }
+  $w('#financingLink').href = '/financing';
+  if (product.price >= 200) {
+    const monthly = Math.ceil(product.price / 24);
+    $w('#financingMonthly').text = `As low as $${monthly}/mo`;
+    $w('#financingBadge').show();
+  } else {
+    $w('#financingBadge').hide();
+  }
+}
 
 // ── Cross-Sell Sections ───────────────────────────────────────────────
 
