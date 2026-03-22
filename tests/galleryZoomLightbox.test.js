@@ -1,9 +1,10 @@
 /**
  * Tests for GalleryZoomLightbox.js
  *
- * Covers: initGalleryZoomLightbox (setup, ARIA, main image click, gallery thumbnail
- * click, prev/next navigation, counter, close, keyboard, swipe, destroy,
- * element nicknames, no-product guard).
+ * Covers: initGalleryZoomLightbox (setup, ARIA, accessible dialog config, main image
+ * click, gallery thumbnail click, prev/next navigation, counter, announce, swipe,
+ * close via onClose callback, keyboard arrow navigation, destroy, element nicknames
+ * (Wix element IDs used in $w selector calls), and no-product/no-images guards).
  *
  * See CF-q5ua for original specification.
  */
@@ -12,6 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ── Mocks ─────────────────────────────────────────────────────────────
 
 vi.mock('public/a11yHelpers.js', () => ({
+  setupAccessibleDialog: vi.fn(),
   announce: vi.fn(),
 }));
 
@@ -20,7 +22,7 @@ vi.mock('public/touchHelpers', () => ({
 }));
 
 import { initGalleryZoomLightbox } from '../src/public/GalleryZoomLightbox.js';
-import { announce } from 'public/a11yHelpers.js';
+import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { enableSwipe } from 'public/touchHelpers';
 
 // ── Test Helpers ──────────────────────────────────────────────────────
@@ -30,7 +32,6 @@ function createMockElement() {
     text: '',
     src: '',
     alt: '',
-    value: '',
     accessibility: {},
     collapse: vi.fn(() => Promise.resolve()),
     expand: vi.fn(() => Promise.resolve()),
@@ -38,19 +39,16 @@ function createMockElement() {
     hide: vi.fn(() => Promise.resolve()),
     onClick: vi.fn(),
     onItemClicked: vi.fn(),
-    focus: vi.fn(),
     htmlElement: null,
   };
 }
 
 function createMock$w() {
   const elements = {};
-  const $w = vi.fn((selector) => {
+  return vi.fn((selector) => {
     if (!elements[selector]) elements[selector] = createMockElement();
     return elements[selector];
   });
-  $w._elements = elements;
-  return $w;
 }
 
 function createMockState(overrides = {}) {
@@ -70,6 +68,8 @@ function createMockState(overrides = {}) {
   };
 }
 
+// Stubs document to capture only the keydown handler for keyboard navigation tests.
+// Extend captured events if testing other document-level listeners.
 function stubDocument() {
   let keydownHandler = null;
   const stub = {
@@ -83,8 +83,12 @@ function stubDocument() {
   return stub;
 }
 
+// Extract the handler registered via onClick.mock.calls.
+// Uses the most recently registered call so tests remain correct if wiring order changes.
 function clickHandler(element) {
-  const [[handler]] = element.onClick.mock.calls;
+  const calls = element.onClick.mock.calls;
+  if (!calls.length) throw new Error('No onClick handler registered on element');
+  const handler = calls[calls.length - 1][0];
   handler();
 }
 
@@ -93,54 +97,76 @@ function clickMainImage($w) {
 }
 
 function clickGalleryItem($w, src) {
-  const [[handler]] = $w('#productGallery').onItemClicked.mock.calls;
-  handler({ item: { src } });
+  const calls = $w('#productGallery').onItemClicked.mock.calls;
+  if (!calls.length) throw new Error('No onItemClicked handler registered on #productGallery');
+  calls[calls.length - 1][0]({ item: { src } });
 }
+
+// ── Shared setup (hoisted to avoid repetition across all describes) ───
+
+let $w, state, mockDialog, docStub;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  $w = createMock$w();
+  state = createMockState();
+  mockDialog = { open: vi.fn(), close: vi.fn() };
+  setupAccessibleDialog.mockReturnValue(mockDialog);
+  docStub = stubDocument();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 // ── initGalleryZoomLightbox — setup ───────────────────────────────────
 
 describe('initGalleryZoomLightbox — setup', () => {
-  let $w, state;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    stubDocument();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it('collapses zoomLightboxOverlay on init', () => {
     initGalleryZoomLightbox($w, state);
     expect($w('#zoomLightboxOverlay').collapse).toHaveBeenCalled();
   });
 
   it('returns null when state has no product', () => {
-    const result = initGalleryZoomLightbox($w, { product: null });
-    expect(result).toBeNull();
+    expect(initGalleryZoomLightbox($w, { product: null })).toBeNull();
   });
 
   it('returns null when state is null', () => {
-    const result = initGalleryZoomLightbox($w, null);
-    expect(result).toBeNull();
+    expect(initGalleryZoomLightbox($w, null)).toBeNull();
   });
 
-  it('sets ARIA role dialog on zoomLightboxOverlay', () => {
-    initGalleryZoomLightbox($w, state);
-    expect($w('#zoomLightboxOverlay').accessibility.role).toBe('dialog');
+  it('returns null when product has no images and no mainMedia', () => {
+    const s = createMockState({ product: { mediaItems: [], mainMedia: undefined } });
+    expect(initGalleryZoomLightbox($w, s)).toBeNull();
   });
 
-  it('sets ariaModal true on zoomLightboxOverlay', () => {
+  it('calls setupAccessibleDialog with panelId #zoomLightboxOverlay', () => {
     initGalleryZoomLightbox($w, state);
-    expect($w('#zoomLightboxOverlay').accessibility.ariaModal).toBe(true);
+    expect(setupAccessibleDialog).toHaveBeenCalledWith(
+      $w,
+      expect.objectContaining({ panelId: '#zoomLightboxOverlay' })
+    );
   });
 
-  it('sets ariaLabel on zoomLightboxClose', () => {
+  it('calls setupAccessibleDialog with closeId #zoomLightboxClose', () => {
     initGalleryZoomLightbox($w, state);
-    expect($w('#zoomLightboxClose').accessibility.ariaLabel).toBeTruthy();
+    expect(setupAccessibleDialog).toHaveBeenCalledWith(
+      $w,
+      expect.objectContaining({ closeId: '#zoomLightboxClose' })
+    );
+  });
+
+  it('calls setupAccessibleDialog with focusableIds including nav buttons', () => {
+    initGalleryZoomLightbox($w, state);
+    const config = setupAccessibleDialog.mock.calls[0][1];
+    expect(config.focusableIds).toContain('#zoomLightboxPrev');
+    expect(config.focusableIds).toContain('#zoomLightboxNext');
+  });
+
+  it('calls setupAccessibleDialog with an onClose callback', () => {
+    initGalleryZoomLightbox($w, state);
+    const config = setupAccessibleDialog.mock.calls[0][1];
+    expect(typeof config.onClose).toBe('function');
   });
 
   it('sets ariaLabel on zoomLightboxPrev', () => {
@@ -163,9 +189,9 @@ describe('initGalleryZoomLightbox — setup', () => {
     expect($w('#productGallery').onItemClicked).toHaveBeenCalled();
   });
 
-  it('does not expand overlay at init', () => {
+  it('does not open dialog at init', () => {
     initGalleryZoomLightbox($w, state);
-    expect($w('#zoomLightboxOverlay').expand).not.toHaveBeenCalled();
+    expect(mockDialog.open).not.toHaveBeenCalled();
   });
 
   it('returns an object with destroy function', () => {
@@ -180,29 +206,46 @@ describe('initGalleryZoomLightbox — setup', () => {
     clickMainImage($w);
     expect($w('#zoomLightboxImage').src).toBe('https://example.com/main.jpg');
   });
+
+  it('includes items with mediaType image when type is absent', () => {
+    const s = createMockState({
+      product: {
+        mediaItems: [{ src: 'https://example.com/x.jpg', mediaType: 'image', title: 'X' }],
+        mainMedia: undefined,
+      },
+    });
+    initGalleryZoomLightbox($w, s);
+    clickMainImage($w);
+    expect($w('#zoomLightboxImage').src).toBe('https://example.com/x.jpg');
+  });
+
+  it('filters out video items from the image list', () => {
+    const s = createMockState({
+      product: {
+        mediaItems: [
+          { src: 'https://example.com/a.jpg', type: 'image', title: 'A' },
+          { src: 'https://example.com/v.mp4', type: 'video', title: 'V' },
+          { src: 'https://example.com/b.jpg', type: 'image', title: 'B' },
+        ],
+      },
+    });
+    initGalleryZoomLightbox($w, s);
+    clickMainImage($w);
+    expect($w('#zoomLightboxCounter').text).toBe('1 / 2');
+  });
 });
 
 // ── initGalleryZoomLightbox — main image click ────────────────────────
 
 describe('initGalleryZoomLightbox — main image click', () => {
-  let $w, state;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    stubDocument();
     $w('#productMainImage').src = 'https://example.com/b.jpg';
     initGalleryZoomLightbox($w, state);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('expands zoomLightboxOverlay on click', () => {
+  it('calls dialog.open on click', () => {
     clickMainImage($w);
-    expect($w('#zoomLightboxOverlay').expand).toHaveBeenCalled();
+    expect(mockDialog.open).toHaveBeenCalled();
   });
 
   it('displays the matching image in lightbox', () => {
@@ -226,11 +269,9 @@ describe('initGalleryZoomLightbox — main image click', () => {
   });
 
   it('opens at index 0 when main image src does not match any media item', () => {
-    $w('#productMainImage').src = 'https://example.com/unknown.jpg';
-    vi.clearAllMocks();
-    // re-init with fresh $w to reset onClick
     $w = createMock$w();
     $w('#productMainImage').src = 'https://example.com/unknown.jpg';
+    setupAccessibleDialog.mockReturnValue(mockDialog);
     initGalleryZoomLightbox($w, state);
     clickMainImage($w);
     expect($w('#zoomLightboxImage').src).toBe('https://example.com/a.jpg');
@@ -240,23 +281,13 @@ describe('initGalleryZoomLightbox — main image click', () => {
 // ── initGalleryZoomLightbox — gallery thumbnail click ─────────────────
 
 describe('initGalleryZoomLightbox — gallery thumbnail click', () => {
-  let $w, state;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    stubDocument();
     initGalleryZoomLightbox($w, state);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('expands overlay on thumbnail click', () => {
+  it('calls dialog.open on thumbnail click', () => {
     clickGalleryItem($w, 'https://example.com/b.jpg');
-    expect($w('#zoomLightboxOverlay').expand).toHaveBeenCalled();
+    expect(mockDialog.open).toHaveBeenCalled();
   });
 
   it('shows the clicked thumbnail image', () => {
@@ -278,20 +309,12 @@ describe('initGalleryZoomLightbox — gallery thumbnail click', () => {
 // ── initGalleryZoomLightbox — navigation ──────────────────────────────
 
 describe('initGalleryZoomLightbox — navigation', () => {
-  let $w, state;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    stubDocument();
     initGalleryZoomLightbox($w, state);
     clickMainImage($w); // open at index 0
-    announce.mockClear(); // reset announce only — preserve onClick.mock.calls
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
+    // Only clear announce — vi.clearAllMocks() would wipe onClick.mock.calls, which
+    // clickHandler() reads to retrieve the registered handler reference.
+    announce.mockClear();
   });
 
   it('next button advances to next image', () => {
@@ -321,18 +344,49 @@ describe('initGalleryZoomLightbox — navigation', () => {
     expect($w('#zoomLightboxCounter').text).toBe('3 / 3');
   });
 
+  it('announce is called on next navigation', () => {
+    clickHandler($w('#zoomLightboxNext'));
+    expect(announce).toHaveBeenCalledWith($w, 'Image 2 of 3');
+  });
+
+  it('announce is called on prev wrap navigation', () => {
+    clickHandler($w('#zoomLightboxPrev'));
+    expect(announce).toHaveBeenCalledWith($w, 'Image 3 of 3');
+  });
+
   it('hides prev and next for single-image product', () => {
     vi.clearAllMocks();
     $w = createMock$w();
-    const singleState = createMockState({
-      product: {
-        mediaItems: [{ src: 'https://example.com/only.jpg', type: 'image', title: 'Only' }],
-      },
+    setupAccessibleDialog.mockReturnValue(mockDialog);
+    const s = createMockState({
+      product: { mediaItems: [{ src: 'https://example.com/only.jpg', type: 'image', title: 'Only' }] },
     });
-    initGalleryZoomLightbox($w, singleState);
+    initGalleryZoomLightbox($w, s);
     clickMainImage($w);
     expect($w('#zoomLightboxPrev').hide).toHaveBeenCalled();
     expect($w('#zoomLightboxNext').hide).toHaveBeenCalled();
+  });
+
+  it('counter text is empty string for single-image product', () => {
+    vi.clearAllMocks();
+    $w = createMock$w();
+    setupAccessibleDialog.mockReturnValue(mockDialog);
+    const s = createMockState({
+      product: { mediaItems: [{ src: 'https://example.com/only.jpg', type: 'image', title: 'Only' }] },
+    });
+    initGalleryZoomLightbox($w, s);
+    clickMainImage($w);
+    expect($w('#zoomLightboxCounter').text).toBe('');
+  });
+
+  it('shows prev and next when re-opening multi-image lightbox', () => {
+    const { onClose } = setupAccessibleDialog.mock.calls[0][1];
+    onClose(); // close
+    $w('#zoomLightboxPrev').show.mockClear();
+    $w('#zoomLightboxNext').show.mockClear();
+    clickMainImage($w); // re-open
+    expect($w('#zoomLightboxPrev').show).toHaveBeenCalled();
+    expect($w('#zoomLightboxNext').show).toHaveBeenCalled();
   });
 
   it('does not hide prev/next for multi-image product', () => {
@@ -344,56 +398,34 @@ describe('initGalleryZoomLightbox — navigation', () => {
 // ── initGalleryZoomLightbox — close ───────────────────────────────────
 
 describe('initGalleryZoomLightbox — close', () => {
-  let $w, state, docStub;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    docStub = stubDocument();
     initGalleryZoomLightbox($w, state);
-    clickMainImage($w);
-    $w('#zoomLightboxOverlay').collapse.mockClear();
+    clickMainImage($w); // open
     announce.mockClear();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('close button collapses zoomLightboxOverlay', () => {
-    clickHandler($w('#zoomLightboxClose'));
-    expect($w('#zoomLightboxOverlay').collapse).toHaveBeenCalled();
-  });
-
-  it('close button announces lightbox closed', () => {
-    clickHandler($w('#zoomLightboxClose'));
+  it('onClose callback announces lightbox closed', () => {
+    const { onClose } = setupAccessibleDialog.mock.calls[0][1];
+    onClose();
     expect(announce).toHaveBeenCalledWith($w, expect.stringMatching(/closed/i));
   });
 
-  it('Escape key closes the lightbox', () => {
-    docStub.keydownHandler({ key: 'Escape' });
-    expect($w('#zoomLightboxOverlay').collapse).toHaveBeenCalled();
+  it('onClose callback sets isOpen to false (subsequent arrows do nothing)', () => {
+    const { onClose } = setupAccessibleDialog.mock.calls[0][1];
+    onClose();
+    const srcBefore = $w('#zoomLightboxImage').src;
+    docStub.keydownHandler({ key: 'ArrowRight' });
+    expect($w('#zoomLightboxImage').src).toBe(srcBefore);
   });
 });
 
 // ── initGalleryZoomLightbox — keyboard navigation ─────────────────────
 
 describe('initGalleryZoomLightbox — keyboard navigation', () => {
-  let $w, state, docStub;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    docStub = stubDocument();
     initGalleryZoomLightbox($w, state);
     clickMainImage($w); // open at index 0
     announce.mockClear();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it('ArrowRight navigates to next image', () => {
@@ -406,34 +438,73 @@ describe('initGalleryZoomLightbox — keyboard navigation', () => {
     expect($w('#zoomLightboxImage').src).toBe('https://example.com/c.jpg');
   });
 
-  it('keyboard does nothing when lightbox is closed', () => {
-    clickHandler($w('#zoomLightboxClose')); // close
-    $w('#zoomLightboxOverlay').expand.mockClear();
+  it('ArrowRight does not change image when lightbox is closed', () => {
+    const { onClose } = setupAccessibleDialog.mock.calls[0][1];
+    onClose();
+    const srcBefore = $w('#zoomLightboxImage').src;
     docStub.keydownHandler({ key: 'ArrowRight' });
-    expect($w('#zoomLightboxOverlay').expand).not.toHaveBeenCalled();
+    expect($w('#zoomLightboxImage').src).toBe(srcBefore);
+  });
+
+  it('unrecognised keys do nothing', () => {
+    const srcBefore = $w('#zoomLightboxImage').src;
+    docStub.keydownHandler({ key: 'Enter' });
+    expect($w('#zoomLightboxImage').src).toBe(srcBefore);
+  });
+});
+
+// ── initGalleryZoomLightbox — swipe navigation ────────────────────────
+
+describe('initGalleryZoomLightbox — swipe navigation', () => {
+  let capturedSwipeCb, mockCleanup;
+
+  beforeEach(() => {
+    mockCleanup = vi.fn();
+    capturedSwipeCb = null;
+    enableSwipe.mockImplementation((_el, cb) => { capturedSwipeCb = cb; return mockCleanup; });
+
+    // Give overlay an htmlElement so swipe is initialised
+    $w('#zoomLightboxOverlay').htmlElement = { addEventListener: vi.fn() };
+
+    initGalleryZoomLightbox($w, state);
+    clickMainImage($w); // open at index 0
+    announce.mockClear();
+  });
+
+  it('swipe left advances to next image', () => {
+    capturedSwipeCb('left');
+    expect($w('#zoomLightboxImage').src).toBe('https://example.com/b.jpg');
+  });
+
+  it('swipe right goes to previous image (wraps)', () => {
+    capturedSwipeCb('right');
+    expect($w('#zoomLightboxImage').src).toBe('https://example.com/c.jpg');
+  });
+
+  it('swipe does nothing when lightbox is closed', () => {
+    const { onClose } = setupAccessibleDialog.mock.calls[0][1];
+    onClose();
+    capturedSwipeCb('left');
+    expect($w('#zoomLightboxImage').src).toBe('https://example.com/a.jpg'); // unchanged
   });
 });
 
 // ── initGalleryZoomLightbox — destroy ─────────────────────────────────
 
 describe('initGalleryZoomLightbox — destroy', () => {
-  let $w, state, docStub;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    docStub = stubDocument();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
   it('destroy removes keydown listener', () => {
     const handle = initGalleryZoomLightbox($w, state);
     handle.destroy();
     expect(document.removeEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
+  });
+
+  it('destroy calls swipe cleanup when swipe was initialised', () => {
+    const mockCleanup = vi.fn();
+    enableSwipe.mockReturnValue(mockCleanup);
+    $w('#zoomLightboxOverlay').htmlElement = { addEventListener: vi.fn() };
+    const handle = initGalleryZoomLightbox($w, state);
+    handle.destroy();
+    expect(mockCleanup).toHaveBeenCalled();
   });
 
   it('destroy is safe to call multiple times', () => {
@@ -445,18 +516,8 @@ describe('initGalleryZoomLightbox — destroy', () => {
 // ── element nicknames ─────────────────────────────────────────────────
 
 describe('element nicknames — all required IDs are addressed', () => {
-  let $w, state;
-
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    stubDocument();
     initGalleryZoomLightbox($w, state);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it('addresses #zoomLightboxOverlay', () => {
@@ -468,8 +529,9 @@ describe('element nicknames — all required IDs are addressed', () => {
     expect($w).toHaveBeenCalledWith('#zoomLightboxImage');
   });
 
-  it('addresses #zoomLightboxClose', () => {
-    expect($w).toHaveBeenCalledWith('#zoomLightboxClose');
+  it('passes #zoomLightboxClose as closeId to setupAccessibleDialog', () => {
+    const config = setupAccessibleDialog.mock.calls[0][1];
+    expect(config.closeId).toBe('#zoomLightboxClose');
   });
 
   it('addresses #zoomLightboxPrev', () => {
