@@ -20,9 +20,14 @@ vi.mock('backend/catalogContent.web.js', () => ({
   getProductSpecs: vi.fn(),
 }));
 
+vi.mock('wix-location', () => ({
+  default: { onChange: vi.fn() },
+}));
+
 import { initProductInfoModal } from '../src/public/ProductInfoModal.js';
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { getProductSpecs } from 'backend/catalogContent.web.js';
+import wixLocation from 'wix-location';
 
 // ── Test Helpers ──────────────────────────────────────────────────────
 
@@ -171,6 +176,15 @@ describe('initProductInfoModal — setup', () => {
     await initProductInfoModal($w, undefined);
     expect($w('#careGuideBtn').hide).toHaveBeenCalled();
   });
+
+  it('registers wixLocation.onChange to close dialog on navigation', async () => {
+    await initProductInfoModal($w, state);
+    expect(wixLocation.onChange).toHaveBeenCalled();
+    const dialog = setupAccessibleDialog.mock.results[0].value;
+    const [navHandler] = wixLocation.onChange.mock.calls[0];
+    navHandler();
+    expect(dialog.close).toHaveBeenCalled();
+  });
 });
 
 // ── careGuideBtn click — lazy load ────────────────────────────────────
@@ -226,6 +240,14 @@ describe('careGuideBtn click — lazy load', () => {
     expect(text).toContain('32');
     expect(text).toContain('36');
     expect(text).toContain('85');
+  });
+
+  it('retries getProductSpecs if first click throws (initialized resets on failure)', async () => {
+    getProductSpecs.mockRejectedValueOnce(new Error('CMS unavailable'));
+    await clickCareGuideBtn(); // fails — initialized stays false
+    mockSpecsSuccess();
+    await clickCareGuideBtn(); // retries
+    expect(getProductSpecs).toHaveBeenCalledTimes(2);
   });
 });
 

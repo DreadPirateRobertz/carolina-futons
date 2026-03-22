@@ -16,6 +16,7 @@ import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { addToCart } from 'public/cartService';
 import { formatCurrency } from 'public/productPageUtils.js';
 import wixStoresFrontend from 'wix-stores-frontend';
+import wixLocation from 'wix-location';
 
 // Per-session product cache keyed by productId.
 const _cache = new Map();
@@ -71,6 +72,11 @@ export function initQuickView($w) {
       },
     });
 
+    // Close modal on page navigation.
+    try { wixLocation.onChange(() => { dialog.close(); }); } catch (e) {
+      console.warn('[QuickView] wixLocation.onChange wire failed:', e?.message);
+    }
+
     // Wire add-to-cart once at init; _currentProduct is updated by openQuickView.
     try {
       $w('#quickViewAddToCart').onClick(async () => {
@@ -120,7 +126,7 @@ export async function openQuickView($w, productId, dialog) {
     } else {
       try {
         product = await wixStoresFrontend.products.getProduct(productId);
-        _cache.set(productId, product);
+        if (product) { _cache.set(productId, product); }
       } catch (e) {
         console.warn('[QuickView] getProduct failed for id:', productId, '—', e?.message);
         // Do not cache the error — allow retry on next open.

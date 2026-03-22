@@ -28,10 +28,15 @@ vi.mock('wix-stores-frontend', () => ({
   },
 }));
 
+vi.mock('wix-location', () => ({
+  default: { onChange: vi.fn() },
+}));
+
 import { initQuickView, openQuickView, __resetCache } from '../src/public/QuickView.js';
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { addToCart } from 'public/cartService';
 import wixStoresFrontend from 'wix-stores-frontend';
+import wixLocation from 'wix-location';
 
 // ── Test Helpers ──────────────────────────────────────────────────────
 
@@ -141,6 +146,14 @@ describe('initQuickView — modal setup', () => {
   it('returns the dialog object', async () => {
     const result = await initQuickView($w);
     expect(result).toBe(mockDialog);
+  });
+
+  it('registers wixLocation.onChange to close dialog on navigation', async () => {
+    await initQuickView($w);
+    expect(wixLocation.onChange).toHaveBeenCalled();
+    const [navHandler] = wixLocation.onChange.mock.calls[0];
+    navHandler();
+    expect(mockDialog.close).toHaveBeenCalled();
   });
 });
 
@@ -309,6 +322,13 @@ describe('openQuickView — lazy-load cache', () => {
     await openQuickView($w, 'prod-fail', mockDialog);
     expect(wixStoresFrontend.products.getProduct).toHaveBeenCalledTimes(2);
     expect($w('#quickViewName').text).toContain('not available');
+  });
+
+  it('retries getProduct when product is null/not-found (null not cached)', async () => {
+    mockProductNotFound();
+    await openQuickView($w, 'prod-missing', mockDialog);
+    await openQuickView($w, 'prod-missing', mockDialog);
+    expect(wixStoresFrontend.products.getProduct).toHaveBeenCalledTimes(2);
   });
 });
 
