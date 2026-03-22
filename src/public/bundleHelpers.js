@@ -7,11 +7,16 @@
  * so that all 3 components (frame + mattress + cover) can be grouped in the cart UI.
  */
 
-// Expected number of components in a complete bundle
-const BUNDLE_COMPONENT_COUNT = 3;
+/**
+ * Expected number of components in a complete bundle (frame + mattress + cover).
+ * Exported so bundleService.web.js can share the same source of truth.
+ */
+export const BUNDLE_COMPONENT_COUNT = 3;
 
 /**
  * Generate the bundleTag value for a given bundleId.
+ * Returns 'bundle:null' / 'bundle:undefined' if bundleId is null/undefined —
+ * callers should validate bundleId before calling.
  * @param {string} bundleId
  * @returns {string} e.g. 'bundle:bundle-001'
  */
@@ -49,7 +54,11 @@ export function groupBundleItems(cartItems) {
 
 /**
  * Find bundles in the cart that are missing components.
- * A complete bundle has exactly BUNDLE_COMPONENT_COUNT items with the same tag.
+ * A complete bundle has exactly {@link BUNDLE_COMPONENT_COUNT} items with the same tag.
+ *
+ * Note: this function returns { bundleTag, componentCount, expectedCount } only.
+ * The backend's validateBundleCohesion adds a human-readable `message` field on top.
+ *
  * @param {Object[]} cartItems - Cart line items
  * @returns {Array<{bundleTag: string, componentCount: number, expectedCount: number}>}
  */
@@ -71,7 +80,7 @@ export function findBrokenBundles(cartItems) {
 /**
  * Format bundle savings for display.
  * @param {{ savings: number, bundlePrice: number }} bundle
- * @returns {string} e.g. 'Save $75 (12% off)'
+ * @returns {string} e.g. 'Save $75 (12% off)' or 'Bundle price' when savings <= 0
  */
 export function formatBundleSavings({ savings, bundlePrice }) {
   if (!savings || savings <= 0) return 'Bundle price';

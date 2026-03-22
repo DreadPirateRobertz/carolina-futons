@@ -20,15 +20,18 @@
  *   bundlePrice       (Number)  - Discounted bundle price
  *   savings           (Number)  - Dollar savings vs. individual prices
  *   isActive          (Boolean) - Whether bundle is available for purchase
+ *
+ * Index: create a compound index on [frameProductId, isActive] —
+ * required for getBundlesByFrame query performance.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
 import { validateId } from 'backend/utils/sanitize';
-import { getBundleTag, groupBundleItems } from 'public/bundleHelpers';
+import { logError } from 'backend/utils/errorHandler';
+import { getBundleTag, findBrokenBundles } from 'public/bundleHelpers';
 
 const COLLECTION = 'Bundles';
-const BUNDLE_COMPONENT_COUNT = 3;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,17 +60,19 @@ function formatBundle(item) {
 
 /**
  * Build 3 tagged line items for cart.addProducts from a bundle CMS record.
- * Each item carries bundleTag in customTextFields so the frontend can group them.
+ * Returns null if any component productId is missing (malformed CMS data).
  * @param {Object} bundle - Normalized bundle (from formatBundle)
- * @returns {Object[]} Array of 3 line items
+ * @returns {Object[]|null} Array of 3 line items, or null if a component is missing
  */
 function buildLineItems(bundle) {
-  const tag = getBundleTag(bundle._id);
-  const tagField = [{ title: 'bundleTag', value: tag }];
+  const { frameProductId, mattressProductId, coverProductId } = bundle;
+  if (!frameProductId || !mattressProductId || !coverProductId) return null;
+
+  const tagField = [{ title: 'bundleTag', value: getBundleTag(bundle._id) }];
   return [
-    { productId: bundle.frameProductId, quantity: 1, customTextFields: tagField },
-    { productId: bundle.mattressProductId, quantity: 1, customTextFields: tagField },
-    { productId: bundle.coverProductId, quantity: 1, customTextFields: tagField },
+    { productId: frameProductId, quantity: 1, customTextFields: tagField },
+    { productId: mattressProductId, quantity: 1, customTextFields: tagField },
+    { productId: coverProductId, quantity: 1, customTextFields: tagField },
   ];
 }
 
@@ -98,7 +103,7 @@ export const getBundlesByFrame = webMethod(
         bundles: result.items.map(formatBundle),
       };
     } catch (err) {
-      console.error('[bundleService] getBundlesByFrame error:', err.message);
+      logError('bundleService.getBundlesByFrame', err);
       return { success: false, error: 'Failed to load bundles.' };
     }
   }
@@ -112,7 +117,8 @@ export const getBundlesByFrame = webMethod(
  *
  * @param {string} bundleId - CMS _id of the bundle record
  * @returns {Promise<{success: boolean, bundleTag?: string, productsAdded?: number,
- *   bundlePrice?: number, savings?: number, displayName?: string, error?: string}>}
+ *   bundlePrice?: number, savings?: number, displayName?: string,
+ *   error?: string, errorCode?: string}>}
  */
 export const addBundle = webMethod(
   Permissions.Anyone,
@@ -135,6 +141,11 @@ export const addBundle = webMethod(
       const bundle = formatBundle(result.items[0]);
       const lineItems = buildLineItems(bundle);
 
+      if (!lineItems) {
+        logError('bundleService.addBundle', new Error(`Bundle ${cleanId} has missing component IDs in CMS`));
+        return { success: false, error: 'Bundle configuration is incomplete.', errorCode: 'BUNDLE_INCOMPLETE' };
+      }
+
       await ecomCart.addProducts(lineItems);
 
       return {
@@ -146,7 +157,7 @@ export const addBundle = webMethod(
         displayName: bundle.displayName,
       };
     } catch (err) {
-      console.error('[bundleService] addBundle error:', err.message);
+      logError('bundleService.addBundle', err);
       return { success: false, error: 'Failed to add bundle to cart.' };
     }
   }
@@ -158,6 +169,11 @@ export const addBundle = webMethod(
  * Check whether all bundle groups in the cart have all 3 components present.
  * Detects orphaned bundle items (e.g. user removed one piece of a bundle).
  *
+ * Note: accepts caller-supplied cart data and is informational only — it does
+ * not cross-reference bundle IDs against CMS. Fabricated bundleTags will be
+ * flagged as broken if they lack 3 items, but will not trigger false "valid"
+ * responses. This is acceptable for S1 (display/warning use case).
+ *
  * @param {Object[]} cartItems - Cart line items (with customTextFields)
  * @returns {Promise<{valid: boolean, brokenBundles: Object[]}>}
  */
@@ -168,19 +184,11 @@ export const validateBundleCohesion = webMethod(
       return { valid: true, brokenBundles: [] };
     }
 
-    const groups = groupBundleItems(cartItems);
-    const brokenBundles = [];
-
-    for (const [bundleTag, items] of Object.entries(groups)) {
-      if (items.length < BUNDLE_COMPONENT_COUNT) {
-        brokenBundles.push({
-          bundleTag,
-          componentCount: items.length,
-          expectedCount: BUNDLE_COMPONENT_COUNT,
-          message: `Bundle is incomplete: ${items.length} of ${BUNDLE_COMPONENT_COUNT} items present. Removing part of a bundle may affect bundle pricing.`,
-        });
-      }
-    }
+    const broken = findBrokenBundles(cartItems);
+    const brokenBundles = broken.map(b => ({
+      ...b,
+      message: `Bundle is incomplete: ${b.componentCount} of ${b.expectedCount} items present. Removing part of a bundle may affect bundle pricing.`,
+    }));
 
     return {
       valid: brokenBundles.length === 0,

@@ -38,6 +38,15 @@ describe('getBundleTag', () => {
   it('returns bundle:<id> for any string id', () => {
     expect(getBundleTag('abc123')).toBe('bundle:abc123');
   });
+
+  it('with null produces bundle:null (callers must validate before calling)', () => {
+    // Documents the known behavior — callers should not pass null
+    expect(getBundleTag(null)).toBe('bundle:null');
+  });
+
+  it('with undefined produces bundle:undefined', () => {
+    expect(getBundleTag(undefined)).toBe('bundle:undefined');
+  });
 });
 
 // ── extractBundleTag ──────────────────────────────────────────────────────────
@@ -99,6 +108,14 @@ describe('groupBundleItems', () => {
     const items = [makeItem('product-a'), makeItem('product-b')];
     expect(groupBundleItems(items)).toEqual({});
   });
+
+  it('excludes item with non-bundleTag customTextField (e.g. engraving)', () => {
+    const item = {
+      productId: 'frame-001',
+      customTextFields: [{ title: 'engraving', value: 'Happy Birthday' }],
+    };
+    expect(groupBundleItems([item])).toEqual({});
+  });
 });
 
 // ── findBrokenBundles ─────────────────────────────────────────────────────────
@@ -139,20 +156,21 @@ describe('findBrokenBundles', () => {
 // ── formatBundleSavings ───────────────────────────────────────────────────────
 
 describe('formatBundleSavings', () => {
-  it('returns formatted savings string', () => {
-    const result = formatBundleSavings({ savings: 75, bundlePrice: 549 });
-    expect(typeof result).toBe('string');
-    expect(result).toContain('75');
+  it('returns exact format: Save $<amount> (<pct>% off)', () => {
+    // $75 savings on $549 bundle: original = 624, pct = round(75/624*100) = 12%
+    expect(formatBundleSavings({ savings: 75, bundlePrice: 549 })).toBe('Save $75 (12% off)');
   });
 
-  it('includes percentage off when calculable', () => {
-    // $75 savings on $549 bundle ≈ 12% off (75/(549+75) = 12%)
-    const result = formatBundleSavings({ savings: 75, bundlePrice: 549 });
-    expect(result).toMatch(/\d+%/);
+  it('calculates percentage correctly for a different bundle', () => {
+    // $120 savings on $899 bundle: original = 1019, pct = round(120/1019*100) = 12%
+    expect(formatBundleSavings({ savings: 120, bundlePrice: 899 })).toBe('Save $120 (12% off)');
   });
 
-  it('handles zero savings gracefully', () => {
-    const result = formatBundleSavings({ savings: 0, bundlePrice: 300 });
-    expect(typeof result).toBe('string');
+  it('returns "Bundle price" for zero savings', () => {
+    expect(formatBundleSavings({ savings: 0, bundlePrice: 300 })).toBe('Bundle price');
+  });
+
+  it('returns "Bundle price" for negative savings', () => {
+    expect(formatBundleSavings({ savings: -10, bundlePrice: 300 })).toBe('Bundle price');
   });
 });

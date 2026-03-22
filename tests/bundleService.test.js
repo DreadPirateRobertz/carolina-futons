@@ -26,6 +26,9 @@ import {
   __reset as __resetCart,
 } from './__mocks__/wix-ecom-backend.js';
 
+// Suppress logError console output during tests
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const BUNDLES = [
@@ -253,6 +256,48 @@ describe('addBundle', () => {
     const result = await addBundle('bundle-001');
     expect(result.bundlePrice).toBe(549); // exact CMS value, not manipulable
   });
+
+  it('returns error when CMS query throws', async () => {
+    __setQueryError('Bundles', new Error('DB unavailable'));
+    const result = await addBundle('bundle-001');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('returns BUNDLE_INCOMPLETE error when a CMS record has empty frameProductId', async () => {
+    __resetData();
+    __seed('Bundles', [{
+      _id: 'bundle-bad',
+      displayName: 'Broken Bundle',
+      frameProductId: '',        // missing
+      mattressProductId: 'mattress-ok',
+      coverProductId: 'cover-ok',
+      bundlePrice: 400,
+      savings: 50,
+      isActive: true,
+    }]);
+    const result = await addBundle('bundle-bad');
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('BUNDLE_INCOMPLETE');
+    expect(cart.addProducts).not.toHaveBeenCalled();
+  });
+
+  it('returns BUNDLE_INCOMPLETE when mattressProductId is missing', async () => {
+    __resetData();
+    __seed('Bundles', [{
+      _id: 'bundle-no-mattress',
+      displayName: 'No Mattress Bundle',
+      frameProductId: 'frame-ok',
+      mattressProductId: '',     // missing
+      coverProductId: 'cover-ok',
+      bundlePrice: 400,
+      savings: 50,
+      isActive: true,
+    }]);
+    const result = await addBundle('bundle-no-mattress');
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('BUNDLE_INCOMPLETE');
+  });
 });
 
 // ── validateBundleCohesion ───────────────────────────────────────────────────
@@ -332,5 +377,17 @@ describe('validateBundleCohesion', () => {
     const result = await validateBundleCohesion(incomplete);
     expect(typeof result.brokenBundles[0].message).toBe('string');
     expect(result.brokenBundles[0].message.length).toBeGreaterThan(0);
+  });
+
+  it('returns valid:true for null input (non-array guard)', async () => {
+    const result = await validateBundleCohesion(null);
+    expect(result.valid).toBe(true);
+    expect(result.brokenBundles).toHaveLength(0);
+  });
+
+  it('returns valid:true for undefined input', async () => {
+    const result = await validateBundleCohesion(undefined);
+    expect(result.valid).toBe(true);
+    expect(result.brokenBundles).toHaveLength(0);
   });
 });
