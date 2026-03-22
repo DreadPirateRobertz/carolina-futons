@@ -83,6 +83,13 @@ describe('checkRateLimit — opts.max override', () => {
     const result = await checkRateLimit(TRACKING_RATE_COLLECTION, 'user@example.com', { now: NOW + 1 });
     expect(result).toEqual({ allowed: false, reason: 'rate_limited' });
   });
+
+  it('opts.max = 0 blocks immediately (count 0 >= max 0)', async () => {
+    // count=0 existing record — max=0 means no calls allowed
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('user@example.com', 0, NOW)]);
+    const result = await checkRateLimit(TRACKING_RATE_COLLECTION, 'user@example.com', { now: NOW + 1, max: 0 });
+    expect(result).toEqual({ allowed: false, reason: 'rate_limited' });
+  });
 });
 
 // ── subscribeToNotifications rate limiting ───────────────────────────────────
@@ -129,12 +136,16 @@ describe('subscribeToNotifications — rate limiting', () => {
     expect(result.success).toBe(true);
   });
 
-  it('fails open (allows) when the rate limit DB check throws', async () => {
+  it('fails open (allows) when the rate limit DB check throws, and still persists the subscription', async () => {
     seedOrderAndFulfillment();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let insertedCollection, insertedItem;
+    __onInsert((col, item) => { insertedCollection = col; insertedItem = item; });
     const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
+    expect(insertedCollection).toBe('TrackingNotifications');
+    expect(insertedItem.email).toBe('buyer@example.com');
     warnSpy.mockRestore();
   });
 
