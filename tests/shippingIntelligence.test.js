@@ -39,6 +39,9 @@ vi.mock('backend/ups-shipping.web', () => ({
   getPackageDimensions: vi.fn().mockResolvedValue({
     length: 72, width: 24, height: 6, weight: 80,
   }),
+  getUPSFallbackRates: vi.fn().mockReturnValue([
+    { code: 'ups-ground-est', title: 'UPS Ground (Estimated)', cost: 49.99, estimatedDelivery: '5-7 business days', isEstimate: true },
+  ]),
 }));
 
 vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
@@ -56,7 +59,7 @@ vi.mock('backend/wwex-freight.web', () => ({
 
 import { getShippingEstimate, calculateBundleQuote, _resolveProfile, _routeToCarrier } from '../src/backend/shippingIntelligence.web.js';
 import { shouldUseLTL, getLTLRates, getLTLFallbackRates } from '../src/backend/wwex-freight.web.js';
-import { getUPSRates, getPackageDimensions } from '../src/backend/ups-shipping.web.js';
+import { getUPSRates, getPackageDimensions, getUPSFallbackRates } from '../src/backend/ups-shipping.web.js';
 
 beforeEach(() => {
   resetWixData();
@@ -374,6 +377,35 @@ describe('UPS option response shape', () => {
     const result = await getShippingEstimate('prod-1', '10001');
     const upsOpt = result.options.find(o => o.carrier === 'UPS');
     expect(upsOpt.requiresLiftgate).toBe(false);
+  });
+});
+
+describe('UPS fail-open — fallback when getUPSRates throws', () => {
+  it('returns options with isEstimate:true when getUPSRates throws', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    getUPSRates.mockRejectedValueOnce(new Error('UPS API timeout'));
+    const result = await getShippingEstimate('prod-1', '10001');
+    expect(result.success).toBe(true);
+    expect(result.options.length).toBeGreaterThan(0);
+    const upsOpt = result.options.find(o => o.carrier === 'UPS');
+    expect(upsOpt).toBeDefined();
+    expect(upsOpt.isEstimate).toBe(true);
+  });
+
+  it('calls getUPSFallbackRates with the zip when getUPSRates throws', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    getUPSRates.mockRejectedValueOnce(new Error('connection refused'));
+    await getShippingEstimate('prod-1', '28701');
+    expect(getUPSFallbackRates).toHaveBeenCalledWith('28701');
+  });
+
+  it('also returns local zone options on UPS failure when zip is local', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    getUPSRates.mockRejectedValueOnce(new Error('timeout'));
+    const result = await getShippingEstimate('prod-1', '28701');
+    expect(result.success).toBe(true);
+    expect(result.options.some(o => o.carrier === 'UPS')).toBe(true);
+    expect(result.options.some(o => o.carrier === 'Carolina Futons')).toBe(true);
   });
 });
 

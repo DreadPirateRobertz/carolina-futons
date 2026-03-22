@@ -27,7 +27,7 @@
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
-import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
+import { getUPSRates, getPackageDimensions, getUPSFallbackRates } from 'backend/ups-shipping.web';
 import { getLTLRates, getLTLFallbackRates, shouldUseLTL } from 'backend/wwex-freight.web';
 import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
@@ -259,9 +259,15 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
       });
     }
   } else {
-    // Standard items → UPS parcel
-    const rates = await getUPSRates({ postalCode: zip, country: 'US' }, packages, orderSubtotal);
-    for (const rate of rates) {
+    // Standard items → UPS parcel (fail-open: static fallback if API throws)
+    let upsRates;
+    try {
+      upsRates = await getUPSRates({ postalCode: zip, country: 'US' }, packages, orderSubtotal);
+    } catch (err) {
+      logError('shippingIntelligence.buildShippingResponse.ups', err, { zip });
+      upsRates = getUPSFallbackRates(zip);
+    }
+    for (const rate of upsRates) {
       const delivery = rate.estimatedDelivery || '';
       options.push({
         code: rate.code,

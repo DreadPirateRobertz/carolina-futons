@@ -263,7 +263,7 @@ export const getUPSRates = webMethod(
       if (!response.ok) {
         const errorText = await response.text();
         console.error('UPS Rate API error:', response.status, errorText);
-        return getFallbackRates(destinationAddress.postalCode);
+        return getUPSFallbackRates(destinationAddress.postalCode);
       }
 
       const data = await response.json();
@@ -289,7 +289,7 @@ export const getUPSRates = webMethod(
 
     } catch (err) {
       console.error('Error getting UPS rates:', err);
-      return getFallbackRates(destinationAddress?.postalCode);
+      return getUPSFallbackRates(destinationAddress?.postalCode);
     }
   }
 );
@@ -302,7 +302,7 @@ export const getUPSRates = webMethod(
  * @param {string|undefined} postalCode - Destination ZIP code
  * @returns {Array<{code: string, title: string, cost: number, estimatedDelivery: string, isEstimate: boolean}>}
  */
-function getFallbackRates(postalCode) {
+export function getUPSFallbackRates(postalCode) {
   const prefix = postalCode ? parseInt(postalCode.substring(0, 3)) : 0;
   let groundRate = 49.99;
 
