@@ -2524,6 +2524,27 @@ describe('masterPage.js', () => {
         expect(getEl('#announcementText').style.color).toBe('');
       });
     });
+
+    it('wires linkUrl to #announcementBarLink and shows it when present', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Shop the sale!', linkUrl: 'https://carolinafutons.com/sale', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').href).toBe('https://carolinafutons.com/sale');
+        expect(getEl('#announcementBarLink').show).toHaveBeenCalled();
+      });
+    });
+
+    it('hides #announcementBarLink when first CMS bar has no linkUrl', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Visit our showroom!', linkUrl: null, backgroundColor: null, textColor: null, priority: 5 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').hide).toHaveBeenCalled();
+      });
+    });
   });
 
   // ── GDPR: TikTok PageView consent gate ──────────────────────────────
