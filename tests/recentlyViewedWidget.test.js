@@ -277,6 +277,14 @@ describe('RecentlyViewedWidget', () => {
       expect($w('#recentlyViewedClear').accessibility.ariaLabel).toBe('Clear recently viewed items');
     });
 
+    it('wires onClick even when accessibility property is absent', async () => {
+      trackView('prod-1');
+      const clearEl = $w('#recentlyViewedClear');
+      delete clearEl.accessibility;
+      await renderWidget($w);
+      expect(clearEl.onClick).toHaveBeenCalledWith(expect.any(Function));
+    });
+
     it('clicking clear button collapses section', async () => {
       trackView('prod-1');
       await renderWidget($w);
