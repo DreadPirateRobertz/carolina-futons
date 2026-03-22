@@ -53,12 +53,12 @@ describe('shouldUseLTL', () => {
     expect(shouldUseLTL([{ weight: 151, length: 72 }])).toBe(true);
   });
 
-  it('returns true at exactly the length threshold + 1 (109 in)', () => {
-    expect(shouldUseLTL([{ weight: 50, length: LTL_THRESHOLDS.maxParcelLengthIn + 1 }])).toBe(true);
+  it('returns true at exactly the length threshold (108 in) — inclusive boundary', () => {
+    expect(shouldUseLTL([{ weight: 50, length: LTL_THRESHOLDS.maxParcelLengthIn }])).toBe(true);
   });
 
-  it('returns false at exactly the length threshold (108 in)', () => {
-    expect(shouldUseLTL([{ weight: 50, length: LTL_THRESHOLDS.maxParcelLengthIn }])).toBe(false);
+  it('returns false just below the length threshold (107 in)', () => {
+    expect(shouldUseLTL([{ weight: 50, length: LTL_THRESHOLDS.maxParcelLengthIn - 1 }])).toBe(false);
   });
 
   it('returns true when total weight of multiple parcels meets or exceeds threshold', () => {

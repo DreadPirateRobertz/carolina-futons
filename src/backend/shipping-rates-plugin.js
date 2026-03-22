@@ -154,7 +154,7 @@ export const getShippingRates = async (options) => {
 
       shippingRates = ltlRates.map(rate => {
         if (!rate.cost) {
-          logError('shipping-rates-plugin.ltlMap', new Error(`LTL rate missing cost — code: ${rate.code}`), { silent: true });
+          logError('shipping-rates-plugin.ltlRateMapping', new Error(`LTL rate ${rate.code} has falsy cost: ${rate.cost}`), { silent: true });
         }
         return {
           code: rate.code,

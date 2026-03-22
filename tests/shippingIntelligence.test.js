@@ -316,8 +316,12 @@ describe('_routeToCarrier', () => {
     expect(_routeToCarrier(100, [{}])).toBe('ups');
   });
 
-  it('returns "ups" for weight exactly 150 lbs', () => {
-    expect(_routeToCarrier(150, [{}])).toBe('ups');
+  it('returns "ltl" for weight exactly 150 lbs — inclusive boundary', () => {
+    expect(_routeToCarrier(150, [{}])).toBe('ltl');
+  });
+
+  it('returns "ups" for weight just below 150 lbs (149 lbs)', () => {
+    expect(_routeToCarrier(149, [{}])).toBe('ups');
   });
 
   it('returns "ltl" for weight over 150 lbs', () => {

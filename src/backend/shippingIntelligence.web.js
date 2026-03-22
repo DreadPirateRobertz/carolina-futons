@@ -28,7 +28,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { getUPSRates, getPackageDimensions, getUPSFallbackRates } from 'backend/ups-shipping.web';
-import { getLTLRates, getLTLFallbackRates, shouldUseLTL } from 'backend/wwex-freight.web';
+import { getLTLRates, getLTLFallbackRates, shouldUseLTL, LTL_THRESHOLDS } from 'backend/wwex-freight.web';
 import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
@@ -385,7 +385,7 @@ export async function _resolveProfile(productId) {
  * Determine carrier tier from total weight and profile flags.
  * Routing logic (per spec):
  *   - any profile has requiresPallet or requiresFreight → 'ltl'
- *   - totalWeight > 150 lbs → 'ltl'  (UPS max chargeable weight per piece)
+ *   - totalWeight >= 150 lbs → 'ltl'  (UPS max chargeable weight per piece)
  *   - otherwise → 'ups'
  *
  * @param {number} totalWeight - Sum of all package weights in lbs
@@ -394,7 +394,7 @@ export async function _resolveProfile(productId) {
  */
 export function _routeToCarrier(totalWeight, profiles) {
   const forceFreight = profiles.some(p => p?.requiresPallet || p?.requiresFreight);
-  if (forceFreight || totalWeight > 150) return 'ltl';
+  if (forceFreight || totalWeight >= LTL_THRESHOLDS.maxParcelWeightLbs) return 'ltl';
   return 'ups';
 }
 
