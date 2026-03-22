@@ -18,6 +18,7 @@ import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/Wishlis
 import { buildProductBadgeOverlay } from 'public/galleryHelpers';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { buildSkeletonData, getActiveFilterCount, buildSearchChips } from 'public/SearchResultsHelpers.js';
+import { initSearchFilter } from 'public/SearchResultsFilter.js';
 import { initPageSeo } from 'public/pageSeo.js';
 
 let _debounceTimer = null;
@@ -101,6 +102,7 @@ async function performSearch(query) {
     try { $w('#noResultsBox').hide(); } catch (e) {}
 
     await renderResults(result.products, query);
+    try { initSearchFilter($w, result.products); } catch (e) {}
 
     // Show load more if there are additional pages
     try {
