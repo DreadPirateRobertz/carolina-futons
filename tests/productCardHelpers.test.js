@@ -30,6 +30,7 @@ import {
   initCardHover,
   formatCardPrice,
   setCardImage,
+  renderCardFinancingBadge,
 } from '../src/public/productCardHelpers.js';
 
 // ── Helper: mock Wix element ──────────────────────────────────────────
@@ -405,5 +406,63 @@ describe('setCardImage', () => {
       },
     };
     expect(() => setCardImage(el, { mainMedia: 'https://img.com/x.jpg', name: 'Y' }, '', { width: 400, height: 400 })).not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 7. renderCardFinancingBadge (CF-3dz8)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('renderCardFinancingBadge', () => {
+  it('shows badge element with first badge label when badges provided', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, [{ label: '4 payments of $149.75', type: 'afterpay' }]);
+    expect(el.text).toBe('4 payments of $149.75');
+    expect(el.show).toHaveBeenCalled();
+    expect(el.hide).not.toHaveBeenCalled();
+  });
+
+  it('uses first badge when multiple badges present', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, [
+      { label: '4 payments of $149.75', type: 'afterpay' },
+      { label: '6 months interest-free', type: 'financing' },
+    ]);
+    expect(el.text).toBe('4 payments of $149.75');
+    expect(el.show).toHaveBeenCalled();
+  });
+
+  it('hides badge element when badges array is empty', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, []);
+    expect(el.hide).toHaveBeenCalled();
+    expect(el.show).not.toHaveBeenCalled();
+  });
+
+  it('hides badge element when badges is null', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, null);
+    expect(el.hide).toHaveBeenCalled();
+    expect(el.show).not.toHaveBeenCalled();
+  });
+
+  it('hides badge element when badges is undefined', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, undefined);
+    expect(el.hide).toHaveBeenCalled();
+    expect(el.show).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when element is null', () => {
+    expect(() => renderCardFinancingBadge(null, [{ label: '4 payments of $100', type: 'afterpay' }])).not.toThrow();
+  });
+
+  it('does not throw when element hide/show throws', () => {
+    const el = {
+      text: '',
+      show: vi.fn(() => { throw new Error('element error'); }),
+      hide: vi.fn(() => { throw new Error('element error'); }),
+    };
+    expect(() => renderCardFinancingBadge(el, [])).not.toThrow();
   });
 });

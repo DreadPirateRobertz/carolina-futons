@@ -135,3 +135,25 @@ export function setCardImage($el, product, category, dimensions) {
     }
   } catch (e) { /* element may not support src/alt */ }
 }
+
+/**
+ * Render a financing badge on a product card using pre-fetched badge data.
+ * Shows the first badge label (Afterpay > financing) or hides the element.
+ *
+ * Call getBatchPaymentBadges() once for all cards, then invoke this per card
+ * in repeater.onItemReady — element ID: #gridFinancingBadge.
+ *
+ * @param {Object|null} $el - Wix text element (#gridFinancingBadge)
+ * @param {Array|null} badges - Badge array from getBatchPaymentBadges, or null/empty
+ */
+export function renderCardFinancingBadge($el, badges) {
+  if (!$el) return;
+  try {
+    if (Array.isArray(badges) && badges.length > 0) {
+      $el.text = badges[0].label;
+      $el.show();
+    } else {
+      $el.hide();
+    }
+  } catch (e) { /* element may not be visible or accessible */ }
+}
