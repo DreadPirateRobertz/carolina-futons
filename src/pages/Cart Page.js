@@ -81,7 +81,7 @@ async function initCartPage() {
     await initCartDeliveryEstimate($w, cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
-    renderRecentlyViewedWidget($w).catch((e) => console.error('[RecentlyViewed]', e));
+    renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
     initQuantityControls();
     initCouponCodeInput($w, {
       appliedCoupon: cart.appliedCoupon || null,

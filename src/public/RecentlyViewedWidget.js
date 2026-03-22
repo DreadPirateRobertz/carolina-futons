@@ -59,7 +59,7 @@ export function trackView(productId) {
     ids.unshift(productId);
     if (ids.length > MAX_HISTORY) ids = ids.slice(0, MAX_HISTORY);
     _writeHistory(ids);
-  } catch { /* noop */ }
+  } catch (e) { console.warn('[RecentlyViewed] trackView failed', e); }
 }
 
 // ── renderWidget ──────────────────────────────────────────────────────
