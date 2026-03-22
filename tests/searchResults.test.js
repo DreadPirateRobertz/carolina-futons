@@ -54,6 +54,14 @@ vi.mock('backend/searchService.web', () => ({
   getFilterValues: mockGetFilterValues,
 }));
 
+// ── Mock trending searches (CF-ts4n) ─────────────────────────────────
+// Default: return empty terms so popular searches fallback is exercised
+
+const mockGetTrendingSearches = vi.fn().mockResolvedValue({ success: true, terms: [] });
+vi.mock('backend/trendingSearches.web', () => ({
+  getTrendingSearches: mockGetTrendingSearches,
+}));
+
 // ── Mock swatch service ─────────────────────────────────────────────
 
 const mockGetSwatchPreviewColors = vi.fn().mockResolvedValue([]);

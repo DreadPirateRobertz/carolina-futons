@@ -11,6 +11,7 @@ import {
   getPopularSearches,
   getFilterValues,
 } from 'backend/searchService.web';
+import { getTrendingSearches } from 'backend/trendingSearches.web';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/WishlistCardButton.js';
@@ -598,10 +599,22 @@ async function showEmptyState() {
 async function loadPopularChips() {
   const fallbackQueries = ['futon frames', 'mattresses', 'murphy beds', 'platform beds', 'accessories'];
   try {
-    const { queries = [] } = await getPopularSearches(8) || {};
-    const queryStrings = queries.length > 0
-      ? queries.map(q => q.query)
-      : fallbackQueries;
+    // Prefer CMS-managed trending terms; fall back to analytics popular searches, then hardcoded.
+    let queryStrings = fallbackQueries;
+    try {
+      const trending = await getTrendingSearches();
+      if (trending?.terms?.length > 0) {
+        queryStrings = trending.terms;
+      } else {
+        const { queries = [] } = await getPopularSearches(8) || {};
+        if (queries.length > 0) queryStrings = queries.map(q => q.query);
+      }
+    } catch (e) {
+      try {
+        const { queries = [] } = await getPopularSearches(8) || {};
+        if (queries.length > 0) queryStrings = queries.map(q => q.query);
+      } catch (e2) {}
+    }
     const chips = buildSearchChips(queryStrings, 8);
 
     const chipsRepeater = $w('#searchChipsRepeater');
