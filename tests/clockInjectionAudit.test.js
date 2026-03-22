@@ -112,34 +112,36 @@ export function extractHandlerParamNames(handlerText) {
 
 /**
  * Return true if `body` calls checkRateLimit or _checkRateLimit where
- * `paramName` appears as a standalone identifier at the 3rd or later argument
- * position (index >= 2). This is where the opts/timing object lives in the
- * shared `checkRateLimit(collection, key, opts)` signature.
+ * `paramName` appears as a standalone identifier at the opts argument position.
+ *
+ * Signatures and their opts positions:
+ *   checkRateLimit(collection, key, opts)  — opts at index 2+
+ *   _checkRateLimit(key, opts)             — opts at index 1+
  *
  * Flags:   checkRateLimit('Col', key, opts)          -- opts at index 2
+ *          _checkRateLimit(key, opts)                 -- opts at index 1
  * Ignores: checkRateLimit('Col', key)                -- no opts arg (safe)
  *          checkRateLimit('Col', key, { max: 5 })    -- fresh literal (safe)
  *          checkRateLimit('Col', key, opts.max)      -- property access (safe)
- *          checkRateLimit('Col', paramName)           -- only 2 args, key position (safe)
- *
- * NOTE: 2-argument _checkRateLimit(key, opts) calls are not detected by this
- * rule. In practice, such local variants are not called from Permissions.Anyone
- * handlers in this codebase.
+ *          checkRateLimit('Col', paramName)           -- only 2 args, key position, not opts
  *
  * @param {string} body
  * @param {string} paramName
  * @returns {boolean}
  */
 export function bodyForwardsParamToRateLimit(body, paramName) {
-  const searchRe = /\b_?checkRateLimit\s*\(/g;
+  const searchRe = /\b(_?checkRateLimit)\s*\(/g;
   let m;
   while ((m = searchRe.exec(body)) !== null) {
+    const fnName = m[1];
     const callBlock = extractBalancedBlock(body, m.index, '(', ')');
     if (!callBlock) continue;
     const argsText = callBlock.slice(1, -1); // strip outer ()
     const args = splitArgsByCommaBalanced(argsText);
-    // Only check 3rd+ argument (index >= 2) — that's the opts position
-    for (let i = 2; i < args.length; i++) {
+    // checkRateLimit(collection, key, opts) — opts starts at index 2
+    // _checkRateLimit(key, opts)            — opts starts at index 1
+    const optsStartIndex = fnName.startsWith('_') ? 1 : 2;
+    for (let i = optsStartIndex; i < args.length; i++) {
       if (args[i].trim() === paramName) return true;
     }
   }
@@ -238,13 +240,6 @@ describe('bodyForwardsParamToRateLimit', () => {
     expect(bodyForwardsParamToRateLimit(body, 'opts')).toBe(true);
   });
 
-  it('detects forwarding as 3rd argument to _checkRateLimit (underscore variant)', () => {
-    const body = `{
-      await _checkRateLimit('Col', key, opts);
-    }`;
-    expect(bodyForwardsParamToRateLimit(body, 'opts')).toBe(true);
-  });
-
   it('does NOT flag checkRateLimit with no opts argument', () => {
     const body = `{
       const { allowed } = await checkRateLimit('QARateLimit', cleanEmail);
@@ -259,7 +254,7 @@ describe('bodyForwardsParamToRateLimit', () => {
     expect(bodyForwardsParamToRateLimit(body, 'opts')).toBe(false);
   });
 
-  it('does NOT flag opts.max — property access is safe (only opts.now is exploitable)', () => {
+  it('does NOT flag opts.max property access — only full opts forwarding exposes clock injection', () => {
     const body = `{
       const { allowed } = await checkRateLimit('Limit', key, { max: opts.max });
     }`;
@@ -287,13 +282,27 @@ describe('bodyForwardsParamToRateLimit', () => {
     }`;
     expect(bodyForwardsParamToRateLimit(body, 'opts')).toBe(true);
   });
+
+  it('detects _checkRateLimit(key, opts) — 2-arg variant where opts is 2nd arg', () => {
+    const body = `{
+      const rateCheck = await _checkRateLimit(cleaned, options);
+    }`;
+    expect(bodyForwardsParamToRateLimit(body, 'options')).toBe(true);
+  });
+
+  it('does NOT flag checkRateLimit(collection, key) 2-arg call where key is a param name', () => {
+    // key is a handler param passed as the email arg — not the opts position
+    const body = `{
+      const { allowed } = await checkRateLimit('Limit', key);
+    }`;
+    expect(bodyForwardsParamToRateLimit(body, 'key')).toBe(false);
+  });
 });
 
 // ── Unit tests: findClockInjectionViolations (synthetic sources) ─────
 
 describe('findClockInjectionViolations', () => {
-  // Build import statement without triggering Vite import analysis
-  const imp = 'imp' + 'ort';
+  const imp = 'imp' + 'ort'; // split to prevent Vite import-analysis parsing
 
   it('flags webMethod(Permissions.Anyone) handler that forwards opts to checkRateLimit', () => {
     const source = [
@@ -365,6 +374,19 @@ describe('findClockInjectionViolations', () => {
     ].join('\n');
 
     expect(findClockInjectionViolations(source, 'multi.web.js')).toHaveLength(2);
+  });
+
+  it('flags 2-arg _checkRateLimit(key, options) when options comes from handler', () => {
+    const source = [
+      `export const subscribe = webMethod(Permissions.Anyone, async (email, options = {}) => {`,
+      `  const cleaned = sanitize(email);`,
+      `  const rateCheck = await _checkRateLimit(cleaned, options);`,
+      `});`,
+    ].join('\n');
+
+    const violations = findClockInjectionViolations(source, 'newsletter.web.js');
+    expect(violations).toHaveLength(1);
+    expect(violations[0].param).toBe('options');
   });
 
   it('handles Permissions.Anyone with extra whitespace around tokens', () => {

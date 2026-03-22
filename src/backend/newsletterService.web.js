@@ -358,7 +358,8 @@ export const subscribeToNewsletter = webMethod(
       }
 
       // Rate limit: max 3 submissions per email per hour
-      const rateCheck = await _checkRateLimit(cleaned, options);
+      // NOTE: do NOT forward `options` here — callers can inject { now: 0 } to bypass (CF-xz8y)
+      const rateCheck = await _checkRateLimit(cleaned);
       if (!rateCheck.allowed) {
         return { success: false, message: 'Too many requests. Please try again later.' };
       }
@@ -434,7 +435,8 @@ export const captureExitIntentEmail = webMethod(
       }
 
       // Rate limit: max 3 submissions per email per hour
-      const rateCheck = await _checkRateLimit(cleaned, options);
+      // NOTE: do NOT forward `options` here — callers can inject { now: 0 } to bypass (CF-xz8y)
+      const rateCheck = await _checkRateLimit(cleaned);
       if (!rateCheck.allowed) {
         return { success: false, message: 'Too many requests. Please try again later.' };
       }
