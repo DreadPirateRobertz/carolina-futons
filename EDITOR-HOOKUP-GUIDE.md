@@ -2018,6 +2018,23 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
+## GALLERY ZOOM LIGHTBOX (Product Page — `GalleryZoomLightbox.js`)
+
+Added to product page via `initGalleryZoomLightbox`. Elements live on **Product Page**. Click the main product image or any gallery thumbnail to open full-size overlay with prev/next navigation, keyboard arrows, mobile swipe, and ARIA accessibility.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `zoomLightboxOverlay` | Box | Full-screen modal overlay — hidden by default |
+| `zoomLightboxImage` | Image | Full-size product image (updates on nav) |
+| `zoomLightboxClose` | Button | Close X button |
+| `zoomLightboxPrev` | Button | Previous image — hidden when single image |
+| `zoomLightboxNext` | Button | Next image — hidden when single image |
+| `zoomLightboxCounter` | Text | "2 / 5" — hidden when single image |
+
+**Behavior:** `zoomLightboxOverlay` starts collapsed (hidden). ARIA dialog role, focus trap, and Escape-to-close wired via `setupAccessibleDialog`. Keyboard ← → navigation when overlay open.
+
+---
+
 ## 360° SPIN VIEWER (Product Page — `Product360Viewer.js`)
 
 Added to product page via `initProduct360Viewer`. Elements live on **Product Page**:

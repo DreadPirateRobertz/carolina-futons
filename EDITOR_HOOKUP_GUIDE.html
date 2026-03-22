@@ -4743,6 +4743,29 @@ SHARING:
     ]
   },
   {
+    name: "Gallery Zoom Lightbox", file: "GalleryZoomLightbox.js (on Product Page)", priority: "P1", est: "15 min",
+    sections: [
+      { name: "Lightbox Elements (Product Page)", impl: `<h4>🔍 Implementation — Gallery Zoom Lightbox (Product Page)</h4>
+<p><strong>Note: These elements live on the Product Page. Added via <code>initGalleryZoomLightbox()</code>. Click the main product image or any gallery thumbnail to open the full-size overlay.</strong></p>
+<ul>
+  <li><strong>#zoomLightboxOverlay</strong>: Box — full-screen modal overlay. <span class="impl-warn">Hidden by default (collapsed)</span>. ARIA dialog role, ariaModal, and focus trap wired via <code>setupAccessibleDialog()</code>. Escape key closes.</li>
+  <li><strong>#zoomLightboxImage</strong>: Image — full-size product image. Updates on prev/next navigation.</li>
+  <li><strong>#zoomLightboxClose</strong>: Button — close X button (top-right corner of overlay).</li>
+  <li><strong>#zoomLightboxPrev</strong>: Button — navigate to previous image. Hidden when only one image.</li>
+  <li><strong>#zoomLightboxNext</strong>: Button — navigate to next image. Hidden when only one image.</li>
+  <li><strong>#zoomLightboxCounter</strong>: Text — shows "2 / 5" style counter. Hidden when only one image.</li>
+</ul>
+<p><strong>Keyboard:</strong> ← → arrow keys navigate when overlay open. <strong>Swipe:</strong> mobile swipe left/right via HtmlComponent. <strong>Nav buttons:</strong> hide automatically for single-image products.</p>`, elements: [
+        ["zoomLightboxOverlay","Box","Full-screen modal overlay (hidden by default)"],
+        ["zoomLightboxImage","Image","Full-size product image (updates on nav)"],
+        ["zoomLightboxClose","Button","Close X button"],
+        ["zoomLightboxPrev","Button","Previous image (hidden for single-image)"],
+        ["zoomLightboxNext","Button","Next image (hidden for single-image)"],
+        ["zoomLightboxCounter","Text","\"2 / 5\" counter (hidden for single-image)"]
+      ]}
+    ]
+  },
+  {
     name: "360° Spin Viewer", file: "Product360Viewer.js (on Product Page)", priority: "P2", est: "15 min",
     sections: [
       { name: "Viewer Elements (Product Page)", impl: `<h4>🔄 Implementation — 360° Spin Viewer (Product Page)</h4>
