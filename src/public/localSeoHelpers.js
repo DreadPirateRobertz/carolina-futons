@@ -79,7 +79,7 @@ export function buildFaqSchema(faqs) {
   const items = Array.isArray(faqs) ? faqs : [];
 
   const mainEntity = items
-    .filter(faq => faq && faq.question?.length > 0 && faq.answer?.length > 0)
+    .filter(faq => faq && typeof faq.question === 'string' && faq.question.length > 0 && typeof faq.answer === 'string' && faq.answer.length > 0)
     .map(faq => ({
       '@type': 'Question',
       name: faq.question,

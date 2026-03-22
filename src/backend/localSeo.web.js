@@ -6,15 +6,13 @@
  * @requires backend/utils/localSeoData
  */
 
-import { SITE_URL, STORE_PHONE, STORE_GEO, CITY_GEO } from 'backend/utils/localSeoData';
+import { SITE_URL, STORE_PHONE, STORE_GEO, STORE_ADDRESS, CITY_GEO } from 'backend/utils/localSeoData';
 
+// '@type' is kept here (not in STORE_ADDRESS) so the plain address object stays
+// schema-agnostic. Do not add '@type' to STORE_ADDRESS — it would override this.
 const SCHEMA_ADDRESS = {
   '@type': 'PostalAddress',
-  streetAddress: '824 Locust St',
-  addressLocality: 'Hendersonville',
-  addressRegion: 'NC',
-  postalCode: '28792',
-  addressCountry: 'US',
+  ...STORE_ADDRESS,
 };
 
 // Wed-Fri 10am-5pm, Sat 10am-4pm — schema.org openingHours format
