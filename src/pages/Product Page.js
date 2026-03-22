@@ -188,10 +188,10 @@ async function initProductPage() {
         const m = await import('public/ProductAssemblyGuide.js');
         await m.initProductAssemblyGuide($w, state);
       }, critical: false },
-      // Size guide modal (lazy-loads ProductSizeGuide components on open)
+      // CF-nmi2: Static futon mattress size chart (Twin/Full/Queen reference)
       { name: 'sizeGuide', init: async () => {
-        const m = await import('public/SizeGuideModal.js');
-        await m.initSizeGuideModal($w, state);
+        const m = await import('public/SizeGuide.js');
+        m.initSizeGuide($w);
       }, critical: false },
       // Inline dimension diagram + room fit callout (mobile-ported patterns)
       { name: 'dimensionDiagram', init: async () => {
