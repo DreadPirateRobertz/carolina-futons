@@ -287,8 +287,11 @@ export const getShippingRates = async (options) => {
     logError('shipping-rates-plugin.getShippingRates', err);
 
     // Return conservative flat rates as fallback when UPS API is unavailable.
-    // Rates are deliberately set above typical ground rates to avoid under-charging
-    // on unexpected errors — customers can contact us for a corrected quote.
+    // Rates are deliberately set above typical ground rates (CF avg: ~$38 ground,
+    // ~$72 express) so the store does not under-collect. Titles include "(Estimated)"
+    // to signal to the customer that these are not live-calculated rates.
+    // Alternative: return { shippingRates: [] } to block checkout on UPS failure —
+    // rejected because it prevents customers from completing orders during outages.
     return {
       shippingRates: [
         {
