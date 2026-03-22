@@ -48,13 +48,8 @@ export function initCartRecentlyViewed($w, cartItems = []) {
   $w('#cartRecentlyViewedSection').expand();
 
   const repeater = $w('#cartRecentlyViewedRepeater');
-  repeater.data = filtered.map(p => ({
-    _id: p._id,
-    name: p.name,
-    formattedPrice: p.formattedPrice || '',
-    mainMedia: p.mainMedia || '',
-  }));
 
+  // Register handler BEFORE setting .data (Wix Velo requirement)
   repeater.onItemReady(($item, itemData) => {
     $item('#crvProductImage').src = itemData.mainMedia;
     $item('#crvProductName').text = itemData.name;
@@ -76,4 +71,11 @@ export function initCartRecentlyViewed($w, cartItems = []) {
       }
     });
   });
+
+  repeater.data = filtered.map(p => ({
+    _id: p._id,
+    name: p.name,
+    formattedPrice: p.formattedPrice || '',
+    mainMedia: p.mainMedia || '',
+  }));
 }
