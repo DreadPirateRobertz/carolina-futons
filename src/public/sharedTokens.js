@@ -236,11 +236,13 @@ export const business = {
 /**
  * Domestic shipping rate configuration.
  *
- * Zone determination: local uses ZIP prefix (first 3 digits); regional uses
- * state code (see zones.regional.states). ZIP prefixes are retained for the
- * dynamic pricing system only — not for shipping eligibility.
- * "WNC" = Western North Carolina (local delivery area).
- * White-glove service includes in-home delivery and assembly.
+ * Local delivery uses a four-zone system (zone1–zone4) based on distance from
+ * the Hendersonville NC store. Zones are matched by explicit zip code list first,
+ * then by zip3 prefix + state. This avoids Wix dashboard limitations and gives
+ * full control over pricing tiers and gamification copy.
+ *
+ * Parcel (UPS) and LTL freight (WWEX SpeedFreight) are handled separately by
+ * their respective modules. This config governs CF's own local delivery fleet.
  *
  * All monetary values are in USD (whole dollars, no cents).
  *
@@ -288,7 +290,7 @@ export const shippingConfig = {
    *   2. Else check if zip3Prefix is in `zip3Prefixes` AND state is in `states`
    *   3. Else fall through to next zone
    *
-   * Gamification fields (badge, badgeStyle, icon, upsellMessage) are passed through
+   * Gamification fields (badge, badgeStyle, upsellMessage) are passed through
    * to the cart/checkout UI for display in the shipping option card.
    */
   localZones: [

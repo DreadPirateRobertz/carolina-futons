@@ -28,14 +28,41 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
-import { getLTLRates, getLTLFallbackRates, shouldUseLTL, LTL_THRESHOLDS } from 'backend/wwex-freight.web';
+import { getLTLRates, getLTLFallbackRates, shouldUseLTL } from 'backend/wwex-freight.web';
 import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
+import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
 
-const { localZones } = shippingConfig;
+// localZones accessed via matchLocalZone from backend/utils/shippingZones
 
 /** CMS collection name for per-product shipping profile overrides */
 const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
+
+/** Rate limiting: 1-minute sliding window */
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const ESTIMATE_RATE_COLLECTION = 'ShippingEstimateRateLimit';
+const BUNDLE_RATE_COLLECTION = 'BundleQuoteRateLimit';
+
+/** Anonymous rate limits (global shared bucket — Wix webMethods don't expose client IP) */
+const ANON_ESTIMATE_MAX = 60;  // shared across all anonymous users per minute
+const ANON_BUNDLE_MAX = 30;
+
+/**
+ * Get the current member's ID for rate limiting, or null if anonymous.
+ * @private
+ */
+async function getCurrentMemberId() {
+  try {
+    const member = await currentMember.getMember();
+    return member?._id ?? null;
+  } catch (err) {
+    logError('shippingIntelligence.getCurrentMemberId', err, { silent: true });
+    return null;
+  }
+}
 
 /**
  * @typedef {Object} ShippingEstimateResult
@@ -70,8 +97,29 @@ const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
 export const getShippingEstimate = webMethod(
   Permissions.Anyone,
   async (productId, zip) => {
-    if (!productId || !zip || !/^\d{5}$/.test(zip)) {
+    if (!productId || typeof productId !== 'string' || !zip || !/^\d{5}$/.test(zip)) {
       return { success: false, error: 'Valid product ID and 5-digit ZIP required', options: [] };
+    }
+
+    // Rate limit: 20 req/min per logged-in member; 60 req/min shared global bucket for anonymous.
+    const memberId = await getCurrentMemberId();
+    if (memberId) {
+      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, memberId, {
+        max: 20,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
+    } else {
+      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
+      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, 'anon', {
+        max: ANON_ESTIMATE_MAX,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
+      }
     }
 
     try {
@@ -79,17 +127,17 @@ export const getShippingEstimate = webMethod(
       const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
       const packages = [{
-        length: dims.length,
-        width: dims.width,
-        height: dims.height,
-        weight: dims.weight,
+        length: dims.length_in ?? dims.length,
+        width: dims.width_in ?? dims.width,
+        height: dims.height_in ?? dims.height,
+        weight: dims.weight_lbs ?? dims.weight,
         category: dims.category || profile?.category || 'default',
         description: profile?.productName || 'Furniture',
       }];
 
       return await buildShippingResponse(zip, packages, 0, 1);
     } catch (err) {
-      console.error('shippingIntelligence getShippingEstimate error:', err);
+      logError('shippingIntelligence.getShippingEstimate', err);
       return { success: false, error: 'Estimate unavailable', options: [] };
     }
   }
@@ -113,6 +161,27 @@ export const calculateBundleQuote = webMethod(
       return { success: false, error: 'Valid 5-digit ZIP required', options: [] };
     }
 
+    // Rate limit: 10 req/min per logged-in member; 30 req/min shared global bucket for anonymous.
+    const memberId = await getCurrentMemberId();
+    if (memberId) {
+      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, memberId, {
+        max: 10,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
+    } else {
+      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
+      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, 'anon', {
+        max: ANON_BUNDLE_MAX,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
+      }
+    }
+
     try {
       const packages = [];
       let orderSubtotal = 0;
@@ -127,10 +196,10 @@ export const calculateBundleQuote = webMethod(
 
         for (let i = 0; i < quantity; i++) {
           packages.push({
-            length: dims.length,
-            width: dims.width,
-            height: dims.height,
-            weight: dims.weight,
+            length: dims.length_in ?? dims.length,
+            width: dims.width_in ?? dims.width,
+            height: dims.height_in ?? dims.height,
+            weight: dims.weight_lbs ?? dims.weight,
             category: dims.category || profile?.category || 'default',
           });
         }
@@ -138,7 +207,7 @@ export const calculateBundleQuote = webMethod(
 
       return await buildShippingResponse(zip, packages, orderSubtotal, items.length);
     } catch (err) {
-      console.error('shippingIntelligence calculateBundleQuote error:', err);
+      logError('shippingIntelligence.calculateBundleQuote', err);
       return { success: false, error: 'Quote unavailable', options: [] };
     }
   }
@@ -245,6 +314,10 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     options.push(wgOption);
   }
 
+  if (options.length === 0) {
+    return { success: false, error: 'No shipping options available for this destination', options: [] };
+  }
+
   return { success: true, options };
 }
 
@@ -274,32 +347,6 @@ async function getProductShippingProfile(productId) {
 }
 
 /**
- * Match a ZIP to a local delivery zone (mirrors shipping-rates-plugin logic).
- * @private
- */
-function matchLocalZone(postalCode, stateCode) {
-  const zip3 = parseInt((postalCode || '').substring(0, 3), 10);
-  for (const zone of localZones) {
-    if (zone.zips && zone.zips.includes(postalCode)) return zone;
-    if (
-      zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3) &&
-      zone.states && zone.states.includes(stateCode)
-    ) return zone;
-  }
-  return null;
-}
-
-/**
- * Calculate terrain surcharge for white-glove delivery.
- * @private
- */
-function getTerrainSurcharge(postalCode) {
-  const ts = shippingConfig.whiteGlove.terrainSurcharge;
-  if (!ts || !ts.zips) return 0;
-  return ts.zips.includes(postalCode) ? (ts.amount || 0) : 0;
-}
-
-/**
  * Rough state inference from ZIP3 prefix for zone matching.
  * Not authoritative — product page doesn't have Wix subdivision.
  * Covers the states CF delivers to. Fallback to 'NC' for unknown.
@@ -307,7 +354,6 @@ function getTerrainSurcharge(postalCode) {
  */
 function guessStateFromZip(zip) {
   const z = parseInt((zip || '').substring(0, 3), 10);
-  if (z >= 270 && z <= 289) return 'NC';
   if (z >= 270 && z <= 289) return 'NC';
   if (z >= 290 && z <= 299) return 'SC';
   if (z >= 300 && z <= 319) return 'GA';

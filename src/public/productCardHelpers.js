@@ -166,6 +166,7 @@ export function setCardImage($el, product, category, dimensions) {
   } catch (e) { console.warn('[ProductCard] setCardImage error:', e?.message); }
 }
 
+
 /**
  * Render a financing badge on a product card using pre-fetched badge data.
  * Shows the first badge label from the badges array, or hides the element.

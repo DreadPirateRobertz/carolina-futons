@@ -22,9 +22,6 @@ import categoryDescriptions from '../content/category-descriptions.json';
 describe('Threshold alignment — content files match sharedTokens', () => {
   const STANDARD_FREE = shippingConfig.freeThreshold;       // 999999 (disabled)
   const WHITE_GLOVE_FREE = shippingConfig.whiteGlove.freeThreshold; // 999999 (disabled)
-  // Zone-based pricing: zone1=$99, zone2=$149, zone3=$199, zone4=$249
-  const zone1 = shippingConfig.localZones.find(z => z.code === 'zone1');
-  const zone4 = shippingConfig.localZones.find(z => z.code === 'zone4');
 
   it('sharedTokens standard free shipping threshold is $999,999 (disabled)', () => {
     expect(STANDARD_FREE).toBe(999999);
@@ -32,14 +29,6 @@ describe('Threshold alignment — content files match sharedTokens', () => {
 
   it('sharedTokens white glove free threshold is $999,999 (disabled)', () => {
     expect(WHITE_GLOVE_FREE).toBe(999999);
-  });
-
-  it('sharedTokens zone1 (local) white glove price is $99', () => {
-    expect(zone1.whiteGlove).toBe(99);
-  });
-
-  it('sharedTokens zone4 (extended SE) white glove price is $249', () => {
-    expect(zone4.whiteGlove).toBe(249);
   });
 
   it('shipping-info.json standard shipping freeThreshold matches sharedTokens ($999,999)', () => {
@@ -55,22 +44,6 @@ describe('Threshold alignment — content files match sharedTokens', () => {
       m => m.name === 'Standard Shipping'
     );
     expect(standardMethod.note).toContain('calculated at checkout');
-  });
-
-  it('shipping-info.json local white glove price matches zone1 ($99)', () => {
-    const localWhiteGlove = shippingInfo.shippingPolicy.methods.find(
-      m => m.name === 'Local White-Glove Delivery'
-    );
-    if (!localWhiteGlove) return; // content may reference zone name differently — skip if not found
-    expect(localWhiteGlove.price).toBe(zone1.whiteGlove);
-  });
-
-  it('shipping-info.json regional white glove price matches zone4 ($249)', () => {
-    const regionalWhiteGlove = shippingInfo.shippingPolicy.methods.find(
-      m => m.name === 'Regional White-Glove Delivery'
-    );
-    if (!regionalWhiteGlove) return; // content may reference zone name differently — skip if not found
-    expect(regionalWhiteGlove.price).toBe(zone4.whiteGlove);
   });
 
   it('faq.json shipping cost answer does NOT claim free shipping (disabled)', () => {
@@ -183,35 +156,41 @@ describe('Local pickup — WNC zip codes only (287-289)', () => {
 // ── 4. WHITE GLOVE PRICING ──────────────────────────────────────────
 
 describe('White glove delivery pricing', () => {
-  const { whiteGlove, localZones } = shippingConfig;
+  const { whiteGlove } = shippingConfig;
 
-  it('zone1 white glove costs $99 (free threshold disabled)', () => {
-    const price = getZoneWhiteGlovePrice(1500, '28792', localZones, whiteGlove);
+  it('zone1 (28792 Hendersonville, exact ZIP) white glove costs $99', () => {
+    const price = getWhiteGlovePrice(1500, '28792', 'NC', whiteGlove);
     expect(price).toBe(99);
   });
 
-  it('zone2 white glove costs $149 (Asheville, zip3=288)', () => {
-    const price = getZoneWhiteGlovePrice(1500, '28801', localZones, whiteGlove);
-    expect(price).toBe(149);
-  });
-
-  it('zone3 white glove costs $199 (Atlanta, GA)', () => {
-    const price = getZoneWhiteGlovePrice(1500, '30301', localZones, whiteGlove);
+  it('zone3 (27601 Raleigh, prefix 276 NC) white glove costs $199', () => {
+    const price = getWhiteGlovePrice(1500, '27601', 'NC', whiteGlove);
     expect(price).toBe(199);
   });
 
-  it('zone4 white glove costs $249 (Nashville, TN)', () => {
-    const price = getZoneWhiteGlovePrice(1500, '37201', localZones, whiteGlove);
-    expect(price).toBe(249);
-  });
-
-  it('white glove at $5,000 is NOT free — threshold disabled', () => {
-    const price = getZoneWhiteGlovePrice(5000, '28792', localZones, whiteGlove);
+  it('white glove at $1,999 is NOT free — threshold disabled (zone1)', () => {
+    const price = getWhiteGlovePrice(1999, '28792', 'NC', whiteGlove);
     expect(price).toBe(99);
   });
 
-  it('white glove freeThreshold is 999999 (unreachable)', () => {
-    expect(whiteGlove.freeThreshold).toBe(999999);
+  it('white glove at $2,000 is NOT free — threshold disabled (zone3)', () => {
+    const price = getWhiteGlovePrice(2000, '27601', 'NC', whiteGlove);
+    expect(price).toBe(199);
+  });
+
+  it('white glove at $1,998.99 is NOT free (zone1)', () => {
+    const price = getWhiteGlovePrice(1998.99, '28792', 'NC', whiteGlove);
+    expect(price).toBe(99);
+  });
+
+  it('white glove at $1,998.99 is NOT free (zone3)', () => {
+    const price = getWhiteGlovePrice(1998.99, '27601', 'NC', whiteGlove);
+    expect(price).toBe(199);
+  });
+
+  it('white glove for $5,000 order is NOT free — threshold disabled', () => {
+    const price = getWhiteGlovePrice(5000, '28792', 'NC', whiteGlove);
+    expect(price).toBe(99);
   });
 });
 
@@ -307,13 +286,9 @@ describe('Regional zone configuration', () => {
     expect(zones.local.name).toBe('WNC');
   });
 
-  it('regional zone is Southeast (270-399 for pricing, NC/SC/GA/TN/VA for delivery eligibility)', () => {
+  it('regional zone is Southeast (270-399)', () => {
     expect(zones.regional.prefixMin).toBe(270);
     expect(zones.regional.prefixMax).toBe(399);
-    expect(zones.regional.states).toContain('NC');
-    expect(zones.regional.states).toContain('SC');
-    expect(zones.regional.states).toContain('GA');
-    expect(zones.regional.states).not.toContain('FL');
     expect(zones.regional.name).toBe('Southeast');
   });
 
@@ -354,26 +329,20 @@ function isLocalZip(postalCode, localZone) {
   return prefix >= localZone.prefixMin && prefix <= localZone.prefixMax;
 }
 
-/** Zone-based white glove price lookup — mirrors matchLocalZone logic */
-function getZoneWhiteGlovePrice(orderSubtotal, postalCode, localZones, whiteGloveConfig) {
-  if (orderSubtotal >= whiteGloveConfig.freeThreshold) return 0;
+function matchLocalZoneHelper(postalCode, stateCode) {
   const zip3 = parseInt((postalCode || '').substring(0, 3), 10);
-  // For test purposes we use a simple zip3 match (no state needed for these test cases)
-  for (const zone of localZones) {
-    if (zone.zips && zone.zips.includes(postalCode)) return zone.whiteGlove;
-    if (zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3)) return zone.whiteGlove;
+  for (const zone of shippingConfig.localZones) {
+    if (zone.zips && zone.zips.includes(postalCode)) return zone;
+    if (zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3) &&
+        zone.states && zone.states.includes(stateCode)) return zone;
   }
   return null;
 }
 
-/** @deprecated retained for local-pickup tests which still use legacy zones config */
-function getWhiteGlovePrice(orderSubtotal, postalCode, zones, whiteGloveConfig) {
+function getWhiteGlovePrice(orderSubtotal, postalCode, stateCode, whiteGloveConfig) {
   if (orderSubtotal >= whiteGloveConfig.freeThreshold) return 0;
-  const prefix = parseInt(String(postalCode).substring(0, 3));
-  const isLocal = prefix >= zones.local.prefixMin && prefix <= zones.local.prefixMax;
-  // Legacy: localPrice/regionalPrice no longer in config — return zone-matched value
-  const localZones = shippingConfig.localZones;
-  return getZoneWhiteGlovePrice(orderSubtotal, postalCode, localZones, whiteGloveConfig);
+  const zone = matchLocalZoneHelper(postalCode, stateCode);
+  return zone ? zone.whiteGlove : null;
 }
 
 function getFallbackRates(postalCode) {

@@ -31,7 +31,6 @@ import {
   formatCardPrice,
   setCardImage,
   renderCardFinancingBadge,
-  getLifestyleImage,
 } from '../src/public/productCardHelpers.js';
 
 // ── Helper: mock Wix element ──────────────────────────────────────────
@@ -417,8 +416,8 @@ describe('setCardImage', () => {
 describe('renderCardFinancingBadge', () => {
   it('shows badge element with first badge label when badges provided', () => {
     const el = mockElement();
-    renderCardFinancingBadge(el, [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }]);
-    expect(el.text).toBe('Pay in 4 with Afterpay');
+    renderCardFinancingBadge(el, [{ label: '4 payments of $149.75', type: 'afterpay' }]);
+    expect(el.text).toBe('4 payments of $149.75');
     expect(el.show).toHaveBeenCalled();
     expect(el.hide).not.toHaveBeenCalled();
   });
@@ -426,10 +425,10 @@ describe('renderCardFinancingBadge', () => {
   it('uses first badge when multiple badges present', () => {
     const el = mockElement();
     renderCardFinancingBadge(el, [
-      { label: 'Pay in 4 with Afterpay', type: 'afterpay' },
+      { label: '4 payments of $149.75', type: 'afterpay' },
       { label: '6 months interest-free', type: 'financing' },
     ]);
-    expect(el.text).toBe('Pay in 4 with Afterpay');
+    expect(el.text).toBe('4 payments of $149.75');
     expect(el.show).toHaveBeenCalled();
   });
 
@@ -462,7 +461,7 @@ describe('renderCardFinancingBadge', () => {
   });
 
   it('does not throw when element is null', () => {
-    expect(() => renderCardFinancingBadge(null, [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }])).not.toThrow();
+    expect(() => renderCardFinancingBadge(null, [{ label: '4 payments of $100', type: 'afterpay' }])).not.toThrow();
   });
 
   it('does not throw when element hide/show throws', () => {
@@ -472,156 +471,5 @@ describe('renderCardFinancingBadge', () => {
       hide: vi.fn(() => { throw new Error('element error'); }),
     };
     expect(() => renderCardFinancingBadge(el, [])).not.toThrow();
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════════
-// 8. getLifestyleImage (CF-l5id) — lifestyle photo first on product cards
-// ═══════════════════════════════════════════════════════════════════════
-
-describe('getLifestyleImage', () => {
-  it('returns mainMedia when no mediaItems', () => {
-    expect(getLifestyleImage({ mainMedia: 'https://img.com/product.jpg' }))
-      .toBe('https://img.com/product.jpg');
-  });
-
-  it('returns mainMedia when mediaItems is empty array', () => {
-    expect(getLifestyleImage({ mainMedia: 'https://img.com/product.jpg', mediaItems: [] }))
-      .toBe('https://img.com/product.jpg');
-  });
-
-  it('returns mainMedia when only one mediaItem (the product shot)', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [{ url: 'https://img.com/product.jpg', alt: 'product shot' }],
-    })).toBe('https://img.com/product.jpg');
-  });
-
-  it('returns mainMedia when 2+ items but no keyword match (no index-based fallback)', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg', alt: 'front view' },
-        { url: 'https://img.com/photo2.jpg', alt: 'back view' },
-      ],
-    })).toBe('https://img.com/product.jpg');
-  });
-
-  it('prefers keyword-matched item even if not second in array', () => {
-    const result = getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg', alt: 'front view' },
-        { url: 'https://img.com/photo2.jpg', alt: 'back view' },
-        { url: 'https://img.com/room.jpg', title: 'lifestyle shot in living room' },
-      ],
-    });
-    expect(result).toBe('https://img.com/room.jpg');
-  });
-
-  it('matches "lifestyle" keyword in alt text', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg', alt: 'white background' },
-        { url: 'https://img.com/room.jpg', alt: 'lifestyle photo in bedroom' },
-      ],
-    })).toBe('https://img.com/room.jpg');
-  });
-
-  it('matches "room" keyword in URL', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg', alt: '' },
-        { url: 'https://img.com/living-room-scene.jpg', alt: '' },
-      ],
-    })).toBe('https://img.com/living-room-scene.jpg');
-  });
-
-  it('matches "scene" keyword in title', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg' },
-        { url: 'https://img.com/setting.jpg', title: 'bedroom scene' },
-      ],
-    })).toBe('https://img.com/setting.jpg');
-  });
-
-  it('returns empty string when product is null', () => {
-    expect(getLifestyleImage(null)).toBe('');
-  });
-
-  it('returns empty string when product is undefined', () => {
-    expect(getLifestyleImage(undefined)).toBe('');
-  });
-
-  it('supports src field on media items (Wix alternate field name)', () => {
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { src: 'https://img.com/product.jpg' },
-        { src: 'https://img.com/lifestyle.jpg', alt: 'lifestyle shot' },
-      ],
-    })).toBe('https://img.com/lifestyle.jpg');
-  });
-
-  it('returns keywordMatch.src when url is absent on matched item', () => {
-    // Covers the keywordMatch.url || keywordMatch.src branch:
-    // matched item has no url field — must fall through to src
-    expect(getLifestyleImage({
-      mainMedia: 'https://img.com/product.jpg',
-      mediaItems: [
-        { url: 'https://img.com/product.jpg', alt: 'front' },
-        { src: 'https://img.com/scene.jpg', title: 'scene shot' }, // keyword match via title, src field
-      ],
-    })).toBe('https://img.com/scene.jpg');
-  });
-});
-
-// ── setCardImage uses lifestyle image when available (CF-l5id) ───────
-
-describe('setCardImage — lifestyle image priority', () => {
-  it('uses keyword-matched mediaItem when lifestyle keyword present', () => {
-    const el = mockElement();
-    setCardImage(el, {
-      mainMedia: 'https://img.com/white-bg.jpg',
-      name: 'Futon Frame',
-      mediaItems: [
-        { url: 'https://img.com/white-bg.jpg', alt: 'product view' },
-        { url: 'https://img.com/room-shot.jpg', alt: 'room scene' },
-      ],
-    });
-    expect(el.src).toBe('https://img.com/room-shot.jpg');
-  });
-
-  it('falls back to mainMedia when multiple items but no keyword match', () => {
-    const el = mockElement();
-    setCardImage(el, {
-      mainMedia: 'https://img.com/white-bg.jpg',
-      name: 'Futon Frame',
-      mediaItems: [
-        { url: 'https://img.com/white-bg.jpg', alt: 'front view' },
-        { url: 'https://img.com/back-view.jpg', alt: 'back view' },
-      ],
-    });
-    expect(el.src).toBe('https://img.com/white-bg.jpg');
-  });
-
-  it('uses mainMedia when only one mediaItem', () => {
-    const el = mockElement();
-    setCardImage(el, {
-      mainMedia: 'https://img.com/white-bg.jpg',
-      name: 'Futon Frame',
-      mediaItems: [{ url: 'https://img.com/white-bg.jpg' }],
-    });
-    expect(el.src).toBe('https://img.com/white-bg.jpg');
-  });
-
-  it('uses placeholder fallback when no image and no mediaItems', () => {
-    const el = mockElement();
-    setCardImage(el, { name: 'Futon' }, 'futon-frames');
-    expect(el.src).toBe('https://placeholder.com/futon-frames.jpg');
   });
 });

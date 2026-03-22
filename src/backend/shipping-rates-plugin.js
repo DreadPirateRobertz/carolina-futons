@@ -29,43 +29,10 @@ import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 import { logError } from 'backend/utils/errorHandler';
+import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
 
-const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, localZones, zones } = shippingConfig;
-const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, terrainSurcharge } = whiteGlove;
-
-/**
- * Determine which local delivery zone matches a destination, if any.
- * Evaluation order: exact zip match → zip3 prefix + state match → next zone.
- *
- * @param {string} postalCode - 5-digit US ZIP code
- * @param {string} stateCode  - 2-letter state code (US-XX stripped to XX)
- * @returns {Object|null} Matched zone config from shippingConfig.localZones, or null
- */
-function matchLocalZone(postalCode, stateCode) {
-  const zip3 = parseInt((postalCode || '').substring(0, 3), 10);
-  for (const zone of localZones) {
-    // 1. Exact ZIP match (highest precision — zone1 and mountain towns)
-    if (zone.zips && zone.zips.includes(postalCode)) return zone;
-    // 2. ZIP-3 prefix AND state match
-    if (
-      zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3) &&
-      zone.states && zone.states.includes(stateCode)
-    ) return zone;
-  }
-  return null;
-}
-
-/**
- * Calculate the terrain surcharge for white-glove delivery.
- * Mountain communities with steep/winding road access carry an additional fee.
- *
- * @param {string} postalCode - 5-digit US ZIP code
- * @returns {number} Surcharge amount in USD (0 if not applicable)
- */
-function getTerrainSurcharge(postalCode) {
-  if (!terrainSurcharge || !terrainSurcharge.zips) return 0;
-  return terrainSurcharge.zips.includes(postalCode) ? (terrainSurcharge.amount || 0) : 0;
-}
+const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
+const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD } = whiteGlove;
 
 /**
  * Calculate available shipping rates for the current checkout.
@@ -258,27 +225,18 @@ export const getShippingRates = async (options) => {
         ? `Includes in-home placement, packaging removal, and basic assembly. Mountain area surcharge $${terrainFee} applied. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`
         : `Includes in-home placement, packaging removal, and basic assembly. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`;
 
-      const wgRate = {
-        code: `white-glove-${zone.code}`,
+      // White-glove is an upgrade add-on to local delivery, not a standalone rate.
+      // Attach it as an additionalCharge on the delivery rate so the customer sees
+      // one option with an optional upgrade — not two competing shipping choices.
+      const whiteGloveCharge = {
+        code: 'white-glove',
         title: whiteGloveLabel,
-        logistics: {
-          deliveryTime: zone.deliveryDays,
-          instructions: wgInstructions,
-        },
-        cost: {
-          price: String(whiteGlovePrice.toFixed(2)),
-          currency: 'USD',
-          additionalCharges: [],
-        },
+        price: String(whiteGlovePrice.toFixed(2)),
+        currency: 'USD',
       };
-      if (zone.whiteGloveBadge) {
-        wgRate.badge = zone.whiteGloveBadge;
-        wgRate.badgeStyle = 'premium';
-      }
-      if (zone.whiteGloveUpsell) wgRate.upsellMessage = zone.whiteGloveUpsell;
-      wgRate.highlight = zone.whiteGloveHighlight || false;
-      if (terrainFee > 0) wgRate.terrainSurcharge = terrainFee;
-      shippingRates.push(wgRate);
+      if (terrainFee > 0) whiteGloveCharge.terrainSurcharge = terrainFee;
+      deliveryRate.cost.additionalCharges = [whiteGloveCharge];
+      deliveryRate.whiteGloveInstructions = wgInstructions;
     }
 
     return { shippingRates };

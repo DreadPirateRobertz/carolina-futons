@@ -48,8 +48,8 @@ export const LTL_THRESHOLDS = {
 const FREIGHT_CLASS = {
   'murphy-bed': '125',    // Cabinet beds with mechanisms
   'platform-bed': '100',  // Knocked-down wood furniture
-  'futon-frame': '100',   // Metal/wood frames, flat-packed
-  'futon-mattress': '85', // Dense compressed foam
+  'futon-frame': '150',   // Metal/wood frames, flat-packed
+  'futon-mattress': '200', // Dense compressed foam
   'casegoods': '85',      // Dressers, nightstands — dense
   'default': '100',
 };
@@ -164,8 +164,8 @@ function buildWWEXSoapRequest({ username, password, accountNumber, originZip, de
   </soap:Header>
   <soap:Body>
     <RateQuoteRequest xmlns="http://api.wwex.com/">
-      <OriginZip>${originZip}</OriginZip>
-      <DestinationZip>${destZip}</DestinationZip>
+      <OriginZip>${escapeXml(originZip)}</OriginZip>
+      <DestinationZip>${escapeXml(destZip)}</DestinationZip>
       <TotalWeight>${Math.ceil(totalWeight)}</TotalWeight>
       <HandlingUnits>${packageItems}
       </HandlingUnits>
