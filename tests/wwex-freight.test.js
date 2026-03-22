@@ -382,3 +382,61 @@ describe('requiresLiftgate — propagated to rate objects', () => {
     expect(rates[0].carrier).toBe('WWEX');
   });
 });
+
+// ── extractXmlValue — multiline content ───────────────────────────────────────
+
+const SOAP_RESPONSE_MULTILINE = `<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <RateQuoteResponse>
+      <RateQuote>
+        <ServiceCode>STD</ServiceCode>
+        <ServiceName>Standard LTL</ServiceName>
+        <TotalCharge>
+          325.00
+        </TotalCharge>
+        <TransitDays>3</TransitDays>
+      </RateQuote>
+    </RateQuoteResponse>
+  </soap:Body>
+</soap:Envelope>`;
+
+describe('getLTLRates — multiline SOAP response', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  it('parses TotalCharge with surrounding whitespace/newlines', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async text() { return SOAP_RESPONSE_MULTILINE; },
+    }));
+    const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
+    expect(result.success).toBe(true);
+    expect(result.rates).toHaveLength(1);
+    expect(result.rates[0].cost).toBe(325);
+  });
+});
+
+// ── dead freightClass param removed ─────────────────────────────────────────
+
+describe('getLTLRates — per-package FreightClass, no top-level param', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  it('two packages with different categories get distinct FreightClass values', async () => {
+    let capturedBody = null;
+    __setHandler((url, options) => {
+      capturedBody = options.body;
+      return { ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } };
+    });
+    await getLTLRates('28792', '28701', [
+      { weight: 100, length: 48, width: 24, height: 6, category: 'futon-mattress' }, // class 200
+      { weight: 100, length: 48, width: 24, height: 6, category: 'futon-frame' },    // class 150
+    ]);
+    expect(capturedBody).toContain('<FreightClass>200</FreightClass>');
+    expect(capturedBody).toContain('<FreightClass>150</FreightClass>');
+  });
+});

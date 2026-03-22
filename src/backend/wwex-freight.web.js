@@ -120,7 +120,6 @@ export async function getLTLRates(originZip, destZip, packages) {
 
     // Build WWEX SpeedFreight SOAP request
     const totalWeight = packages.reduce((sum, p) => sum + (p.weight || 0), 0);
-    const freightClass = FREIGHT_CLASS[packages[0]?.category || 'default'];
 
     const soapBody = buildWWEXSoapRequest({
       username,
@@ -129,7 +128,6 @@ export async function getLTLRates(originZip, destZip, packages) {
       originZip,
       destZip,
       totalWeight,
-      freightClass,
       packages,
     });
 
@@ -171,7 +169,7 @@ export async function getLTLRates(originZip, destZip, packages) {
  * Build the WWEX SpeedFreight SOAP request XML.
  * @private
  */
-function buildWWEXSoapRequest({ username, password, accountNumber, originZip, destZip, totalWeight, freightClass, packages }) {
+function buildWWEXSoapRequest({ username, password, accountNumber, originZip, destZip, totalWeight, packages }) {
   const packageItems = packages.map((p, i) => `
     <HandlingUnit>
       <Sequence>${i + 1}</Sequence>
@@ -299,6 +297,6 @@ function escapeXml(str) {
 
 /** Extract text content of a single XML element by tag name */
 function extractXmlValue(xml, tag) {
-  const match = xml.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`));
+  const match = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
   return match ? match[1].trim() : null;
 }
