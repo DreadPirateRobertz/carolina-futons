@@ -20,7 +20,8 @@ async function getEditorModule() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — dynamic Wix SDK import
     return await import('@wix/editor');
-  } catch {
+  } catch (err) {
+    console.warn('[usePageNavigator] @wix/editor module unavailable:', err);
     return null;
   }
 }

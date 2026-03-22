@@ -254,7 +254,9 @@ jobs:
   # Runs vitest with coverage thresholds for the hookup-assistant package.
   # @wix/* packages are listed as optionalDependencies — npm skips them
   # gracefully when the private Wix registry is unavailable in CI.
-  # Tests mock @wix/editor via vi.mock; no Wix package needs to be installed.
+  # All current tests stub @wix/editor via vi.mock — no Wix packages need
+  # resolving at test time. If tests are added that import @wix/* without
+  # mocks, --ignore-optional must be revisited.
   hookup-assistant:
     runs-on: ubuntu-latest
     permissions:
@@ -275,7 +277,7 @@ jobs:
           cache-dependency-path: packages/hookup-assistant/package-lock.json
 
       - name: Install dependencies (skip optional @wix/* packages)
-        run: npm install --ignore-optional --ignore-scripts
+        run: npm ci --ignore-optional --ignore-scripts
 
       - name: Run hookup-assistant tests with coverage thresholds
         run: npx vitest run --coverage --config vitest.config.ts

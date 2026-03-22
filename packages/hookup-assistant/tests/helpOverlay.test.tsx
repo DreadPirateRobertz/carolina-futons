@@ -38,10 +38,11 @@ describe('HelpOverlay', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('does not call onClose when the card itself is clicked', () => {
+  it('does not call onClose when clicking content inside the card', () => {
     const onClose = vi.fn();
     render(<HelpOverlay onClose={onClose} />);
-    // Clicking the close button calls onClose, but click on a shortcut row should not
+    // 'D' is the key-cap label for the Mark Done shortcut, inside the card content area.
+    // Clicking it must not bubble up to the backdrop handler.
     fireEvent.click(screen.getByText('D'));
     expect(onClose).not.toHaveBeenCalled();
   });

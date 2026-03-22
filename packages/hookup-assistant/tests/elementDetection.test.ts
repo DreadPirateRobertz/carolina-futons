@@ -109,9 +109,7 @@ describe('useElementDetection — selection callback', () => {
 
   it('populates selected with compRef, type, and nickname on valid componentRef', async () => {
     const fakeRef = { id: 'comp-123' };
-    mockGetType.mockResolvedValue({ componentType: 'wixui.Button' });
-    mockGetNickname.mockResolvedValue('shopBtn');
-
+    // beforeEach defaults: getType → wixui.Button, getNickname → 'shopBtn'
     const { getCb } = captureCallback();
     const { result } = renderHook(() => useElementDetection());
     await waitFor(() => expect(getCb()).not.toBeNull());

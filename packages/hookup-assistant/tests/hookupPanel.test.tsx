@@ -8,7 +8,7 @@
  *  - "Editor not detected" banner shows when editorAvailable false
  *  - detection row shows when editorAvailable true
  *  - conflict banner shown when pendingConflict is set
- *  - auto-page-switch useEffect: detectedPageName triggers setSelectedPageName
+ *  - auto-page-switch: when detectedPageName changes, the page selector reflects the new value
  *  - footer progress counter
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -128,7 +128,7 @@ describe('HookupPanel — settings drawer', () => {
     render(<HookupPanel />);
     const btn = screen.getByRole('button', { name: /toggle settings/i });
     fireEvent.click(btn);
-    // "Reset page progress" button is unique to the settings drawer
+    // "Reset page progress" button is rendered only inside the settings drawer; its presence confirms the drawer is open.
     expect(screen.getByRole('button', { name: /reset page progress/i })).toBeInTheDocument();
   });
 
@@ -194,7 +194,7 @@ describe('HookupPanel — editor status', () => {
 describe('HookupPanel — conflict banner', () => {
   it('shows conflict banner when pendingConflict is set', () => {
     setupDefaults({ pendingConflict: 'oldNickname' });
-    // Need at least one element on the page for the banner to render
+    // Default page 'Home' always has elements, so currentElement is non-null — banner renders.
     render(<HookupPanel />);
     expect(screen.getByText(/id conflict/i)).toBeInTheDocument();
   });
@@ -224,7 +224,7 @@ describe('HookupPanel — footer', () => {
 // ── Auto-page-switch ──────────────────────────────────────────────────────────
 
 describe('HookupPanel — auto page switch via detectedPageName', () => {
-  it('page selector value reflects detectedPageName when it changes', () => {
+  it('page selector value reflects detectedPageName on render', () => {
     setupDefaults({ detectedPageName: 'Product Page' });
     render(<HookupPanel />);
     const select = screen.getByRole('combobox', { name: /select page/i });
