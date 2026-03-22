@@ -22,6 +22,7 @@
 //   roomSubmitStatus        — UGC submission: status message
 
 import { voteForPhoto, submitUGCPhoto } from 'backend/ugcService.web';
+import { logError } from 'backend/errorMonitoring.web';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers.js';
 
@@ -54,14 +55,15 @@ export function renderRoomPhotos($w, photos) {
   }
 
   $w('#roomGalleryEmptyState').collapse();
-  $w('#roomGalleryRepeater').data = list;
 
   $w('#roomGalleryRepeater').onItemReady(($item, itemData) => {
     $item('#roomGalleryImage').src = itemData.photoUrl || '';
     $item('#roomGalleryImage').alt = itemData.caption || 'Customer room photo';
     $item('#roomGalleryCaption').text = itemData.caption || '';
     $item('#roomGallerySubmitter').text = itemData.memberDisplayName || '';
-    $item('#roomGalleryLikeCount').text = String(itemData.voteCount ?? 0);
+
+    const originalCount = String(itemData.voteCount ?? 0);
+    $item('#roomGalleryLikeCount').text = originalCount;
 
     $item('#roomGalleryLikeBtn').onClick(async () => {
       try {
@@ -70,11 +72,13 @@ export function renderRoomPhotos($w, photos) {
           $item('#roomGalleryLikeCount').text = String(result.voteCount ?? 0);
         }
       } catch (err) {
-        console.error('[RoomGallery] voteForPhoto failed:', err);
+        logError({ message: '[RoomGallery] voteForPhoto failed', stack: err?.stack, context: 'roomGallery.voteForPhoto' });
+        $item('#roomGalleryLikeCount').text = originalCount;
       }
     });
   });
 
+  $w('#roomGalleryRepeater').data = list;
   $w('#roomGallerySection').expand();
 }
 

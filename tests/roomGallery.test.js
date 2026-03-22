@@ -37,6 +37,10 @@ vi.mock('public/a11yHelpers.js', () => ({
   announce: vi.fn(),
 }));
 
+vi.mock('backend/errorMonitoring.web', () => ({
+  logError: vi.fn(),
+}));
+
 import {
   renderRoomPhotos,
   initRoomFilter,
@@ -44,6 +48,7 @@ import {
   initRoomGallery,
 } from '../src/public/RoomGallery.js';
 import { voteForPhoto, submitUGCPhoto } from 'backend/ugcService.web';
+import { logError } from 'backend/errorMonitoring.web';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers.js';
 
@@ -214,18 +219,26 @@ describe('RoomGallery', () => {
 
     it('like button logs error and does not throw on backend failure', async () => {
       voteForPhoto.mockRejectedValueOnce(new Error('Network error'));
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const photo = makePhoto({ _id: 'photo-xyz' });
+      const photo = makePhoto({ _id: 'photo-xyz', voteCount: 3 });
       const cb = getOnItemReadyCb([photo]);
       const $item = create$w();
       cb($item, photo);
       const handler = $item('#roomGalleryLikeBtn').onClick.mock.calls[0][0];
       await expect(handler()).resolves.not.toThrow();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[RoomGallery]'),
-        expect.any(Error)
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('[RoomGallery]') })
       );
-      consoleSpy.mockRestore();
+    });
+
+    it('like button reverts count to original on backend failure', async () => {
+      voteForPhoto.mockRejectedValueOnce(new Error('Network error'));
+      const photo = makePhoto({ _id: 'photo-xyz', voteCount: 3 });
+      const cb = getOnItemReadyCb([photo]);
+      const $item = create$w();
+      cb($item, photo);
+      const handler = $item('#roomGalleryLikeBtn').onClick.mock.calls[0][0];
+      await handler();
+      expect($item('#roomGalleryLikeCount').text).toBe('3');
     });
   });
 
