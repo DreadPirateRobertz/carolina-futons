@@ -4,6 +4,7 @@
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import { getCartFinancing } from 'backend/financingCalc.web';
 import { getRecentlyViewed } from 'public/galleryHelpers';
+import { renderWidget as renderRecentlyViewedWidget } from 'public/RecentlyViewedWidget.js';
 import {
   getCurrentCart,
   addToCart,
@@ -80,6 +81,7 @@ async function initCartPage() {
     await initCartDeliveryEstimate($w, cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
+    renderRecentlyViewedWidget($w).catch(() => {});
     initQuantityControls();
     initCouponCodeInput($w, {
       appliedCoupon: cart.appliedCoupon || null,

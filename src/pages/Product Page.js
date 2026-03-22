@@ -72,6 +72,7 @@ async function initProductPage() {
     }
 
     trackProductView(state.product);
+    import('public/RecentlyViewedWidget.js').then(({ trackView }) => trackView(state.product._id)).catch(() => {});
     cacheProduct(state.product);
 
     // Call-for-price products use a $1.00 Wix placeholder — hide price, disable purchase
@@ -142,6 +143,7 @@ async function initProductPage() {
       { name: 'relatedProducts', init: loadRelatedProducts, critical: false },
       { name: 'collectionProducts', init: loadCollectionProducts, critical: false },
       { name: 'recentlyViewed', init: loadRecentlyViewed, critical: false },
+      { name: 'recentlyViewedWidget', init: async () => { const { renderWidget } = await import('public/RecentlyViewedWidget.js'); return renderWidget($w, { excludeCurrentId: state.product?._id }); }, critical: false },
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
