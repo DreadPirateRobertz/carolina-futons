@@ -66,6 +66,7 @@ export function initMembershipPrompt($w) {
     const dialog = setupAccessibleDialog($w, {
       panelId: '#membershipPromptModal',
       closeId: '#membershipPromptClose',
+      titleId: '#membershipPromptTitle',
       focusableIds: [
         '#membershipPromptClose',
         '#membershipUpgradeBtn',

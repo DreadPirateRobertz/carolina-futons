@@ -106,13 +106,14 @@ describe('initMembershipPrompt — modal setup', () => {
     expect(text).toContain('\n• ');
   });
 
-  it('calls setupAccessibleDialog with correct panel and close IDs', () => {
+  it('calls setupAccessibleDialog with correct panel, close, and title IDs', () => {
     initMembershipPrompt($w);
     expect(setupAccessibleDialog).toHaveBeenCalledWith(
       $w,
       expect.objectContaining({
         panelId: '#membershipPromptModal',
         closeId: '#membershipPromptClose',
+        titleId: '#membershipPromptTitle',
       })
     );
   });
