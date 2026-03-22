@@ -29,7 +29,7 @@ function mockEl(overrides = {}) {
 
 describe('PRODUCT_CARD_VIDEOS', () => {
   it('has entry for asheville-futon-frame', () => {
-    expect(PRODUCT_CARD_VIDEOS['asheville-futon-frame']).toBe('e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f');
+    expect(PRODUCT_CARD_VIDEOS['asheville-futon-frame']).toBe('e04e89_c2e8bedf07c74b249894fffffc0564b7');
   });
 
   it('has entry for sedona-futon-frame', () => {
@@ -59,7 +59,7 @@ describe('PRODUCT_CARD_VIDEOS', () => {
 describe('getCardVideoUrl', () => {
   it('returns full Wix video URL for asheville-futon-frame', () => {
     const url = getCardVideoUrl('asheville-futon-frame');
-    expect(url).toBe(`${WIX_BASE}/e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f/1080p/mp4/file.mp4`);
+    expect(url).toBe(`${WIX_BASE}/e04e89_c2e8bedf07c74b249894fffffc0564b7/1080p/mp4/file.mp4`);
   });
 
   it('returns full Wix video URL for sedona-futon-frame', () => {
@@ -99,7 +99,7 @@ describe('getCardVideoUrl', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('initCardVideo', () => {
-  const VIDEO_URL = `${WIX_BASE}/e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f/1080p/mp4/file.mp4`;
+  const VIDEO_URL = `${WIX_BASE}/e04e89_c2e8bedf07c74b249894fffffc0564b7/1080p/mp4/file.mp4`;
 
   it('sets video src', () => {
     const container = mockEl();
@@ -219,5 +219,55 @@ describe('initCardVideo', () => {
     const container = { onMouseOut: vi.fn() };
     const video = mockEl();
     expect(() => initCardVideo(container, video, null, VIDEO_URL)).not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 4. console.warn coverage (CF-nmvf review issues 3 & 4)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('getCardVideoUrl — console.warn on missing slug', () => {
+  it('warns when slug is present but has no video', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    getCardVideoUrl('nonexistent-frame');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('nonexistent-frame'));
+    warn.mockRestore();
+  });
+
+  it('does not warn for null slug', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    getCardVideoUrl(null);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('does not warn for empty string slug', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    getCardVideoUrl('');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('initCardVideo — console.warn on element errors', () => {
+  const VIDEO_URL = `${WIX_BASE}/e04e89_c2e8bedf07c74b249894fffffc0564b7/1080p/mp4/file.mp4`;
+
+  it('warns when video.play() throws', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = mockEl();
+    const video = mockEl({ play: vi.fn(() => { throw new Error('autoplay blocked'); }) });
+    initCardVideo(container, video, null, VIDEO_URL);
+    container.onMouseIn.mock.calls[0][0]();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('play failed'), 'autoplay blocked');
+    warn.mockRestore();
+  });
+
+  it('warns when video.hide() throws', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = mockEl();
+    const video = mockEl({ hide: vi.fn(() => { throw new Error('hide error'); }) });
+    initCardVideo(container, video, null, VIDEO_URL);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('hide video failed'), 'hide error');
+    warn.mockRestore();
   });
 });

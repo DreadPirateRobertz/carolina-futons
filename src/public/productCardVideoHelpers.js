@@ -1,19 +1,19 @@
 // productCardVideoHelpers.js — Product card hover-play video (CF-nmvf)
 // Wires Wix-hosted product demo videos to card grids via hover-play.
-// Video IDs from videoPageHelpers.js; URL format per Wix Media spec.
+// Video data derived from videoPageHelpers.js — single source of truth.
+import { getVideoData } from 'public/videoPageHelpers.js';
 
 const WIX_VIDEO_BASE = 'https://video.wixstatic.com/video';
 
 /**
- * Test data: product slug → Wix Media video ID.
- * 3 futon frames with existing Wix-hosted demo videos.
- * URL format: https://video.wixstatic.com/video/{id}/1080p/mp4/file.mp4
+ * Product slug → Wix Media video ID, derived from videoPageHelpers.js.
+ * Only Wix-hosted videos with a productSlug are eligible for card hover-play.
  */
-export const PRODUCT_CARD_VIDEOS = {
-  'asheville-futon-frame': 'e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f',
-  'sedona-futon-frame': 'e04e89_8483b56d2ef5417c95242c821934e2b2',
-  'alpine-futon-frame': 'e04e89_dba4fc2f08ee4a42906dcb76bcb9b31a',
-};
+export const PRODUCT_CARD_VIDEOS = Object.fromEntries(
+  getVideoData()
+    .filter(v => v.source === 'wix' && v.productSlug)
+    .map(v => [v.productSlug, v.videoUri])
+);
 
 /**
  * Get the full Wix video URL for a product card, or null if none.
@@ -22,14 +22,17 @@ export const PRODUCT_CARD_VIDEOS = {
  */
 export function getCardVideoUrl(slug) {
   const id = slug ? PRODUCT_CARD_VIDEOS[slug] : null;
-  if (!id) return null;
+  if (!id) {
+    if (slug) console.warn(`[ProductCardVideo] No video found for slug: ${slug}`);
+    return null;
+  }
   return `${WIX_VIDEO_BASE}/${id}/1080p/mp4/file.mp4`;
 }
 
 /**
  * Wire hover-play video on a product card.
  * Hides video initially; plays/shows on mouseIn, pauses/hides on mouseOut.
- * Swaps image↔video so card media is always one or the other.
+ * Swaps image<->video so card media is always one or the other.
  *
  * Compatible with initCardHover — Wix Velo supports multiple onMouseIn
  * handlers on the same container element.
@@ -43,22 +46,22 @@ export function initCardVideo($containerEl, $videoEl, $imageEl, videoUrl) {
   if (!$containerEl || !$videoEl || !videoUrl) return;
   try {
     $videoEl.src = videoUrl;
-    try { $videoEl.hide(); } catch (e) {}
+    try { $videoEl.hide(); } catch (e) { console.warn('[ProductCardVideo] hide video failed:', e?.message); }
 
     if (typeof $containerEl.onMouseIn === 'function') {
       $containerEl.onMouseIn(() => {
-        try { $videoEl.play(); } catch (e) {}
-        try { $videoEl.show(); } catch (e) {}
-        try { if ($imageEl) $imageEl.hide(); } catch (e) {}
+        try { $videoEl.play(); } catch (e) { console.warn('[ProductCardVideo] play failed:', e?.message); }
+        try { $videoEl.show(); } catch (e) { console.warn('[ProductCardVideo] show video failed:', e?.message); }
+        try { if ($imageEl) $imageEl.hide(); } catch (e) { console.warn('[ProductCardVideo] hide image failed:', e?.message); }
       });
     }
 
     if (typeof $containerEl.onMouseOut === 'function') {
       $containerEl.onMouseOut(() => {
-        try { $videoEl.pause(); } catch (e) {}
-        try { $videoEl.hide(); } catch (e) {}
-        try { if ($imageEl) $imageEl.show(); } catch (e) {}
+        try { $videoEl.pause(); } catch (e) { console.warn('[ProductCardVideo] pause failed:', e?.message); }
+        try { $videoEl.hide(); } catch (e) { console.warn('[ProductCardVideo] hide video failed:', e?.message); }
+        try { if ($imageEl) $imageEl.show(); } catch (e) { console.warn('[ProductCardVideo] show image failed:', e?.message); }
       });
     }
-  } catch (e) { /* element may not support video ops */ }
+  } catch (e) { console.warn('[ProductCardVideo] initCardVideo error:', e?.message); }
 }
