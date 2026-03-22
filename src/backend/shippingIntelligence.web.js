@@ -308,7 +308,6 @@ function getTerrainSurcharge(postalCode) {
 function guessStateFromZip(zip) {
   const z = parseInt((zip || '').substring(0, 3), 10);
   if (z >= 270 && z <= 289) return 'NC';
-  if (z >= 270 && z <= 289) return 'NC';
   if (z >= 290 && z <= 299) return 'SC';
   if (z >= 300 && z <= 319) return 'GA';
   if (z >= 370 && z <= 385) return 'TN';
