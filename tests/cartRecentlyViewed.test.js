@@ -85,6 +85,10 @@ describe('CartRecentlyViewed', () => {
     $w = create$w();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // Case 1 ─────────────────────────────────────────────────────────
   it('hides section when history is empty', () => {
     mockGetViewHistory.mockReturnValue([]);
@@ -165,7 +169,6 @@ describe('CartRecentlyViewed', () => {
     expect(btn.label).toBe('Add to Cart');
     expect(btn.enable).toHaveBeenCalled();
 
-    vi.useRealTimers();
   });
 
   // Case 5 ─────────────────────────────────────────────────────────
@@ -213,6 +216,21 @@ describe('CartRecentlyViewed', () => {
     const data = $w('#cartRecentlyViewedRepeater').data;
     expect(data).toHaveLength(4);
     expect(data.map(r => r._id)).toEqual(['1', '2', '3', '4']);
+  });
+
+  // _id fallback — Wix Stores line-item shape uses ._id not .productId
+  it('filters correctly when cart items use ._id instead of .productId', () => {
+    const history = [makeProduct('alpha'), makeProduct('beta')];
+    mockGetViewHistory.mockReturnValue(history);
+
+    // Cart items shaped like Wix Stores line items (._id, no .productId)
+    const cartItems = [{ _id: 'alpha' }];
+    initCartRecentlyViewed($w, cartItems);
+
+    expect($w('#cartRecentlyViewedSection').expand).toHaveBeenCalled();
+    const data = $w('#cartRecentlyViewedRepeater').data;
+    expect(data).toHaveLength(1);
+    expect(data[0]._id).toBe('beta');
   });
 
   // Extra: populate repeater item fields

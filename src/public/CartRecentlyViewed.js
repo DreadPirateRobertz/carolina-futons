@@ -29,7 +29,9 @@ const SUCCESS_DURATION_MS = 1500;
  * the onCartChanged callback to re-filter after inline Add to Cart.
  *
  * @param {Function} $w - Wix element selector
- * @param {Array}    cartItems - Current cart line items (each has .productId)
+ * @param {Array}    cartItems - Current cart line items. Each item is checked for
+ *                              `.productId` first, then `._id` as a fallback (Wix
+ *                              Stores line-item objects use `._id`).
  */
 export function initCartRecentlyViewed($w, cartItems = []) {
   const inCart = new Set(
