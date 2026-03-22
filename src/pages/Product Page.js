@@ -33,7 +33,7 @@ import { buildYouTubeEmbed } from 'public/videoHelpers.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
-// LifestyleGallery, ComfortStoryCards, FeelAndComfort, ProductQA,
+// LifestyleGallery, ComfortStoryCards, FeelAndComfort,
 // ProductReviews, ProductFinancing, ProductSizeGuide
 
 const state = {
@@ -149,19 +149,21 @@ async function initProductPage() {
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
-      { name: 'productQA', init: async () => { const m = await import('public/ProductQA.js'); m.initProductQA($w, state); }, critical: false },
       {
         name: 'productQnA',
         critical: false,
         init: async () => {
           const productId = state.product?._id;
           const m = await import('public/ProductQnA.js');
-          const { items, hasMore } = await m.loadQnA(productId);
-          m.renderQnA($w, items, hasMore);
+          const { items, hasMore, totalCount, page } = await m.loadQnA(productId);
+          m.renderQnA($w, items, { hasMore, totalCount });
+          m.initSearch($w, productId);
+          m.injectSchema($w, productId);
+
+          let currentPage = page;
           $w('#qnaLoadMore').onClick(async () => {
-            const data = $w('#qnaAccordion').data;
-            const page = Math.ceil((Array.isArray(data) ? data : []).length / 5);
-            await m.loadMore($w, productId, page);
+            const result = await m.loadMore($w, productId, currentPage);
+            if (result.appended > 0) currentPage++;
           });
           $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, productId));
         },

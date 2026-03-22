@@ -3265,6 +3265,76 @@ Action buttons (right):
       ]}
     ]
   },
+  // ─────────────────────────────────────────────────────────────────────
+  // PRODUCT PAGE — Q&A WIDGET (CF-q7nt / CF-qa8c)
+  // ProductQnA.js — consolidated from ProductQA.js (retired in CF-qa8c).
+  // Uses #qna* element IDs throughout. Old #qa* IDs are RETIRED — do NOT
+  // add them to the editor; they will not be wired by any code.
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    name: "Customer Q&A Widget (Product Page)", file: "ProductQnA.js", priority: "P1", est: "20 min",
+    sections: [
+      { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
+<p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
+<div class="layer-diagram">LAYOUT:
+  #qnaSection (Box — shown when questions exist)
+    ├─ #qnaCount (Text — "N questions")
+    ├─ #qnaSearchInput (TextInput — optional keyword filter, debounced 300ms)
+    ├─ #qnaAccordion (Repeater — one item per question)
+    │    Per item: #qnaQuestion (Text/toggle) · #qnaAuthor · #qnaDate
+    │              #qnaAnswer (collapsible) · #qnaAnswerSection · #qnaAnsweredBy
+    │              #qnaPending (Badge — shown when unanswered)
+    │              #qnaHelpfulBtn (Button — optional) · #qnaHelpfulCount (Text)
+    │              #qnaFlagBtn (Button — optional)
+    └─ #qnaLoadMore (Button — hidden when all loaded)
+  #qnaEmpty (Box — shown when no questions)
+  #qnaSchemaScript (HtmlComponent — FAQ JSON-LD SEO, optional)
+  #qnaQuestionInput (TextInput — submit form)
+  #qnaSubmitBtn (Button — submit)
+  #qnaThankYou (Box — shown on successful submit)
+  #qnaFormError (Text — shown on error)</div>
+<ul>
+  <li><strong>#qnaSection</strong>: Main container. Hidden when no questions exist (shows #qnaEmpty instead).</li>
+  <li><strong>#qnaCount</strong>: Text set to "1 question" or "N questions". Optional — silently skipped if absent.</li>
+  <li><strong>#qnaSearchInput</strong>: Optional keyword filter. Debounces 300ms, re-queries backend on each keystroke. Silently skipped if absent.</li>
+  <li><strong>#qnaAccordion</strong>: Repeater. <span class="impl-warn">⚠️ <code>onItemReady</code> MUST be registered before setting <code>.data</code> (Wix requirement).</span> Each item toggles expand/collapse on click with full ARIA support (<code>ariaExpanded</code>, <code>ariaControls</code>).</li>
+  <li><strong>#qnaPending</strong>: Badge shown when a question is awaiting an answer. Hidden when <code>status === 'answered'</code>.</li>
+  <li><strong>#qnaAnswerSection</strong>: Container for the answer text + #qnaAnsweredBy credit. Hidden when unanswered.</li>
+  <li><strong>#qnaHelpfulBtn / #qnaHelpfulCount</strong>: Optional voting elements. Silently skipped if absent. Count updates optimistically on success.</li>
+  <li><strong>#qnaFlagBtn</strong>: Optional report button. Disabled after first click. Silently skipped if absent.</li>
+  <li><strong>#qnaLoadMore</strong>: Shown when more pages exist. Hidden after final page loads. Stays visible on network error (allows retry).</li>
+  <li><strong>#qnaSchemaScript</strong>: Optional HtmlComponent for FAQ JSON-LD schema injection. Silently skipped if absent.</li>
+  <li><strong>#qnaQuestionInput</strong>: Text input for submitting a new question. Cleared on success.</li>
+  <li><strong>#qnaSubmitBtn</strong>: Submit button. Disabled during in-flight request; re-enabled in <code>finally</code>.</li>
+  <li><strong>#qnaThankYou</strong>: Box shown after successful question submission.</li>
+  <li><strong>#qnaFormError</strong>: Error Text shown on submit failure. Hidden on each new attempt.</li>
+  <li><span class="impl-warn">⚠️ Retired: <code>#qa*</code> IDs (from old ProductQA.js) are no longer wired. Do NOT add them to the editor.</span></li>
+</ul>`, elements: [
+        ["qnaSection","Box","Q&A main container"],
+        ["qnaEmpty","Box","Empty state"],
+        ["qnaCount","Text","Question count"],
+        ["qnaSearchInput","TextInput","Keyword filter (optional)"],
+        ["qnaAccordion","Repeater","Q&A items"],
+        ["qnaLoadMore","Button","Load next page"],
+        ["qnaSchemaScript","HtmlComponent","FAQ JSON-LD (optional)"],
+        ["qnaQuestionInput","TextInput","Submit question form"],
+        ["qnaSubmitBtn","Button","Submit question"],
+        ["qnaThankYou","Box","Success message"],
+        ["qnaFormError","Text","Error message"]
+      ], children: [
+        ["qnaQuestion","Text","Question text (accordion toggle)"],
+        ["qnaAuthor","Text","Member name"],
+        ["qnaDate","Text","Submitted date"],
+        ["qnaAnswerSection","Box","Answer container"],
+        ["qnaAnswer","Text","Answer text (collapsible)"],
+        ["qnaAnsweredBy","Text","Answered by credit"],
+        ["qnaPending","Box/Badge","Awaiting answer badge"],
+        ["qnaHelpfulBtn","Button","Helpful vote (optional)"],
+        ["qnaHelpfulCount","Text","Helpful count (optional)"],
+        ["qnaFlagBtn","Button","Flag/report (optional)"]
+      ]}
+    ]
+  },
   // ═══════════════════════════════════════════════════════════════════════
   // DASHBOARD & ADMIN INTEGRATIONS (v1.0.0+)
   // These pages connect to backend web modules for analytics, content
