@@ -112,32 +112,30 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
-const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene', 'setting', 'living', 'bedroom', 'context'];
+// Matches batchAltText.web.js + imageAltText.web.js keyword convention (3 terms only).
+// 'context' excluded — matches Wix CDN URL params. 'living/bedroom/setting' excluded — too broad.
+const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
 
 /**
  * Select the best image for a product card — lifestyle room shot preferred over
- * white-background product shots. Checks mediaItems for lifestyle/room-context
- * images by keyword, then falls back to the second image (convention: lifestyle
- * shot follows the hero product shot), then mainMedia.
+ * white-background product shots. Checks mediaItems title/alt/url for lifestyle
+ * keywords; falls back to mainMedia when no match.
+ *
+ * Keywords aligned with batchAltText.web.js + imageAltText.web.js convention.
+ * No index-based fallback — mediaItems[1] is not guaranteed to be a lifestyle
+ * shot (could be a back view, dimension diagram, or detail photo).
  *
  * @param {Object} product - Wix product with mainMedia and optional mediaItems array
- * @returns {string} Image URL — lifestyle shot if available, else mainMedia
+ * @returns {string} Image URL — keyword-matched lifestyle shot if found, else mainMedia
  */
 export function getLifestyleImage(product) {
   const mediaItems = product?.mediaItems;
   if (Array.isArray(mediaItems) && mediaItems.length > 0) {
-    // Keyword match first: any item tagged as lifestyle/room/scene
     const keywordMatch = mediaItems.find(item => {
       const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
       return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
     });
     if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
-
-    // Convention fallback: second image (index 1) is typically the lifestyle shot
-    if (mediaItems.length > 1) {
-      const second = mediaItems[1];
-      return second?.url || second?.src || '';
-    }
   }
   return product?.mainMedia || '';
 }

@@ -497,14 +497,14 @@ describe('getLifestyleImage', () => {
     })).toBe('https://img.com/product.jpg');
   });
 
-  it('returns second mediaItem url when 2+ items and no keyword match (convention)', () => {
+  it('returns mainMedia when 2+ items but no keyword match (no index-based fallback)', () => {
     expect(getLifestyleImage({
       mainMedia: 'https://img.com/product.jpg',
       mediaItems: [
         { url: 'https://img.com/product.jpg', alt: 'front view' },
         { url: 'https://img.com/photo2.jpg', alt: 'back view' },
       ],
-    })).toBe('https://img.com/photo2.jpg');
+    })).toBe('https://img.com/product.jpg');
   });
 
   it('prefers keyword-matched item even if not second in array', () => {
@@ -562,7 +562,7 @@ describe('getLifestyleImage', () => {
       mainMedia: 'https://img.com/product.jpg',
       mediaItems: [
         { src: 'https://img.com/product.jpg' },
-        { src: 'https://img.com/lifestyle.jpg' },
+        { src: 'https://img.com/lifestyle.jpg', alt: 'lifestyle shot' },
       ],
     })).toBe('https://img.com/lifestyle.jpg');
   });
@@ -571,17 +571,30 @@ describe('getLifestyleImage', () => {
 // ── setCardImage uses lifestyle image when available (CF-l5id) ───────
 
 describe('setCardImage — lifestyle image priority', () => {
-  it('uses second mediaItem when multiple images and no keyword match', () => {
+  it('uses keyword-matched mediaItem when lifestyle keyword present', () => {
     const el = mockElement();
     setCardImage(el, {
       mainMedia: 'https://img.com/white-bg.jpg',
       name: 'Futon Frame',
       mediaItems: [
-        { url: 'https://img.com/white-bg.jpg' },
-        { url: 'https://img.com/room-shot.jpg' },
+        { url: 'https://img.com/white-bg.jpg', alt: 'product view' },
+        { url: 'https://img.com/room-shot.jpg', alt: 'room scene' },
       ],
     });
     expect(el.src).toBe('https://img.com/room-shot.jpg');
+  });
+
+  it('falls back to mainMedia when multiple items but no keyword match', () => {
+    const el = mockElement();
+    setCardImage(el, {
+      mainMedia: 'https://img.com/white-bg.jpg',
+      name: 'Futon Frame',
+      mediaItems: [
+        { url: 'https://img.com/white-bg.jpg', alt: 'front view' },
+        { url: 'https://img.com/back-view.jpg', alt: 'back view' },
+      ],
+    });
+    expect(el.src).toBe('https://img.com/white-bg.jpg');
   });
 
   it('uses mainMedia when only one mediaItem', () => {
