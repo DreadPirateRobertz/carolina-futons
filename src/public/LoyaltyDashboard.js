@@ -135,11 +135,16 @@ export function checkTierUp($wFn, account, storage) {
   let prevTier = null;
   try {
     prevTier = storage.getItem(TIER_KEY);
-    storage.setItem(TIER_KEY, currentTier);
   } catch (_) {
-    // Storage error — skip tier-up detection
+    // getItem failed — can't determine previous tier; skip tier-up detection
     return;
   }
+
+  // Persist current tier independently so a write failure (quota exceeded)
+  // does not prevent a legitimate tier-up popup from showing.
+  try {
+    storage.setItem(TIER_KEY, currentTier);
+  } catch (_) { /* storage write failed — non-fatal, popup still fires */ }
 
   if (!prevTier) return; // First visit — no previous tier to compare
 

@@ -215,6 +215,15 @@ describe('checkTierUp', () => {
     expect(() => checkTierUp(make$w(), makeSilverAccount(), storage)).not.toThrow();
   });
 
+  it('still shows tier-up modal when setItem throws (QuotaExceeded must not suppress popup)', () => {
+    const modal   = makeElement();
+    const text    = makeElement();
+    const $wFn    = make$w({ '#tierUpModal': modal, '#tierUpModalText': text });
+    const storage = { getItem: () => 'Bronze', setItem: () => { throw new Error('QuotaExceeded'); }, removeItem: () => {} };
+    checkTierUp($wFn, makeSilverAccount(), storage);
+    expect(modal.show).toHaveBeenCalledOnce();
+  });
+
   it('skips gracefully when account.tier is absent', () => {
     const modal   = makeElement();
     const $wFn    = make$w({ '#tierUpModal': modal });
