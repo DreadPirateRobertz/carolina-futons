@@ -127,10 +127,10 @@ export const getShippingEstimate = webMethod(
       const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
       const packages = [{
-        length: dims.length,
-        width: dims.width,
-        height: dims.height,
-        weight: dims.weight,
+        length: dims.length_in ?? dims.length,
+        width: dims.width_in ?? dims.width,
+        height: dims.height_in ?? dims.height,
+        weight: dims.weight_lbs ?? dims.weight,
         category: dims.category || profile?.category || 'default',
         description: profile?.productName || 'Furniture',
       }];
@@ -196,10 +196,10 @@ export const calculateBundleQuote = webMethod(
 
         for (let i = 0; i < quantity; i++) {
           packages.push({
-            length: dims.length,
-            width: dims.width,
-            height: dims.height,
-            weight: dims.weight,
+            length: dims.length_in ?? dims.length,
+            width: dims.width_in ?? dims.width,
+            height: dims.height_in ?? dims.height,
+            weight: dims.weight_lbs ?? dims.weight,
             category: dims.category || profile?.category || 'default',
           });
         }
