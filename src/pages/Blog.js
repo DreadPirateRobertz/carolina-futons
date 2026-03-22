@@ -32,15 +32,20 @@ $w.onReady(async function () {
   initPageSeo('blog');
   trackEvent('page_view', { page: 'blog' });
   try {
+    // ── Page-independent sections (always init, CMS-independent) ────
+    initRelatedProductsSidebar();
+    initSocialShareButtons();
+    initBlogNewsletter();
+
     // ── Load Blog Posts (CMS-driven via Wix Blog backend) ───────────
     const blogResult = await getPublishedBlogPosts(1, ITEMS_PER_PAGE * 3);
 
     if (blogResult.error) {
-      try { $w('#blogCmsError').expand(); } catch (e) {}
-      try { $w('#blogListRepeater').collapse(); } catch (e) {}
+      try { $w('#blogCmsError').expand(); } catch (e) { console.error('[Blog] #blogCmsError expand failed:', e); }
+      try { $w('#blogListRepeater').collapse(); } catch (e) { console.error('[Blog] #blogListRepeater collapse failed:', e); }
       return;
     }
-    try { $w('#blogCmsError').collapse(); } catch (e) {}
+    try { $w('#blogCmsError').collapse(); } catch (e) { console.error('[Blog] #blogCmsError collapse failed:', e); }
 
     _allPosts = blogResult.posts || [];
 
@@ -69,15 +74,6 @@ $w.onReady(async function () {
         );
       } catch (e) {}
     }
-
-    // ── Related Products Sidebar ────────────────────────────────────
-    initRelatedProductsSidebar();
-
-    // ── Social Share Buttons ────────────────────────────────────────
-    initSocialShareButtons();
-
-    // ── Newsletter CTA ──────────────────────────────────────────────
-    initBlogNewsletter();
 
   } catch (err) {
     console.error('Blog page init error:', err);
