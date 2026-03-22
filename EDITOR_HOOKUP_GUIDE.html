@@ -1470,6 +1470,37 @@ Right column:
         ["membershipPromptTitle","Text","Context headline — set dynamically"],
         ["membershipPromptBenefits","Text","CF+ benefits bullet list — set at init"],
         ["membershipUpgradeBtn","Button","Upgrade CTA — links to /pricing-plans"]
+      ]},
+      { name: "Shipping Intelligence (NEW — CF-ybcm)", impl: `<h4>🚚 Implementation — Shipping Intelligence (NEW)</h4>
+<p><em>Source: <code>src/public/ShippingIntelligence.js</code> — <code>initShippingIntelligence($w, productId, { storage? })</code></em></p>
+<p><strong>Reads stored postal code (sessionStorage key <code>cf_postal_code</code>), calls <code>getShippingEstimate(productId, zip)</code>, and populates all shipping elements. Shows white-glove upsell when a local delivery zone is detected.</strong></p>
+<ul>
+  <li><strong>#shippingEstimateBox</strong>: Box — container for the estimate result. <span class="impl-warn">Hidden by default</span> — shown after successful API call.</li>
+  <li><strong>#deliveryEstimateText</strong>: Text — delivery window, e.g. "Wed Apr 2" or "3–5 business days". Set from primary option <code>deliveryTime</code>.</li>
+  <li><strong>#deliveryZoneText</strong>: Text — option title, e.g. "🚚 Zone 1 Delivery (Free)" or "UPS Ground". Set from primary option <code>title</code>.</li>
+  <li><strong>#shippingRateBadge</strong>: Text — badge copy, e.g. "Free Delivery". Shown when primary option has a <code>badge</code>; hidden otherwise.</li>
+  <li><strong>#shippingEstimateSpinner</strong>: Box — loading indicator. Shown while API call is in flight, hidden on resolve.</li>
+  <li><strong>#shippingEstimateError</strong>: Text — error message. <span class="impl-warn">Hidden by default</span> — shown on API failure, missing postal code, or empty options.</li>
+  <li><strong>#whiteGloveUpsellBanner</strong>: Box — upgrade CTA banner. <span class="impl-warn">Hidden by default</span> — shown when any returned option has code starting with <code>local-delivery-</code> or <code>highlight: true</code>.</li>
+  <li><strong>#whiteGloveUpsellText</strong>: Text — upsell copy from the local option's <code>upsellMessage</code>, e.g. "Upgrade to White Glove (+$99)".</li>
+  <li><strong>#whiteGloveLearnMoreBtn</strong>: Button — opens <code>#whiteGloveModal</code> via accessible dialog.</li>
+  <li><strong>#whiteGloveModal</strong>: Box — modal overlay. <span class="impl-warn">Hidden by default</span> — managed by <code>setupAccessibleDialog</code> (focus trap, ESC close, ARIA).</li>
+  <li><strong>#whiteGloveModalClose</strong>: Button — close X inside modal. Wired by <code>setupAccessibleDialog</code>.</li>
+  <li><strong>#whiteGloveModalContent</strong>: Text — in-home setup description copy.</li>
+</ul>
+<p>Postal code key: <code>cf_postal_code</code> (same key used by ZIP estimator widget). Primary option = first <code>highlight:true</code> option, or first option overall.</p>`, elements: [
+        ["shippingEstimateBox","Box","Estimate container — hidden until data loads"],
+        ["deliveryEstimateText","Text","Delivery window from primary option deliveryTime"],
+        ["deliveryZoneText","Text","Zone/service title from primary option title"],
+        ["shippingRateBadge","Text","Badge copy — hidden when no badge"],
+        ["shippingEstimateSpinner","Box","Loading state — shown during API call"],
+        ["shippingEstimateError","Text","Error message — hidden by default"],
+        ["whiteGloveUpsellBanner","Box","White glove CTA — shown for local zone"],
+        ["whiteGloveUpsellText","Text","Upsell copy from local option upsellMessage"],
+        ["whiteGloveLearnMoreBtn","Button","Opens white glove modal"],
+        ["whiteGloveModal","Box","Modal overlay — managed by setupAccessibleDialog"],
+        ["whiteGloveModalClose","Button","Close X — wired by setupAccessibleDialog"],
+        ["whiteGloveModalContent","Text","In-home setup description"]
       ]}
     ]
   },
