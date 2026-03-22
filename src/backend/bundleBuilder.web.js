@@ -33,6 +33,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { cart as ecomCart } from 'wix-ecom-backend';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { colors } from 'public/sharedTokens';
@@ -594,6 +595,86 @@ async function getMatchingTemplates(productIds, cartCategories) {
     return [];
   }
 }
+
+// ── getBundlePageProducts ─────────────────────────────────────────────
+
+/**
+ * Load products for the /bundle page builder.
+ * Returns a curated list of bundle-eligible products from the store
+ * (active, in-stock, with a price), sorted by price ascending.
+ *
+ * @returns {Promise<{success: boolean, products: Array, error?: string}>}
+ *   products: array of { _id, name, price, formattedPrice, mainMedia }
+ */
+export const getBundlePageProducts = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const result = await wixData.query('Stores/Products')
+        .eq('visible', true)
+        .gt('price', 0)
+        .ascending('price')
+        .limit(24)
+        .find();
+
+      const products = result.items.map(p => ({
+        _id: p._id,
+        name: p.name || '',
+        price: p.price || 0,
+        formattedPrice: p.formattedPrice || `$${(p.price || 0).toFixed(2)}`,
+        mainMedia: p.mainMedia || null,
+      }));
+
+      return { success: true, products };
+    } catch (e) {
+      console.error('[bundleBuilder] getBundlePageProducts failed:', e);
+      return { success: false, error: 'Failed to load products', products: [] };
+    }
+  }
+);
+
+// ── addBundleToCart ───────────────────────────────────────────────────
+
+/**
+ * Add a custom bundle (user-selected product IDs) to the cart.
+ * Pricing and discount are server-derived — no client-supplied totals accepted.
+ *
+ * @param {string[]} productIds - Array of product IDs to bundle (2–4 items)
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const addBundleToCart = webMethod(
+  Permissions.Anyone,
+  async (productIds) => {
+    try {
+      if (!productIds || productIds.length < 2) {
+        return { success: false, error: 'Select at least 2 items to build a bundle' };
+      }
+
+      const cleanIds = productIds
+        .slice(0, 4)
+        .map(id => sanitize(id, 50))
+        .filter(Boolean);
+
+      if (cleanIds.length < 2) {
+        return { success: false, error: 'Invalid product IDs' };
+      }
+
+      const lineItems = cleanIds.map(productId => ({
+        catalogReference: {
+          catalogItemId: productId,
+          appId: '1380b703-ce81-ff05-f115-39571d94dfcd', // Wix Stores appId
+        },
+        quantity: 1,
+      }));
+
+      await ecomCart.addToCurrentCart({ lineItems });
+      return { success: true };
+    } catch (e) {
+      console.error('[bundleBuilder] addBundleToCart failed:', e);
+      return { success: false, error: 'Failed to add bundle to cart' };
+    }
+  }
+);
 
 // Export for testing
 export const _BUNDLE_RULES = BUNDLE_RULES;
