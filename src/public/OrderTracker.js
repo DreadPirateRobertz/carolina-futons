@@ -86,11 +86,18 @@ export function getActiveSteps(fulfillmentStatus) {
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 
-// Intentionally silent: Wix $w() throws for unknown selectors at runtime.
-// Returning null lets callers degrade gracefully without polluting logs for
-// every optional element that happens not to be on the current page variant.
+// Silent for expected Wix "selector not found" errors; warns on anything else
+// so unexpected platform faults surface without breaking the UI.
 function safeGet($wFn, sel) {
-  try { return $wFn(sel) || null; } catch (_) { return null; }
+  try {
+    return $wFn(sel) || null;
+  } catch (err) {
+    const msg = err?.message ?? '';
+    if (!msg.includes('not found') && !msg.includes('Cannot read')) {
+      console.warn('[OrderTracker] safeGet unexpected error:', sel, msg);
+    }
+    return null;
+  }
 }
 
 function showError($wFn, msg) {
@@ -245,9 +252,9 @@ function renderProgressBar($wFn, fulfillmentStatus) {
     el.removeCssClass(CSS_STEP_ACTIVE);
     if (i <= active) {
       el.addCssClass(CSS_STEP_ACTIVE);
-      if (el.accessibility) el.accessibility.ariaCurrent = i === active ? 'step' : '';
+      if (el.accessibility) el.accessibility.ariaCurrent = i === active ? 'step' : false;
     } else {
-      if (el.accessibility) el.accessibility.ariaCurrent = '';
+      if (el.accessibility) el.accessibility.ariaCurrent = false;
     }
   }
 }
