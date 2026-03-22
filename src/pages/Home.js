@@ -19,6 +19,7 @@ import { getImageDimensions } from 'public/galleryConfig.js';
 import { initSocialFeeds } from 'public/SocialFeedEmbed.js';
 import { initBlogTeaserRepeater } from 'public/HomeBlogTeasers.js';
 import { initGiftCardSection } from 'public/giftCardSection.js';
+import { initContinueShoppingSection } from 'public/ContinueShoppingSection.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,6 +67,7 @@ $w.onReady(async function () {
     { name: 'categoryShowcase', init: initCategoryShowcase, critical: true },
     { name: 'trustBar', init: initTrustBar, critical: true },
     { name: 'saleHighlights', init: loadSaleHighlights, critical: false },
+    { name: 'continueShopping', init: () => initContinueShoppingSection($w), critical: false },
     { name: 'recentlyViewed', init: initRecentlyViewed, critical: false },
     { name: 'testimonials', init: initTestimonials, critical: false },
     { name: 'videoShowcase', init: initVideoShowcase, critical: false },
