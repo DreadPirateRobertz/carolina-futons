@@ -32,7 +32,8 @@ export function loadHistory(): SessionRecord[] {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed as SessionRecord[];
-  } catch {
+  } catch (err) {
+    console.warn('[useSessionTimer] loadHistory: corrupt/missing storage', err);
     return [];
   }
 }
@@ -42,8 +43,8 @@ function appendHistory(record: SessionRecord): void {
     const prev = loadHistory();
     const trimmed = prev.slice(-MAX_HISTORY + 1); // keep most recent N-1, append new
     localStorage.setItem(HISTORY_KEY, JSON.stringify([...trimmed, record]));
-  } catch {
-    // quota exceeded — silently ignore
+  } catch (err) {
+    console.warn('[useSessionTimer] saveHistory: localStorage unavailable', err);
   }
 }
 
