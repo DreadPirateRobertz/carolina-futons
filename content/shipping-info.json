@@ -15,17 +15,17 @@
       },
       {
         "name": "Local White-Glove Delivery",
-        "description": "In-home delivery within 50 miles of Hendersonville, NC. Includes unpacking, room placement, assembly, and packaging removal.",
-        "price": 149,
-        "timeline": "Scheduled delivery — Wednesday through Saturday",
-        "area": "Within 50 miles of Hendersonville, NC"
+        "description": "In-home delivery for Hendersonville & immediate WNC. We bring it in, set it up, and place it exactly where you want it. Includes unpacking, room placement, assembly, and packaging removal.",
+        "price": 99,
+        "timeline": "2–4 business days (Wed–Sat scheduled)",
+        "area": "Hendersonville, Flat Rock, Brevard, Fletcher, Mills River and surrounding WNC communities"
       },
       {
         "name": "Regional White-Glove Delivery",
-        "description": "Full-service in-home delivery for customers beyond local range. Includes unpacking, assembly, and packaging removal.",
+        "description": "Full-service in-home delivery across the Southeast. We bring it in, set it up, and place it exactly where you want it. Includes unpacking, assembly, and packaging removal.",
         "price": 249,
-        "timeline": "1-2 weeks",
-        "area": "Southeast US and beyond"
+        "timeline": "5–10 business days (Wed–Sat scheduled)",
+        "area": "NC, SC, GA, TN, VA and extended Southeast"
       },
       {
         "name": "In-Store Pickup",

@@ -68,20 +68,81 @@ describe('shippingConfig', () => {
     expect(shippingConfig.freeThreshold).toBe(999999);
   });
 
-  it('has white glove pricing', () => {
+  it('has white glove freeThreshold', () => {
     expect(shippingConfig.whiteGlove.freeThreshold).toBe(999999);
   });
 
-  it('has ZIP zone definitions', () => {
-    expect(shippingConfig.zones.local.prefixMin).toBe(287);
-    expect(shippingConfig.zones.local.prefixMax).toBe(289);
-    expect(shippingConfig.zones.regional.prefixMin).toBe(270);
-    expect(shippingConfig.zones.regional.prefixMax).toBe(399);
+  it('has terrain surcharge config', () => {
+    expect(shippingConfig.whiteGlove.terrainSurcharge.amount).toBe(75);
+    expect(shippingConfig.whiteGlove.terrainSurcharge.zips).toContain('28741'); // Highlands
+    expect(shippingConfig.whiteGlove.terrainSurcharge.zips).toContain('28717'); // Cashiers
   });
 
-  it('local zone is subset of regional zone', () => {
-    expect(shippingConfig.zones.local.prefixMin).toBeGreaterThanOrEqual(shippingConfig.zones.regional.prefixMin);
-    expect(shippingConfig.zones.local.prefixMax).toBeLessThanOrEqual(shippingConfig.zones.regional.prefixMax);
+  it('has 4 local delivery zones', () => {
+    expect(shippingConfig.localZones).toHaveLength(4);
+    const codes = shippingConfig.localZones.map(z => z.code);
+    expect(codes).toEqual(['zone1', 'zone2', 'zone3', 'zone4']);
+  });
+
+  it('zone1 covers Hendersonville exact zips with cheapest delivery', () => {
+    const z = shippingConfig.localZones.find(z => z.code === 'zone1');
+    expect(z.zips).toContain('28792');
+    expect(z.delivery).toBe(39);
+    expect(z.whiteGlove).toBe(99);
+    expect(z.icon).toBe('🏠');
+    expect(z.badge).toBe('Local Love ♥');
+  });
+
+  it('zone2 covers WNC extended (zip3 prefixes + NC/SC)', () => {
+    const z = shippingConfig.localZones.find(z => z.code === 'zone2');
+    expect(z.zip3Prefixes).toContain(287);
+    expect(z.zip3Prefixes).toContain(293); // Upstate SC
+    expect(z.states).toContain('NC');
+    expect(z.states).toContain('SC');
+    expect(z.delivery).toBe(69);
+    expect(z.icon).toBe('🏔️');
+  });
+
+  it('zone3 covers Southeast regional states (NC/SC/GA/TN)', () => {
+    const z = shippingConfig.localZones.find(z => z.code === 'zone3');
+    expect(z.states).toContain('NC');
+    expect(z.states).toContain('SC');
+    expect(z.states).toContain('GA');
+    expect(z.states).toContain('TN');
+    expect(z.states).not.toContain('VA'); // VA is zone4
+    expect(z.states).not.toContain('FL');
+    expect(z.delivery).toBe(99);
+  });
+
+  it('zone4 covers extended SE including VA (previously excluded)', () => {
+    const z = shippingConfig.localZones.find(z => z.code === 'zone4');
+    expect(z.states).toContain('VA');
+    expect(z.states).toContain('GA');
+    expect(z.states).toContain('TN');
+    expect(z.delivery).toBe(149);
+    expect(z.icon).toBe('🗺️');
+  });
+
+  it('all zones have required gamification fields', () => {
+    for (const zone of shippingConfig.localZones) {
+      expect(zone.icon, `${zone.code}.icon`).toBeTruthy();
+      expect(zone.whiteGloveIcon, `${zone.code}.whiteGloveIcon`).toBeTruthy();
+      expect(zone.whiteGloveUpsell, `${zone.code}.whiteGloveUpsell`).toBeTruthy();
+      expect(typeof zone.highlight, `${zone.code}.highlight`).toBe('boolean');
+      expect(typeof zone.whiteGloveHighlight, `${zone.code}.whiteGloveHighlight`).toBe('boolean');
+    }
+  });
+
+  it('has legacy zones config for dynamicPricing.web.js compat', () => {
+    expect(shippingConfig.zones.local.prefixMin).toBe(287);
+    expect(shippingConfig.zones.local.prefixMax).toBe(289);
+    // Regional: state list for shipping eligibility + prefix range for dynamic pricing
+    expect(shippingConfig.zones.regional.states).toContain('NC');
+    expect(shippingConfig.zones.regional.states).toContain('GA');
+    expect(shippingConfig.zones.regional.states).toContain('VA');
+    expect(shippingConfig.zones.regional.states).not.toContain('FL');
+    expect(shippingConfig.zones.regional.prefixMin).toBe(270);
+    expect(shippingConfig.zones.regional.prefixMax).toBe(399);
   });
 });
 

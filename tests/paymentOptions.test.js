@@ -154,14 +154,14 @@ describe('getPaymentOptions', () => {
     const result = await getPaymentOptions(200);
     const badge = result.badges.find(b => b.type === 'afterpay');
     expect(badge).toBeDefined();
-    expect(badge.label).toContain('4 payments of');
+    expect(badge.label).toBe('Pay in 4 with Afterpay');
   });
 
   it('includes financing badge for $500', async () => {
     const result = await getPaymentOptions(500);
     const badge = result.badges.find(b => b.type === 'financing');
     expect(badge).toBeDefined();
-    expect(badge.label).toContain('6 months interest-free');
+    expect(badge.label).toBe('As low as $84/mo'); // Math.ceil(83.33) = 84 for $500/6mo 0% APR
   });
 
   it('returns financing ineligible below $300', async () => {

@@ -446,16 +446,9 @@ describe('CustomizationBuilder', () => {
     });
 
     it('renders saved config list via onItemReady', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
-        default: {
-          local: {
-            getItem: vi.fn(() => JSON.stringify([
-              { _id: 'local-1', productId: 'prod-1', configName: 'Blue Setup', fabricName: 'Coastal Blue', fabricColorHex: '#5B8FA8', totalPrice: 499 },
-            ])),
-            setItem: vi.fn(),
-          },
-        },
-      }));
+      globalThis.sessionStorage.setItem('cf_saved_configs', JSON.stringify([
+        { _id: 'local-1', productId: 'prod-1', configName: 'Blue Setup', fabricName: 'Coastal Blue', fabricColorHex: '#5B8FA8', totalPrice: 499 },
+      ]));
 
       await loadSavedCustomizations($w, state);
       expect($w('#custSavedList').onItemReady).toHaveBeenCalled();
@@ -470,42 +463,24 @@ describe('CustomizationBuilder', () => {
       expect($item('#savedColorDot').style.backgroundColor).toBe('#5B8FA8');
       expect($item('#savedPrice').text).toBe('$499.00');
       expect($item('#savedLoadBtn').onClick).toHaveBeenCalled();
-
-      vi.doUnmock('wix-storage-frontend');
     });
 
     it('shows Untitled for config with no name', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
-        default: {
-          local: {
-            getItem: vi.fn(() => JSON.stringify([
-              { _id: 'local-2', productId: 'prod-1', configName: '', fabricName: 'X', fabricColorHex: '#000', totalPrice: 100 },
-            ])),
-            setItem: vi.fn(),
-          },
-        },
-      }));
+      globalThis.sessionStorage.setItem('cf_saved_configs', JSON.stringify([
+        { _id: 'local-2', productId: 'prod-1', configName: '', fabricName: 'X', fabricColorHex: '#000', totalPrice: 100 },
+      ]));
 
       await loadSavedCustomizations($w, state);
       const listCb = $w('#custSavedList').onItemReady.mock.calls[0][0];
       const $item = create$w();
       listCb($item, { _id: 'local-2', configName: '', fabricName: 'X', totalPrice: 100 });
       expect($item('#savedConfigName').text).toBe('Untitled');
-
-      vi.doUnmock('wix-storage-frontend');
     });
 
     it('load button click applies saved config to state', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
-        default: {
-          local: {
-            getItem: vi.fn(() => JSON.stringify([
-              { _id: 'local-3', productId: 'prod-1', configName: 'Hemp Setup', fabricName: 'Organic Hemp', fabricSwatchId: 'sw-3', fabricColorHex: '#C4B896', priceTier: 'luxury', totalPrice: 574 },
-            ])),
-            setItem: vi.fn(),
-          },
-        },
-      }));
+      globalThis.sessionStorage.setItem('cf_saved_configs', JSON.stringify([
+        { _id: 'local-3', productId: 'prod-1', configName: 'Hemp Setup', fabricName: 'Organic Hemp', fabricSwatchId: 'sw-3', fabricColorHex: '#C4B896', priceTier: 'luxury', totalPrice: 574 },
+      ]));
 
       await loadSavedCustomizations($w, state);
       const listCb = $w('#custSavedList').onItemReady.mock.calls[0][0];
@@ -519,23 +494,14 @@ describe('CustomizationBuilder', () => {
       expect(state.customization).toBeTruthy();
       expect(state.customization.fabricSwatchId).toBe('sw-3');
       expect(state.customization.fabricName).toBe('Organic Hemp');
-
-      vi.doUnmock('wix-storage-frontend');
     });
 
     it('applySavedConfig announces loaded config name', async () => {
       const { announce } = await import('public/a11yHelpers.js');
 
-      vi.doMock('wix-storage-frontend', () => ({
-        default: {
-          local: {
-            getItem: vi.fn(() => JSON.stringify([
-              { _id: 'local-4', productId: 'prod-1', configName: 'My Fave', fabricName: 'Coastal Blue', fabricSwatchId: 'sw-1', fabricColorHex: '#5B8FA8', priceTier: 'standard', totalPrice: 499 },
-            ])),
-            setItem: vi.fn(),
-          },
-        },
-      }));
+      globalThis.sessionStorage.setItem('cf_saved_configs', JSON.stringify([
+        { _id: 'local-4', productId: 'prod-1', configName: 'My Fave', fabricName: 'Coastal Blue', fabricSwatchId: 'sw-1', fabricColorHex: '#5B8FA8', priceTier: 'standard', totalPrice: 499 },
+      ]));
 
       await loadSavedCustomizations($w, state);
       const listCb = $w('#custSavedList').onItemReady.mock.calls[0][0];
@@ -545,28 +511,17 @@ describe('CustomizationBuilder', () => {
       loadCb();
 
       expect(announce).toHaveBeenCalledWith($w, 'Loaded configuration: My Fave');
-
-      vi.doUnmock('wix-storage-frontend');
     });
 
     it('filters local configs by productId', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
-        default: {
-          local: {
-            getItem: vi.fn(() => JSON.stringify([
-              { _id: 'local-a', productId: 'other-product', configName: 'Other', fabricName: 'X', totalPrice: 100 },
-              { _id: 'local-b', productId: 'prod-1', configName: 'Match', fabricName: 'Y', totalPrice: 200 },
-            ])),
-            setItem: vi.fn(),
-          },
-        },
-      }));
+      globalThis.sessionStorage.setItem('cf_saved_configs', JSON.stringify([
+        { _id: 'local-a', productId: 'other-product', configName: 'Other', fabricName: 'X', totalPrice: 100 },
+        { _id: 'local-b', productId: 'prod-1', configName: 'Match', fabricName: 'Y', totalPrice: 200 },
+      ]));
 
       await loadSavedCustomizations($w, state);
       expect($w('#custSavedList').data).toHaveLength(1);
       expect($w('#custSavedList').data[0].configName).toBe('Match');
-
-      vi.doUnmock('wix-storage-frontend');
     });
   });
 

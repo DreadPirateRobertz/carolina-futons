@@ -1,308 +1,130 @@
 /**
- * Tests for getFeaturedProductsForCity webMethod in localSeoService.web.js
+ * @file localSeoFeaturedProducts.test.js
+ * @description CF-4e8m: Additional coverage for getFeaturedProductsForCity — S4 behavior.
  *
- * Covers: known city products, home city (4 categories) vs. nearby (2 categories),
- * unknown city, invalid slugs, required product fields, missing product IDs,
- * and partial catalog failures.
+ * Supplements localSeoS4.test.js with: strict limit enforcement (6+ seeded products),
+ * products without salesRank field, formattedPrice fallback, getLocalPage with
+ * preferredCategories city, and getLocalPage page:null for unknown slug.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ── Mock Wix modules ────────────────────────────────────────────────────
-vi.mock('wix-web-module', () => ({
-  Permissions: { Anyone: 'Anyone', SiteMember: 'SiteMember' },
-  webMethod: vi.fn((_, fn) => fn),
-}));
+import { describe, it, expect, beforeEach } from 'vitest';
+import { getFeaturedProductsForCity, getLocalPage } from '../src/backend/localSeoService.web.js';
+import { __reset, __seed, __setQueryError } from './__mocks__/wix-data.js';
 
-import { getFeaturedProductsForCity } from '../src/backend/localSeoService.web.js';
-import { __seed, __reset } from './__mocks__/wix-data.js';
-import {
-  FEATURED_PRODUCT_CATALOG,
-  HOME_CITY_FEATURED_CATEGORIES,
-  NEARBY_CITY_FEATURED_CATEGORIES,
-} from '../src/backend/utils/localSeoData.js';
+// ── 6-product fixture for strict limit testing ────────────────────────────────
 
-// Seed test products matching catalog IDs
-const TEST_PRODUCTS = {
-  'cf-seo-frame-001': {
-    _id: 'cf-seo-frame-001',
-    name: 'Classic Futon Frame',
-    slug: 'classic-futon-frame',
-    price: 499,
-    formattedPrice: '$499.00',
-    mainMedia: 'https://example.com/frame.jpg',
-  },
-  'cf-seo-mattress-001': {
-    _id: 'cf-seo-mattress-001',
-    name: 'Premium Foam Mattress',
-    slug: 'premium-foam-mattress',
-    price: 299,
-    formattedPrice: '$299.00',
-    mainMedia: 'https://example.com/mattress.jpg',
-  },
-  'cf-seo-cover-001': {
-    _id: 'cf-seo-cover-001',
-    name: 'Cotton Futon Cover',
-    slug: 'cotton-futon-cover',
-    price: 79,
-    formattedPrice: '$79.00',
-    mainMedia: 'https://example.com/cover.jpg',
-  },
-  'cf-seo-accessory-001': {
-    _id: 'cf-seo-accessory-001',
-    name: 'Futon Pillow Set',
-    slug: 'futon-pillow-set',
-    price: 49,
-    formattedPrice: '$49.00',
-    mainMedia: 'https://example.com/pillows.jpg',
-  },
-};
-
-function seedAllProducts() {
-  __seed('Stores/Products', Object.values(TEST_PRODUCTS));
-}
+const SIX_PRODUCTS = [
+  { _id: 'p1', name: 'Frame A',    price: 399, formattedPrice: '$399.00', mainMedia: 'a.jpg', slug: 'frame-a',    salesRank: 1, categories: ['futon-frames'] },
+  { _id: 'p2', name: 'Mattress B', price: 199, formattedPrice: '$199.00', mainMedia: 'b.jpg', slug: 'mattress-b', salesRank: 2, categories: ['mattresses'] },
+  { _id: 'p3', name: 'Cover C',    price:  49, formattedPrice: '$49.00',  mainMedia: 'c.jpg', slug: 'cover-c',    salesRank: 3, categories: ['covers'] },
+  { _id: 'p4', name: 'Frame D',    price: 499, formattedPrice: '$499.00', mainMedia: 'd.jpg', slug: 'frame-d',    salesRank: 4, categories: ['futon-frames'] },
+  { _id: 'p5', name: 'Mattress E', price: 249, formattedPrice: '$249.00', mainMedia: 'e.jpg', slug: 'mattress-e', salesRank: 5, categories: ['mattresses'] },
+  { _id: 'p6', name: 'Cover F',    price:  59, formattedPrice: '$59.00',  mainMedia: 'f.jpg', slug: 'cover-f',    salesRank: 6, categories: ['covers'] },
+];
 
 beforeEach(() => {
-  vi.clearAllMocks();
   __reset();
+  __seed('Stores/Products', SIX_PRODUCTS);
 });
 
-// ── Happy path — known cities ────────────────────────────────────────────
+// ── Strict limit enforcement ──────────────────────────────────────────────────
 
-describe('getFeaturedProductsForCity — known city', () => {
-  it('returns success: true for a known city slug', async () => {
-    seedAllProducts();
+describe('getFeaturedProductsForCity — strict limit enforcement', () => {
+  it('default limit 4 returns exactly 4 products when 6 are seeded', async () => {
     const result = await getFeaturedProductsForCity('asheville-nc');
     expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(4);
   });
 
-  it('returns an array of products', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    expect(Array.isArray(products)).toBe(true);
-  });
-
-  it('each product has productId', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(p.productId).toBeTruthy();
-    }
-  });
-
-  it('each product has name', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(typeof p.name).toBe('string');
-      expect(p.name.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('each product has price', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(typeof p.price).toBe('number');
-      expect(p.price).toBeGreaterThan(0);
-    }
-  });
-
-  it('each product has formattedPrice', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(typeof p.formattedPrice).toBe('string');
-      expect(p.formattedPrice.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('each product has imageUrl', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(typeof p.imageUrl).toBe('string');
-    }
-  });
-
-  it('each product has productPageUrl containing /product-page/', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(p.productPageUrl).toContain('/product-page/');
-    }
-  });
-
-  it('productPageUrl starts with site domain', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    for (const p of products) {
-      expect(p.productPageUrl).toMatch(/^https:\/\/www\.carolinafutons\.com/);
-    }
-  });
-});
-
-// ── Home city (Hendersonville) — 4 categories ───────────────────────────
-
-describe('getFeaturedProductsForCity — home city', () => {
-  it('Hendersonville returns 4 products', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    expect(products).toHaveLength(4);
-  });
-
-  it('home city product count matches HOME_CITY_FEATURED_CATEGORIES length', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    expect(products.length).toBe(HOME_CITY_FEATURED_CATEGORIES.length);
-  });
-
-  it('Hendersonville includes a futon frame product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    const frameProductId = FEATURED_PRODUCT_CATALOG['futon-frames'].productId;
-    expect(products.some(p => p.productId === frameProductId)).toBe(true);
-  });
-
-  it('Hendersonville includes a mattress product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    const mattressProductId = FEATURED_PRODUCT_CATALOG['mattresses'].productId;
-    expect(products.some(p => p.productId === mattressProductId)).toBe(true);
-  });
-
-  it('Hendersonville includes a cover product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    const coverProductId = FEATURED_PRODUCT_CATALOG['covers'].productId;
-    expect(products.some(p => p.productId === coverProductId)).toBe(true);
-  });
-
-  it('Hendersonville includes an accessories product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('hendersonville-nc');
-    const accessoryProductId = FEATURED_PRODUCT_CATALOG['accessories'].productId;
-    expect(products.some(p => p.productId === accessoryProductId)).toBe(true);
-  });
-});
-
-// ── Nearby cities — 2 categories ─────────────────────────────────────────
-
-describe('getFeaturedProductsForCity — nearby cities', () => {
-  it('asheville-nc returns 2 products', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    expect(products).toHaveLength(2);
-  });
-
-  it('nearby city product count matches NEARBY_CITY_FEATURED_CATEGORIES length', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    expect(products.length).toBe(NEARBY_CITY_FEATURED_CATEGORIES.length);
-  });
-
-  it('all 5 non-home cities return 2 products each', async () => {
-    seedAllProducts();
-    const nearbySlugs = ['asheville-nc', 'charlotte-nc', 'greenville-sc', 'spartanburg-sc', 'boone-nc'];
-    for (const slug of nearbySlugs) {
-      const { products } = await getFeaturedProductsForCity(slug);
-      expect(products).toHaveLength(2);
-    }
-  });
-
-  it('nearby cities include futon-frames product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('greenville-sc');
-    const frameProductId = FEATURED_PRODUCT_CATALOG['futon-frames'].productId;
-    expect(products.some(p => p.productId === frameProductId)).toBe(true);
-  });
-
-  it('nearby cities include mattresses product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('greenville-sc');
-    const mattressProductId = FEATURED_PRODUCT_CATALOG['mattresses'].productId;
-    expect(products.some(p => p.productId === mattressProductId)).toBe(true);
-  });
-
-  it('nearby cities do not include covers product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    const coverProductId = FEATURED_PRODUCT_CATALOG['covers'].productId;
-    expect(products.some(p => p.productId === coverProductId)).toBe(false);
-  });
-
-  it('nearby cities do not include accessories product', async () => {
-    seedAllProducts();
-    const { products } = await getFeaturedProductsForCity('asheville-nc');
-    const accessoryProductId = FEATURED_PRODUCT_CATALOG['accessories'].productId;
-    expect(products.some(p => p.productId === accessoryProductId)).toBe(false);
-  });
-});
-
-// ── Unknown city ──────────────────────────────────────────────────────────
-
-describe('getFeaturedProductsForCity — unknown city', () => {
-  it('returns success: true, products: [] for unknown slug', async () => {
-    const result = await getFeaturedProductsForCity('portland-or');
+  it('explicit limit 2 returns exactly 2 products when 6 are seeded', async () => {
+    const result = await getFeaturedProductsForCity('asheville-nc', 2);
     expect(result.success).toBe(true);
-    expect(result.products).toHaveLength(0);
+    expect(result.products).toHaveLength(2);
   });
 
-  it('returns empty products for any undefined city slug', async () => {
-    const result = await getFeaturedProductsForCity('not-a-city');
+  it('clamps limit 0 to 1 — returns 1 product', async () => {
+    const result = await getFeaturedProductsForCity('asheville-nc', 0);
     expect(result.success).toBe(true);
-    expect(Array.isArray(result.products)).toBe(true);
-    expect(result.products.length).toBe(0);
+    expect(result.products).toHaveLength(1);
+  });
+
+  it('clamps limit 100 to 20 — returns at most 20 products', async () => {
+    const result = await getFeaturedProductsForCity('asheville-nc', 100);
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeLessThanOrEqual(20);
+  });
+
+  it('clamps non-numeric limit to default 4', async () => {
+    const result = await getFeaturedProductsForCity('asheville-nc', 'abc');
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(4);
   });
 });
 
-// ── Invalid slugs ─────────────────────────────────────────────────────────
+// ── Products without salesRank ────────────────────────────────────────────────
 
-describe('getFeaturedProductsForCity — invalid slug', () => {
-  it('returns success: false for empty string', async () => {
-    const result = await getFeaturedProductsForCity('');
-    expect(result.success).toBe(false);
-    expect(result.products).toHaveLength(0);
-  });
-
-  it('returns success: false for null', async () => {
-    const result = await getFeaturedProductsForCity(null);
-    expect(result.success).toBe(false);
-  });
-
-  it('returns success: false for undefined', async () => {
-    const result = await getFeaturedProductsForCity(undefined);
-    expect(result.success).toBe(false);
-  });
-
-  it('returns success: false for HTML injection', async () => {
-    const result = await getFeaturedProductsForCity('<script>alert(1)</script>');
-    expect(result.success).toBe(false);
-  });
-
-  it('returns success: false for path-traversal', async () => {
-    const result = await getFeaturedProductsForCity('../etc/passwd');
-    expect(result.success).toBe(false);
-  });
-});
-
-// ── Partial catalog (missing product in store) ────────────────────────────
-
-describe('getFeaturedProductsForCity — missing product in catalog', () => {
-  it('skips products not found in Wix Stores (no throw)', async () => {
-    // Only seed frame and mattress — covers and accessories are missing
+describe('getFeaturedProductsForCity — products without salesRank', () => {
+  it('does not throw when products lack salesRank field', async () => {
+    __reset();
     __seed('Stores/Products', [
-      TEST_PRODUCTS['cf-seo-frame-001'],
-      TEST_PRODUCTS['cf-seo-mattress-001'],
+      { _id: 'px', name: 'No-rank product', price: 100, slug: 'no-rank', mainMedia: '', categories: ['futon-frames'] },
     ]);
-    const result = await getFeaturedProductsForCity('hendersonville-nc');
-    expect(result.success).toBe(true);
-    expect(result.products.length).toBe(2); // only 2 found
+    await expect(getFeaturedProductsForCity('asheville-nc')).resolves.toMatchObject({ success: true });
   });
 
-  it('returns success: true even if all products are missing', async () => {
-    // Empty store
+  it('products without salesRank return undefined salesRank (not throw)', async () => {
+    __reset();
+    __seed('Stores/Products', [
+      { _id: 'px', name: 'No-rank', price: 100, slug: 'no-rank', mainMedia: '', categories: ['futon-frames'] },
+    ]);
     const result = await getFeaturedProductsForCity('asheville-nc');
     expect(result.success).toBe(true);
-    expect(result.products).toHaveLength(0);
+    expect(result.products[0]).toHaveProperty('productId', 'px');
+  });
+});
+
+// ── formattedPrice fallback ───────────────────────────────────────────────────
+
+describe('getFeaturedProductsForCity — formattedPrice fallback', () => {
+  it('falls back to $price when formattedPrice is missing', async () => {
+    __reset();
+    __seed('Stores/Products', [
+      { _id: 'pf', name: 'Bare product', price: 250, slug: 'bare', mainMedia: '', salesRank: 1, categories: ['futon-frames'] },
+    ]);
+    const result = await getFeaturedProductsForCity('asheville-nc');
+    expect(result.success).toBe(true);
+    expect(result.products[0].formattedPrice).toBe('$250');
+  });
+});
+
+// ── getLocalPage with preferredCategories city ────────────────────────────────
+
+describe('getLocalPage — featuredProducts respect preferredCategories', () => {
+  it('hendersonville-nc featuredProducts only include futon-frames category', async () => {
+    const result = await getLocalPage('hendersonville-nc');
+    expect(result.success).toBe(true);
+    expect(Array.isArray(result.page.featuredProducts)).toBe(true);
+    for (const p of result.page.featuredProducts) {
+      expect(p.categories).toContain('futon-frames');
+    }
+  });
+
+  it('hendersonville-nc featuredProducts are ordered by salesRank', async () => {
+    const result = await getLocalPage('hendersonville-nc');
+    expect(result.success).toBe(true);
+    const prods = result.page.featuredProducts;
+    expect(prods.length).toBeGreaterThan(0);
+    const ranks = prods.map(p => p.salesRank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+  });
+});
+
+// ── getLocalPage — page:null for undefined city ───────────────────────────────
+
+describe('getLocalPage — page:null contract for undefined city slug', () => {
+  it('returns success:true, page:null for a valid but undefined slug', async () => {
+    const result = await getLocalPage('unknown-city-xyz');
+    expect(result.success).toBe(true);
+    expect(result.page).toBeNull();
   });
 });

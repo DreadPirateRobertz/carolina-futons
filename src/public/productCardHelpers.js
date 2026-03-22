@@ -112,18 +112,48 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
+// Matches batchAltText.web.js + imageAltText.web.js keyword convention (3 terms only).
+// 'context' excluded — matches Wix CDN URL params. 'living/bedroom/setting' excluded — too broad.
+const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
+
+/**
+ * Select the best image for a product card — lifestyle room shot preferred over
+ * white-background product shots. Checks mediaItems title/alt/url for lifestyle
+ * keywords; falls back to mainMedia when no match.
+ *
+ * Keywords aligned with batchAltText.web.js + imageAltText.web.js convention.
+ * No index-based fallback — mediaItems[1] is not guaranteed to be a lifestyle
+ * shot (could be a back view, dimension diagram, or detail photo).
+ *
+ * @param {Object} product - Wix product with mainMedia and optional mediaItems array
+ * @returns {string} Image URL — keyword-matched lifestyle shot if found, else mainMedia
+ */
+export function getLifestyleImage(product) {
+  const mediaItems = product?.mediaItems;
+  if (Array.isArray(mediaItems) && mediaItems.length > 0) {
+    const keywordMatch = mediaItems.find(item => {
+      const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
+      return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
+    });
+    if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
+  }
+  return product?.mainMedia || '';
+}
+
 /**
  * Set card image src with placeholder fallback when missing.
+ * Prefers lifestyle/room-context photography over white-background product shots
+ * per CF-l5id — lifestyle photo first on product cards.
  * Optionally sets explicit dimensions to prevent CLS (Cumulative Layout Shift).
  * @param {Object} $el - Wix image element
- * @param {Object} product - Product data with mainMedia and name
+ * @param {Object} product - Product data with mainMedia, mediaItems, and name
  * @param {string} [category] - Category slug for placeholder selection
  * @param {{ width: number, height: number }} [dimensions] - Explicit image dimensions to prevent CLS
  */
 export function setCardImage($el, product, category, dimensions) {
   if (!$el) return;
   try {
-    const src = product?.mainMedia;
+    const src = getLifestyleImage(product);
     const name = product?.name;
     $el.src = src || getProductFallbackImage(category || '');
     $el.alt = name ? `${name} - Carolina Futons` : 'Product image';
@@ -133,8 +163,9 @@ export function setCardImage($el, product, category, dimensions) {
         $el.style.aspectRatio = `${dimensions.width} / ${dimensions.height}`;
       } catch (e) { /* style may not be settable */ }
     }
-  } catch (e) { /* element may not support src/alt */ }
+  } catch (e) { console.warn('[ProductCard] setCardImage error:', e?.message); }
 }
+
 
 /**
  * Render a financing badge on a product card using pre-fetched badge data.

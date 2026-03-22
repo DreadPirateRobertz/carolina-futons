@@ -152,7 +152,11 @@ export const getShippingRates = async (options) => {
 
     // ── Local delivery zone matching ──────────────────────────────────────
     const zip3 = parseInt((destination.postalCode || '').substring(0, 3), 10);
-    const stateCode = destination.state;
+    // Wix subdivisions may be 'NC' or 'US-NC' — normalise to 2-letter code
+    const stateCode = (destination.state || '').replace(/^US-/, '');
+    if (!stateCode && destination.postalCode) {
+      logError('shipping-rates-plugin', new Error(`No state code for ZIP ${destination.postalCode} — local delivery options suppressed`), { silent: true });
+    }
 
     // In-store pickup — local (WNC) zone only
     if (zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax) {
@@ -241,8 +245,11 @@ export const getShippingRates = async (options) => {
     logError('shipping-rates-plugin.getShippingRates', err);
 
     // Return conservative flat rates as fallback when UPS API is unavailable.
-    // Rates are deliberately above typical ground rates so the store does not
-    // under-collect. Titles include "(Estimated)" to signal non-live rates.
+    // Rates are deliberately set above typical ground rates (CF avg: ~$38 ground,
+    // ~$72 express) so the store does not under-collect. Titles include "(Estimated)"
+    // to signal to the customer that these are not live-calculated rates.
+    // Alternative: return { shippingRates: [] } to block checkout on UPS failure —
+    // rejected because it prevents customers from completing orders during outages.
     return {
       shippingRates: [
         {

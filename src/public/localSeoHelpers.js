@@ -72,14 +72,14 @@ export function buildBreadcrumbList(cityData, siteUrl) {
  * Build a FAQPage JSON-LD schema from an array of question/answer pairs.
  *
  * @param {Array<{ question: string, answer: string }>} faqs
- * @returns {Object} FAQPage JSON-LD schema object. Returns minimal valid
- *   schema (empty mainEntity) if faqs is empty or not an array.
+ * @returns {Object|null} FAQPage JSON-LD schema object, or null if faqs is
+ *   empty, not an array, or all entries fail validation.
  */
 export function buildFaqSchema(faqs) {
   const items = Array.isArray(faqs) ? faqs : [];
 
   const mainEntity = items
-    .filter(faq => faq && typeof faq.question === 'string' && typeof faq.answer === 'string')
+    .filter(faq => faq && typeof faq.question === 'string' && faq.question.length > 0 && typeof faq.answer === 'string' && faq.answer.length > 0)
     .map(faq => ({
       '@type': 'Question',
       name: faq.question,
@@ -113,7 +113,8 @@ export function buildJsonLdScript(schema) {
   try {
     const json = JSON.stringify(schema);
     return `<script type="application/ld+json">${json}</script>`;
-  } catch {
+  } catch (err) {
+    console.error('[localSeoHelpers] buildJsonLdScript: JSON.stringify failed:', err.message, schema?.['@type']);
     return '';
   }
 }

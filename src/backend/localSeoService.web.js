@@ -1,9 +1,10 @@
 /**
  * @module localSeoService
  * @description WebMethod layer for /near/[city] local SEO landing pages.
- * Returns city page data, SEO metadata, and slug lists for route generation.
+ * Returns city page data, SEO metadata, slug lists, and product recommendations.
  *
- * All city data is sourced from backend/utils/localSeoData — no CMS queries.
+ * Static city data sourced from backend/utils/localSeoData.
+ * Product recommendations query Stores/Products live, ordered by salesRank.
  *
  * @requires wix-web-module
  */
@@ -14,9 +15,6 @@ import {
   LOCAL_PAGES,
   SITE_URL,
   STORE_DIRECTIONS_URL,
-  FEATURED_PRODUCT_CATALOG,
-  HOME_CITY_FEATURED_CATEGORIES,
-  NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
@@ -48,8 +46,19 @@ export const getLocalPage = webMethod(
 
       const canonicalUrl = `${SITE_URL}/near/${cityData.slug}`;
 
-      const faqs = Array.isArray(cityData.faqs) ? cityData.faqs : [];
+      const faqItems = Array.isArray(cityData.faqs) ? cityData.faqs : [];
       const breadcrumbs = buildBreadcrumbList(cityData, SITE_URL);
+      const localBusinessSchema = generateLocalBusinessSchema(cityData);
+      const faqSchema = buildFaqSchema(faqItems);
+      const breadcrumbSchema = buildBreadcrumbSchema(cityData, SITE_URL);
+
+      // Fetch live product recommendations — non-critical, page still renders on failure
+      let featuredProducts = [];
+      try {
+        featuredProducts = await _fetchProductsByCity(cityData, 4);
+      } catch (e) {
+        console.warn('[localSeoService] Failed to fetch featured products for page:', cleanSlug, e.message, e);
+      }
 
       return {
         success: true,
@@ -67,12 +76,20 @@ export const getLocalPage = webMethod(
           storeHours: SCHEMA_OPENING_HOURS,
           storeHoursDisplay: STORE_HOURS_DISPLAY,
           categoryRecommendations: Array.isArray(cityData.categoryRecommendations) ? cityData.categoryRecommendations : [],
-          faqs,
+          faqItems,
+          // Legacy alias for backward compat with existing page components — remove once all callers migrate to faqItems
+          faqs: faqItems,
           breadcrumbs,
-          jsonLd: generateLocalBusinessSchema(cityData),
-          breadcrumbSchema: buildBreadcrumbSchema(cityData, SITE_URL),
-          faqSchema: buildFaqSchema(faqs),
-          featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
+          jsonLd: localBusinessSchema,
+          breadcrumbSchema,
+          faqSchema,
+          // Combined structured data bundle for page <head> injection
+          schemaData: {
+            localBusiness: localBusinessSchema,
+            faqPage: faqSchema,
+            breadcrumb: breadcrumbSchema,
+          },
+          featuredProducts,
           mapEmbedUrl: cityData.mapEmbedUrl || '',
           directionsUrl: STORE_DIRECTIONS_URL,
           directions: cityData.directions || '',
@@ -112,22 +129,58 @@ function _buildMetaDescription(cityData) {
   return `Shop futons, murphy beds & mattresses near ${cityData.city}, ${cityData.state}. Visit Carolina Futons in Hendersonville NC${distancePart}.`;
 }
 
+// ── _fetchProductsByCity (internal helper) ────────────────────────────
+
+/**
+ * Query Stores/Products ordered by salesRank, optionally filtered by the
+ * city's preferredCategories. Called by both getFeaturedProductsForCity and
+ * getLocalPage so product objects are consistent across both callers.
+ *
+ * @param {Object} cityData - City config from LOCAL_PAGES.
+ * @param {number} [limit=4] - Max products to return. Clamped internally to [1, 20];
+ *   non-numeric values fall back to 4.
+ * @returns {Promise<Array>} Mapped product objects.
+ */
+async function _fetchProductsByCity(cityData, limit = 4) {
+  const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
+  let query = wixData.query('Stores/Products').ascending('salesRank').limit(safeLimit);
+
+  if (Array.isArray(cityData.preferredCategories) && cityData.preferredCategories.length > 0) {
+    query = query.hasSome('categories', cityData.preferredCategories);
+  }
+
+  const result = await query.find();
+  const items = Array.isArray(result?.items) ? result.items : [];
+  return items.map(p => ({
+    productId: p._id,
+    name: p.name,
+    price: p.price,
+    formattedPrice: p.formattedPrice || `$${p.price}`,
+    imageUrl: p.mainMedia || '',
+    productPageUrl: `${SITE_URL}/product-page/${p.slug}`,
+    salesRank: p.salesRank,
+    categories: Array.isArray(p.categories) ? p.categories : [],
+  }));
+}
+
 // ── getFeaturedProductsForCity ────────────────────────────────────────
 
 /**
  * Get featured products for a /near/[slug] city landing page.
- * Fetches live product data (name, price, image) from Wix Stores by
- * hardcoded catalog IDs. Home city returns 4 categories; others return 2.
+ * Queries Wix Stores ordered by salesRank. Filters by cityData.preferredCategories
+ * when set; otherwise returns top products across all categories.
  *
  * @param {string} slug - City slug (e.g. 'asheville-nc').
+ * @param {number} [limit=4] - Max products to return. Clamped to [1, 20].
  * @returns {Promise<{success: boolean, products: Array, error?: string}>}
- *   - success: false — invalid slug format
- *   - success: true, products: [] — valid slug but city not defined
- *   - success: true, products: Array — up to 4 product objects
+ *   - success: false, error: string — invalid slug (empty/path-traversal)
+ *   - success: false, error: string — Wix Stores query error
+ *   - success: true, products: [] — valid slug but no city defined, or no category matches
+ *   - success: true, products: Array — up to `limit` product objects ordered by salesRank
  */
 export const getFeaturedProductsForCity = webMethod(
   Permissions.Anyone,
-  async (slug) => {
+  async (slug, limit = 4) => {
     try {
       const cleanSlug = validateSlug(slug);
       if (!cleanSlug) {
@@ -139,31 +192,7 @@ export const getFeaturedProductsForCity = webMethod(
         return { success: true, products: [] };
       }
 
-      const categories = cityData.isHomeCity
-        ? HOME_CITY_FEATURED_CATEGORIES
-        : NEARBY_CITY_FEATURED_CATEGORIES;
-
-      const products = [];
-      for (const category of categories) {
-        const catalog = FEATURED_PRODUCT_CATALOG[category];
-        if (!catalog) continue;
-        try {
-          const product = await wixData.get('Stores/Products', catalog.productId);
-          if (product) {
-            products.push({
-              productId: product._id,
-              name: product.name,
-              price: product.price,
-              formattedPrice: product.formattedPrice || `$${product.price}`,
-              imageUrl: product.mainMedia || '',
-              productPageUrl: `${SITE_URL}/product-page/${product.slug}`,
-            });
-          }
-        } catch (e) {
-          console.error('[localSeoService] Failed to fetch product:', catalog.productId, e.message);
-        }
-      }
-
+      const products = await _fetchProductsByCity(cityData, limit);
       return { success: true, products };
     } catch (err) {
       console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initFinancingOptions, updateFinancingPrice, renderTermPills } from '../src/public/ProductFinancing.js';
+import { initFinancingOptions, updateFinancingPrice, renderTermPills, renderHeroPricingBadge } from '../src/public/ProductFinancing.js';
 import { futonFrame } from './fixtures/products.js';
 
 // Mock financingCalc.web backend (replaces old financingService.web)
@@ -551,5 +551,87 @@ describe('ProductFinancing', () => {
       expect($item('#termPill').accessibility.ariaLabel).toContain('6');
       expect($item('#termPill').accessibility.ariaLabel).toContain('100');
     });
+  });
+});
+
+// ── renderHeroPricingBadge (CF-3dz8) ──────────────────────────────────────
+
+describe('renderHeroPricingBadge', () => {
+  beforeEach(() => {
+    mockGetFinancingWidget.mockResolvedValue(mockWidgetResult);
+  });
+
+  it('shows #heroFinancingBadge with lowestMonthly text when eligible', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 600);
+    expect($w('#heroFinancingBadge').text).toBe('As low as $50/mo');
+    expect($w('#heroFinancingBadge').show).toHaveBeenCalled();
+  });
+
+  it('hides badge when price is zero', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 0);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+    expect($w('#heroFinancingBadge').show).not.toHaveBeenCalled();
+  });
+
+  it('hides badge when price is negative', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, -100);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+  });
+
+  it('hides badge when financing not eligible', async () => {
+    mockGetFinancingWidget.mockResolvedValueOnce({ success: true, eligible: false });
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 50);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+  });
+
+  it('hides badge when lowestMonthly is null', async () => {
+    mockGetFinancingWidget.mockResolvedValueOnce({ success: true, eligible: true, lowestMonthly: null });
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 600);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+  });
+
+  it('hides badge when backend returns error', async () => {
+    mockGetFinancingWidget.mockResolvedValueOnce({ success: false });
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 600);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+  });
+
+  it('hides badge gracefully on backend throw', async () => {
+    mockGetFinancingWidget.mockRejectedValueOnce(new Error('network error'));
+    const $w = createMock$w();
+    await expect(renderHeroPricingBadge($w, 600)).resolves.not.toThrow();
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+  });
+
+  it('is a no-op when #heroFinancingBadge element is absent', async () => {
+    const $w = vi.fn(() => null);
+    await expect(renderHeroPricingBadge($w, 600)).resolves.not.toThrow();
+  });
+
+  it('hides badge when price is undefined (variant mid-selection)', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, undefined);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+    expect($w('#heroFinancingBadge').show).not.toHaveBeenCalled();
+  });
+
+  // Known limitation: updateFinancingPrice does not update #heroFinancingBadge.
+  // Hero badge is a one-shot render at page init — on variant/price change the
+  // badge shows a stale value until page reload. Tracked for future fix.
+  it('hero badge is NOT updated by updateFinancingPrice (stale-price known limitation)', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 600);
+    expect($w('#heroFinancingBadge').show).toHaveBeenCalled();
+
+    // Simulate a variant change — updateFinancingPrice runs but does not touch hero badge
+    $w('#heroFinancingBadge').show.mockClear();
+    await updateFinancingPrice($w, 900);
+    expect($w('#heroFinancingBadge').show).not.toHaveBeenCalled();
   });
 });

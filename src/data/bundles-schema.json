@@ -1,0 +1,21 @@
+{
+  "collectionName": "Bundles",
+  "description": "Frame+Mattress+Cover bundle definitions for Bundle Builder S1. Each record defines one valid bundle configuration with pricing. addBundle() reads this collection to build cart line items.",
+  "fields": [
+    { "name": "displayName",       "type": "Text",    "required": true,  "description": "Bundle display name, e.g. 'Sunset Complete Set'" },
+    { "name": "frameProductId",    "type": "Text",    "required": true,  "indexed": true, "description": "Wix product ID of the frame component" },
+    { "name": "mattressProductId", "type": "Text",    "required": true,  "description": "Wix product ID of the mattress component" },
+    { "name": "coverProductId",    "type": "Text",    "required": true,  "description": "Wix product ID of the cover component" },
+    { "name": "bundlePrice",       "type": "Number",  "required": true,  "description": "Discounted total price for the bundle" },
+    { "name": "savings",           "type": "Number",  "required": true,  "description": "Dollar savings vs. buying all 3 items individually" },
+    { "name": "isActive",          "type": "Boolean", "required": true,  "default": true, "description": "When false, bundle is excluded from getBundlesByFrame and addBundle" }
+  ],
+  "indexes": [
+    { "fields": ["frameProductId", "isActive"], "description": "Powers getBundlesByFrame query" }
+  ],
+  "notes": [
+    "bundleTag is NOT stored here — it is derived at runtime as 'bundle:<_id>'",
+    "bundlePrice is authoritative — clients cannot override pricing",
+    "A single frame may have multiple bundles (different cover options)"
+  ]
+}

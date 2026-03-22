@@ -11,7 +11,16 @@
  *  - submitExitIntentEmail: invalid email rejected
  *  - submitExitIntentEmail: coupon failure is non-blocking
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// ── newsletterService mock (hoisted so vi.mock factory can reference it) ──────
+const { mockSubscribeToNewsletter } = vi.hoisted(() => ({
+  mockSubscribeToNewsletter: vi.fn(),
+}));
+vi.mock('backend/newsletterService.web', () => ({
+  subscribeToNewsletter: mockSubscribeToNewsletter,
+}));
+
 import {
   initCursorLeaveDetection,
   submitExitIntentEmail,
@@ -304,19 +313,17 @@ describe('submitExitIntentEmail — validation', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('submitExitIntentEmail — success flow', () => {
-  let mockSubscribe;
-
   beforeEach(() => {
-    mockSubscribe = vi.fn().mockResolvedValue({ success: true });
+    mockSubscribeToNewsletter.mockResolvedValue({ success: true });
+  });
 
-    vi.doMock('backend/newsletterService.web', () => ({
-      subscribeToNewsletter: mockSubscribe,
-    }));
+  afterEach(() => {
+    mockSubscribeToNewsletter.mockReset();
   });
 
   it('calls subscribeToNewsletter with exit_intent_popup source', async () => {
     await submitExitIntentEmail('user@test.com');
-    expect(mockSubscribe).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
+    expect(mockSubscribeToNewsletter).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
   });
 
   it('returns success:true', async () => {
@@ -330,25 +337,25 @@ describe('submitExitIntentEmail — success flow', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('submitExitIntentEmail — error paths', () => {
-  let mockSubscribe;
-
   beforeEach(() => {
-    mockSubscribe = vi.fn().mockResolvedValue({ success: true });
+    mockSubscribeToNewsletter.mockResolvedValue({ success: true });
+  });
 
-    vi.doMock('backend/newsletterService.web', () => ({
-      subscribeToNewsletter: mockSubscribe,
-    }));
+  afterEach(() => {
+    mockSubscribeToNewsletter.mockReset();
   });
 
   it('returns error when subscription fails', async () => {
-    mockSubscribe.mockResolvedValue({ success: false, message: 'Already subscribed' });
+    mockSubscribeToNewsletter.mockResolvedValue({ success: false, message: 'Already subscribed' });
     const result = await submitExitIntentEmail('user@test.com');
     expect(result.success).toBe(false);
     expect(result.error).toBe('Already subscribed');
   });
 
   it('handles newsletter module import failure gracefully', async () => {
-    vi.doMock('backend/newsletterService.web', () => {
+    // vi.doMock cannot intercept cached modules on Node 20 — simulate failure
+    // by throwing from the function itself (same catch path as import failure).
+    mockSubscribeToNewsletter.mockImplementationOnce(() => {
       throw new Error('Module unavailable');
     });
     const result = await submitExitIntentEmail('user@test.com');
