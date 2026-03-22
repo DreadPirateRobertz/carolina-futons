@@ -312,9 +312,13 @@ describe('Regional zone configuration', () => {
     expect(zones.local.name).toBe('WNC');
   });
 
-  it('regional zone is Southeast (270-399)', () => {
+  it('regional zone is Southeast (270-399 for pricing, NC/SC/GA/TN/VA for delivery eligibility)', () => {
     expect(zones.regional.prefixMin).toBe(270);
     expect(zones.regional.prefixMax).toBe(399);
+    expect(zones.regional.states).toContain('NC');
+    expect(zones.regional.states).toContain('SC');
+    expect(zones.regional.states).toContain('GA');
+    expect(zones.regional.states).not.toContain('FL');
     expect(zones.regional.name).toBe('Southeast');
   });
 

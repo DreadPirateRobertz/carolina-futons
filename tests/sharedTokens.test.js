@@ -77,11 +77,17 @@ describe('shippingConfig', () => {
   it('has ZIP zone definitions', () => {
     expect(shippingConfig.zones.local.prefixMin).toBe(287);
     expect(shippingConfig.zones.local.prefixMax).toBe(289);
+    // Regional: state list for shipping eligibility + prefix range for dynamic pricing
+    expect(shippingConfig.zones.regional.states).toContain('NC');
+    expect(shippingConfig.zones.regional.states).toContain('GA');
+    expect(shippingConfig.zones.regional.states).not.toContain('FL');
     expect(shippingConfig.zones.regional.prefixMin).toBe(270);
     expect(shippingConfig.zones.regional.prefixMax).toBe(399);
   });
 
-  it('local zone is subset of regional zone', () => {
+  it('local zone (WNC) is within regional zone (Southeast)', () => {
+    // WNC is inside NC which is in the regional states list
+    expect(shippingConfig.zones.regional.states).toContain('NC');
     expect(shippingConfig.zones.local.prefixMin).toBeGreaterThanOrEqual(shippingConfig.zones.regional.prefixMin);
     expect(shippingConfig.zones.local.prefixMax).toBeLessThanOrEqual(shippingConfig.zones.regional.prefixMax);
   });

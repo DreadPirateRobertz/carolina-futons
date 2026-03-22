@@ -86,13 +86,50 @@ describe('getShippingRates', () => {
     expect(pickup.cost.price).toBe('0.00');
   });
 
-  it('adds local delivery option for Southeast (270-399)', async () => {
+  it('adds local delivery option for Southeast state (GA)', async () => {
     const result = await getShippingRates({
       lineItems: [
         { name: 'Futon Frame', quantity: 1, price: '499' },
       ],
       shippingDestination: {
         address: { postalCode: '30301', city: 'Atlanta', subdivision: 'GA', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).toContain('local-delivery');
+  });
+
+  it('does NOT add local delivery for FL (outside Southeast zone)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '33101', city: 'Miami', subdivision: 'FL', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('adds local delivery for VA (Southeast zone)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '22201', city: 'Arlington', subdivision: 'VA', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).toContain('local-delivery');
+  });
+
+  it('handles Wix US-XX subdivision format for regional check', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '29401', city: 'Charleston', subdivision: 'US-SC', country: 'US' },
       },
     });
 
@@ -225,7 +262,7 @@ describe('getShippingRates', () => {
     expect(wg.cost.price).toBe('149.00');
   });
 
-  it('charges $249 for regional white-glove (ZIP 270-286, 290-399)', async () => {
+  it('charges $249 for regional white-glove (SE state, non-local ZIP)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {

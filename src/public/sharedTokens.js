@@ -255,12 +255,26 @@ export const shippingConfig = {
     /** White-glove price for regional zone (Southeast — NC/SC/GA/TN/VA) */
     regionalPrice: 249,
   },
-  /** ZIP prefix ranges for shipping zone determination */
+  /** Shipping zone determination — local uses ZIP prefix, regional uses state code */
   zones: {
-    /** WNC = Western North Carolina — local delivery area */
+    /** WNC = Western North Carolina — local delivery area (ZIP prefix 287-289) */
     local: { prefixMin: 287, prefixMax: 289, name: 'WNC' },
-    /** Southeast region — broader delivery area with higher shipping cost */
-    regional: { prefixMin: 270, prefixMax: 399, name: 'Southeast' },
+    /**
+     * Southeast region — white-glove delivery area.
+     *
+     * `states` is the AUTHORITATIVE list for shipping eligibility — avoids zip prefix
+     * ranges 320-399 that bleed into FL/AL/MS. The shipping plugin uses this.
+     * Plugin strips 'US-' prefix from Wix subdivision format ('US-NC' → 'NC').
+     *
+     * `prefixMin/prefixMax` are retained for the dynamic pricing system which works
+     * on zip-only inputs and uses these as approximate pricing tier boundaries.
+     */
+    regional: {
+      states: ['NC', 'SC', 'GA', 'TN', 'VA'],
+      prefixMin: 270,
+      prefixMax: 399,
+      name: 'Southeast',
+    },
   },
 };
 

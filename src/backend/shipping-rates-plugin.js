@@ -162,8 +162,11 @@ export const getShippingRates = async (options) => {
       });
     }
 
-    // Add local delivery option for NC/SC/GA/TN
-    if (zip3 >= zones.regional.prefixMin && zip3 <= zones.regional.prefixMax) {
+    // Add local delivery option for Southeast states (NC/SC/GA/TN/VA)
+    // State-based check: ZIP prefix 270-399 was too broad (included FL/AL/MS).
+    // Wix subdivisions may be 'NC' or 'US-NC' — strip the prefix.
+    const stateCode = (destination.state || '').replace(/^US-/, '');
+    if ((zones.regional.states || []).includes(stateCode)) {
       const localDeliveryPrice = orderSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 49.99;
       shippingRates.push({
         code: 'local-delivery',
