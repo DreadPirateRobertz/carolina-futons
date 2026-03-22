@@ -82,6 +82,8 @@ function buildBadge(type) {
  * @returns {{ type: string, label: string, bgColor: string, textColor: string } | null}
  */
 function resolveBadge(cmsTypes, computedTypes) {
+  // Merge CMS and computed types into a set, then select the highest-priority one.
+  // Priority is determined solely by BADGE_PRIORITY order, not by source.
   const allTypes = new Set([...cmsTypes, ...computedTypes]);
   for (const type of BADGE_PRIORITY) {
     if (allTypes.has(type)) return buildBadge(type);

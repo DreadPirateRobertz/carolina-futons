@@ -43,18 +43,15 @@ export async function initCmsBadgePDP($w, state) {
     }
 
     const { label, bgColor, textColor } = result.badge;
-    try { container.style.backgroundColor = bgColor; } catch (e) {}
-    try {
-      const textEl = $w('#pdpBadgeText');
-      if (textEl) {
-        textEl.text = label;
-        try { textEl.style.color = textColor; } catch (e) {}
-      } else {
-        // Fallback: container itself is the text element
-        container.text = label;
-      }
-    } catch (e) {}
-    try { container.show(); } catch (e) {}
+    try { container.style.backgroundColor = bgColor; } catch (e) { /* style prop optional */ }
+    const textEl = $w('#pdpBadgeText');
+    if (textEl) {
+      textEl.text = label;
+      try { textEl.style.color = textColor; } catch (e) { /* style prop optional */ }
+    } else {
+      container.text = label;
+    }
+    container.show();
   } catch (e) {
     console.error('initCmsBadgePDP error:', e);
     try { $w('#pdpBadgeContainer').hide(); } catch (_) {}
@@ -93,11 +90,7 @@ export async function batchLoadCmsBadges(products) {
     const result = await getBatchProductBadges(productIds, productDataMap);
     if (!result.success) return empty;
 
-    const map = new Map();
-    for (const [id, badge] of Object.entries(result.badges)) {
-      map.set(id, badge);
-    }
-    return map;
+    return new Map(Object.entries(result.badges));
   } catch (e) {
     console.error('batchLoadCmsBadges error:', e);
     return empty;
@@ -108,7 +101,8 @@ export async function batchLoadCmsBadges(products) {
  * Render a CMS badge into a category card repeater item element.
  * Hides the element when no badge is active.
  *
- * @param {Object} $el - Wix element (e.g., $item('#productBadgeRepeater'))
+ * @param {Object} $el - Wix Box element (e.g., $item('#productBadgeRepeater')).
+ *   Must be a Box, not Text, because renderCardCmsBadge sets style.backgroundColor.
  * @param {{ type: string, label: string, bgColor: string, textColor: string } | null} badge
  * @returns {void}
  */
