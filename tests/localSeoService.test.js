@@ -6,6 +6,7 @@
  * nearby areas resolution, and the home city (Hendersonville NC).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { __reset, __seed } from './__mocks__/wix-data.js';
 
 // ── Mock Wix modules ────────────────────────────────────────────────────
 vi.mock('wix-web-module', () => ({
@@ -15,8 +16,15 @@ vi.mock('wix-web-module', () => ({
 
 import { getLocalPage, getAllLocalSlugs } from '../src/backend/localSeoService.web.js';
 
+const SAMPLE_PRODUCTS = [
+  { _id: 'p1', name: 'Futon Frame A', price: 399, formattedPrice: '$399.00', mainMedia: 'img1.jpg', slug: 'futon-frame-a', salesRank: 1, categories: ['futon-frames'] },
+  { _id: 'p2', name: 'Mattress B',    price: 199, formattedPrice: '$199.00', mainMedia: 'img2.jpg', slug: 'mattress-b',    salesRank: 2, categories: ['mattresses'] },
+];
+
 beforeEach(() => {
   vi.clearAllMocks();
+  __reset();
+  __seed('Stores/Products', SAMPLE_PRODUCTS);
 });
 
 // ── getLocalPage — happy path ──────────────────────────────────────────
