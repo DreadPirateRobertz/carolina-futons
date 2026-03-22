@@ -504,7 +504,7 @@ describe('payment — getPaymentOptions', () => {
     const result = await getPaymentOptions(100);
     const apBadge = result.badges.find(b => b.type === 'afterpay');
     expect(apBadge).toBeDefined();
-    expect(apBadge.label).toContain('payments');
+    expect(apBadge.label).toContain('Afterpay');
   });
 
   it('includes financing badge for $500+', async () => {
