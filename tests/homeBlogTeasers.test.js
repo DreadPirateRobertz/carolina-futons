@@ -317,7 +317,7 @@ describe('HomeBlogTeasers', () => {
   // ── initHomeBlogTeasers ──────────────────────────────────────────
   describe('initHomeBlogTeasers', () => {
     it('collapses container when no posts returned', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         getAllBlogPosts: vi.fn().mockResolvedValue([]),
       }));
 
@@ -335,7 +335,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('collapses container on error', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         getAllBlogPosts: vi.fn().mockRejectedValue(new Error('CMS offline')),
       }));
 
@@ -402,7 +402,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('collapses section when no posts returned', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -414,7 +414,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('collapses section on fetch error', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockRejectedValue(new Error('CMS offline')),
       }));
       const section = mockSection('blogTeaserSection');
@@ -426,7 +426,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('sets repeater data with at most MAX_TEASERS items', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');
@@ -443,7 +443,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('sorts repeater data newest-first by publishDate', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');
@@ -461,7 +461,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('adds _id field to each repeater item', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');
@@ -480,7 +480,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady sets title and excerpt', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -514,7 +514,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady sets cover image src and alt', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -536,7 +536,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady hides image element when no cover image', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[2]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -556,7 +556,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady shows category when present', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -578,7 +578,7 @@ describe('HomeBlogTeasers', () => {
 
     it('onItemReady hides category when absent', async () => {
       const noCategory = { ...MOCK_POSTS[0], category: '' };
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([noCategory]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -598,7 +598,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady sets reading time text', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -618,7 +618,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('onItemReady sets blog link on the link element', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
       }));
       const section = mockSection('blogTeaserSection');
@@ -638,7 +638,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('wires up See All Posts CTA to /blog', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');
@@ -656,7 +656,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('fires blog_teasers_loaded tracking event', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');
@@ -675,7 +675,7 @@ describe('HomeBlogTeasers', () => {
     });
 
     it('falls back to HTML container when repeater element is absent', async () => {
-      vi.doMock('backend/blogService.web', () => ({
+      vi.doMock('backend/blogService.web', () => ({  // vi-domock-legacy
         fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
       }));
       const section = mockSection('blogTeaserSection');

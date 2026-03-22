@@ -793,7 +793,7 @@ describe('AddToCart', () => {
 
   describe('initStockUrgency — popularity badge', () => {
     beforeEach(() => {
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -863,7 +863,7 @@ describe('AddToCart', () => {
     it('shows auto-enrolled message for wishlist member', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-1' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -899,7 +899,7 @@ describe('AddToCart', () => {
     it('sets filled heart when product is already wishlisted', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-1' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1042,7 +1042,7 @@ describe('AddToCart', () => {
       const membersMod = await import('wix-members-frontend');
       // Initial check: not wishlisted
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-1' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1069,7 +1069,7 @@ describe('AddToCart', () => {
       const membersMod = await import('wix-members-frontend');
       const { fireAddToWishlist } = await import('public/ga4Tracking');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-2' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1090,7 +1090,7 @@ describe('AddToCart', () => {
     it('sets filled heart icon after adding', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-3' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1113,7 +1113,7 @@ describe('AddToCart', () => {
     it('removes wishlist entry when already wishlisted', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-4' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1135,7 +1135,7 @@ describe('AddToCart', () => {
     it('sets outline heart icon after removing', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-5' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1156,7 +1156,7 @@ describe('AddToCart', () => {
     it('updates aria label to "Add to wishlist" after removing', async () => {
       const membersMod = await import('wix-members-frontend');
       membersMod.currentMember.getMember.mockResolvedValueOnce({ _id: 'mem-6' });
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1286,7 +1286,7 @@ describe('AddToCart', () => {
 
   describe('initStockUrgency — popularity badge edge cases', () => {
     it('hides popularity badge when weekSales is 0', async () => {
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1301,7 +1301,7 @@ describe('AddToCart', () => {
     });
 
     it('hides popularity badge when no analytics items returned', async () => {
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1316,7 +1316,7 @@ describe('AddToCart', () => {
     });
 
     it('hides popularity badge when query throws', async () => {
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),
@@ -1331,7 +1331,7 @@ describe('AddToCart', () => {
     });
 
     it('hides popularity badge when weekSales is NaN', async () => {
-      vi.doMock('wix-data', () => ({
+      vi.doMock('wix-data', () => ({  // vi-domock-legacy
         default: {
           query: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnThis(),

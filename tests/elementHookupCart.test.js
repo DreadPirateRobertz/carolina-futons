@@ -552,7 +552,7 @@ describe('Cart Page — #cartRecentRepeater child elements', () => {
 
   it('expands recent section and populates repeater when products exist', async () => {
     // Mock must be set up inside loadPage override to survive vi.resetModules()
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Vienna Frame', mainMedia: 'vienna.jpg', price: '$399', slug: 'vienna-frame' },
       ]),

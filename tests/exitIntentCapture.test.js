@@ -277,7 +277,7 @@ describe('submitExitCapture', () => {
     mockQueueWelcome = vi.fn().mockResolvedValue({ success: true, queued: 3 });
 
     // Mock the dynamic backend imports
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: mockSubscribe,
       captureExitIntentEmail: mockQueueWelcome,
     }));

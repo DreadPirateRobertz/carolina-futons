@@ -214,7 +214,7 @@ describe('submitExitCapture — edge cases', () => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' });
     mockQueueWelcome = vi.fn().mockResolvedValue({ success: true });
 
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: mockSubscribe,
       captureExitIntentEmail: mockQueueWelcome,
     }));

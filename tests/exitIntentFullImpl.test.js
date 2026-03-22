@@ -309,7 +309,7 @@ describe('submitExitIntentEmail — success flow', () => {
   beforeEach(() => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true });
 
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: mockSubscribe,
     }));
   });
@@ -335,7 +335,7 @@ describe('submitExitIntentEmail — error paths', () => {
   beforeEach(() => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true });
 
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: mockSubscribe,
     }));
   });
@@ -348,7 +348,7 @@ describe('submitExitIntentEmail — error paths', () => {
   });
 
   it('handles newsletter module import failure gracefully', async () => {
-    vi.doMock('backend/newsletterService.web', () => {
+    vi.doMock('backend/newsletterService.web', () => {  // vi-domock-legacy
       throw new Error('Module unavailable');
     });
     const result = await submitExitIntentEmail('user@test.com');
