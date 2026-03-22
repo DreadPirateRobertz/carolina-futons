@@ -208,4 +208,18 @@ describe('Financing Badge (CF-et8y)', () => {
     // Badge hidden — monthly text should not be set
     expect(getEl('#financingMonthly').text).toBe('');
   });
+
+  it('hides #addToCartButton and shows "Product Not Found" when product is null', async () => {
+    await loadWithProduct(null);
+    // Product Page.js returns early before initFinancingBadge — badge is not touched.
+    // The null-product guard ($w('#financingBadge').hide()) inside initFinancingBadge
+    // is defensive code for direct calls; the early-return path hides the cart button instead.
+    expect(getEl('#addToCartButton').hide).toHaveBeenCalled();
+    expect(getEl('#productName').text).toBe('Product Not Found');
+  });
+
+  it('hides #financingBadge when product.price is a non-numeric string', async () => {
+    await loadWithProduct({ ...makeProduct(0), price: 'free' });
+    expect(getEl('#financingBadge').hide).toHaveBeenCalled();
+  });
 });
