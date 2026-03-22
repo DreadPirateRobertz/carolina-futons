@@ -662,10 +662,13 @@ For each section below:
 | `breadcrumbSchemaHtml` | HtmlComponent | Breadcrumb JSON-LD |
 
 ### Announcement Bar
+*Source: `src/backend/AnnouncementBarService.web.js` — `getActiveAnnouncementBar()` (CF-6y24, NEW v1.1.0+)*
+*CMS: `AnnouncementBars` collection — fields: message, linkUrl, backgroundColor, textColor, active, priority, startDate, endDate*
 | Element ID | Wix Element | Notes |
 |---|---|---|
-| `announcementBar` | Box | Announcement bar container |
-| `announcementText` | Text | Announcement text |
+| `announcementBar` | Box | Container — bg color set from CMS |
+| `announcementText` | Text | Message text — rotates through active bars |
+| `announcementLink` | Button | CTA link (linkUrl from CMS, optional) |
 | `announcementDismiss` | Button | Dismiss button |
 
 ### Sticky Nav / Back to Top
@@ -1310,8 +1313,17 @@ Backend utility for social media story generation — no editor elements needed.
 `dashQuickOrders` (Button), `dashQuickWishlist` (Button), `dashQuickSettings` (Button)
 
 ### Loyalty ⚠️ REPEATER
+*Source: `src/public/LoyaltyDashboard.js` — `initLoyaltyDashboard($w, memberId)` (CF-gkgv, NEW v1.1.0+)*
 `tierProgressBar` (ProgressBar), `tierProgressText` (Text), `loyaltyMilestone` (Text), `tierComparisonRepeater` (Repeater)
 **↳ Inside:** `tierName` (Text), `tierMinPoints` (Text), `tierBenefits` (Text), `tierCard` (Box), `tierCurrentBadge` (Text)
+
+**Tier Progress + Badge (CF-gkgv):**
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `loyaltyProgressBar` | ProgressBar | currentPoints/nextTierThreshold (0–100%) |
+| `loyaltyTierBadge` | Text | Tier badge icon (✨ Bronze / ⭐ Silver / 🏆 Gold) |
+| `tierUpModal` | Box | Milestone popup container — auto-dismissed after 4s |
+| `tierUpModalText` | Text | "Congratulations! You reached [Tier]!" message |
 
 ### Rewards ⚠️ REPEATER
 `rewardsRepeater` (Repeater), `rewardsSection` (Section), `rewardsEmpty` (Text)
