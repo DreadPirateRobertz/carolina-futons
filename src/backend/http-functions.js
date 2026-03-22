@@ -36,7 +36,7 @@ async function fetchAllProducts() {
     const result = await wixData.query('Stores/Products')
       .limit(PAGE_SIZE)
       .skip(skip)
-      .find();
+      .find({ suppressAuth: true });
     allItems = allItems.concat(result.items);
     skip += PAGE_SIZE;
     hasMore = result.items.length === PAGE_SIZE;

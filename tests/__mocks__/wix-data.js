@@ -7,6 +7,7 @@ let _insertSpy = null;
 let _updateSpy = null;
 let _removeSpy = null;
 let _queryErrors = {};  // collection -> Error to throw on query
+let _lastFindOptions = {};  // collection -> options passed to find()
 let _insertErrors = {}; // collection -> Error to throw on insert
 let _updateErrors = {}; // collection -> Error to throw on update
 
@@ -20,6 +21,7 @@ export function __reset() {
   _queryErrors = {};
   _insertErrors = {};
   _updateErrors = {};
+  _lastFindOptions = {};
 }
 
 // Force the next insert on a collection to throw
@@ -119,7 +121,8 @@ function createQueryBuilder(collection) {
     skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
-    async find() {
+    async find(options) {
+      _lastFindOptions[collection] = options;
       if (_queryErrors[collection]) throw _queryErrors[collection];
       let items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
@@ -240,6 +243,11 @@ const wixData = {
     return null;
   },
 };
+
+// Return options last passed to find() for a collection (e.g. { suppressAuth: true })
+export function __getLastFindOptions(collection) {
+  return _lastFindOptions[collection];
+}
 
 export default wixData;
 export { __reset as reset, __seed as seed };

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onUpdate, __setQueryError } from './__mocks__/wix-data.js';
+import { __seed, __onUpdate, __setQueryError, __getLastFindOptions } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
@@ -146,6 +146,21 @@ describe('get_productSitemap', () => {
     expect(result.body).toContain('<loc>https://www.carolinafutons.com/</loc>');
     // No product URLs when DB is down
     expect(result.body).not.toContain('/product-page/');
+  });
+
+  it('queries Stores/Products with suppressAuth to avoid permissions error in HTTP function context', async () => {
+    await get_productSitemap();
+    const opts = __getLastFindOptions('Stores/Products');
+    expect(opts).toEqual({ suppressAuth: true });
+  });
+
+  it('fetchAllProducts returns items with slug field used for product URLs', async () => {
+    const result = await get_productSitemap();
+    expect(result.status).toBe(200);
+    // All 3 seeded products have slug fields and appear as product URLs
+    expect(result.body).toContain('/product-page/eureka-futon-frame');
+    expect(result.body).toContain('/product-page/moonshadow-futon-mattress');
+    expect(result.body).toContain('/product-page/sagebrush-murphy-cabinet-bed');
   });
 });
 
