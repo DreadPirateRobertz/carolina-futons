@@ -3,7 +3,6 @@
 // tiered discount incentives, recently viewed, financing, and "Complete Your Futon" bundling
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import { getCartFinancing } from 'backend/financingCalc.web';
-import { getRecentlyViewed } from 'public/galleryHelpers';
 import { renderWidget as renderRecentlyViewedWidget } from 'public/RecentlyViewedWidget.js';
 import {
   getCurrentCart,
@@ -80,7 +79,6 @@ async function initCartPage() {
     updateCartFinancingFromCart(cart);
     await initCartDeliveryEstimate($w, cart);
     await loadCartSuggestions(cart);
-    loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
     initQuantityControls();
     initCouponCodeInput($w, {
@@ -230,55 +228,6 @@ function updateTierProgressFromCart(currentCart) {
     try { progressBar.accessibility.ariaValueNow = progressPct; } catch (e) {}
     try { progressBar.accessibility.ariaValueMin = 0; } catch (e) {}
     try { progressBar.accessibility.ariaValueMax = 100; } catch (e) {}
-  } catch (e) {}
-}
-
-// ── Recently Viewed Products ────────────────────────────────────────
-// Horizontal scroll of products the user has viewed this session
-
-function loadRecentlyViewedFromCart(cart) {
-  try {
-    loadRecentlyViewed(cart);
-  } catch (e) {}
-}
-
-async function loadRecentlyViewed(cart) {
-  try {
-    const currentCart = cart || await getCurrentCart();
-    const cartProductIds = currentCart?.lineItems?.map(item => item.productId) || [];
-
-    // Get recently viewed, excluding items already in cart
-    let recentProducts = getRecentlyViewed();
-    recentProducts = recentProducts.filter(p => !cartProductIds.includes(p._id));
-
-    const section = $w('#cartRecentSection');
-    const repeater = $w('#cartRecentRepeater');
-
-    if (!recentProducts || recentProducts.length === 0) {
-      if (section) section.collapse();
-      return;
-    }
-
-    if (section) section.expand();
-
-    if (repeater) {
-      repeater.data = recentProducts.map(p => ({ ...p, _id: p._id }));
-      repeater.onItemReady(($item, itemData) => {
-        try { $item('#cartRecentImage').src = itemData.mainMedia; } catch (e) {}
-        try { $item('#cartRecentImage').alt = `${itemData.name} - recently viewed`; } catch (e) {}
-        try { $item('#cartRecentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-        try { $item('#cartRecentName').text = itemData.name; } catch (e) {}
-        try { $item('#cartRecentPrice').text = itemData.price; } catch (e) {}
-
-        const navigate = () => {
-          import('wix-location-frontend').then(({ to }) => {
-            to(`/product-page/${itemData.slug}`);
-          });
-        };
-        try { makeClickable($item('#cartRecentImage'), navigate, { ariaLabel: `View ${itemData.name}` }); } catch (e) {}
-        try { makeClickable($item('#cartRecentName'), navigate, { ariaLabel: `View ${itemData.name} details` }); } catch (e) {}
-      });
-    }
   } catch (e) {}
 }
 
@@ -524,7 +473,6 @@ function initCartListeners() {
         updateCartFinancing(cart);
         updateCartDeliveryEstimate($w, cart);
         loadCartSuggestions(cart);
-        loadRecentlyViewed(cart);
       } catch (e) {
         console.error('Error refreshing cart on change:', e);
       }
