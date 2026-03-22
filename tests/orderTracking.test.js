@@ -280,9 +280,10 @@ describe('lookupOrder', () => {
 
 describe('lookupOrder — rate limiting', () => {
   it('returns success:false when rate limit exceeded', async () => {
-    __seed('OrderLookupRateLimit', [{
+    // Key is compound: email + ':' + orderNumber (prevents rotating-address bypass)
+    __seed('TrackingRateLimit', [{
       _id: 'rl-1',
-      key: 'jane@example.com',
+      key: 'jane@example.com:10042',
       count: 10,
       windowStart: Date.now() - 1000,
     }]);
@@ -292,8 +293,22 @@ describe('lookupOrder — rate limiting', () => {
   });
 
   it('allows lookupOrder when under the rate limit', async () => {
+    // No rate limit record — beforeEach seeds Stores/Orders so order resolves
     const result = await lookupOrder('10042', 'jane@example.com');
     expect(result.success).toBe(true);
+  });
+
+  it('treats different order numbers as separate buckets', async () => {
+    // Exhaust the limit for order 10042 only — 10043 should still be allowed
+    __seed('TrackingRateLimit', [{
+      _id: 'rl-1',
+      key: 'jane@example.com:10042',
+      count: 10,
+      windowStart: Date.now() - 1000,
+    }]);
+    const blocked = await lookupOrder('10042', 'jane@example.com');
+    expect(blocked.success).toBe(false);
+    expect(blocked.error).toMatch(/too many/i);
   });
 });
 

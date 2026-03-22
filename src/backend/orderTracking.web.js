@@ -64,7 +64,9 @@ export const lookupOrder = webMethod(
         return { success: false, error: 'A valid email address is required' };
       }
 
-      const { allowed } = await checkRateLimit('OrderLookupRateLimit', cleanEmail, { max: 10 });
+      // Compound key prevents rotating-address bypass (email alone allows unlimited lookups
+      // across order numbers with throwaway accounts).
+      const { allowed } = await checkRateLimit('TrackingRateLimit', `${cleanEmail}:${cleanOrderNumber}`, { max: 10 });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again later.' };
       }
