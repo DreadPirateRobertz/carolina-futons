@@ -28,6 +28,7 @@ const mockFind = vi.fn();
 const mockQueryChain = {
   eq: vi.fn().mockReturnThis(),
   hasSome: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
   find: mockFind,
 };
 
@@ -158,6 +159,46 @@ describe('getProductBadges', () => {
     // sanitize strips tags leaving 'prod-1', query proceeds with no CMS items
     expect(r.success).toBe(true);
   });
+
+  it('returns error for null productId', async () => {
+    const r = await getProductBadges(null);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/required/i);
+  });
+
+  it('returns error for undefined productId', async () => {
+    const r = await getProductBadges(undefined);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/required/i);
+  });
+
+  it('returns error for numeric productId', async () => {
+    const r = await getProductBadges(123);
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/required/i);
+  });
+
+  it('unknown CMS badgeType is skipped — valid sibling badge wins', async () => {
+    mockFind.mockResolvedValue({ items: [
+      makeEntry('prod-1', 'TYPO_BADGE'),
+      makeEntry('prod-1', 'NEW'),
+    ]});
+    const r = await getProductBadges('prod-1', {});
+    // TYPO_BADGE is unknown → buildBadge returns null → NEW is selected
+    expect(r.badge?.type).toBe('NEW');
+  });
+
+  it('unknown CMS badgeType alone returns null badge', async () => {
+    mockFind.mockResolvedValue({ items: [makeEntry('prod-1', 'TYPO_BADGE')] });
+    const r = await getProductBadges('prod-1', {});
+    expect(r.badge).toBeNull();
+  });
+
+  it('SALE wins over LOW_STOCK when both computed badges fire', async () => {
+    // comparePrice > 0 → SALE; quantityInStock < 5 → LOW_STOCK; SALE has higher priority
+    const r = await getProductBadges('prod-1', { comparePrice: 199, quantityInStock: 2 });
+    expect(r.badge?.type).toBe('SALE');
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════
@@ -238,5 +279,22 @@ describe('getBatchProductBadges', () => {
     mockFind.mockResolvedValue({ items: [makeEntry('prod-1', 'CF_PLUS_EXCLUSIVE')] });
     const r = await getBatchProductBadges(['prod-1'], { 'prod-1': { comparePrice: 100 } });
     expect(r.badges['prod-1']?.type).toBe('CF_PLUS_EXCLUSIVE');
+  });
+
+  it('CMS items with productId not in requested set are ignored (sanitize defence)', async () => {
+    // Simulate a CMS row with a different productId than what was requested
+    mockFind.mockResolvedValue({ items: [
+      makeEntry('prod-1', 'NEW'),
+      makeEntry('injected-id', 'BESTSELLER'),
+    ]});
+    const r = await getBatchProductBadges(['prod-1']);
+    expect(r.badges['prod-1']?.type).toBe('NEW');
+    expect(r.badges['injected-id']).toBeUndefined(); // not in requested set
+  });
+
+  it('query uses .limit() to prevent wix-data silent truncation', async () => {
+    // mockQueryChain.limit is already in the chain; verify it was called
+    await getBatchProductBadges(['prod-1']);
+    expect(mockQueryChain.limit).toHaveBeenCalled();
   });
 });

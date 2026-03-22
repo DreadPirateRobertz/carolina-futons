@@ -107,6 +107,25 @@ describe('initCmsBadgePDP', () => {
     mockGetProductBadges.mockRejectedValue(new Error('network'));
     await expect(initCmsBadgePDP($w, state)).resolves.not.toThrow();
   });
+
+  it('falls back to container.text when #pdpBadgeText is not wired', async () => {
+    mockGetProductBadges.mockResolvedValue({
+      success: true,
+      badge: { type: 'SALE', label: 'Sale', bgColor: '#4A7D94', textColor: '#FFFFFF' },
+      source: 'cms',
+    });
+    // Create a $w that returns null for #pdpBadgeText only
+    const els = new Map();
+    const $wNull = vi.fn((sel) => {
+      if (sel === '#pdpBadgeText') return null;
+      if (!els.has(sel)) els.set(sel, makeMockEl(sel));
+      return els.get(sel);
+    });
+    await initCmsBadgePDP($wNull, state);
+    // Should fall back: container.text = label
+    expect(els.get('#pdpBadgeContainer').text).toBe('Sale');
+    expect(els.get('#pdpBadgeContainer').show).toHaveBeenCalled();
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════

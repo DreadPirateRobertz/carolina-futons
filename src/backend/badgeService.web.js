@@ -116,6 +116,7 @@ export const getProductBadges = webMethod(
 
       const result = await wixData.query(BADGES_COLLECTION)
         .eq('productId', cleanId)
+        .limit(10) // at most 5 badge types per product
         .find();
 
       const cmsTypes = result.items.filter(isBadgeActive).map(i => i.badgeType);
@@ -164,16 +165,23 @@ export const getBatchProductBadges = webMethod(
 
       if (cleanIds.length === 0) return { success: true, badges: {} };
 
+      // Up to 50 products × 5 badge types = 250 rows max; limit(1000) prevents silent truncation
       const result = await wixData.query(BADGES_COLLECTION)
         .hasSome('productId', cleanIds)
+        .limit(1000)
         .find();
 
-      // Group CMS entries by productId
+      // Use a Set of clean IDs for defence-in-depth filtering of raw CMS productId values
+      const cleanIdSet = new Set(cleanIds);
+
+      // Group CMS entries by productId (only for IDs we actually requested)
       const cmsByProduct = {};
       for (const item of result.items) {
         if (!isBadgeActive(item)) continue;
-        if (!cmsByProduct[item.productId]) cmsByProduct[item.productId] = [];
-        cmsByProduct[item.productId].push(item.badgeType);
+        const itemId = sanitize(item.productId, 50);
+        if (!itemId || !cleanIdSet.has(itemId)) continue;
+        if (!cmsByProduct[itemId]) cmsByProduct[itemId] = [];
+        cmsByProduct[itemId].push(item.badgeType);
       }
 
       // Build badge map for all requested products
