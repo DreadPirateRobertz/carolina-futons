@@ -163,7 +163,7 @@ export function setCardImage($el, product, category, dimensions) {
         $el.style.aspectRatio = `${dimensions.width} / ${dimensions.height}`;
       } catch (e) { /* style may not be settable */ }
     }
-  } catch (e) { /* element may not support src/alt */ }
+  } catch (e) { console.warn('[ProductCard] setCardImage error:', e?.message); }
 }
 
 /**

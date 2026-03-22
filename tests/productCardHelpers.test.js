@@ -566,6 +566,18 @@ describe('getLifestyleImage', () => {
       ],
     })).toBe('https://img.com/lifestyle.jpg');
   });
+
+  it('returns keywordMatch.src when url is absent on matched item', () => {
+    // Covers the keywordMatch.url || keywordMatch.src branch:
+    // matched item has no url field — must fall through to src
+    expect(getLifestyleImage({
+      mainMedia: 'https://img.com/product.jpg',
+      mediaItems: [
+        { url: 'https://img.com/product.jpg', alt: 'front' },
+        { src: 'https://img.com/scene.jpg', title: 'scene shot' }, // keyword match via title, src field
+      ],
+    })).toBe('https://img.com/scene.jpg');
+  });
 });
 
 // ── setCardImage uses lifestyle image when available (CF-l5id) ───────
