@@ -1,6 +1,6 @@
 // SizeGuide.js — Static Futon Mattress Size Chart Modal
-// Shows a simple size reference chart for Full/Queen/Twin futon mattresses.
-// Static data only — no backend calls.
+// Shows a size reference chart for Twin/Full/Queen futon mattresses.
+// Static data only — no backend calls. State not required (see CF-nmi2).
 //
 // Element nicknames:
 //   sizeGuideBtn          — Button: 'Size Guide' trigger near product title
@@ -10,15 +10,16 @@
 //
 //   Inside repeater:
 //   sizeChartName         — Text: size name (Twin / Full / Queen)
-//   sizeChartSofa         — Text: sofa (closed) dimensions
-//   sizeChartBed          — Text: bed (open) dimensions
+//   sizeChartDims         — Text: width × length
+//   sizeChartFolded       — Text: folded height (sofa position)
+//   sizeChartOpen         — Text: open height (sleeping position)
 
 // ── Static size data ──────────────────────────────────────────────────────
 
 const SIZES = [
-  { _id: 'twin',  size: 'Twin',  sofa: '39"W × 75"L', bed: '39"W × 75"L' },
-  { _id: 'full',  size: 'Full',  sofa: '54"W × 75"L', bed: '54"W × 75"L' },
-  { _id: 'queen', size: 'Queen', sofa: '60"W × 80"L', bed: '60"W × 80"L' },
+  { _id: 'twin',  size: 'Twin',  dims: '39"W × 75"L', folded: '9"', open: '4.5"' },
+  { _id: 'full',  size: 'Full',  dims: '54"W × 75"L', folded: '9"', open: '4.5"' },
+  { _id: 'queen', size: 'Queen', dims: '60"W × 80"L', folded: '9"', open: '5"'   },
 ];
 
 // ── initSizeGuide ─────────────────────────────────────────────────────────
@@ -27,9 +28,9 @@ const SIZES = [
  * Initialize the static futon size guide modal.
  * Wires open/close buttons and populates the size chart repeater.
  *
- * @param {Function} $w - Wix selector function
+ * @param {Function} $w - Wix selector function ($w('#id') returns element)
  */
-export function initSizeGuide($w) {
+export async function initSizeGuide($w) {
   // Collapse modal on load
   try { $w('#sizeGuideModal').collapse(); } catch { /* noop */ }
 
@@ -53,9 +54,10 @@ export function initSizeGuide($w) {
   // Populate size chart repeater
   try {
     $w('#sizeChartRepeater').onItemReady(($item, itemData) => {
-      try { $item('#sizeChartName').text = itemData.size; } catch { /* noop */ }
-      try { $item('#sizeChartSofa').text = itemData.sofa; } catch { /* noop */ }
-      try { $item('#sizeChartBed').text  = itemData.bed;  } catch { /* noop */ }
+      try { $item('#sizeChartName').text   = itemData.size;   } catch { /* noop */ }
+      try { $item('#sizeChartDims').text   = itemData.dims;   } catch { /* noop */ }
+      try { $item('#sizeChartFolded').text = itemData.folded; } catch { /* noop */ }
+      try { $item('#sizeChartOpen').text   = itemData.open;   } catch { /* noop */ }
     });
     $w('#sizeChartRepeater').data = SIZES;
   } catch { /* noop */ }
