@@ -276,6 +276,27 @@ describe('lookupOrder', () => {
   });
 });
 
+// ── lookupOrder rate limiting ────────────────────────────────────────
+
+describe('lookupOrder — rate limiting', () => {
+  it('returns success:false when rate limit exceeded', async () => {
+    __seed('OrderLookupRateLimit', [{
+      _id: 'rl-1',
+      key: 'jane@example.com',
+      count: 10,
+      windowStart: Date.now() - 1000,
+    }]);
+    const result = await lookupOrder('10042', 'jane@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many/i);
+  });
+
+  it('allows lookupOrder when under the rate limit', async () => {
+    const result = await lookupOrder('10042', 'jane@example.com');
+    expect(result.success).toBe(true);
+  });
+});
+
 // ── lookupOrder with delivered status ───────────────────────────────
 
 describe('lookupOrder delivered status', () => {

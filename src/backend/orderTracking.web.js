@@ -46,8 +46,8 @@ const TIMELINE_STEPS = [
 ];
 
 // ── lookupOrder ─────────────────────────────────────────────────────
-// No rate limiting: read-only query, no CMS writes. Email + order number
-// must match before any data is returned (implicit ownership check).
+// Unauthenticated public endpoint — rate limited to prevent order number
+// enumeration attacks (brute-forcing order numbers per email address).
 
 export const lookupOrder = webMethod(
   Permissions.Anyone,
@@ -62,6 +62,11 @@ export const lookupOrder = webMethod(
       }
       if (!cleanEmail || !validateEmail(cleanEmail)) {
         return { success: false, error: 'A valid email address is required' };
+      }
+
+      const { allowed } = await checkRateLimit('OrderLookupRateLimit', cleanEmail, { max: 10 });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again later.' };
       }
 
       // Find the order
