@@ -22,13 +22,14 @@ import {
 } from '../src/backend/utils/rateLimit.js';
 import { subscribeToNotifications } from '../src/backend/orderTracking.web.js';
 
-const NOW = 1_700_000_000_000;
-const ONE_HOUR = 60 * 60 * 1000;
+const NOW = 1_700_000_000_000; // fixed clock for checkRateLimit direct tests
 const TRACKING_RATE_COLLECTION = 'TrackingRateLimit';
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
-function makeRateLimitRecord(email, count, windowStart = NOW) {
+// Use Date.now() for "within current window" — checkRateLimit reads Date.now() internally.
+// Use epoch (0) for "window already expired" — guaranteed >1 hour in the past.
+function makeRateLimitRecord(email, count, windowStart = Date.now()) {
   return {
     _id: 'rl-tracking-1',
     key: email.toLowerCase(),
@@ -85,6 +86,12 @@ describe('checkRateLimit — opts.max override', () => {
 });
 
 // ── subscribeToNotifications rate limiting ───────────────────────────────────
+//
+// subscribeToNotifications accepts no opts — clock is not injectable from the
+// caller to prevent anonymous rate-limit bypass via now manipulation.
+// Tests control window state by seeding records with real timestamps:
+//   - Date.now()  → within the current window
+//   - new Date(0) → epoch (always > 1 hour ago → window expired)
 
 describe('subscribeToNotifications — rate limiting', () => {
   function seedOrderAndFulfillment() {
@@ -95,30 +102,30 @@ describe('subscribeToNotifications — rate limiting', () => {
 
   it('allows first subscription (no rate limit record)', async () => {
     seedOrderAndFulfillment();
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW });
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
   });
 
-  it('allows up to 5 subscriptions per hour per email', async () => {
+  it('allows up to 5 subscriptions per hour per email (count=4 < max)', async () => {
     seedOrderAndFulfillment();
-    // count=4 — should still allow (4 < 5)
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 4, NOW)]);
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW + 1 });
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 4)]);
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
   });
 
-  it('blocks the 6th subscription attempt within the hour', async () => {
+  it('blocks when count has reached 5 within the current window', async () => {
     seedOrderAndFulfillment();
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5, NOW)]);
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW + 1 });
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5)]);
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });
 
   it('resets after the 1-hour window expires and allows again', async () => {
     seedOrderAndFulfillment();
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5, NOW - ONE_HOUR - 1)]);
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW });
+    // new Date(0) is epoch — guaranteed > 1 hour ago, forcing a window reset
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5, 0)]);
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
   });
 
@@ -126,7 +133,7 @@ describe('subscribeToNotifications — rate limiting', () => {
     seedOrderAndFulfillment();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW });
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
     warnSpy.mockRestore();
   });
@@ -138,28 +145,28 @@ describe('subscribeToNotifications — rate limiting', () => {
     ]);
     __seed('Fulfillments', [makeFulfillment()]);
     __seed('TrackingNotifications', []);
-    // buyer1 is blocked
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer1@example.com', 5, NOW)]);
+    // buyer1 is blocked (current window)
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer1@example.com', 5)]);
     // buyer2 should not be blocked
-    const result = await subscribeToNotifications('ORD-002', 'buyer2@example.com', { now: NOW + 1 });
+    const result = await subscribeToNotifications('ORD-002', 'buyer2@example.com');
     expect(result.success).toBe(true);
   });
 
   it('rate limit check uses lowercase-normalized email key', async () => {
     seedOrderAndFulfillment();
-    // Seed rate limit record with lowercase key
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5, NOW)]);
+    // Seed rate limit record with lowercase key (current window)
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5)]);
     // Call with mixed-case email — should hit the same rate limit bucket
-    const result = await subscribeToNotifications('ORD-001', 'BUYER@EXAMPLE.COM', { now: NOW + 1 });
+    const result = await subscribeToNotifications('ORD-001', 'BUYER@EXAMPLE.COM');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });
 
-  it('rate limit applies before order lookup (rejected before DB writes)', async () => {
-    // No order seeded — if rate limit runs first, should return rate_limited, not order-not-found
+  it('rate limit applies before order lookup (rejected before unnecessary DB reads)', async () => {
+    // No order seeded — if rate limit runs first, returns rate-limit error, not order-not-found
     __seed('Stores/Orders', []);
-    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5, NOW)]);
-    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com', { now: NOW + 1 });
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 5)]);
+    const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });
