@@ -455,4 +455,65 @@ describe('getAllLocalSlugs — CMS union', () => {
     expect(slugs).toHaveLength(6);
     expect(slugs).toContain('asheville-nc');
   });
+
+  it('deduplicates when CMS slug overlaps a static slug', async () => {
+    // seed a CMS record with a slug that already exists in LOCAL_PAGES
+    __seed('LocalSeoCities', [{ ...CMS_CITY_BREVARD, slug: 'asheville-nc' }]);
+    const { slugs } = await getAllLocalSlugs();
+    // still 6 — no duplication of asheville-nc
+    expect(slugs).toHaveLength(6);
+    expect(slugs.filter(s => s === 'asheville-nc')).toHaveLength(1);
+  });
+});
+
+// ── CMS additional edge cases ─────────────────────────────────────────────────
+
+describe('getLocalPage — CMS edge cases', () => {
+  it('CMS record wins over static when slug matches both', async () => {
+    // Intentional CMS-primary behavior: CMS record for a static slug overrides static
+    __seed('LocalSeoCities', [{
+      ...CMS_CITY_BREVARD,
+      slug: 'asheville-nc',
+      city: 'Asheville',
+      state: 'NC',
+      headline: 'CMS headline for Asheville',
+    }]);
+    const { page } = await getLocalPage('asheville-nc');
+    expect(page).not.toBeNull();
+    expect(page.headline).toBe('CMS headline for Asheville');
+  });
+
+  it('_parseJsonField: already-parsed array in faqs passes through', async () => {
+    // Wix CMS can return fields pre-deserialized; _parseJsonField must handle this
+    __seed('LocalSeoCities', [{
+      ...CMS_CITY_BREVARD,
+      faqs: [{ question: 'Pre-parsed?', answer: 'Yes.' }], // array, not JSON string
+    }]);
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.faqItems).toHaveLength(1);
+    expect(page.faqItems[0].question).toBe('Pre-parsed?');
+  });
+
+  it('_parseJsonField: malformed JSON string returns empty array', async () => {
+    __seed('LocalSeoCities', [{ ...CMS_CITY_BREVARD, faqs: 'not valid json' }]);
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.faqItems).toEqual([]);
+  });
+
+  it('_parseJsonField: non-array JSON (object/number) returns empty array', async () => {
+    __seed('LocalSeoCities', [{ ...CMS_CITY_BREVARD, faqs: '{"key":"value"}' }]);
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.faqItems).toEqual([]);
+  });
+
+  it('nearbyAreas resolves CMS city nearbyAreas that point to valid static slugs', async () => {
+    __seed('LocalSeoCities', [{
+      ...CMS_CITY_BREVARD,
+      nearbyAreas: ['asheville-nc', 'hendersonville-nc'],
+    }]);
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.nearbyAreas).toHaveLength(2);
+    expect(page.nearbyAreas.map(a => a.slug)).toContain('asheville-nc');
+    expect(page.nearbyAreas.map(a => a.slug)).toContain('hendersonville-nc');
+  });
 });

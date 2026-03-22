@@ -24,17 +24,29 @@ const CMS_COLLECTION = 'LocalSeoCities';
 // ── CMS helpers ───────────────────────────────────────────────────────
 
 /**
- * Parse a JSON string field into an array. Returns [] on any failure.
- * Accepts already-parsed arrays for defensive use with mixed CMS field types.
+ * Parse a JSON string field into an array. Returns [] on any failure or if the
+ * parsed value is not an array. Accepts already-parsed arrays for defensive use
+ * with mixed CMS field types (Wix can return fields pre-deserialized or as strings).
  */
 function _parseJsonField(raw) {
   if (Array.isArray(raw)) return raw;
   if (typeof raw !== 'string' || !raw.trim()) return [];
-  try { return JSON.parse(raw); } catch { return []; }
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 }
 
 /**
  * Map a LocalSeoCities CMS record to the cityData shape used by getLocalPage.
+ *
+ * @param {Object} item - Raw record from the LocalSeoCities CMS collection.
+ * @returns {Object} Normalized cityData. faqs and categoryRecommendations accept
+ *   either a JSON string or a pre-parsed array from the CMS.
+ *
+ * Note: nearbyAreas slugs are filtered to static LOCAL_PAGES entries by
+ *   getLocalPage — CMS-only slugs in nearbyAreas will not appear in rendered
+ *   nearby links (tracked for S3 when CMS city count grows).
  */
 function _normalizeCmsCity(item) {
   return {
@@ -44,8 +56,6 @@ function _normalizeCmsCity(item) {
     headline: item.headline || '',
     heroDescription: item.heroDescription || '',
     neighborhoodContext: item.neighborhoodContext || '',
-    metaTitle: item.metaTitle || null,
-    metaDescription: item.metaDescription || null,
     preferredCategories: Array.isArray(item.preferredCategories) ? item.preferredCategories : [],
     categoryRecommendations: _parseJsonField(item.categoryRecommendations),
     faqs: _parseJsonField(item.faqs),
@@ -87,9 +97,7 @@ export const getLocalPage = webMethod(
       } catch {
         // CMS unavailable — fall through to static
       }
-      if (!cityData) {
-        cityData = LOCAL_PAGES[cleanSlug] || null;
-      }
+      cityData = cityData ?? LOCAL_PAGES[cleanSlug] ?? null;
       if (!cityData) {
         return { success: true, page: null };
       }
