@@ -47,8 +47,8 @@ export function generateLocalBusinessSchema(city, products = []) {
     ? `${city.city}, ${city.state || 'NC'}`
     : 'Hendersonville, NC';
 
-  // Use per-city geo coordinates when available — signals proximity to the
-  // served city for local search. Falls back to store coords (Hendersonville).
+  // Per-city geo for local search proximity signal. Falls back to store coords
+  // (Hendersonville) when city is null, slug is missing, or slug is not in CITY_GEO.
   const cityGeo = (hasCity && city.slug && CITY_GEO[city.slug]) || STORE_GEO;
 
   const schema = {

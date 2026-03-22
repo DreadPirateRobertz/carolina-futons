@@ -71,7 +71,7 @@ export const getLocalPage = webMethod(
           storeHoursDisplay: STORE_HOURS_DISPLAY,
           categoryRecommendations: Array.isArray(cityData.categoryRecommendations) ? cityData.categoryRecommendations : [],
           faqItems,
-          // Legacy alias — prefer faqItems
+          // Legacy alias for backward compat with existing page components — remove once all callers migrate to faqItems
           faqs: faqItems,
           breadcrumbs,
           jsonLd: localBusinessSchema,

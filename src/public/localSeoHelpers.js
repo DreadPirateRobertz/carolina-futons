@@ -72,8 +72,8 @@ export function buildBreadcrumbList(cityData, siteUrl) {
  * Build a FAQPage JSON-LD schema from an array of question/answer pairs.
  *
  * @param {Array<{ question: string, answer: string }>} faqs
- * @returns {Object} FAQPage JSON-LD schema object. Returns minimal valid
- *   schema (empty mainEntity) if faqs is empty or not an array.
+ * @returns {Object|null} FAQPage JSON-LD schema object, or null if faqs is
+ *   empty, not an array, or all entries fail validation.
  */
 export function buildFaqSchema(faqs) {
   const items = Array.isArray(faqs) ? faqs : [];

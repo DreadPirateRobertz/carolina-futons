@@ -1,6 +1,6 @@
 /**
  * @file localSeoS3.test.js
- * @description CF-ov8s: Local SEO S3 — JSON-LD schema + FAQ section on /near/[city] pages.
+ * @description CF-ov8s: Local SEO phase 3 (S3) — JSON-LD schema + FAQ section on /near/[city] pages.
  *
  * Covers:
  *  - generateLocalBusinessSchema: per-city geo coordinates for all 6 cities
@@ -323,6 +323,13 @@ describe('getLocalPage — faqItems and schemaData', () => {
   it('legacy faqs field still present (alias of faqItems)', async () => {
     const { page } = await getLocalPage('asheville-nc');
     expect(page.faqs).toEqual(page.faqItems);
+  });
+
+  it('schemaData.faqPage is null when city has no FAQs (via buildFaqSchema contract)', () => {
+    // buildFaqSchema returns null for empty input — getLocalPage passes this directly
+    // into schemaData.faqPage. Callers must null-check before accessing faqPage fields.
+    expect(buildFaqSchema([])).toBeNull();
+    expect(buildFaqSchema(null)).toBeNull();
   });
 });
 
