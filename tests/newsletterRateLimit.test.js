@@ -9,7 +9,7 @@
  *  - captureExitIntentEmail: honeypot bypass, rate limit enforcement
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { __seed, __onInsert, __setQueryError } from './__mocks__/wix-data.js';
 import {
   _checkRateLimit,
@@ -146,40 +146,49 @@ describe('subscribeToNewsletter — honeypot', () => {
 // ── subscribeToNewsletter — rate limiting ────────────────────────────────────
 
 describe('subscribeToNewsletter — rate limiting', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
   it('allows new email subscription on first attempt', async () => {
-    const result = await subscribeToNewsletter('first@example.com', { now: NOW });
+    const result = await subscribeToNewsletter('first@example.com');
     expect(result.success).toBe(true);
     expect(result.discountCode).toBe('WELCOME10');
   });
 
   it('blocks subscription when rate limit exceeded for that email', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
-    const result = await subscribeToNewsletter('test@example.com', { now: NOW + 1000 });
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW + 1000);
+    const result = await subscribeToNewsletter('test@example.com', {});
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/too many requests/i);
   });
 
   it('does not insert subscriber record when rate limited', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW + 1000);
     let subscriberInserts = 0;
     __onInsert((collection) => {
       if (collection === 'NewsletterSubscribers') subscriberInserts++;
     });
-    await subscribeToNewsletter('test@example.com', { now: NOW + 1000 });
+    await subscribeToNewsletter('test@example.com', {});
     expect(subscriberInserts).toBe(0);
   });
 
   it('existing subscribers bypass rate limit and return success', async () => {
     seedSubscriber('test@example.com');
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
-    const result = await subscribeToNewsletter('test@example.com', { now: NOW + 1000 });
+    // Dedup check exits before rate limit — no fake timers needed
+    const result = await subscribeToNewsletter('test@example.com', {});
     expect(result.success).toBe(true);
     expect(result.discountCode).toBe('WELCOME10');
   });
 
   it('rate limit resets after window expiry and allows subscription', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW - RATE_LIMIT_WINDOW_MS - 1)]);
-    const result = await subscribeToNewsletter('test@example.com', { now: NOW });
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    const result = await subscribeToNewsletter('test@example.com', {});
     expect(result.success).toBe(true);
   });
 
@@ -189,8 +198,8 @@ describe('subscribeToNewsletter — rate limiting', () => {
     __onInsert((collection) => {
       if (collection === 'NewsletterRateLimit') rateLimitHits++;
     });
-    await subscribeToNewsletter('test@example.com', { now: NOW });
-    // No rate limit record should be inserted (dedup exits early)
+    // Dedup check exits before rate limit — no rate limit insert expected
+    await subscribeToNewsletter('test@example.com', {});
     expect(rateLimitHits).toBe(0);
   });
 });
@@ -220,40 +229,49 @@ describe('captureExitIntentEmail — honeypot', () => {
 // ── captureExitIntentEmail — rate limiting ───────────────────────────────────
 
 describe('captureExitIntentEmail — rate limiting', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
   it('blocks queue insertion when rate limit exceeded', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
-    const result = await captureExitIntentEmail('test@example.com', { now: NOW + 1000 });
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW + 1000);
+    const result = await captureExitIntentEmail('test@example.com', {});
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/too many requests/i);
   });
 
   it('does not insert EmailQueue records when rate limited', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW + 1000);
     let emailQueueInserts = 0;
     __onInsert((collection) => {
       if (collection === 'EmailQueue') emailQueueInserts++;
     });
-    await captureExitIntentEmail('test@example.com', { now: NOW + 1000 });
+    await captureExitIntentEmail('test@example.com', {});
     expect(emailQueueInserts).toBe(0);
   });
 
   it('already-queued emails bypass rate limit and return success', async () => {
     seedEmailQueue('test@example.com');
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW)]);
-    const result = await captureExitIntentEmail('test@example.com', { now: NOW + 1000 });
+    // Dedup check exits before rate limit — no fake timers needed
+    const result = await captureExitIntentEmail('test@example.com', {});
     expect(result.success).toBe(true);
     expect(result.queued).toBe(0);
   });
 
   it('allows submission after window reset', async () => {
     __seed('NewsletterRateLimit', [makeRateLimitRecord(RATE_LIMIT_MAX, NOW - RATE_LIMIT_WINDOW_MS - 1)]);
-    const result = await captureExitIntentEmail('test@example.com', { now: NOW });
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    const result = await captureExitIntentEmail('test@example.com', {});
     expect(result.success).toBe(true);
     expect(result.queued).toBeGreaterThan(0);
   });
 
   it('queues 3 welcome series steps for valid new submission', async () => {
-    const result = await captureExitIntentEmail('new@example.com', { now: NOW });
+    const result = await captureExitIntentEmail('new@example.com', {});
     expect(result.success).toBe(true);
     expect(result.queued).toBe(3);
   });
@@ -264,7 +282,8 @@ describe('captureExitIntentEmail — rate limiting', () => {
     __onInsert((collection) => {
       if (collection === 'NewsletterRateLimit') rateLimitHits++;
     });
-    await captureExitIntentEmail('test@example.com', { now: NOW });
+    // Dedup check exits before rate limit — no rate limit insert expected
+    await captureExitIntentEmail('test@example.com', {});
     expect(rateLimitHits).toBe(0);
   });
 });
