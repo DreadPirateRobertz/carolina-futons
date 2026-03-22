@@ -150,7 +150,21 @@ async function initProductPage() {
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
       { name: 'productQA', init: async () => { const m = await import('public/ProductQA.js'); m.initProductQA($w, state); }, critical: false },
-      { name: 'productQnA', init: async () => { const m = await import('public/ProductQnA.js'); const { items, hasMore } = await m.loadQnA(state.product?._id); m.renderQnA($w, items, hasMore); const loadMoreBtn = $w('#qnaLoadMore'); loadMoreBtn.onClick(async () => { const page = Math.ceil((($w('#qnaAccordion').data || []).length) / 5); await m.loadMore($w, state.product?._id, page); }); $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, state.product?._id)); }, critical: false },
+      {
+        name: 'productQnA',
+        critical: false,
+        init: async () => {
+          const productId = state.product?._id;
+          const m = await import('public/ProductQnA.js');
+          const { items, hasMore } = await m.loadQnA(productId);
+          m.renderQnA($w, items, hasMore);
+          $w('#qnaLoadMore').onClick(async () => {
+            const page = Math.ceil(($w('#qnaAccordion').data || []).length / 5);
+            await m.loadMore($w, productId, page);
+          });
+          $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, productId));
+        },
+      },
       { name: 'feelAndComfort', init: async () => { const m = await import('public/FeelAndComfort.js'); m.initFeelAndComfort($w, state); }, critical: false },
       { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },

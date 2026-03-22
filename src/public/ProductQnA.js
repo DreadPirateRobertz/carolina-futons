@@ -6,7 +6,7 @@
 const PAGE_SIZE = 5;
 const RATE_LIMIT_MS = 60_000; // one submit per minute per session
 
-// Module-level state (reset via _resetForTest / destroy)
+// Module-level state (reset via destroy / _resetForTest)
 let _lastSubmitAt = 0;
 
 // ─── Public API ──────────────────────────────────────────────────────────────
@@ -18,19 +18,7 @@ let _lastSubmitAt = 0;
  */
 export async function loadQnA(productId) {
   try {
-    const wixData = (await import('wix-data')).default;
-    const result = await wixData
-      .query('ProductQnA')
-      .eq('productId', productId)
-      .eq('approved', true)
-      .descending('createdDate')
-      .limit(PAGE_SIZE + 1) // fetch one extra to detect hasMore
-      .find();
-
-    const allItems = result.items || [];
-    const hasMore = allItems.length > PAGE_SIZE;
-    const items = hasMore ? allItems.slice(0, PAGE_SIZE) : allItems;
-
+    const { items, hasMore } = await _queryQnA(productId, 0);
     return { items, hasMore, error: false };
   } catch (e) {
     console.error('[ProductQnA] loadQnA failed:', e.message);
@@ -86,20 +74,8 @@ export function renderQnA($w, items, hasMore) {
  */
 export async function loadMore($w, productId, currentPage) {
   try {
-    const wixData = (await import('wix-data')).default;
     const skip = currentPage * PAGE_SIZE;
-    const result = await wixData
-      .query('ProductQnA')
-      .eq('productId', productId)
-      .eq('approved', true)
-      .descending('createdDate')
-      .limit(PAGE_SIZE + 1)
-      .skip(skip)
-      .find();
-
-    const allItems = result.items || [];
-    const hasMore = allItems.length > PAGE_SIZE;
-    const newItems = hasMore ? allItems.slice(0, PAGE_SIZE) : allItems;
+    const { items: newItems, hasMore } = await _queryQnA(productId, skip);
 
     if (newItems.length > 0) {
       const accordion = $w('#qnaAccordion');
@@ -172,10 +148,32 @@ export function destroy() {
 // ─── Test-only reset ─────────────────────────────────────────────────────────
 
 export function _resetForTest() {
-  _lastSubmitAt = 0;
+  destroy();
 }
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Query the ProductQnA collection for approved items.
+ * Fetches PAGE_SIZE+1 to detect whether more pages exist.
+ * @param {string} productId
+ * @param {number} skip - number of items to skip (for pagination)
+ * @returns {{ items: object[], hasMore: boolean }}
+ */
+async function _queryQnA(productId, skip) {
+  const wixData = (await import('wix-data')).default;
+  const query = wixData
+    .query('ProductQnA')
+    .eq('productId', productId)
+    .eq('approved', true)
+    .descending('createdDate')
+    .limit(PAGE_SIZE + 1);
+
+  const result = await (skip > 0 ? query.skip(skip) : query).find();
+  const allItems = result.items || [];
+  const hasMore = allItems.length > PAGE_SIZE;
+  return { items: hasMore ? allItems.slice(0, PAGE_SIZE) : allItems, hasMore };
+}
 
 function _renderItem($item, itemData) {
   const answerId = `qna-answer-${itemData._id}`;
