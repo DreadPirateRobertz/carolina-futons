@@ -138,22 +138,26 @@ export function setCardImage($el, product, category, dimensions) {
 
 /**
  * Render a financing badge on a product card using pre-fetched badge data.
- * Shows the first badge label (Afterpay > financing) or hides the element.
+ * Shows the first badge label from the badges array, or hides the element.
+ * Badge ordering (Afterpay before installment financing) is controlled by
+ * getBatchPaymentBadges in paymentOptions.web.js, not enforced here.
  *
  * Call getBatchPaymentBadges() once for all cards, then invoke this per card
  * in repeater.onItemReady — element ID: #gridFinancingBadge.
  *
- * @param {Object|null} $el - Wix text element (#gridFinancingBadge)
+ * @param {Object} $el - Wix text element (#gridFinancingBadge), or falsy to no-op
  * @param {Array|null} badges - Badge array from getBatchPaymentBadges, or null/empty
  */
 export function renderCardFinancingBadge($el, badges) {
   if (!$el) return;
-  try {
-    if (Array.isArray(badges) && badges.length > 0) {
-      $el.text = badges[0].label;
-      $el.show();
-    } else {
-      $el.hide();
+  const label = Array.isArray(badges) && badges.length > 0 ? badges[0]?.label : null;
+  if (label) {
+    try { $el.text = label; $el.show(); } catch (e) {
+      console.warn('[ProductCard] #gridFinancingBadge show failed:', e?.message);
     }
-  } catch (e) { /* element may not be visible or accessible */ }
+  } else {
+    try { $el.hide(); } catch (e) {
+      console.warn('[ProductCard] #gridFinancingBadge hide failed:', e?.message);
+    }
+  }
 }

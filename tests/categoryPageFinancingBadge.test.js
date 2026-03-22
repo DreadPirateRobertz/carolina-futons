@@ -339,4 +339,38 @@ describe('Category Page — financing badge (CF-3dz8)', () => {
       null
     );
   });
+
+  it('treats success:false response as empty badges (graceful degradation)', async () => {
+    getBatchPaymentBadgesMock.mockResolvedValue({ success: false, error: 'internal error' });
+
+    const repeater = setupRepeaterWithProducts([
+      { _id: 'prod-1', name: 'Futon A', price: 499, slug: 'futon-a' },
+    ]);
+
+    repeater.onItemReady.mockImplementation((cb) => {
+      const $item = (sel) => getEl(`prod-1:${sel}`);
+      cb($item, { _id: 'prod-1', name: 'Futon A', price: 499, slug: 'futon-a' });
+    });
+
+    await triggerOnReady();
+    await new Promise(r => setTimeout(r, 20));
+
+    // r.badges is undefined when success:false — ?? {} resolves to {} — no badge entry for prod-1
+    expect(renderCardFinancingBadgeMock).toHaveBeenCalledWith(
+      expect.anything(),
+      null
+    );
+  });
+
+  it('excludes products with null or undefined price from the batch call', async () => {
+    setupRepeaterWithProducts([
+      { _id: 'prod-1', name: 'Futon A', price: null },
+      { _id: 'prod-2', name: 'Futon B', price: undefined },
+    ]);
+
+    await triggerOnReady();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(getBatchPaymentBadgesMock).not.toHaveBeenCalled();
+  });
 });

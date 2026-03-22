@@ -453,6 +453,13 @@ describe('renderCardFinancingBadge', () => {
     expect(el.show).not.toHaveBeenCalled();
   });
 
+  it('hides when badge has no label (undefined label property)', () => {
+    const el = mockElement();
+    renderCardFinancingBadge(el, [{ type: 'afterpay' }]); // no .label
+    expect(el.hide).toHaveBeenCalled();
+    expect(el.show).not.toHaveBeenCalled();
+  });
+
   it('does not throw when element is null', () => {
     expect(() => renderCardFinancingBadge(null, [{ label: '4 payments of $100', type: 'afterpay' }])).not.toThrow();
   });
