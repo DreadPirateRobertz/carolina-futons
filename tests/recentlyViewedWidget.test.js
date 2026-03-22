@@ -271,6 +271,12 @@ describe('RecentlyViewedWidget', () => {
       expect($w('#recentlyViewedClear').onClick).toHaveBeenCalledWith(expect.any(Function));
     });
 
+    it('sets aria-label on clear button', async () => {
+      trackView('prod-1');
+      await renderWidget($w);
+      expect($w('#recentlyViewedClear').accessibility.ariaLabel).toBe('Clear recently viewed items');
+    });
+
     it('clicking clear button collapses section', async () => {
       trackView('prod-1');
       await renderWidget($w);
