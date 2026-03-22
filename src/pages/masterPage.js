@@ -222,7 +222,8 @@ function initEnhancedNavigation() {
 }
 
 // ── Announcement Bar ────────────────────────────────────────────────
-// Rotating promotional messages at top of site
+// Three-source message rotation: flash sales → CMS AnnouncementBars → static fallbacks.
+// First CMS bar's colors are applied to the container; all bar messages rotate on a timer.
 
 async function initAnnouncementBar() {
   const staticMessages = [
@@ -237,8 +238,9 @@ async function initAnnouncementBar() {
   let cmsBars = [];
   try {
     cmsBars = await getActiveAnnouncementBars();
-  } catch (_) {
-    // CMS fetch failed — continue with static messages
+  } catch (e) {
+    console.warn('[masterPage] announcementBar CMS fetch failed:', e.message);
+    // Continue with static messages
   }
 
   // Prepend active flash sale messages for urgency

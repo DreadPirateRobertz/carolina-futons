@@ -18,8 +18,11 @@ import { logError } from 'backend/utils/errorHandler';
  * Fetch all active announcement bars whose date range includes now,
  * sorted by priority descending (highest priority first).
  *
+ * CMS fields `active`, `startDate`, and `endDate` are used as server-side
+ * filters only and are intentionally excluded from the returned payload.
+ *
  * @returns {Promise<Array<{message: string, linkUrl: string|null, backgroundColor: string|null, textColor: string|null, priority: number}>>}
- *   Array of active bars, or empty array on error.
+ *   Array of active bars (filter-only fields omitted), or empty array on error.
  * @permission Anyone
  */
 export const getActiveAnnouncementBars = webMethod(
