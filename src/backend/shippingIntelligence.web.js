@@ -36,8 +36,6 @@ import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
 
-// localZones accessed via matchLocalZone from backend/utils/shippingZones
-
 /** CMS collection name for per-product shipping profile overrides */
 const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
 
@@ -62,6 +60,41 @@ async function getCurrentMemberId() {
     logError('shippingIntelligence.getCurrentMemberId', err, { silent: true });
     return null;
   }
+}
+
+/**
+ * Enforce rate limiting for a webMethod. Returns an error response if rate
+ * limited, or null if the request is allowed.
+ *
+ * Members get a per-user bucket; anonymous callers share a global bucket
+ * (Wix webMethods don't expose client IP, so per-IP limiting is unavailable).
+ *
+ * @param {string|null} memberId  - From getCurrentMemberId()
+ * @param {string}      collection - Rate-limit CMS collection name
+ * @param {number}      memberMax  - Max requests per member per window
+ * @param {number}      anonMax    - Max requests in shared anonymous bucket
+ * @returns {Promise<{success: false, error: string, options: []}|null>}
+ * @private
+ */
+async function enforceRateLimit(memberId, collection, memberMax, anonMax) {
+  if (memberId) {
+    const { allowed } = await checkRateLimit(collection, memberId, {
+      max: memberMax,
+      windowMs: RATE_WINDOW_MS,
+    });
+    if (!allowed) {
+      return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+    }
+  } else {
+    const { allowed } = await checkRateLimit(collection, 'anon', {
+      max: anonMax,
+      windowMs: RATE_WINDOW_MS,
+    });
+    if (!allowed) {
+      return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
+    }
+  }
+  return null;
 }
 
 /**
@@ -101,29 +134,16 @@ export const getShippingEstimate = webMethod(
       return { success: false, error: 'Valid product ID and 5-digit ZIP required', options: [] };
     }
 
-    // Rate limit: 20 req/min per logged-in member; 60 req/min shared global bucket for anonymous.
+    // Rate limit: 20 req/min per logged-in member; 60 req/min shared anonymous bucket.
     const memberId = await getCurrentMemberId();
-    if (memberId) {
-      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, memberId, {
-        max: 20,
-        windowMs: RATE_WINDOW_MS,
-      });
-      if (!allowed) {
-        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
-      }
-    } else {
-      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
-      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, 'anon', {
-        max: ANON_ESTIMATE_MAX,
-        windowMs: RATE_WINDOW_MS,
-      });
-      if (!allowed) {
-        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
-      }
-    }
+    const rateLimitError = await enforceRateLimit(memberId, ESTIMATE_RATE_COLLECTION, 20, ANON_ESTIMATE_MAX);
+    if (rateLimitError) return rateLimitError;
 
     try {
       const profile = await getProductShippingProfile(productId);
+      // dims is the CMS profile when found (fields: length, width, height, weight, category).
+      // Falls back to getPackageDimensions() which returns _in/_lbs-suffixed fields; both
+      // are handled by the length_in ?? length / weight_lbs ?? weight fallbacks below.
       const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
       const packages = [{
@@ -161,26 +181,10 @@ export const calculateBundleQuote = webMethod(
       return { success: false, error: 'Valid 5-digit ZIP required', options: [] };
     }
 
-    // Rate limit: 10 req/min per logged-in member; 30 req/min shared global bucket for anonymous.
+    // Rate limit: 10 req/min per logged-in member; 30 req/min shared anonymous bucket.
     const memberId = await getCurrentMemberId();
-    if (memberId) {
-      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, memberId, {
-        max: 10,
-        windowMs: RATE_WINDOW_MS,
-      });
-      if (!allowed) {
-        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
-      }
-    } else {
-      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
-      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, 'anon', {
-        max: ANON_BUNDLE_MAX,
-        windowMs: RATE_WINDOW_MS,
-      });
-      if (!allowed) {
-        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
-      }
-    }
+    const rateLimitError = await enforceRateLimit(memberId, BUNDLE_RATE_COLLECTION, 10, ANON_BUNDLE_MAX);
+    if (rateLimitError) return rateLimitError;
 
     try {
       const packages = [];
@@ -192,6 +196,7 @@ export const calculateBundleQuote = webMethod(
         orderSubtotal += price * quantity;
 
         const profile = await getProductShippingProfile(item.productId);
+        // See getShippingEstimate dims comment — same CMS/fallback field contract applies.
         const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
         for (let i = 0; i < quantity; i++) {
@@ -340,8 +345,9 @@ async function getProductShippingProfile(productId) {
 
     return results.items.length > 0 ? results.items[0] : null;
   } catch (err) {
-    // CMS miss — fall back to category defaults
-    console.warn('ProductShippingProfiles lookup failed for', productId, err.message);
+    // Log with full context so quota/permission errors are visible in Sentry,
+    // not silently collapsed into the "no profile" fallback.
+    logError('shippingIntelligence.getProductShippingProfile', err, { productId });
     return null;
   }
 }

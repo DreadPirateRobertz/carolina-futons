@@ -173,13 +173,12 @@ describe('getLTLRates — input validation', () => {
 });
 
 describe('getLTLRates — secret retrieval failure', () => {
-  it('returns { success: false, fallback } when secrets are missing', async () => {
-    // No secrets seeded — getSecret will throw
+  it('returns { success: false, error } when secrets are missing', async () => {
+    // No secrets seeded — getSecret will throw. Caller (shippingIntelligence) owns fallback.
     const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
-    expect(result.fallback).toBeDefined();
-    expect(result.fallback[0].isEstimate).toBe(true);
+    expect(result.fallback).toBeUndefined();
   });
 });
 
@@ -260,16 +259,15 @@ describe('getLTLRates — HTTP error fallback', () => {
     });
   });
 
-  it('returns { success: false, fallback } on HTTP 500', async () => {
+  it('returns { success: false, error } on HTTP 500 (caller owns fallback)', async () => {
     __setHandler(() => ({ ok: false, status: 500, async text() { return ''; } }));
     const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/500/);
-    expect(result.fallback).toBeDefined();
-    expect(result.fallback[0].isEstimate).toBe(true);
+    expect(result.fallback).toBeUndefined();
   });
 
-  it('returns { success: false, fallback } when SOAP response has no RateQuote blocks', async () => {
+  it('returns { success: false, error } when SOAP response has no RateQuote blocks', async () => {
     __setHandler(() => ({
       ok: true,
       status: 200,
@@ -277,6 +275,6 @@ describe('getLTLRates — HTTP error fallback', () => {
     }));
     const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
     expect(result.success).toBe(false);
-    expect(result.fallback).toBeDefined();
+    expect(result.fallback).toBeUndefined();
   });
 });

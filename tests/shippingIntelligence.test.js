@@ -184,6 +184,22 @@ describe('getShippingEstimate — local zone options', () => {
     const codes = result.options.map(o => o.code);
     expect(codes.some(c => c.startsWith('local-delivery-'))).toBe(false);
   });
+
+  // guessStateFromZip VA path (zip3 220–246 → 'VA' → zone4)
+  it('appends local-delivery-zone4 for a VA zip (22201 Arlington)', async () => {
+    const result = await getShippingEstimate('prod-1', '22201');
+    expect(result.success).toBe(true);
+    const codes = result.options.map(o => o.code);
+    expect(codes).toContain('local-delivery-zone4');
+  });
+
+  // guessStateFromZip TN path (zip3 370–385 → 'TN' → zone4)
+  it('appends local-delivery-zone4 for a TN zip (37201 Nashville)', async () => {
+    const result = await getShippingEstimate('prod-1', '37201');
+    expect(result.success).toBe(true);
+    const codes = result.options.map(o => o.code);
+    expect(codes).toContain('local-delivery-zone4');
+  });
 });
 
 // ── calculateBundleQuote — input validation ───────────────────────────────────

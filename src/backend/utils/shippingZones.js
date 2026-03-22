@@ -45,5 +45,5 @@ export function matchLocalZone(postalCode, stateCode) {
  */
 export function getTerrainSurcharge(postalCode) {
   if (!terrainSurcharge || !terrainSurcharge.zips) return 0;
-  return terrainSurcharge.zips.includes(postalCode) ? (terrainSurcharge.amount || 0) : 0;
+  return terrainSurcharge.zips.includes(postalCode) ? (terrainSurcharge.amount ?? 0) : 0;
 }
