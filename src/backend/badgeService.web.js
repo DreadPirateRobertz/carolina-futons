@@ -43,10 +43,17 @@ const BADGE_PRIORITY = ['CF_PLUS_EXCLUSIVE', 'BESTSELLER', 'NEW', 'SALE', 'LOW_S
 /**
  * Return whether a CMS badge entry is currently active.
  * @param {{ active: boolean, expiresAt?: string|Date }} item
+ *
+ * Note: expiresAt must be stored as a UTC ISO 8601 string (e.g. "2026-04-01T00:00:00Z")
+ * in the CMS. Dates without timezone context may expire hours early depending on server
+ * locale. A 5-minute grace buffer is applied to tolerate minor clock skew.
  */
 function isBadgeActive(item) {
   if (!item.active) return false;
-  if (item.expiresAt && new Date(item.expiresAt) < new Date()) return false;
+  if (item.expiresAt) {
+    const GRACE_MS = 5 * 60 * 1000;
+    if (new Date(item.expiresAt) < new Date(Date.now() - GRACE_MS)) return false;
+  }
   return true;
 }
 
@@ -59,6 +66,9 @@ function isBadgeActive(item) {
 function computedBadges(product) {
   const badges = [];
   if (product.comparePrice && product.comparePrice > 0) badges.push('SALE');
+  // LOW_STOCK is cosmetic/best-effort: quantityInStock is caller-supplied (Permissions.Anyone).
+  // Any caller can pass { quantityInStock: 0 } to force this badge. CMS overrides are
+  // authoritative — use a ProductBadges CMS entry to pin badges for specific products.
   if ((product.quantityInStock ?? Infinity) < LOW_STOCK_THRESHOLD) badges.push('LOW_STOCK');
   return badges;
 }

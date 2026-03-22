@@ -8,9 +8,10 @@ vi.mock('wix-web-module', () => ({
 }));
 
 vi.mock('backend/utils/sanitize', () => ({
+  // Minimal mock: type-gate + length cap only (no HTML regex — real sanitize handles that)
   sanitize: (str, maxLen = 1000) => {
     if (typeof str !== 'string') return '';
-    return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLen);
+    return str.trim().slice(0, maxLen);
   },
 }));
 
@@ -85,7 +86,7 @@ describe('getProductBadges', () => {
   });
 
   it('ignores expired CMS entries', async () => {
-    const past = new Date(Date.now() - 1000).toISOString();
+    const past = new Date(Date.now() - 10 * 60 * 1000).toISOString(); // 10 min ago, past 5-min grace
     mockFind.mockResolvedValue({ items: [makeEntry('prod-1', 'SALE', { expiresAt: past })] });
     const r = await getProductBadges('prod-1', {});
     expect(r.badge).toBeNull();
