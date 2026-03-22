@@ -164,8 +164,8 @@ function buildWWEXSoapRequest({ username, password, accountNumber, originZip, de
   </soap:Header>
   <soap:Body>
     <RateQuoteRequest xmlns="http://api.wwex.com/">
-      <OriginZip>${originZip}</OriginZip>
-      <DestinationZip>${destZip}</DestinationZip>
+      <OriginZip>${escapeXml(originZip)}</OriginZip>
+      <DestinationZip>${escapeXml(destZip)}</DestinationZip>
       <TotalWeight>${Math.ceil(totalWeight)}</TotalWeight>
       <HandlingUnits>${packageItems}
       </HandlingUnits>

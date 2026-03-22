@@ -28,6 +28,7 @@
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
+import { logError } from 'backend/utils/errorHandler';
 
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, localZones, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, terrainSurcharge } = whiteGlove;
@@ -270,9 +271,11 @@ export const getShippingRates = async (options) => {
     return { shippingRates };
 
   } catch (err) {
-    console.error('Shipping rates plugin error:', err);
+    logError('shipping-rates-plugin.getShippingRates', err);
 
-    // Return estimated flat rates as fallback
+    // Return conservative flat rates as fallback when UPS API is unavailable.
+    // Rates are deliberately above typical ground rates so the store does not
+    // under-collect. Titles include "(Estimated)" to signal non-live rates.
     return {
       shippingRates: [
         {

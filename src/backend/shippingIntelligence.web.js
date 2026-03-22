@@ -33,16 +33,21 @@ import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const { localZones } = shippingConfig;
 
 /** CMS collection name for per-product shipping profile overrides */
 const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
 
-/** Rate limiting: 1-minute sliding window per logged-in member */
+/** Rate limiting: 1-minute sliding window */
 const RATE_WINDOW_MS = 60_000; // 1 minute
 const ESTIMATE_RATE_COLLECTION = 'ShippingEstimateRateLimit';
 const BUNDLE_RATE_COLLECTION = 'BundleQuoteRateLimit';
+
+/** Anonymous rate limits (global shared bucket — Wix webMethods don't expose client IP) */
+const ANON_ESTIMATE_MAX = 60;  // shared across all anonymous users per minute
+const ANON_BUNDLE_MAX = 30;
 
 /**
  * Get the current member's ID for rate limiting, or null if anonymous.
@@ -52,7 +57,8 @@ async function getCurrentMemberId() {
   try {
     const member = await currentMember.getMember();
     return member?._id ?? null;
-  } catch {
+  } catch (err) {
+    logError('shippingIntelligence.getCurrentMemberId', err, { silent: true });
     return null;
   }
 }
@@ -94,7 +100,7 @@ export const getShippingEstimate = webMethod(
       return { success: false, error: 'Valid product ID and 5-digit ZIP required', options: [] };
     }
 
-    // Rate limit: 20 req/min per logged-in member; anonymous users are not limited.
+    // Rate limit: 20 req/min per logged-in member; 60 req/min shared global bucket for anonymous.
     const memberId = await getCurrentMemberId();
     if (memberId) {
       const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, memberId, {
@@ -103,6 +109,15 @@ export const getShippingEstimate = webMethod(
       });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
+    } else {
+      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
+      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, 'anon', {
+        max: ANON_ESTIMATE_MAX,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
       }
     }
 
@@ -145,7 +160,7 @@ export const calculateBundleQuote = webMethod(
       return { success: false, error: 'Valid 5-digit ZIP required', options: [] };
     }
 
-    // Rate limit: 10 req/min per logged-in member; anonymous users are not limited.
+    // Rate limit: 10 req/min per logged-in member; 30 req/min shared global bucket for anonymous.
     const memberId = await getCurrentMemberId();
     if (memberId) {
       const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, memberId, {
@@ -154,6 +169,15 @@ export const calculateBundleQuote = webMethod(
       });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
+    } else {
+      // Anonymous: shared global bucket — coarse DoS protection (no client IP in Wix webMethods)
+      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, 'anon', {
+        max: ANON_BUNDLE_MAX,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Service temporarily busy. Please try again shortly.', options: [] };
       }
     }
 
@@ -287,6 +311,10 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     };
     if (terrainFee > 0) wgOption.terrainSurcharge = terrainFee;
     options.push(wgOption);
+  }
+
+  if (options.length === 0) {
+    return { success: false, error: 'No shipping options available for this destination', options: [] };
   }
 
   return { success: true, options };

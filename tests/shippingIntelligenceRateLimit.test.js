@@ -168,10 +168,18 @@ describe('getShippingEstimate — rate limiting (20 req/min per member)', () => 
     expect(result.error ?? '').not.toMatch(/too many requests/i);
   });
 
-  it('skips rate limiting for anonymous users (no logged-in member)', async () => {
-    // No member set — getMember returns null
+  it('allows anonymous users when global bucket is not full', async () => {
+    // No member set — getMember returns null; anonymous bucket is empty
     const result = await getShippingEstimate('prod-1', '28701');
-    expect(result.error ?? '').not.toMatch(/too many requests/i);
+    expect(result.error ?? '').not.toMatch(/too many requests|temporarily busy/i);
+  });
+
+  it('blocks anonymous users when global anonymous rate limit is exceeded', async () => {
+    // Seed the shared anonymous bucket as full
+    __seed(ESTIMATE_COLLECTION, [makeRateLimitRecord('anon', 60)]);
+    const result = await getShippingEstimate('prod-1', '28701');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/temporarily busy/i);
   });
 
   it('rate limit check runs before shipping logic (returns rate-limit error immediately)', async () => {
@@ -241,10 +249,18 @@ describe('calculateBundleQuote — rate limiting (10 req/min per member)', () =>
     expect(result.error ?? '').not.toMatch(/too many requests/i);
   });
 
-  it('skips rate limiting for anonymous users (no logged-in member)', async () => {
-    // No member set — getMember returns null
+  it('allows anonymous users when global bucket is not full', async () => {
+    // No member set — getMember returns null; anonymous bucket is empty
     const result = await calculateBundleQuote(ITEMS, '28701');
-    expect(result.error ?? '').not.toMatch(/too many requests/i);
+    expect(result.error ?? '').not.toMatch(/too many requests|temporarily busy/i);
+  });
+
+  it('blocks anonymous users when global anonymous rate limit is exceeded', async () => {
+    // Seed the shared anonymous bucket as full
+    __seed(BUNDLE_COLLECTION, [makeRateLimitRecord('anon', 30)]);
+    const result = await calculateBundleQuote(ITEMS, '28701');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/temporarily busy/i);
   });
 
   it('rate limit check runs before shipping logic', async () => {
