@@ -38,7 +38,8 @@ const FILTER_TABS = [
 
 /**
  * Render the photo repeater. Expands/collapses gallery section based on
- * whether photos are present.
+ * whether photos are present. Does NOT register onItemReady — that must be
+ * done once via initRoomGallery to avoid Wix Velo handler stacking.
  *
  * @param {Function} $w
  * @param {Array|null} photos
@@ -54,32 +55,6 @@ export function renderRoomPhotos($w, photos) {
   }
 
   $w('#roomGalleryEmptyState').collapse();
-
-  $w('#roomGalleryRepeater').onItemReady(($item, itemData) => {
-    $item('#roomGalleryImage').src = itemData.photoUrl || '';
-    $item('#roomGalleryImage').alt = itemData.caption || 'Customer room photo';
-    $item('#roomGalleryCaption').text = itemData.caption || '';
-    $item('#roomGallerySubmitter').text = itemData.memberDisplayName || '';
-
-    const originalCount = String(itemData.voteCount ?? 0);
-    $item('#roomGalleryLikeCount').text = originalCount;
-    $item('#roomGalleryLikeBtn').accessibility.ariaPressed = false;
-    $item('#roomGalleryLikeBtn').accessibility.ariaLabel = `Like photo by ${itemData.memberDisplayName || 'member'}`;
-
-    $item('#roomGalleryLikeBtn').onClick(async () => {
-      try {
-        const result = await voteForPhoto(itemData._id);
-        if (result && result.success) {
-          $item('#roomGalleryLikeCount').text = String(result.voteCount ?? 0);
-          $item('#roomGalleryLikeBtn').accessibility.ariaPressed = !!result.voted;
-        }
-      } catch (err) {
-        logError({ message: '[RoomGallery] voteForPhoto failed', stack: err?.stack, context: 'roomGallery.voteForPhoto' });
-        $item('#roomGalleryLikeCount').text = originalCount;
-      }
-    });
-  });
-
   $w('#roomGalleryRepeater').data = list;
   $w('#roomGallerySection').expand();
 }
@@ -151,11 +126,41 @@ export function initRoomSubmitForm($w) {
 /**
  * Orchestrate the full Room Gallery section.
  *
+ * Registers onItemReady ONCE so that repeated renderRoomPhotos calls (e.g. on
+ * filter change) never stack duplicate handlers in Wix Velo.
+ *
  * @param {Function} $w
  * @param {{ photos?: Array }} opts
  */
 export function initRoomGallery($w, opts = {}) {
   const { photos = [] } = opts ?? {};
+
+  // Register the repeater item handler exactly once. Wix Velo stacks handlers
+  // rather than replacing them, so this must not be called on re-renders.
+  $w('#roomGalleryRepeater').onItemReady(($item, itemData) => {
+    $item('#roomGalleryImage').src = itemData.photoUrl || '';
+    $item('#roomGalleryImage').alt = itemData.caption || 'Customer room photo';
+    $item('#roomGalleryCaption').text = itemData.caption || '';
+    $item('#roomGallerySubmitter').text = itemData.memberDisplayName || '';
+
+    const originalCount = String(itemData.voteCount ?? 0);
+    $item('#roomGalleryLikeCount').text = originalCount;
+    $item('#roomGalleryLikeBtn').accessibility.ariaPressed = false;
+    $item('#roomGalleryLikeBtn').accessibility.ariaLabel = `Like photo by ${itemData.memberDisplayName || 'member'}`;
+
+    $item('#roomGalleryLikeBtn').onClick(async () => {
+      try {
+        const result = await voteForPhoto(itemData._id);
+        if (result && result.success) {
+          $item('#roomGalleryLikeCount').text = String(result.voteCount ?? 0);
+          $item('#roomGalleryLikeBtn').accessibility.ariaPressed = !!result.voted;
+        }
+      } catch (err) {
+        logError({ message: '[RoomGallery] voteForPhoto failed', stack: err?.stack, context: 'roomGallery.voteForPhoto' });
+        $item('#roomGalleryLikeCount').text = originalCount;
+      }
+    });
+  });
 
   renderRoomPhotos($w, photos);
 

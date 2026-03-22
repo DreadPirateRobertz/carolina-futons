@@ -121,17 +121,18 @@ describe('RoomGallery', () => {
       expect($w('#roomGalleryEmptyState').collapse).toHaveBeenCalled();
     });
 
-    it('registers onItemReady on the repeater', () => {
+    it('does not register onItemReady on the repeater (handler lives in initRoomGallery)', () => {
       renderRoomPhotos($w, [makePhoto()]);
-      expect($w('#roomGalleryRepeater').onItemReady).toHaveBeenCalledWith(expect.any(Function));
+      expect($w('#roomGalleryRepeater').onItemReady).not.toHaveBeenCalled();
     });
   });
 
   // ── onItemReady ─────────────────────────────────────────────────────
 
   describe('onItemReady', () => {
+    // onItemReady is registered once in initRoomGallery, not in renderRoomPhotos.
     function getOnItemReadyCb(photos) {
-      renderRoomPhotos($w, photos);
+      initRoomGallery($w, { photos });
       return $w('#roomGalleryRepeater').onItemReady.mock.calls[0][0];
     }
 

@@ -288,9 +288,13 @@ export const voteForPhoto = webMethod(
             createdAt: new Date(),
           });
         } catch (dupErr) {
-          // Unique constraint violation — vote already counted by concurrent request
-          console.warn('[ugcService] duplicate vote insert (concurrent), treating as voted', dupErr?.message);
-          return { success: true, voted: true, voteCount: photo.voteCount || 0 };
+          const errMsg = dupErr?.message || '';
+          if (errMsg.includes('duplicate') || errMsg.includes('unique')) {
+            // Unique constraint violation — vote already counted by concurrent request
+            console.warn('[ugcService] duplicate vote insert (concurrent), treating as voted', errMsg);
+            return { success: true, voted: true, voteCount: photo.voteCount || 0 };
+          }
+          throw dupErr;
         }
         photo.voteCount = (photo.voteCount || 0) + 1;
         await wixData.update('UGCPhotos', photo);
