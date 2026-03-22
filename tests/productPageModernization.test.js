@@ -92,10 +92,11 @@ describe('CF-isru: Enhanced Delivery Estimate', () => {
     const state = { product: { name: 'Eureka Futon Frame', weight: 30 } };
     initDeliveryEstimate($w, state);
 
-    const el = $w._elements['#deliveryEstimate'];
-    expect(el).toBeTruthy();
-    expect(el.text).toContain('Estimated delivery');
-    expect(el.show).toHaveBeenCalled();
+    const textEl = $w._elements['#deliveryEstimateText'];
+    const boxEl = $w._elements['#deliveryEstimateBox'];
+    expect(textEl).toBeTruthy();
+    expect(textEl.text).toContain('Estimated delivery');
+    expect(boxEl.show).toHaveBeenCalled();
   });
 
   it('shows white-glove note for heavy items (weight > 50)', () => {
