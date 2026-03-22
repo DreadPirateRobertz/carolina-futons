@@ -101,8 +101,7 @@ export function renderViewerBadge($wFn, viewCount) {
  */
 export function renderSoldBadge($wFn, lastSold24h) {
   if (lastSold24h >= 1) {
-    const label = lastSold24h === 1 ? '1 sold in last 24h' : `${lastSold24h} sold in last 24h`;
-    showElement($wFn, '#soldRecentlyBadge', label);
+    showElement($wFn, '#soldRecentlyBadge', `${lastSold24h} sold in last 24h`);
     return true;
   }
   hideElement($wFn, '#soldRecentlyBadge');

@@ -8,7 +8,7 @@
  *     incrementViewerCount — inserts on first call, updates on subsequent, error fallback
  *   Frontend:
  *     renderViewerBadge — shows/hides at threshold
- *     renderSoldBadge   — shows/hides at threshold, singular vs plural
+ *     renderSoldBadge   — shows/hides at threshold, "N sold in last 24h" label
  *     hideSocialProofSection / showSocialProofSection — graceful no-ops
  *     hasIncrementedThisSession / markIncrementedThisSession — sessionStorage rate limiting
  *     initSocialProof — full integration: increment, fetch, render, section visibility, fail-open
@@ -115,6 +115,11 @@ describe('getViewerCount', () => {
     expect(result).toEqual({ viewCount: 0, lastSold24h: 0 });
     expect(console.error).toHaveBeenCalled();
   });
+
+  it('returns zeros for a productId that fails validateId (invalid chars)', async () => {
+    const result = await getViewerCount('../../etc/passwd');
+    expect(result).toEqual({ viewCount: 0, lastSold24h: 0 });
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -176,6 +181,18 @@ describe('incrementViewerCount', () => {
     expect(result.ok).toBe(false);
     expect(console.error).toHaveBeenCalled();
   });
+
+  it('returns { ok: false } when wixData.insert throws', async () => {
+    __setInsertError('ViewerCount', new Error('Insert failed'));
+    const result = await incrementViewerCount('prod-001');
+    expect(result.ok).toBe(false);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('returns { ok: false } for a productId that fails validateId (invalid chars)', async () => {
+    const result = await incrementViewerCount('../../etc/passwd');
+    expect(result.ok).toBe(false);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -228,7 +245,7 @@ describe('renderSoldBadge', () => {
     expect(result).toBe(true);
   });
 
-  it('uses singular text when lastSold24h === 1', () => {
+  it('uses "1 sold in last 24h" text when lastSold24h === 1', () => {
     const badge = makeElement();
     renderSoldBadge(make$w({ '#soldRecentlyBadge': badge }), 1);
     expect(badge.text).toBe('1 sold in last 24h');

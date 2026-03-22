@@ -9,13 +9,13 @@
  * @requires backend/utils/sanitize
  *
  * @setup
- * Uses existing CMS collections: Orders (Wix Stores), InventoryLevels.
+ * Existing CMS collections used: Orders (Wix Stores), InventoryLevels, ProductAnalytics, Reviews.
  * New collection (CF-ej3t): ViewerCount — fields: productId (text), viewCount (number),
  * lastSold24h (number), updatedAt (date). Create manually in Wix CMS before deploying.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
 
 const LOW_STOCK_THRESHOLD = 5;
 const RECENT_PURCHASE_HOURS = 48;
@@ -35,7 +35,7 @@ const MIN_REVIEW_COUNT = 5;
 
 /**
  * Get social proof notifications for a product.
- * Returns up to 3 notification objects, prioritized by type.
+ * Returns up to 4 notification objects, prioritized by type.
  *
  * @function getProductSocialProof
  * @param {string} productId - The product ID
@@ -128,7 +128,7 @@ export const getCategorySocialProof = webMethod(
 
       const slug = sanitize(categorySlug, 100);
 
-      // Get low stock products in this category
+      // Get low stock products (site-wide — category filter not yet implemented)
       const lowStockResult = await wixData.query('InventoryLevels')
         .le('quantity', LOW_STOCK_THRESHOLD)
         .gt('quantity', 0)
@@ -188,7 +188,8 @@ export const getViewerCount = webMethod(
   Permissions.Anyone,
   async (productId) => {
     if (!productId) return { viewCount: 0, lastSold24h: 0 };
-    const id = sanitize(productId, 50);
+    const id = validateId(productId, 50);
+    if (!id) return { viewCount: 0, lastSold24h: 0 };
     try {
       const result = await wixData.query(VIEWER_COLLECTION)
         .eq('productId', id)
@@ -215,6 +216,10 @@ export const getViewerCount = webMethod(
  * Session-level rate limiting (1 call per product per session) is enforced
  * client-side — this method always increments when called.
  *
+ * NOTE: The read-then-write is not atomic (Wix Data has no native atomic increment).
+ * Concurrent calls for the same product can lose increments. Viewer counts are
+ * decorative-only — best-effort accuracy is acceptable for this use case.
+ *
  * Returns { ok: true } on success, { ok: false } on CMS error.
  *
  * @function incrementViewerCount
@@ -226,7 +231,8 @@ export const incrementViewerCount = webMethod(
   Permissions.Anyone,
   async (productId) => {
     if (!productId) return { ok: false };
-    const id = sanitize(productId, 50);
+    const id = validateId(productId, 50);
+    if (!id) return { ok: false };
     try {
       const result = await wixData.query(VIEWER_COLLECTION)
         .eq('productId', id)
