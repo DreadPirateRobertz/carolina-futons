@@ -106,7 +106,6 @@ export function getTierForPoints(points) {
   for (let i = TIER_NAMES.length - 1; i >= 0; i--) {
     if (p >= TIER_NAMES[i].threshold) return TIER_NAMES[i].name;
   }
-  return TIER_NAMES[0].name;
 }
 
 // ── getBadgesForAccount ───────────────────────────────────────────────────────
