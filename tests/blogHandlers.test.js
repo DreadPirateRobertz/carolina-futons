@@ -584,4 +584,63 @@ describe('Blog page handlers', () => {
       expect(getEl('#blogNewsletterError').show).toHaveBeenCalled();
     });
   });
+
+  // ── CMS error state ───────────────────────────────────────────────
+
+  describe('CMS unavailable error state', () => {
+    it('expands #blogCmsError when getPublishedBlogPosts returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').expand).toHaveBeenCalled();
+    });
+
+    it('collapses #blogListRepeater when CMS returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
+    });
+
+    it('collapses #blogCmsError when CMS succeeds', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').collapse).toHaveBeenCalled();
+    });
+
+    it('still registers newsletter onClick when CMS returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogNewsletterSubmit').onClick).toHaveBeenCalled();
+    });
+
+    it('still calls makeClickable on #shareFacebook when CMS returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      const { makeClickable } = await import('public/a11yHelpers');
+      const calls = makeClickable.mock.calls.map(c => c[0]);
+      expect(calls).toContain(getEl('#shareFacebook'));
+    });
+
+    it('expands #blogCmsError when getPublishedBlogPosts throws', async () => {
+      getPublishedBlogPosts.mockRejectedValueOnce(new Error('Network failure'));
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').expand).toHaveBeenCalled();
+    });
+
+    it('collapses #blogListRepeater when getPublishedBlogPosts throws', async () => {
+      getPublishedBlogPosts.mockRejectedValueOnce(new Error('Network failure'));
+      await onReadyHandler();
+      expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
+    });
+  });
 });
