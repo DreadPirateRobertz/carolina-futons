@@ -124,7 +124,7 @@ export const getShippingEstimate = webMethod(
 
     try {
       const profile = await _resolveProfile(productId);
-      const dims = profile || await getPackageDimensions(profile?.category || 'default');
+      const dims = profile ?? await getPackageDimensions('default');
 
       const packages = [{
         length: dims.length_in ?? dims.length,
@@ -192,7 +192,7 @@ export const calculateBundleQuote = webMethod(
         orderSubtotal += price * quantity;
 
         const profile = await _resolveProfile(item.productId);
-        const dims = profile || await getPackageDimensions(profile?.category || 'default');
+        const dims = profile ?? await getPackageDimensions('default');
 
         for (let i = 0; i < quantity; i++) {
           packages.push({
@@ -348,8 +348,6 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
  *
  * CMS fields: productId, weight_lbs, length_in, width_in, height_in,
  *             handlingFee_usd, requiresPallet, requiresFreight, customItemFlag
- *
- * @private
  */
 export async function _resolveProfile(productId) {
   if (!productId) return null;
