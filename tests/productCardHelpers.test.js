@@ -31,6 +31,7 @@ import {
   formatCardPrice,
   setCardImage,
   renderCardFinancingBadge,
+  getLifestyleImage,
 } from '../src/public/productCardHelpers.js';
 
 // ── Helper: mock Wix element ──────────────────────────────────────────
@@ -471,5 +472,84 @@ describe('renderCardFinancingBadge', () => {
       hide: vi.fn(() => { throw new Error('element error'); }),
     };
     expect(() => renderCardFinancingBadge(el, [])).not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 8. getLifestyleImage (CF-l5id / CF-q024)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('getLifestyleImage', () => {
+  it('returns url from keyword-matched mediaItem (url field)', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [
+        { title: 'product shot', url: 'https://img.com/product.jpg' },
+        { title: 'lifestyle room scene', url: 'https://img.com/lifestyle.jpg' },
+      ],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/lifestyle.jpg');
+  });
+
+  it('returns src from keyword-matched mediaItem when url is absent (src field)', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [
+        { title: 'room setting', src: 'https://img.com/room.jpg' },
+      ],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/room.jpg');
+  });
+
+  it('falls back to product.mainMedia when keywordMatch has no url or src (CF-q024)', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [
+        { title: 'lifestyle', url: '', src: '' },
+      ],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('falls back to product.mainMedia when no keyword match found', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [
+        { title: 'back view', url: 'https://img.com/back.jpg' },
+      ],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('returns empty string when no mainMedia and no keyword match', () => {
+    const product = {
+      mediaItems: [{ title: 'white bg', url: 'https://img.com/white.jpg' }],
+    };
+    expect(getLifestyleImage(product)).toBe('');
+  });
+
+  it('returns mainMedia when mediaItems is empty array', () => {
+    const product = { mainMedia: 'https://img.com/main.jpg', mediaItems: [] };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('returns mainMedia when mediaItems is missing', () => {
+    const product = { mainMedia: 'https://img.com/main.jpg' };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('does not throw for null product', () => {
+    expect(() => getLifestyleImage(null)).not.toThrow();
+    expect(getLifestyleImage(null)).toBe('');
+  });
+
+  it('matches on alt field keyword', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [
+        { title: '', alt: 'scene with futon in living room', url: 'https://img.com/alt-scene.jpg' },
+      ],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/alt-scene.jpg');
   });
 });
