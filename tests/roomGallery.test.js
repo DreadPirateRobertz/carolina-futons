@@ -27,14 +27,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('backend/ugcService.web', () => ({
   voteForPhoto: vi.fn().mockResolvedValue({ success: true, voted: true, voteCount: 5 }),
   submitUGCPhoto: vi.fn().mockResolvedValue({ success: true }),
+  getApprovedPhotos: vi.fn().mockResolvedValue({ success: true, photos: [] }),
 }));
 
 vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
-}));
-
-vi.mock('public/a11yHelpers.js', () => ({
-  announce: vi.fn(),
 }));
 
 vi.mock('backend/errorMonitoring.web', () => ({
@@ -47,10 +44,9 @@ import {
   initRoomSubmitForm,
   initRoomGallery,
 } from '../src/public/RoomGallery.js';
-import { voteForPhoto, submitUGCPhoto } from 'backend/ugcService.web';
+import { voteForPhoto, submitUGCPhoto, getApprovedPhotos } from 'backend/ugcService.web';
 import { logError } from 'backend/errorMonitoring.web';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -194,6 +190,36 @@ describe('RoomGallery', () => {
       const $item = create$w();
       cb($item, photo);
       expect($item('#roomGalleryLikeBtn').onClick).toHaveBeenCalledWith(expect.any(Function));
+    });
+
+    it('sets aria-pressed to false on like button initially', () => {
+      const photo = makePhoto();
+      const cb = getOnItemReadyCb([photo]);
+      const $item = create$w();
+      cb($item, photo);
+      expect($item('#roomGalleryLikeBtn').accessibility.ariaPressed).toBe(false);
+    });
+
+    it('sets aria-pressed to true after successful vote', async () => {
+      voteForPhoto.mockResolvedValueOnce({ success: true, voted: true, voteCount: 4 });
+      const photo = makePhoto();
+      const cb = getOnItemReadyCb([photo]);
+      const $item = create$w();
+      cb($item, photo);
+      const handler = $item('#roomGalleryLikeBtn').onClick.mock.calls[0][0];
+      await handler();
+      expect($item('#roomGalleryLikeBtn').accessibility.ariaPressed).toBe(true);
+    });
+
+    it('sets aria-pressed to false after toggle-off vote', async () => {
+      voteForPhoto.mockResolvedValueOnce({ success: true, voted: false, voteCount: 2 });
+      const photo = makePhoto();
+      const cb = getOnItemReadyCb([photo]);
+      const $item = create$w();
+      cb($item, photo);
+      const handler = $item('#roomGalleryLikeBtn').onClick.mock.calls[0][0];
+      await handler();
+      expect($item('#roomGalleryLikeBtn').accessibility.ariaPressed).toBe(false);
     });
 
     it('like button click calls voteForPhoto with photoId', async () => {
@@ -355,15 +381,12 @@ describe('RoomGallery', () => {
 
     it('shows error status and logs on submitUGCPhoto throw', async () => {
       submitUGCPhoto.mockRejectedValueOnce(new Error('Server down'));
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const handler = getSubmitHandler();
       await expect(handler()).resolves.not.toThrow();
       expect($w('#roomSubmitStatus').text).toMatch(/error|failed/i);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[RoomGallery]'),
-        expect.any(Error)
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('[RoomGallery]') })
       );
-      consoleSpy.mockRestore();
     });
 
     it('disables submit button during submission and re-enables on completion', async () => {
@@ -404,6 +427,34 @@ describe('RoomGallery', () => {
 
     it('does not throw when opts is omitted', () => {
       expect(() => initRoomGallery($w)).not.toThrow();
+    });
+
+    it('filter tab click re-queries getApprovedPhotos with roomType', async () => {
+      const filtered = [makePhoto({ _id: 'p-filtered', roomType: 'bedroom' })];
+      getApprovedPhotos.mockResolvedValueOnce({ success: true, photos: filtered });
+      initRoomGallery($w, { photos: [] });
+      const handler = $w('#roomFilterBedroom').onClick.mock.calls[0][0];
+      await handler();
+      expect(getApprovedPhotos).toHaveBeenCalledWith({ roomType: 'bedroom' });
+      expect($w('#roomGalleryRepeater').data).toEqual(filtered);
+    });
+
+    it('"All" filter tab re-queries without roomType filter', async () => {
+      getApprovedPhotos.mockResolvedValueOnce({ success: true, photos: [] });
+      initRoomGallery($w, { photos: [] });
+      const handler = $w('#roomFilterAll').onClick.mock.calls[0][0];
+      await handler();
+      expect(getApprovedPhotos).toHaveBeenCalledWith({});
+    });
+
+    it('filter callback logs error on getApprovedPhotos failure', async () => {
+      getApprovedPhotos.mockRejectedValueOnce(new Error('Network error'));
+      initRoomGallery($w, { photos: [] });
+      const handler = $w('#roomFilterBedroom').onClick.mock.calls[0][0];
+      await expect(handler()).resolves.not.toThrow();
+      expect(logError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('[RoomGallery]') })
+      );
     });
   });
 });

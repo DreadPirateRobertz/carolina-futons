@@ -33,6 +33,8 @@
  *     memberId (Text, indexed) - Voter member ID
  *     photoId (Text, indexed) - Photo being voted on
  *     createdAt (Date) - Vote timestamp
+ *   REQUIRED: Add a unique constraint on (memberId, photoId) in the UGCVotes
+ *   collection to prevent duplicate votes under concurrent requests (TOCTOU).
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -401,20 +403,21 @@ export const getUGCStats = webMethod(
   Permissions.Anyone,
   async () => {
     try {
-      const result = await wixData.query('UGCPhotos')
+      const total = await wixData.query('UGCPhotos')
         .hasSome('status', ['approved', 'featured'])
-        .limit(1000)
-        .find();
+        .count();
 
-      const photos = result.items;
-      const total = photos.length;
-      const featured = photos.filter((p) => p.status === 'featured').length;
+      const featured = await wixData.query('UGCPhotos')
+        .eq('status', 'featured')
+        .count();
 
       const byRoomType = {};
-      for (const photo of photos) {
-        if (photo.roomType) {
-          byRoomType[photo.roomType] = (byRoomType[photo.roomType] || 0) + 1;
-        }
+      for (const roomType of VALID_ROOM_TYPES) {
+        const count = await wixData.query('UGCPhotos')
+          .hasSome('status', ['approved', 'featured'])
+          .eq('roomType', roomType)
+          .count();
+        if (count > 0) byRoomType[roomType] = count;
       }
 
       return {

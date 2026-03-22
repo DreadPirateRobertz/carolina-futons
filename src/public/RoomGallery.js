@@ -21,10 +21,9 @@
 //   roomRoomTypeDropdown    — UGC submission: room type dropdown
 //   roomSubmitStatus        — UGC submission: status message
 
-import { voteForPhoto, submitUGCPhoto } from 'backend/ugcService.web';
+import { voteForPhoto, submitUGCPhoto, getApprovedPhotos } from 'backend/ugcService.web';
 import { logError } from 'backend/errorMonitoring.web';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers.js';
 
 const FILTER_TABS = [
   { id: '#roomFilterAll',        roomType: null },
@@ -64,12 +63,14 @@ export function renderRoomPhotos($w, photos) {
 
     const originalCount = String(itemData.voteCount ?? 0);
     $item('#roomGalleryLikeCount').text = originalCount;
+    $item('#roomGalleryLikeBtn').accessibility.ariaPressed = false;
 
     $item('#roomGalleryLikeBtn').onClick(async () => {
       try {
         const result = await voteForPhoto(itemData._id);
         if (result && result.success) {
           $item('#roomGalleryLikeCount').text = String(result.voteCount ?? 0);
+          $item('#roomGalleryLikeBtn').accessibility.ariaPressed = !!result.voted;
         }
       } catch (err) {
         logError({ message: '[RoomGallery] voteForPhoto failed', stack: err?.stack, context: 'roomGallery.voteForPhoto' });
@@ -94,7 +95,7 @@ export function initRoomFilter($w, onFilterChange) {
   for (const { id, roomType } of FILTER_TABS) {
     $w(id).onClick(() => {
       if (typeof onFilterChange === 'function') {
-        onFilterChange(roomType);
+        return onFilterChange(roomType);
       }
     });
   }
@@ -136,7 +137,7 @@ export function initRoomSubmitForm($w) {
         $w('#roomSubmitStatus').text = msg;
       }
     } catch (err) {
-      console.error('[RoomGallery] submitUGCPhoto failed:', err);
+      logError({ message: '[RoomGallery] submitUGCPhoto failed', stack: err?.stack, context: 'roomGallery.submitUGCPhoto' });
       $w('#roomSubmitStatus').text = 'An error occurred. Please try again.';
     } finally {
       $w('#roomSubmitBtn').enable();
@@ -157,9 +158,14 @@ export function initRoomGallery($w, opts = {}) {
 
   renderRoomPhotos($w, photos);
 
-  initRoomFilter($w, (roomType) => {
-    // Filter callback — re-render with filtered photos when implemented.
-    // Noop here; caller provides onFilterChange via initRoomFilter if needed.
+  initRoomFilter($w, async (roomType) => {
+    try {
+      const result = await getApprovedPhotos(roomType ? { roomType } : {});
+      const filtered = (result && Array.isArray(result.photos)) ? result.photos : [];
+      renderRoomPhotos($w, filtered);
+    } catch (err) {
+      logError({ message: '[RoomGallery] filter re-query failed', stack: err?.stack, context: 'roomGallery.filter' });
+    }
   });
 
   initRoomSubmitForm($w);
