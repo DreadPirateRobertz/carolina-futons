@@ -49,8 +49,14 @@ export function getTrayState(storage) {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
-  } catch (_) {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      console.warn('[ComparisonTray] tray state in storage is not an array, resetting');
+      return [];
+    }
+    return parsed;
+  } catch (err) {
+    console.warn('[ComparisonTray] failed to parse tray state, resetting:', err?.message);
     return [];
   }
 }
@@ -59,7 +65,14 @@ function saveTrayState(storage, products) {
   if (!storage) return;
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(products));
-  } catch (_) {}
+  } catch (err) {
+    // setItem throws QuotaExceededError in low-storage environments; tray state is best-effort
+    if (err?.name === 'QuotaExceededError') {
+      console.warn('[ComparisonTray] sessionStorage quota exceeded — tray state not persisted');
+    } else {
+      console.error('[ComparisonTray] failed to save tray state:', err?.message ?? err);
+    }
+  }
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────
@@ -98,8 +111,8 @@ export function syncTrayUI($wFn, products) {
 
       if (product) {
         if (slotEl) slotEl.show();
-        if (imgEl  && product.mainMedia) imgEl.src   = product.mainMedia;
-        if (nameEl && product.name)      nameEl.text = product.name;
+        if (imgEl)  imgEl.src   = product.mainMedia || '';
+        if (nameEl) nameEl.text = product.name || '';
       } else {
         if (slotEl) slotEl.hide();
       }
@@ -116,7 +129,9 @@ export function syncTrayUI($wFn, products) {
       if (products.length >= 2) compareBtn.enable();
       else                      compareBtn.disable();
     }
-  } catch (_) {}
+  } catch (err) {
+    console.error('[ComparisonTray] syncTrayUI error:', err?.message ?? err);
+  }
 }
 
 // ── Tray visibility ────────────────────────────────────────────────────
@@ -180,7 +195,8 @@ export function removeFromTray($wFn, productId, storage) {
   saveTrayState(stor, updated);
   syncTrayUI($wFn, updated);
 
-  if (updated.length === 0) hideTray($wFn);
+  if (updated.length > 0) showTray($wFn);
+  else                     hideTray($wFn);
 }
 
 /**
@@ -211,12 +227,14 @@ export function clearTray($wFn, storage) {
  * @param {Function} $wFn - Wix $w selector function
  * @param {Object} [opts]
  * @param {Object|null} [opts.storage]  - Injectable sessionStorage for testing
- * @param {Function}    [opts.navigate] - Injectable navigation fn (productId → void); defaults to wixLocationFrontend.to
+ * @param {Function}    [opts.navigate] - Injectable navigation fn (url: string) => void — called with full /compare?ids=... URL; defaults to wixLocationFrontend.to
  */
 export function initComparisonTray($wFn, opts = {}) {
   try {
     const storage = 'storage' in opts ? opts.storage : resolveStorage();
-    const navigate = opts.navigate || (() => {});
+    const navigate = opts.navigate ?? (() => {
+      console.warn('[ComparisonTray] navigate option not provided — Compare Now will not navigate');
+    });
 
     const current = getTrayState(storage);
 
@@ -254,6 +272,6 @@ export function initComparisonTray($wFn, opts = {}) {
       }
     });
   } catch (err) {
-    console.error('[ComparisonTray] init error:', err?.message ?? err);
+    console.error('[ComparisonTray] init error:', err);
   }
 }

@@ -4,12 +4,11 @@
  *
  * Coverage:
  *   getTrayState         — returns current comparison state from sessionStorage
- *   addToCompareTray     — adds product, prevents duplicates, enforces max-3
+ *   addToCompareTray     — toggle add/remove, enforces max-3, auto-show/hide tray
  *   removeFromTray       — removes product by id, updates tray UI
  *   clearTray            — empties tray, hides bar
  *   syncTrayUI           — renders slots, count badge, button states
- *   initComparisonTray   — wires buttons + syncs UI on load
- *   navigateToCompare    — navigates to /compare with product IDs
+ *   initComparisonTray   — wires buttons + syncs UI on load, compare navigates to /compare?ids=
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
@@ -215,6 +214,15 @@ describe('removeFromTray', () => {
     expect(els.tray.hide).toHaveBeenCalled();
   });
 
+  it('keeps tray visible when products remain after remove', () => {
+    const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' })];
+    const storage = makeStorage({ [STORAGE_KEY]: encodeState(products) });
+    const els = makeElements();
+    removeFromTray(make$w(els), 'p1', storage);
+    expect(els.tray.show).toHaveBeenCalled();
+    expect(els.tray.hide).not.toHaveBeenCalled();
+  });
+
   it('does not throw when id is not in tray', () => {
     const storage = makeStorage();
     const els = makeElements();
@@ -298,6 +306,15 @@ describe('syncTrayUI', () => {
     expect(els.compareBtn.enable).not.toHaveBeenCalled();
   });
 
+  it('clears slot image and name when product has no mainMedia or name', () => {
+    const els = makeElements();
+    els.img1.src = 'https://old-image.com/a.jpg';
+    els.name1.text = 'Old Name';
+    syncTrayUI(make$w(els), [makeProduct({ mainMedia: undefined, name: undefined })]);
+    expect(els.img1.src).toBe('');
+    expect(els.name1.text).toBe('');
+  });
+
   it('does not throw when elements are absent', () => {
     expect(() => syncTrayUI(() => null, [makeProduct()])).not.toThrow();
   });
@@ -369,6 +386,23 @@ describe('initComparisonTray', () => {
     expect(navigate).toHaveBeenCalledWith('/compare?ids=p1,p2');
   });
 
+  it('compareNowBtn click navigates with all 3 product IDs when tray is full', () => {
+    const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' }), makeProduct({ _id: 'p3' })];
+    storage = makeStorage({ [STORAGE_KEY]: encodeState(products) });
+    initComparisonTray(make$w(els), { storage, navigate });
+    const compareHandler = els.compareBtn.onClick.mock.calls[0][0];
+    compareHandler();
+    expect(navigate).toHaveBeenCalledWith('/compare?ids=p1,p2,p3');
+  });
+
+  it('compareNowBtn click does not navigate when fewer than 2 products in storage at click time', () => {
+    storage = makeStorage({ [STORAGE_KEY]: encodeState([makeProduct({ _id: 'p1' })]) });
+    initComparisonTray(make$w(els), { storage, navigate });
+    const compareHandler = els.compareBtn.onClick.mock.calls[0][0];
+    compareHandler();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('remove1 click removes first product from tray', () => {
     const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' })];
     storage = makeStorage({ [STORAGE_KEY]: encodeState(products) });
@@ -377,6 +411,39 @@ describe('initComparisonTray', () => {
     removeHandler();
     const state = getTrayState(storage);
     expect(state.some(p => p._id === 'p1')).toBe(false);
+  });
+
+  it('remove2 click removes second product from tray', () => {
+    const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' }), makeProduct({ _id: 'p3' })];
+    storage = makeStorage({ [STORAGE_KEY]: encodeState(products) });
+    initComparisonTray(make$w(els), { storage, navigate });
+    const removeHandler = els.remove2.onClick.mock.calls[0][0];
+    removeHandler();
+    const state = getTrayState(storage);
+    expect(state.some(p => p._id === 'p2')).toBe(false);
+    expect(state.some(p => p._id === 'p1')).toBe(true);
+    expect(state.some(p => p._id === 'p3')).toBe(true);
+  });
+
+  it('remove3 click removes third product from tray', () => {
+    const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' }), makeProduct({ _id: 'p3' })];
+    storage = makeStorage({ [STORAGE_KEY]: encodeState(products) });
+    initComparisonTray(make$w(els), { storage, navigate });
+    const removeHandler = els.remove3.onClick.mock.calls[0][0];
+    removeHandler();
+    const state = getTrayState(storage);
+    expect(state.some(p => p._id === 'p3')).toBe(false);
+    expect(state.some(p => p._id === 'p1')).toBe(true);
+    expect(state.some(p => p._id === 'p2')).toBe(true);
+  });
+
+  it('remove handler is a no-op when slot has no product', () => {
+    // Tray has 1 product — slot 2's remove button has no product at index 1
+    storage = makeStorage({ [STORAGE_KEY]: encodeState([makeProduct({ _id: 'p1' })]) });
+    initComparisonTray(make$w(els), { storage, navigate });
+    const removeHandler = els.remove2.onClick.mock.calls[0][0];
+    expect(() => removeHandler()).not.toThrow();
+    expect(getTrayState(storage)).toHaveLength(1); // p1 still there
   });
 
   it('disables compareNowBtn on init when fewer than 2 products', () => {
