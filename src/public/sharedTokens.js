@@ -236,31 +236,187 @@ export const business = {
 /**
  * Domestic shipping rate configuration.
  *
- * Zones are determined by the first 3 digits of the destination ZIP code.
- * "WNC" = Western North Carolina (local delivery area).
- * White-glove service includes in-home delivery and assembly.
+ * Local delivery uses a four-zone system (zone1–zone4) based on distance from
+ * the Hendersonville NC store. Zones are matched by explicit zip code list first,
+ * then by zip3 prefix + state. This avoids Wix dashboard limitations and gives
+ * full control over pricing tiers and gamification copy.
+ *
+ * Parcel (UPS) and LTL freight (WWEX SpeedFreight) are handled separately by
+ * their respective modules. This config governs CF's own local delivery fleet.
  *
  * All monetary values are in USD (whole dollars, no cents).
  *
  * @type {Object}
  */
 export const shippingConfig = {
-  /** Orders at or above this amount (USD) qualify for free standard shipping */
+  /** Orders at or above this amount qualify for free standard shipping (disabled = 999999) */
   freeThreshold: 999999,
+
+  /**
+   * White-glove delivery config.
+   * "We bring it in, set it up, and place it exactly where you want it."
+   */
   whiteGlove: {
-    /** Orders at or above this amount get free white-glove delivery */
     freeThreshold: 999999,
-    /** White-glove price for local zone (WNC — within ~50 miles) */
-    localPrice: 149,
-    /** White-glove price for regional zone (Southeast — NC/SC/GA/TN/VA) */
-    regionalPrice: 249,
+    /**
+     * Terrain surcharge — adds a flat fee to white-glove for destinations with
+     * steep, winding, or otherwise difficult mountain road access. Staff can add
+     * zips here without touching plugin logic.
+     */
+    terrainSurcharge: {
+      amount: 75,
+      zips: [
+        '28741', // Highlands — 4,118 ft elevation, steep Blue Ridge access
+        '28717', // Cashiers — winding Hwy 107/64 approach
+        '28718', // Chimney Rock / Bat Cave — narrow gorge road
+        '28713', // Bryson City — Smoky Mountains access
+        '28719', // Cherokee — mountain approach, narrow streets
+        '28770', // Ridgecrest — steep access off I-26
+        '28774', // Rosman — rural, limited truck clearance
+        '28779', // Sylva — mountain town access
+        '28781', // Topton — extremely remote
+        '28783', // Tuckasegee — rural mountain hollow
+        '28789', // Whittier — narrow mountain roads
+      ],
+    },
   },
-  /** ZIP prefix ranges for shipping zone determination */
+
+  /**
+   * Local delivery zones — CF's own trucks, distance-based from store.
+   * Zones are evaluated in order; first match wins.
+   *
+   * Match logic (per zone):
+   *   1. Check if postalCode is in `zips` (exact match, highest precision)
+   *   2. Else check if zip3Prefix is in `zip3Prefixes` AND state is in `states`
+   *   3. Else fall through to next zone
+   *
+   * Gamification fields (badge, badgeStyle, upsellMessage) are passed through
+   * to the cart/checkout UI for display in the shipping option card.
+   */
+  localZones: [
+    {
+      code: 'zone1',
+      name: 'Store Local',
+      description: 'Hendersonville & immediate WNC (~0–30 mi)',
+      // Explicit zip list for precision — covers the store's immediate trade area
+      zips: [
+        '28792', '28791', // Hendersonville core
+        '28739', '28742', // Flat Rock, Horse Shoe
+        '28731', '28756', // Edneyville, Saluda
+        '28732', '28726', '28759', // Fletcher, Mills River
+        '28712', '28766', // Brevard, Pisgah Forest
+        '28748', // Leicester (near Asheville)
+      ],
+      zip3Prefixes: [], // exact zips only for zone1
+      states: ['NC'],
+      delivery: 39,
+      whiteGlove: 99,
+      deliveryDays: '2–4',
+      icon: '🏠',
+      whiteGloveIcon: '✨',
+      badge: 'Local Love ♥',
+      badgeStyle: 'local',
+      upsellMessage: 'Delivered by our own team right from our Hendersonville showroom',
+      whiteGloveBadge: 'Premium Experience ✦',
+      whiteGloveUpsell: 'We bring it in, set it up, and place it exactly where you want it',
+      highlight: false,
+      whiteGloveHighlight: true,
+    },
+    {
+      code: 'zone2',
+      name: 'WNC Extended',
+      description: 'Asheville metro, WNC mountains, Upstate SC (~30–100 mi)',
+      zips: [],
+      // 287/288/289 = WNC; 293/294/296/297 = Greenville/Spartanburg SC area
+      zip3Prefixes: [287, 288, 289, 293, 294, 296, 297],
+      states: ['NC', 'SC'],
+      delivery: 69,
+      whiteGlove: 149,
+      deliveryDays: '3–5',
+      icon: '🏔️',
+      whiteGloveIcon: '✨',
+      badge: 'Same-Day Capable',
+      badgeStyle: 'regional',
+      upsellMessage: 'Same Carolina Futons crew — just a little further from home',
+      whiteGloveBadge: 'White Glove Setup ✦',
+      whiteGloveUpsell: 'We bring it in, set it up, and place it exactly where you want it',
+      highlight: false,
+      whiteGloveHighlight: true,
+    },
+    {
+      code: 'zone3',
+      name: 'Southeast Regional',
+      description: 'Charlotte, Raleigh, Columbia, Atlanta, Knoxville (~100–250 mi)',
+      zips: [],
+      zip3Prefixes: [
+        // NC: Charlotte + Piedmont + East
+        270, 271, 272, 273, 274, 275, 276, 277, 278, 279,
+        280, 281, 282, 283, 284, 285, 286,
+        // SC: Columbia + Lowcountry
+        290, 291, 292, 295, 298, 299,
+        // GA: Atlanta metro + N. Georgia
+        300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
+        // TN: Knoxville + East Tennessee
+        376, 377, 378, 379,
+      ],
+      states: ['NC', 'SC', 'GA', 'TN'],
+      delivery: 99,
+      whiteGlove: 199,
+      deliveryDays: '5–7',
+      icon: '🚚',
+      whiteGloveIcon: '✨',
+      badge: null,
+      badgeStyle: null,
+      upsellMessage: null,
+      whiteGloveBadge: 'White Glove Delivery ✦',
+      whiteGloveUpsell: 'We bring it in, set it up, and place it exactly where you want it',
+      highlight: false,
+      whiteGloveHighlight: true,
+    },
+    {
+      code: 'zone4',
+      name: 'Extended Southeast',
+      description: 'Deep GA, Nashville, Richmond, Roanoke (~250+ mi)',
+      zips: [],
+      zip3Prefixes: [
+        // GA: Savannah + South Georgia
+        311, 312, 313, 314, 315, 316, 317, 318, 319,
+        // TN: Nashville + Middle TN
+        370, 371, 372, 373, 374, 375, 380, 381, 382, 383, 384, 385,
+        // VA: all
+        220, 221, 222, 223, 224, 225, 226, 227, 228, 229,
+        230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
+        240, 241, 242, 243, 244, 245, 246,
+      ],
+      states: ['GA', 'TN', 'VA'],
+      delivery: 149,
+      whiteGlove: 249,
+      deliveryDays: '7–10',
+      icon: '🗺️',
+      whiteGloveIcon: '✨',
+      badge: null,
+      badgeStyle: null,
+      upsellMessage: null,
+      whiteGloveBadge: 'Premium White Glove ✦',
+      whiteGloveUpsell: 'We bring it in, set it up, and place it exactly where you want it',
+      highlight: false,
+      whiteGloveHighlight: true,
+    },
+  ],
+
+  /**
+   * Legacy zone config — retained for dynamicPricing.web.js which uses zip3
+   * prefix ranges. Not used for delivery eligibility (see localZones above).
+   * `regional.states` is authoritative for shipping-rates-plugin eligibility.
+   */
   zones: {
-    /** WNC = Western North Carolina — local delivery area */
     local: { prefixMin: 287, prefixMax: 289, name: 'WNC' },
-    /** Southeast region — broader delivery area with higher shipping cost */
-    regional: { prefixMin: 270, prefixMax: 399, name: 'Southeast' },
+    regional: {
+      states: ['NC', 'SC', 'GA', 'TN', 'VA'],
+      prefixMin: 270,
+      prefixMax: 399,
+      name: 'Southeast',
+    },
   },
 };
 
