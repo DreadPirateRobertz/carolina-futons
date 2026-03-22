@@ -1397,6 +1397,24 @@ Right column:
         ["sizeCompareRepeater","Repeater","Size comparison items"],
         ["sizeComparisonTitle","Text","Comparison title"],
         ["sizeComparisonVisual","HtmlComponent","Size comparison visual"]
+      ]},
+      { name: "Delivery Estimator (NEW v1.1.0+)", impl: `<h4>\u{1F4E6} Implementation \u2014 Delivery Estimator (NEW v1.1.0+ / PR #649)</h4>
+<p><em>Source: <code>src/public/ProductDetails.js</code> \u2014 <code>initDeliveryEstimate()</code> + <code>updateEstimateForZip()</code></em><br>
+<em>Backend: <code>src/backend/shippingIntelligence.web.js</code> \u2014 <code>getDeliveryEstimate(zip, productIds[])</code></em></p>
+<ul>
+  <li><strong>#deliveryZipInput</strong>: Input for ZIP code entry. Code reads value on button click.</li>
+  <li><strong>#deliveryZipBtn</strong>: Button \u2014 triggers <code>updateEstimateForZip()</code>. Label: "Check Delivery".</li>
+  <li><strong>#deliveryEstimateBox</strong>: Container Box \u2014 hidden until a ZIP has been submitted. Code toggles visibility.</li>
+  <li><strong>#deliveryEstimateText</strong>: Text showing delivery window, e.g. "Estimated delivery: Mar 27 \u2013 Mar 31 via UPS Ground". Updated by code on each lookup.</li>
+  <li><strong>#deliveryEstimateError</strong>: Text for error messages (ZIP invalid, API error). Hidden by default, shown on failure.</li>
+  <li><strong>#whiteGloveNote</strong>: Text for white-glove delivery note. Shown when UPS returns a real service (non-fallback); hidden when showing fallback estimate.</li>
+</ul>`, elements: [
+        ["deliveryZipInput","Input","ZIP code entry field"],
+        ["deliveryZipBtn","Button","Check Delivery action"],
+        ["deliveryEstimateBox","Box","Container — hidden until result ready"],
+        ["deliveryEstimateText","Text","Delivery window display"],
+        ["deliveryEstimateError","Text","Error message (hidden by default)"],
+        ["whiteGloveNote","Text","White-glove delivery note"]
       ]}
     ]
   },
