@@ -63,6 +63,7 @@ export async function renderHeroPricingBadge($w, price) {
     el.text = result.lowestMonthly;
     el.show();
   } catch (e) {
+    console.warn('[ProductFinancing] renderHeroPricingBadge failed:', e?.message);
     try { $w('#heroFinancingBadge').hide(); } catch (e2) {}
   }
 }
