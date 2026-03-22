@@ -137,11 +137,13 @@ function _buildMetaDescription(cityData) {
  * getLocalPage so product objects are consistent across both callers.
  *
  * @param {Object} cityData - City config from LOCAL_PAGES.
- * @param {number} [limit=4] - Max products to return.
+ * @param {number} [limit=4] - Max products to return. Clamped internally to [1, 20];
+ *   non-numeric values fall back to 4.
  * @returns {Promise<Array>} Mapped product objects.
  */
 async function _fetchProductsByCity(cityData, limit = 4) {
-  let query = wixData.query('Stores/Products').ascending('salesRank').limit(limit);
+  const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
+  let query = wixData.query('Stores/Products').ascending('salesRank').limit(safeLimit);
 
   if (Array.isArray(cityData.preferredCategories) && cityData.preferredCategories.length > 0) {
     query = query.hasSome('categories', cityData.preferredCategories);
@@ -190,8 +192,7 @@ export const getFeaturedProductsForCity = webMethod(
         return { success: true, products: [] };
       }
 
-      const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
-      const products = await _fetchProductsByCity(cityData, safeLimit);
+      const products = await _fetchProductsByCity(cityData, limit);
       return { success: true, products };
     } catch (err) {
       console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);
