@@ -32,6 +32,7 @@ import {
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 import { saveForLater } from 'public/SaveForLater.js';
 import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
+import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
 import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 import { initPageSeo } from 'public/pageSeo.js';
 
@@ -79,6 +80,14 @@ async function initCartPage() {
     updateTierProgressFromCart(cart);
     updateCartFinancingFromCart(cart);
     await initCartDeliveryEstimate($w, cart);
+
+    // Per-item delivery estimates in cart repeater (zip from #cartZipInput if present)
+    try {
+      const zipEl = $w('#cartZipInput');
+      const zip = zipEl?.value || null;
+      initCartDelivery($w, cart.lineItems, zip, { repeaterSelector: '#cartItemsRepeater' });
+    } catch (e) {}
+
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
