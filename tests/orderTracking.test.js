@@ -281,7 +281,7 @@ describe('lookupOrder', () => {
 describe('lookupOrder rate limiting', () => {
   it('returns success:false when rate limit is exceeded', async () => {
     // Seed rate limit record at max (10) within current window
-    __seed('TrackingRateLimit', [{
+    __seed('OrderLookupRateLimit', [{
       _id: 'rl-1',
       key: 'jane@example.com',
       count: 10,

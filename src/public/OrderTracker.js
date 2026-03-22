@@ -272,7 +272,8 @@ function renderLineItems($wFn, items) {
     if (qtyEl) qtyEl.text = `Qty: ${itemData.quantity ?? 1}`;
 
     const priceEl = safeGet($item, '#orderItemPrice');
-    if (priceEl) priceEl.text = `$${Number(itemData.price ?? 0).toFixed(2)}`;
+    const price = Number(itemData.price ?? 0);
+    if (priceEl) priceEl.text = `$${(Number.isFinite(price) ? price : 0).toFixed(2)}`;
   });
 
   repeater.data = items.map((item, idx) => ({ _id: `item-${idx}`, ...item }));

@@ -518,6 +518,22 @@ describe('initOrderTracker', () => {
     expect($item).toHaveBeenCalledWith('#orderItemName');
   });
 
+  it('renders $0.00 for non-finite price (guard against $NaN)', async () => {
+    lookupOrder.mockResolvedValue(BASE_ORDER);
+    let capturedCallback;
+    const repeater = makeEl({
+      onItemReady: vi.fn(cb => { capturedCallback = cb; }),
+    });
+    const $w = makeWixEnv({ '#orderItemsRepeater': repeater });
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    const priceEl = makeEl();
+    const $item = vi.fn(sel => sel === '#orderItemPrice' ? priceEl : makeEl());
+    capturedCallback($item, { _id: 'i-0', name: 'Item', quantity: 1, price: 'N/A' });
+    expect(priceEl.text).toBe('$0.00');
+  });
+
   // ── error state ──────────────────────────────────────────────────────
 
   it('shows orderLookupError when API returns success:false', async () => {

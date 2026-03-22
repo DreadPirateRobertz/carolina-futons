@@ -64,7 +64,7 @@ export const lookupOrder = webMethod(
       }
 
       // Rate limit: unauthenticated public endpoint, keyed by email
-      const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { max: 10 });
+      const { allowed } = await checkRateLimit('OrderLookupRateLimit', cleanEmail, { max: 10 });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again later.' };
       }
