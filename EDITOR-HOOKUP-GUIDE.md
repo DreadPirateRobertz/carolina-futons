@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-21 (S0 Recon — documentServices direct API confirmed, all page IDs captured, bulk rename script added)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-22 (Added Editor Hookup Steps — per-page 6-step coordination flow between Stilgar and melania)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -82,6 +82,61 @@ All write endpoints with `Permissions.Anyone` are rate-limited using the shared 
 | `TrackingRateLimit` | `subscribeToNotifications` | 5/hr per email |
 
 **Security fix applied (v1.0.0)**: Anonymous bucket DoS vector was patched — rate limit keys now use the caller's email/memberId, never `'anonymous'` as a fallback that creates a shared bucket across all callers.
+
+---
+
+## 📋 Editor Hookup Steps — Per-Page Coordination Flow (2026-03-22)
+
+This is the exact sequence Stilgar and melania follow to wire each page. Repeat for every page.
+
+### Who Does What
+
+| Role | Responsibility |
+|---|---|
+| **Stilgar** | Builds frontend elements in Wix Studio editor (places sections, buttons, galleries, text boxes, etc.) |
+| **Melania** | Reads discovery output → builds comp-ID map → generates rename script |
+
+---
+
+### The 6-Step Flow
+
+**Step 1 — Stilgar builds the page frontend**
+- Open Wix Studio editor → navigate to the target page
+- Add all elements listed in this guide's page section (hero, buttons, gallery, text boxes, etc.)
+- Rough sizing is fine — Velo code + CSS handle precise styling
+- Repeater children: add elements INSIDE the repeater item template
+
+**Step 2 — Stilgar tells melania the page is ready**
+- Message: `"[PageName] is ready for hookup"`
+- Include the page ID (see Page ID table below or the discovery script)
+
+**Step 3 — Stilgar runs the Step 1 discovery script**
+- Open Chrome DevTools (`F12` or `Cmd+Option+I`) inside the editor
+- Switch to the `preview-frame` context (frame selector dropdown in DevTools top bar)
+- Paste the **STEP 1: Discovery** script below (update `pageId` to the target page)
+- Copy the full console output and paste it to melania
+
+**Step 4 — Melania builds the comp-ID → nickname map**
+- Melania reads the discovery output
+- Cross-references against the target nicknames in this guide's page section
+- Produces the `COMP_ID_MAP` for the rename script (compId → targetNickname)
+- Sends the filled-in rename script back to Stilgar
+
+**Step 5 — Stilgar runs the Step 2 rename script**
+- Paste the **STEP 2: Rename** script (with the map melania provided) into the preview-frame console
+- Script calls `setNickname()` for each element
+- Confirm: re-run discovery script → all target nicknames should appear in the "Already Named" list
+
+**Step 6 — Verify and publish**
+- Velo code on that page reads elements by nickname — they now connect automatically
+- Test page behaviour in preview mode
+- Coordinate publish: `gt mail "PUBLISH STARTING"` → publish → `gt mail "PUBLISH DONE"`
+
+---
+
+### Key Constraint
+
+> **Element nicknames MUST match this guide's target names exactly.** The Velo code uses `$w('#nickname')` to reference every element — a single character difference means the element won't connect.
 
 ---
 

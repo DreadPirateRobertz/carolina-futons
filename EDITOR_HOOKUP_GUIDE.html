@@ -5062,6 +5062,33 @@ function render() {
 
   while (main.firstChild) main.removeChild(main.firstChild);
 
+  // ── EDITOR HOOKUP STEPS ──
+  const hookupSteps = document.createElement('div');
+  hookupSteps.className = 'howto';
+  hookupSteps.innerHTML = [
+    '<h2>\u{1F4CB} Editor Hookup Steps \u2014 Per-Page Coordination Flow</h2>',
+    '<p style="color:#555;font-size:0.9em;margin-bottom:12px;">Updated 2026-03-22. Exact sequence Stilgar and melania follow to wire each page. Repeat for every page.</p>',
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.88em;">',
+    '<tr style="background:#e8d5b7;"><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Role</th><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Responsibility</th></tr>',
+    '<tr><td style="padding:6px 10px;border:1px solid #ddd;"><strong>Stilgar</strong></td><td style="padding:6px 10px;border:1px solid #ddd;">Builds frontend elements in Wix Studio editor (sections, buttons, galleries, text boxes, etc.)</td></tr>',
+    '<tr style="background:#fafaf8;"><td style="padding:6px 10px;border:1px solid #ddd;"><strong>Melania</strong></td><td style="padding:6px 10px;border:1px solid #ddd;">Reads discovery output \u2192 builds comp-ID map \u2192 generates rename script</td></tr>',
+    '</table>',
+    '<div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;padding:14px 18px;margin-bottom:16px;">',
+    '<strong style="color:#2e7d32;font-size:1.05em;">The 6-Step Flow</strong>',
+    '<ol style="margin:10px 0 0 0;padding-left:20px;line-height:1.9;">',
+    '<li><strong>Stilgar builds the page frontend</strong> \u2014 Editor \u2192 target page \u2192 add all elements from this guide\u2019s page section. Rough sizing is fine \u2014 Velo + CSS handle styling. Repeaters: add elements INSIDE the item template.</li>',
+    '<li><strong>Stilgar tells melania the page is ready</strong> \u2014 Message: <em>"[PageName] is ready for hookup"</em> with the page ID.</li>',
+    '<li><strong>Stilgar runs the Step 1 discovery script</strong> \u2014 Open Chrome DevTools (F12) inside the editor \u2192 switch to <strong>preview-frame</strong> context \u2192 paste STEP 1 Discovery script (update <code>pageId</code>) \u2192 copy full console output \u2192 paste to melania.</li>',
+    '<li><strong>Melania builds the comp-ID \u2192 nickname map</strong> \u2014 Cross-references target nicknames in this guide \u2192 produces <code>COMP_ID_MAP</code> for the rename script \u2192 sends filled-in script back to Stilgar.</li>',
+    '<li><strong>Stilgar runs the Step 2 rename script</strong> \u2014 Paste rename script (with melania\u2019s map) into preview-frame console \u2192 calls <code>setNickname()</code> for each element \u2192 re-run discovery to confirm all target nicknames appear.</li>',
+    '<li><strong>Verify and publish</strong> \u2014 Velo code reads elements by nickname \u2014 they connect automatically. Test in preview. Coordinate publish: send \u201cPUBLISH STARTING\u201d \u2192 publish \u2192 \u201cPUBLISH DONE\u201d.</li>',
+    '</ol></div>',
+    '<div style="background:#fff3cd;border:1px solid #e0a800;border-radius:6px;padding:10px 14px;font-size:0.88em;">',
+    '<strong>\u26a0\ufe0f Key Constraint:</strong> Element nicknames MUST match this guide\u2019s target names exactly. The Velo code uses <code>$w(\'#nickname\')</code> \u2014 a single character difference means the element won\u2019t connect.',
+    '</div>',
+  ].join('');
+  main.appendChild(hookupSteps);
+
   // ── HOW TO ──
   const howto = document.createElement('div');
   howto.className = 'howto';
