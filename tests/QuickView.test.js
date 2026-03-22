@@ -246,6 +246,24 @@ describe('openQuickView — error and not-found paths', () => {
     await openQuickView($w, 'prod-error', mockDialog);
     expect(mockDialog.open).toHaveBeenCalled();
   });
+
+  it('does not call addToCart when product is null', async () => {
+    mockProductNotFound();
+    await init();
+    await openQuickView($w, 'prod-missing', mockDialog);
+    const calls = $w('#quickViewAddToCart').onClick.mock.calls;
+    if (calls.length > 0) {
+      const [handler] = calls[0];
+      await handler();
+    }
+    expect(addToCart).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when dialog is null (initQuickView returned null)', async () => {
+    mockProductSuccess();
+    await init();
+    await expect(openQuickView($w, 'prod-001', null)).resolves.not.toThrow();
+  });
 });
 
 // ── openQuickView — lazy-load cache ───────────────────────────────────
@@ -283,6 +301,14 @@ describe('openQuickView — lazy-load cache', () => {
     wixStoresFrontend.products.getProduct.mockResolvedValue({ ...PRODUCT, _id: 'prod-002', name: 'Empire Frame' });
     await openQuickView($w, 'prod-002', mockDialog);
     expect($w('#quickViewName').text).toBe('Empire Frame');
+  });
+
+  it('retries getProduct after a fetch error (errors are not cached)', async () => {
+    mockProductError();
+    await openQuickView($w, 'prod-fail', mockDialog);
+    await openQuickView($w, 'prod-fail', mockDialog);
+    expect(wixStoresFrontend.products.getProduct).toHaveBeenCalledTimes(2);
+    expect($w('#quickViewName').text).toContain('not available');
   });
 });
 

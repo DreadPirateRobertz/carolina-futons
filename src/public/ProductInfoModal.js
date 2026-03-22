@@ -106,7 +106,7 @@ export async function initProductInfoModal($w, state) {
       console.warn('[ProductInfoModal] fitResult ariaLive init failed:', e?.message);
     }
   } catch (e) {
-    console.error('[ProductInfoModal] Init failed:', e?.message || e);
+    console.error('[ProductInfoModal] Init failed:', e);
   }
 }
 
@@ -131,7 +131,7 @@ async function _loadSpecs($w, slug) {
       console.warn('[ProductInfoModal] getProductSpecs returned failure for slug:', slug, '— error:', error);
     }
   } catch (e) {
-    console.warn('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e?.message);
+    console.error('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e);
   }
 
   _renderCareGuide($w, specs?.careGuide || null);
@@ -257,7 +257,7 @@ function _checkRoomFit($w, specs) {
 }
 
 /**
- * Write the fit result text and update ARIA live region.
+ * Write the fit result text and set ARIA label for screen readers.
  *
  * @param {Function} $w
  * @param {string} message

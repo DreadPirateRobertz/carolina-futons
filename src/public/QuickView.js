@@ -1,5 +1,5 @@
 // QuickView.js — Product Quick-View Modal
-// Hover/click on a product card opens a mini-PDP overlay without navigation.
+// Click on a product card opens a mini-PDP overlay without navigation.
 // Displays name, price, main image, add-to-cart button, and view-full-page link.
 // Data sourced from the Wix Stores catalog via wix-stores-frontend products.getProduct().
 //
@@ -19,21 +19,27 @@ import wixStoresFrontend from 'wix-stores-frontend';
 
 // Per-session product cache keyed by productId.
 const _cache = new Map();
+// Currently displayed product — updated by openQuickView, read by the add-to-cart handler.
+let _currentProduct = null;
 
-/** Test helper — clears the product cache between test runs. */
-export function __resetCache() { _cache.clear(); }
+/** Test helper — clears the product cache and current product between test runs. */
+export function __resetCache() {
+  _cache.clear();
+  _currentProduct = null;
+}
 
 // ── initQuickView ─────────────────────────────────────────────────────
 
 /**
  * Initialize the quick-view modal container.
  * Call once on page ready (Category Page, Home Page) before any card renders.
+ * Wires the add-to-cart handler once here; openQuickView updates _currentProduct.
  * Returns the dialog handle for use with openQuickView().
  *
  * @param {Function} $w - Wix selector function
  * @returns {Object} dialog handle ({ open, close })
  */
-export async function initQuickView($w) {
+export function initQuickView($w) {
   try {
     try { $w('#quickViewModal').collapse(); } catch (e) {
       console.warn('[QuickView] collapse failed:', e?.message);
@@ -65,6 +71,27 @@ export async function initQuickView($w) {
       },
     });
 
+    // Wire add-to-cart once at init; _currentProduct is updated by openQuickView.
+    try {
+      $w('#quickViewAddToCart').onClick(async () => {
+        if (!_currentProduct) return;
+        const btn = $w('#quickViewAddToCart');
+        try {
+          btn.disable();
+          btn.label = 'Adding…';
+          await addToCart(_currentProduct._id, 1);
+          btn.label = 'Added!';
+        } catch (e) {
+          console.error('[QuickView] addToCart failed:', e);
+          btn.label = 'Error — Try Again';
+        } finally {
+          btn.enable();
+        }
+      });
+    } catch (e) {
+      console.warn('[QuickView] addToCart wire failed:', e?.message);
+    }
+
     return dialog;
   } catch (e) {
     console.error('[QuickView] initQuickView failed:', e);
@@ -77,7 +104,8 @@ export async function initQuickView($w) {
 /**
  * Open the quick-view modal for a specific product.
  * Fetches the product from Wix Stores on first open; subsequent opens for
- * the same productId use the in-memory cache.
+ * the same productId use the in-memory cache. Updates _currentProduct so the
+ * add-to-cart handler (wired once in initQuickView) uses the correct product.
  *
  * @param {Function} $w - Wix selector function
  * @param {string} productId - Wix Stores product _id
@@ -95,12 +123,12 @@ export async function openQuickView($w, productId, dialog) {
         _cache.set(productId, product);
       } catch (e) {
         console.warn('[QuickView] getProduct failed for id:', productId, '—', e?.message);
-        _cache.set(productId, null);
+        // Do not cache the error — allow retry on next open.
       }
     }
 
+    _currentProduct = product;
     _renderProduct($w, product);
-    _wireAddToCart($w, product);
 
     announce($w, 'Quick view opened');
     if (dialog) dialog.open();
@@ -123,9 +151,15 @@ function _renderProduct($w, product) {
     try { $w('#quickViewName').text = 'Product information not available.'; } catch (e) {
       console.warn('[QuickView] name fallback failed:', e?.message);
     }
-    try { $w('#quickViewPrice').text = ''; } catch (e) {}
-    try { $w('#quickViewImage').src = ''; } catch (e) {}
-    try { $w('#quickViewFullLink').link = ''; } catch (e) {}
+    try { $w('#quickViewPrice').text = ''; } catch (e) {
+      console.warn('[QuickView] price clear failed:', e?.message);
+    }
+    try { $w('#quickViewImage').src = ''; } catch (e) {
+      console.warn('[QuickView] image clear failed:', e?.message);
+    }
+    try { $w('#quickViewFullLink').link = ''; } catch (e) {
+      console.warn('[QuickView] fullLink clear failed:', e?.message);
+    }
     return;
   }
 
@@ -160,37 +194,5 @@ function _renderProduct($w, product) {
     $w('#quickViewAddToCart').accessibility.ariaLabel = `Add ${product.name || 'product'} to cart`;
   } catch (e) {
     console.warn('[QuickView] addToCart ariaLabel failed:', e?.message);
-  }
-}
-
-// ── _wireAddToCart ────────────────────────────────────────────────────
-
-/**
- * Wire the add-to-cart button for the currently displayed product.
- * Re-wires on each openQuickView call (replaces prior handler).
- *
- * @param {Function} $w
- * @param {Object|null} product
- */
-function _wireAddToCart($w, product) {
-  if (!product) return;
-
-  try {
-    $w('#quickViewAddToCart').onClick(async () => {
-      const btn = $w('#quickViewAddToCart');
-      try {
-        btn.disable();
-        btn.label = 'Adding…';
-        await addToCart(product._id, 1);
-        btn.label = 'Added!';
-      } catch (e) {
-        console.error('[QuickView] addToCart failed:', e);
-        btn.label = 'Error — Try Again';
-      } finally {
-        btn.enable();
-      }
-    });
-  } catch (e) {
-    console.warn('[QuickView] addToCart wire failed:', e?.message);
   }
 }

@@ -161,6 +161,16 @@ describe('initProductInfoModal — setup', () => {
     config.onClose();
     expect(announce).toHaveBeenCalledWith($w, 'Care guide closed');
   });
+
+  it('hides careGuideBtn when state is null', async () => {
+    await initProductInfoModal($w, null);
+    expect($w('#careGuideBtn').hide).toHaveBeenCalled();
+  });
+
+  it('hides careGuideBtn when state is undefined', async () => {
+    await initProductInfoModal($w, undefined);
+    expect($w('#careGuideBtn').hide).toHaveBeenCalled();
+  });
 });
 
 // ── careGuideBtn click — lazy load ────────────────────────────────────
@@ -313,6 +323,11 @@ describe('dimensions rendering', () => {
     await init({ ...FULL_SPECS, dimensions: null });
     expect($w('#dimensionsText').text).toContain('not available');
   });
+
+  it('shows fallback text when all dimension fields are null (empty dims object)', async () => {
+    await init({ ...FULL_SPECS, dimensions: { width: null, depth: null, height: null, weight: null } });
+    expect($w('#dimensionsText').text).toContain('not available');
+  });
 });
 
 // ── room fit calculator ───────────────────────────────────────────────
@@ -420,6 +435,21 @@ describe('room fit calculator', () => {
   it('shows "tight" result when clearance is 1 inch (one below CLEARANCE_GOOD threshold)', () => {
     triggerFitCheck(55, 33); // 1" width clearance, 1" depth clearance
     expect($w('#fitResult').text).toContain('Tight');
+  });
+
+  it('shows "not available" when checkRoomFitBtn clicked before lazy-load (specs = null)', async () => {
+    // Wire a fresh modal without triggering lazy-load (careGuideBtn never clicked)
+    vi.clearAllMocks();
+    const freshW = createMock$w();
+    setupAccessibleDialog.mockReturnValue(mockDialog);
+    mockSpecsSuccess();
+    await initProductInfoModal(freshW, createMockState());
+    // Invoke checkRoomFitBtn directly — specs are still null
+    freshW('#roomWidthInput').value = '72';
+    freshW('#roomLengthInput').value = '60';
+    const [handler] = freshW('#checkRoomFitBtn').onClick.mock.calls[0];
+    handler();
+    expect(freshW('#fitResult').text).toContain('not available');
   });
 });
 
