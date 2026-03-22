@@ -10,7 +10,10 @@
  * - Resolve package dimensions from product category via ups-shipping.web
  * - Route international destinations to internationalShipping.web
  * - Offer in-store pickup for Hendersonville-area ZIP prefixes
- * - Offer local delivery + white-glove for NC/SC/GA/TN ZIP prefixes
+ * - Offer local delivery + white-glove for localZones (zone1–zone4)
+ *   using state-based eligibility, not raw ZIP prefix ranges
+ * - Apply terrain surcharge to white-glove for mountain-access ZIPs
+ * - Return gamification metadata (badge, icon, upsellMessage) for cart UI
  * - Fall back to flat estimated rates when UPS API is unavailable
  *
  * No CMS collections — reads shipping config from sharedTokens.js.
@@ -26,15 +29,49 @@ import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 
-const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
-const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, localPrice: WHITE_GLOVE_LOCAL_PRICE, regionalPrice: WHITE_GLOVE_REGIONAL_PRICE } = whiteGlove;
+const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, localZones, zones } = shippingConfig;
+const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, terrainSurcharge } = whiteGlove;
+
+/**
+ * Determine which local delivery zone matches a destination, if any.
+ * Evaluation order: exact zip match → zip3 prefix + state match → next zone.
+ *
+ * @param {string} postalCode - 5-digit US ZIP code
+ * @param {string} stateCode  - 2-letter state code (US-XX stripped to XX)
+ * @returns {Object|null} Matched zone config from shippingConfig.localZones, or null
+ */
+function matchLocalZone(postalCode, stateCode) {
+  const zip3 = parseInt((postalCode || '').substring(0, 3), 10);
+  for (const zone of localZones) {
+    // 1. Exact ZIP match (highest precision — zone1 and mountain towns)
+    if (zone.zips && zone.zips.includes(postalCode)) return zone;
+    // 2. ZIP-3 prefix AND state match
+    if (
+      zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3) &&
+      zone.states && zone.states.includes(stateCode)
+    ) return zone;
+  }
+  return null;
+}
+
+/**
+ * Calculate the terrain surcharge for white-glove delivery.
+ * Mountain communities with steep/winding road access carry an additional fee.
+ *
+ * @param {string} postalCode - 5-digit US ZIP code
+ * @returns {number} Surcharge amount in USD (0 if not applicable)
+ */
+function getTerrainSurcharge(postalCode) {
+  if (!terrainSurcharge || !terrainSurcharge.zips) return 0;
+  return terrainSurcharge.zips.includes(postalCode) ? (terrainSurcharge.amount || 0) : 0;
+}
 
 /**
  * Calculate available shipping rates for the current checkout.
  * Wix calls this automatically — the function name is mandated by the SPI.
  *
  * Flow: build destination → size packages by category → check international →
- * fetch UPS rates → append local pickup / delivery / white-glove options.
+ * fetch UPS rates → match local zone → append pickup / delivery / white-glove.
  *
  * @param {Object} options - Wix-provided checkout context
  * @param {Array}  options.lineItems - Cart line items with name, sku, price, quantity, physicalProperties
@@ -44,7 +81,7 @@ const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, localPrice: WHITE_GLOVE_LOCAL
  *   Wix-formatted shipping rates array. Returns flat fallback rates on error.
  */
 export const getShippingRates = async (options) => {
-  const { lineItems, shippingDestination, shippingOrigin } = options;
+  const { lineItems, shippingDestination } = options;
 
   try {
     // Build destination address from Wix checkout data
@@ -54,7 +91,8 @@ export const getShippingRates = async (options) => {
         : 'Customer',
       addressLine1: shippingDestination?.address?.addressLine || '',
       city: shippingDestination?.address?.city || '',
-      state: shippingDestination?.address?.subdivision || '',
+      // Wix can return 'US-NC' or 'NC' — normalise to 2-letter code
+      state: (shippingDestination?.address?.subdivision || '').replace(/^US-/, ''),
       postalCode: shippingDestination?.address?.postalCode || '',
       country: shippingDestination?.address?.country || 'US',
     };
@@ -144,12 +182,15 @@ export const getShippingRates = async (options) => {
       },
     }));
 
-    // Add local pickup option for Hendersonville area
-    const zip3 = parseInt((destination.postalCode || '').substring(0, 3));
+    // ── Local delivery zone matching ──────────────────────────────────────
+    const zip3 = parseInt((destination.postalCode || '').substring(0, 3), 10);
+    const stateCode = destination.state;
+
+    // In-store pickup — local (WNC) zone only
     if (zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax) {
       shippingRates.push({
         code: 'local-pickup',
-        title: 'In-Store Pickup (Free)',
+        title: 'In-Store Pickup (Free) 🏪',
         logistics: {
           deliveryTime: 'Ready in 1-2 business days',
           instructions: `Pick up at ${business.address.street}, ${business.address.city}, ${business.address.state} ${business.address.zip}. ${business.hours}.`,
@@ -162,47 +203,77 @@ export const getShippingRates = async (options) => {
       });
     }
 
-    // Add local delivery option for Southeast states (NC/SC/GA/TN/VA)
-    // State-based check: ZIP prefix 270-399 was too broad (included FL/AL/MS).
-    // Wix subdivisions may be 'NC' or 'US-NC' — strip the prefix.
-    const stateCode = (destination.state || '').replace(/^US-/, '');
-    if ((zones.regional.states || []).includes(stateCode)) {
-      const localDeliveryPrice = orderSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 49.99;
-      shippingRates.push({
-        code: 'local-delivery',
-        title: localDeliveryPrice === 0 ? 'Local Delivery (Free)' : 'Local Delivery',
+    // CF truck local delivery — zone-based match
+    const zone = matchLocalZone(destination.postalCode, stateCode);
+    if (zone) {
+      const terrainFee = getTerrainSurcharge(destination.postalCode);
+
+      // Local delivery option
+      const deliveryPrice = orderSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : zone.delivery;
+      const deliveryTitle = [
+        zone.icon || '🚚',
+        deliveryPrice === 0 ? `${zone.name} Delivery (Free)` : `${zone.name} Delivery`,
+      ].join(' ');
+
+      const deliveryRate = {
+        code: `local-delivery-${zone.code}`,
+        title: deliveryTitle,
         logistics: {
-          deliveryTime: '3-7 business days',
+          deliveryTime: zone.deliveryDays,
           instructions: `Curbside delivery. Call ${business.phone} to schedule.`,
         },
         cost: {
-          price: String(localDeliveryPrice.toFixed(2)),
+          price: String(deliveryPrice.toFixed(2)),
           currency: 'USD',
           additionalCharges: [],
         },
-      });
+      };
+      // Attach gamification metadata for cart UI
+      if (zone.badge) {
+        deliveryRate.badge = zone.badge;
+        deliveryRate.badgeStyle = zone.badgeStyle || 'default';
+      }
+      if (zone.upsellMessage) deliveryRate.upsellMessage = zone.upsellMessage;
+      deliveryRate.highlight = zone.highlight || false;
+      shippingRates.push(deliveryRate);
 
-      // White Glove Delivery: in-home placement, packaging removal, basic assembly
-      const isLocal = zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax;
-      const whiteGloveBase = isLocal ? WHITE_GLOVE_LOCAL_PRICE : WHITE_GLOVE_REGIONAL_PRICE;
-      const whiteGlovePrice = orderSubtotal >= WHITE_GLOVE_FREE_THRESHOLD ? 0 : whiteGloveBase;
-      const whiteGloveLabel = whiteGlovePrice === 0
-        ? 'White Glove Delivery (Free)'
-        : 'White Glove Delivery — In-Home Setup';
+      // White-glove option
+      const whiteGloveBase = zone.whiteGlove;
+      const whiteGlovePrice = orderSubtotal >= WHITE_GLOVE_FREE_THRESHOLD
+        ? 0
+        : whiteGloveBase + terrainFee;
+      const whiteGloveLabel = [
+        zone.whiteGloveIcon || '✨',
+        whiteGlovePrice === 0
+          ? (zone.whiteGloveBadge ? `${zone.whiteGloveBadge} (Free)` : 'White Glove Delivery (Free)')
+          : (zone.whiteGloveBadge || 'White Glove Delivery — In-Home Setup'),
+      ].join(' ');
 
-      shippingRates.push({
-        code: 'white-glove',
+      const wgInstructions = terrainFee > 0
+        ? `Includes in-home placement, packaging removal, and basic assembly. Mountain area surcharge $${terrainFee} applied. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`
+        : `Includes in-home placement, packaging removal, and basic assembly. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`;
+
+      const wgRate = {
+        code: `white-glove-${zone.code}`,
         title: whiteGloveLabel,
         logistics: {
-          deliveryTime: isLocal ? '3-5 business days' : '5-10 business days',
-          instructions: 'Includes in-home placement, packaging removal, and basic assembly. We\'ll call to schedule a delivery window (Wed-Sat, 9am-5pm).',
+          deliveryTime: zone.deliveryDays,
+          instructions: wgInstructions,
         },
         cost: {
           price: String(whiteGlovePrice.toFixed(2)),
           currency: 'USD',
           additionalCharges: [],
         },
-      });
+      };
+      if (zone.whiteGloveBadge) {
+        wgRate.badge = zone.whiteGloveBadge;
+        wgRate.badgeStyle = 'premium';
+      }
+      if (zone.whiteGloveUpsell) wgRate.upsellMessage = zone.whiteGloveUpsell;
+      wgRate.highlight = zone.whiteGloveHighlight || false;
+      if (terrainFee > 0) wgRate.terrainSurcharge = terrainFee;
+      shippingRates.push(wgRate);
     }
 
     return { shippingRates };
@@ -240,7 +311,6 @@ export const getShippingRates = async (options) => {
  */
 function detectCategory(item) {
   const name = (item.name || '').toLowerCase();
-  const sku = (item.sku || '').toLowerCase();
 
   if (name.includes('murphy') || name.includes('cabinet bed')) return 'murphy-bed';
   if (name.includes('platform') || name.includes('nomad') || name.includes('lexington') ||
