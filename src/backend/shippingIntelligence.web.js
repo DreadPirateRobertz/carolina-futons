@@ -138,6 +138,8 @@ export const getShippingEstimate = webMethod(
         weight: dims.weight_lbs ?? dims.weight,
         category: dims.category || profile?.category || 'default',
         description: profile?.productName || 'Furniture',
+        requiresPallet: profile?.requiresPallet || false,
+        requiresFreight: profile?.requiresFreight || false,
       }];
 
       return await buildShippingResponse(zip, packages, 0, 1);
@@ -206,6 +208,8 @@ export const calculateBundleQuote = webMethod(
             height: dims.height_in ?? dims.height,
             weight: dims.weight_lbs ?? dims.weight,
             category: dims.category || profile?.category || 'default',
+            requiresPallet: profile?.requiresPallet || false,
+            requiresFreight: profile?.requiresFreight || false,
           });
         }
       }
@@ -232,7 +236,9 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
   const zone = matchLocalZone(zip, stateForZone);
 
   // ── Carrier routing ──────────────────────────────────────────────
-  if (shouldUseLTL(packages)) {
+  // Honor CMS flags (requiresPallet / requiresFreight) alongside weight/dimension check
+  const forceFreight = packages.some(p => p.requiresPallet || p.requiresFreight);
+  if (forceFreight || shouldUseLTL(packages)) {
     // Large items → WWEX LTL freight
     const ltlResult = await getLTLRates('28792', zip, packages);
     const ltlRates = ltlResult.success ? ltlResult.rates : getLTLFallbackRates(zip, packages);
@@ -242,8 +248,8 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
       options.push({
         code: rate.code,
         title: rate.title,
-        cost: rate.cost,
-        price: rate.cost.toFixed(2),
+        cost: Number(rate.cost) || 0,
+        price: (Number(rate.cost) || 0).toFixed(2),
         currency: rate.currency || 'USD',
         estimatedDelivery: delivery,
         deliveryTime: delivery,
@@ -272,8 +278,8 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
       options.push({
         code: rate.code,
         title: `📦 ${rate.title}`,
-        cost: rate.cost,
-        price: rate.cost.toFixed(2),
+        cost: Number(rate.cost) || 0,
+        price: (Number(rate.cost) || 0).toFixed(2),
         currency: rate.currency || 'USD',
         estimatedDelivery: delivery,
         deliveryTime: delivery,

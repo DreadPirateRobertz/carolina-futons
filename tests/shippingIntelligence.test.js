@@ -488,4 +488,50 @@ describe('getShippingEstimate — ZIP edge cases', () => {
     // No local zone for PR
     expect(result.options.some(o => o.carrier === 'Carolina Futons')).toBe(false);
   });
+
+  it('accepts GU ZIP 96910 (5-digit numeric, no local zone)', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '96910');
+    expect(result.success).toBe(true);
+    expect(result.options.some(o => o.carrier === 'Carolina Futons')).toBe(false);
+  });
+});
+
+// ── requiresPallet / requiresFreight flag routing ──────────────────────────────
+
+describe('CMS freight flags → LTL routing', () => {
+  it('routes to LTL when product has requiresPallet=true (regardless of weight)', async () => {
+    // Profile with requiresPallet — low weight that would otherwise be UPS
+    __seed('ProductShippingProfiles', [
+      { productId: 'pallet-prod', weight_lbs: 30, length_in: 48, width_in: 40, height_in: 4, requiresPallet: true, requiresFreight: false },
+    ]);
+    shouldUseLTL.mockReturnValue(false); // weight/dim check says UPS
+    const result = await getShippingEstimate('pallet-prod', '10001');
+    expect(result.success).toBe(true);
+    // forceFreight flag should have overridden — LTL rates used
+    expect(getLTLRates).toHaveBeenCalled();
+    expect(result.options.some(o => o.isLTL)).toBe(true);
+  });
+
+  it('routes to LTL when product has requiresFreight=true', async () => {
+    __seed('ProductShippingProfiles', [
+      { productId: 'freight-prod', weight_lbs: 20, length_in: 60, width_in: 30, height_in: 6, requiresPallet: false, requiresFreight: true },
+    ]);
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('freight-prod', '10001');
+    expect(result.success).toBe(true);
+    expect(getLTLRates).toHaveBeenCalled();
+    expect(result.options.some(o => o.isLTL)).toBe(true);
+  });
+
+  it('routes to UPS when neither flag set and weight is under threshold', async () => {
+    __seed('ProductShippingProfiles', [
+      { productId: 'light-prod', weight_lbs: 20, length_in: 48, width_in: 24, height_in: 6, requiresPallet: false, requiresFreight: false },
+    ]);
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('light-prod', '10001');
+    expect(result.success).toBe(true);
+    expect(result.options.some(o => o.carrier === 'UPS')).toBe(true);
+    expect(result.options.some(o => o.isLTL)).toBe(false);
+  });
 });
