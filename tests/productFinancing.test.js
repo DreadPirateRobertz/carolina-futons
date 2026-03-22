@@ -613,4 +613,25 @@ describe('renderHeroPricingBadge', () => {
     const $w = vi.fn(() => null);
     await expect(renderHeroPricingBadge($w, 600)).resolves.not.toThrow();
   });
+
+  it('hides badge when price is undefined (variant mid-selection)', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, undefined);
+    expect($w('#heroFinancingBadge').hide).toHaveBeenCalled();
+    expect($w('#heroFinancingBadge').show).not.toHaveBeenCalled();
+  });
+
+  // Known limitation: updateFinancingPrice does not update #heroFinancingBadge.
+  // Hero badge is a one-shot render at page init — on variant/price change the
+  // badge shows a stale value until page reload. Tracked for future fix.
+  it('hero badge is NOT updated by updateFinancingPrice (stale-price known limitation)', async () => {
+    const $w = createMock$w();
+    await renderHeroPricingBadge($w, 600);
+    expect($w('#heroFinancingBadge').show).toHaveBeenCalled();
+
+    // Simulate a variant change — updateFinancingPrice runs but does not touch hero badge
+    $w('#heroFinancingBadge').show.mockClear();
+    await updateFinancingPrice($w, 900);
+    expect($w('#heroFinancingBadge').show).not.toHaveBeenCalled();
+  });
 });

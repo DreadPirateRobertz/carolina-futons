@@ -161,7 +161,7 @@ describe('getPaymentOptions', () => {
     const result = await getPaymentOptions(500);
     const badge = result.badges.find(b => b.type === 'financing');
     expect(badge).toBeDefined();
-    expect(badge.label).toMatch(/^As low as \$\d+\/mo$/);
+    expect(badge.label).toBe('As low as $84/mo'); // Math.ceil(83.33) = 84 for $500/6mo 0% APR
   });
 
   it('returns financing ineligible below $300', async () => {
