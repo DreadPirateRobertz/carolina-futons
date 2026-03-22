@@ -38,6 +38,32 @@ export async function initFinancingOptions($w, state) {
 }
 
 /**
+ * Render a compact financing teaser in the hero pricing area.
+ * Shows "As low as $X/mo" near the price on the PDP for above-fold visibility.
+ * Targets #heroFinancingBadge — add this element in the Wix editor below the price.
+ *
+ * @param {Function} $w - Wix selector function.
+ * @param {number} price - Product price.
+ */
+export async function renderHeroPricingBadge($w, price) {
+  try {
+    const el = $w('#heroFinancingBadge');
+    if (!el) return;
+    if (!price || price <= 0) { el.hide(); return; }
+
+    const { getFinancingWidget } = await import('backend/financingCalc.web');
+    const result = await getFinancingWidget(price);
+
+    if (!result.success || !result.eligible || !result.lowestMonthly) { el.hide(); return; }
+
+    el.text = result.lowestMonthly;
+    el.show();
+  } catch (e) {
+    try { $w('#heroFinancingBadge').hide(); } catch (e2) {}
+  }
+}
+
+/**
  * Update financing display when variant/price changes.
  *
  * @param {Function} $w - Wix selector function.

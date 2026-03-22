@@ -119,7 +119,7 @@ export const getBatchPaymentBadges = webMethod(
         if (afterpay.eligible) {
           badgeList.push({
             type: 'afterpay',
-            label: `4 payments of $${afterpay.installmentAmount}`,
+            label: 'Pay in 4 with Afterpay',
             color: colors.sandLight,
             textColor: colors.espresso,
           });
@@ -128,7 +128,7 @@ export const getBatchPaymentBadges = webMethod(
         if (financing.eligible) {
           badgeList.push({
             type: 'financing',
-            label: financing.bestTier.label,
+            label: `As low as $${Math.ceil(price / financing.bestTier.months)}/mo`,
             color: colors.sandLight,
             textColor: colors.espresso,
           });
@@ -350,7 +350,7 @@ function getPaymentBadges(price) {
   if (price >= AFTERPAY_CONFIG.minAmount && price <= AFTERPAY_CONFIG.maxAmount) {
     badges.push({
       type: 'afterpay',
-      label: `4 payments of $${(price / 4).toFixed(2)}`,
+      label: 'Pay in 4 with Afterpay',
       icon: 'afterpay',
       color: colors.sandLight,
     });
@@ -360,7 +360,7 @@ function getPaymentBadges(price) {
   if (financing.eligible) {
     badges.push({
       type: 'financing',
-      label: financing.bestTier.label,
+      label: `As low as $${Math.ceil(price / financing.bestTier.months)}/mo`,
       icon: 'calendar',
       color: colors.sandLight,
     });

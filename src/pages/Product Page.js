@@ -145,6 +145,7 @@ async function initProductPage() {
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
+      { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
