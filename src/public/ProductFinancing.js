@@ -38,6 +38,37 @@ export async function initFinancingOptions($w, state) {
 }
 
 /**
+ * Render a compact financing teaser in the hero pricing area.
+ * Fetches the lowest monthly payment text from the backend and displays it at
+ * #heroFinancingBadge for above-fold visibility near the price.
+ * The displayed text is whatever getFinancingWidget returns as lowestMonthly
+ * (e.g. "As low as $50/mo") — format is backend-controlled.
+ * Silently hides the badge on ineligible price, backend error, or missing element.
+ * Targets #heroFinancingBadge — add this text element in the Wix editor below the price.
+ *
+ * @param {Function} $w - Wix selector function.
+ * @param {number} price - Finite positive product price; no coercion is performed.
+ */
+export async function renderHeroPricingBadge($w, price) {
+  try {
+    const el = $w('#heroFinancingBadge');
+    if (!el) return;
+    if (!price || price <= 0) { el.hide(); return; }
+
+    const { getFinancingWidget } = await import('backend/financingCalc.web');
+    const result = await getFinancingWidget(price);
+
+    if (!result.success || !result.eligible || !result.lowestMonthly) { el.hide(); return; }
+
+    el.text = result.lowestMonthly;
+    el.show();
+  } catch (e) {
+    console.warn('[ProductFinancing] renderHeroPricingBadge failed:', e?.message);
+    try { $w('#heroFinancingBadge').hide(); } catch (e2) {}
+  }
+}
+
+/**
  * Update financing display when variant/price changes.
  *
  * @param {Function} $w - Wix selector function.
