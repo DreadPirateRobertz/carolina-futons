@@ -236,6 +236,25 @@ describe('buildFaqSchema — FAQPage JSON-LD', () => {
     ]);
     expect(schema.mainEntity).toHaveLength(1);
   });
+
+  it('rejects array question — array with length > 0 must not pass', () => {
+    const schema = buildFaqSchema([
+      { question: ['array question'], answer: 'answer' },
+    ]);
+    expect(schema).toBeNull();
+  });
+
+  it('rejects array answer — array with length > 0 must not pass', () => {
+    const schema = buildFaqSchema([
+      { question: 'question', answer: ['array answer'] },
+    ]);
+    expect(schema).toBeNull();
+  });
+
+  it('rejects numeric question', () => {
+    const schema = buildFaqSchema([{ question: 42, answer: 'answer' }]);
+    expect(schema).toBeNull();
+  });
 });
 
 // ── buildJsonLdScript — serialization ────────────────────────────────────────

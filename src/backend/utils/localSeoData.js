@@ -11,7 +11,7 @@ export const STORE_CITY = 'hendersonville-nc';
 
 export const STORE_PHONE = '+1-828-693-1935';
 export const STORE_ADDRESS = {
-  streetAddress: '329 N Main St',
+  streetAddress: '824 Locust St',
   addressLocality: 'Hendersonville',
   addressRegion: 'NC',
   postalCode: '28792',
