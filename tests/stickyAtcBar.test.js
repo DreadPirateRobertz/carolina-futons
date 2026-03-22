@@ -154,6 +154,7 @@ describe('handleStickyAtcClick', () => {
   });
 
   afterEach(() => {
+    vi.runAllTimers(); // flushes setTimeout so _busy resets between tests
     vi.useRealTimers();
   });
 
@@ -162,6 +163,25 @@ describe('handleStickyAtcClick', () => {
     const els = makeElements();
     await handleStickyAtcClick(make$wFromElements(els), makeState(), { addToCart });
     expect(addToCart).toHaveBeenCalledWith('prod-001', 1);
+  });
+
+  it('passes selectedQuantity > 1 to addToCart', async () => {
+    const addToCart = vi.fn(async () => {});
+    const els = makeElements();
+    await handleStickyAtcClick(make$wFromElements(els), makeState({ selectedQuantity: 3 }), { addToCart });
+    expect(addToCart).toHaveBeenCalledWith('prod-001', 3);
+  });
+
+  it('ignores a second click while in-flight (busy guard)', async () => {
+    let resolve;
+    const addToCart = vi.fn(() => new Promise(r => { resolve = r; }));
+    const els = makeElements();
+    const first = handleStickyAtcClick(make$wFromElements(els), makeState(), { addToCart });
+    // Fire second click before first resolves
+    await handleStickyAtcClick(make$wFromElements(els), makeState(), { addToCart });
+    resolve();
+    await first;
+    expect(addToCart).toHaveBeenCalledTimes(1);
   });
 
   it('disables button and sets "Adding..." during call', async () => {
@@ -336,6 +356,24 @@ describe('initStickyAtcBar', () => {
     expect(addToCart).toHaveBeenCalledWith('prod-001', 1);
   });
 
+  it('sticky button click passes selectedQuantity > 1 through to addToCart', async () => {
+    const opts = makeOpts();
+    initStickyAtcBar($wFn, makeState({ selectedQuantity: 4 }), opts);
+    const clickHandler = els.btn.onClick.mock.calls[0][0];
+    await clickHandler();
+    expect(addToCart).toHaveBeenCalledWith('prod-001', 4);
+  });
+
+  it('does not throw when getBoundingRect rejects', async () => {
+    const opts = {
+      addToCart,
+      onScroll: (fn) => { scrollHandlers.push(fn); },
+      getBoundingRect: vi.fn().mockRejectedValue(new Error('DOM unavailable')),
+    };
+    initStickyAtcBar($wFn, state, opts);
+    await expect(Promise.all(scrollHandlers.map(fn => fn()))).resolves.not.toThrow();
+  });
+
   it('disables sticky button when out of stock', () => {
     initStickyAtcBar($wFn, makeState({ isOutOfStock: true }), makeOpts());
     expect(els.btn.disable).toHaveBeenCalled();
@@ -354,6 +392,7 @@ describe('initStickyAtcBar', () => {
   });
 
   afterEach(() => {
+    vi.runAllTimers(); // flushes setTimeout so _busy resets between tests
     vi.useRealTimers();
   });
 });

@@ -2,10 +2,10 @@
  * @module StickyAtcBar
  * @description Scroll-aware sticky Add-to-Cart bar for the Product Detail Page.
  *
- * Watches the primary #addToCartButton via a scroll listener. When that button
- * scrolls above the viewport the sticky bar slides up from the bottom, giving
- * the user a persistent purchase CTA. The bar disappears when the primary
- * button is back in view.
+ * Accepts an injected getBoundingRect callback (typically querying
+ * #addToCartButton) that returns the primary CTA's viewport position.
+ * When bounds.top < 0 the bar slides up from the bottom; when >= 0 it hides.
+ * The bar disappears when the primary button is back in view.
  *
  * Mirrors the primary button's out-of-stock disabled state and delegates the
  * actual cart operation to the same addToCart function used by the main button.
@@ -19,9 +19,8 @@
  *   stickyAtcBtn         → #stickyAtcBtn          (Button — CTA)
  *
  * @example
- *   // In Product Page code:
+ *   // In Product Page code (import paths depend on your project structure):
  *   import { initStickyAtcBar } from 'public/StickyAtcBar';
- *   import { addToCart } from 'public/cartService';
  *   $w.onReady(() => initStickyAtcBar($w, state, { addToCart }));
  */
 
@@ -95,10 +94,14 @@ export function hideStickyBar($wFn) {
 
 // ── Click handler ──────────────────────────────────────────────────────
 
+let _busy = false; // Concurrency guard — prevents duplicate addToCart calls on rapid taps
+
 /**
  * Handle a click on the sticky Add-to-Cart button.
  * Disables the button during the async call, sets feedback labels, then
- * re-enables after RESET_DELAY_MS. No-op when product is absent.
+ * re-enables after RESET_DELAY_MS on both success and error paths.
+ * No-op when product is absent or addToCart is not provided. Concurrency-safe:
+ * a second click while in-flight is ignored.
  *
  * @param {Function} $wFn
  * @param {Object} state - { product, selectedQuantity }
@@ -106,6 +109,8 @@ export function hideStickyBar($wFn) {
  * @param {Function} opts.addToCart - (productId, qty) => Promise
  */
 export async function handleStickyAtcClick($wFn, state, opts = {}) {
+  if (_busy) return;
+
   const btn = safeGet($wFn, '#stickyAtcBtn');
   const { product, selectedQuantity = 1 } = state || {};
 
@@ -114,14 +119,17 @@ export async function handleStickyAtcClick($wFn, state, opts = {}) {
   const { addToCart } = opts;
   if (!addToCart) return;
 
+  _busy = true;
   try {
     if (btn) { btn.disable(); btn.label = LABEL_ADDING; }
     await addToCart(product._id, selectedQuantity);
     if (btn) btn.label = LABEL_ADDED;
-  } catch (_) {
+  } catch (err) {
+    console.error('[StickyAtcBar] addToCart failed:', err?.message ?? err);
     if (btn) btn.label = LABEL_ERROR;
   } finally {
     setTimeout(() => {
+      _busy = false;
       try {
         if (btn) { btn.label = LABEL_DEFAULT; btn.enable(); }
       } catch (_) {}
@@ -143,7 +151,7 @@ export async function handleStickyAtcClick($wFn, state, opts = {}) {
  * @param {Object} state  - { product, selectedQuantity, isOutOfStock }
  * @param {Object} [opts]
  * @param {Function} [opts.addToCart]       - Injectable cart function for testing
- * @param {Function} [opts.onScroll]        - Injectable scroll event (replaces wixWindowFrontend)
+ * @param {Function} [opts.onScroll]        - Injectable scroll binder; if absent, no scroll listener is registered and the bar will never auto-show/hide
  * @param {Function} [opts.getBoundingRect] - Injectable zero-arg async factory → { top: number }; replaces direct DOM call for testability
  */
 export function initStickyAtcBar($wFn, state, opts = {}) {
