@@ -928,14 +928,14 @@ describe('Delivery Estimate', () => {
 
   it('shows delivery date range', () => {
     initDeliveryEstimate($w, state);
-    expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
-    expect($w('#deliveryEstimate').show).toHaveBeenCalled();
+    expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
+    expect($w('#deliveryEstimateBox').show).toHaveBeenCalled();
   });
 
   it('does nothing when no product', () => {
     state.product = null;
     initDeliveryEstimate($w, state);
-    expect($w('#deliveryEstimate').text).toBe('');
+    expect($w('#deliveryEstimateText').text).toBe('');
   });
 
   it('shows white-glove note for large items', () => {
