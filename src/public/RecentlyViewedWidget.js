@@ -128,7 +128,10 @@ export async function renderWidget($w, opts = {}) {
 
   try { $w('#recentlyViewedSection').expand(); } catch { /* noop */ }
 
-  // Wire clear button
+  // Configure and wire clear button
+  try {
+    $w('#recentlyViewedClear').accessibility.ariaLabel = 'Clear recently viewed items';
+  } catch (e) { console.warn('[RecentlyViewedWidget] ariaLabel assignment failed:', e); }
   try {
     $w('#recentlyViewedClear').onClick(() => clearHistory($w));
   } catch { /* noop */ }
