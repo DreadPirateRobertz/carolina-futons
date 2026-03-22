@@ -57,7 +57,7 @@ export const getLocalPage = webMethod(
       try {
         featuredProducts = await _fetchProductsByCity(cityData, 4);
       } catch (e) {
-        console.error('[localSeoService] Failed to fetch featured products for page:', cleanSlug, e.message);
+        console.warn('[localSeoService] Failed to fetch featured products for page:', cleanSlug, e.message, e);
       }
 
       return {
@@ -147,7 +147,8 @@ async function _fetchProductsByCity(cityData, limit = 4) {
     query = query.hasSome('categories', cityData.preferredCategories);
   }
 
-  const { items } = await query.find();
+  const result = await query.find();
+  const items = Array.isArray(result?.items) ? result.items : [];
   return items.map(p => ({
     productId: p._id,
     name: p.name,
@@ -168,11 +169,12 @@ async function _fetchProductsByCity(cityData, limit = 4) {
  * when set; otherwise returns top products across all categories.
  *
  * @param {string} slug - City slug (e.g. 'asheville-nc').
- * @param {number} [limit=4] - Max number of products to return.
+ * @param {number} [limit=4] - Max products to return. Clamped to [1, 20].
  * @returns {Promise<{success: boolean, products: Array, error?: string}>}
- *   - success: false — invalid slug or query error
- *   - success: true, products: [] — valid slug but city not defined, or no matches
- *   - success: true, products: Array — up to `limit` product objects
+ *   - success: false, error: string — invalid slug (empty/path-traversal)
+ *   - success: false, error: string — Wix Stores query error
+ *   - success: true, products: [] — valid slug but no city defined, or no category matches
+ *   - success: true, products: Array — up to `limit` product objects ordered by salesRank
  */
 export const getFeaturedProductsForCity = webMethod(
   Permissions.Anyone,
@@ -188,7 +190,8 @@ export const getFeaturedProductsForCity = webMethod(
         return { success: true, products: [] };
       }
 
-      const products = await _fetchProductsByCity(cityData, limit);
+      const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
+      const products = await _fetchProductsByCity(cityData, safeLimit);
       return { success: true, products };
     } catch (err) {
       console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);

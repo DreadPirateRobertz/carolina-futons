@@ -84,8 +84,19 @@ describe('getFeaturedProductsForCity — preferredCategories filter', () => {
   });
 
   it('returns empty products when preferredCategories has no matches', async () => {
-    // charlotte-nc preferredCategories: ['accessories'] — not in PRODUCTS
-    const result = await getFeaturedProductsForCity('charlotte-nc');
+    // Seed only futon-frames products, then query a city that would filter on a non-matching category
+    __reset();
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'Frame A', price: 399, formattedPrice: '$399.00', mainMedia: 'img1.jpg', slug: 'frame-a', salesRank: 1, categories: ['futon-frames'] },
+    ]);
+    // hendersonville-nc preferredCategories: ['futon-frames'] — matches; to get empty we need a city
+    // whose preferredCategories don't intersect with the seeded data. Use a one-off seed reset.
+    __reset();
+    __seed('Stores/Products', [
+      { _id: 'px', name: 'Mattress X', price: 199, formattedPrice: '$199.00', mainMedia: 'img.jpg', slug: 'mattress-x', salesRank: 1, categories: ['mattresses'] },
+    ]);
+    // hendersonville-nc preferredCategories: ['futon-frames'] — no futon-frames in seed → empty
+    const result = await getFeaturedProductsForCity('hendersonville-nc');
     expect(result.success).toBe(true);
     expect(result.products).toEqual([]);
   });
@@ -152,10 +163,9 @@ describe('getLocalPage — featuredProducts[] from S4', () => {
     const result = await getLocalPage('asheville-nc');
     expect(result.success).toBe(true);
     const prods = result.page.featuredProducts;
-    if (prods.length > 1) {
-      const ranks = prods.map(p => p.salesRank);
-      expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
-    }
+    expect(prods.length).toBeGreaterThan(1);
+    const ranks = prods.map(p => p.salesRank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
   });
 
   it('getLocalPage still succeeds when product fetch fails', async () => {

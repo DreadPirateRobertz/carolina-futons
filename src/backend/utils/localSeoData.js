@@ -37,19 +37,6 @@ export const CITY_GEO = {
 // Static Google Maps directions URL — store is always the destination.
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
-// ── Featured product catalog ──────────────────────────────────────────
-// Product IDs from Wix Stores catalog, looked up at runtime via wixData.
-// Home city shows all 4 categories; nearby cities show top 2 by demand.
-
-export const FEATURED_PRODUCT_CATALOG = {
-  'futon-frames': { categoryLabel: 'Futon Frames', productId: 'cf-seo-frame-001' },
-  'mattresses': { categoryLabel: 'Futon Mattresses', productId: 'cf-seo-mattress-001' },
-  'covers': { categoryLabel: 'Futon Covers', productId: 'cf-seo-cover-001' },
-  'accessories': { categoryLabel: 'Accessories', productId: 'cf-seo-accessory-001' },
-};
-
-export const HOME_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses', 'covers', 'accessories'];
-export const NEARBY_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses'];
 
 export const LOCAL_PAGES = {
   'hendersonville-nc': {
@@ -111,7 +98,6 @@ export const LOCAL_PAGES = {
     city: 'Charlotte',
     state: 'NC',
     isHomeCity: false,
-    preferredCategories: ['accessories'],
     distance: '2 hours',
     headline: 'Futons Near Charlotte, NC — Order Online from Carolina Futons',
     heroDescription: 'Carolina Futons ships futon frames, mattresses, and covers across North Carolina — including the Charlotte metro area. Browse our full online catalog, place your order, and we\'ll handle delivery. Or make the scenic drive to our Hendersonville showroom to see everything in person.',
