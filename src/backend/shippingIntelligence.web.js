@@ -10,7 +10,7 @@
  *
  * Routing logic:
  *   1. Look up product's shipping profile from ProductShippingProfiles CMS
- *   2. If item is oversized (murphy bed, platform bed) → route to WWEX LTL
+ *   2. If total weight > 150 lbs or profile flags requiresPallet/requiresFreight → WWEX LTL
  *   3. Otherwise → route to UPS parcel via getUPSRates
  *   4. Append local delivery options for SE zone destinations
  *   5. Return gamification metadata for cart UI display
@@ -73,12 +73,17 @@ async function getCurrentMemberId() {
 
 /**
  * @typedef {Object} ShippingOption
- * @property {string} code       - Unique shipping method code
- * @property {string} title      - Display title (with icon)
- * @property {string} price      - Formatted price string ('49.00')
+ * @property {string} code                - Unique shipping method code
+ * @property {string} title               - Display title (with icon)
+ * @property {number} cost                - USD cost (numeric, for calculations)
+ * @property {string} price               - Formatted price string ('49.00') — alias of cost.toFixed(2)
  * @property {string} currency
- * @property {string} deliveryTime
- * @property {string|null} badge - Gamification badge text
+ * @property {string} estimatedDelivery   - Human-readable delivery window
+ * @property {string} deliveryTime        - Alias of estimatedDelivery (legacy field)
+ * @property {string} carrier             - Carrier name: 'UPS' | 'WWEX' | 'Carolina Futons'
+ * @property {boolean} requiresLiftgate   - True for LTL options requiring liftgate service
+ * @property {boolean} isEstimate         - True when using cached/fallback data (API unavailable)
+ * @property {string|null} badge          - Gamification badge text
  * @property {string} badgeStyle
  * @property {string|null} upsellMessage
  * @property {boolean} highlight
@@ -346,7 +351,7 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
  * Look up per-product shipping profile from ProductShippingProfiles CMS.
  * Returns null if product has no profile (use category defaults).
  *
- * CMS fields: productId, weight_lbs, length_in, width_in, height_in,
+ * CMS fields: productId, productName, category, weight_lbs, length_in, width_in, height_in,
  *             handlingFee_usd, requiresPallet, requiresFreight, customItemFlag
  */
 export async function _resolveProfile(productId) {
@@ -359,8 +364,7 @@ export async function _resolveProfile(productId) {
 
     return results.items.length > 0 ? results.items[0] : null;
   } catch (err) {
-    // CMS miss — fall back to category defaults
-    console.warn('ProductShippingProfiles lookup failed for', productId, err.message);
+    logError('shippingIntelligence._resolveProfile', err, { productId });
     return null;
   }
 }
