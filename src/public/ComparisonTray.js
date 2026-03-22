@@ -114,7 +114,9 @@ export function syncTrayUI($wFn, products) {
         if (imgEl)  imgEl.src   = product.mainMedia || '';
         if (nameEl) nameEl.text = product.name || '';
       } else {
-        if (slotEl) slotEl.hide();
+        if (slotEl)  slotEl.hide();
+        if (imgEl)   imgEl.src   = '';
+        if (nameEl)  nameEl.text = '';
       }
     });
 

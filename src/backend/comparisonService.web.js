@@ -12,8 +12,9 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateId } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
-const MAX_COMPARE = 4;
+const MAX_COMPARE = 3;
 
 // Category-specific attribute definitions
 const CATEGORY_ATTRIBUTES = {
@@ -67,7 +68,7 @@ const COMMON_ATTRIBUTES = [
  */
 export const getComparisonData = webMethod(
   Permissions.Anyone,
-  async (productIds) => {
+  async (productIds, sessionToken) => {
     try {
       if (!Array.isArray(productIds) || productIds.length < 2) {
         return { success: false, error: 'At least 2 products required' };
@@ -81,6 +82,10 @@ export const getComparisonData = webMethod(
       if (validIds.length < 2) {
         return { success: false, error: 'At least 2 valid product IDs required' };
       }
+
+      const rlKey = sessionToken ? `session:${sessionToken}` : `ids:${validIds[0]}`;
+      const { allowed } = await checkRateLimit('ComparisonRateLimit', rlKey, { max: 10, windowMs: 60_000 });
+      if (!allowed) return { success: false, error: 'Rate limited — try again shortly' };
 
       // Fetch products
       const result = await wixData.query('Stores/Products')
@@ -145,10 +150,12 @@ export const getComparisonData = webMethod(
  */
 function findSharedCategory(products) {
   if (!products.length) return null;
+  const getId = v => (v && typeof v === 'object') ? v._id : v;
   const firstCols = products[0].collections || [];
   for (const col of firstCols) {
-    if (products.every(p => (p.collections || []).includes(col))) {
-      return col;
+    const colId = getId(col);
+    if (products.every(p => (p.collections || []).some(c => getId(c) === colId))) {
+      return colId;
     }
   }
   return null;
@@ -327,11 +334,15 @@ export const buildShareableUrl = webMethod(
  */
 export const trackComparison = webMethod(
   Permissions.Anyone,
-  async (productIds) => {
+  async (productIds, sessionToken) => {
     try {
       if (!Array.isArray(productIds) || productIds.length < 2) return false;
       const validIds = productIds.slice(0, MAX_COMPARE).map(id => validateId(id)).filter(Boolean);
       if (validIds.length < 2) return false;
+
+      const rlKey = sessionToken ? `session:${sessionToken}` : `ids:${validIds[0]}`;
+      const { allowed } = await checkRateLimit('ComparisonRateLimit', rlKey, { max: 20, windowMs: 60_000 });
+      if (!allowed) return false;
 
       // Sort IDs for consistent dedup (A vs B same as B vs A)
       const sortedIds = [...validIds].sort();

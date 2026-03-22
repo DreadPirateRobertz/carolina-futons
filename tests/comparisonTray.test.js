@@ -306,6 +306,17 @@ describe('syncTrayUI', () => {
     expect(els.compareBtn.enable).not.toHaveBeenCalled();
   });
 
+  it('clears img.src and name.text for empty slots when tray shrinks from 3 to 2', () => {
+    const els = makeElements();
+    // Pre-populate slot 3 with stale data from a prior render
+    els.img3.src   = 'https://stale.example.com/old.jpg';
+    els.name3.text = 'Stale Product';
+    const products = [makeProduct({ _id: 'p1' }), makeProduct({ _id: 'p2' })];
+    syncTrayUI(make$w(els), products);
+    expect(els.img3.src).toBe('');
+    expect(els.name3.text).toBe('');
+  });
+
   it('clears slot image and name when product has no mainMedia or name', () => {
     const els = makeElements();
     els.img1.src = 'https://old-image.com/a.jpg';

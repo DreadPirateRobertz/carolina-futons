@@ -119,8 +119,8 @@ function makeProduct(overrides = {}) {
 // Constants
 // ═════════════════════════════════════════════════════════════════════
 describe('constants', () => {
-  it('MAX_COMPARE is 4', () => {
-    expect(MAX_COMPARE).toBe(4);
+  it('MAX_COMPARE is 3', () => {
+    expect(MAX_COMPARE).toBe(3);
   });
 
   it('CATEGORY_ATTRIBUTES has expected categories', () => {
