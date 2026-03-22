@@ -49,6 +49,9 @@ export function initCartUpsell($w) {
   _sourceProductId = null;
   _busy = false;
 
+  // Register close button ONCE — same stacking issue as onItemReady.
+  $w('#upsellDrawerClose').onClick(() => _dismissUpsell($w));
+
   // Register onItemReady ONCE — Wix Velo stacks handlers; re-registering on
   // every cart add would multiply click handlers and duplicate tracking events.
   $w('#upsellRepeater').onItemReady(($item, itemData) => {
@@ -64,7 +67,7 @@ export function initCartUpsell($w) {
           upsellProductId: itemData._id,
           sourceProductId: _sourceProductId,
         });
-        await fireCustomEvent('upsell_conversion', {
+        await fireCustomEvent('upsell_add_to_cart', {
           upsellProductId: itemData._id,
           sourceProductId: _sourceProductId,
         });
@@ -127,9 +130,6 @@ async function _showUpsellDrawer($w, sourceProductId) {
     }
 
     trackEvent('upsell_shown', { sourceProductId, count: products.length });
-
-    // Wire close button
-    $w('#upsellDrawerClose').onClick(() => _dismissUpsell($w));
 
     // Auto-dismiss after 8s, replacing any existing timer
     if (_dismissTimer) clearTimeout(_dismissTimer);

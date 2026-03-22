@@ -321,7 +321,7 @@ describe('CartUpsell', () => {
       upsellProductId: 'rec-item',
       sourceProductId: 'source-prod',
     });
-    expect(fireCustomEvent).toHaveBeenCalledWith('upsell_conversion', {
+    expect(fireCustomEvent).toHaveBeenCalledWith('upsell_add_to_cart', {
       upsellProductId: 'rec-item',
       sourceProductId: 'source-prod',
     });
@@ -449,6 +449,22 @@ describe('CartUpsell', () => {
   });
 
   // ── Single onItemReady registration ───────────────────────────────
+
+  it('upsellDrawerClose onClick is registered exactly once on init, not re-registered on cart events', async () => {
+    initCartUpsell($w);
+
+    // Trigger multiple cart adds
+    getCurrentCart.mockResolvedValueOnce(makeCart([]));
+    await cartChangedCallback();
+
+    getCurrentCart.mockResolvedValueOnce(makeCart([makeLineItem('prod-1')]));
+    await cartChangedCallback();
+
+    getCurrentCart.mockResolvedValueOnce(makeCart([makeLineItem('prod-1', 2)]));
+    await cartChangedCallback();
+
+    expect($w('#upsellDrawerClose').onClick).toHaveBeenCalledTimes(1);
+  });
 
   it('onItemReady is registered exactly once on init, not re-registered on cart events', async () => {
     initCartUpsell($w);
