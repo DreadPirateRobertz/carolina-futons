@@ -135,7 +135,7 @@ export function getLifestyleImage(product) {
       const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
       return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
     });
-    if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
+    if (keywordMatch) return keywordMatch.url || keywordMatch.src || product?.mainMedia || '';
   }
   return product?.mainMedia || '';
 }

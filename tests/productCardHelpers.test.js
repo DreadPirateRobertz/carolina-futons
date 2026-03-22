@@ -31,6 +31,7 @@ import {
   formatCardPrice,
   setCardImage,
   renderCardFinancingBadge,
+  getLifestyleImage,
 } from '../src/public/productCardHelpers.js';
 
 // ── Helper: mock Wix element ──────────────────────────────────────────
@@ -471,5 +472,58 @@ describe('renderCardFinancingBadge', () => {
       hide: vi.fn(() => { throw new Error('element error'); }),
     };
     expect(() => renderCardFinancingBadge(el, [])).not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 8. getLifestyleImage
+// ═══════════════════════════════════════════════════════════════════════
+describe('getLifestyleImage', () => {
+  it('returns keyword-matched url when present', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [{ url: 'https://img.com/lifestyle.jpg', title: 'lifestyle shot', alt: '' }],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/lifestyle.jpg');
+  });
+
+  it('returns keyword-matched src when url is absent', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [{ src: 'https://img.com/lifestyle-src.jpg', title: 'lifestyle', alt: '' }],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/lifestyle-src.jpg');
+  });
+
+  it('falls back to mainMedia when keywordMatch has no url or src', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [{ title: 'lifestyle', alt: '' }], // no url, no src
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('falls back to mainMedia when no keyword match', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [{ url: 'https://img.com/other.jpg', title: 'product photo', alt: '' }],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('returns empty string when no match and no mainMedia', () => {
+    const product = {
+      mediaItems: [{ url: 'https://img.com/other.jpg', title: 'product photo', alt: '' }],
+    };
+    expect(getLifestyleImage(product)).toBe('');
+  });
+
+  it('returns mainMedia when mediaItems is empty', () => {
+    const product = { mainMedia: 'https://img.com/main.jpg', mediaItems: [] };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('returns empty string for null product', () => {
+    expect(getLifestyleImage(null)).toBe('');
   });
 });
