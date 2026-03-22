@@ -34,7 +34,10 @@ function _parseJsonField(raw) {
   try {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; }
+  } catch (err) {
+    console.warn('[localSeoService] _parseJsonField: invalid JSON in CMS field:', err.message);
+    return [];
+  }
 }
 
 /**
@@ -94,8 +97,8 @@ export const getLocalPage = webMethod(
         if (cmsResult.items.length > 0) {
           cityData = _normalizeCmsCity(cmsResult.items[0]);
         }
-      } catch {
-        // CMS unavailable — fall through to static
+      } catch (err) {
+        console.warn('[localSeoService] CMS query failed for slug:', cleanSlug, err.message, err);
       }
       cityData = cityData ?? LOCAL_PAGES[cleanSlug] ?? null;
       if (!cityData) {
@@ -152,14 +155,13 @@ export const getLocalPage = webMethod(
           directionsUrl: STORE_DIRECTIONS_URL,
           directions: cityData.directions || '',
           nearbyAreas: Array.isArray(cityData.nearbyAreas)
-            ? cityData.nearbyAreas
-                .filter(s => LOCAL_PAGES[s])
-                .map(s => ({
-                  slug: s,
-                  city: LOCAL_PAGES[s].city,
-                  state: LOCAL_PAGES[s].state,
-                  url: `${SITE_URL}/near/${s}`,
-                }))
+            ? cityData.nearbyAreas.flatMap(s => {
+                if (LOCAL_PAGES[s]) {
+                  return [{ slug: s, city: LOCAL_PAGES[s].city, state: LOCAL_PAGES[s].state, url: `${SITE_URL}/near/${s}` }];
+                }
+                console.warn('[localSeoService] nearbyAreas slug not in LOCAL_PAGES (may be CMS-only city):', s, 'for city:', cityData.slug);
+                return [];
+              })
             : [],
         },
       };
@@ -323,8 +325,8 @@ export const getAllLocalSlugs = webMethod(
       try {
         const cmsResult = await wixData.query(CMS_COLLECTION).find();
         cmsSlugs = (cmsResult.items || []).map(i => i.slug).filter(Boolean);
-      } catch {
-        // CMS unavailable — return static only
+      } catch (err) {
+        console.warn('[localSeoService] CMS query failed in getAllLocalSlugs — returning static only:', err.message, err);
       }
       const staticSlugs = Object.keys(LOCAL_PAGES);
       const allSlugs = [...new Set([...staticSlugs, ...cmsSlugs])];
