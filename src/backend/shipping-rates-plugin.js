@@ -30,6 +30,8 @@ import { getInternationalShippingRates } from 'backend/internationalShipping.web
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
+import { applyOverrides } from 'backend/shippingOverrides.web';
+import wixData from 'wix-data';
 
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD } = whiteGlove;
@@ -74,11 +76,10 @@ export const getShippingRates = async (options) => {
       const price = Math.max(0, parseFloat(item.price) || 0);
       orderSubtotal += price * quantity;
 
-      // Determine package dimensions based on product category
-      // In Wix Stores, lineItems don't include physical dimensions,
-      // so we map from product data or use category defaults
-      const category = detectCategory(item);
-      // getPackageDimensions is a webMethod (async) - must await
+      // Determine package dimensions based on product category.
+      // detectCategory checks ProductShippingProfiles CMS first, then falls
+      // back to name keyword matching for backwards compatibility.
+      const category = await detectCategory(item);
       const dims = await getPackageDimensions(category);
 
       // One package per unit for furniture items
@@ -239,7 +240,20 @@ export const getShippingRates = async (options) => {
       deliveryRate.whiteGloveInstructions = wgInstructions;
     }
 
-    return { shippingRates };
+    // ── Override rules (CMS-driven, fail-open) ───────────────────────────
+    const products = lineItems.map(item => ({
+      productId: item.catalogReference?.catalogItemId || null,
+    }));
+    const overrideContext = { zip: destination.postalCode, products, orderSubtotal, memberId: null };
+    // applyOverrides expects {cost: number} — adapt Wix format in/out
+    const internalRates = shippingRates.map(r => ({ ...r, cost: parseFloat(r.cost.price) || 0 }));
+    const overridden = await applyOverrides(internalRates, overrideContext);
+    const finalRates = overridden.map(r => ({
+      ...r,
+      cost: { ...(shippingRates.find(s => s.code === r.code)?.cost || {}), price: r.cost.toFixed(2) },
+    }));
+
+    return { shippingRates: finalRates };
 
   } catch (err) {
     logError('shipping-rates-plugin.getShippingRates', err);
@@ -271,15 +285,32 @@ export const getShippingRates = async (options) => {
 
 /**
  * Detect product category from line item data for package sizing.
- * Uses name/SKU (Stock Keeping Unit) keyword matching because Wix checkout
- * line items don't carry a structured category field.
+ * Prefers ProductShippingProfiles CMS lookup (single source of truth with
+ * shippingIntelligence.web.js); falls back to name/SKU keyword matching
+ * for backwards compatibility when the CMS has no record for the item.
  *
- * @param {Object} item - Wix line item with name and sku fields
- * @returns {string} Category key matching PACKAGE_DEFAULTS in ups-shipping.web
+ * @param {Object} item - Wix line item with catalogReference, name, sku fields
+ * @returns {Promise<string>} Category key matching PACKAGE_DEFAULTS in ups-shipping.web
  */
-function detectCategory(item) {
-  const name = (item.name || '').toLowerCase();
+async function detectCategory(item) {
+  // Try CMS lookup first (same collection used by shippingIntelligence)
+  const productId = item.catalogReference?.catalogItemId;
+  if (productId) {
+    try {
+      const result = await wixData.query('ProductShippingProfiles')
+        .eq('productId', productId)
+        .limit(1)
+        .find({ suppressAuth: true });
+      if (result.items.length > 0 && result.items[0].category) {
+        return result.items[0].category;
+      }
+    } catch {
+      // CMS unavailable — fall through to name matching
+    }
+  }
 
+  // Fallback: keyword matching from product name
+  const name = (item.name || '').toLowerCase();
   if (name.includes('murphy') || name.includes('cabinet bed')) return 'murphy-bed';
   if (name.includes('platform') || name.includes('nomad') || name.includes('lexington') ||
       name.includes('charleston') || name.includes('ekko')) return 'platform-bed';
