@@ -37,19 +37,6 @@ export const CITY_GEO = {
 // Static Google Maps directions URL — store is always the destination.
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
-// ── Featured product catalog ──────────────────────────────────────────
-// Product IDs from Wix Stores catalog, looked up at runtime via wixData.
-// Home city shows all 4 categories; nearby cities show top 2 by demand.
-
-export const FEATURED_PRODUCT_CATALOG = {
-  'futon-frames': { categoryLabel: 'Futon Frames', productId: 'cf-seo-frame-001' },
-  'mattresses': { categoryLabel: 'Futon Mattresses', productId: 'cf-seo-mattress-001' },
-  'covers': { categoryLabel: 'Futon Covers', productId: 'cf-seo-cover-001' },
-  'accessories': { categoryLabel: 'Accessories', productId: 'cf-seo-accessory-001' },
-};
-
-export const HOME_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses', 'covers', 'accessories'];
-export const NEARBY_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses'];
 
 export const LOCAL_PAGES = {
   'hendersonville-nc': {
@@ -57,6 +44,7 @@ export const LOCAL_PAGES = {
     city: 'Hendersonville',
     state: 'NC',
     isHomeCity: true,
+    preferredCategories: ['futon-frames'],
     distance: null,
     headline: 'Carolina Futons — Your Local Futon Store in Hendersonville, NC',
     heroDescription: 'Carolina Futons has been Hendersonville\'s go-to futon and furniture store since 1991. Browse our full showroom on Main Street — hundreds of futon frames, mattresses, covers, and accessories in stock. Family-owned, locally focused, and ready to help you find the perfect fit for your space.',
