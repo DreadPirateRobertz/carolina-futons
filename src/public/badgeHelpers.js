@@ -56,6 +56,7 @@ export async function initCmsBadgePDP($w, state) {
     } catch (e) {}
     try { container.show(); } catch (e) {}
   } catch (e) {
+    console.error('initCmsBadgePDP error:', e);
     try { $w('#pdpBadgeContainer').hide(); } catch (_) {}
   }
 }
@@ -98,6 +99,7 @@ export async function batchLoadCmsBadges(products) {
     }
     return map;
   } catch (e) {
+    console.error('batchLoadCmsBadges error:', e);
     return empty;
   }
 }
@@ -118,5 +120,7 @@ export function renderCardCmsBadge($el, badge) {
     try { $el.style.backgroundColor = badge.bgColor; } catch (e) {}
     try { $el.style.color = badge.textColor; } catch (e) {}
     $el.show();
-  } catch (e) {}
+  } catch (e) {
+    console.error('renderCardCmsBadge error:', e);
+  }
 }
