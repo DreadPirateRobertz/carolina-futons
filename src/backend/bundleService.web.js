@@ -14,28 +14,33 @@
  * @requires wix-ecom-backend
  *
  * @setup
- * Create CMS collection `Bundles` with fields:
- *   displayName       (Text)    - Bundle display name
- *   frameProductId    (Text)    - Wix product ID of the frame
- *   mattressProductId (Text)    - Wix product ID of the mattress
- *   coverProductId    (Text)    - Wix product ID of the cover
- *   bundlePrice       (Number)  - Discounted bundle price
- *   savings           (Number)  - Dollar savings vs. individual prices
- *   couponCode        (Text)    - Wix Marketing coupon code to auto-apply (optional)
- *   isActive          (Boolean) - Whether bundle is available for purchase
+ * 1. Create CMS collection `Bundles` with fields:
+ *      displayName       (Text)    - Bundle display name
+ *      frameProductId    (Text)    - Wix product ID of the frame
+ *      mattressProductId (Text)    - Wix product ID of the mattress
+ *      coverProductId    (Text)    - Wix product ID of the cover
+ *      bundlePrice       (Number)  - Discounted bundle price
+ *      savings           (Number)  - Dollar savings vs. individual prices
+ *      couponCode        (Text)    - Wix Marketing coupon code to auto-apply (optional)
+ *      isActive          (Boolean) - Whether bundle is available for purchase
+ *    Index: compound index on [frameProductId, isActive] — required for
+ *    getBundlesByFrame query performance.
  *
- * Create CMS collection `UserBundleCart` with fields:
- *   sessionId         (Text, indexed) - Browser session identifier (null for anonymous)
- *   bundleId          (Text, indexed) - CMS _id of the Bundles record
- *   bundleTag         (Text)    - 'bundle:<bundleId>' for display grouping
- *   frameProductId    (Text)    - Snapshot of component product IDs at add time
- *   mattressProductId (Text)    - Snapshot of component product IDs at add time
- *   coverProductId    (Text)    - Snapshot of component product IDs at add time
- *   addedAt           (Date)    - Timestamp of bundle add
+ * 2. Create CMS collection `UserBundleCart` with fields:
+ *      sessionId         (Text, indexed) - Sanitized session identifier (null for anonymous)
+ *      bundleId          (Text, indexed) - CMS _id of the Bundles record
+ *      bundleTag         (Text)    - 'bundle:<bundleId>' for display grouping
+ *      frameProductId    (Text)    - Snapshot of component product IDs at add time
+ *      mattressProductId (Text)    - Snapshot of component product IDs at add time
+ *      coverProductId    (Text)    - Snapshot of component product IDs at add time
+ *      addedAt           (Date)    - Timestamp of bundle add
+ *    Index: [sessionId] — required for validateBundleCohesion query performance.
+ *    Permissions: Anyone can insert (addBundle writes anonymously); Admin read only.
  *
- * Index: create a compound index on [frameProductId, isActive] in Bundles —
- * required for getBundlesByFrame query performance.
- * Index: create index on [sessionId] in UserBundleCart.
+ * 3. Wix Marketing Dashboard: create one coupon code per active bundle.
+ *    Set coupon type to "free shipping" or "fixed amount" as appropriate.
+ *    Populate the couponCode field in each Bundles CMS record.
+ *    Coupons are applied server-side after cart.addProducts — never client-supplied.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -148,6 +153,8 @@ export const addBundle = webMethod(
     if (!cleanId) {
       return { success: false, error: 'Invalid bundleId.' };
     }
+    // Sanitize caller-supplied sessionId before CMS storage — reject invalid, truncate long
+    const cleanSessionId = sessionId ? (validateId(sessionId, 128) || null) : null;
 
     try {
       const result = await wixData.query(COLLECTION)
@@ -182,7 +189,7 @@ export const addBundle = webMethod(
       const bundleTag = getBundleTag(bundle._id);
       try {
         await wixData.insert(UBC_COLLECTION, {
-          sessionId: sessionId || null,
+          sessionId: cleanSessionId,
           bundleId: bundle._id,
           bundleTag,
           frameProductId: bundle.frameProductId,
@@ -226,7 +233,9 @@ export const addBundle = webMethod(
 export const validateBundleCohesion = webMethod(
   Permissions.Anyone,
   async (sessionId, cartItems) => {
-    if (!sessionId) {
+    // Sanitize caller-supplied sessionId before querying CMS
+    const cleanSessionId = sessionId ? (validateId(sessionId, 128) || null) : null;
+    if (!cleanSessionId) {
       return { valid: true, brokenBundles: [] };
     }
 
@@ -235,7 +244,7 @@ export const validateBundleCohesion = webMethod(
 
     try {
       const result = await wixData.query(UBC_COLLECTION)
-        .eq('sessionId', sessionId)
+        .eq('sessionId', cleanSessionId)
         .find();
 
       if (result.items.length === 0) {
@@ -269,7 +278,8 @@ export const validateBundleCohesion = webMethod(
       };
     } catch (err) {
       logError('bundleService.validateBundleCohesion', err);
-      return { valid: true, brokenBundles: [] };
+      // Do NOT return valid:true on CMS failure — cohesion is unknown, not confirmed valid
+      return { valid: false, error: 'Unable to verify bundle cohesion.', brokenBundles: [] };
     }
   }
 );

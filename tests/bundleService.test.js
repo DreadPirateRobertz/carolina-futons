@@ -523,4 +523,44 @@ describe('validateBundleCohesion', () => {
     expect(result.valid).toBe(false); // bundle in session, 0 cart items → broken
     expect(result.brokenBundles).toHaveLength(1);
   });
+
+  it('returns valid:false (not valid:true) on CMS query error — error must not be masked', async () => {
+    __setQueryError('UserBundleCart', new Error('DB unavailable'));
+    const result = await validateBundleCohesion(SESSION, []);
+    expect(result.valid).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.brokenBundles).toHaveLength(0);
+  });
+
+  it('sanitizes sessionId — rejects XSS payload', async () => {
+    const result = await validateBundleCohesion('<script>alert(1)</script>', []);
+    expect(result.valid).toBe(true); // sanitized → null → treated as no session
+    expect(result.brokenBundles).toHaveLength(0);
+  });
+});
+
+// ── addBundle sessionId sanitization ────────────────────────────────────────
+
+describe('addBundle — sessionId sanitization', () => {
+  it('sanitizes sessionId before writing to UserBundleCart', async () => {
+    const result = await addBundle('bundle-001', 'valid-session-123');
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('UserBundleCart');
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].sessionId).toBe('valid-session-123');
+  });
+
+  it('stores null sessionId when sessionId is invalid/XSS', async () => {
+    const result = await addBundle('bundle-001', '<script>bad</script>');
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('UserBundleCart');
+    expect(inserted[0].sessionId).toBeNull();
+  });
+
+  it('stores null sessionId when sessionId is omitted', async () => {
+    const result = await addBundle('bundle-001');
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('UserBundleCart');
+    expect(inserted[0].sessionId).toBeNull();
+  });
 });
