@@ -34,8 +34,9 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logError } from 'backend/utils/errorHandler';
+import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
 
-const { localZones } = shippingConfig;
+// localZones accessed via matchLocalZone from backend/utils/shippingZones
 
 /** CMS collection name for per-product shipping profile overrides */
 const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
@@ -343,32 +344,6 @@ async function getProductShippingProfile(productId) {
     console.warn('ProductShippingProfiles lookup failed for', productId, err.message);
     return null;
   }
-}
-
-/**
- * Match a ZIP to a local delivery zone (mirrors shipping-rates-plugin logic).
- * @private
- */
-function matchLocalZone(postalCode, stateCode) {
-  const zip3 = parseInt((postalCode || '').substring(0, 3), 10);
-  for (const zone of localZones) {
-    if (zone.zips && zone.zips.includes(postalCode)) return zone;
-    if (
-      zone.zip3Prefixes && zone.zip3Prefixes.includes(zip3) &&
-      zone.states && zone.states.includes(stateCode)
-    ) return zone;
-  }
-  return null;
-}
-
-/**
- * Calculate terrain surcharge for white-glove delivery.
- * @private
- */
-function getTerrainSurcharge(postalCode) {
-  const ts = shippingConfig.whiteGlove.terrainSurcharge;
-  if (!ts || !ts.zips) return 0;
-  return ts.zips.includes(postalCode) ? (ts.amount || 0) : 0;
 }
 
 /**
