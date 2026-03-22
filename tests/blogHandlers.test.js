@@ -630,5 +630,17 @@ describe('Blog page handlers', () => {
       const calls = makeClickable.mock.calls.map(c => c[0]);
       expect(calls).toContain(getEl('#shareFacebook'));
     });
+
+    it('expands #blogCmsError when getPublishedBlogPosts throws', async () => {
+      getPublishedBlogPosts.mockRejectedValueOnce(new Error('Network failure'));
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').expand).toHaveBeenCalled();
+    });
+
+    it('collapses #blogListRepeater when getPublishedBlogPosts throws', async () => {
+      getPublishedBlogPosts.mockRejectedValueOnce(new Error('Network failure'));
+      await onReadyHandler();
+      expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
+    });
   });
 });

@@ -77,6 +77,9 @@ $w.onReady(async function () {
 
   } catch (err) {
     console.error('Blog page init error:', err);
+    // Show error UI for unexpected failures (e.g. network error before fail-open catches)
+    try { $w('#blogCmsError').expand(); } catch (e) {}
+    try { $w('#blogListRepeater').collapse(); } catch (e) {}
   }
 });
 
