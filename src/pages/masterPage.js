@@ -225,7 +225,7 @@ function initEnhancedNavigation() {
 
 // ── Announcement Bar ────────────────────────────────────────────────
 // Three-source message rotation: flash sales → CMS AnnouncementBars → static fallbacks.
-// First CMS bar's colors are applied to the container; all bar messages rotate on a timer.
+// First CMS bar's colors and linkUrl are applied to the container; all bar messages rotate on a timer.
 
 async function initAnnouncementBar() {
   const staticMessages = [
@@ -262,7 +262,7 @@ async function initAnnouncementBar() {
   const cmsMessages = cmsBars.map(b => b.message).filter(Boolean);
   const messages = [...flashMessages, ...cmsMessages, ...staticMessages];
 
-  // Apply first CMS bar's styles + linkUrl to the announcement bar container
+  // Apply first CMS bar's styles + linkUrl to the announcement bar container; show link if https linkUrl present, hide otherwise
   const [firstBar] = cmsBars;
   if (firstBar) {
     try {

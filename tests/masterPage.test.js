@@ -2556,6 +2556,32 @@ describe('masterPage.js', () => {
         expect(getEl('#announcementBarLink').show).not.toHaveBeenCalled();
       });
     });
+
+    it('does not throw when #announcementBarLink element is absent from page', async () => {
+      const origW = globalThis.$w;
+      globalThis.$w = Object.assign(
+        (sel) => (sel === '#announcementBarLink' ? null : getEl(sel)),
+        { onReady: origW.onReady }
+      );
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Sale!', linkUrl: 'https://carolinafutons.com/sale', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      globalThis.$w = origW;
+    });
+
+    it('logs console.warn when CMS fetch rejects (flash sales path)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      getActiveAnnouncementBars.mockRejectedValueOnce(new Error('DB timeout'));
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[masterPage] announcementBar'),
+          expect.stringContaining('DB timeout')
+        );
+      });
+      warnSpy.mockRestore();
+    });
   });
 
   // ── GDPR: TikTok PageView consent gate ──────────────────────────────
