@@ -62,8 +62,9 @@ export function usePageNavigator() {
           const matched = matchPageName(page.title as string);
           if (matched) setDetectedPageName(matched);
         }
-      } catch {
+      } catch (err) {
         // API unavailable — fall through to event listener only
+        console.warn('[usePageNavigator] pages.getCurrent failed:', err);
       }
 
       // Subscribe to page navigation events so the panel auto-switches
@@ -81,13 +82,14 @@ export function usePageNavigator() {
               const matched = matchPageName(page.title as string);
               if (matched) setDetectedPageName(matched);
             }
-          } catch {
-            // ignore
+          } catch (err) {
+            console.warn('[usePageNavigator] pageNavigated getCurrent failed:', err);
           }
         });
         if (typeof off === 'function') unsubscribe = off;
-      } catch {
+      } catch (err) {
         // Event API unavailable — no page-change tracking
+        console.warn('[usePageNavigator] events.addEventListener failed:', err);
       }
     })();
 

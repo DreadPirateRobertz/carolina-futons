@@ -47,13 +47,15 @@ export function useElementDetection() {
             const elementType = mapWixType(internalType);
             const nickname = await editor.components.getNickname(compRef).catch(() => null);
             setSelected({ compRef, internalType, elementType, currentNickname: nickname ?? null });
-          } catch {
+          } catch (err) {
+            console.warn('[useElementDetection] Failed to resolve element type:', err);
             setSelected(null);
           }
         });
         setEditorAvailable(true);
-      } catch {
+      } catch (err) {
         // Running outside the editor (dev/test): no selection events available
+        console.warn('[useElementDetection] editor.selection.onSelectionChanged unavailable:', err);
         setEditorAvailable(false);
       }
     })();

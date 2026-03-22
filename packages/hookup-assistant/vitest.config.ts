@@ -15,10 +15,10 @@ export default defineConfig({
         'src/main.tsx', // entry-point boilerplate: ReactDOM.createRoot render call only
       ],
       thresholds: {
-        statements: 62,
-        branches: 59,
-        functions: 62,
-        lines: 62,
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
       },
     },
   },
