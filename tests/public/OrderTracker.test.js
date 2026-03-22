@@ -658,6 +658,20 @@ describe('initOrderTracker', () => {
     expect($w.__els['#orderStep4'].accessibility.ariaCurrent).toBe('');
   });
 
+  it('sets aria-current=step only on the last active step, not all active steps', async () => {
+    const delivered = { ...BASE_ORDER, order: { ...BASE_ORDER.order, fulfillmentStatus: 'DELIVERED', status: 'Delivered' } };
+    lookupOrder.mockResolvedValue(delivered);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    // Only step 4 (the last active) should have aria-current='step'
+    expect($w.__els['#orderStep4'].accessibility.ariaCurrent).toBe('step');
+    expect($w.__els['#orderStep1'].accessibility.ariaCurrent).toBe('');
+    expect($w.__els['#orderStep2'].accessibility.ariaCurrent).toBe('');
+    expect($w.__els['#orderStep3'].accessibility.ariaCurrent).toBe('');
+  });
+
   // ── null safety ──────────────────────────────────────────────────────
 
   it('does not throw when $w returns null for all elements', async () => {

@@ -245,7 +245,7 @@ function renderProgressBar($wFn, fulfillmentStatus) {
     el.removeCssClass(CSS_STEP_ACTIVE);
     if (i <= active) {
       el.addCssClass(CSS_STEP_ACTIVE);
-      if (el.accessibility) el.accessibility.ariaCurrent = 'step';
+      if (el.accessibility) el.accessibility.ariaCurrent = i === active ? 'step' : '';
     } else {
       if (el.accessibility) el.accessibility.ariaCurrent = '';
     }
