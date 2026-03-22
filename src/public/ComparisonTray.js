@@ -62,7 +62,12 @@ function saveTrayState(storage, products) {
   } catch (_) {}
 }
 
-// ── Element helpers ────────────────────────────────────────────────────
+// ── Internal helpers ──────────────────────────────────────────────────
+
+function resolveStorage(storage) {
+  if (storage !== undefined) return storage;
+  try { return sessionStorage; } catch (_) { return null; }
+}
 
 function safeGet($wFn, selector) {
   try { return $wFn(selector) || null; } catch (_) { return null; }
@@ -117,17 +122,13 @@ export function syncTrayUI($wFn, products) {
 // ── Tray visibility ────────────────────────────────────────────────────
 
 function showTray($wFn) {
-  try {
-    const tray = safeGet($wFn, '#comparisonTray');
-    if (tray) tray.show();
-  } catch (_) {}
+  const tray = safeGet($wFn, '#comparisonTray');
+  if (tray) tray.show();
 }
 
 function hideTray($wFn) {
-  try {
-    const tray = safeGet($wFn, '#comparisonTray');
-    if (tray) tray.hide();
-  } catch (_) {}
+  const tray = safeGet($wFn, '#comparisonTray');
+  if (tray) tray.hide();
 }
 
 // ── Public actions ─────────────────────────────────────────────────────
@@ -144,16 +145,13 @@ function hideTray($wFn) {
 export function addToCompareTray($wFn, product, storage) {
   if (!product?._id) return;
 
-  const stor = storage !== undefined ? storage : (
-    (() => { try { return sessionStorage; } catch (_) { return null; } })()
-  );
+  const stor = resolveStorage(storage);
 
   const current = getTrayState(stor);
-  const existing = current.findIndex(p => p._id === product._id);
+  const alreadyInTray = current.some(p => p._id === product._id);
 
   let updated;
-  if (existing !== -1) {
-    // Toggle off — remove
+  if (alreadyInTray) {
     updated = current.filter(p => p._id !== product._id);
   } else {
     if (current.length >= MAX_TRAY) return; // tray full
@@ -176,9 +174,7 @@ export function addToCompareTray($wFn, product, storage) {
  * @param {Object|null} [storage]
  */
 export function removeFromTray($wFn, productId, storage) {
-  const stor = storage !== undefined ? storage : (
-    (() => { try { return sessionStorage; } catch (_) { return null; } })()
-  );
+  const stor = resolveStorage(storage);
 
   const updated = getTrayState(stor).filter(p => p._id !== productId);
   saveTrayState(stor, updated);
@@ -194,9 +190,7 @@ export function removeFromTray($wFn, productId, storage) {
  * @param {Object|null} [storage]
  */
 export function clearTray($wFn, storage) {
-  const stor = storage !== undefined ? storage : (
-    (() => { try { return sessionStorage; } catch (_) { return null; } })()
-  );
+  const stor = resolveStorage(storage);
 
   saveTrayState(stor, []);
   syncTrayUI($wFn, []);
@@ -221,9 +215,7 @@ export function clearTray($wFn, storage) {
  */
 export function initComparisonTray($wFn, opts = {}) {
   try {
-    const storage = 'storage' in opts ? opts.storage : (
-      (() => { try { return sessionStorage; } catch (_) { return null; } })()
-    );
+    const storage = 'storage' in opts ? opts.storage : resolveStorage();
     const navigate = opts.navigate || (() => {});
 
     const current = getTrayState(storage);
