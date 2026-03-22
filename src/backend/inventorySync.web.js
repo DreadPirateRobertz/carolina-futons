@@ -4,6 +4,9 @@
  * Reads `product.stock.quantity` (or sums variant quantities for tracked products),
  * upserts InventoryThresholds.currentStock, and raises LowStockAlerts when a
  * product crosses below its reorder threshold for the first time.
+ * Deduplication is enforced via the `reorderAlertSent` flag on InventoryThresholds;
+ * the flag is cleared when stock recovers above reorderThreshold, allowing a fresh
+ * alert on the next crossing.
  *
  * Called by Wix Jobs Scheduler (see jobs.config → syncInventoryFromStore).
  * Also exported as a webMethod so admins can trigger on-demand.
@@ -33,9 +36,12 @@ const BATCH_DELAY_MS = 500;
 // ── Internal helpers ─────────────────────────────────────────────────
 
 /**
- * Compute total available stock for a product.
- * Uses variant-level quantities when trackInventory is true; falls back to
- * the product-level inStock boolean (returns 1 or 0) when not tracked.
+ * Compute total available stock for a product. Three paths:
+ * 1. trackInventory=false: returns 1 if stock.inStock is true, 0 otherwise.
+ * 2. trackInventory=true and product.variants is a non-empty array: sums
+ *    v.stock.quantity across all variants (non-numeric/negative treated as 0).
+ * 3. trackInventory=true but no variants array (single-variant product):
+ *    falls back to stock.quantity on the product itself.
  *
  * @param {Object} product - Wix Stores product object
  * @returns {number} Total stock quantity (>= 0)
@@ -104,7 +110,9 @@ async function upsertProductThreshold(product, stock, now) {
 
     await wixData.update(THRESHOLDS_COLLECTION, config);
 
-    // Raise alert on first crossing below reorder threshold
+    // Raise alert on first crossing below reorder threshold.
+    // Note: reorderAlertSent may have been cleared above (stock recovery path),
+    // so this guard reads the flag state after any reset in this same call.
     if (stock <= reorderThreshold && !config.reorderAlertSent) {
       await wixData.insert(ALERTS_COLLECTION, {
         productId,
