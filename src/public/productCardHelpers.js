@@ -112,18 +112,50 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
+const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene', 'setting', 'living', 'bedroom', 'context'];
+
+/**
+ * Select the best image for a product card — lifestyle room shot preferred over
+ * white-background product shots. Checks mediaItems for lifestyle/room-context
+ * images by keyword, then falls back to the second image (convention: lifestyle
+ * shot follows the hero product shot), then mainMedia.
+ *
+ * @param {Object} product - Wix product with mainMedia and optional mediaItems array
+ * @returns {string} Image URL — lifestyle shot if available, else mainMedia
+ */
+export function getLifestyleImage(product) {
+  const mediaItems = product?.mediaItems;
+  if (Array.isArray(mediaItems) && mediaItems.length > 0) {
+    // Keyword match first: any item tagged as lifestyle/room/scene
+    const keywordMatch = mediaItems.find(item => {
+      const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
+      return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
+    });
+    if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
+
+    // Convention fallback: second image (index 1) is typically the lifestyle shot
+    if (mediaItems.length > 1) {
+      const second = mediaItems[1];
+      return second?.url || second?.src || '';
+    }
+  }
+  return product?.mainMedia || '';
+}
+
 /**
  * Set card image src with placeholder fallback when missing.
+ * Prefers lifestyle/room-context photography over white-background product shots
+ * per CF-l5id — lifestyle photo first on product cards.
  * Optionally sets explicit dimensions to prevent CLS (Cumulative Layout Shift).
  * @param {Object} $el - Wix image element
- * @param {Object} product - Product data with mainMedia and name
+ * @param {Object} product - Product data with mainMedia, mediaItems, and name
  * @param {string} [category] - Category slug for placeholder selection
  * @param {{ width: number, height: number }} [dimensions] - Explicit image dimensions to prevent CLS
  */
 export function setCardImage($el, product, category, dimensions) {
   if (!$el) return;
   try {
-    const src = product?.mainMedia;
+    const src = getLifestyleImage(product);
     const name = product?.name;
     $el.src = src || getProductFallbackImage(category || '');
     $el.alt = name ? `${name} - Carolina Futons` : 'Product image';
