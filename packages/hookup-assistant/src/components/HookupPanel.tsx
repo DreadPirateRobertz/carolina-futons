@@ -25,6 +25,8 @@ import { HelpOverlay } from './HelpOverlay.js';
 import type { PageDef } from '../types/index.js';
 import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
 import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
+import { useSessionTimer, formatElapsed, loadHistory } from '../hooks/useSessionTimer.js';
+import type { SessionRecord } from '../hooks/useSessionTimer.js';
 
 const APP_VERSION = '0.1.0';
 const DEFAULT_PAGE = PAGES[0]?.name ?? '';
@@ -52,6 +54,7 @@ export function HookupPanel() {
   }, [detectedPageName]);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
+  const { elapsed, paused, pace, recordApply } = useSessionTimer();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
 
   // S14: Reset repeater guard whenever the user switches pages
@@ -85,9 +88,12 @@ export function HookupPanel() {
   }, [repeaterSection, confirmEntered]);
 
   const handleMarkDone = useCallback(() => {
-    if (currentElement) markHooked(currentElement.id);
+    if (currentElement) {
+      markHooked(currentElement.id);
+      recordApply();
+    }
     resetApplyStatus();
-  }, [currentElement, markHooked, resetApplyStatus]);
+  }, [currentElement, markHooked, resetApplyStatus, recordApply]);
 
   const handleSkip = useCallback(() => {
     if (currentElement) markSkipped(currentElement.id);
@@ -107,6 +113,7 @@ export function HookupPanel() {
     const conflict = detectConflict(selected.currentNickname, currentElement.id);
     if (conflict.type === 'already-set') {
       markHooked(currentElement.id);
+      recordApply();
       return;
     }
     if (conflict.type === 'conflict') {
@@ -115,8 +122,11 @@ export function HookupPanel() {
     }
     resetApplyStatus();
     const ok = await applyId(currentElement, selected.compRef);
-    if (ok) markHooked(currentElement.id);
-  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, openConflict]);
+    if (ok) {
+      markHooked(currentElement.id);
+      recordApply();
+    }
+  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, openConflict, recordApply]);
 
   // S11: user chose to override — proceed with setNickname despite conflict
   const handleOverride = useCallback(async () => {
@@ -129,9 +139,10 @@ export function HookupPanel() {
     if (ok) {
       clearConflict();
       markHooked(currentElement.id);
+      recordApply();
     }
     // if !ok: leave banner visible so user can retry or cancel
-  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, clearConflict]);
+  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, clearConflict, recordApply]);
 
   // S11: user cancelled — dismiss conflict banner without applying
   const handleCancelConflict = useCallback(() => {
@@ -281,6 +292,8 @@ export function HookupPanel() {
               onChange={handleImportFile}
             />
           </div>
+          {/* S9: Session history */}
+          <SessionHistorySection />
         </div>
       )}
 
@@ -401,10 +414,76 @@ export function HookupPanel() {
         <span style={s.footerText}>
           Carolina Futons · {hookedIds.length + skippedIds.length}/{allElements.length} addressed
         </span>
+        {elapsed > 0 && (
+          <span style={s.timerText}>
+            {paused ? '⏸' : '⏱'} {formatElapsed(elapsed)}
+            {pace > 0 && <> · {pace.toFixed(1)}/hr</>}
+          </span>
+        )}
       </footer>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// S9: Session history display (rendered inside the settings drawer)
+
+function SessionHistorySection() {
+  const history: SessionRecord[] = loadHistory();
+  if (history.length === 0) return null;
+
+  // Show most recent 5, newest first
+  const recent = [...history].reverse().slice(0, 5);
+
+  return (
+    <div style={sh.root}>
+      <div style={sh.heading}>Session history</div>
+      {recent.map((rec, i) => (
+        <div key={i} style={sh.row}>
+          <span style={sh.date}>{new Date(rec.date).toLocaleDateString()}</span>
+          <span style={sh.stats}>
+            {formatElapsed(rec.elapsed)} · {rec.applyCount} applied
+            {rec.pace > 0 && <> · {rec.pace.toFixed(1)}/hr</>}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const sh: Record<string, React.CSSProperties> = {
+  root: {
+    borderTop: '1px solid #dfe5eb',
+    paddingTop: '6px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+  },
+  heading: {
+    fontSize: '10px',
+    fontWeight: 700,
+    color: '#7a92a5',
+    textTransform: 'uppercase',
+    letterSpacing: '0.4px',
+    marginBottom: '2px',
+  },
+  row: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: '4px',
+  },
+  date: {
+    fontSize: '10px',
+    color: '#7a92a5',
+    flexShrink: 0,
+  },
+  stats: {
+    fontSize: '10px',
+    color: '#4e6579',
+    textAlign: 'right' as const,
+  },
+};
 
 // ---------------------------------------------------------------------------
 
@@ -572,8 +651,12 @@ const s: Record<string, React.CSSProperties> = {
     padding: '6px 12px',
     borderTop: '1px solid #dfe5eb',
     backgroundColor: '#f0f4f7',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   footerText: { fontSize: '10px', color: '#7a92a5' },
+  timerText: { fontSize: '10px', color: '#4e6579' },
   // S11: conflict banner
   conflictBanner: {
     backgroundColor: '#fff3cd',
