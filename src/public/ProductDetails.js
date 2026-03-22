@@ -157,7 +157,9 @@ export function initSocialShare($w, state) {
 
 /**
  * Show a default 5-10 business day delivery estimate and wire up the
- * zip-code input for zone-specific estimates (local WNC / Southeast / national).
+ * zip-code input. On zip submission, calls getDeliveryEstimate webMethod
+ * for a live UPS window; falls back to estimate text when UPS is unavailable.
+ * Updates #deliveryEstimateText inside the #deliveryEstimateBox container.
  * @param {Function} $w - Wix Velo selector function for querying page elements
  * @param {Object} state - Shared product page state
  * @param {Object} state.product - Current Wix Stores product object
@@ -236,46 +238,6 @@ async function updateEstimateForZip($w, state, rawZip) {
     }
     try { $w('#deliveryEstimateText').text = estimateText; } catch (e) {}
     try { $w('#deliveryEstimateBox').show(); } catch (e) {}
-  } catch (e) {}
-}
-
-// Legacy static estimator (kept for backward compatibility, used when DeliveryEstimator import fails)
-function updateEstimateForZipStatic($w, state, rawZip) {
-  try {
-    const zip = (rawZip || '').trim().replace(/[^0-9]/g, '').slice(0, 5);
-    if (zip.length !== 5) return;
-    const prefix = parseInt(zip.slice(0, 3), 10);
-    const today = new Date();
-    const opts = { month: 'short', day: 'numeric' };
-    // Local WNC (287–289): 3–5 business days
-    // Southeast (270–399): 5–8 business days
-    // National: 7–12 business days
-    let minDays, maxDays, zone;
-    if (prefix >= 287 && prefix <= 289) {
-      minDays = 3; maxDays = 5; zone = 'local';
-    } else if (prefix >= 270 && prefix <= 399) {
-      minDays = 5; maxDays = 8; zone = 'regional';
-    } else {
-      minDays = 7; maxDays = 12; zone = 'national';
-    }
-    const early = addBusinessDays(today, minDays).toLocaleDateString('en-US', opts);
-    const late = addBusinessDays(today, maxDays).toLocaleDateString('en-US', opts);
-    const el = $w('#deliveryEstimate');
-    el.text = `Delivered by ${early} \u2013 ${late}`;
-    el.show();
-    // Show white-glove for large items in local/regional zones
-    try {
-      const isLarge = state.product.weight > 50 ||
-        (state.product.collections || []).some(c => /murphy|platform|futon|frame/i.test(c));
-      if (isLarge && (zone === 'local' || zone === 'regional')) {
-        const note = $w('#whiteGloveNote');
-        if (note) {
-          const price = zone === 'local' ? '$149' : '$249';
-          note.text = `White-glove delivery available (${price}) \u2014 call (828) 252-9449 to schedule`;
-          note.show();
-        }
-      }
-    } catch (e) {}
   } catch (e) {}
 }
 

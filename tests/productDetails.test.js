@@ -550,6 +550,23 @@ describe('ProductDetails', () => {
       initDeliveryEstimate($w, state);
       expect($w('#deliveryZipBtn').accessibility.ariaLabel).toContain('delivery estimate');
     });
+
+    it('passes empty productIds when product has no _id', async () => {
+      state.product = { ...state.product, _id: undefined };
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getDeliveryEstimate).toHaveBeenCalledWith('28801', []);
+    });
+
+    it('does not throw when getDeliveryEstimate rejects', async () => {
+      getDeliveryEstimate.mockRejectedValueOnce(new Error('Network error'));
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await expect(clickHandler()).resolves.toBeUndefined();
+    });
   });
 
   // ── initSwatchRequest — extended ───────────────────────────
