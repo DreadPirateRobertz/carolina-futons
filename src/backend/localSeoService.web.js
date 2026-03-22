@@ -19,6 +19,54 @@ import {
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
 
+const CMS_COLLECTION = 'LocalSeoCities';
+
+// ── CMS helpers ───────────────────────────────────────────────────────
+
+/**
+ * Parse a JSON string field into an array. Returns [] on any failure or if the
+ * parsed value is not an array. Accepts already-parsed arrays for defensive use
+ * with mixed CMS field types (Wix can return fields pre-deserialized or as strings).
+ */
+function _parseJsonField(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+/**
+ * Map a LocalSeoCities CMS record to the cityData shape used by getLocalPage.
+ *
+ * @param {Object} item - Raw record from the LocalSeoCities CMS collection.
+ * @returns {Object} Normalized cityData. faqs and categoryRecommendations accept
+ *   either a JSON string or a pre-parsed array from the CMS.
+ *
+ * Note: nearbyAreas slugs are filtered to static LOCAL_PAGES entries by
+ *   getLocalPage — CMS-only slugs in nearbyAreas will not appear in rendered
+ *   nearby links (tracked for S3 when CMS city count grows).
+ */
+function _normalizeCmsCity(item) {
+  return {
+    slug: item.slug,
+    city: item.city,
+    state: item.state,
+    headline: item.headline || '',
+    heroDescription: item.heroDescription || '',
+    neighborhoodContext: item.neighborhoodContext || '',
+    preferredCategories: Array.isArray(item.preferredCategories) ? item.preferredCategories : [],
+    categoryRecommendations: _parseJsonField(item.categoryRecommendations),
+    faqs: _parseJsonField(item.faqs),
+    distance: item.distance || '',
+    isHomeCity: Boolean(item.isHomeCity),
+    nearbyAreas: Array.isArray(item.nearbyAreas) ? item.nearbyAreas : [],
+    mapEmbedUrl: item.mapEmbedUrl || '',
+    directions: item.directions || '',
+  };
+}
+
 // ── getLocalPage ──────────────────────────────────────────────────────
 
 /**
@@ -39,7 +87,17 @@ export const getLocalPage = webMethod(
         return { success: false, error: 'Slug is required.', page: null };
       }
 
-      const cityData = LOCAL_PAGES[cleanSlug];
+      // CMS-primary: query LocalSeoCities first, fall through to static on miss or error
+      let cityData = null;
+      try {
+        const cmsResult = await wixData.query(CMS_COLLECTION).eq('slug', cleanSlug).find();
+        if (cmsResult.items.length > 0) {
+          cityData = _normalizeCmsCity(cmsResult.items[0]);
+        }
+      } catch {
+        // CMS unavailable — fall through to static
+      }
+      cityData = cityData ?? LOCAL_PAGES[cleanSlug] ?? null;
       if (!cityData) {
         return { success: true, page: null };
       }
@@ -261,7 +319,16 @@ export const getAllLocalSlugs = webMethod(
   Permissions.Anyone,
   async () => {
     try {
-      return { success: true, slugs: Object.keys(LOCAL_PAGES) };
+      let cmsSlugs = [];
+      try {
+        const cmsResult = await wixData.query(CMS_COLLECTION).find();
+        cmsSlugs = (cmsResult.items || []).map(i => i.slug).filter(Boolean);
+      } catch {
+        // CMS unavailable — return static only
+      }
+      const staticSlugs = Object.keys(LOCAL_PAGES);
+      const allSlugs = [...new Set([...staticSlugs, ...cmsSlugs])];
+      return { success: true, slugs: allSlugs };
     } catch (err) {
       console.error('[localSeoService] Error getting local slugs:', err.name, err.message, err);
       return { success: false, slugs: [] };
