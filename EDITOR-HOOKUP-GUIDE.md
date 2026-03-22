@@ -1195,6 +1195,22 @@ Place the same 5 elements on the Product Page canvas:
 | `clearComparisonBtn` | Button | Clears all slots, hides tray |
 | `comparisonCount` | Text | Badge — "N products" (e.g. "2 products") |
 
+### Swatch Filter (NEW v1.2.0+ — PR #670 / CF-wigv)
+*Source: `src/public/SwatchFilter.js` — `initSwatchFilter($w, allProducts)`*
+*Client-side filter — no backend call. Multi-select (OR logic). State persisted in sessionStorage.*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `swatchFilterSection` | Box | Section container — structural landmark; not queried by code |
+| `swatchFilterRepeater` | **Repeater** | Color chip strip — populated with unique fabric values + counts |
+| `clearFilterBtn` | Button | **Hidden when no filter active**, shown on first chip selection |
+| `filterResultCount` | Text | "Showing X of Y products" — updated on every filter change |
+
+**↳ Inside `swatchFilterRepeater` item template:**
+`swatchChip` (Box — active state: `swatch-active` CSS class toggled on click), `swatchLabel` (Text — fabric name), `swatchCount` (Text — "(12)")
+
+> **⚠️ Velo order**: `onItemReady` is registered by code BEFORE `.data` is set — don't move or duplicate this wiring.
+
 ### Recently Viewed
 | Element ID | Wix Element | Notes |
 |---|---|---|
