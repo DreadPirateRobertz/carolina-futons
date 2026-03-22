@@ -1103,6 +1103,10 @@ Right column:
   <li><strong>Quantity row</strong>: Three inline elements — minus Button, Input, plus Button. Code enforces min/max bounds.</li>
   <li><strong>#addToCartButton</strong>: For call-for-price items, label becomes "Call for Pricing" and button is disabled.</li>
   <li><strong>#buyNowButton</strong>: <span class="impl-warn">Hidden for call-for-price items</span>.</li>
+  <li><strong>#stickyAtcBar</strong> (CF-gj26): <span class="impl-warn">Fixed bottom overlay Box</span>. Initially hidden. Slides up when <code>#addToCartButton</code> scrolls out of view, hides when it re-enters. Contains product name, price, and CTA. Set to Fixed position in editor.</li>
+  <li><strong>#stickyAtcProductName</strong>: Text inside sticky bar — displays product name. Pre-populated on init.</li>
+  <li><strong>#stickyAtcPrice</strong>: Text inside sticky bar — displays formatted price. Pre-populated on init.</li>
+  <li><strong>#stickyAtcBtn</strong>: Button inside sticky bar — fires same addToCart as primary button. Disabled + labelled "Out of Stock" when product is unavailable.</li>
   <li><strong>#productHeroSkyline</strong>: Empty Box at bottom of section. Code injects mountain skyline SVG (gradient variant).</li>
 </ul>
 <p>Above-fold critical section. Uses <code>prioritizeSections()</code> to load variant selector, gallery, and add-to-cart first, then deferred sections below.</p>`, elements: [
@@ -1117,7 +1121,11 @@ Right column:
         ["quantityMinus","Button","Decrease qty"],
         ["quantityPlus","Button","Increase qty"],
         ["buyNowButton","Button","Express checkout"],
-        ["productHeroSkyline","Box","Mountain skyline"]
+        ["productHeroSkyline","Box","Mountain skyline"],
+        ["stickyAtcBar","Box","Sticky ATC bar (fixed bottom overlay) — CF-gj26"],
+        ["stickyAtcProductName","Text","Sticky bar: product name"],
+        ["stickyAtcPrice","Text","Sticky bar: formatted price"],
+        ["stickyAtcBtn","Button","Sticky bar: Add to Cart CTA"]
       ]},
       { name: "Related Products", repeater: "relatedRepeater", impl: `<h4>🔗 Implementation — Related Products</h4>
 <p><strong>Layout: Section heading + 4-card product grid (below-fold, deferred)</strong></p>
