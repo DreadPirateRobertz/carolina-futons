@@ -8,6 +8,8 @@
 
 import { SITE_URL, STORE_PHONE, STORE_GEO, STORE_ADDRESS, CITY_GEO } from 'backend/utils/localSeoData';
 
+// '@type' is kept here (not in STORE_ADDRESS) so the plain address object stays
+// schema-agnostic. Do not add '@type' to STORE_ADDRESS — it would override this.
 const SCHEMA_ADDRESS = {
   '@type': 'PostalAddress',
   ...STORE_ADDRESS,

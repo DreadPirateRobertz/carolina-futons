@@ -150,6 +150,8 @@ describe('generateLocalBusinessSchema — FurnitureStore schema', () => {
 
   it('includes Hendersonville store address', () => {
     const schema = generateLocalBusinessSchema(ASHEVILLE);
+    expect(schema.address['@type']).toBe('PostalAddress');
+    expect(schema.address.streetAddress).toBe('824 Locust St');
     expect(schema.address.addressLocality).toBe('Hendersonville');
     expect(schema.address.addressRegion).toBe('NC');
     expect(schema.address.postalCode).toBe('28792');

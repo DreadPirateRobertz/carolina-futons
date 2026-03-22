@@ -1,6 +1,7 @@
 /**
  * Static local SEO data for /near/[city] city landing pages.
- * Shared source of truth for localSeoService.web.js (webMethod layer).
+ * Shared source of truth for localSeoService.web.js (webMethod layer) and
+ * localSeo.web.js (STORE_ADDRESS, STORE_GEO for JSON-LD schema generation).
  *
  * Each key is a URL slug. Hendersonville NC is the home/store city (distance = 0).
  * Nearby areas provide internal cross-linking between city pages.
