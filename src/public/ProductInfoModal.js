@@ -1,7 +1,8 @@
 // ProductInfoModal.js — Product care guide + dimensions modal
 // Opens overlay with care instructions, full dimensions
 // (width/depth/height/weight), and a room fit calculator.
-// Data sourced from ProductSpecs CMS via catalogContent.getProductSpecs.
+// Data sourced from the ProductSpecs CMS collection via the getProductSpecs
+// backend web method (backend/catalogContent.web.js).
 //
 // Element nicknames:
 //   careGuideBtn     — trigger button
@@ -13,7 +14,7 @@
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { getProductSpecs } from 'backend/catalogContent.web.js';
 
-// Room fit thresholds (inches clearance on each side)
+// Minimum clearance (inches, each side) for a 'fits' result. Below this = 'tight'.
 const CLEARANCE_GOOD = 2;
 
 // ── initProductInfoModal ──────────────────────────────────────────────
@@ -23,7 +24,8 @@ const CLEARANCE_GOOD = 2;
  * Lazy-loads product specs from CMS on first open.
  *
  * @param {Function} $w - Wix selector function
- * @param {Object} state - Product page state (must have state.product.slug)
+ * @param {Object|null} state - Page state; if null/undefined or missing product.slug,
+ *   the care guide button is hidden and the modal is not initialized.
  */
 export async function initProductInfoModal($w, state) {
   try {
@@ -71,13 +73,13 @@ export async function initProductInfoModal($w, state) {
     $w('#careGuideBtn').onClick(async () => {
       try {
         if (!initialized) {
-          specs = await _loadSpecs($w, state.product.slug);
           initialized = true;
+          specs = await _loadSpecs($w, state.product.slug);
         }
         announce($w, 'Care guide opened');
         dialog.open();
       } catch (e) {
-        console.error('[ProductInfoModal] onClick failed:', e?.message || e);
+        console.error('[ProductInfoModal] onClick failed:', e);
       }
     });
 
@@ -87,7 +89,7 @@ export async function initProductInfoModal($w, state) {
         try {
           _checkRoomFit($w, specs);
         } catch (e) {
-          console.error('[ProductInfoModal] checkRoomFit failed:', e?.message || e);
+          console.error('[ProductInfoModal] checkRoomFit failed:', e);
         }
       });
     } catch (e) {
@@ -106,18 +108,20 @@ export async function initProductInfoModal($w, state) {
  *
  * @param {Function} $w
  * @param {string} slug - Product URL slug
- * @returns {Object|null} Normalized specs object, or null if unavailable
+ * @returns {Object|null} Raw specs object from CMS (as returned by getProductSpecs), or null if unavailable
  */
 async function _loadSpecs($w, slug) {
   let specs = null;
 
   try {
-    const { success, data } = await getProductSpecs(slug);
+    const { success, data, error } = await getProductSpecs(slug);
     if (success && data) {
       specs = data;
+    } else if (!success) {
+      console.warn('[ProductInfoModal] getProductSpecs returned failure for slug:', slug, '— error:', error);
     }
   } catch (e) {
-    console.warn('[ProductInfoModal] getProductSpecs failed:', e?.message);
+    console.warn('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e?.message);
   }
 
   _renderCareGuide($w, specs?.careGuide || null);
@@ -146,22 +150,24 @@ function _renderCareGuide($w, careGuide) {
 
 /**
  * Populate the dimensions section with width, depth, height, and weight.
- * Expects dimensions object from ProductSpecs CMS (parsed JSON).
+ * Expects dimensions object from ProductSpecs CMS (deserialized by the backend web method).
  *
  * @param {Function} $w
  * @param {Object|null} dims - Dimensions object { width, depth, height, weight, ... }
  */
 function _renderDimensions($w, dims) {
   if (!dims) {
-    try { $w('#dimensionsText').text = 'Dimensions not available for this product.'; } catch (e) {}
+    try { $w('#dimensionsText').text = 'Dimensions not available for this product.'; } catch (e) {
+      console.warn('[ProductInfoModal] dimensionsText fallback failed:', e?.message);
+    }
     return;
   }
 
   const lines = [];
-  if (dims.width)  lines.push(`Width:  ${dims.width}"`);
-  if (dims.depth)  lines.push(`Depth:  ${dims.depth}"`);
-  if (dims.height) lines.push(`Height: ${dims.height}"`);
-  if (dims.weight) lines.push(`Weight: ${dims.weight} lbs`);
+  if (dims.width  != null) lines.push(`Width:  ${dims.width}"`);
+  if (dims.depth  != null) lines.push(`Depth:  ${dims.depth}"`);
+  if (dims.height != null) lines.push(`Height: ${dims.height}"`);
+  if (dims.weight != null) lines.push(`Weight: ${dims.weight} lbs`);
 
   const text = lines.length > 0
     ? lines.join('\n')
@@ -184,6 +190,8 @@ function _renderDimensions($w, dims) {
  *   fits    — both dimensions have ≥ CLEARANCE_GOOD inches clearance
  *   tight   — fits but < CLEARANCE_GOOD inches clearance on at least one side
  *   too-big — room too small in at least one dimension
+ *   invalid — one or more room dimensions are 0, non-numeric, or > 600"
+ *   unknown — product dimensions unavailable or non-numeric in specs
  *
  * @param {Function} $w
  * @param {Object|null} specs - Product specs (may be null if CMS unavailable)
@@ -249,7 +257,9 @@ function _setFitResult($w, message, category) {
   try { $w('#fitResult').text = message; } catch (e) {
     console.warn('[ProductInfoModal] fitResult text failed:', e?.message);
   }
-  try { $w('#fitResult').accessibility.ariaLive = 'polite'; } catch (e) {}
+  try { $w('#fitResult').accessibility.ariaLive = 'polite'; } catch (e) {
+    console.warn('[ProductInfoModal] fitResult ariaLive failed:', e?.message);
+  }
   try { $w('#fitResult').show(); } catch (e) {
     console.warn('[ProductInfoModal] fitResult show failed:', e?.message);
   }
@@ -258,5 +268,7 @@ function _setFitResult($w, message, category) {
   try {
     const label = `Room fit result: ${category}`;
     $w('#fitResult').accessibility.ariaLabel = label;
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[ProductInfoModal] fitResult ariaLabel failed:', e?.message);
+  }
 }

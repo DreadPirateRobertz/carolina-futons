@@ -5,7 +5,7 @@
  * room fit calculator (fits/tight/too-big/invalid), element nicknames,
  * accessibility setup, and missing-data fallbacks.
  *
- * TDD: written before implementation (CF-b2x2).
+ * See CF-b2x2 for original specification.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -154,6 +154,13 @@ describe('initProductInfoModal — setup', () => {
     await initProductInfoModal($w, state);
     expect(getProductSpecs).not.toHaveBeenCalled();
   });
+
+  it('announces "Care guide closed" when onClose callback is invoked', async () => {
+    await initProductInfoModal($w, state);
+    const config = setupAccessibleDialog.mock.calls[0][1];
+    config.onClose();
+    expect(announce).toHaveBeenCalledWith($w, 'Care guide closed');
+  });
 });
 
 // ── careGuideBtn click — lazy load ────────────────────────────────────
@@ -252,6 +259,14 @@ describe('care guide rendering', () => {
     await handler();
     expect($w('#careGuideText').text).toContain('not available');
   });
+
+  it('shows fallback text when getProductSpecs returns success: false', async () => {
+    getProductSpecs.mockResolvedValue({ success: false, error: 'Product specs unavailable' });
+    await initProductInfoModal($w, state);
+    const [handler] = $w('#careGuideBtn').onClick.mock.calls[0];
+    await handler();
+    expect($w('#careGuideText').text).toContain('not available');
+  });
 });
 
 // ── dimensions rendering ──────────────────────────────────────────────
@@ -313,7 +328,7 @@ describe('room fit calculator', () => {
     setupAccessibleDialog.mockReturnValue(mockDialog);
     mockSpecsSuccess();
     await initProductInfoModal($w, state);
-    // Trigger load
+    // Click care guide to trigger lazy-load; specs must be loaded before checkRoomFitBtn handler reads them.
     const [clickHandler] = $w('#careGuideBtn').onClick.mock.calls[0];
     await clickHandler();
   });
@@ -385,6 +400,11 @@ describe('room fit calculator', () => {
   it('sets ariaLive polite on fitResult for screen readers', () => {
     triggerFitCheck(72, 60);
     expect($w('#fitResult').accessibility.ariaLive).toBe('polite');
+  });
+
+  it('shows "tight" result when clearance is exactly zero (product exactly fills room)', () => {
+    triggerFitCheck(54, 32); // 0" clearance on both sides — tight, not too-big
+    expect($w('#fitResult').text).toContain('Tight');
   });
 });
 
