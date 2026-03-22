@@ -16,7 +16,7 @@ import {
   TIER_NAMES,
   getTierForPoints,
   getBadgesForAccount,
-} from '../src/public/gamification-tokens.js';
+} from '../src/public/gamificationTokens.js';
 
 // ── TIER_THRESHOLDS ───────────────────────────────────────────────────────────
 
