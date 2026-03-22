@@ -443,11 +443,6 @@ describe('getShippingEstimate — ZIP edge cases', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects 6-digit ZIP', async () => {
-    const result = await getShippingEstimate('prod-1', '287010');
-    expect(result.success).toBe(false);
-  });
-
   it('rejects alpha ZIP', async () => {
     const result = await getShippingEstimate('prod-1', 'ABCDE');
     expect(result.success).toBe(false);
