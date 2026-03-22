@@ -7,11 +7,12 @@
  *  - has_photo bonus applied correctly
  *  - Unknown event: no-op, returns current total without error
  *  - Missing memberId: returns { success: false }
- *  - CMS write failure: returns { success: false }
+ *  - CMS write failure (insert, update, query): returns { success: false }
+ *  - Unknown event query failure: returns { success: false }
  *  - Points accumulation across multiple events
- *  - Tier advancement detected and returned
+ *  - Tier advancement detected and returned (including boundary at 500)
  *  - First event creates new MemberPoints record
- *  - Subsequent event updates existing record
+ *  - Subsequent event updates existing record with correct tier persisted
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -20,6 +21,7 @@ import {
   __seed,
   __setQueryError,
   __setInsertError,
+  __setUpdateError,
   __getInserted,
   __onUpdate,
 } from './__mocks__/wix-data.js';
@@ -69,13 +71,14 @@ describe('gamification_add_to_cart', () => {
     expect(record.totalPoints).toBe(5);
   });
 
-  it('updates existing MemberPoints record on subsequent event', async () => {
+  it('updates existing MemberPoints record on subsequent event with correct totalPoints and tier', async () => {
     __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
     const updated = [];
     __onUpdate((collection, item) => updated.push({ collection, item }));
     await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     expect(updated.length).toBe(1);
     expect(updated[0].item.totalPoints).toBe(55);
+    expect(updated[0].item.tier).toBe('Trail Blazer');
   });
 });
 
@@ -148,6 +151,12 @@ describe('unknown event name', () => {
     await receiveGamificationEvent('gamification_unknown', {}, 'mem-1');
     expect(__getInserted('MemberPoints')).toHaveLength(0);
   });
+
+  it('returns { success: false } when query throws on unknown event', async () => {
+    __setQueryError('MemberPoints', new Error('DB read failed'));
+    const result = await receiveGamificationEvent('gamification_unknown', {}, 'mem-1');
+    expect(result.success).toBe(false);
+  });
 });
 
 // ── CMS write failure ─────────────────────────────────────────────────────────
@@ -155,6 +164,13 @@ describe('unknown event name', () => {
 describe('CMS write failure', () => {
   it('returns { success: false } when insert throws', async () => {
     __setInsertError('MemberPoints', new Error('DB write failed'));
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns { success: false } when update throws', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
+    __setUpdateError('MemberPoints', new Error('DB update failed'));
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     expect(result.success).toBe(false);
   });
@@ -207,15 +223,30 @@ describe('tier transitions', () => {
     expect(result.newTotal).toBe(595);
   });
 
+  it('tierChanged is true exactly at the 500-point boundary', async () => {
+    // 499 → +5 (add_to_cart) = 504 → Mountain Guide
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 499, tier: 'Trail Blazer' }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.tierChanged).toBe(true);
+    expect(result.newTier).toBe('Mountain Guide');
+  });
+
+  it('tierChanged is false at 499 points (one point below boundary)', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 494, tier: 'Trail Blazer' }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.tierChanged).toBe(false);
+    expect(result.newTier).toBe('Trail Blazer');
+  });
+
   it('tierChanged is false on first event when tier stays at Trail Blazer', async () => {
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-new');
     expect(result.tierChanged).toBe(false);
     expect(result.newTier).toBe('Trail Blazer');
   });
 
-  it('newTier is included in successful response', async () => {
+  it('newTier is Trail Blazer on first add_to_cart event', async () => {
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    expect(result.newTier).toBeTruthy();
+    expect(result.newTier).toBe('Trail Blazer');
   });
 });
 

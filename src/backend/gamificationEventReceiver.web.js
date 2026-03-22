@@ -42,6 +42,11 @@ export const receiveGamificationEvent = webMethod(
 
     // Unknown event: return current total without writing
     if (delta === null) {
+      logError(
+        `gamificationEventReceiver — unknown event "${eventName}" for member ${memberId}`,
+        new Error('Unknown gamification event'),
+        { silent: true }
+      );
       try {
         const record = await findMemberRecord(memberId);
         const totalPoints = record ? record.totalPoints : 0;
@@ -52,7 +57,7 @@ export const receiveGamificationEvent = webMethod(
           newTier: getTierForPoints(totalPoints),
         };
       } catch (err) {
-        logError('gamificationEventReceiver.receiveGamificationEvent', err);
+        logError(`gamificationEventReceiver — query failed for member ${memberId}`, err);
         return { success: false, error: 'Failed to retrieve points' };
       }
     }
@@ -81,7 +86,7 @@ export const receiveGamificationEvent = webMethod(
 
       return { success: true, newTotal, tierChanged, newTier };
     } catch (err) {
-      logError('gamificationEventReceiver.receiveGamificationEvent', err);
+      logError(`gamificationEventReceiver — ${eventName} failed for member ${memberId}`, err);
       return { success: false, error: 'Failed to award points' };
     }
   }
