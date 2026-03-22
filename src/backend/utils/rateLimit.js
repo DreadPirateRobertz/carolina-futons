@@ -26,10 +26,12 @@ export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @param {Object} [opts]
  * @param {number} [opts.now] - Timestamp override for testing (internal use only — never accept from callers).
  * @param {number} [opts.max] - Max calls per window (defaults to RATE_LIMIT_MAX). Callers may override per endpoint.
+ * @param {number} [opts.windowMs] - Window duration in ms (defaults to RATE_LIMIT_WINDOW_MS = 1 hour). Use 60_000 for per-minute limits.
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function checkRateLimit(collection, key, opts = {}) {
   const now = opts.now ?? Date.now();
+  const windowMs = opts.windowMs ?? RATE_LIMIT_WINDOW_MS;
   try {
     const cleanKey = sanitize(key, 254).toLowerCase();
 
@@ -50,7 +52,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
     const record = existing.items[0];
     const windowAge = now - new Date(record.windowStart).getTime();
 
-    if (windowAge > RATE_LIMIT_WINDOW_MS) {
+    if (windowAge > windowMs) {
       // Window expired — reset counter
       await wixData.update(collection, {
         ...record,

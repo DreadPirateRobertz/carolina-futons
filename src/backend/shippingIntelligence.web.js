@@ -31,11 +31,31 @@ import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getLTLRates, getLTLFallbackRates, shouldUseLTL, LTL_THRESHOLDS } from 'backend/wwex-freight.web';
 import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const { localZones } = shippingConfig;
 
 /** CMS collection name for per-product shipping profile overrides */
 const SHIPPING_PROFILES_COLLECTION = 'ProductShippingProfiles';
+
+/** Rate limiting: 1-minute sliding window per logged-in member */
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const ESTIMATE_RATE_COLLECTION = 'ShippingEstimateRateLimit';
+const BUNDLE_RATE_COLLECTION = 'BundleQuoteRateLimit';
+
+/**
+ * Get the current member's ID for rate limiting, or null if anonymous.
+ * @private
+ */
+async function getCurrentMemberId() {
+  try {
+    const member = await currentMember.getMember();
+    return member?._id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * @typedef {Object} ShippingEstimateResult
@@ -72,6 +92,18 @@ export const getShippingEstimate = webMethod(
   async (productId, zip) => {
     if (!productId || !zip || !/^\d{5}$/.test(zip)) {
       return { success: false, error: 'Valid product ID and 5-digit ZIP required', options: [] };
+    }
+
+    // Rate limit: 20 req/min per logged-in member; anonymous users are not limited.
+    const memberId = await getCurrentMemberId();
+    if (memberId) {
+      const { allowed } = await checkRateLimit(ESTIMATE_RATE_COLLECTION, memberId, {
+        max: 20,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
     }
 
     try {
@@ -111,6 +143,18 @@ export const calculateBundleQuote = webMethod(
     }
     if (!zip || !/^\d{5}$/.test(zip)) {
       return { success: false, error: 'Valid 5-digit ZIP required', options: [] };
+    }
+
+    // Rate limit: 10 req/min per logged-in member; anonymous users are not limited.
+    const memberId = await getCurrentMemberId();
+    if (memberId) {
+      const { allowed } = await checkRateLimit(BUNDLE_RATE_COLLECTION, memberId, {
+        max: 10,
+        windowMs: RATE_WINDOW_MS,
+      });
+      if (!allowed) {
+        return { success: false, error: 'Too many requests. Please try again in 1 minute.', options: [] };
+      }
     }
 
     try {
