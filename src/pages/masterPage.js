@@ -16,6 +16,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
+import { initCartUpsell } from 'public/CartUpsell';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
 import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
@@ -55,6 +56,7 @@ $w.onReady(async function () {
   initCartIconForMiniCart();
   initSiteLogo();
   initMiniCartAutoOpen();
+  initCartUpsell($w);
   initFooter($w);
   initMountainSkylineHeader();
   initHeaderShippingProgress();
