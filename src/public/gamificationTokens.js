@@ -82,7 +82,7 @@ export const BADGE_REGISTRY = {
   },
 };
 
-// ── TIER_NAMES — sorted array used for tier lookup ───────────────────────────
+// ── TIER_NAMES — ascending by threshold; getTierForPoints depends on this order ─
 
 export const TIER_NAMES = [
   { threshold: TIER_THRESHOLDS.TRAIL_BLAZER, name: 'Trail Blazer' },
@@ -95,7 +95,9 @@ export const TIER_NAMES = [
 
 /**
  * Returns the tier name for a given point total.
- * Non-numeric or negative input floors to 'Trail Blazer'.
+ * NaN / Infinity / negative input returns 'Trail Blazer' via the guard.
+ * null / undefined coerce to 0 via Number() and return 'Trail Blazer' through
+ * the normal loop (TRAIL_BLAZER threshold = 0).
  *
  * @param {number} points
  * @returns {string} tier name
