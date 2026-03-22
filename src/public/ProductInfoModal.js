@@ -18,6 +18,7 @@
 
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { getProductSpecs } from 'backend/catalogContent.web.js';
+import wixLocation from 'wix-location';
 
 // Minimum clearance (inches, each side) for a 'fits' result. Below this = 'tight'.
 const CLEARANCE_GOOD = 2;
@@ -72,19 +73,25 @@ export async function initProductInfoModal($w, state) {
       },
     });
 
+    // Close modal on page navigation.
+    try { wixLocation.onChange(() => { dialog.close(); }); } catch (e) {
+      console.warn('[ProductInfoModal] wixLocation.onChange wire failed:', e?.message);
+    }
+
     let initialized = false;
     let specs = null;
 
     $w('#careGuideBtn').onClick(async () => {
       try {
         if (!initialized) {
-          initialized = true;
           specs = await _loadSpecs($w, state.product.slug);
+          initialized = true;
         }
         announce($w, 'Care guide opened');
         dialog.open();
       } catch (e) {
         console.error('[ProductInfoModal] onClick failed:', e);
+        // initialized stays false — next click will retry
       }
     });
 
@@ -106,7 +113,7 @@ export async function initProductInfoModal($w, state) {
       console.warn('[ProductInfoModal] fitResult ariaLive init failed:', e?.message);
     }
   } catch (e) {
-    console.error('[ProductInfoModal] Init failed:', e?.message || e);
+    console.error('[ProductInfoModal] Init failed:', e);
   }
 }
 
@@ -131,7 +138,10 @@ async function _loadSpecs($w, slug) {
       console.warn('[ProductInfoModal] getProductSpecs returned failure for slug:', slug, '— error:', error);
     }
   } catch (e) {
-    console.warn('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e?.message);
+    console.error('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e);
+    _renderCareGuide($w, null);
+    _renderDimensions($w, null);
+    throw e;  // re-throw: onClick catch keeps initialized=false, allowing retry
   }
 
   _renderCareGuide($w, specs?.careGuide || null);
@@ -257,7 +267,7 @@ function _checkRoomFit($w, specs) {
 }
 
 /**
- * Write the fit result text and update ARIA live region.
+ * Write the fit result text and set ARIA label for screen readers.
  *
  * @param {Function} $w
  * @param {string} message
