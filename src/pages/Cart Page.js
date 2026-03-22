@@ -34,7 +34,7 @@ import { saveForLater } from 'public/SaveForLater.js';
 import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
 import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 import { initPageSeo } from 'public/pageSeo.js';
-import { initCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
+import { initCartRecentlyViewed, updateCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
 
 $w.onReady(async function () {
   initPageSeo('cart');
@@ -527,7 +527,7 @@ function initCartListeners() {
         updateCartDeliveryEstimate($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
-        initCartRecentlyViewed($w, cart?.lineItems || []);
+        updateCartRecentlyViewed($w, cart?.lineItems || []);
       } catch (e) {
         console.error('Error refreshing cart on change:', e);
       }

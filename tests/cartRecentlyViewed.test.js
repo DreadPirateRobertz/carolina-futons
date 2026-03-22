@@ -27,7 +27,7 @@ vi.mock('public/cartService', () => ({
   addToCart: mockAddToCart,
 }));
 
-import { initCartRecentlyViewed } from '../src/public/CartRecentlyViewed.js';
+import { initCartRecentlyViewed, updateCartRecentlyViewed } from '../src/public/CartRecentlyViewed.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -195,6 +195,7 @@ describe('CartRecentlyViewed', () => {
       expect.any(Error),
     );
     expect(btn.enable).toHaveBeenCalled();
+    expect(btn.label).toBe('Add to Cart');
 
     consoleSpy.mockRestore();
   });
@@ -216,6 +217,37 @@ describe('CartRecentlyViewed', () => {
     const data = $w('#cartRecentlyViewedRepeater').data;
     expect(data).toHaveLength(4);
     expect(data.map(r => r._id)).toEqual(['1', '2', '3', '4']);
+  });
+
+  // updateCartRecentlyViewed: does NOT re-register onItemReady (no stacking)
+  it('updateCartRecentlyViewed updates data without calling onItemReady again', () => {
+    mockGetViewHistory.mockReturnValue([makeProduct('r1'), makeProduct('r2')]);
+
+    initCartRecentlyViewed($w, []);
+
+    const repeater = $w('#cartRecentlyViewedRepeater');
+    const callsAfterInit = repeater.onItemReady.mock.calls.length;
+    expect(callsAfterInit).toBe(1);
+
+    // Cart changes — r1 added to cart
+    mockGetViewHistory.mockReturnValue([makeProduct('r1'), makeProduct('r2')]);
+    updateCartRecentlyViewed($w, [makeCartItem('r1')]);
+
+    // onItemReady must NOT be called again — still exactly 1 registration
+    expect(repeater.onItemReady).toHaveBeenCalledTimes(1);
+    expect(repeater.data).toHaveLength(1);
+    expect(repeater.data[0]._id).toBe('r2');
+  });
+
+  // updateCartRecentlyViewed: collapses section when all in cart
+  it('updateCartRecentlyViewed collapses section when filtered list is empty', () => {
+    mockGetViewHistory.mockReturnValue([makeProduct('s1')]);
+    initCartRecentlyViewed($w, []);
+
+    mockGetViewHistory.mockReturnValue([makeProduct('s1')]);
+    updateCartRecentlyViewed($w, [makeCartItem('s1')]);
+
+    expect($w('#cartRecentlyViewedSection').collapse).toHaveBeenCalled();
   });
 
   // _id fallback — Wix Stores line-item shape uses ._id not .productId
