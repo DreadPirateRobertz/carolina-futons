@@ -133,7 +133,7 @@ export function getBadgesForAccount(accountHistory = {}) {
   if (purchaseCount >= 1) earned.push('first_step');
   if (purchaseCount >= 3) earned.push('trail_regular');
   if (arTryOnUsed) earned.push('visualizer');
-  if (Array.isArray(productLines) && productLines.length >= 3) earned.push('curator');
+  if (Array.isArray(productLines) && new Set(productLines).size >= 3) earned.push('curator');
   if (loginStreakDays >= 7) earned.push('week_wanderer');
   if (reviewCount >= 3) earned.push('voice_of_mountain');
 

@@ -195,6 +195,13 @@ describe('TIER_NAMES', () => {
   it('includes "Blue Ridge Legend" as the highest tier name', () => {
     expect(TIER_NAMES[TIER_NAMES.length - 1].name).toBe('Blue Ridge Legend');
   });
+
+  it('thresholds match corresponding TIER_THRESHOLDS values', () => {
+    expect(TIER_NAMES[0].threshold).toBe(TIER_THRESHOLDS.TRAIL_BLAZER);
+    expect(TIER_NAMES[1].threshold).toBe(TIER_THRESHOLDS.MOUNTAIN_GUIDE);
+    expect(TIER_NAMES[2].threshold).toBe(TIER_THRESHOLDS.SUMMIT_MASTER);
+    expect(TIER_NAMES[3].threshold).toBe(TIER_THRESHOLDS.BLUE_RIDGE_LEGEND);
+  });
 });
 
 // ── getTierForPoints ──────────────────────────────────────────────────────────
@@ -241,7 +248,25 @@ describe('getTierForPoints', () => {
   });
 
   it('returns Trail Blazer for null input', () => {
+    // Number(null) === 0: null routes through the normal loop, not the guard
     expect(getTierForPoints(null)).toBe('Trail Blazer');
+  });
+
+  it('returns Trail Blazer for undefined input', () => {
+    // Number(undefined) === NaN: caught by the isFinite guard
+    expect(getTierForPoints(undefined)).toBe('Trail Blazer');
+  });
+
+  it('returns Mountain Guide for string "500" (numeric coercion)', () => {
+    expect(getTierForPoints('500')).toBe('Mountain Guide');
+  });
+
+  it('returns Trail Blazer for 499.9 points', () => {
+    expect(getTierForPoints(499.9)).toBe('Trail Blazer');
+  });
+
+  it('returns Mountain Guide for 500.1 points', () => {
+    expect(getTierForPoints(500.1)).toBe('Mountain Guide');
   });
 });
 
@@ -285,6 +310,21 @@ describe('getBadgesForAccount', () => {
 
   it('does not return curator for 2 product lines', () => {
     const history = { purchaseCount: 2, productLines: ['futons', 'covers'], arTryOnUsed: false, reviewCount: 0, loginStreakDays: 0 };
+    expect(getBadgesForAccount(history)).not.toContain('curator');
+  });
+
+  it('does not return curator for 3 duplicate product lines', () => {
+    const history = { purchaseCount: 3, productLines: ['futons', 'futons', 'futons'], arTryOnUsed: false, reviewCount: 0, loginStreakDays: 0 };
+    expect(getBadgesForAccount(history)).not.toContain('curator');
+  });
+
+  it('does not return curator for 2 unique + 1 duplicate product line', () => {
+    const history = { purchaseCount: 3, productLines: ['futons', 'covers', 'futons'], arTryOnUsed: false, reviewCount: 0, loginStreakDays: 0 };
+    expect(getBadgesForAccount(history)).not.toContain('curator');
+  });
+
+  it('does not return curator when productLines is a non-array', () => {
+    const history = { purchaseCount: 3, productLines: 'futons,covers,mattresses', arTryOnUsed: false, reviewCount: 0, loginStreakDays: 0 };
     expect(getBadgesForAccount(history)).not.toContain('curator');
   });
 
