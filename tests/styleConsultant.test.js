@@ -21,7 +21,11 @@ import {
   __getInserted,
 } from './__mocks__/wix-data.js';
 
-import { getStyleConsultation, _getProductRecommendations } from '../src/backend/styleConsultant.web.js';
+import {
+  getStyleConsultation,
+  _getProductRecommendations,
+  _setCallClaudeVision,
+} from '../src/backend/styleConsultant.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -250,5 +254,126 @@ describe('_getProductRecommendations', () => {
       score: expect.any(Number),
       matchedTags: expect.any(Array),
     });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. Full flow — AI call paths (callClaudeVision injected)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('getStyleConsultation — AI call paths', () => {
+  beforeEach(() => {
+    resetData();
+    _setCallClaudeVision(null); // reset to stub/throw default
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    // Seed catalog so recommendations can be returned
+    __seed('Stores/Products', [
+      makeProduct({ _id: 'p1', name: 'Modern Frame', categories: ['futon-frames'], salesRank: 1 }),
+      makeProduct({ _id: 'p2', name: 'Wall Hugger', categories: ['wall-huggers'], salesRank: 2 }),
+    ]);
+  });
+
+  afterEach(() => {
+    _setCallClaudeVision(null);
+  });
+
+  it('returns success with recommendations when Claude returns valid style tags', async () => {
+    _setCallClaudeVision(async () => ({
+      styleTags: ['modern'],
+      explanation: 'Clean lines and neutral tones suggest a modern aesthetic.',
+    }));
+
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(true);
+    expect(result.styleTags).toEqual(['modern']);
+    expect(result.explanation).toBe('Clean lines and neutral tones suggest a modern aesthetic.');
+    expect(result.recommendations.length).toBeGreaterThan(0);
+    expect(result.sessionKey).toBe(VALID_KEY);
+  });
+
+  it('returns AI_ERROR when callClaudeVision throws', async () => {
+    _setCallClaudeVision(async () => { throw new Error('Claude 429 rate limited'); });
+
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('AI_ERROR');
+  });
+
+  it('returns NO_RESULTS when Claude tags match no catalog products', async () => {
+    _setCallClaudeVision(async () => ({
+      styleTags: ['bohemian'], // maps to futon-frames only
+      explanation: 'Eclectic bohemian style.',
+    }));
+    // Seed only products in a category not matched by bohemian
+    resetData();
+    __seed('Stores/Products', [
+      makeProduct({ _id: 'p-nomatch', categories: ['mattresses'] }),
+    ]);
+
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('NO_RESULTS');
+  });
+
+  it('writes session record after a successful AI call', async () => {
+    _setCallClaudeVision(async () => ({
+      styleTags: ['modern'],
+      explanation: 'Modern style.',
+    }));
+
+    const inserts = [];
+    __onInsert((col, item) => { if (col === 'StyleConsultantSessions') inserts.push(item); });
+
+    await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0].sessionKey).toBe(VALID_KEY);
+    expect(inserts[0].windowCallCount).toBe(1);
+  });
+
+  it('updates existing session record rather than inserting a duplicate', async () => {
+    _setCallClaudeVision(async () => ({
+      styleTags: ['modern'],
+      explanation: 'Modern style.',
+    }));
+
+    __seed('StyleConsultantSessions', [makeSession()]);
+
+    const updates = [];
+    const inserts = [];
+    __onUpdate((col, item) => { if (col === 'StyleConsultantSessions') updates.push(item); });
+    __onInsert((col, item) => { if (col === 'StyleConsultantSessions') inserts.push(item); });
+
+    await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(updates).toHaveLength(1);
+    expect(inserts).toHaveLength(0); // update, not insert
+  });
+
+  it('passes photo URL and text to callClaudeVision', async () => {
+    const calls = [];
+    _setCallClaudeVision(async (photoUrl, textInput) => {
+      calls.push({ photoUrl, textInput });
+      return { styleTags: ['modern'], explanation: 'Modern.' };
+    });
+
+    await getStyleConsultation(VALID_KEY, { photoUrl: VALID_PHOTO, textDescription: VALID_TEXT });
+    expect(calls).toHaveLength(1);
+    expect(calls[0].photoUrl).toBe(VALID_PHOTO);
+    expect(calls[0].textInput).toContain('modern minimalist');
+  });
+
+  it('session upsert failure is non-fatal — still returns recommendations', async () => {
+    _setCallClaudeVision(async () => ({
+      styleTags: ['modern'],
+      explanation: 'Modern.',
+    }));
+    // Force session insert to fail
+    const { __setInsertError } = await import('./__mocks__/wix-data.js');
+    __setInsertError('StyleConsultantSessions', new Error('CMS write failed'));
+
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(true); // CMS write failure is non-fatal
+    expect(result.recommendations.length).toBeGreaterThan(0);
   });
 });

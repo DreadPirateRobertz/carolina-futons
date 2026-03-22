@@ -204,7 +204,14 @@ async function upsertSession(existing, sessionKey, updatedCounts, textInput, pho
  * @param {string} textInput - Sanitized free-text description (empty string if photo-only)
  * @returns {Promise<{ styleTags: string[], explanation: string }>}
  */
+// Test injection hook — allows tests to mock the AI call without network access.
+// Set via _setCallClaudeVision(fn) in beforeEach; clear with _setCallClaudeVision(null).
+let _callClaudeVisionImpl = null;
+
 async function callClaudeVision(photoUrl, textInput) {
+  if (_callClaudeVisionImpl) {
+    return _callClaudeVisionImpl(photoUrl, textInput);
+  }
   // STUB: replace with real implementation after zhora review
   // Expected implementation outline:
   //   1. Fetch ANTHROPIC_API_KEY from wixSecretsManager
@@ -385,3 +392,12 @@ export const getStyleConsultation = webMethod(
 
 // ── Export internals for testing ─────────────────────────────────────
 export { getProductRecommendations as _getProductRecommendations };
+
+/**
+ * Inject a mock implementation for callClaudeVision in tests.
+ * Call with null to restore the default (stubbed) behaviour.
+ * @param {Function|null} fn
+ */
+export function _setCallClaudeVision(fn) {
+  _callClaudeVisionImpl = fn;
+}
