@@ -483,6 +483,17 @@ describe('Contact Illustrations', () => {
       return { mock$w, containerEl, trigger };
     }
 
+    // Canonical LivingSkyState fixture (living-sky.js:280-298)
+    function makeState({ sky0 = '#5B8FA8', starOpacity = 0, weather = 'clear' } = {}) {
+      return {
+        skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'],
+        ridgeColors: { r1: '#3A2518', r2: '#5B8FA8', r3: '#667788', r4: '#5B8FA8', tree: '#334455' },
+        starOpacity,
+        cloudOpacity: 0,
+        weather,
+      };
+    }
+
     it('subscribes to #livingSkyFrame onMessage on init', () => {
       const onMessageSpy = vi.fn();
       const containerEl = { html: '' };
@@ -525,88 +536,88 @@ describe('Contact Illustrations', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const before = containerEl.html;
-      trigger({ skyGradient: '#5B8FA8', ambientLight: 0.8, weather: 'clear' });
+      trigger(makeState({ sky0: '#5B8FA8' }));
       expect(containerEl.html).not.toBe(before);
       expect(containerEl.html).toContain('id="sky-overlay"');
     });
 
-    it('no sky-overlay injected when skyGradient is absent in day mode (early return)', () => {
+    it('no sky-overlay injected when skyColors is absent in day mode (early return)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const base = containerEl.html;
-      trigger({ ambientLight: 0.8, weather: 'clear' }); // no skyGradient
+      trigger({ starOpacity: 0, weather: 'clear' }); // no skyColors
       expect(containerEl.html).toBe(base);
     });
 
-    it('night mode injects stars even when skyGradient is absent', () => {
+    it('night mode injects stars even when skyColors is absent', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ ambientLight: 0.1, weather: 'clear' }); // no skyGradient
+      trigger({ starOpacity: 0.5, weather: 'clear' }); // no skyColors, starOpacity > 0 = night
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
-    it('invalid skyGradient (non-hex) is rejected — no sky-overlay injected', () => {
+    it('invalid skyColors[0] (non-hex) is rejected — no sky-overlay injected', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const base = containerEl.html;
-      trigger({ skyGradient: 'linear-gradient(red, blue)', ambientLight: 0.8, weather: 'clear' });
+      trigger({ ...makeState(), skyColors: ['linear-gradient(red, blue)', '#4A7D94', '#3D6B80', '#2C5A6A'] });
       expect(containerEl.html).toBe(base);
     });
 
-    it('night mode (ambientLight < 0.3) injects star elements', () => {
+    it('night mode (starOpacity > 0) injects star elements', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#0A0F2C', ambientLight: 0.1, weather: 'clear' });
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.8 }));
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
     it('night mode injects a moon element', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#0A0F2C', ambientLight: 0.0, weather: 'clear' });
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 1.0 }));
       expect(containerEl.html).toMatch(/id="moon"/);
     });
 
     it('night mode injects window lantern glow', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#0A0F2C', ambientLight: 0.05, weather: 'clear' });
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.9 }));
       expect(containerEl.html).toMatch(/id="window-glow"/);
     });
 
     it('day mode does not inject star or moon elements', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#B8D4E3', ambientLight: 0.9, weather: 'clear' });
+      trigger(makeState({ sky0: '#B8D4E3', starOpacity: 0 }));
       expect(containerEl.html).not.toMatch(/id="stars"/);
       expect(containerEl.html).not.toMatch(/id="moon"/);
     });
 
-    it('night boundary: ambientLight = 0.3 is day (no stars)', () => {
+    it('night boundary: starOpacity = 0 is day (no stars)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#4A5568', ambientLight: 0.3, weather: 'clear' });
+      trigger(makeState({ sky0: '#4A5568', starOpacity: 0 }));
       expect(containerEl.html).not.toMatch(/id="stars"/);
     });
 
-    it('night boundary: ambientLight = 0.29 is night (has stars)', () => {
+    it('night boundary: starOpacity > 0 is night (has stars)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#1A1F3E', ambientLight: 0.29, weather: 'clear' });
+      trigger(makeState({ sky0: '#1A1F3E', starOpacity: 0.1 }));
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
-    it('sky gradient color appears in updated SVG', () => {
+    it('sky color appears in updated SVG', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#A0B0C8', ambientLight: 0.7, weather: 'cloudy' });
+      trigger(makeState({ sky0: '#A0B0C8', weather: 'cloudy' }));
       expect(containerEl.html).toContain('#A0B0C8');
     });
 
     it('updated SVG remains a valid SVG', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ skyGradient: '#B8D4E3', ambientLight: 0.8, weather: 'clear' });
+      trigger(makeState({ sky0: '#B8D4E3' }));
       expect(containerEl.html.trimStart()).toMatch(/^<svg[\s>]/);
       expect(containerEl.html.trimEnd()).toMatch(/<\/svg>$/);
     });

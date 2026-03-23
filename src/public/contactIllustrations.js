@@ -103,18 +103,19 @@ const STAR_POSITIONS = [
 
 /**
  * Apply LivingSkyState overlay to a showroom SVG string.
- * Night mode (ambientLight < 0.3) injects stars, moon, and window lantern glow.
+ * Night mode (starOpacity > 0) injects stars, moon, and window lantern glow.
  * Day mode injects a sky color tint overlay.
  * Intentionally unexported — use through initContactShowroomScene.
  * @param {string} svg - Base SVG markup
- * @param {Object} state - LivingSkyState { skyGradient, ambientLight }
+ * @param {Object} state - LivingSkyState { skyColors, starOpacity }
  * @returns {string} Modified SVG, or the original svg when no overlay applies
  */
 function applyLivingSkyState(svg, state) {
-  const isNight = Number(state.ambientLight) < 0.3;
-  // Validate skyGradient to prevent XSS via postMessage injection
-  const safeGradient = typeof state.skyGradient === 'string' && SAFE_HEX_RE.test(state.skyGradient)
-    ? state.skyGradient : null;
+  const isNight = Number(state.starOpacity) > 0;
+  // Validate skyColors[0] to prevent XSS via postMessage injection
+  const skyColor = state.skyColors && state.skyColors[0];
+  const safeGradient = typeof skyColor === 'string' && SAFE_HEX_RE.test(skyColor)
+    ? skyColor : null;
   let overlay = '';
 
   if (safeGradient) {
