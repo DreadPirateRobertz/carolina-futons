@@ -5,7 +5,7 @@
 // express checkout
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
-import { ZIP_KEY, setStoredZip } from 'public/shippingPrefs';
+import { getStoredZip, setStoredZip } from 'public/shippingPrefs';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
 import { announce, applyFocusRing } from 'public/a11yHelpers.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
@@ -411,8 +411,7 @@ async function initAddressValidation() {
 
     // Pre-populate ZIP from localStorage so returning customers don't re-type it.
     try {
-      const { local } = await import('wix-storage-frontend');
-      const savedZip = local.getItem(ZIP_KEY);
+      const savedZip = await getStoredZip();
       if (savedZip) {
         try { $w('#addressZip').value = savedZip; } catch (e) {}
         try { $w('#checkoutShippingZip').value = savedZip; } catch (e) {}

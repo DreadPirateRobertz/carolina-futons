@@ -32,7 +32,7 @@ async function getLocalStorage() {
  */
 export async function getStoredZip(storage) {
   const store = storage ?? (await getLocalStorage());
-  return store.getItem(ZIP_KEY) ?? null;
+  return store.getItem(ZIP_KEY);
 }
 
 /**
