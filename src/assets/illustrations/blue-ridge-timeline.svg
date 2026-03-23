@@ -38,7 +38,7 @@
     </linearGradient>
     <linearGradient id="tl-ridge-mid" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#5B8FA8"/>
-      <stop offset="100%" stop-color="#3D6B80" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#5B8FA8" stop-opacity="0.65"/>
     </linearGradient>
   </defs>
   <g>
@@ -72,8 +72,8 @@
       <rect x="0" y="190" width="1200" height="35" fill="url(#tl-haze-blue)" opacity="0.35"/>
       <path id="mountain-ridge-3" d="M0 212 Q48 192 105 202 Q162 182 228 195 Q295 175 365 190 Q435 172 508 188 Q580 168 655 185 Q728 165 802 180 Q878 162 952 178 Q1025 160 1098 175 Q1155 165 1200 170 L1200 260 L0 260Z" fill="url(#tl-ridge-mid)" opacity="0.38"/>
       <rect x="0" y="210" width="1200" height="30" fill="url(#tl-haze-blue)" opacity="0.28"/>
-      <path id="mountain-ridge-2" d="M0 232 Q55 215 120 222 Q188 202 262 215 Q335 198 412 210 Q488 195 568 208 Q648 192 728 205 Q808 188 888 202 Q968 185 1048 198 Q1128 185 1200 192 L1200 275 L0 275Z" fill="#3D6B80" opacity="0.45"/>
-      <path id="mountain-ridge-near" d="M0 248 Q62 235 132 240 Q205 225 285 235 Q365 220 448 232 Q532 218 618 228 Q702 215 788 225 Q872 212 955 222 Q1038 210 1120 218 Q1165 212 1200 215 L1200 280 L0 280Z" fill="#3D6B80" opacity="0.5"/>
+      <path id="mountain-ridge-2" d="M0 232 Q55 215 120 222 Q188 202 262 215 Q335 198 412 210 Q488 195 568 208 Q648 192 728 205 Q808 188 888 202 Q968 185 1048 198 Q1128 185 1200 192 L1200 275 L0 275Z" fill="#5B8FA8" opacity="0.45"/>
+      <path id="mountain-ridge-near" d="M0 248 Q62 235 132 240 Q205 225 285 235 Q365 220 448 232 Q532 218 618 228 Q702 215 788 225 Q872 212 955 222 Q1038 210 1120 218 Q1165 212 1200 215 L1200 280 L0 280Z" fill="#5B8FA8" opacity="0.5"/>
       <path id="bird-flock-1" d="M175 68 L184 58 L193 68" fill="none" stroke="#3A2518" stroke-width="1.4" opacity="0.28"/>
       <path id="bird-flock-2" d="M198 75 L206 66 L214 75" fill="none" stroke="#3A2518" stroke-width="1.1" opacity="0.22"/>
       <path id="bird-flock-3" d="M840 58 L848 50 L856 58" fill="none" stroke="#3A2518" stroke-width="1.2" opacity="0.25"/>
