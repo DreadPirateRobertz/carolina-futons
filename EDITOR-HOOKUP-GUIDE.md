@@ -809,7 +809,7 @@ For each section below:
 
 **Integration notes:**
 - `masterPage.js` calls `updateSkyToState($w, state)` every 60s, which posts raw state object (no `type` wrapper) to `#livingSkyFrame`
-- Consumers subscribe: `$w('#livingSkyFrame').onMessage(e => ...)` — state shape: `{ ridgeColors: {r1–r7, tree}, skyGradient, ambientLight, weather }`
+- Consumers subscribe: `$w('#livingSkyFrame').onMessage(e => ...)` — state shape: `{ ridgeColors: {r1–r7, tree}, skyColors: ['#hex',...], starOpacity: 0–1, weather }`
 - Phase 8: `#footerMountainDivider` and `#contactShowroomSvg` will subscribe to this same stream for dynamic sky/ambient shift
 
 ---
