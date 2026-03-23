@@ -21,6 +21,8 @@ import {
   __reset as resetIndexes,
   __seedIndexes,
   __getIndexes,
+  __setListError,
+  __setCreateError,
 } from './__mocks__/wix-data-index-service-v2.js';
 import { ensurePointsLedgerIndex } from '../src/backend/cms/ensureIndexes.js';
 import { recordStreakMilestoneEvent } from '../src/backend/loyaltyService.web.js';
@@ -112,5 +114,29 @@ describe('recordStreakMilestoneEvent — DB-level duplicate rejection', () => {
     __setInsertError('PointsLedger', new Error('Connection timeout'));
 
     await expect(recordStreakMilestoneEvent('mem-1', 30, 60)).rejects.toThrow('Connection timeout');
+  });
+
+  it('swallows a WDE0025-prefixed error (Wix error code variant)', async () => {
+    __seed('PointsLedger', []);
+    __setInsertError('PointsLedger', new Error('WDE0025: unique constraint violation'));
+
+    await expect(recordStreakMilestoneEvent('mem-1', 30, 60)).resolves.toBeUndefined();
+  });
+});
+
+// ── ensurePointsLedgerIndex — error paths ─────────────────────────────────────
+
+describe('ensurePointsLedgerIndex — error paths', () => {
+  it('re-throws listIndexes errors', async () => {
+    __setListError(new Error('Service unavailable'));
+
+    await expect(ensurePointsLedgerIndex()).rejects.toThrow('Service unavailable');
+  });
+
+  it('re-throws createIndex errors', async () => {
+    __setCreateError(new Error('Quota exceeded'));
+
+    await expect(ensurePointsLedgerIndex()).rejects.toThrow('Quota exceeded');
+    expect(__getIndexes('PointsLedger')).toHaveLength(0);
   });
 });
