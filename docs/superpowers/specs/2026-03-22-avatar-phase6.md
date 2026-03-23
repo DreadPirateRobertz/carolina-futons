@@ -309,6 +309,7 @@ Accessories are displayed as HTML overlay elements (`#avatarAccessoryOverlay`) o
 | `purchaseAccessory` — tier too low | Return `{ error: 'tier_required', requiredTier }`. Frontend shows: "Reach [Tier] to unlock" |
 | `purchaseAccessory` — already owned | Return `{ error: 'already_owned', state }`. Frontend marks item as owned; no double-deduct |
 | `purchaseAccessory` — seasonal expired | Return `{ error: 'seasonal_expired' }`. Frontend hides item or shows "Seasonal — expired" |
+| `purchaseAccessory` — `MemberAvatar` write fails after points deducted | Log error; do not retry silently (same pattern as BONUS_POINTS_DAY above). Points stand; member loses points without receiving accessory. Accepted risk — mirrors the existing codebase's single-write-per-collection pattern (no atomic cross-collection writes in Wix Velo). Manual audit if abuse or error-rate spike detected. |
 | `equipAccessory` — not in unlocked list | Return `{ error: 'not_unlocked' }`. Should not be reachable via normal UI; log as anomaly |
 | `getAvatarState` — no `MemberAvatar` record | Return defaults: `{ equippedAccessoryId: null, unlockedAccessoryIds: [], lottieAnimationId: 'waving-bear-3e2qFVfuGO' }` — do not error |
 | BONUS_POINTS_DAY write fails after points awarded | Log error; do not retry. Points stand. Manual audit if abuse suspected. |
