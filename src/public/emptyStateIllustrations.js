@@ -19,6 +19,82 @@ const { sandBase, sandLight, sandDark, espresso, espressoLight, mountainBlue,
   mountainBlueDark, mountainBlueLight, sunsetCoral, sunsetCoralDark,
   sunsetCoralLight, offWhite, skyGradientTop, skyGradientBottom, success, white } = colors;
 
+/** Validates hex color strings to prevent XSS via postMessage injection. */
+const SAFE_HEX_RE = /^#[0-9A-Fa-f]{3,8}$/;
+
+/** Star positions for LivingSkyState night overlay (within 280×120 sky region). */
+const STAR_POSITIONS = [
+  [30,20],[80,15],[140,25],[190,10],[250,18],[220,5],[160,8],[60,30],[110,12],[240,28],
+];
+
+/**
+ * Apply LivingSkyState overlay to an empty-state SVG string.
+ * Night mode (starOpacity > 0) injects stars and moon.
+ * Day mode injects a sky color tint overlay.
+ * Intentionally unexported — use through initEmptyStateScene.
+ * @param {string} svg - Base SVG markup
+ * @param {Object} state - LivingSkyState { skyColors, starOpacity }
+ * @returns {string} Modified SVG with overlays injected, or the original svg unchanged
+ *   when skyColor is absent/invalid and starOpacity is 0.
+ */
+function applyLivingSkyState(svg, state) {
+  const isNight = Number(state.starOpacity) > 0;
+  const skyColor = state.skyColors && state.skyColors[0];
+  const safeGradient = typeof skyColor === 'string' && SAFE_HEX_RE.test(skyColor)
+    ? skyColor : null;
+  let overlay = '';
+
+  if (safeGradient) {
+    // Day: subtle tint (0.25); night: deeper tint (0.55) to shift sky toward dark
+    const opacity = isNight ? 0.55 : 0.25;
+    overlay += '<rect width="280" height="120" fill="' + safeGradient + '" opacity="' + opacity + '" id="sky-overlay"/>';
+  }
+
+  if (isNight) {
+    overlay += '<g id="stars">';
+    for (const [x, y] of STAR_POSITIONS) {
+      overlay += '<circle cx="' + x + '" cy="' + y + '" r="1.2" fill="#FAF7F2" opacity="0.8"/>';
+    }
+    overlay += '</g>';
+    overlay += '<circle cx="220" cy="25" r="12" fill="#F2E8D5" opacity="0.7" id="moon"/>'
+      + '<circle cx="220" cy="25" r="9" fill="#FAF7F2" opacity="0.6"/>';
+  }
+
+  if (!overlay) return svg;
+  return svg.replace('</svg>', overlay + '</svg>');
+}
+
+/**
+ * Initialize an empty state illustration on a Wix HtmlComponent, with optional
+ * LivingSkyState subscription for day/night sky theming.
+ * Subscribes to #livingSkyFrame onMessage and re-renders the illustration on each
+ * state update. Safe to call when the frame or container is absent.
+ * @param {Function} $w - Wix selector function
+ * @param {string} key - ILLUSTRATION_SVGS key (e.g. 'cart', 'search')
+ * @param {string} containerId - Wix selector string including '#' prefix (e.g. '#emptyStateScene')
+ */
+export function initEmptyStateScene($w, key, containerId) {
+  try {
+    if (!$w) return;
+    const container = $w(containerId);
+    if (!container) return;
+    const baseSvg = ILLUSTRATION_SVGS[key] || '';
+    if (!baseSvg) console.warn('[emptyStateIllustrations] initEmptyStateScene: unknown key "' + key + '"');
+    container.html = baseSvg;
+
+    // Subscribe to LivingSkyState — only wrap the selector call; let onMessage errors surface
+    let livingSkyFrame;
+    try { livingSkyFrame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
+    if (livingSkyFrame && typeof livingSkyFrame.onMessage === 'function') {
+      livingSkyFrame.onMessage((event) => {
+        const state = event && event.data;
+        if (!state) return;
+        container.html = applyLivingSkyState(baseSvg, state);
+      });
+    }
+  } catch (e) { console.error('[emptyStateIllustrations] initEmptyStateScene failed:', e); }
+}
+
 /**
  * Convert an SVG string to a data URI for use as Wix image src.
  * @param {string} svgString - Raw SVG markup

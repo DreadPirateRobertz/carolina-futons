@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   ILLUSTRATION_SVGS,
   svgToDataUri,
+  initEmptyStateScene,
 } from '../src/public/emptyStateIllustrations.js';
 
 import { colors } from '../src/public/sharedTokens.js';
@@ -362,6 +363,148 @@ describe('Empty State Illustrations', () => {
         expect(hasBirds || hasWildflowerStems,
           `${key} lacks detail elements (needs espresso bird lines or success wildflower stems)`).toBe(true);
       });
+    });
+  });
+
+  // ── initEmptyStateScene — LivingSkyState wiring ────────────────────────────
+
+  describe('initEmptyStateScene', () => {
+    // Helper: build mock $w with container + optional livingSkyFrame
+    function makeWix({ containerId = '#emptyStateScene', hasFrame = true, frameHasOnMessage = true } = {}) {
+      let handler = null;
+      const containerEl = { html: '' };
+      const livingSkyEl = frameHasOnMessage
+        ? { onMessage: (fn) => { handler = fn; } }
+        : {};
+      const mock$w = (sel) => {
+        if (sel === containerId) return containerEl;
+        if (sel === '#livingSkyFrame') return hasFrame ? livingSkyEl : null;
+        return null;
+      };
+      const trigger = (data) => handler && handler({ data });
+      return { mock$w, containerEl, trigger };
+    }
+
+    function makeState({ sky0 = '#5B8FA8', starOpacity = 0 } = {}) {
+      return { skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'], starOpacity };
+    }
+
+    it('is a function', () => {
+      expect(typeof initEmptyStateScene).toBe('function');
+    });
+
+    it('sets container html to the base illustration on init', () => {
+      const { mock$w, containerEl } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      expect(containerEl.html).toBe(ILLUSTRATION_SVGS.cart);
+    });
+
+    it('accepts a custom containerId', () => {
+      const { mock$w, containerEl } = makeWix({ containerId: '#myContainer' });
+      initEmptyStateScene(mock$w, 'search', '#myContainer');
+      expect(containerEl.html).toBe(ILLUSTRATION_SVGS.search);
+    });
+
+    it('sets html to empty string for unknown key', () => {
+      const { mock$w, containerEl } = makeWix();
+      initEmptyStateScene(mock$w, 'unknown-key', '#emptyStateScene');
+      expect(containerEl.html).toBe('');
+    });
+
+    it('subscribes to #livingSkyFrame onMessage on init', () => {
+      const onMessageSpy = vi.fn();
+      const containerEl = { html: '' };
+      const mock$w = (sel) => {
+        if (sel === '#emptyStateScene') return containerEl;
+        if (sel === '#livingSkyFrame') return { onMessage: onMessageSpy };
+        return null;
+      };
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      expect(onMessageSpy).toHaveBeenCalledWith(expect.any(Function));
+    });
+
+    it('does not throw when $w is null', () => {
+      expect(() => initEmptyStateScene(null, 'cart', '#emptyStateScene')).not.toThrow();
+    });
+
+    it('does not throw when container element is missing', () => {
+      const mock$w = () => null;
+      expect(() => initEmptyStateScene(mock$w, 'cart', '#emptyStateScene')).not.toThrow();
+    });
+
+    it('does not throw when #livingSkyFrame is not found', () => {
+      const { mock$w } = makeWix({ hasFrame: false });
+      expect(() => initEmptyStateScene(mock$w, 'cart', '#emptyStateScene')).not.toThrow();
+    });
+
+    it('does not throw when #livingSkyFrame has no onMessage method', () => {
+      const { mock$w } = makeWix({ frameHasOnMessage: false });
+      expect(() => initEmptyStateScene(mock$w, 'cart', '#emptyStateScene')).not.toThrow();
+    });
+
+    it('is a no-op when state data is null', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      const before = containerEl.html;
+      trigger(null);
+      expect(containerEl.html).toBe(before);
+    });
+
+    it('updates container html when valid state arrives (injects sky-overlay at day opacity)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      trigger(makeState({ sky0: '#5B8FA8' }));
+      expect(containerEl.html).toContain('id="sky-overlay"');
+      expect(containerEl.html).toContain('opacity="0.25"');
+    });
+
+    it('injects stars and moon in night mode (starOpacity > 0), uses night opacity', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      trigger(makeState({ starOpacity: 0.9 }));
+      expect(containerEl.html).toContain('id="stars"');
+      expect(containerEl.html).toContain('id="moon"');
+      expect(containerEl.html).toContain('opacity="0.55"');
+    });
+
+    it('does not inject stars in day mode (starOpacity = 0)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      trigger(makeState({ sky0: '#5B8FA8', starOpacity: 0 }));
+      expect(containerEl.html).not.toContain('id="stars"');
+    });
+
+    it('injects stars without sky-overlay when skyColor absent and starOpacity > 0', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      trigger({ skyColors: null, starOpacity: 0.9 });
+      expect(containerEl.html).toContain('id="stars"');
+      expect(containerEl.html).not.toContain('id="sky-overlay"');
+    });
+
+    it('rejects unsafe skyColor and returns unmodified svg (XSS guard)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      const before = containerEl.html;
+      trigger({ skyColors: ['javascript:alert(1)'], starOpacity: 0 });
+      expect(containerEl.html).toBe(before);
+    });
+
+    it('unknown key + trigger leaves container html empty', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'unknown-key', '#emptyStateScene');
+      trigger(makeState({ starOpacity: 0.9 }));
+      expect(containerEl.html).toBe('');
+    });
+
+    it('still sets container.html when livingSkyFrame selector throws', () => {
+      const containerEl = { html: '' };
+      const mock$w = (sel) => {
+        if (sel === '#emptyStateScene') return containerEl;
+        throw new Error('element not found');
+      };
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      expect(containerEl.html).toBe(ILLUSTRATION_SVGS.cart);
     });
   });
 });
