@@ -94,7 +94,7 @@ function parseColor(c) {
   if (hex.length === 8) {
     return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16), parseInt(hex.slice(6,8),16)/255];
   }
-  return [0, 0, 1];
+  return [0, 0, 0, 1];
 }
 
 function lerpColor(c1, c2, t) {
@@ -228,7 +228,7 @@ export function useLivingSky(totalMinutes) {
   const fireflyOpacity = lerp(sa.fireflyOp || 0, sb.fireflyOp || 0, st);
   const owlOpacity     = lerp(sa.owlOp     || 0, sb.owlOp     || 0, st);
   const rimOpacity     = lerp(sa.rimOp     || 0, sb.rimOp     || 0, st);
-  const rimColor       = sa.rimCol || '#ffffff';
+  const rimColor       = lerpColor(sa.rimCol || '#ffffff', sb.rimCol || '#ffffff', st);
   const navBg          = lerpColor(sa.navBg,   sb.navBg   || sa.navBg,   st);
   const navText        = lerpColor(sa.navText, sb.navText || sa.navText, st);
 
@@ -264,9 +264,9 @@ export function useLivingSky(totalMinutes) {
   } else if (season === 'spring' && cloudOpacity > 0.4) {
     precipitationType = 'mist';
   }
-  const precipitationOpacity = season === 'winter'
+  const precipitationOpacity = season === 'winter' && cloudOpacity > 0
     ? Math.max(0, 0.55 - Math.abs(hour - 12) * 0.02)
-    : season === 'spring' && cloudOpacity > 0.08
+    : season === 'spring' && cloudOpacity > 0.4
       ? 0.38
       : 0;
 

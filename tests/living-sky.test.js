@@ -271,6 +271,7 @@ describe('useLivingSky — moon phase', () => {
 
   it('moonPos.shadowOffset.dx varies over lunar cycle', () => {
     // Mock Date to simulate different lunar phases
+    vi.useFakeTimers();
     const knownNewMoon = new Date('2025-01-29T12:36:00Z').getTime();
     const fullMoonDate = new Date(knownNewMoon + 14.77 * 86400000);
     const newMoonDate  = new Date(knownNewMoon);
@@ -304,14 +305,10 @@ describe('useLivingSky — precipitationType', () => {
   it('returns "snow" during winter night with cloudOp > 0', () => {
     // Winter: December
     vi.setSystemTime(new Date('2026-12-15T22:00:00'));
-    // At hour 22 (1320 mins) the skyTable has moonOp/stars but we need cloudOp
-    // Use a time with cloud presence in the ridgeTable — check actual night state
-    // Winter night will have precipitationType='snow' when cloudOp > 0
     const state = useLivingSky(300); // 5am — has cloudOp 0.55 in skyTable
-    if (state.cloudOpacity > 0) {
-      expect(state.precipitationType).toBe('snow');
-    }
     expect(state.season).toBe('winter');
+    expect(state.cloudOpacity).toBeGreaterThan(0);
+    expect(state.precipitationType).toBe('snow');
   });
 
   it('returns "mist" during spring when cloudOp > 0.4', () => {
@@ -319,9 +316,8 @@ describe('useLivingSky — precipitationType', () => {
     vi.setSystemTime(new Date('2026-04-15T07:00:00'));
     const state = useLivingSky(360); // 6am — cloudOp 0.85 in skyTable
     expect(state.season).toBe('spring');
-    if (state.cloudOpacity > 0.4) {
-      expect(state.precipitationType).toBe('mist');
-    }
+    expect(state.cloudOpacity).toBeGreaterThan(0.4);
+    expect(state.precipitationType).toBe('mist');
   });
 
   it('returns "none" during summer', () => {
