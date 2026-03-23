@@ -168,17 +168,40 @@ export function wixEcom_onFulfillmentCreated(event) {
 
   if (!email) return;
 
-  import('backend/emailService.web')
-    .then(({ sendShippingNotification }) => sendShippingNotification({
-      contactId,
-      email,
-      firstName,
-      orderNumber: String(orderNumber),
-      trackingNumber: tracking.trackingNumber || '',
-      trackingUrl: tracking.trackingLink || '',
-      carrier: tracking.shippingProvider || '',
-    }))
-    .catch(err => console.error('Error sending shipping notification:', err));
+  // Detect LTL freight carriers (XPO, Estes, WWEX) and route to freight email.
+  // Parcel carriers (UPS, USPS, FedEx) use the standard shipping notification.
+  import('backend/freightTracking.web')
+    .then(({ buildFreightTrackingPayload }) => {
+      const payload = buildFreightTrackingPayload({
+        carrierName: tracking.shippingProvider || '',
+        proNumber: tracking.trackingNumber || '',
+      });
+
+      if (payload.isLTL) {
+        return import('backend/emailService.web')
+          .then(({ sendFreightShippingNotification }) => sendFreightShippingNotification({
+            contactId,
+            email,
+            firstName,
+            orderNumber: String(orderNumber),
+            proNumber: payload.proNumber,
+            trackingUrl: payload.trackingUrl || '',
+            carrier: payload.displayCarrier,
+          }));
+      }
+
+      return import('backend/emailService.web')
+        .then(({ sendShippingNotification }) => sendShippingNotification({
+          contactId,
+          email,
+          firstName,
+          orderNumber: String(orderNumber),
+          trackingNumber: tracking.trackingNumber || '',
+          trackingUrl: tracking.trackingLink || '',
+          carrier: tracking.shippingProvider || '',
+        }));
+    })
+    .catch(err => console.error('Error sending fulfillment notification:', err));
 }
 
 /**

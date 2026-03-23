@@ -433,15 +433,82 @@ describe('sendDeliveryConfirmation', () => {
 // Event handler wiring
 // ═══════════════════════════════════════════════════════════════════
 
-describe('wixEcom_onFulfillmentCreated', () => {
-  it('does not throw on valid fulfillment event', async () => {
+describe('wixEcom_onFulfillmentCreated — UPS parcel', () => {
+  it('does not throw on valid UPS fulfillment event', async () => {
     await expect(
       Promise.resolve(wixEcom_onFulfillmentCreated(FULFILLMENT_EVENT))
     ).resolves.not.toThrow();
   });
 
+  it('sends order_shipped template for UPS parcel carrier', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(FULFILLMENT_EVENT));
+    // Allow the async import chain to settle
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    expect(log.some(e => e.templateId === 'order_shipped')).toBe(true);
+  });
+
   it('does not throw when email is missing from event', () => {
     expect(() => wixEcom_onFulfillmentCreated({ entity: { order: {} } })).not.toThrow();
+  });
+
+  it('does not throw on empty event', () => {
+    expect(() => wixEcom_onFulfillmentCreated({})).not.toThrow();
+  });
+});
+
+describe('wixEcom_onFulfillmentCreated — LTL freight routing', () => {
+  const makeLTLEvent = (shippingProvider) => ({
+    entity: {
+      trackingInfo: {
+        trackingNumber: '987654321',
+        trackingLink: '',
+        shippingProvider,
+      },
+      order: {
+        buyerInfo: { email: 'alice@example.com', contactId: 'contact-abc' },
+        billingInfo: { firstName: 'Alice' },
+        number: '99999',
+      },
+    },
+  });
+
+  it('sends freight_shipped template for XPO carrier', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO Logistics')));
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
+    expect(log.every(e => e.templateId !== 'order_shipped')).toBe(true);
+  });
+
+  it('sends freight_shipped template for Estes carrier', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('Estes Express')));
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
+  });
+
+  it('sends freight_shipped template for WWEX carrier', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('WWEX Freight')));
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
+  });
+
+  it('freight_shipped email includes proNumber variable', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO')));
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    const freight = log.find(e => e.templateId === 'freight_shipped');
+    expect(freight?.options?.variables?.proNumber).toBe('987654321');
+  });
+
+  it('freight_shipped email includes XPO tracking URL', async () => {
+    await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO')));
+    await new Promise(r => setTimeout(r, 100));
+    const log = __getEmailLog();
+    const freight = log.find(e => e.templateId === 'freight_shipped');
+    expect(freight?.options?.variables?.trackingUrl).toContain('xpo.com');
   });
 
   it('does not throw on empty event', () => {
