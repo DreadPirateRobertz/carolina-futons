@@ -224,6 +224,30 @@ describe('initCartDelivery — freight state', () => {
     expect(repeater._elements[0]['#deliveryEstimateText'].text)
       .toContain('Freight');
   });
+
+  // CF-ieq1: Murphy bed in local zone — CF truck handles it, NOT freight
+  // Intentional behaviour: local zone short-circuits before freight check.
+  // If this ever changes, update setItemText() ordering too.
+  it('Murphy bed in local zone shows Local delivery, not freight', () => {
+    getShippingZone.mockReturnValue('local');
+    const repeater = makeRepeater([MURPHY_ITEM]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    initCartDelivery($w, [MURPHY_ITEM], VALID_ZIP_LOCAL);
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .toMatch(/local delivery/i);
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .not.toContain('Freight');
+  });
+
+  // CF-ieq1: item with no name property — isFreightItem guard (item?.name || '')
+  it('item with undefined name does not throw and shows parcel text', () => {
+    const noNameItem = { _id: 'nn', quantity: 1, price: 199 }; // name absent
+    const repeater = makeRepeater([noNameItem]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    expect(() => initCartDelivery($w, [noNameItem], VALID_ZIP_NATIONAL)).not.toThrow();
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .not.toContain('Freight');
+  });
 });
 
 // ── Parcel state ──────────────────────────────────────────────────────────

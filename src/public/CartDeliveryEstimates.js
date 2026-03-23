@@ -27,7 +27,11 @@ const FREIGHT_TEXT = 'Freight: 10-14 business days (carrier will call to schedul
 /** No-zip prompt shown when destination ZIP is unknown. */
 const NO_ZIP_TEXT = 'Enter your zip for delivery estimate';
 
-/** Product names matching this pattern are routed to freight. */
+/**
+ * Product names matching this pattern are routed to freight (LTL).
+ * NOTE: Must be updated when product names change (CF-drka renamed some
+ * products — verify pattern still matches after any catalog rename).
+ */
 const FREIGHT_NAME_PATTERN = /murphy|platform bed|bunk bed/i;
 
 /** Fallback delivery days by zone when shippingConfig is unavailable. */
@@ -90,7 +94,7 @@ function setItemText($item, itemData, zone) {
 
     estimateEl.text = `Est. arrival: ${deliveryDaysForZone(zone)}`;
   } catch (e) {
-    // Element not present in this layout — skip silently
+    console.warn('[CartDeliveryEstimates] setItemText error:', e?.message);
   }
 }
 
@@ -118,6 +122,6 @@ export function initCartDelivery($w, cartItems, zip, opts = {}) {
       setItemText($item, itemData, zone);
     });
   } catch (e) {
-    // Repeater not available in this layout — skip silently
+    console.warn('[CartDeliveryEstimates] initCartDelivery error:', e?.message);
   }
 }
