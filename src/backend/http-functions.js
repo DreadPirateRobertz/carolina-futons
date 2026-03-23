@@ -1714,6 +1714,9 @@ export async function post_gamificationEvent(request) {
   } catch (err) {
     console.error('HTTP function error (post_gamificationEvent):', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
 // ── Active Challenges Endpoint ────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/activeChallenges?memberId=X
 // Returns active challenges with member progress for the authenticated member.

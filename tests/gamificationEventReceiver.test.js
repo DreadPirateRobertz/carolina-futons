@@ -1073,6 +1073,9 @@ describe('recordWishlistAdd', () => {
     const inserted = __getInserted('WishlistAddLog');
     expect(inserted).toHaveLength(1);
     expect(inserted[0]).toMatchObject({ memberId: 'mem-1', date: '2026-03-22' });
+  });
+});
+
 // ── getActiveChallenges ───────────────────────────────────────────────────────
 
 const CHALLENGES_COLLECTION = 'Challenges';
