@@ -422,25 +422,29 @@ export function _resetGetMyNotificationsRateLimit() {
 async function writeNotification(memberId, type, message, extra = {}) {
   if (!memberId) return;
 
-  if (type === 'streak_milestone' && extra.milestone != null) {
-    const existing = await wixData
-      .query(NOTIFICATIONS_COLLECTION)
-      .eq('memberId', memberId)
-      .eq('type', 'streak_milestone')
-      .eq('milestone', extra.milestone)
-      .limit(1)
-      .find({ suppressAuth: true });
-    if (existing.items.length > 0) return;
-  }
+  try {
+    if (type === 'streak_milestone' && extra.milestone != null) {
+      const existing = await wixData
+        .query(NOTIFICATIONS_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('type', 'streak_milestone')
+        .eq('milestone', extra.milestone)
+        .limit(1)
+        .find({ suppressAuth: true });
+      if (existing.items.length > 0) return;
+    }
 
-  await wixData.insert(NOTIFICATIONS_COLLECTION, {
-    memberId,
-    type,
-    message,
-    read: false,
-    createdAt: new Date(),
-    ...extra,
-  }, { suppressAuth: true });
+    await wixData.insert(NOTIFICATIONS_COLLECTION, {
+      memberId,
+      type,
+      message,
+      read: false,
+      createdAt: new Date(),
+      ...extra,
+    }, { suppressAuth: true });
+  } catch (err) {
+    console.error('[notificationService] writeNotification failed:', err);
+  }
 }
 
 /**
@@ -467,7 +471,7 @@ export async function sendStreakMilestoneNotification(memberId, milestone, badge
  */
 export async function sendQuestCompleteNotification(memberId, questTitle, points) {
   const message = `Daily quest complete: ${questTitle}. +${points} pts! ✅`;
-  await writeNotification(memberId, 'daily_quest', message);
+  await writeNotification(memberId, 'daily_quest', message, { questTitle, points });
 }
 
 /**

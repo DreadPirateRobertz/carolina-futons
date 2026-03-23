@@ -5,7 +5,7 @@
  * and getMyNotifications webMethod.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __getInserted, __setQueryError, __setInsertError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   sendStreakMilestoneNotification,
@@ -43,6 +43,7 @@ describe('sendStreakMilestoneNotification', () => {
     await sendStreakMilestoneNotification('mem-1', 7, 'Week Warrior');
     // Only 1 record (seeded) — no new insert
     expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(1);
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)[0]._id).toBe('n-1');
   });
 
   it('inserts for a different milestone on the same member', async () => {
@@ -63,6 +64,11 @@ describe('sendStreakMilestoneNotification', () => {
     await sendStreakMilestoneNotification('mem-1', 30, 'Monthly Master');
     const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
     expect(inserted[0].milestone).toBe(30);
+  });
+
+  it('does not throw when Notifications query errors', async () => {
+    __setQueryError(NOTIFICATIONS_COLLECTION, new Error('DB error'));
+    await expect(sendStreakMilestoneNotification('mem-1', 7, 'Week Warrior')).resolves.not.toThrow();
   });
 });
 
@@ -89,6 +95,11 @@ describe('sendQuestCompleteNotification', () => {
     await sendQuestCompleteNotification('mem-1', 'Place an order today', 50);
     await sendQuestCompleteNotification('mem-1', 'Write a product review', 30);
     expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
+  });
+
+  it('does not throw when Notifications insert errors', async () => {
+    __setInsertError(NOTIFICATIONS_COLLECTION, new Error('DB error'));
+    await expect(sendQuestCompleteNotification('mem-1', 'Place an order today', 50)).resolves.not.toThrow();
   });
 });
 
