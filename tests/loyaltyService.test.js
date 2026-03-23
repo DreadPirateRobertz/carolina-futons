@@ -536,7 +536,7 @@ describe('getChallengeCatalog', () => {
     }
     _resetChallengeCatalogCache();
     const result = await getChallengeCatalog();
-    expect(result).toEqual({ error: 429 });
+    expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
   });
 
   it('handles empty ChallengeDefinitions gracefully', async () => {
