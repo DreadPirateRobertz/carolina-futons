@@ -56,6 +56,9 @@ function classifyCategory(product) {
   // Murphy Cabinet Beds
   if (cols.includes('Murphy Cabinet Beds') || name.includes('murphy')) return 'MURPHY';
 
+  // Mattress Protector is a CASE accessory even if in the Mattresses collection
+  if (/\bmattress protector\b/.test(name)) return 'CASE';
+
   // Mattresses
   if (cols.includes('Mattresses') || cols.includes('Mattresses - In-Store')) return 'MATTRESS';
 
@@ -71,7 +74,6 @@ function classifyCategory(product) {
     /\bchest\b/.test(name) ||        // whole word — avoid "winchester"
     /\bdrawers\b/.test(name) ||
     /\bcenter legs\b/.test(name) ||
-    /\bmattress protector\b/.test(name) ||
     /\bleg length options\b/.test(name) ||
     /\brolling drawers\b/.test(name) ||
     /\btrundle\b/.test(name);
@@ -222,7 +224,7 @@ if (DRY_RUN) {
 
 const HEADERS = {
   'Content-Type': 'application/json',
-  'Authorization': WIX_API_KEY,
+  'Authorization': `Bearer ${WIX_API_KEY}`,
   'wix-site-id': SITE_ID,
 };
 

@@ -423,13 +423,13 @@
     "productId": "e8b02be6-5887-930a-1300-62eb930d41d4",
     "name": "Mattress Protector",
     "currentSku": "",
-    "sku": "CF-MATTRESS-MATTRESSPR",
-    "category": "MATTRESS",
+    "sku": "CF-CASE-MATTRESSPR",
+    "category": "CASE",
     "shipping": {
-      "weight": 55,
-      "length": 78,
-      "width": 54,
-      "height": 14,
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
       "requiresFreight": false,
       "requiresPallet": false
     }
