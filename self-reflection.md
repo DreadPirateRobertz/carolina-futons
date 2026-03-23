@@ -13,10 +13,12 @@
 - `bd assign` doesn't exist — use `bd update <id> --assignee <path>`. Test GT commands before assuming flags.
 - `gt mail` denied for routine status — strictly use `gt nudge` for inter-agent status. Mail = handoffs + escalations ONLY.
 - Wrong-branch commit: pushed plan fix from rennala's feature branch → used `git push origin HEAD:main` to rescue. Always check `git branch --show-current` before committing plan/docs changes.
+- **CRITICAL: Merged PRs before refinery returned.** Refinery agent stalled during network outage; did manual review, assessed `initLivingSky($w)` as correct. Refinery returned POST-MERGE and flagged it as functional bug (containers never update). Created cf-gug to fix. **RULE: Wait for refinery verdict before merging, even when CI is green.** When refinery stalls, either re-dispatch and wait, or do a deeper manual review of the architecture (trace the data flow — don't just check "function called correctly").
 
 ### Pattern notes
 - Phase 8 refinery found SAFE_HEX_RE variance: comfort/onboarding use stricter `/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/` vs reference `/^#[0-9A-Fa-f]{3,8}$/`. Stricter = correct for LivingSkyState (always 6-char hex). Acceptable variance — document in PR comment.
 - All 82 inbox messages unread after context compact. No new mail from today. Nudge was from previous session (not a new mail).
+- `initLivingSky($w)` pushes state TO the sky frame (tick loop). To react to sky state, use `#livingSkyFrame.onMessage` pattern. These are opposite directions. Don't confuse "starts the sky frame running" with "subscribes to sky state updates."
 
 ## Session 2026-03-23 cont-7 (Illustration rename + PR #770 queue)
 
