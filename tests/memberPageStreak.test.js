@@ -7,13 +7,14 @@
  *  - On page load: streak chip hidden when streak = 0 or member has no streak data
  *  - On page load: multiplier badge shows when streakMultiplier > 1
  *  - On page load: multiplier badge hidden when multiplier = 1 (no bonus)
- *  - getMyStreakData: returns streak fields from MemberPoints
- *  - getMyStreakData: returns defaults when no record exists
- *  - getMyStreakData: returns defaults on error
+ *
+ * NOTE: getMyStreakData backend webMethod tests live in getMyStreakData.test.js.
+ * vi.importActual loads the real module into the shared module cache, which
+ * bypasses vi.mock for dynamic imports here — keeping them separate avoids this.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __reset, __seed } from './__mocks__/wix-data.js';
+import { __reset } from './__mocks__/wix-data.js';
 
 // ── $w mock infrastructure ─────────────────────────────────────────────────────
 
@@ -241,32 +242,6 @@ async function loadPage() {
   await import('../src/pages/Member Page.js');
   if (onReadyHandler) await onReadyHandler();
 }
-
-// ── getMyStreakData — backend webMethod ──────────────────────────────────────
-// These tests import loyaltyService.web directly (not through Member Page mock)
-// They verify the webMethod implementation itself.
-
-describe('getMyStreakData (backend)', () => {
-  it('returns streak fields from MemberPoints record', async () => {
-    __seed('MemberPoints', [{
-      _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer',
-      currentStreakDays: 5, streakMultiplier: 1.5,
-      streakStartDate: '2026-03-18', lastActivityDate: '2026-03-22',
-    }]);
-    // importActual bypasses vi.mock to test the real implementation
-    const { getMyStreakData } = await vi.importActual('../src/backend/loyaltyService.web.js');
-    const result = await getMyStreakData();
-    expect(result.currentStreakDays).toBe(5);
-    expect(result.streakMultiplier).toBe(1.5);
-  });
-
-  it('returns zeros/defaults when no MemberPoints record exists', async () => {
-    const { getMyStreakData } = await vi.importActual('../src/backend/loyaltyService.web.js');
-    const result = await getMyStreakData();
-    expect(result.currentStreakDays).toBe(0);
-    expect(result.streakMultiplier).toBe(1);
-  });
-});
 
 // ── Member Page.js — streak display on page load ─────────────────────────────
 
