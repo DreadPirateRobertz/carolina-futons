@@ -419,6 +419,21 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Merge conflict resolution in multi-file rebases needs explicit closing-brace accounting. When resolving conflicts in `try/catch` blocks or `describe/it` nesting, count open vs. close braces before committing.
 - When two PR branches are parallel (same base commit), rebase the dependent one onto the fix-first one. When the fix merges to main, git rebase will skip the cherry-picked commit automatically.
 
+## Session 2026-03-23 (Wave 21 — PR triple review, illustration proposal, Phase 8 scoping)
+
+### What worked well
+- Parallel 3-agent PR review pipeline fired simultaneously on #747/#748/#750. All returned substantive findings with confidence scores. Catching missing vi.mock calls (confidence 95) and no-try/catch poisoning successful writes (confidence 95) before merge = real quality gate.
+- Proposal delivered before Stilgar came back — `06-illustration-proposal.html` served at port 60425 with SVG previews, phase map, 3-option choices per Phase 8 target, and artist brief. Mayor alerted per Stilgar's directive.
+- Dallas tree fill conflict caught and corrected immediately. Clear definitive answer: treeFill=#4A7C59, treeDark=#2E4A38 (two separate tokens).
+- PR #747 merged cleanly (93faaa23). Conflict cascade (#748/#750 conflicting after #747 landed) caught quickly, crew rebasing.
+- cf-y0o Phase 8a created and assigned to radahn immediately when bd ready queue had no web P1 beads — didn't leave him idle.
+
+### Gaps / pattern notes
+- "Rebase confirmed" ≠ "fixes applied" — miquella rebased without addressing 3 review findings. Need to check the actual diff after a rebase nudge, not just take the commit message at face value. Quick `gh pr diff <num> | grep "^+" | grep validateId` catches this in seconds.
+- Squash merge order dependency: when 3 PRs all touch the same file, merging any one creates conflicts in the others. Should sequence the merges explicitly (oldest/smallest first), not try to merge all at once. Or batch them in one commit.
+- Old background agent (a2a690e2ac643a702) hit 32K output token limit trying to generate the illustration HTML. Direct Write tool is the right approach for large HTML generation — don't delegate to subagent.
+- gh pr review --request-changes fails on own PRs (DreadPirateRobertz = submitter). Use gh pr comment instead. This is a standing limitation.
+
 ## Session 2026-03-23 (Wave 20 — squash merge loss recovery, Phase 8 doc, illustration consultation)
 
 ### What worked well
