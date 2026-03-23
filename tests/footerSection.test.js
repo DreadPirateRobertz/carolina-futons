@@ -3,7 +3,7 @@
  *
  * Tests the extracted footer logic: 4-column links, newsletter wiring
  * (subscribeToNewsletter), social icons, trust badges, ARIA landmarks,
- * mobile collapse, error/empty states.
+ * error/empty states.
  *
  * CF-76b1: Footer redesign
  */
@@ -17,9 +17,8 @@ import {
   initFooterCopyright,
   initFooterAria,
   initFooterLogo,
-  initMountainDivider,
   buildFooterMountainSVG,
-  initMountainDividerWithSkyWiring,
+  initMountainDivider,
   applyFooterStyles,
   fixFooterContactFallback,
   initFooter,
@@ -32,10 +31,6 @@ vi.mock('backend/newsletterService.web', () => ({
     success: true,
     discountCode: 'WELCOME10',
   }),
-}));
-
-vi.mock('backend/contactSubmissions.web', () => ({
-  submitContactForm: vi.fn().mockResolvedValue({}),
 }));
 
 import { subscribeToNewsletter } from 'backend/newsletterService.web';
@@ -76,7 +71,6 @@ function createMockElement(overrides = {}) {
     onItemReady: vi.fn(),
     onMouseIn: vi.fn(),
     onMouseOut: vi.fn(),
-    onMessage: vi.fn(),
     disable: vi.fn(),
     enable: vi.fn(),
     accessibility: {},
@@ -546,6 +540,66 @@ describe('initFooterSocial — individual social buttons', () => {
   });
 });
 
+// ── initFooterSocial — invoke onClick handlers ───────────────────────
+
+describe('initFooterSocial — onClick handler invocation', () => {
+  it('onClick handler on #socialFacebook opens Facebook URL', () => {
+    const open = vi.fn();
+    global.window = { open };
+    initFooterSocial($w);
+    const handler = $w('#socialFacebook').onClick.mock.calls[0][0];
+    handler();
+    expect(open).toHaveBeenCalledWith('https://www.facebook.com/carolinafutons', '_blank');
+    delete global.window;
+  });
+
+  it('onClick handler on #socialInstagram opens Instagram URL', () => {
+    const open = vi.fn();
+    global.window = { open };
+    initFooterSocial($w);
+    const handler = $w('#socialInstagram').onClick.mock.calls[0][0];
+    handler();
+    expect(open).toHaveBeenCalledWith('https://www.instagram.com/carolinafutons', '_blank');
+    delete global.window;
+  });
+
+  it('onClick handler on #socialPinterest opens Pinterest URL', () => {
+    const open = vi.fn();
+    global.window = { open };
+    initFooterSocial($w);
+    const handler = $w('#socialPinterest').onClick.mock.calls[0][0];
+    handler();
+    expect(open).toHaveBeenCalledWith('https://www.pinterest.com/carolinafutons', '_blank');
+    delete global.window;
+  });
+
+  it('social repeater onItemReady callback sets icon text and aria', () => {
+    initFooterSocial($w);
+    const repeater = $w('#footerSocialRepeater');
+    const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
+    const mockIcon = createMockElement();
+    const $item = () => mockIcon;
+    onItemReadyCb($item, { platform: 'facebook', ariaLabel: 'Visit on Facebook', url: 'https://www.facebook.com/carolinafutons' });
+    expect(mockIcon.text).toBe('facebook');
+    expect(mockIcon.accessibility.ariaLabel).toBe('Visit on Facebook');
+  });
+
+  it('social repeater onItemReady onClick handler opens URL', () => {
+    const open = vi.fn();
+    global.window = { open };
+    initFooterSocial($w);
+    const repeater = $w('#footerSocialRepeater');
+    const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
+    const mockIcon = createMockElement();
+    const $item = () => mockIcon;
+    onItemReadyCb($item, { platform: 'instagram', ariaLabel: 'Follow on Instagram', url: 'https://www.instagram.com/carolinafutons' });
+    const iconClickHandler = mockIcon.onClick.mock.calls[0][0];
+    iconClickHandler();
+    expect(open).toHaveBeenCalledWith('https://www.instagram.com/carolinafutons', '_blank');
+    delete global.window;
+  });
+});
+
 // ── initFooterColumns — onItemReady branch coverage ─────────────────
 
 describe('initFooterColumns — onItemReady branches', () => {
@@ -814,6 +868,246 @@ describe('initMountainDivider', () => {
   it('survives when $w throws', () => {
     const broken$w = () => { throw new Error('nope'); };
     expect(() => initMountainDivider(broken$w)).not.toThrow();
+  });
+});
+
+// ── buildFooterMountainSVG ───────────────────────────────────────────
+
+describe('buildFooterMountainSVG', () => {
+  const DEFAULT_COLORS = { r1: '#3A2518', r2: '#5B8FA8', r4: '#B8D4E3' };
+
+  it('returns a valid SVG string (starts <svg, ends </svg>)', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg.trimStart()).toMatch(/^<svg[\s>]/);
+    expect(svg.trimEnd()).toMatch(/<\/svg>$/);
+  });
+
+  it('includes viewBox="0 0 1440 80"', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('viewBox="0 0 1440 80"');
+  });
+
+  it('includes preserveAspectRatio="none"', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('preserveAspectRatio="none"');
+  });
+
+  it('includes aria-hidden="true"', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('aria-hidden="true"');
+  });
+
+  it('includes feTurbulence with result="cf-noise"', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('feTurbulence');
+    expect(svg).toContain('result="cf-noise"');
+  });
+
+  it('includes feDisplacementMap with in2="cf-noise"', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('feDisplacementMap');
+    expect(svg).toContain('in2="cf-noise"');
+  });
+
+  it('applies ridgeColors.r4 to far ridge at opacity 0.22', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('fill="#B8D4E3"');
+    expect(svg).toContain('opacity="0.22"');
+  });
+
+  it('applies ridgeColors.r2 to mid ridge at opacity 0.40', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('fill="#5B8FA8"');
+    expect(svg).toContain('opacity="0.40"');
+  });
+
+  it('applies ridgeColors.r1 to near ridge at opacity 0.75', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('fill="#3A2518"');
+    expect(svg).toContain('opacity="0.75"');
+  });
+
+  it('changes far ridge when ridgeColors.r4 changes', () => {
+    const svg1 = buildFooterMountainSVG({ ...DEFAULT_COLORS, r4: '#AABBCC' });
+    const svg2 = buildFooterMountainSVG({ ...DEFAULT_COLORS, r4: '#DDEEFF' });
+    expect(svg1).toContain('#AABBCC');
+    expect(svg2).toContain('#DDEEFF');
+    expect(svg1).not.toContain('#DDEEFF');
+  });
+
+  it('changes near ridge when ridgeColors.r1 changes', () => {
+    const svg = buildFooterMountainSVG({ ...DEFAULT_COLORS, r1: '#112233' });
+    expect(svg).toContain('#112233');
+  });
+
+  it('retains static decorative groups (birds, pine-trees, wildflowers)', () => {
+    const svg = buildFooterMountainSVG(DEFAULT_COLORS);
+    expect(svg).toContain('birds');
+    expect(svg).toContain('pine-trees');
+    expect(svg).toContain('wildflowers');
+  });
+
+  it('retains haze-footer filter', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('haze-footer');
+  });
+
+  it('applies cf-ridge-warp filter to near ridge path', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('filter="url(#cf-ridge-warp)"');
+  });
+
+  it('falls back to design-token defaults when called with no arguments', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('opacity="0.22"');
+    expect(svg).toContain('opacity="0.40"');
+    expect(svg).toContain('opacity="0.75"');
+    expect(svg).not.toContain('undefined');
+  });
+
+  it('falls back for r1 and r2 when only r4 is provided', () => {
+    const svg = buildFooterMountainSVG({ r4: '#AABBCC' });
+    expect(svg).not.toContain('"undefined"');
+    expect(svg).toContain('#AABBCC');
+  });
+
+  it('changes mid ridge when ridgeColors.r2 changes', () => {
+    const svg1 = buildFooterMountainSVG({ ...DEFAULT_COLORS, r2: '#223344' });
+    const svg2 = buildFooterMountainSVG({ ...DEFAULT_COLORS, r2: '#554433' });
+    expect(svg1).toContain('#223344');
+    expect(svg2).toContain('#554433');
+    expect(svg1).not.toContain('#554433');
+  });
+});
+
+// ── initMountainDivider — LivingSkyState wiring (CF-6oh) ─────────────
+
+describe('initMountainDivider — LivingSkyState wiring', () => {
+  function makeWix({ hasFrame = true, frameHasOnMessage = true } = {}) {
+    let handler = null;
+    const dividerEl = { html: '' };
+    const livingSkyEl = frameHasOnMessage
+      ? { onMessage: (fn) => { handler = fn; } }
+      : {};
+    const mock$w = (sel) => {
+      if (sel === '#footerMountainDivider') return dividerEl;
+      if (sel === '#livingSkyFrame') return hasFrame ? livingSkyEl : null;
+      return null;
+    };
+    const trigger = (data) => handler && handler({ data });
+    return { mock$w, dividerEl, trigger };
+  }
+
+  // Canonical LivingSkyState fixture (living-sky.js:280-298)
+  function makeState({ r1 = '#3A2518', r2 = '#5B8FA8', r4 = '#5B8FA8', sky0 = '#4A6B8A' } = {}) {
+    return {
+      skyColors: [sky0, '#3D5A7A', '#2C4B6A', '#1E3A5A'],
+      ridgeColors: { r1, r2, r3: '#667788', r4, tree: '#334455' },
+      starOpacity: 0,
+      cloudOpacity: 0,
+      weather: 'clear',
+    };
+  }
+
+  it('subscribes to #livingSkyFrame onMessage on init', () => {
+    const onMessageSpy = vi.fn();
+    const dividerEl = { html: '' };
+    const mock$w = (sel) => {
+      if (sel === '#footerMountainDivider') return dividerEl;
+      if (sel === '#livingSkyFrame') return { onMessage: onMessageSpy };
+      return null;
+    };
+    initMountainDivider(mock$w);
+    expect(onMessageSpy).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it('does not throw when #livingSkyFrame is not found', () => {
+    const { mock$w } = makeWix({ hasFrame: false });
+    expect(() => initMountainDivider(mock$w)).not.toThrow();
+  });
+
+  it('does not throw when #livingSkyFrame has no onMessage method', () => {
+    const { mock$w } = makeWix({ frameHasOnMessage: false });
+    expect(() => initMountainDivider(mock$w)).not.toThrow();
+  });
+
+  it('is a no-op when state data is null', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    const before = dividerEl.html;
+    trigger(null);
+    expect(dividerEl.html).toBe(before);
+  });
+
+  it('is a no-op when state data is undefined', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    const before = dividerEl.html;
+    trigger(undefined);
+    expect(dividerEl.html).toBe(before);
+  });
+
+  it('updates divider html when valid state arrives (distinct from default)', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    const before = dividerEl.html;
+    // Use r1 distinct from design-token default (colors.espresso = #1E3A5F)
+    trigger(makeState({ r1: '#112244' }));
+    expect(dividerEl.html).not.toBe(before);
+    expect(dividerEl.html).toContain('<svg');
+  });
+
+  it('does NOT check e.data.type — consumes state object directly (no type field on LivingSkyState)', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger(makeState()); // no .type field on LivingSkyState
+    expect(dividerEl.html).toContain('<svg');
+  });
+
+  it('reflects skyColors[0] as r4 far-ridge color', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger(makeState({ sky0: '#AABBCC' }));
+    expect(dividerEl.html).toContain('#AABBCC');
+  });
+
+  it('reflects ridgeColors.r1 and r2 as near/mid ridge colors', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger(makeState({ r1: '#112233', r2: '#445566' }));
+    expect(dividerEl.html).toContain('#112233');
+    expect(dividerEl.html).toContain('#445566');
+  });
+
+  it('rejects non-hex skyColors[0] (XSS guard)', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger({ ...makeState(), skyColors: ['<script>bad</script>', '#aaa', '#bbb', '#ccc'] });
+    expect(dividerEl.html).not.toContain('<script>');
+  });
+
+  it('rejects non-hex ridgeColors.r1 and r2 (XSS guard — safeColor fallback)', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger({
+      ...makeState(),
+      ridgeColors: { r1: '<img onerror=x>', r2: 'javascript:alert(1)', r3: '#667788', r4: '#5B8FA8', tree: '#334455' },
+    });
+    expect(dividerEl.html).not.toContain('onerror');
+    expect(dividerEl.html).not.toContain('javascript:');
+  });
+
+  it('updated SVG remains valid (starts <svg, ends </svg>)', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger(makeState());
+    expect(dividerEl.html.trimStart()).toMatch(/^<svg[\s>]/);
+    expect(dividerEl.html.trimEnd()).toMatch(/<\/svg>$/);
+  });
+
+  it('re-renders on every onMessage trigger, not just the first', () => {
+    const { mock$w, dividerEl, trigger } = makeWix();
+    initMountainDivider(mock$w);
+    trigger(makeState({ r1: '#AABBCC' }));
+    const after1 = dividerEl.html;
+    trigger(makeState({ r1: '#DDEEFF' }));
+    expect(dividerEl.html).not.toBe(after1);
+    expect(dividerEl.html).toContain('#DDEEFF');
   });
 });
 
@@ -1092,6 +1386,13 @@ describe('initFooterLogo — deep branches', () => {
     expect($w('#footerLogo').onClick).toHaveBeenCalled();
   });
 
+  it('onClick handler does not throw when invoked', () => {
+    initFooterLogo($w);
+    const handler = $w('#footerLogo').onClick.mock.calls[0][0];
+    // handler does fire-and-forget dynamic import — should not throw synchronously
+    expect(() => handler()).not.toThrow();
+  });
+
   it('survives when src assignment throws', () => {
     const logo = createMockElement();
     Object.defineProperty(logo, 'src', {
@@ -1154,122 +1455,5 @@ describe('initFooter', () => {
   it('survives $w that always throws', () => {
     const broken$w = () => { throw new Error('boom'); };
     expect(() => initFooter(broken$w)).not.toThrow();
-  });
-});
-
-// ── buildFooterMountainSVG ──────────────────────────────────────────
-
-describe('buildFooterMountainSVG', () => {
-  it('returns an SVG string with correct viewBox, a11y, and responsive attrs', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('<svg');
-    expect(svg).toContain('viewBox="0 0 1440 80"');
-    expect(svg).toContain('aria-hidden="true"');
-    expect(svg).toContain('preserveAspectRatio="none"');
-  });
-
-  it('includes feTurbulence watercolor filter with correct attributes', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('feTurbulence');
-    expect(svg).toContain('result="cfWatercolor"');
-    expect(svg).toContain('baseFrequency="0.035"');
-  });
-
-  it('feDisplacementMap references cfWatercolor result (no-op guard)', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('feDisplacementMap');
-    expect(svg).toContain('in2="cfWatercolor"');
-    expect(svg).toContain('xChannelSelector="R"');
-  });
-
-  it('includes feGaussianBlur atmospheric haze filter', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('feGaussianBlur');
-  });
-
-  it('contains at least 5 ridgeline path elements', () => {
-    const svg = buildFooterMountainSVG();
-    const pathMatches = svg.match(/<path /g) || [];
-    expect(pathMatches.length).toBeGreaterThanOrEqual(5);
-  });
-
-  it('contains pine-trees, birds, and wildflowers groups', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('pine-trees');
-    expect(svg).toContain('birds');
-    expect(svg).toContain('wildflowers');
-  });
-
-  it('uses default distant-ridge color when no ridgeColors provided', () => {
-    const svg = buildFooterMountainSVG();
-    expect(svg).toContain('#5B8FA8'); // default r1 distant blue
-    expect(svg).toContain('#3A2518'); // default espresso dark
-  });
-
-  it('injects custom r1 ridge color into SVG output', () => {
-    const svg = buildFooterMountainSVG({ r1: '#AABBCC' });
-    expect(svg).toContain('#AABBCC');
-  });
-
-  it('injects custom r3 and r4 ridge colors independently', () => {
-    const svg = buildFooterMountainSVG({ r3: '#112233', r4: '#445566' });
-    expect(svg).toContain('#112233');
-    expect(svg).toContain('#445566');
-  });
-
-  it('partial overrides preserve other defaults', () => {
-    const svg = buildFooterMountainSVG({ r1: '#FFFFFF' });
-    expect(svg).toContain('#FFFFFF'); // override applied
-    expect(svg).toContain('#3A2518'); // other defaults preserved
-  });
-});
-
-// ── initMountainDividerWithSkyWiring ────────────────────────────────
-
-describe('initMountainDividerWithSkyWiring', () => {
-  it('sets SVG html on #footerMountainDivider', () => {
-    initMountainDividerWithSkyWiring($w);
-    expect($w('#footerMountainDivider').html).toContain('<svg');
-    expect($w('#footerMountainDivider').html).toContain('viewBox="0 0 1440 80"');
-  });
-
-  it('subscribes to onMessage on #livingSkyFrame', () => {
-    initMountainDividerWithSkyWiring($w);
-    expect($w('#livingSkyFrame').onMessage).toHaveBeenCalledTimes(1);
-  });
-
-  it('survives when #livingSkyFrame is absent', () => {
-    const sparse$w = (sel) => sel === '#footerMountainDivider' ? createMockElement() : null;
-    expect(() => initMountainDividerWithSkyWiring(sparse$w)).not.toThrow();
-  });
-
-  it('survives when $w always throws', () => {
-    const broken$w = () => { throw new Error('nope'); };
-    expect(() => initMountainDividerWithSkyWiring(broken$w)).not.toThrow();
-  });
-
-  it('updates SVG colors when LivingSkyState message received (bare state, no type field)', () => {
-    initMountainDividerWithSkyWiring($w);
-    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
-    handler({ data: { ridgeColors: { r1: '#FF1111', r3: '#FF2222', r4: '#FF3333' } } });
-    const html = $w('#footerMountainDivider').html;
-    expect(html).toContain('#FF1111');
-    expect(html).toContain('#FF2222');
-    expect(html).toContain('#FF3333');
-  });
-
-  it('ignores postMessages without ridgeColors', () => {
-    initMountainDividerWithSkyWiring($w);
-    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
-    const htmlBefore = $w('#footerMountainDivider').html;
-    handler({ data: { someOtherPayload: {} } });
-    expect($w('#footerMountainDivider').html).toBe(htmlBefore);
-  });
-
-  it('ignores messages with missing data', () => {
-    initMountainDividerWithSkyWiring($w);
-    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
-    expect(() => handler({})).not.toThrow();
-    expect(() => handler(null)).not.toThrow();
   });
 });
