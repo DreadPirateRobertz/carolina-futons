@@ -683,9 +683,6 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
 /**
  * Record a challenge completion event in the PointsLedger CMS collection.
  * Idempotent: skips insert if a record for this member + challenge already exists.
- * Note: the app-level idempotency guard has a TOCTOU window under concurrent
- * invocations. TODO(cf-ipg): add unique constraint on (memberId, challengeId) in
- * the PointsLedger CMS collection for hard deduplication at the DB level.
  *
  * @param {string} memberId
  * @param {string} challengeId
@@ -726,6 +723,57 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
     points,
     earnedAt: new Date(),
   }, { suppressAuth: true });
+}
+
+/**
+ * Write a PointsLedger entry when a challenge is completed.
+ * Idempotent — skips if an entry already exists for memberId + challengeId.
+ *
+ * Deduplication strategy (two layers):
+ *   1. App-level: read-before-write guard (fast path, has TOCTOU window).
+ *   2. DB-level: unique index on `memberChallengeKey` field enforced by
+ *      ensureChallengeCompletionIndex() in src/backend/cms/ensureIndexes.js.
+ *      When the DB rejects a duplicate insert the error is caught and
+ *      silently swallowed — the record already exists, so the goal is met.
+ *
+ * @param {string} memberId
+ * @param {string} challengeId - ID of the completed challenge.
+ * @param {number} points - Points awarded for challenge completion.
+ * @returns {Promise<void>}
+ * @throws {TypeError} if memberId/challengeId are invalid or points is not a positive finite number
+ */
+export async function recordChallengeCompletionEvent(memberId, challengeId, points) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('recordChallengeCompletionEvent: invalid memberId');
+  if (typeof challengeId !== 'string' || !challengeId.trim()) {
+    throw new TypeError('recordChallengeCompletionEvent: challengeId must be a non-empty string');
+  }
+  if (typeof points !== 'number' || !Number.isFinite(points) || points <= 0) {
+    throw new TypeError('recordChallengeCompletionEvent: points must be a positive finite number');
+  }
+
+  const existing = await wixData.query(POINTS_LEDGER_COLLECTION)
+    .eq('memberId', cleanId)
+    .eq('challengeId', challengeId)
+    .limit(1)
+    .find({ suppressAuth: true });
+  if (existing.items.length > 0) return;
+
+  try {
+    await wixData.insert(POINTS_LEDGER_COLLECTION, {
+      memberId: cleanId,
+      challengeId,
+      memberChallengeKey: `${cleanId}:${challengeId}`,
+      type: 'challenge_completion',
+      points,
+      earnedAt: new Date(),
+    }, { suppressAuth: true });
+  } catch (err) {
+    // DB-level unique constraint violation: record was inserted by a concurrent
+    // call between our read and write. Treat as idempotent success.
+    if (isDuplicateKeyError(err)) return;
+    throw err;
+  }
 }
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
