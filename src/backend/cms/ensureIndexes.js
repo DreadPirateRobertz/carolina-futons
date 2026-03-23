@@ -2,9 +2,16 @@
  * @module ensureIndexes
  * @description One-time CMS index setup for Carolina Futons.
  *
- * Run ensurePointsLedgerIndex() once from an admin HTTP function or the
- * Wix Dashboard console after deploying cf-7mr. The function is idempotent —
- * it skips creation if the index already exists.
+ * Run each ensure*() function once from an admin HTTP function or the
+ * Wix Dashboard console after deploying the relevant feature. All functions
+ * are idempotent — they skip creation if the index already exists.
+ *
+ * DEPLOYMENT ORDER:
+ *   (1) Run backfillPointsLedger() FIRST to populate memberMilestoneKey on
+ *       all existing rows.
+ *   (2) THEN run ensurePointsLedgerIndex() to create the unique index.
+ *   Running ensurePointsLedgerIndex() first risks duplicate-key errors during
+ *   the backfill if any (memberId, milestone) pair already appears more than once.
  *
  * Wix unique indexes are single-field only. The compound (memberId, milestone)
  * uniqueness is encoded as a single computed key field: memberMilestoneKey

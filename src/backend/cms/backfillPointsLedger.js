@@ -6,6 +6,13 @@
  * Safe to run multiple times — rows that already have `memberMilestoneKey`
  * set are skipped.  Returns a summary object for logging/testing.
  *
+ * DEPLOYMENT ORDER:
+ *   (1) Run backfillPointsLedger() FIRST to populate memberMilestoneKey on
+ *       all existing rows.
+ *   (2) THEN run ensurePointsLedgerIndex() to create the unique index.
+ *   Running ensurePointsLedgerIndex() first risks duplicate-key errors during
+ *   the backfill if any (memberId, milestone) pair already appears more than once.
+ *
  * Usage (Wix backend script or one-shot web method):
  *   import { backfillPointsLedger } from 'backend/cms/backfillPointsLedger';
  *   const result = await backfillPointsLedger();
