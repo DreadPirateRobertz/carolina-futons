@@ -18,6 +18,7 @@
  *  - memberId derived from server-side auth, not client param
  *  - Order lookup scope: only returns orders for authenticated memberId
  *  - Successful call returns reply + remaining quota counts
+ *  - Session edge cases: corrupted JSON, history structure, trim boundary, concurrent insert
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -26,7 +27,9 @@ import {
   __seed,
   __getInserted,
   __onUpdate,
+  __onInsert,
   __setQueryError,
+  __setInsertError,
 } from './__mocks__/wix-data.js';
 import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
@@ -517,6 +520,86 @@ describe('Order scope guard (architecture note)', () => {
     // Call succeeds using real-member's session, not attacker-id
     expect(result.reply).toBe('ok');
     expect(result.error).toBeUndefined();
+  });
+});
+
+// ── Session management edge cases ────────────────────────────────────────────
+
+describe('Session management edge cases', () => {
+  beforeEach(() => {
+    __setSecrets({
+      GAMIFICATION_CHATBOT_ENABLED: 'true',
+      ANTHROPIC_API_KEY: 'test-key',
+    });
+    __setMember(makeMember());
+    __setHandler(() => makeClaudeOkResponse('ok'));
+  });
+
+  it('handles corrupted sessionHistory JSON gracefully (treats as empty)', async () => {
+    __seed('ChatbotSessions', [makeSession({ sessionHistory: 'not-valid-json{{' })]);
+    const result = await chatWithAssistant('hello', 'member-123');
+    // Should not throw — falls back to empty history
+    expect(result.reply).toBe('ok');
+    expect(Array.isArray(result.sessionHistory)).toBe(true);
+  });
+
+  it('history after reply has user turn + assistant turn', async () => {
+    __seed('ChatbotSessions', [makeSession({ sessionHistory: '[]' })]);
+    const result = await chatWithAssistant('my question', 'member-123');
+    expect(result.sessionHistory.length).toBe(2);
+    expect(result.sessionHistory[0].role).toBe('user');
+    expect(result.sessionHistory[0].content).toBe('my question');
+    expect(result.sessionHistory[1].role).toBe('assistant');
+  });
+
+  it('inserts new record when no session exists for member', async () => {
+    // No seed — empty collection
+    const result = await chatWithAssistant('first message', 'member-123');
+    expect(result.reply).toBeDefined();
+    // Session was created (no error returned)
+    expect(result.error).toBeUndefined();
+    // Verify record was inserted
+    const inserted = __getInserted('ChatbotSessions');
+    expect(inserted.length).toBe(1);
+    expect(inserted[0].memberId).toBe('member-123');
+  });
+
+  it('trim: keeps exactly 10 turns after appending user+assistant on a 9-turn history', async () => {
+    // 9 existing turns
+    const history9 = Array.from({ length: 9 }, (_, i) => ({
+      role: i % 2 === 0 ? 'user' : 'assistant',
+      content: `msg ${i}`,
+    }));
+    __seed('ChatbotSessions', [makeSession({ sessionHistory: JSON.stringify(history9) })]);
+
+    const result = await chatWithAssistant('turn 10', 'member-123');
+    // 9 + user turn = 10, then assistant turn added = 11, trim to 10
+    expect(result.sessionHistory.length).toBe(10);
+  });
+
+  it('CMS insert failure is non-fatal (concurrent insert race condition)', async () => {
+    // Simulate concurrent insert failure: two simultaneous requests for a new member
+    // both read no session, both try to insert, second one fails due to duplicate/error.
+    // The reply must still be returned — CMS write failure is non-fatal.
+    __setInsertError('ChatbotSessions', new Error('Duplicate key / concurrent insert'));
+    // No session seeded → will attempt insert → fails
+    const result = await chatWithAssistant('hello', 'member-123');
+    expect(result.reply).toBe('ok');
+    expect(result.error).toBeUndefined();
+  });
+
+  it('daily reset clears counts even when session record is missing dailyResetDate', async () => {
+    // Edge: record has undefined dailyResetDate (migrated or corrupt record)
+    __seed('ChatbotSessions', [makeSession({
+      dailyResetDate: undefined,
+      dailyMessageCount: 10,
+      dailyTokensUsed: 2000,
+    })]);
+
+    const result = await chatWithAssistant('hello', 'member-123');
+    // dailyResetDate !== todayET → reset triggered → count should be 1 after this call
+    expect(result.error).toBeUndefined();
+    expect(result.dailyMessagesRemaining).toBe(19); // 20 - 1 (reset + this message)
   });
 });
 
