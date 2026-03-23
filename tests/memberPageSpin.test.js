@@ -148,6 +148,8 @@ vi.mock('wix-window-frontend', () => ({ copyToClipboard: vi.fn(), openUrl: vi.fn
 
 await import('../src/pages/Member Page.js');
 
+const { trackEvent } = await import('public/engagementTracker');
+
 // ── Prize fixture ────────────────────────────────────────────────────────────
 
 const POINTS_PRIZE = {
@@ -349,6 +351,35 @@ describe('Member Page — initSpinSection', () => {
       const handler = getEl('#spinButton').onClick.mock.calls[0][0];
       await handler();
       expect(getEl('#spinConfettiOverlay').show).toHaveBeenCalled();
+    });
+
+    it('re-enables button and sets Try Again label when spinWheel throws', async () => {
+      spinMocks.spinWheel.mockRejectedValue(new Error('network timeout'));
+      await initPage();
+      const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+      await handler();
+      expect(getEl('#spinButton').enable).toHaveBeenCalled();
+      expect(getEl('#spinButton').label).toBe('Try Again');
+    });
+
+    it('calls trackEvent with spinType, prizeType, isFallback on success', async () => {
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
+      await initPage();
+      const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+      await handler();
+      expect(vi.mocked(trackEvent)).toHaveBeenCalledWith('spin_wheel', {
+        spinType: 'DAILY',
+        prizeType: 'POINTS',
+        isFallback: false,
+      });
+    });
+
+    it('does not call trackEvent(spin_wheel) on failed spin', async () => {
+      spinMocks.spinWheel.mockResolvedValue({ success: false, error: 'NOT_ELIGIBLE' });
+      await initPage();
+      const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+      await handler();
+      expect(vi.mocked(trackEvent)).not.toHaveBeenCalledWith('spin_wheel', expect.anything());
     });
   });
 

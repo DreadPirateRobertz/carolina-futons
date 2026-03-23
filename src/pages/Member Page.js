@@ -364,6 +364,8 @@ async function initLoyaltyDashboard() {
 }
 
 // ── Session Storage Fallback ────────────────────────────────────────
+// sessionStorage unavailable in Wix SSR/preview contexts — falls back to an
+// ephemeral in-memory object (lost on page unload, cache never persisted)
 
 function safeSession() {
   try {
@@ -382,6 +384,11 @@ function safeSession() {
 }
 
 // ── Spin Wheel Section ──────────────────────────────────────────────
+
+// SVG attribute escaping — defense-in-depth if color values ever come from CMS
+function escapeSvgAttr(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 async function initSpinSection() {
   try {
@@ -407,7 +414,9 @@ async function initSpinSection() {
           const { ts, prizes } = JSON.parse(raw);
           if (Date.now() - ts < PRIZES_CACHE_TTL) return prizes;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[MemberPage] spinPrizes cache parse failed, re-fetching:', e.message);
+      }
       const wixData = (await import('wix-data')).default;
       const res = await wixData.query('SpinPrizes').eq('active', true).find();
       const prizes = res.items || [];
@@ -433,18 +442,26 @@ async function initSpinSection() {
           const x2 = cx + r * Math.cos(a2);
           const y2 = cy + r * Math.sin(a2);
           const large = seg.angle > 180 ? 1 : 0;
-          return `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${seg.color}"/>`;
+          return `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${escapeSvgAttr(seg.color)}"/>`;
         });
         const svg = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">${paths.join('')}<circle cx="${cx}" cy="${cy}" r="8" fill="#fff"/></svg>`;
         svgEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      } catch (e) {}
+      } catch (e) {
+        console.error('[MemberPage] renderSVGWheel failed:', e);
+      }
     }
 
     // ── UI state ──────────────────────────────────────────────────
     function updateSpinUI(eligibility) {
       try {
         const btn = $w('#spinButton');
-        if (!eligibility.eligible) {
+        if (eligibility.reason === 'ERROR') {
+          btn.disable();
+          btn.label = 'Unavailable';
+          $w('#spinBonusChip').hide();
+          $w('#spinCountdown').text = 'Unable to check eligibility — please refresh';
+          $w('#spinCountdown').show();
+        } else if (!eligibility.eligible) {
           btn.disable();
           btn.label = 'Come Back Tomorrow';
           $w('#spinBonusChip').hide();
@@ -464,7 +481,9 @@ async function initSpinSection() {
             $w('#spinBonusChip').hide();
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('[MemberPage] updateSpinUI failed:', e);
+      }
     }
 
     // ── Pending prizes ─────────────────────────────────────────────
@@ -474,7 +493,7 @@ async function initSpinSection() {
         const res = await wixData.query('MemberPendingPrizes')
           .eq('memberId', memberId)
           .eq('status', 'PENDING')
-          .find({ suppressAuth: true });
+          .find();
         const items = renderPendingPrizes(res.items || []);
         const repeater = $w('#pendingPrizesRepeater');
         if (!repeater) return;
@@ -556,6 +575,10 @@ async function initSpinSection() {
           updateSpinUI(updated);
           await loadPendingPrizes();
 
+          if (result.isFallback) {
+            console.error('[MemberPage] Spin fallback prize awarded — SpinPrizes collection may be empty or weighted draw failed');
+          }
+
           trackEvent('spin_wheel', {
             spinType: result.spinType,
             prizeType: result.prize?.type,
@@ -567,7 +590,9 @@ async function initSpinSection() {
           $w('#spinButton').label = 'Try Again';
         }
       });
-    } catch (e) {}
+    } catch (e) {
+      console.error('[MemberPage] Failed to register #spinButton onClick:', e);
+    }
 
   } catch (e) {
     console.error('[MemberPage] Error initializing spin section:', e);
