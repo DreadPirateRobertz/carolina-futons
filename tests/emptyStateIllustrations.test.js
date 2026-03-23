@@ -386,13 +386,7 @@ describe('Empty State Illustrations', () => {
     }
 
     function makeState({ sky0 = '#5B8FA8', starOpacity = 0 } = {}) {
-      return {
-        skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'],
-        ridgeColors: { r1: '#3A2518', r2: '#5B8FA8', r3: '#667788', r4: '#5B8FA8', tree: '#334455' },
-        starOpacity,
-        cloudOpacity: 0,
-        weather: 'clear',
-      };
+      return { skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'], starOpacity };
     }
 
     it('is a function', () => {
@@ -456,21 +450,21 @@ describe('Empty State Illustrations', () => {
       expect(containerEl.html).toBe(before);
     });
 
-    it('updates container html when valid state arrives (injects sky-overlay)', () => {
+    it('updates container html when valid state arrives (injects sky-overlay at day opacity)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
-      const before = containerEl.html;
       trigger(makeState({ sky0: '#5B8FA8' }));
-      expect(containerEl.html).not.toBe(before);
       expect(containerEl.html).toContain('id="sky-overlay"');
+      expect(containerEl.html).toContain('opacity="0.25"');
     });
 
-    it('injects stars and moon in night mode (starOpacity > 0)', () => {
+    it('injects stars and moon in night mode (starOpacity > 0), uses night opacity', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
       trigger(makeState({ starOpacity: 0.9 }));
       expect(containerEl.html).toContain('id="stars"');
       expect(containerEl.html).toContain('id="moon"');
+      expect(containerEl.html).toContain('opacity="0.55"');
     });
 
     it('does not inject stars in day mode (starOpacity = 0)', () => {
@@ -480,12 +474,37 @@ describe('Empty State Illustrations', () => {
       expect(containerEl.html).not.toContain('id="stars"');
     });
 
+    it('injects stars without sky-overlay when skyColor absent and starOpacity > 0', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      trigger({ skyColors: null, starOpacity: 0.9 });
+      expect(containerEl.html).toContain('id="stars"');
+      expect(containerEl.html).not.toContain('id="sky-overlay"');
+    });
+
     it('rejects unsafe skyColor and returns unmodified svg (XSS guard)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
       const before = containerEl.html;
       trigger({ skyColors: ['javascript:alert(1)'], starOpacity: 0 });
       expect(containerEl.html).toBe(before);
+    });
+
+    it('unknown key + trigger leaves container html empty', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initEmptyStateScene(mock$w, 'unknown-key', '#emptyStateScene');
+      trigger(makeState({ starOpacity: 0.9 }));
+      expect(containerEl.html).toBe('');
+    });
+
+    it('still sets container.html when livingSkyFrame selector throws', () => {
+      const containerEl = { html: '' };
+      const mock$w = (sel) => {
+        if (sel === '#emptyStateScene') return containerEl;
+        throw new Error('element not found');
+      };
+      initEmptyStateScene(mock$w, 'cart', '#emptyStateScene');
+      expect(containerEl.html).toBe(ILLUSTRATION_SVGS.cart);
     });
   });
 });

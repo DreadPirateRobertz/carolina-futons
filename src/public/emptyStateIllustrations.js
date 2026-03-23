@@ -34,11 +34,11 @@ const STAR_POSITIONS = [
  * Intentionally unexported — use through initEmptyStateScene.
  * @param {string} svg - Base SVG markup
  * @param {Object} state - LivingSkyState { skyColors, starOpacity }
- * @returns {string} Modified SVG, or the original svg when no overlay applies
+ * @returns {string} Modified SVG with overlays injected, or the original svg unchanged
+ *   when skyColor is absent/invalid and starOpacity is 0.
  */
 function applyLivingSkyState(svg, state) {
   const isNight = Number(state.starOpacity) > 0;
-  // Validate skyColors[0] to prevent XSS via postMessage injection
   const skyColor = state.skyColors && state.skyColors[0];
   const safeGradient = typeof skyColor === 'string' && SAFE_HEX_RE.test(skyColor)
     ? skyColor : null;
@@ -71,7 +71,7 @@ function applyLivingSkyState(svg, state) {
  * state update. Safe to call when the frame or container is absent.
  * @param {Function} $w - Wix selector function
  * @param {string} key - ILLUSTRATION_SVGS key (e.g. 'cart', 'search')
- * @param {string} containerId - HtmlComponent element ID (e.g. '#emptyStateScene')
+ * @param {string} containerId - Wix selector string including '#' prefix (e.g. '#emptyStateScene')
  */
 export function initEmptyStateScene($w, key, containerId) {
   try {
@@ -79,6 +79,7 @@ export function initEmptyStateScene($w, key, containerId) {
     const container = $w(containerId);
     if (!container) return;
     const baseSvg = ILLUSTRATION_SVGS[key] || '';
+    if (!baseSvg) console.warn('[emptyStateIllustrations] initEmptyStateScene: unknown key "' + key + '"');
     container.html = baseSvg;
 
     // Subscribe to LivingSkyState — only wrap the selector call; let onMessage errors surface
@@ -91,7 +92,7 @@ export function initEmptyStateScene($w, key, containerId) {
         container.html = applyLivingSkyState(baseSvg, state);
       });
     }
-  } catch (e) { console.warn('[emptyStateIllustrations] initEmptyStateScene failed:', e); }
+  } catch (e) { console.error('[emptyStateIllustrations] initEmptyStateScene failed:', e); }
 }
 
 /**
