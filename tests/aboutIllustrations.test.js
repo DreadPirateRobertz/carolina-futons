@@ -340,70 +340,69 @@ describe('initAboutIllustrations($w)', () => {
 // LIVINGSKY WIRING — initAboutIllustrations subscribes #livingSkyFrame
 // ═══════════════════════════════════════════════════════════════════
 
-const mockStop = vi.fn();
-const mockInitLivingSky = vi.fn().mockReturnValue({ stop: mockStop });
-
-vi.mock('public/living-sky-wix.js', () => ({
-  initLivingSky: mockInitLivingSky,
-}));
-
-describe('initAboutIllustrations($w) — LivingSkyState wiring (CF-p8c)', () => {
+describe('initAboutIllustrations($w) — onMessage sky subscription (CF-p8c / cf-gug)', () => {
   function makeW() {
     const elements = new Map();
-    return (sel) => {
+    let _onMessageCb = null;
+    const $w = (sel) => {
       if (!elements.has(sel)) {
-        elements.set(sel, { html: '', postMessage: vi.fn() });
+        const el = { html: '', postMessage: vi.fn() };
+        if (sel === '#livingSkyFrame') {
+          el.onMessage = (cb) => { _onMessageCb = cb; };
+        }
+        elements.set(sel, el);
       }
       return elements.get(sel);
     };
+    $w._fire = (data) => { if (_onMessageCb) _onMessageCb({ data }); };
+    return $w;
   }
 
-  beforeAll(() => {
-    mockInitLivingSky.mockClear();
-    mockStop.mockClear();
+  it('does not export initLivingSky (onMessage pattern replaces delegation)', async () => {
+    const mod = await import('../src/public/aboutIllustrations.js');
+    expect(mod.initLivingSky).toBeUndefined();
   });
 
-  it('calls initLivingSky with $w to wire #livingSkyFrame', async () => {
+  it('updates both containers when #livingSkyFrame fires a day-mode state', async () => {
     const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
     const $w = makeW();
     initAboutIllustrations($w);
-    expect(mockInitLivingSky).toHaveBeenCalledWith($w);
+    $w._fire({ skyColors: ['#1A2B3C'], starOpacity: 0 });
+    expect($w('#teamPortraitContainer').html).toContain('id="sky-overlay"');
+    expect($w('#timelineContainer').html).toContain('id="sky-overlay"');
   });
 
-  it('returns a stop handle from initLivingSky', async () => {
-    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
-    const handle = initAboutIllustrations(makeW());
-    expect(typeof handle?.stop).toBe('function');
-  });
-
-  it('stop() from returned handle halts the sky animation loop', async () => {
-    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
-    const handle = initAboutIllustrations(makeW());
-    handle.stop();
-    expect(mockStop).toHaveBeenCalled();
-  });
-
-  it('returns { stop: noop } and logs when initLivingSky throws', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockInitLivingSky.mockImplementationOnce(() => { throw new Error('sky-boom'); });
-    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
-    const handle = initAboutIllustrations(makeW());
-    expect(typeof handle?.stop).toBe('function');
-    expect(() => handle.stop()).not.toThrow();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[aboutIllustrations] initLivingSky threw:'),
-      expect.any(Error),
-    );
-    consoleSpy.mockRestore();
-  });
-
-  it('still injects SVGs into containers even when initLivingSky throws', async () => {
-    mockInitLivingSky.mockImplementationOnce(() => { throw new Error('sky-boom'); });
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('injects star field when starOpacity > 0 (night mode)', async () => {
     const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
     const $w = makeW();
     initAboutIllustrations($w);
-    expect($w('#teamPortraitContainer').html).toMatch(/^<svg[\s>]/);
-    expect($w('#timelineContainer').html).toMatch(/^<svg[\s>]/);
+    $w._fire({ skyColors: ['#0A0E1A'], starOpacity: 0.8 });
+    expect($w('#teamPortraitContainer').html).toContain('id="stars"');
+    expect($w('#timelineContainer').html).toContain('id="stars"');
+  });
+
+  it('does not inject sky-overlay when skyColors[0] fails hex validation (XSS guard)', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const $w = makeW();
+    initAboutIllustrations($w);
+    $w._fire({ skyColors: ['javascript:alert(1)'], starOpacity: 0 });
+    expect($w('#teamPortraitContainer').html).not.toContain('id="sky-overlay"');
+    expect($w('#timelineContainer').html).not.toContain('id="sky-overlay"');
+  });
+
+  it('does not throw when #livingSkyFrame is absent', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const $w = (sel) => {
+      if (sel === '#livingSkyFrame') return null;
+      return { html: '', postMessage: vi.fn() };
+    };
+    expect(() => initAboutIllustrations($w)).not.toThrow();
+  });
+
+  it('does not throw when event.data is null', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const $w = makeW();
+    initAboutIllustrations($w);
+    expect(() => $w._fire(null)).not.toThrow();
   });
 });
