@@ -1,5 +1,26 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 (Wave 24 — PR sweep: merged #748, #752; closed #755; reviewed #751/#753/#756/#754)
+
+### What worked well
+- Parallel refinery dispatch (5 agents simultaneously) kept wave cadence high — all 4 first-pass agents completed within ~10 mins.
+- PR #748 (radahn) came back clean after fixes — all 6 wave-23 issues resolved, PASS first re-review. Quick merge.
+- PR #752 (radahn) passed review after fixes — feDisplacementMap/type guard/tokens/inner return all correct. Merged.
+- Closed PR #755 (miquella fix-only) as redundant once #754 had the same fix in its own branch. Avoids double merge conflict.
+- Caught deployment run-order risk on PR #753: backfill must precede index creation or legacy rows stay unprotected. One-line doc fix.
+- PR #756 (godfrey): stale `skyGradient` comment + missing ridgeColors XSS test caught by review. Correct pattern: XSS test must cover ALL input fields, not just the primary one.
+- PR #751 (rennala): onItemReady ordering assertion missing — the exact regression fix from wave 23 has no test guard. Critical to call out: fixes without sentinel tests can be reverted silently.
+
+### Gaps / improvement opportunities
+- The ordering test gap (PR #751) is a systemic issue: whenever a sequencing fix is made (onItemReady before .data, validateId before write), we should mandate a corresponding ordering/ordering-assertion test that would catch a reversal.
+
+### Pattern notes
+- `onItemReady` ordering test pattern: use call-order array + defineProperty setter to assert `onItemReady` called before `.data` assignment.
+- When two PRs modify the same file and both have the fix applied, close the smaller/fix-only one and do a single comprehensive review of the feature PR.
+- Deployment docs on migration scripts are just as important as the code — run-order matters for unique index + backfill combos.
+
+---
+
 ## Session 2026-03-23 (Wave 23 — illustration iteration 3, PR #752 review, dallas screen doc)
 
 ### What worked well
