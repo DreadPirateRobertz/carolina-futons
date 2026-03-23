@@ -109,10 +109,16 @@ $w.onReady(async function () {
   const weather = detectWeatherSeed(new Date());
   import('public/living-sky-wix.js')
     .then(({ initLivingSky, tickLivingSky }) => {
-      initLivingSky({ weather });
-      setInterval(() => tickLivingSky(), 30_000);
+      try { initLivingSky({ weather }); } catch (err) {
+        console.error('[masterPage] initLivingSky threw:', err.message);
+      }
+      setInterval(() => {
+        try { tickLivingSky(); } catch (err) {
+          console.error('[masterPage] tickLivingSky threw:', err.message);
+        }
+      }, 30_000);
     })
-    .catch(err => console.warn('[masterPage] living-sky-wix not available:', err.message));
+    .catch(err => console.warn('[masterPage] living-sky-wix.js not available (cf-ad3 pending):', err.message));
 });
 
 // ── Accessibility ───────────────────────────────────────────────────
@@ -1199,11 +1205,12 @@ function collectCoreWebVitals() {
 
 // ── Phase 7: Living sky weather seed ─────────────────────────────────────────
 
+// 7-slot cycle: clear ×3 (~43%), cloudy/fog/rain/storm ×1 each (~14% each)
+const WEATHER_CYCLE = ['clear', 'clear', 'clear', 'cloudy', 'fog', 'rain', 'storm'];
+
 /**
  * Deterministic weather type for a given date.
  * Uses (year + dayOfYear) % 7 as a stable 7-slot cycle with no external API.
- * Distribution: clear ×3, cloudy ×1, fog ×1, rain ×1, storm ×1 per cycle
- * (approximates: clear 43%, cloudy/fog/rain/storm ~14% each).
  *
  * @param {Date} date
  * @returns {'clear'|'cloudy'|'fog'|'rain'|'storm'}
@@ -1212,5 +1219,5 @@ export function detectWeatherSeed(date) {
   const startOfYear = new Date(date.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((date - startOfYear) / 86_400_000);
   const slot = (date.getFullYear() + dayOfYear) % 7;
-  return ['clear', 'clear', 'clear', 'cloudy', 'fog', 'rain', 'storm'][slot];
+  return WEATHER_CYCLE[slot];
 }

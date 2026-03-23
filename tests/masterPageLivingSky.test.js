@@ -274,11 +274,11 @@ describe('masterPage — tickLivingSky interval', () => {
     intervalSpy.mockRestore();
   });
 
-  it('registers a 30s setInterval for tickLivingSky', async () => {
+  it('registers exactly one 30s setInterval for tickLivingSky', async () => {
     await getOnReadyHandler()();
     await waitFor(() => {
       const thirtySecCalls = intervalSpy.mock.calls.filter(([, ms]) => ms === 30_000);
-      expect(thirtySecCalls.length).toBeGreaterThanOrEqual(1);
+      expect(thirtySecCalls.length).toBe(1);
     });
   });
 
@@ -288,6 +288,8 @@ describe('masterPage — tickLivingSky interval', () => {
       const call = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
       expect(call).toBeDefined();
     });
+    // Verify tickLivingSky has not fired before the interval fires
+    expect(mockTickLivingSky).toHaveBeenCalledTimes(0);
     const [fn] = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
     fn();
     expect(mockTickLivingSky).toHaveBeenCalledTimes(1);
@@ -298,6 +300,8 @@ describe('masterPage — tickLivingSky interval', () => {
     await waitFor(() => {
       expect(intervalSpy.mock.calls.some(([, ms]) => ms === 30_000)).toBe(true);
     });
+    // Verify tickLivingSky has not fired before the interval fires
+    expect(mockTickLivingSky).toHaveBeenCalledTimes(0);
     const [fn] = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
     fn(); fn();
     expect(mockTickLivingSky).toHaveBeenCalledTimes(2);
@@ -311,20 +315,25 @@ describe('masterPage — graceful degradation when living-sky-wix unavailable', 
     clearElements();
   });
 
-  it('does not throw when initLivingSky rejects', async () => {
+  it('does not throw when initLivingSky returns a rejected promise', async () => {
     mockInitLivingSky.mockRejectedValueOnce(new Error('Module unavailable'));
-    await getOnReadyHandler()();
+    // initLivingSky is called synchronously (not awaited) so the returned
+    // rejected promise is intentionally unhandled — page should still load
+    await expect(getOnReadyHandler()()).resolves.not.toThrow();
     await flushImportMicrotasks();
-    // Reaching here means the page onReady did not throw
-    expect(true).toBe(true);
   });
 
-  it('page onReady completes even when initLivingSky throws synchronously', async () => {
+  it('logs console.error and completes when initLivingSky throws synchronously', async () => {
+    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockInitLivingSky.mockImplementationOnce(() => {
       throw new Error('import failed');
     });
     await getOnReadyHandler()();
     await flushImportMicrotasks();
-    expect(true).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[masterPage] initLivingSky threw:'),
+      'import failed',
+    );
+    warnSpy.mockRestore();
   });
 });
