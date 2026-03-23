@@ -1,5 +1,25 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont-4 (Wave 25 wrap + illustration phase)
+
+### What worked well
+- Context recovery after compaction: resumed mid-task (Discord DM + #759 merge + #761 refinery) without any re-recap. Three P0 actions fired in parallel (Discord DM, PR merge, Discord follow-up).
+- Discord polling pattern established: poll after every action block, reply only to messages addressed to MELANIA, emoji confirmation protocol now live.
+- Illustration doc upgrades: replaced 2 basic SVG cards with phase 7-quality designs (futon-on-porch, interior night view). Added streak flame (3 tiers) + challenge trail — all in one commit.
+- Wrong-branch detection: caught commit on feat/CF-vu30 immediately, stash → checkout main → cherry-pick cleanly.
+- stale LivingSkyState fields (skyGradient, ambientLight) found and corrected throughout illustration spec doc.
+
+### Gaps / improvement opportunities
+- Still committing on wrong branch (feat/CF-vu30-ai-style-consultant) for doc-only work. Root cause: CWD is the repo which has an active feature branch checked out. **Fix: always run `git branch` before ANY commit.**
+- PR #764 (godfrey): duplicate loyaltyService.web.js change + unchecked test box. Root cause: cf-1z1 was filed while #759 was in flight, godfrey branched before #759 merged. Next time: when closing beads inline, immediately nudge any other crew working the same file.
+
+### Pattern notes
+- Discord protocol: MAYOR=👍, MELANIA=🚀. Addresses routed separately. No need to double-route.
+- `gt nudge` queue can be full (50/50) for mayor — delivered immediately as fallback.
+- Illustration doc is the design source of truth for Phase 8 wiring. Keep skyColors/starOpacity/ridgeColors field names current — they change when LivingSkyState protocol updates.
+
+---
+
 ## Session 2026-03-23 cont-3 (Wave 25 — #757/#763 merged, #759/#761 CHANGES REQUESTED)
 
 ### What worked well
