@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 150" width="100%" height="100%"
      preserveAspectRatio="xMidYMax meet"
-     role="img" aria-labelledby="living-sky-title">
+     role="img" aria-labelledby="living-sky-title" aria-describedby="living-sky-desc">
   <title id="living-sky-title">Blue Ridge mountain skyline — living time-of-day illustration</title>
+  <desc id="living-sky-desc">Layered Blue Ridge mountain ridgelines with animated sky gradient, celestial bodies, wildlife, and weather effects driven by living-sky.js based on time of day.</desc>
 
   <defs>
     <!-- Sky gradient — stop colors dynamically updated by living-sky.js -->
@@ -37,7 +38,7 @@
       <stop offset="100%" stop-color="#2A3840"/>
     </linearGradient>
 
-    <!-- Edge glow filter for rim-light effect -->
+    <!-- Edge glow filter for rim-light effect — applied to rim-light-line at golden hour -->
     <filter id="edge-glow" x="-2%" y="-10%" width="104%" height="120%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
       <feColorMatrix in="blur" type="matrix"
@@ -53,7 +54,7 @@
       <feGaussianBlur stdDeviation="3"/>
     </filter>
 
-    <!-- Star glow filter -->
+    <!-- Star glow filter — applied by living-sky.js to individual stars (not group) -->
     <filter id="star-glow" x="-100%" y="-100%" width="300%" height="300%">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
       <feMerge>
@@ -62,13 +63,17 @@
       </feMerge>
     </filter>
 
-    <!-- Moon glow filter -->
+    <!-- Moon glow filter — composites blur + source so disc stays crisp -->
     <filter id="moon-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="4"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
 
-    <!-- Shooting star trail gradient -->
-    <linearGradient id="star-trail-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <!-- Shooting star trail gradient — userSpaceOnUse so it works on a zero-height <line> -->
+    <linearGradient id="star-trail-grad" gradientUnits="userSpaceOnUse" x1="-32" y1="9" x2="0" y2="0">
       <stop offset="0%"   stop-color="#FFFDE8" stop-opacity="0"/>
       <stop offset="100%" stop-color="#FFFDE8" stop-opacity="0.9"/>
     </linearGradient>
@@ -76,7 +81,7 @@
 
   <!-- ── 1. Sky backdrop ──────────────────────────────────────────────────── -->
   <!-- Primary sky rect: fill updated by living-sky.js via dyn-sky gradient -->
-  <rect id="sky-backdrop" width="1040" height="150" fill="url(#dyn-sky)"/>
+  <rect id="sky-backdrop" width="1040" height="150" fill="url(#dyn-sky) #B8D0E0"/>
   <!-- Horizon glow overlay: opacity driven by living-sky.js -->
   <rect id="sky-glow-overlay" width="1040" height="150" fill="url(#sun-radial)" opacity="0.6"/>
 
@@ -136,7 +141,7 @@
     <circle id="star-29" cx="418"  cy="9"  r="0.6" fill="#5878A0"/>
     <circle id="star-30" cx="182"  cy="14" r="0.7" fill="#7090A8"/>
     <circle id="star-31" cx="590"  cy="14" r="0.8" fill="#8BAFC8"/>
-    <!-- Extra stars to reach 35 -->
+    <!-- Deep background stars (faintest layer) -->
     <circle id="star-32" cx="330"  cy="35" r="0.7" fill="#6888A0"/>
     <circle id="star-33" cx="700"  cy="35" r="0.6" fill="#5878A0"/>
     <circle id="star-34" cx="870"  cy="32" r="0.7" fill="#7090A8"/>
@@ -184,19 +189,19 @@
     <path id="ridge-r4"
           d="M0,150 L0,62 C240,52 480,38 660,32 C780,28 880,27 980,30
              C1010,31 1028,32 1040,32 L1040,150Z"
-          fill="url(#ridge-r4-grad)"/>
+          fill="url(#ridge-r4-grad) #9AAAB8"/>
 
     <!-- Ridge r3 — mid-distant; wide smooth arch, dominant crest left-of-centre -->
     <path id="ridge-r3"
           d="M0,150 L0,78 C200,64 400,50 560,45 C660,42 750,43 860,47
              C940,50 995,53 1040,52 L1040,150Z"
-          fill="url(#ridge-r3-grad)"/>
+          fill="url(#ridge-r3-grad) #7A8FA0"/>
 
     <!-- Ridge r2 — mid distance; blue-purple isoprene band (Pisgah-area character) -->
     <path id="ridge-r2"
           d="M0,150 L0,88 C110,76 240,64 380,57 C470,53 550,56 650,51
              C730,47 820,46 920,50 C965,53 1005,57 1040,56 L1040,150Z"
-          fill="url(#ridge-r2-grad)"/>
+          fill="url(#ridge-r2-grad) #5B8FA8"/>
 
     <!-- Ridge r2 mini pine silhouettes on skyline -->
     <g id="ridge-r2-trees" fill="#3A4A55" opacity="0.7">
@@ -218,7 +223,7 @@
              C438,63 462,57 498,53 C528,50 556,53 588,50 C626,47 668,46
              718,50 C768,54 818,59 876,57 C916,55 960,60 1005,65
              C1022,67 1033,68 1040,68 L1040,150Z"
-          fill="url(#ridge-r1-grad)"/>
+          fill="url(#ridge-r1-grad) #3A4A55"/>
 
     <!-- Foreground tree canopy — dark base, silhouette undulation -->
     <path id="tree-line"
@@ -292,6 +297,7 @@
         <animateTransform attributeName="transform" type="translate"
           values="180,23; 320,16; 480,26; 640,18; 800,24; 940,16; 800,24; 640,18; 480,26; 320,16; 180,23"
           dur="65s" repeatCount="indefinite" calcMode="spline"
+          keyTimes="0;0.1;0.2;0.3;0.4;0.5;0.6;0.7;0.8;0.9;1"
           keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"/>
       </g>
     </g>
@@ -339,7 +345,7 @@
         <circle cx="1.8"  cy="-2.5" r="1.6" fill="#131F2E"/>
         <animateTransform attributeName="transform" type="translate"
           values="1080,36; 800,29; 520,34; 240,27; -120,32"
-          dur="22s" begin="2s;47s" repeatCount="indefinite" calcMode="spline"
+          dur="22s" begin="2s" repeatCount="indefinite" calcMode="spline"
           keySplines="0.25 0 0.75 1;0.25 0 0.75 1;0.25 0 0.75 1;0.25 0 0.75 1"/>
       </g>
     </g>
@@ -423,6 +429,14 @@
       <line x1="380" y1="2"  x2="374" y2="17" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
       <line x1="620" y1="13" x2="614" y2="28" stroke="#A8C4D8" stroke-width="0.5" stroke-linecap="round"/>
       <line x1="860" y1="7"  x2="854" y2="22" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="50"  y1="12" x2="44"  y2="27" stroke="#A8C4D8" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="250" y1="5"  x2="244" y2="20" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="490" y1="8"  x2="484" y2="23" stroke="#A8C4D8" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="730" y1="4"  x2="724" y2="19" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="970" y1="14" x2="964" y2="29" stroke="#A8C4D8" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="170" y1="10" x2="164" y2="25" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="700" y1="2"  x2="694" y2="17" stroke="#A8C4D8" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="1000" y1="9" x2="994" y2="24" stroke="#A4C0D4" stroke-width="0.5" stroke-linecap="round"/>
     </g>
   </g>
 
@@ -435,7 +449,8 @@
              C438,63 462,57 498,53 C528,50 556,53 588,50 C626,47 668,46
              718,50 C768,54 818,59 876,57 C916,55 960,60 1005,65
              C1022,67 1033,68 1040,68"
-          fill="none" stroke="#F08020" stroke-width="2" opacity="0"/>
+          fill="none" stroke="#F08020" stroke-width="2" opacity="0"
+          filter="url(#edge-glow)"/>
     <!-- Soft glow layer beneath rim-light-line -->
     <path id="rim-light-soft"
           d="M0,104 C80,94 170,84 250,78 C310,73 355,76 400,69
