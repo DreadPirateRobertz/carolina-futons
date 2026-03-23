@@ -298,6 +298,19 @@ describe('_getProductRecommendations', () => {
       matchedTags: expect.any(Array),
     });
   });
+
+  it('returns empty array when Stores/Products query returns result without items array', async () => {
+    // Test the `Array.isArray(result?.items) ? result.items : []` guard path.
+    // Spy on wixData.query to return a chainable builder whose find() resolves without `items`.
+    const wixDataMod = (await import('wix-data')).default;
+    const stub = { hasSome: () => stub, ascending: () => stub, limit: () => stub,
+      async find() { return {}; } }; // no items property
+    const spy = vi.spyOn(wixDataMod, 'query').mockReturnValueOnce(stub);
+
+    const recs = await _getProductRecommendations(['modern']);
+    expect(recs).toEqual([]);
+    spy.mockRestore();
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
