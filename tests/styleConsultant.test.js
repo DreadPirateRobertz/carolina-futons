@@ -401,7 +401,7 @@ describe('_wixMediaToCdnUrl', () => {
     expect(result).toBe('https://static.wixstatic.com/media/vid456~mv2.mp4');
   });
 
-  it('returns CDN URL as-is when already https://', () => {
+  it('returns wixstatic.com CDN URL as-is', () => {
     const cdn = 'https://static.wixstatic.com/media/abc123~mv2.jpg';
     expect(_wixMediaToCdnUrl(cdn)).toBe(cdn);
   });
@@ -409,6 +409,10 @@ describe('_wixMediaToCdnUrl', () => {
   it('returns wixmp.com URL as-is', () => {
     const cdn = 'https://video.wixmp.com/video/file/abc.mp4';
     expect(_wixMediaToCdnUrl(cdn)).toBe(cdn);
+  });
+
+  it('returns null for arbitrary non-Wix https:// URL (SSRF guard)', () => {
+    expect(_wixMediaToCdnUrl('https://example.com/photo.jpg')).toBeNull();
   });
 
   it('returns null for empty string', () => {
@@ -419,7 +423,7 @@ describe('_wixMediaToCdnUrl', () => {
     expect(_wixMediaToCdnUrl(null)).toBeNull();
   });
 
-  it('returns null for unrecognized format', () => {
+  it('returns null for http:// URL', () => {
     expect(_wixMediaToCdnUrl('http://example.com/photo.jpg')).toBeNull();
   });
 });
@@ -570,7 +574,7 @@ describe('_callClaudeVision — real implementation', () => {
 
   it('throws when ANTHROPIC_API_KEY secret is missing', async () => {
     resetSecrets(); // clear all secrets — no ANTHROPIC_API_KEY
-    await expect(_callClaudeVision('', 'test')).rejects.toThrow();
+    await expect(_callClaudeVision('', 'test')).rejects.toThrow('Secret "ANTHROPIC_API_KEY" not found');
   });
 
   it('returns empty styleTags and explanation gracefully for partial JSON', async () => {
@@ -585,5 +589,56 @@ describe('_callClaudeVision — real implementation', () => {
     const result = await _callClaudeVision('', 'some text');
     expect(result.styleTags).toEqual([]);
     expect(result.explanation).toBe('');
+  });
+
+  it('omits image block and warns when photo URL cannot be converted to CDN URL', async () => {
+    const captured = [];
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    __setHandler((_url, opts) => {
+      captured.push(JSON.parse(opts.body));
+      return makeClaudeResponse(['modern'], 'Modern.');
+    });
+
+    // A wix:// URI that does not match v1 pattern — _wixMediaToCdnUrl returns null
+    await _callClaudeVision('wix:document://v1/doc123/file.pdf', 'my study');
+
+    const content = captured[0].messages[0].content;
+    expect(content.every(b => b.type !== 'image')).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[styleConsultant]'),
+      expect.stringContaining('wix:document://')
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('uses generic text prompt when photo conversion fails (no "room photo" reference)', async () => {
+    const captured = [];
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    __setHandler((_url, opts) => {
+      captured.push(JSON.parse(opts.body));
+      return makeClaudeResponse(['rustic'], 'Rustic.');
+    });
+
+    await _callClaudeVision('wix:document://v1/bad/file.pdf', '');
+
+    const textBlock = captured[0].messages[0].content.find(b => b.type === 'text');
+    expect(textBlock.text).not.toContain('room photo');
+    vi.restoreAllMocks();
+  });
+
+  it('throws claude_parse_error for malformed JSON inside a markdown fence', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          content: [{
+            type: 'text',
+            text: '```json\n{not valid json\n```',
+          }],
+        };
+      },
+    }));
+    await expect(_callClaudeVision('', 'test')).rejects.toThrow('claude_parse_error');
   });
 });
