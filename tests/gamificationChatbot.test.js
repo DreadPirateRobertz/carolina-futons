@@ -34,7 +34,7 @@ import {
 import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __reset as resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
-import { chatWithAssistant } from '../src/backend/gamificationChatbot.web.js';
+import { chatWithAssistant, _callClaude } from '../src/backend/gamificationChatbot.web.js';
 
 const TODAY_ET = '2026-03-22';
 const YESTERDAY_ET = '2026-03-21';
@@ -650,5 +650,45 @@ describe('Claude API call format', () => {
     expect(capturedBody.max_tokens).toBe(600);
     expect(typeof capturedBody.system).toBe('string');
     expect(capturedBody.system.length).toBeGreaterThan(0);
+  });
+});
+
+// ── _callClaude unit tests ────────────────────────────────────────────────────
+
+describe('_callClaude', () => {
+  beforeEach(() => {
+    resetFetch();
+  });
+
+  it('returns parsed JSON on OK response', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        content: [{ type: 'text', text: 'hello' }],
+        usage: { input_tokens: 10, output_tokens: 5 },
+      }),
+    }));
+    const result = await _callClaude([{ role: 'user', content: 'hi' }], 'sk-test');
+    expect(result.content[0].text).toBe('hello');
+    expect(result.usage.input_tokens).toBe(10);
+  });
+
+  it('returns null on non-OK response', async () => {
+    __setHandler(() => ({ ok: false, status: 529, json: async () => ({}) }));
+    const result = await _callClaude([{ role: 'user', content: 'hi' }], 'sk-test');
+    expect(result).toBeNull();
+  });
+
+  it('sends POST with correct headers', async () => {
+    let captured = null;
+    __setHandler((url, opts) => {
+      captured = { url, opts };
+      return { ok: true, status: 200, json: async () => ({ content: [], usage: { input_tokens: 0, output_tokens: 0 } }) };
+    });
+    await _callClaude([{ role: 'user', content: 'test' }], 'my-api-key');
+    expect(captured.opts.headers['x-api-key']).toBe('my-api-key');
+    expect(captured.opts.headers['anthropic-version']).toBe('2023-06-01');
+    expect(captured.opts.method).toBe('POST');
   });
 });
