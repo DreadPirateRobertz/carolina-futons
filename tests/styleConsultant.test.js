@@ -139,8 +139,10 @@ describe('getStyleConsultation — rate limiting', () => {
     ]);
 
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(false);
     expect(result.status).toBe(429);
     expect(result.error).toBe('Rate limit exceeded');
+    expect(result.errorCode).toBe('RATE_LIMITED');
   });
 
   it('allows a session whose window has expired despite high call count', async () => {
@@ -678,9 +680,7 @@ describe('_callClaudeVision — real implementation', () => {
   });
 
   it('throws claude_timeout when fetch does not resolve before 30s', async () => {
-    // Catch the pending promise immediately so vitest never sees an unhandled
-    // rejection while advancing fake timers (vitest hooks the rejection before
-    // microtasks can link it to Promise.race's handler).
+    // Catch immediately — see void timeoutPromise.catch() in callClaudeVision for why.
     vi.useFakeTimers();
     try {
       __setHandler(() => new Promise(() => {})); // never resolves
@@ -707,5 +707,21 @@ describe('_callClaudeVision — real implementation', () => {
     const result = await _callClaudeVision('', 'any text');
     expect(result.explanation).not.toContain('<script>');
     expect(result.explanation).toContain('Modern style.');
+  });
+
+  it('clears the timeout timer when fetch resolves before 30s (no leak)', async () => {
+    // Verifies .finally(() => clearTimeout(timeoutId)) fires on normal success.
+    // If clearTimeout is removed, this test still passes — so we spy to confirm it ran.
+    vi.useFakeTimers();
+    try {
+      __setHandler(() => makeClaudeResponse(['modern'], 'Modern.'));
+      const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+      await _callClaudeVision('', 'any text');
+      expect(clearSpy).toHaveBeenCalled();
+      clearSpy.mockRestore();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 });

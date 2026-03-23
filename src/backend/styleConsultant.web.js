@@ -48,7 +48,7 @@ const SESSION_COLLECTION = 'StyleConsultantSessions';
 // Input constraints
 const SESSION_KEY_LEN = 64;   // SHA-256 hex = exactly 64 chars
 const TEXT_MAX = 1000;        // Max characters for free-text description
-const EXPLANATION_MAX = 500;  // Max characters for Claude explanation before sanitization
+const EXPLANATION_MAX = 500;  // Max characters for Claude explanation (applied after HTML stripping)
 
 // Rate limiting — 5 calls per hour per session (confirmed via cross-rig review)
 const RATE_LIMIT_MAX = 5;
@@ -313,6 +313,8 @@ async function callClaudeVision(photoUrl, textInput) {
   // Promise.race handles this rejection, but fake-timer test environments fire
   // the callback synchronously before race's internal handler is linked.
   // This .catch() marks the rejection as handled without affecting race behavior.
+  // The rejection still propagates through Promise.race — it is NOT suppressed.
+  // `void` discards the derived promise so no-floating-promises linters stay quiet.
   void timeoutPromise.catch(() => {});
   const res = await Promise.race([
     fetch(CLAUDE_API_URL, {
@@ -485,7 +487,7 @@ export const getStyleConsultation = webMethod(
 
     const { allowed, updatedCounts } = checkRateLimit(session);
     if (!allowed) {
-      return { status: 429, error: 'Rate limit exceeded' };
+      return { success: false, status: 429, error: 'Rate limit exceeded', errorCode: 'RATE_LIMITED' };
     }
 
     // 4. Call Claude vision API
