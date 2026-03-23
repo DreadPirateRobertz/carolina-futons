@@ -1168,9 +1168,18 @@ describe('buildFooterMountainSVG', () => {
     expect(svg).toContain('preserveAspectRatio="none"');
   });
 
-  it('includes feTurbulence watercolor filter', () => {
+  it('includes feTurbulence watercolor filter with correct attributes', () => {
     const svg = buildFooterMountainSVG();
     expect(svg).toContain('feTurbulence');
+    expect(svg).toContain('result="cfWatercolor"');
+    expect(svg).toContain('baseFrequency="0.035"');
+  });
+
+  it('feDisplacementMap references cfWatercolor result (no-op guard)', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('feDisplacementMap');
+    expect(svg).toContain('in2="cfWatercolor"');
+    expect(svg).toContain('xChannelSelector="R"');
   });
 
   it('includes feGaussianBlur atmospheric haze filter', () => {
@@ -1239,21 +1248,21 @@ describe('initMountainDividerWithSkyWiring', () => {
     expect(() => initMountainDividerWithSkyWiring(broken$w)).not.toThrow();
   });
 
-  it('updates SVG colors when LivingSkyState message received', () => {
+  it('updates SVG colors when LivingSkyState message received (bare state, no type field)', () => {
     initMountainDividerWithSkyWiring($w);
     const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
-    handler({ data: { type: 'LivingSkyState', ridgeColors: { r1: '#FF1111', r3: '#FF2222', r4: '#FF3333' } } });
+    handler({ data: { ridgeColors: { r1: '#FF1111', r3: '#FF2222', r4: '#FF3333' } } });
     const html = $w('#footerMountainDivider').html;
     expect(html).toContain('#FF1111');
     expect(html).toContain('#FF2222');
     expect(html).toContain('#FF3333');
   });
 
-  it('ignores non-LivingSkyState postMessages', () => {
+  it('ignores postMessages without ridgeColors', () => {
     initMountainDividerWithSkyWiring($w);
     const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
     const htmlBefore = $w('#footerMountainDivider').html;
-    handler({ data: { type: 'OtherEvent', payload: {} } });
+    handler({ data: { someOtherPayload: {} } });
     expect($w('#footerMountainDivider').html).toBe(htmlBefore);
   });
 

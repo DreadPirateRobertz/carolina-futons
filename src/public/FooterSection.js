@@ -399,10 +399,10 @@ export function applyFooterStyles($w) {
 
 const _FOOTER_RIDGE_DEFAULTS = {
   r1: colors.mountainBlue,
-  r2: '#5C4033',
-  r3: '#3A2518',
-  r4: '#3A2518',
-  r5: '#3A2518',
+  r2: colors.pineBark,
+  r3: colors.ridgeBark,
+  r4: colors.ridgeBark,
+  r5: colors.ridgeBark,
 };
 
 // Path data extracted from Figma pipeline SVG — 5 atmospheric layers, 80px viewBox
@@ -432,8 +432,8 @@ export function buildFooterMountainSVG(ridgeColors = {}) {
   const c = { ..._FOOTER_RIDGE_DEFAULTS, ...ridgeColors };
   const defs = '<defs>'
     + '<filter id="cf-watercolor-footer" x="-5%" y="-5%" width="110%" height="110%">'
-    + '<feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>'
-    + '<feDisplacementMap in="SourceGraphic" scale="3"/>'
+    + '<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="42" result="cfWatercolor"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="cfWatercolor" scale="3" xChannelSelector="R" yChannelSelector="G"/>'
     + '</filter>'
     + '<filter id="haze-footer"><feGaussianBlur stdDeviation="2"/></filter>'
     + '<linearGradient id="footer-sky" x1="0" y1="0" x2="0" y2="1">'
@@ -469,11 +469,10 @@ export function initMountainDividerWithSkyWiring($w) {
     divider.html = buildFooterMountainSVG();
     try {
       const frame = $w('#livingSkyFrame');
-      if (!frame) return;
-      frame.onMessage((event) => {
+      if (frame) frame.onMessage((event) => {
         try {
-          const { type, ridgeColors } = (event && event.data) || {};
-          if (type !== 'LivingSkyState' || !ridgeColors) return;
+          const { ridgeColors } = (event && event.data) || {};
+          if (!ridgeColors) return;
           const el = $w('#footerMountainDivider');
           if (!el) return;
           el.html = buildFooterMountainSVG({

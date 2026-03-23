@@ -75,6 +75,10 @@ export const colors = {
   skyGradientTop: '#B8D4E3',
   /** Bottom of mountain skyline gradient — warm golden horizon */
   skyGradientBottom: '#F0C87A',
+  /** Dark walnut brown — mountain ridge silhouettes r3-r5, pine trunks, bird strokes */
+  ridgeBark: '#3A2518',
+  /** Mid warm brown — r2 ridge layer, pine canopy fills, wildflower stems */
+  pineBark: '#5C4033',
   /** Semi-transparent navy overlay for hero images and modals */
   overlay: 'rgba(30, 58, 95, 0.6)',
 
