@@ -253,6 +253,23 @@ describe('initComfortIllustration', () => {
   it('does not throw when $w is null', () => {
     expect(() => initComfortIllustration(null, 'plush', '#comfortScene')).not.toThrow();
   });
+
+  it('second trigger replaces first — overlay does not accumulate', () => {
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'plush', '#comfortScene');
+    trigger({ skyColors: ['#3A5A7A'], starOpacity: 0 });
+    trigger({ skyColors: ['#1B2E3C'], starOpacity: 0 });
+    // Only the second color present; first color not stacked
+    expect(containers['#comfortScene'].html).toContain('#1B2E3C');
+    expect(containers['#comfortScene'].html).not.toContain('#3A5A7A');
+    expect((containers['#comfortScene'].html.match(/sky-overlay/g) || []).length).toBe(1);
+  });
+
+  it('sets empty html for unknown slug', () => {
+    const { $w, containers } = makeWix();
+    initComfortIllustration($w, 'nonexistent', '#comfortScene');
+    expect(containers['#comfortScene'].html).toBe('');
+  });
 });
 
 // ── Quality bar — atmospheric layers ─────────────────────────────────
