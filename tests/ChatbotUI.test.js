@@ -87,6 +87,18 @@ describe('formatLimitDisplay', () => {
   it('returns singular "message" for 1', () => {
     expect(formatLimitDisplay(1)).toBe('1 message remaining today');
   });
+
+  it('clamps negative input to 0', () => {
+    expect(formatLimitDisplay(-1)).toBe('0 messages remaining today');
+  });
+
+  it('clamps large negative input to 0', () => {
+    expect(formatLimitDisplay(-100)).toBe('0 messages remaining today');
+  });
+
+  it('floors fractional input', () => {
+    expect(formatLimitDisplay(2.9)).toBe('2 messages remaining today');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════

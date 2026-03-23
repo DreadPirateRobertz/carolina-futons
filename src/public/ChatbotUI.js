@@ -34,12 +34,14 @@ export function formatThread(history) {
 
 /**
  * Returns the limit indicator string for #chatbotLimitDisplay.
+ * Negative or non-integer values are clamped to the nearest non-negative integer.
  * @param {number} remaining
- * @returns {string}  e.g. "3 messages remaining today"
+ * @returns {string}  e.g. "3 messages remaining today" or "0 messages remaining today"
  */
 export function formatLimitDisplay(remaining) {
-  const word = remaining === 1 ? 'message' : 'messages';
-  return `${remaining} ${word} remaining today`;
+  const n = Math.max(0, Math.floor(remaining));
+  const word = n === 1 ? 'message' : 'messages';
+  return `${n} ${word} remaining today`;
 }
 
 /**
