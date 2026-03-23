@@ -311,7 +311,11 @@ async function callClaudeVision(photoUrl, textInput) {
   } catch (_) {
     const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (!fence) throw new Error('claude_parse_error');
-    parsed = JSON.parse(fence[1]);
+    try {
+      parsed = JSON.parse(fence[1]);
+    } catch (__) {
+      throw new Error('claude_parse_error');
+    }
   }
 
   const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
@@ -445,7 +449,6 @@ export const getStyleConsultation = webMethod(
     }
 
     // 4. Call Claude vision API
-    // TODO(CF-vu30): remove this guard once callClaudeVision is implemented
     let styleTags, explanation;
     try {
       const aiResult = await callClaudeVision(photoUrl, textInput);
