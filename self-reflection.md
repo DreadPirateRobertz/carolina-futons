@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont-2 (Wave 25 — #753/#754/#760 merged, #757 re-assigned, #761 refinery)
+
+### What worked well
+- Resumed mid-wave without recapping: picked up directly from "merge #753 and #754 next" and executed immediately.
+- Re-assigned PR #757 to godfrey when bishop was offline (`gt nudge` returned session-not-found). No waiting — decisive handoff.
+- Filed cf-1z1 follow-up bead immediately from refinery observation about `getChallengeCatalog` outlier. Don't let non-blocking observations become lost.
+- Background refinery agent (PR #761) launched in parallel while nudging crew — no serialization delay.
+
+### Gaps / improvement opportunities
+- MEMORY.md test count was stale (29,661 vs actual 32,455) — should update test count after each wave's PR merges clear.
+- When `gh pr merge` returns no output on an already-merged PR, verify via `gh pr list --state merged` to confirm state rather than assuming success.
+
+### Pattern notes
+- `gt nudge` to offline worker returns "session not found" — use this as signal to re-assign, not to wait. PR quality cannot block on worker availability.
+- Refinery non-blocking "suggestion" observations that identify pre-existing inconsistencies → immediately file as P3 bead. If not filed, it becomes forgotten tech debt.
+
+---
+
 ## Session 2026-03-23 cont. (Wave 25 — #751 MERGED, #756 conflict, queue drain, dispatch)
 
 ### What worked well
