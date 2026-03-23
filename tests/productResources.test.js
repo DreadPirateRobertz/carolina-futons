@@ -8,6 +8,8 @@
  *  - Returns sorted resources (ascending sortOrder)
  *  - Strips internal fields (_id, _owner, etc.) from response
  *  - Returns empty array on wixData error (error resilience)
+ *  - Queries with suppressAuth: true (guest-accessible)
+ *  - Caps results at 20 (limit truncation)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -15,6 +17,7 @@ import {
   __reset,
   __seed,
   __setQueryError,
+  __getLastFindOptions,
 } from './__mocks__/wix-data.js';
 import { getProductResources } from '../src/backend/productResources.web.js';
 
@@ -97,6 +100,21 @@ describe('getProductResources', () => {
     __setQueryError('ProductResources', new Error('CMS timeout'));
     const result = await getProductResources(PRODUCT_ID);
     expect(result).toEqual([]);
+  });
+
+  it('queries with suppressAuth: true', async () => {
+    __seed('ProductResources', []);
+    await getProductResources(PRODUCT_ID);
+    expect(__getLastFindOptions('ProductResources')).toEqual({ suppressAuth: true });
+  });
+
+  it('returns at most 20 resources (limit cap)', async () => {
+    const rows = Array.from({ length: 21 }, (_, i) => ({
+      _id: `r-${i}`, productId: PRODUCT_ID, resourceType: 'SPEC_SHEET', label: `Item ${i}`, url: `/link/${i}`, sortOrder: i,
+    }));
+    __seed('ProductResources', rows);
+    const result = await getProductResources(PRODUCT_ID);
+    expect(result).toHaveLength(20);
   });
 
   it('returns all resourceTypes correctly', async () => {
