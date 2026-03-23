@@ -12,7 +12,8 @@
  *
  * @requires wix-web-module
  * @requires wix-data
- * @requires wix-fetch  (for Claude API call — wired after zhora confirms rate limit strategy)
+ * @requires wix-fetch  (dynamic import — Claude API calls)
+ * @requires wix-secrets-backend  (dynamic import — ANTHROPIC_API_KEY)
  *
  * @setup
  * Create CMS collection `StyleConsultantSessions` with the following fields:
@@ -32,9 +33,10 @@
  * Add to Wix Secrets Manager:
  *   ANTHROPIC_API_KEY — Claude API key (claude-sonnet-4-6, vision-capable)
  *
- * Rate limiting: pending zhora (gastown) review.
- *   Current placeholder: RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
- *   Strategy TBD: per-session sliding window (CMS-backed) vs. global token bucket.
+ * Rate limiting: CMS-backed per-session sliding window.
+ *   RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
+ *   Note: session lookup failure (CMS error) is treated as a new session
+ *   (first call always allowed). See CF-vu31 for a tracked improvement.
  *
  * @see jobs.config — no scheduled job required for this module.
  */
@@ -98,20 +100,27 @@ sleeping, sitting, space-saving`;
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
- * Convert a Wix Media internal URI to a publicly accessible CDN URL suitable
+ * Convert a Wix Media URI to a publicly accessible CDN URL suitable
  * for inclusion in Claude API image content blocks.
  *
- * wix:image://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
- * wixstatic.com / wixmp.com CDN URLs are returned as-is.
+ * - wix:image://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
+ * - wix:video://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
+ * - Recognized Wix CDN domains (wixstatic.com, wixmp.com) are returned as-is.
+ * - Any other input returns null.
+ *
+ * Domain restriction is intentional: only Wix-hosted media should be passed to
+ * the Claude API image block. Non-Wix URLs are blocked here as a defence-in-depth
+ * measure — `isWixMediaUrl` at the webMethod boundary is the primary gate.
  *
  * @param {string} wixUrl
- * @returns {string|null} Public CDN URL, or null if conversion fails
+ * @returns {string|null} Public Wix CDN URL, or null if conversion fails
  */
 export function _wixMediaToCdnUrl(wixUrl) {
   if (typeof wixUrl !== 'string' || !wixUrl.trim()) return null;
   const url = wixUrl.trim();
-  // Already a CDN URL — usable directly
-  if (url.startsWith('https://')) return url;
+  // Recognized Wix CDN domains — pass through directly
+  if (/^https:\/\/static\.wixstatic\.com\//i.test(url)) return url;
+  if (/^https:\/\/[^/]*\.wixmp\.com\//i.test(url)) return url;
   // wix:image://v1/{mediaId}/filename.jpg#...  or  wix:video://v1/...
   const match = url.match(/^wix:(?:image|video):\/\/v1\/([^/#?]+)/);
   if (!match) return null;
@@ -146,12 +155,11 @@ async function lookupSession(sessionKey) {
 }
 
 /**
- * Check and update per-session rate limit using a sliding window.
- * Returns true if the call is allowed; false if the session is rate-limited.
+ * Check per-session rate limit using a CMS-backed sliding window.
+ * Returns allowed=true if the call may proceed; false if the quota is exhausted.
  *
- * TODO(CF-vu30): zhora to review — replace with confirmed strategy before
- *   wiring the Claude API call. Current implementation: simple CMS-backed
- *   sliding window with RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS.
+ * A null session (first call, or CMS lookup failure) is always allowed.
+ * The window resets when windowAge >= RATE_LIMIT_WINDOW_MS.
  *
  * @param {Object|null} session - Existing session record, or null for new sessions
  * @returns {{ allowed: boolean, updatedCounts: { windowStart: Date, windowCallCount: number } }}
@@ -235,10 +243,11 @@ async function upsertSession(existing, sessionKey, updatedCounts, textInput, pho
 
 /**
  * Call Claude vision API to analyze the user's style from photo and/or text.
- * Returns an array of style tags and a natural-language explanation.
+ * Loads ANTHROPIC_API_KEY from Wix Secrets Manager, converts the Wix Media URI
+ * to a CDN URL, then calls claude-sonnet-4-6 via wix-fetch.
  *
- * TODO(CF-vu30): STUB — wire actual Claude API call after zhora confirms
- *   rate limit strategy and model selection. Blocked on cross-rig review.
+ * Throws named errors: claude_rate_limited, claude_auth_error, claude_bad_request,
+ * claude_api_error_{status}, claude_empty_response, claude_parse_error.
  *
  * @param {string} photoUrl - Validated Wix Media URL (empty string if text-only)
  * @param {string} textInput - Sanitized free-text description (empty string if photo-only)
@@ -253,12 +262,13 @@ async function callClaudeVision(photoUrl, textInput) {
     return _callClaudeVisionImpl(photoUrl, textInput);
   }
 
-  // Load API key from Wix Secrets Manager
+  // Load API key from Wix Secrets Manager (errors here are config failures, not AI failures)
   const { getSecret } = await import('wix-secrets-backend');
   const apiKey = await getSecret('ANTHROPIC_API_KEY');
 
   // Build user content blocks — image first (if provided), then text prompt
   const contentBlocks = [];
+  let hasImage = false;
 
   if (photoUrl) {
     const cdnUrl = _wixMediaToCdnUrl(photoUrl);
@@ -267,12 +277,17 @@ async function callClaudeVision(photoUrl, textInput) {
         type: 'image',
         source: { type: 'url', url: cdnUrl },
       });
+      hasImage = true;
+    } else {
+      console.warn('[styleConsultant] Could not convert photo URL to CDN URL — proceeding text-only:', photoUrl);
     }
   }
 
   const textPrompt = textInput
     ? `Analyze this room for furniture style. The customer says: "${textInput}"`
-    : 'Analyze this room photo for furniture style preferences.';
+    : hasImage
+      ? 'Analyze this room photo for furniture style preferences.'
+      : 'Suggest furniture styles based on the customer description.';
   contentBlocks.push({ type: 'text', text: textPrompt });
 
   // Call Claude API via wix-fetch
