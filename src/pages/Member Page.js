@@ -20,7 +20,7 @@ import {
 } from 'public/loyaltyHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
-import { getMyStreakData } from 'backend/loyaltyService.web';
+import { getMyStreakData, getMyAchievements, getMyDailyQuests } from 'backend/loyaltyService.web';
 import {
   buildWheelSegments,
   computeCountdown,
@@ -89,6 +89,8 @@ async function initMemberPage() {
       { name: 'giftCards', init: () => initGiftCardDashboard($w) },
       { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
       { name: 'streakDisplay', init: initStreakDisplay },
+      { name: 'achievementsSection', init: initAchievementsSection },
+      { name: 'dailyQuestsSection', init: initDailyQuestsSection },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
@@ -428,6 +430,52 @@ async function initStreakDisplay() {
 
   } catch (e) {
     console.error('[MemberPage] Error initializing streak display:', e);
+  }
+}
+
+// ── Achievements Section ─────────────────────────────────────────────
+
+async function initAchievementsSection() {
+  try {
+    const { achievements } = await getMyAchievements();
+    if (achievements && achievements.length > 0) {
+      const repeater = $w('#achievementsBadgeRepeater');
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#badgeLabel').text = itemData.badgeLabel; } catch (e) { console.warn('[MemberPage] achievementsBadgeRepeater onItemReady error:', e); }
+      });
+      repeater.data = achievements.map((a, i) => ({ _id: `achievement-${i}`, ...a }));
+      try { repeater.expand(); } catch (e) { console.warn('[MemberPage] achievementsBadgeRepeater expand error:', e); }
+      $w('#achievementsSection').show();
+    } else {
+      $w('#achievementsSection').hide();
+    }
+  } catch (e) {
+    console.error('[MemberPage] Error initializing achievements section:', e);
+    $w('#achievementsSection').hide();
+  }
+}
+
+// ── Daily Quests Section ─────────────────────────────────────────────
+
+async function initDailyQuestsSection() {
+  try {
+    const { quests } = await getMyDailyQuests();
+    if (!quests || !quests.length) {
+      $w('#dailyQuestsSection').hide();
+      return;
+    }
+    $w('#dailyQuestsSection').show();
+    const repeater = $w('#dailyQuestsRepeater');
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#questTitle').text = itemData.title; } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater onItemReady error:', e); }
+    });
+    repeater.data = quests.map((q, i) => ({ _id: `quest-${i}`, ...q }));
+    try { repeater.expand(); } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater expand error:', e); }
+    const completed = quests.filter(q => q.completed).length;
+    $w('#questsCompleteText').text = `${completed} of ${quests.length} complete`;
+  } catch (e) {
+    console.error('[MemberPage] Error initializing daily quests section:', e);
+    $w('#dailyQuestsSection').hide();
   }
 }
 
