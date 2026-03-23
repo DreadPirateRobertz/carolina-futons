@@ -26,13 +26,14 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES } from '../src/public/gamificationTokens.js';
 
 beforeEach(() => {
   __reset();
   vi.clearAllMocks();
   _resetActiveChallengesRateLimit();
+  _resetRecordChallengeProgressRateLimit();
 });
 
 // ── Input validation ──────────────────────────────────────────────────────────
@@ -1179,6 +1180,137 @@ describe('getActiveChallenges', () => {
       await getActiveChallenges('member-rate-limit');
     }
     const result = await getActiveChallenges('member-rate-limit');
+    expect(result.error).toBe(429);
+  });
+});
+
+// ── recordChallengeProgress ───────────────────────────────────────────────────
+
+const FUTURE_EXPIRY = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days out
+const PAST_EXPIRY   = new Date(Date.now() - 24 * 60 * 60 * 1000);      // yesterday
+
+const BASE_CHALLENGE_DEF = {
+  _id: 'ch-1', challengeId: 'ch-1', title: 'Order 3 Times',
+  conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+  rewardBadgeId: null, expiresAt: FUTURE_EXPIRY, active: true,
+};
+
+describe('recordChallengeProgress', () => {
+  beforeEach(() => { __reset(); _resetRecordChallengeProgressRateLimit(); });
+
+  it('returns { success: false, error } when memberId is missing', async () => {
+    const result = await recordChallengeProgress({ memberId: '', challengeId: 'ch-1' });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns { success: false, error } when challengeId is missing', async () => {
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: '' });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns { success: false, error: not_found } when challenge does not exist', async () => {
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'no-such' });
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('challenge_not_found');
+  });
+
+  it('returns { success: false, error: challenge_expired } for expired challenge', async () => {
+    __seed(CHALLENGES_COLLECTION, [
+      { ...BASE_CHALLENGE_DEF, expiresAt: PAST_EXPIRY },
+    ]);
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('challenge_expired');
+  });
+
+  it('increments progress from 0 to 1 for a new member', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.newProgress).toBe(1);
+    expect(result.completed).toBe(false);
+    expect(result.pointsAwarded).toBe(0);
+  });
+
+  it('increments existing progress correctly', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, completedAt: null },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.newProgress).toBe(2);
+    expect(result.completed).toBe(false);
+    expect(result.pointsAwarded).toBe(0);
+  });
+
+  it('returns completed=true and awards rewardPoints when progress reaches targetCount', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]); // targetCount: 3, rewardPoints: 50
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, completedAt: null },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.newProgress).toBe(3);
+    expect(result.completed).toBe(true);
+    expect(result.pointsAwarded).toBe(50);
+  });
+
+  it('writes updated totalPoints to MemberPoints on completion', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, completedAt: null },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    const updated = [];
+    __onUpdate((col, item) => updated.push({ col, item }));
+    await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    const mpUpdate = updated.find(u => u.col === 'MemberPoints');
+    expect(mpUpdate).toBeDefined();
+    expect(mpUpdate.item.totalPoints).toBe(150); // 100 + 50
+  });
+
+  it('returns completed=true without re-awarding points for already-completed challenge (idempotent)', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 3, completedAt: new Date('2026-03-22') },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 150, tier: 'Trail Blazer' }]);
+    const updated = [];
+    __onUpdate((col, item) => updated.push({ col, item }));
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.completed).toBe(true);
+    expect(result.pointsAwarded).toBe(0);
+    // No MemberPoints write on idempotent re-call
+    expect(updated.find(u => u.col === 'MemberPoints')).toBeUndefined();
+  });
+
+  it('creates MemberPoints record for new member on completion', async () => {
+    __seed(CHALLENGES_COLLECTION, [
+      { ...BASE_CHALLENGE_DEF, targetCount: 1 },
+    ]);
+    const inserted = [];
+    __onInsert((col, item) => inserted.push({ col, item }));
+    const result = await recordChallengeProgress({ memberId: 'mem-new', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.completed).toBe(true);
+    expect(result.pointsAwarded).toBe(50);
+    const mpInsert = inserted.find(i => i.col === 'MemberPoints');
+    expect(mpInsert).toBeDefined();
+    expect(mpInsert.item.totalPoints).toBe(50);
+  });
+
+  it('returns { error: 429 } after exceeding rate limit of 20 calls per hour', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
+    for (let i = 0; i < 20; i++) {
+      await recordChallengeProgress({ memberId: 'mem-rl', challengeId: 'ch-1' });
+    }
+    const result = await recordChallengeProgress({ memberId: 'mem-rl', challengeId: 'ch-1' });
     expect(result.error).toBe(429);
   });
 });

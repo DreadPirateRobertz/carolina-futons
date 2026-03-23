@@ -3,7 +3,7 @@ import { __seed, __onUpdate, __setQueryError, __getLastFindOptions, __reset as r
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
-import { _resetActiveChallengesRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
+import { _resetActiveChallengesRateLimit, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import {
   get_health,
   get_productSitemap,
@@ -24,6 +24,7 @@ import {
   get_blogRssFeed,
   post_klaviyoWebhook,
   get_activeChallenges,
+  post_challengeProgress,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -1623,6 +1624,73 @@ describe('get_activeChallenges', () => {
       await get_activeChallenges(makeActiveChallengesRequest('mem-rl'));
     }
     const result = await get_activeChallenges(makeActiveChallengesRequest('mem-rl'));
+    expect(result.status).toBe(429);
+  });
+});
+
+// ── POST /_functions/challengeProgress ───────────────────────────────────────
+
+const makeChallengeProgressRequest = (bodyObj) => ({
+  body: {
+    async json() { return bodyObj; },
+  },
+});
+
+describe('post_challengeProgress', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    _resetRecordChallengeProgressRateLimit();
+  });
+
+  it('returns 400 when memberId is missing', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ challengeId: 'ch-1' }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/memberId/i);
+  });
+
+  it('returns 400 when challengeId is missing', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-1' }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/challengeId/i);
+  });
+
+  it('returns 401 when no member is authenticated', async () => {
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-1', challengeId: 'ch-1' }));
+    expect(result.status).toBe(401);
+    expect(JSON.parse(result.body).error).toMatch(/auth/i);
+  });
+
+  it('returns 403 when authenticated member does not own the requested memberId', async () => {
+    __setMember({ _id: 'mem-other' });
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-1', challengeId: 'ch-1' }));
+    expect(result.status).toBe(403);
+    expect(JSON.parse(result.body).error).toMatch(/denied/i);
+  });
+
+  it('returns 200 with success on valid progress record', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('Challenges', [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'Order 3 Times', conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50, rewardBadgeId: null, expiresAt: new Date(Date.now() + 86400000), active: true },
+    ]);
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-1', challengeId: 'ch-1' }));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(true);
+    expect(body.newProgress).toBe(1);
+  });
+
+  it('returns 429 after rate limit exceeded', async () => {
+    __setMember({ _id: 'mem-rl' });
+    __seed('Challenges', [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'Order 3 Times', conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50, rewardBadgeId: null, expiresAt: new Date(Date.now() + 86400000), active: true },
+    ]);
+    for (let i = 0; i < 20; i++) {
+      await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-rl', challengeId: 'ch-1' }));
+    }
+    const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-rl', challengeId: 'ch-1' }));
     expect(result.status).toBe(429);
   });
 });

@@ -43,6 +43,17 @@ export function _resetActiveChallengesRateLimit() {
   _activeChallengesRateLimit.clear();
 }
 
+// ── recordChallengeProgress rate limit (in-memory, per server instance) ───────
+// 20 calls/hr per member.
+const _recordChallengeProgressRateLimit = new Map();
+const RECORD_CHALLENGE_PROGRESS_RATE_LIMIT = 20;
+const RECORD_CHALLENGE_PROGRESS_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Exported for testing only.
+export function _resetRecordChallengeProgressRateLimit() {
+  _recordChallengeProgressRateLimit.clear();
+}
+
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
 const REFERRAL_SHARED_POINTS = 100; // distinct from REFERRAL_ACCEPTED (200 pts for completed referrals)
@@ -499,6 +510,109 @@ export const getActiveChallenges = webMethod(
     } catch (err) {
       logError(`getActiveChallenges — failed for member ${memberId}`, err);
       return { challenges: [] };
+    }
+  }
+);
+
+// ── recordChallengeProgress ───────────────────────────────────────────────────
+
+/**
+ * Record one unit of progress for a member on a challenge.
+ * Idempotent: re-calling after completion returns completed=true, pointsAwarded=0.
+ *
+ * @param {{ memberId: string, challengeId: string }} params
+ * @returns {Promise<{ success: true, newProgress: number, completed: boolean, pointsAwarded: number }
+ *                  | { success: false, error: string }
+ *                  | { error: 429 }>}
+ */
+export const recordChallengeProgress = webMethod(
+  Permissions.Member,
+  async ({ memberId, challengeId } = {}) => {
+    if (!memberId) return { success: false, error: 'memberId is required' };
+    if (!challengeId) return { success: false, error: 'challengeId is required' };
+
+    // Rate limit: 20 calls/hr per member
+    const now = Date.now();
+    const rl = _recordChallengeProgressRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > RECORD_CHALLENGE_PROGRESS_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _recordChallengeProgressRateLimit.set(memberId, rl);
+    if (rl.count > RECORD_CHALLENGE_PROGRESS_RATE_LIMIT) {
+      return { error: 429 };
+    }
+
+    try {
+      // Look up challenge definition
+      const challengeQuery = await wixData
+        .query(CHALLENGES_COLLECTION)
+        .eq('challengeId', challengeId)
+        .find();
+      const challenge = challengeQuery.items[0];
+      if (!challenge) return { success: false, error: 'challenge_not_found' };
+      if (challenge.expiresAt && new Date(challenge.expiresAt) <= new Date()) {
+        return { success: false, error: 'challenge_expired' };
+      }
+
+      // Look up existing progress record
+      const progressQuery = await wixData
+        .query(CHALLENGE_PROGRESS_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('challengeId', challengeId)
+        .find();
+      const existing = progressQuery.items[0];
+
+      // Idempotent: already completed
+      if (existing && existing.completedAt) {
+        return { success: true, newProgress: existing.progressValue, completed: true, pointsAwarded: 0 };
+      }
+
+      const newProgress = (existing ? existing.progressValue : 0) + 1;
+      const completed = newProgress >= challenge.targetCount;
+      const completedAt = completed ? new Date() : null;
+
+      if (existing) {
+        await wixData.update(CHALLENGE_PROGRESS_COLLECTION, {
+          ...existing,
+          progressValue: newProgress,
+          completedAt,
+        });
+      } else {
+        await wixData.insert(CHALLENGE_PROGRESS_COLLECTION, {
+          memberId,
+          challengeId,
+          progressValue: newProgress,
+          completedAt,
+        });
+      }
+
+      let pointsAwarded = 0;
+      if (completed && challenge.rewardPoints) {
+        pointsAwarded = challenge.rewardPoints;
+        const mpQuery = await wixData
+          .query(MEMBER_POINTS_COLLECTION)
+          .eq('memberId', memberId)
+          .find();
+        const mp = mpQuery.items[0];
+        if (mp) {
+          await wixData.update(MEMBER_POINTS_COLLECTION, {
+            ...mp,
+            totalPoints: mp.totalPoints + pointsAwarded,
+          });
+        } else {
+          await wixData.insert(MEMBER_POINTS_COLLECTION, {
+            memberId,
+            totalPoints: pointsAwarded,
+          });
+        }
+      }
+
+      return { success: true, newProgress, completed, pointsAwarded };
+    } catch (err) {
+      logError(`recordChallengeProgress — failed for member ${memberId} challenge ${challengeId}`, err);
+      return { success: false, error: 'internal_error' };
     }
   }
 );
