@@ -9,6 +9,7 @@ import {
   generateShowroomSVG,
   initContactHeroSkyline,
   initContactShowroomScene,
+  buildShowroomSVGWithState,
 } from '../src/public/contactIllustrations.js';
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -482,5 +483,286 @@ describe('Contact Illustrations', () => {
         expect(CONTACT_ILLUSTRATIONS[key]).not.toMatch(/href="http/i);
       });
     });
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// PHASE 8B: buildShowroomSVGWithState — LivingSkyState ambient wiring
+// ══════════════════════════════════════════════════════════════════════
+
+describe('buildShowroomSVGWithState', () => {
+
+  // ── Sky gradient wiring ─────────────────────────────────────────
+
+  it('returns valid SVG for null state (static fallback)', () => {
+    const svg = buildShowroomSVGWithState(null);
+    expect(svg.trimStart()).toMatch(/^<svg[\s>]/);
+    expect(svg.trimEnd()).toMatch(/<\/svg>$/);
+    expect(svg).toMatch(/viewBox="0 0 400 280"/);
+  });
+
+  it('uses static sky defaults when state is null', () => {
+    const svg = buildShowroomSVGWithState(null);
+    expect(svg).toContain('#B8D4E3');
+    expect(svg).toContain('#A8CCD8');
+  });
+
+  it('maps state.skyColors to sky gradient stops', () => {
+    const state = { skyColors: ['#050810', '#0D1628', '#141E30', '#20283A'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#050810');
+    expect(svg).toContain('#0D1628');
+    expect(svg).toContain('#141E30');
+    expect(svg).toContain('#20283A');
+  });
+
+  it('has 4-stop linear gradient using skyColors', () => {
+    const state = { skyColors: ['#050810', '#0D1628', '#141E30', '#20283A'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('<linearGradient id="show-sky-dyn"');
+    const stops = svg.match(/<stop offset/g) || [];
+    expect(stops.length).toBeGreaterThanOrEqual(4);
+  });
+
+  // ── Ridge layer darkness ────────────────────────────────────────
+
+  it('maps state.ridgeColors to ridge layer fills', () => {
+    const state = { skyColors: ['#B8D4E3', '#A8CCD8', '#F0C87A', '#F2E8D5'], ridgeColors: { r1: '#0A1234', r2: '#1B2345', r3: '#2C3456', r4: '#3D4567' }, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#0A1234');
+    expect(svg).toContain('#1B2345');
+    expect(svg).toContain('#2C3456');
+    expect(svg).toContain('#3D4567');
+  });
+
+  it('falls back to static ridge defaults when ridgeColors absent', () => {
+    const state = { skyColors: ['#B8D4E3', '#A8CCD8', '#F0C87A', '#F2E8D5'], ridgeColors: null, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#3A2518'); // r1 default
+  });
+
+  // ── Ambient window glow ────────────────────────────────────────
+
+  it('window fill is sky blue at daytime (starOpacity < 0.1)', () => {
+    const state = { skyColors: ['#2858A0', '#4878A8', '#88B0C4', '#A4C8DC'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#B8D4E3');
+  });
+
+  it('window fill is soft gold at dusk (starOpacity 0.1–0.39)', () => {
+    const state = { skyColors: ['#100E1E', '#381630', '#801C20', '#C04020'], ridgeColors: {}, starOpacity: 0.2, moonPos: { opacity: 0.5 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#F0C87A');
+  });
+
+  it('window fill is warm lantern yellow at night (starOpacity >= 0.4)', () => {
+    const state = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0.9, moonPos: { opacity: 1 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#FFF0A0');
+  });
+
+  it('uses day fill for starOpacity exactly 0.1 boundary', () => {
+    const dayState = { skyColors: ['#2858A0', '#4878A8', '#88B0C4', '#A4C8DC'], ridgeColors: {}, starOpacity: 0.09, moonPos: { opacity: 0 } };
+    const duskState = { skyColors: ['#100E1E', '#381630', '#801C20', '#C04020'], ridgeColors: {}, starOpacity: 0.1, moonPos: { opacity: 0 } };
+    expect(buildShowroomSVGWithState(dayState)).toContain('#B8D4E3');
+    expect(buildShowroomSVGWithState(duskState)).toContain('#F0C87A');
+  });
+
+  // ── Night stars ────────────────────────────────────────────────
+
+  it('stars appear at night (starOpacity > 0.05)', () => {
+    const state = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0.85, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    // Stars rendered as circles at fixed sky positions
+    expect(svg).toContain('cx="60"');
+    expect(svg).toContain('cx="112"');
+    expect(svg).toContain('cx="342"');
+  });
+
+  it('stars absent at daytime (starOpacity = 0)', () => {
+    const state = { skyColors: ['#2858A0', '#4878A8', '#88B0C4', '#A4C8DC'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    // Star circles use specific sky coordinates not found elsewhere in the SVG
+    expect(svg).not.toContain('cx="60"');
+    expect(svg).not.toContain('cx="342"');
+  });
+
+  it('stars absent at threshold starOpacity = 0.05', () => {
+    const state = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0.05, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).not.toContain('cx="60"');
+    expect(svg).not.toContain('cx="342"');
+  });
+
+  // ── Moon arc ───────────────────────────────────────────────────
+
+  it('moon appears at night (moonPos.opacity > 0.05)', () => {
+    const state = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0.9 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).toContain('#FFF8E0');
+  });
+
+  it('moon absent at daytime (moonPos.opacity = 0)', () => {
+    const state = { skyColors: ['#2858A0', '#4878A8', '#88B0C4', '#A4C8DC'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).not.toContain('#FFF8E0');
+  });
+
+  it('moon uses sky0 color for crescent shadow', () => {
+    const state = { skyColors: ['#0A0A1A', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0.8 } };
+    const svg = buildShowroomSVGWithState(state);
+    // Moon crescent = bright disk + sky-colored shadow circle
+    expect(svg).toContain('#FFF8E0');
+    expect(svg).toContain('#0A0A1A');
+  });
+
+  // ── Security ───────────────────────────────────────────────────
+
+  it('sanitizes non-hex sky colors — no XSS passthrough', () => {
+    const state = { skyColors: ['javascript:alert(1)', '<img/onerror=alert(1)>', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).not.toContain('javascript:');
+    expect(svg).not.toContain('onerror');
+    expect(svg).not.toContain('<img');
+    expect(svg).toContain('#B8D4E3'); // fallback for sky0
+  });
+
+  it('sanitizes non-hex ridge colors — no XSS passthrough', () => {
+    const state = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: { r1: '<script>xss</script>', r2: 'url(evil)', r3: '#345678', r4: '#456789' }, starOpacity: 0, moonPos: { opacity: 0 } };
+    const svg = buildShowroomSVGWithState(state);
+    expect(svg).not.toContain('<script>');
+    expect(svg).not.toContain('url(evil)');
+    expect(svg).toContain('#3A2518'); // r1 fallback
+  });
+
+  // ── Height passthrough ─────────────────────────────────────────
+
+  it('applies height option to SVG root', () => {
+    const svg = buildShowroomSVGWithState(null, { height: 320 });
+    expect(svg).toContain('height="320"');
+    expect(svg).not.toContain('height="100%"');
+  });
+
+  it('uses 100% height when option not provided', () => {
+    const svg = buildShowroomSVGWithState(null);
+    expect(svg).toContain('height="100%"');
+  });
+
+  // ── SVG structure integrity ─────────────────────────────────────
+
+  it('has background, midground, foreground groups', () => {
+    const svg = buildShowroomSVGWithState(null);
+    expect(svg).toMatch(/id="background"/);
+    expect(svg).toMatch(/id="midground"/);
+    expect(svg).toMatch(/id="foreground"/);
+  });
+
+  it('has accessibility attributes', () => {
+    const svg = buildShowroomSVGWithState(null);
+    expect(svg).toMatch(/role="img"/);
+    expect(svg).toMatch(/<title[^>]*>.*<\/title>/s);
+    expect(svg).toMatch(/aria-labelledby/);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// PHASE 8B: initContactShowroomScene — LivingSkyState subscription
+// ══════════════════════════════════════════════════════════════════════
+
+describe('initContactShowroomScene — LivingSkyState subscription', () => {
+
+  it('subscribes to #livingSkyFrame and updates SVG on night state', () => {
+    const sceneEl = { html: '' };
+    let messageHandler = null;
+    const frameEl = { onMessage: (fn) => { messageHandler = fn; } };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      if (sel === '#livingSkyFrame') return frameEl;
+      return null;
+    };
+    initContactShowroomScene(mock$w);
+    expect(sceneEl.html).toContain('<svg'); // initial static
+    const nightState = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0.9, moonPos: { opacity: 1 } };
+    messageHandler({ data: nightState });
+    expect(sceneEl.html).toContain('#FFF0A0'); // lantern yellow windows
+  });
+
+  it('renders dynamic sky gradient colors after state update', () => {
+    const sceneEl = { html: '' };
+    let messageHandler = null;
+    const frameEl = { onMessage: (fn) => { messageHandler = fn; } };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      if (sel === '#livingSkyFrame') return frameEl;
+      return null;
+    };
+    initContactShowroomScene(mock$w);
+    const dayState = { skyColors: ['#3860A0', '#608098', '#98B8CC', '#B4CCE0'], ridgeColors: {}, starOpacity: 0, moonPos: { opacity: 0 } };
+    messageHandler({ data: dayState });
+    expect(sceneEl.html).toContain('#3860A0');
+    expect(sceneEl.html).toContain('#B4CCE0');
+  });
+
+  it('falls back to static SVG when livingSkyFrame is absent', () => {
+    const sceneEl = { html: '' };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      return null; // no livingSkyFrame
+    };
+    initContactShowroomScene(mock$w);
+    expect(sceneEl.html).toContain('<svg');
+  });
+
+  it('does not throw when livingSkyFrame selector throws', () => {
+    const sceneEl = { html: '' };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      throw new Error('not on this page');
+    };
+    expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+    expect(sceneEl.html).toContain('<svg');
+  });
+
+  it('skips update when message data is null', () => {
+    const sceneEl = { html: '' };
+    let messageHandler = null;
+    const frameEl = { onMessage: (fn) => { messageHandler = fn; } };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      if (sel === '#livingSkyFrame') return frameEl;
+      return null;
+    };
+    initContactShowroomScene(mock$w);
+    const initialHtml = sceneEl.html;
+    messageHandler({ data: null });
+    expect(sceneEl.html).toBe(initialHtml);
+  });
+
+  it('passes height option through to dynamic SVG', () => {
+    const sceneEl = { html: '' };
+    let messageHandler = null;
+    const frameEl = { onMessage: (fn) => { messageHandler = fn; } };
+    const mock$w = (sel) => {
+      if (sel === '#contactShowroomScene') return sceneEl;
+      if (sel === '#livingSkyFrame') return frameEl;
+      return null;
+    };
+    initContactShowroomScene(mock$w, { height: 300 });
+    const nightState = { skyColors: ['#050810', '#080D1C', '#0D1628', '#141E30'], ridgeColors: {}, starOpacity: 0.9, moonPos: { opacity: 1 } };
+    messageHandler({ data: nightState });
+    expect(sceneEl.html).toContain('height="300"');
+  });
+
+  it('uses custom containerId when provided', () => {
+    const sceneEl = { html: '' };
+    let messageHandler = null;
+    const frameEl = { onMessage: (fn) => { messageHandler = fn; } };
+    const mock$w = (sel) => {
+      if (sel === '#myScene') return sceneEl;
+      if (sel === '#livingSkyFrame') return frameEl;
+      return null;
+    };
+    initContactShowroomScene(mock$w, { containerId: '#myScene' });
+    expect(sceneEl.html).toContain('<svg');
   });
 });
