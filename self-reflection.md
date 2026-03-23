@@ -311,3 +311,22 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - When a user says "go back to the iteration before" — stop, revert completely, THEN add the new direction. Don't try to half-revert and build forward simultaneously. Two clean passes > one messy hybrid.
 - Visual rejection ("it didn't come out well") + direction change in same message = user has already decided. Don't add caveats, don't explain what was tried. Just confirm direction and execute.
 - Season-driven atmospheric effects (snow, mist) are a better UX pattern than manual weather mode buttons for a passive header. The site visitor doesn't choose the weather — the illustration just reflects the season realistically.
+
+## Session 2026-03-23 (Wave 14 — illustration audit + dallas coordination)
+
+### What worked well
+- Illustration audit doc (04-illustration-audit.html) came together cleanly: 6 web SVGs rendered inline, mobile asset mockups, cross-asset audit table with priorities, design direction narrative. Comprehensive without being verbose.
+- Catching all 7 consistency issues across the illustration system (tree color, non-standard blue, missing timeline text, bird style, footer preserveAspectRatio, frame border, living-sky integration gap) in one pass — that's a real audit, not a checklist exercise.
+- Dallas interface alignment was smooth: he proposed the right LivingSkyState interface independently, I added only the two precipitation fields. Good convergence without over-coordination.
+- gt mail send --stdin with heredoc handles special characters (code blocks, backticks) cleanly. Learned this earlier in session — applied immediately.
+- Miquella picked up the P0 illustration fix bead (cf-4wc) immediately after nudge. Proof the nudge + audit doc gave her enough context to self-start.
+
+### Gaps
+- Demo server was down on session resume — no persistent server process between sessions. Need to either auto-start server or document that it needs to be restarted. Added server.cjs to the brainstorm dir so it can be reliably re-launched.
+- Context compaction caused a round-trip where tasks #10 and #11 (leftover from a brainstorming skill flow) needed deletion. Stale tasks create noise. Should delete planning tasks when the plan is abandoned or the work changes direction.
+- Rennala's productSitemap 500 investigation has no active bead visible in bd list —assignee. Need to verify she picked it up or create a bead and re-assign.
+
+### Pattern notes
+- dallas is a strong PM — sends well-structured design input, maintains clear API contracts, flags bugs from his crew. Treat his input as architectural input, not just acknowledgments. His gamification input (no polling, SWR revalidateOnFocus + invalidate-on-event) was correct on the merits.
+- Illustration audit before escalation to Stilgar is the right gate. Design discipline > speed on visual work.
+- gt mail address format is "rig/pm" not just pm name (cfutons_mobile/dallas not dallas). Learn this early in session rather than failing and recovering.
