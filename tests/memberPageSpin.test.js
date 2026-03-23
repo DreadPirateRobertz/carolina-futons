@@ -4,7 +4,7 @@
  * Tests: initSpinSection init, eligibility-driven UI, spin button click,
  * pending prizes panel, safeSession prize cache.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
 
 // ── $w mock ──────────────────────────────────────────────────────────────────
@@ -155,6 +155,12 @@ const POINTS_PRIZE = {
   prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points', name: '50 Points',
 };
 
+const SPIN_SUCCESS = {
+  success: true, spinType: 'DAILY',
+  prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
+  isFallback: false,
+};
+
 // ── Init helper ──────────────────────────────────────────────────────────────
 
 async function initPage(overrides = {}) {
@@ -200,10 +206,6 @@ describe('Member Page — initSpinSection', () => {
   // ── updateSpinUI — ineligible ─────────────────────────────────────────────
 
   describe('updateSpinUI — ineligible', () => {
-    beforeEach(() => {
-      // Set in initPage overrides
-    });
-
     it('disables spin button when ineligible', async () => {
       await initPage({
         eligibility: { eligible: false, reason: 'ALREADY_SPUN', nextETMidnightMs: 2 * 3600 * 1000 },
@@ -277,11 +279,7 @@ describe('Member Page — initSpinSection', () => {
     });
 
     it('calls spinWheel with memberId on click', async () => {
-      spinMocks.spinWheel.mockResolvedValue({
-        success: true, spinType: 'DAILY',
-        prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
-        isFallback: false,
-      });
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
       await initPage();
       const handler = getEl('#spinButton').onClick.mock.calls[0][0];
       await handler();
@@ -289,11 +287,7 @@ describe('Member Page — initSpinSection', () => {
     });
 
     it('shows win headline with points amount on success', async () => {
-      spinMocks.spinWheel.mockResolvedValue({
-        success: true, spinType: 'DAILY',
-        prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
-        isFallback: false,
-      });
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
       await initPage();
       const handler = getEl('#spinButton').onClick.mock.calls[0][0];
       await handler();
@@ -330,11 +324,7 @@ describe('Member Page — initSpinSection', () => {
     });
 
     it('re-queries eligibility after successful spin', async () => {
-      spinMocks.spinWheel.mockResolvedValue({
-        success: true, spinType: 'DAILY',
-        prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
-        isFallback: false,
-      });
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
       spinMocks.getSpinEligibility.mockResolvedValue({
         eligible: false, reason: 'ALREADY_SPUN', nextETMidnightMs: 3600 * 1000,
       });
@@ -346,11 +336,7 @@ describe('Member Page — initSpinSection', () => {
     });
 
     it('plays confetti Lottie on win', async () => {
-      spinMocks.spinWheel.mockResolvedValue({
-        success: true, spinType: 'DAILY',
-        prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
-        isFallback: false,
-      });
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
       await initPage();
       const handler = getEl('#spinButton').onClick.mock.calls[0][0];
       await handler();
@@ -358,11 +344,7 @@ describe('Member Page — initSpinSection', () => {
     });
 
     it('shows #spinConfettiOverlay on win', async () => {
-      spinMocks.spinWheel.mockResolvedValue({
-        success: true, spinType: 'DAILY',
-        prize: { type: 'POINTS', label: '50 Points', pointsAwarded: 50 },
-        isFallback: false,
-      });
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
       await initPage();
       const handler = getEl('#spinButton').onClick.mock.calls[0][0];
       await handler();
