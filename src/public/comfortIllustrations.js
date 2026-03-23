@@ -62,6 +62,7 @@ function _applyComfortSkyState(svg, state) {
   const safeColor = typeof skyColor === 'string' && _SAFE_HEX.test(skyColor) ? skyColor : null;
   let overlay = '';
   if (safeColor) {
+    // Night overlay is heavier (0.6) to suggest deep sky; daytime is subtle tint (0.22)
     const op = isNight ? 0.6 : 0.22;
     overlay += `<rect width="800" height="500" fill="${safeColor}" opacity="${op}" id="sky-overlay"/>`;
   }
@@ -94,9 +95,11 @@ export function initComfortIllustration($w, slug, containerId) {
     try { frame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
     if (frame && typeof frame.onMessage === 'function') {
       frame.onMessage((event) => {
-        const state = event && event.data;
-        if (!state) return;
-        container.html = _applyComfortSkyState(baseSvg, state);
+        try {
+          const state = event && event.data;
+          if (!state) return;
+          container.html = _applyComfortSkyState(baseSvg, state);
+        } catch (e) { console.error('[comfortIllustrations] onMessage handler failed:', e); }
       });
     }
   } catch (e) { console.warn('[comfortIllustrations] initComfortIllustration failed:', e); }
