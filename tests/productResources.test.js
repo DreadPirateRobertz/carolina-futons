@@ -14,6 +14,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
+  __setQueryError,
 } from './__mocks__/wix-data.js';
 import { getProductResources } from '../src/backend/productResources.web.js';
 
@@ -93,9 +94,7 @@ describe('getProductResources', () => {
   });
 
   it('returns empty array and does not throw on wixData error', async () => {
-    // Wix data mock doesn't throw by default, but test the error path
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    // Seed nothing — queries succeed but return empty
+    __setQueryError('ProductResources', new Error('CMS timeout'));
     const result = await getProductResources(PRODUCT_ID);
     expect(result).toEqual([]);
   });
