@@ -1175,12 +1175,12 @@ describe('getActiveChallenges', () => {
     expect(c).toHaveProperty('completedAt');
   });
 
-  it('returns { error: 429 } after exceeding rate limit of 10 calls per hour', async () => {
+  it('returns { status: 429 } after exceeding rate limit of 10 calls per hour', async () => {
     for (let i = 0; i < 10; i++) {
       await getActiveChallenges('member-rate-limit');
     }
     const result = await getActiveChallenges('member-rate-limit');
-    expect(result.error).toBe(429);
+    expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
   });
 });
 
@@ -1305,13 +1305,13 @@ describe('recordChallengeProgress', () => {
     expect(mpInsert.item.totalPoints).toBe(50);
   });
 
-  it('returns { error: 429 } after exceeding rate limit of 20 calls per hour', async () => {
+  it('returns { status: 429 } after exceeding rate limit of 20 calls per hour', async () => {
     __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]);
     for (let i = 0; i < 20; i++) {
       await recordChallengeProgress({ memberId: 'mem-rl', challengeId: 'ch-1' });
     }
     const result = await recordChallengeProgress({ memberId: 'mem-rl', challengeId: 'ch-1' });
-    expect(result.error).toBe(429);
+    expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
   });
 });
 

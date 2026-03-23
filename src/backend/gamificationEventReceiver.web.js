@@ -439,7 +439,7 @@ export async function recordWishlistAdd(memberId, todayET) {
  * Rate limited to 10 calls/hr per member (in-memory).
  *
  * @param {string} memberId
- * @returns {Promise<{ challenges: Array } | { error: 429 }>}
+ * @returns {Promise<{ challenges: Array } | { status: 429, error: string }>}
  */
 export const getActiveChallenges = webMethod(
   Permissions.Member,
@@ -456,7 +456,7 @@ export const getActiveChallenges = webMethod(
     rl.count += 1;
     _activeChallengesRateLimit.set(memberId, rl);
     if (rl.count > ACTIVE_CHALLENGES_RATE_LIMIT) {
-      return { error: 429 };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     try {
@@ -524,7 +524,7 @@ export const getActiveChallenges = webMethod(
  * @param {{ memberId: string, challengeId: string }} params
  * @returns {Promise<{ success: true, newProgress: number, completed: boolean, pointsAwarded: number }
  *                  | { success: false, error: string }
- *                  | { error: 429 }>}
+ *                  | { status: 429, error: string }>}
  */
 export const recordChallengeProgress = webMethod(
   Permissions.Member,
@@ -542,7 +542,7 @@ export const recordChallengeProgress = webMethod(
     rl.count += 1;
     _recordChallengeProgressRateLimit.set(memberId, rl);
     if (rl.count > RECORD_CHALLENGE_PROGRESS_RATE_LIMIT) {
-      return { error: 429 };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     try {
