@@ -185,6 +185,14 @@ describe('detectWeatherSeed — determinism', () => {
     }
     expect(results.size).toBeGreaterThanOrEqual(2);
   });
+
+  it('returns correct slot on DST spring-forward day (Mar 8 2026, dayOfYear=67)', () => {
+    // US DST spring-forward on 2026-03-08: elapsed ms = 66.958 days from
+    // Dec 31. Math.floor gives dayOfYear=66 (wrong); Math.round gives 67.
+    // dayOfYear=67 → slot (2026+67)%7 = 2093%7 = 0 → 'clear'
+    // dayOfYear=66 → slot (2026+66)%7 = 2092%7 = 6 → 'storm' (DST bug)
+    expect(detectWeatherSeed(new Date(2026, 2, 8))).toBe('clear');
+  });
 });
 
 // ── detectWeatherSeed — valid output ─────────────────────────────────────────

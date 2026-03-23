@@ -1217,7 +1217,7 @@ const WEATHER_CYCLE = ['clear', 'clear', 'clear', 'cloudy', 'fog', 'rain', 'stor
  */
 export function detectWeatherSeed(date) {
   const startOfYear = new Date(date.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((date - startOfYear) / 86_400_000);
+  const dayOfYear = Math.round((date - startOfYear) / 86_400_000);
   const slot = (date.getFullYear() + dayOfYear) % 7;
   return WEATHER_CYCLE[slot];
 }
