@@ -381,3 +381,56 @@ export const ONBOARDING_SVGS = {
   <rect width="640" height="180" filter="url(#fv-grain)" opacity="0.08" fill="${offWhite}"/>
 </svg>`,
 };
+
+// ── LivingSkyState wiring ─────────────────────────────────────────────────────
+
+const _OB_SAFE_HEX = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/;
+
+const _OB_STARS = [
+  [25,12],[60,8],[100,20],[145,6],[195,16],[240,9],[270,22],[310,14],[90,25],[210,5],
+];
+
+function _applyOnboardingSkyState(svg, state) {
+  const isNight = Number(state.starOpacity) > 0;
+  const skyColor = state.skyColors && state.skyColors[0];
+  const safeColor = typeof skyColor === 'string' && _OB_SAFE_HEX.test(skyColor) ? skyColor : null;
+  let overlay = '';
+  if (safeColor) {
+    const op = isNight ? 0.55 : 0.25;
+    overlay += `<rect width="280" height="200" fill="${safeColor}" opacity="${op}" id="sky-overlay"/>`;
+  }
+  if (isNight) {
+    overlay += '<g id="stars">';
+    for (const [x, y] of _OB_STARS) {
+      overlay += `<circle cx="${x}" cy="${y}" r="1.2" fill="#FAF7F2" opacity="0.8"/>`;
+    }
+    overlay += '</g>';
+  }
+  if (!overlay) return svg;
+  return svg.replace('</svg>', overlay + '</svg>');
+}
+
+/**
+ * Initialize an onboarding illustration and subscribe to LivingSkyState.
+ * @param {Function} $w
+ * @param {string} key - Key in ONBOARDING_SVGS
+ * @param {string} containerId
+ */
+export function initOnboardingScene($w, key, containerId) {
+  try {
+    if (!$w) return;
+    const container = $w(containerId);
+    if (!container) return;
+    const baseSvg = ONBOARDING_SVGS[key] || '';
+    container.html = baseSvg;
+    let frame;
+    try { frame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
+    if (frame && typeof frame.onMessage === 'function') {
+      frame.onMessage((event) => {
+        const state = event && event.data;
+        if (!state) return;
+        container.html = _applyOnboardingSkyState(baseSvg, state);
+      });
+    }
+  } catch (e) { console.warn('[onboardingIllustrations] initOnboardingScene failed:', e); }
+}
