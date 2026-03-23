@@ -131,6 +131,35 @@ export function getTierForPoints(points) {
   }
 }
 
+// ── GAMIFICATION_TIER_ORDER — avatar tier display order (ascending) ───────────
+
+export const GAMIFICATION_TIER_ORDER = [
+  'Trail Blazer',
+  'Blue Ridge Explorer',
+  'Summit Seeker',
+  'Peak Performer',
+  'Blue Ridge Legend',
+];
+
+// ── isBonusPointsDayAvailable ─────────────────────────────────────────────────
+
+/**
+ * Returns true if the bonus points day feature is available for use.
+ * A bonus points day resets after a 7-day rolling window (strictly > 6 days ago).
+ *
+ * @param {string|null|undefined} bonusPointsDayUsed  ISO date string 'YYYY-MM-DD' or falsy
+ * @param {string} todayET  Current date in ET as 'YYYY-MM-DD'
+ * @returns {boolean}
+ */
+export function isBonusPointsDayAvailable(bonusPointsDayUsed, todayET) {
+  if (!bonusPointsDayUsed) return true;
+  const [y, m, d] = bonusPointsDayUsed.split('-').map(Number);
+  const usedMs = Date.UTC(y, m - 1, d);
+  const [ty, tm, td] = todayET.split('-').map(Number);
+  const todayMs = Date.UTC(ty, tm - 1, td);
+  return Math.floor((todayMs - usedMs) / 86400000) > 6;
+}
+
 // ── getBadgesForAccount ───────────────────────────────────────────────────────
 
 /**

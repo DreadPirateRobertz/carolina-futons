@@ -19,6 +19,8 @@ import {
   STREAK_MULTIPLIER_TIERS,
   getStreakMultiplier,
   BADGE_DISPLAY_NAMES,
+  GAMIFICATION_TIER_ORDER,
+  isBonusPointsDayAvailable,
 } from '../src/public/gamificationTokens.js';
 
 // ── TIER_THRESHOLDS ───────────────────────────────────────────────────────────
@@ -446,5 +448,69 @@ describe('BADGE_DISPLAY_NAMES', () => {
 
   it('unknown slug is not present (fallback handled in TriggerMoments)', () => {
     expect(BADGE_DISPLAY_NAMES['unknown_badge_xyz']).toBeUndefined();
+  });
+});
+
+// ── GAMIFICATION_TIER_ORDER ───────────────────────────────────────────────────
+
+describe('GAMIFICATION_TIER_ORDER', () => {
+  it('has 5 entries', () => {
+    expect(GAMIFICATION_TIER_ORDER).toHaveLength(5);
+  });
+
+  it('first entry is Trail Blazer', () => {
+    expect(GAMIFICATION_TIER_ORDER[0]).toBe('Trail Blazer');
+  });
+
+  it('second entry is Blue Ridge Explorer', () => {
+    expect(GAMIFICATION_TIER_ORDER[1]).toBe('Blue Ridge Explorer');
+  });
+
+  it('third entry is Summit Seeker', () => {
+    expect(GAMIFICATION_TIER_ORDER[2]).toBe('Summit Seeker');
+  });
+
+  it('fourth entry is Peak Performer', () => {
+    expect(GAMIFICATION_TIER_ORDER[3]).toBe('Peak Performer');
+  });
+
+  it('fifth entry is Blue Ridge Legend', () => {
+    expect(GAMIFICATION_TIER_ORDER[4]).toBe('Blue Ridge Legend');
+  });
+
+  it('is an array', () => {
+    expect(Array.isArray(GAMIFICATION_TIER_ORDER)).toBe(true);
+  });
+});
+
+// ── isBonusPointsDayAvailable ─────────────────────────────────────────────────
+
+describe('isBonusPointsDayAvailable', () => {
+  it('returns true when bonusPointsDayUsed is null', () => {
+    expect(isBonusPointsDayAvailable(null, '2026-03-22')).toBe(true);
+  });
+
+  it('returns true when bonusPointsDayUsed is undefined', () => {
+    expect(isBonusPointsDayAvailable(undefined, '2026-03-22')).toBe(true);
+  });
+
+  it('returns true when used exactly 7 days ago', () => {
+    expect(isBonusPointsDayAvailable('2026-03-15', '2026-03-22')).toBe(true);
+  });
+
+  it('returns false when used exactly 6 days ago', () => {
+    expect(isBonusPointsDayAvailable('2026-03-16', '2026-03-22')).toBe(false);
+  });
+
+  it('returns false when used same day', () => {
+    expect(isBonusPointsDayAvailable('2026-03-22', '2026-03-22')).toBe(false);
+  });
+
+  it('returns true across month boundary (7 days: Feb 23 → Mar 2)', () => {
+    expect(isBonusPointsDayAvailable('2026-02-23', '2026-03-02')).toBe(true);
+  });
+
+  it('returns false across month boundary (6 days: Feb 24 → Mar 2)', () => {
+    expect(isBonusPointsDayAvailable('2026-02-24', '2026-03-02')).toBe(false);
   });
 });
