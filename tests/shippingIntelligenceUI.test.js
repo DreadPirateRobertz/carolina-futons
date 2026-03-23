@@ -170,6 +170,17 @@ describe('initShippingIntelligence', () => {
     expect($w.__els['#shippingEstimateSpinner'].show).not.toHaveBeenCalled();
   });
 
+  it('falls back to member ZIP when localStorage has no ZIP and loadMemberZip returns one', async () => {
+    const { loadMemberZip } = await import('public/shippingPrefs');
+    loadMemberZip.mockResolvedValue('28792');
+    // local storage deliberately empty — no setItem call
+    getShippingEstimate.mockResolvedValue({ success: true, options: STANDARD_OPTIONS });
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: local });
+    expect(getShippingEstimate).toHaveBeenCalledWith(PRODUCT_ID, '28792');
+    expect($w.__els['#shippingEstimateBox'].show).toHaveBeenCalled();
+  });
+
   // ── API call ─────────────────────────────────────────────────────────
 
   it('calls getShippingEstimate with productId and stored postal code', async () => {
