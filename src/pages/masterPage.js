@@ -59,7 +59,7 @@ $w.onReady(async function () {
   initCartUpsell($w);
   initFooter($w);
   // Wire footer mountain divider to LivingSkyState — re-render on every sky tick.
-  // e.data is the raw LivingSkyState object (no type field); extract ridgeColors directly.
+  // e.data is the raw LivingSkyState object; ridgeColors extraction happens inside initMountainDividerWithSkyWiring.
   try {
     $w('#livingSkyFrame').onMessage((e) => {
       initMountainDividerWithSkyWiring($w, e.data);

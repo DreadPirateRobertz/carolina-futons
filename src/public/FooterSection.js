@@ -40,10 +40,10 @@ const DEFAULT_R4 = colors.mountainBlue; // far (use token, not hardcoded hex)
  * Build a reactive Blue Ridge mountain silhouette SVG for the footer divider.
  * Three ridge layers shift color based on LivingSkyState.ridgeColors.
  *
- * Layer mapping (foreground → background):
- *   Layer 3 near  — ridgeColors.r1 at opacity 0.75
- *   Layer 2 mid   — ridgeColors.r2 at opacity 0.40
+ * Layer mapping (SVG paint order, background → foreground):
  *   Layer 1 far   — ridgeColors.r4 at opacity 0.22
+ *   Layer 2 mid   — ridgeColors.r2 at opacity 0.40
+ *   Layer 3 near  — ridgeColors.r1 at opacity 0.75
  *
  * SVG filter chain:
  *   feTurbulence result="cf-noise" → feDisplacementMap in2="cf-noise"

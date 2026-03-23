@@ -42,6 +42,7 @@ function createMockElement(id) {
     onBlur: vi.fn(),
     onChange: vi.fn(),
     onItemReady: vi.fn(),
+    onMessage: vi.fn(),
     disable: vi.fn(),
     enable: vi.fn(),
   };
@@ -2613,6 +2614,24 @@ describe('masterPage.js', () => {
       // SDK must be loaded (to populate window.ttq) before the consent-gated PageView
       expect(initTikTokPixel).toHaveBeenCalled();
       expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
+    });
+  });
+
+  // ── LivingSkyFrame → footer mountain divider wiring (cf-6oh) ────────
+
+  describe('livingSkyFrame mountain divider wiring', () => {
+    it('registers onMessage on #livingSkyFrame during onReady', async () => {
+      await onReadyHandler();
+      expect(getEl('#livingSkyFrame').onMessage).toHaveBeenCalled();
+    });
+
+    it('updates #footerMountainDivider.html when a sky message is received', async () => {
+      await onReadyHandler();
+      // Retrieve the registered callback and fire it with a test sky state
+      const callback = getEl('#livingSkyFrame').onMessage.mock.calls[0][0];
+      callback({ data: { ridgeColors: { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' } } });
+      expect(getEl('#footerMountainDivider').html).toContain('#AA1122');
+      expect(getEl('#footerMountainDivider').html).toContain('<svg');
     });
   });
 });
