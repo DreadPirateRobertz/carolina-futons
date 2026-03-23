@@ -73,7 +73,7 @@ function _applyComfortSkyState(svg, state) {
     overlay += '</g>';
   }
   if (!overlay) return svg;
-  return svg.replace('</svg>', overlay + '</svg>');
+  return svg.replace(/<\/svg>\s*$/, overlay + '</svg>');
 }
 
 /**
