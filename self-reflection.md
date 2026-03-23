@@ -243,6 +243,32 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Dallas: 3 queued mails replied to with API contracts
 - Autonomous mode: granted by Stilgar — continuing all phases without per-decision check-in
 
+## Session 2026-03-23 (wave 12 — gamification phase dispatch + security fire water audit)
+
+### What worked well
+- Context recovery after compaction: checked task notifications before any new work — discovered 8 background agents (4 spec reviewers × 2 passes, 4 plan writers) all completed with results. Processed all findings in sequence.
+- Phase 3 spec: reviewer caught "midnight MT" → "midnight ET" error AND probe-call ambiguity (empty-probe creates CMS record and burns a daily slot). Both fixed before plan was written. Correct gate.
+- Security fire water audit: found AGENTS.md + .mail/ + backup/ + witness/ tracked in public DreadPirateRobertz/carolina-futons. Removed 21 files, hardened .gitignore, committed + pushed in one focused session. Mayor notified via mail. No credentials or tokens were in the files — Gas Town tooling only.
+- Initial gamification dispatch: 10 independent beads slung in parallel to 10 polecats. All confirmed HOOKED via bd show. Engine running immediately.
+- Daemon wasn't running — started gt daemon to let merge wisps fire. Correct: didn't wait for explicit instruction since this is infrastructure maintenance, not work assignment.
+
+### Gaps
+- Phase 3 spec → plan sequence: the plan was written BEFORE spec fixes were applied (background agents ran plan concurrently with spec review). Result: plan had "midnight MT" and missing getChatbotEnabled(). Had to fix plan retroactively. Fix: run spec review fully before plan agent starts — don't parallelize spec-review with plan-writing for the same phase.
+- Melania push rejected twice (needed pull --rebase). Remote had polecat branch refs that weren't local. Should always pull before push on crew/melania; polecats push to the same repo.
+
+### Pattern notes
+- Background plan agents that ran concurrently with spec review will inherit the pre-fix spec. Always verify plans against final spec after spec fixes are committed.
+- `gt nudge` to mayor fails when mayor has no active session. Use `gt mail` for anything that must survive session death.
+- `bd list` without filters returns all 28 open beads including wisps and blocked items — use `--status=open` plus name filter for gamification work tracking.
+
+### Metrics (this wave)
+- Specs fixed: Phase 3 (MT→ET ×2, getChatbotEnabled() mandate, parent spec schema cross-ref)
+- Plans written: Phases 3, 4, 5, 6 (4 plans, committed by background agents before compaction)
+- Security: 21 internal files removed from public repo, .gitignore hardened
+- Beads slung: cf-drd, cf-q0i, cf-br4, cf-g7y, cf-1sa, cf-7nj, cf-zjk, cf-s4p, cf-xk0 (9 gamification), cf-7hy (Phase 2 T4) — all HOOKED
+- Daemon started; merge wisps queued for cf-1sa, cf-g7y, cf-zjk, cf-drd
+- PRs reviewed (in-flight): #717, #718, #719
+
 ## Session 2026-03-22 (wave 10 — gamification brainstorm + PR review)
 
 ### What worked well
