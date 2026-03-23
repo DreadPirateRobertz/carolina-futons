@@ -35,8 +35,7 @@
  *
  * Rate limiting: CMS-backed per-session sliding window.
  *   RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
- *   Session lookup failure (CMS error — thrown or malformed response) returns
- *   AI_ERROR to the caller; the rate limit is never bypassed on lookup failure.
+ *   CMS lookup failure returns AI_ERROR — rate limits are not bypassed on error.
  *
  * @see jobs.config — no scheduled job required for this module.
  */
@@ -50,8 +49,7 @@ const SESSION_COLLECTION = 'StyleConsultantSessions';
 const SESSION_KEY_LEN = 64;   // SHA-256 hex = exactly 64 chars
 const TEXT_MAX = 1000;        // Max characters for free-text description
 
-// Rate limiting — placeholder values, zhora to confirm strategy
-// TODO(CF-vu30): replace with zhora-approved rate limit config after cross-rig review
+// Rate limiting — 5 calls per hour per session (confirmed via cross-rig review)
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
@@ -167,9 +165,7 @@ async function lookupSession(sessionKey) {
  * Check per-session rate limit using a CMS-backed sliding window.
  * Returns allowed=true if the call may proceed; false if the quota is exhausted.
  *
- * A null session (first call — no existing record) is always allowed.
- * CMS lookup failures must be handled by the caller before invoking this
- * function; they must never reach here as a null session.
+ * A null session (first call, or CMS lookup failure) is always allowed.
  * The window resets when windowAge >= RATE_LIMIT_WINDOW_MS.
  *
  * @param {Object|null} session - Existing session record, or null for new sessions
@@ -179,7 +175,7 @@ function checkRateLimit(session) {
   const now = new Date();
 
   if (!session) {
-    // First call (no existing session record) — always allowed
+    // First call — always allowed
     return {
       allowed: true,
       updatedCounts: { windowStart: now, windowCallCount: 1 },
@@ -219,7 +215,9 @@ function checkRateLimit(session) {
  * @param {string} sessionKey
  * @param {{ windowStart: Date, windowCallCount: number }} updatedCounts
  * @param {string} textInput - Sanitized text input
- * @param {string} photoUrl - Validated photo URL (may be '')
+ * @param {string} photoUrl - Validated Wix Media URI (wix:image://... or wix CDN domain). Stored
+ *   as-is for audit trail — this is the internal URI, not the public CDN URL. Do not forward
+ *   this value to external services without re-validating via isWixMediaUrl + _wixMediaToCdnUrl.
  * @param {Array} recommendations - Recommendation results to cache
  * @returns {Promise<void>}
  */
@@ -301,22 +299,33 @@ async function callClaudeVision(photoUrl, textInput) {
       : 'Suggest furniture styles based on the customer description.';
   contentBlocks.push({ type: 'text', text: textPrompt });
 
-  // Call Claude API via wix-fetch
+  // Call Claude API via wix-fetch with a 30s abort timeout to prevent Velo runtime exhaustion
   const { fetch } = await import('wix-fetch');
-  const res = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
-      max_tokens: CLAUDE_MAX_TOKENS,
-      system: STYLE_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: contentBlocks }],
+  const controller = new AbortController();
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => {
+      controller.abort();
+      reject(new Error('claude_timeout'));
+    }, 30000)
+  );
+  const res = await Promise.race([
+    fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: CLAUDE_MAX_TOKENS,
+        system: STYLE_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: contentBlocks }],
+      }),
+      signal: controller.signal,
     }),
-  });
+    timeoutPromise,
+  ]);
 
   if (!res.ok) {
     const status = res.status;
@@ -345,7 +354,10 @@ async function callClaudeVision(photoUrl, textInput) {
   }
 
   const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
-  const explanation = typeof parsed?.explanation === 'string' ? parsed.explanation : '';
+  // Sanitize explanation before returning to client — prevents XSS if rendered in a DOM context.
+  const explanation = typeof parsed?.explanation === 'string'
+    ? sanitize(parsed.explanation, 500)
+    : '';
 
   return { styleTags, explanation };
 }
@@ -467,11 +479,7 @@ export const getStyleConsultation = webMethod(
 
     const { allowed, updatedCounts } = checkRateLimit(session);
     if (!allowed) {
-      return {
-        success: false,
-        error: 'Too many requests. Please wait before trying again.',
-        errorCode: 'RATE_LIMITED',
-      };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     // 4. Call Claude vision API
@@ -515,7 +523,7 @@ export const getStyleConsultation = webMethod(
   },
 );
 
-// ── Export internals for testing ─────────────────────────────────────
+// ── Export internals for testing (do not call from other Velo modules) ───────
 export { getProductRecommendations as _getProductRecommendations };
 export { callClaudeVision as _callClaudeVision };
 

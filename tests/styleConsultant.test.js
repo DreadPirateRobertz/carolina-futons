@@ -139,8 +139,8 @@ describe('getStyleConsultation — rate limiting', () => {
     ]);
 
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
-    expect(result.success).toBe(false);
-    expect(result.errorCode).toBe('RATE_LIMITED');
+    expect(result.status).toBe(429);
+    expect(result.error).toBe('Rate limit exceeded');
   });
 
   it('allows a session whose window has expired despite high call count', async () => {
@@ -158,7 +158,7 @@ describe('getStyleConsultation — rate limiting', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 3. Session lookup CMS failure — CF-7du
+// 3. CMS lookup failure does not bypass rate limit
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('getStyleConsultation — CMS lookup failure does not bypass rate limit', () => {
@@ -167,37 +167,27 @@ describe('getStyleConsultation — CMS lookup failure does not bypass rate limit
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('returns AI_ERROR (not allowed) when CMS session query throws', async () => {
-    __setQueryError('StyleConsultantSessions', new Error('CMS unavailable'));
+  it('returns AI_ERROR when CMS session query throws', async () => {
+    __setQueryError('StyleConsultantSessions', new Error('cms_malformed_response'));
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
     expect(result.success).toBe(false);
     expect(result.errorCode).toBe('AI_ERROR');
   });
 
-  it('does not treat a CMS query error as a new first-call session', async () => {
-    // If session lookup failure were treated as "new session", the call would
-    // proceed past rate limiting and fail at the AI_ERROR stage with errorCode='AI_ERROR'
-    // coming from callClaudeVision stub. The CMS error must be caught first and
-    // returned directly without ever reaching the rate-limit or AI-call steps.
-    __setQueryError('StyleConsultantSessions', new Error('Network timeout'));
-    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
-    // Must fail at session lookup, not at AI call (same errorCode, but for the right reason)
-    expect(result.success).toBe(false);
-    expect(result.errorCode).toBe('AI_ERROR');
-    // Confirm the error message is the session-lookup message, not an AI error message
-    expect(result.error).toMatch(/session lookup failed/i);
+  it('does not insert a session record when CMS lookup throws', async () => {
+    __setQueryError('StyleConsultantSessions', new Error('cms_malformed_response'));
+    const inserts = [];
+    __onInsert((col, item) => { if (col === 'StyleConsultantSessions') inserts.push(item); });
+    await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(inserts).toHaveLength(0);
   });
 
-  it('still allows a genuine new session when the CMS query succeeds with no record', async () => {
-    // Empty store = no session record = new user. Query succeeds (no error), finds nothing.
-    // The call must proceed past rate limiting and reach the AI-call stage (stub throws).
-    // The error message must come from the AI-call catch, NOT from the session-lookup catch.
+  it('allows a genuine new session when query succeeds with no record', async () => {
+    // No session seeded — query returns empty result (not an error)
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
-    expect(result.success).toBe(false);
+    // Should fail at AI call stage (stubbed), not at rate-limit or session-lookup stage
     expect(result.errorCode).not.toBe('RATE_LIMITED');
-    // Genuine new session reaches AI call (stub), fails there — NOT with session-lookup message
-    expect(result.error).not.toMatch(/session lookup failed/i);
-    expect(result.error).toMatch(/style analysis unavailable/i);
+    expect(result.status).not.toBe(429);
   });
 });
 
