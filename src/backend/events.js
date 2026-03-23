@@ -180,6 +180,7 @@ export async function wixEcom_onOrderCreated(event) {
   const email = order.buyerInfo?.email || '';
   const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
   const contactId = order.buyerInfo?.contactId || '';
+  const memberId = order.buyerInfo?.memberId || '';
   const orderNumber = order.number || '';
   const total = order.priceSummary?.total?.amount || order.totals?.total || 0;
   const lineItems = (order.lineItems || []).map(item => ({
@@ -195,6 +196,22 @@ export async function wixEcom_onOrderCreated(event) {
     await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems);
   } catch (err) {
     console.error('[events] Error triggering post-purchase sequence:', err);
+  }
+
+  if (memberId) {
+    try {
+      const { recordChallengeProgress } = await import('backend/gamificationEventReceiver.web');
+      const challengeQuery = await wixData
+        .query('Challenges')
+        .eq('conditionType', 'ORDER_COMPLETE')
+        .eq('active', true)
+        .find({ suppressAuth: true });
+      for (const challenge of challengeQuery.items) {
+        await recordChallengeProgress({ memberId, challengeId: challenge.challengeId });
+      }
+    } catch (err) {
+      console.error('[events] Error recording challenge progress on order:', err);
+    }
   }
 }
 

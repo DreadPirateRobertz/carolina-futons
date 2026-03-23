@@ -17,9 +17,9 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
-import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // Tier thresholds (points)
 const TIERS = {
@@ -274,125 +274,107 @@ function getNextTier(currentLabel) {
   return null; // Gold is max
 }
 
-// ── Daily quest engine ────────────────────────────────────────────────────────
+// ── Achievement system ────────────────────────────────────────────────────────
 
-const DAILY_QUEST_POOL = [
-  { id: 'purchase',       title: 'Place an order today',    action: 'purchase',       pointReward: 50 },
-  { id: 'review',         title: 'Write a product review',  action: 'review',         pointReward: 30 },
-  { id: 'referral',       title: 'Refer a friend',          action: 'referral',       pointReward: 75 },
-  { id: 'browse',         title: 'View 5 products',         action: 'browse',         pointReward: 15 },
-  { id: 'wishlist_share', title: 'Share your wishlist',     action: 'wishlist_share', pointReward: 20 },
-];
+const STREAK_MILESTONES = [7, 14, 30, 60, 100, 365];
 
-const DAILY_QUESTS_PER_DAY = 3;
-const DAILY_QUESTS_RATE_LIMIT = 30;
-const DAILY_QUESTS_WINDOW_MS = 60_000;
-
-/** In-memory rate limit store: memberId → { count, windowStart } */
-const _dailyQuestsRateLimit = new Map();
-
-/** @internal — exposed for test reset only */
-export function _resetDailyQuestsRateLimit() {
-  _dailyQuestsRateLimit.clear();
-}
+const BADGE_LABELS = {
+  7:   'Week Warrior',
+  14:  'Fortnight Fighter',
+  30:  'Monthly Master',
+  60:  'Two Month Titan',
+  100: 'Century Club',
+  365: 'Year-Round Legend',
+};
 
 /**
- * Get the day-of-year (1-indexed) for a given Date in local time.
- * The input must be a local-time Date within its own calendar year.
- * Uses Math.round to avoid DST off-by-one on spring-forward days
- * (elapsed ms ≈ 66.958 days → Math.floor gives 66; Math.round gives 67).
- * @param {Date} date - Local-time Date object
- * @returns {number} Day of year, 1-indexed (Jan 1 = 1)
- */
-function getDayOfYear(date) {
-  const startOfYear = new Date(date.getFullYear(), 0, 0);
-  return Math.round((date - startOfYear) / 86_400_000);
-}
-
-/**
- * Deterministic 3-quest selection for a given date.
- * Base slot = dayOfYear % poolSize, then wraps through the pool to pick 3.
+ * Return milestone thresholds newly crossed by currentStreakDays that have not
+ * yet been recorded for memberId in the StreakAchievements collection.
  *
- * @param {Date} date
- * @returns {Array<{ id: string, title: string, action: string, pointReward: number }>}
+ * @param {string} memberId
+ * @param {number} currentStreakDays
+ * @returns {Promise<number[]>}
  */
-export function generateDailyQuests(date) {
-  const poolSize = DAILY_QUEST_POOL.length;
-  const base = getDayOfYear(date) % poolSize;
-  const quests = [];
-  for (let i = 0; i < DAILY_QUESTS_PER_DAY; i++) {
-    quests.push(DAILY_QUEST_POOL[(base + i) % poolSize]);
+export async function checkStreakAchievements(memberId, currentStreakDays) {
+  try {
+    const reached = STREAK_MILESTONES.filter(m => currentStreakDays >= m);
+    if (reached.length === 0) return [];
+
+    const existing = await wixData.query('StreakAchievements')
+      .eq('memberId', memberId)
+      .find({ suppressAuth: true });
+    const earned = new Set(existing.items.map(r => r.milestone));
+    return reached.filter(m => !earned.has(m));
+  } catch (err) {
+    console.error('Error checking streak achievements:', err);
+    return [];
   }
-  return quests;
 }
 
 /**
- * Return today's 3 daily quests with completion status for the authenticated member.
+ * Insert a StreakAchievements record. Idempotent — skips if already recorded.
  *
- * @function getMyDailyQuests
- * @returns {Promise<{ quests: Array, date: string } | { status: 401|429, error: string }>}
+ * @param {string} memberId
+ * @param {number} milestone
+ * @param {number} streakDays
+ * @returns {Promise<void>}
+ */
+export async function insertStreakAchievement(memberId, milestone, streakDays) {
+  try {
+    const existing = await wixData.query('StreakAchievements')
+      .eq('memberId', memberId)
+      .eq('milestone', milestone)
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (existing.items.length > 0) return;
+
+    await wixData.insert('StreakAchievements', {
+      memberId,
+      milestone,
+      streakDays,
+      earnedAt: new Date(),
+      notified: false,
+    }, { suppressAuth: true });
+  } catch (err) {
+    console.error('Error inserting streak achievement:', err);
+    throw err;
+  }
+}
+
+/**
+ * Return all streak achievements earned by the authenticated member.
+ *
+ * @function getMyAchievements
+ * @returns {Promise<{ achievements: Array<{ milestone, streakDays, earnedAt, badgeLabel }> }>}
  * @permission SiteMember
  */
-export const getMyDailyQuests = webMethod(
+export const getMyAchievements = webMethod(
   Permissions.SiteMember,
   async () => {
-    let member;
+    const defaults = { achievements: [] };
     try {
-      member = await currentMember.getMember();
-    } catch (err) {
-      logError('[loyaltyService] getMember failed', err);
-      return { status: 401, error: 'Unauthenticated' };
-    }
-    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
-    const memberId = member._id;
+      const member = await currentMember.getMember();
+      if (!member?._id) return defaults;
 
-    // Rate limit: 30 requests per minute per member.
-    // NOTE: this Map is module-scoped and is instance-local in serverless environments.
-    // It provides soft rate limiting within a single warm instance; cross-instance
-    // enforcement requires a CMS-backed counter (acceptable for this use case).
-    const now = Date.now();
-    const rl = _dailyQuestsRateLimit.get(memberId) || { count: 0, windowStart: now };
-    if (now - rl.windowStart > DAILY_QUESTS_WINDOW_MS) {
-      rl.count = 0;
-      rl.windowStart = now;
-    }
-    rl.count += 1;
-    _dailyQuestsRateLimit.set(memberId, rl);
-    if (rl.count > DAILY_QUESTS_RATE_LIMIT) {
-      return { status: 429, error: 'Rate limit exceeded' };
-    }
+      const { allowed } = await checkRateLimit('AchievementsRateLimit', member._id, { max: 20, windowMs: 60_000 });
+      if (!allowed) return { error: 'Rate limit exceeded' };
 
-    const today = new Date();
-    const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const quests = generateDailyQuests(today);
-
-    // Fetch completions for this member + today
-    let completions = [];
-    try {
-      const res = await wixData.query('QuestCompletions')
-        .eq('memberId', memberId)
-        .eq('dateKey', dateKey)
+      const res = await wixData.query('StreakAchievements')
+        .eq('memberId', member._id)
         .find({ suppressAuth: true });
-      completions = res.items;
+
+      const achievements = res.items.map(item => ({
+        milestone:  item.milestone,
+        streakDays: item.streakDays,
+        earnedAt:   item.earnedAt,
+        badgeLabel: BADGE_LABELS[item.milestone] ?? `${item.milestone}-day streak`,
+      }));
+
+      return { achievements };
     } catch (err) {
-      logError('[loyaltyService] QuestCompletions query failed', err);
+      // Fail-open: return empty list rather than surface errors to the client
+      console.error('Error getting achievements:', err);
+      return defaults;
     }
-
-    const completionByAction = new Map(completions.map(c => [c.action, c]));
-
-    return {
-      quests: quests.map(q => {
-        const record = completionByAction.get(q.action) ?? null;
-        return {
-          id: q.id,
-          title: q.title,
-          action: q.action,
-          pointReward: q.pointReward,
-          completed: record !== null,
-          completedAt: record?.completedAt ?? null,
-        };
-      }),
-      date: dateKey,
-    };
   }
 );
