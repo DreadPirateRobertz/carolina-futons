@@ -29,6 +29,7 @@ import {
 import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCreditHelpers.js';
 import { initCheckoutGiftCard, finalizeGiftCardRedemption, resetCheckoutGiftCard } from 'public/giftCardHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { initCheckoutShippingIntelligence } from 'public/CheckoutShippingIntelligence.js';
 
 // Shared state for cross-section communication
 let _currentCart = null;
@@ -49,6 +50,7 @@ $w.onReady(async function () {
     { name: 'giftCard', init: initGiftCardSection },
     { name: 'deliveryEstimate', init: initDeliveryEstimate },
     { name: 'expressCheckout', init: initExpressCheckout },
+    { name: 'shippingIntelligence', init: initShippingIntelligenceSection },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
@@ -975,6 +977,46 @@ function initCheckoutFocusIndicators() {
   elementIds.forEach(id => {
     try { applyFocusRing($w(id)); } catch (e) {}
   });
+}
+
+// ── Shipping Intelligence ─────────────────────────────────────────────────────
+// Real-time shipping rate calculation via getShippingEstimate / calculateBundleQuote.
+// Displays all available tiers, freight warnings, and isEstimate labels.
+// CF-nnul: Mobile checkout shipping intelligence integration
+
+async function initShippingIntelligenceSection() {
+  try {
+    const cart = _currentCart || await getCurrentCart();
+    if (!cart) return;
+
+    const lineItems = Array.isArray(cart.lineItems) ? cart.lineItems : [];
+    if (lineItems.length === 0) return;
+
+    // Map Wix cart line items to the shape expected by CheckoutShippingIntelligence
+    const cartItems = lineItems.map(item => ({
+      productId: item.productId || item.catalogReference?.catalogItemId || null,
+      quantity: item.quantity || 1,
+      price: Number(item.price) || 0,
+    })).filter(item => item.productId);
+
+    await initCheckoutShippingIntelligence($w, cartItems, {
+      onSelect: (code, option) => {
+        _selectedShippingMethod = code;
+        // Sync order summary sidebar with chosen shipping option
+        try {
+          const items = lineItems.map(item => ({
+            price: Number(item.price) || 0,
+            quantity: item.quantity || 1,
+            name: item.name || item.productName || 'Item',
+          }));
+          updateOrderSummaryDisplay(items, 'NC', code);
+        } catch (e) {}
+        try { announce($w, `${option.title} selected`); } catch (e) {}
+      },
+    });
+  } catch (e) {
+    console.error('[Checkout] Error initializing shipping intelligence:', e);
+  }
 }
 
 function addBusinessDays(startDate, days) {
