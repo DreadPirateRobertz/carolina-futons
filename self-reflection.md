@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont-5 (Illustration badge alignment + PR #768)
+
+### What worked well
+- Badge alignment: replaced placeholder SVG badges (mountain explorer, flame, star, compass) with actual Blue Ridge Mountain animal silhouettes from gamificationTokens.js — exact paths + hex colors from sharedTokens.js. Rendered faithfully per badgeIcons.js pattern (48×48 viewBox, circle 0.12 opacity + path, no clip-path).
+- Light preview bg (#F5F0E8) shows all 6 animals clearly including the very dark badgeEspresso (#3D1C02) Black Bear.
+- PR #768 (radahn, cf-o70+cf-js7): CI all green, boxes checked, refinery dispatched in background — clean P4 follow-up.
+- 🚀 reaction to Stilgar's MELANIA Discord message (HTTP 204 = success).
+
+### Gaps / improvement opportunities
+- File-modified-since-read error on Edit: caused by the tool detecting the file changed between session compaction read and current edit. Fix: always re-read immediately before editing if there was any delay.
+- Wrong branch for doc commit again (fix/CF-vu30-review-followup). The repo still has that branch checked out. Need to start every commit sequence with `git branch --show-current` check.
+
+### Pattern notes
+- `badgeEspresso = '#3D1C02'` is nearly black — needs light background in preview. On dark bg (#1E1208) it would be invisible. Used parchment (#F5F0E8) as badge preview bg.
+- All 6 animals in the system: Bluebird (coral), Bear (espresso), Owl (mountain blue), Moth (forest blue), Red-Tailed Hawk (gold), Sharp-shinned Hawk (amber/streak chip).
+
+---
+
 ## Session 2026-03-23 cont-4 (Wave 25 wrap + illustration phase)
 
 ### What worked well
