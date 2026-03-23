@@ -91,6 +91,14 @@ describe('formatLimitDisplay', () => {
   it('clamps negative input to 0', () => {
     expect(formatLimitDisplay(-1)).toBe('0 messages remaining today');
   });
+
+  it('clamps large negative input to 0', () => {
+    expect(formatLimitDisplay(-100)).toBe('0 messages remaining today');
+  });
+
+  it('floors fractional input', () => {
+    expect(formatLimitDisplay(2.9)).toBe('2 messages remaining today');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
