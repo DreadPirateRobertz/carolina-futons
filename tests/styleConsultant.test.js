@@ -8,11 +8,14 @@
  *   - Session lookup/upsert paths
  *   - getStyleConsultation integration (mocked AI call)
  *
- * Phase 2 (after zhora review + Claude API wired):
- *   - callClaudeVision error handling (429, content policy, timeout)
- *   - Product matching from style tags
+ * Phase 2 (Claude API wired):
+ *   - callClaudeVision — success (text-only, photo+text)
+ *   - callClaudeVision — HTTP error codes (429, 401, 400, 500)
+ *   - callClaudeVision — response parse errors (empty, malformed, fenced JSON)
+ *   - callClaudeVision — wix:image:// URL conversion to CDN URL
+ *   - _wixMediaToCdnUrl — URL conversion
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   __reset as resetData,
   __seed,
@@ -21,10 +24,15 @@ import {
   __getInserted,
 } from './__mocks__/wix-data.js';
 
+import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
+import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
+
 import {
   getStyleConsultation,
   _getProductRecommendations,
   _setCallClaudeVision,
+  _callClaudeVision,
+  _wixMediaToCdnUrl,
 } from '../src/backend/styleConsultant.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -375,5 +383,207 @@ describe('getStyleConsultation — AI call paths', () => {
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
     expect(result.success).toBe(true); // CMS write failure is non-fatal
     expect(result.recommendations.length).toBeGreaterThan(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 6. _wixMediaToCdnUrl — URL conversion
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('_wixMediaToCdnUrl', () => {
+  it('converts wix:image:// URI to static.wixstatic.com CDN URL', () => {
+    const result = _wixMediaToCdnUrl('wix:image://v1/abc123~mv2.jpg/photo.jpg#originWidth=800&originHeight=600');
+    expect(result).toBe('https://static.wixstatic.com/media/abc123~mv2.jpg');
+  });
+
+  it('converts wix:video:// URI to CDN URL', () => {
+    const result = _wixMediaToCdnUrl('wix:video://v1/vid456~mv2.mp4/clip.mp4');
+    expect(result).toBe('https://static.wixstatic.com/media/vid456~mv2.mp4');
+  });
+
+  it('returns CDN URL as-is when already https://', () => {
+    const cdn = 'https://static.wixstatic.com/media/abc123~mv2.jpg';
+    expect(_wixMediaToCdnUrl(cdn)).toBe(cdn);
+  });
+
+  it('returns wixmp.com URL as-is', () => {
+    const cdn = 'https://video.wixmp.com/video/file/abc.mp4';
+    expect(_wixMediaToCdnUrl(cdn)).toBe(cdn);
+  });
+
+  it('returns null for empty string', () => {
+    expect(_wixMediaToCdnUrl('')).toBeNull();
+  });
+
+  it('returns null for null', () => {
+    expect(_wixMediaToCdnUrl(null)).toBeNull();
+  });
+
+  it('returns null for unrecognized format', () => {
+    expect(_wixMediaToCdnUrl('http://example.com/photo.jpg')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 7. _callClaudeVision — real implementation (wix-fetch + wix-secrets-backend mocked)
+// ═══════════════════════════════════════════════════════════════════════
+
+const TEST_API_KEY = 'sk-ant-test-key-xyz';
+
+function makeClaudeResponse(styleTags, explanation) {
+  return {
+    ok: true,
+    status: 200,
+    async json() {
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ styleTags, explanation }) }],
+      };
+    },
+  };
+}
+
+function makeClaudeError(status) {
+  return { ok: false, status, async json() { return {}; } };
+}
+
+describe('_callClaudeVision — real implementation', () => {
+  beforeEach(() => {
+    resetFetch();
+    resetSecrets();
+    _setCallClaudeVision(null); // ensure real implementation runs
+    __setSecrets({ ANTHROPIC_API_KEY: TEST_API_KEY });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    _setCallClaudeVision(null);
+  });
+
+  it('returns styleTags and explanation on success (text-only)', async () => {
+    __setHandler(() => makeClaudeResponse(['modern', 'minimalist'], 'Clean lines suggest a modern style.'));
+
+    const result = await _callClaudeVision('', 'minimalist living room');
+    expect(result.styleTags).toEqual(['modern', 'minimalist']);
+    expect(result.explanation).toBe('Clean lines suggest a modern style.');
+  });
+
+  it('includes image block in request when photo URL provided', async () => {
+    const captured = [];
+    __setHandler((_url, opts) => {
+      captured.push(JSON.parse(opts.body));
+      return makeClaudeResponse(['coastal'], 'Coastal vibes.');
+    });
+
+    await _callClaudeVision(
+      'wix:image://v1/abc123~mv2.jpg/room.jpg',
+      'beach house feel'
+    );
+
+    const body = captured[0];
+    const content = body.messages[0].content;
+    const imageBlock = content.find(b => b.type === 'image');
+    expect(imageBlock).toBeDefined();
+    expect(imageBlock.source.url).toBe('https://static.wixstatic.com/media/abc123~mv2.jpg');
+  });
+
+  it('omits image block when no photo URL provided', async () => {
+    const captured = [];
+    __setHandler((_url, opts) => {
+      captured.push(JSON.parse(opts.body));
+      return makeClaudeResponse(['rustic'], 'Rustic charm.');
+    });
+
+    await _callClaudeVision('', 'cozy cabin');
+
+    const content = captured[0].messages[0].content;
+    expect(content.every(b => b.type !== 'image')).toBe(true);
+  });
+
+  it('sends x-api-key and anthropic-version headers', async () => {
+    const captured = [];
+    __setHandler((_url, opts) => {
+      captured.push(opts.headers);
+      return makeClaudeResponse(['modern'], 'Modern.');
+    });
+
+    await _callClaudeVision('', 'modern room');
+    expect(captured[0]['x-api-key']).toBe(TEST_API_KEY);
+    expect(captured[0]['anthropic-version']).toBeDefined();
+  });
+
+  it('throws claude_rate_limited on HTTP 429', async () => {
+    __setHandler(() => makeClaudeError(429));
+    await expect(_callClaudeVision('', 'any text')).rejects.toThrow('claude_rate_limited');
+  });
+
+  it('throws claude_auth_error on HTTP 401', async () => {
+    __setHandler(() => makeClaudeError(401));
+    await expect(_callClaudeVision('', 'any text')).rejects.toThrow('claude_auth_error');
+  });
+
+  it('throws claude_bad_request on HTTP 400', async () => {
+    __setHandler(() => makeClaudeError(400));
+    await expect(_callClaudeVision('', 'any text')).rejects.toThrow('claude_bad_request');
+  });
+
+  it('throws claude_api_error_500 on HTTP 500', async () => {
+    __setHandler(() => makeClaudeError(500));
+    await expect(_callClaudeVision('', 'any text')).rejects.toThrow('claude_api_error_500');
+  });
+
+  it('throws claude_empty_response when content array is absent', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() { return { content: [] }; },
+    }));
+    await expect(_callClaudeVision('', 'test')).rejects.toThrow('claude_empty_response');
+  });
+
+  it('throws claude_parse_error when response text is not JSON', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() { return { content: [{ type: 'text', text: 'Sorry, I cannot help.' }] }; },
+    }));
+    await expect(_callClaudeVision('', 'test')).rejects.toThrow('claude_parse_error');
+  });
+
+  it('parses JSON wrapped in a markdown code fence', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          content: [{
+            type: 'text',
+            text: '```json\n{"styleTags":["industrial"],"explanation":"Raw metal finish."}\n```',
+          }],
+        };
+      },
+    }));
+
+    const result = await _callClaudeVision('', 'loft space');
+    expect(result.styleTags).toEqual(['industrial']);
+    expect(result.explanation).toBe('Raw metal finish.');
+  });
+
+  it('throws when ANTHROPIC_API_KEY secret is missing', async () => {
+    resetSecrets(); // clear all secrets — no ANTHROPIC_API_KEY
+    await expect(_callClaudeVision('', 'test')).rejects.toThrow();
+  });
+
+  it('returns empty styleTags and explanation gracefully for partial JSON', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return { content: [{ type: 'text', text: '{}' }] };
+      },
+    }));
+
+    const result = await _callClaudeVision('', 'some text');
+    expect(result.styleTags).toEqual([]);
+    expect(result.explanation).toBe('');
   });
 });
