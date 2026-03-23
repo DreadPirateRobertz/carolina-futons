@@ -150,11 +150,18 @@ export function getTodayET() {
 }
 
 export function getYesterdayET() {
-  const d = new Date(Date.now() - 86400000);
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(d).split('/').reverse().join('-');
+  // Parse the ET calendar date and subtract 1 day using date component arithmetic.
+  // DO NOT use Date.now() - 86400000 — a fixed millisecond offset does not account
+  // for US DST transitions (spring-forward day is 23 hours, fall-back day is 25 hours).
+  // Calendar-day subtraction via Date.UTC handles month and year boundaries correctly.
+  const today = getTodayET(); // e.g. "2026-03-22"
+  const [y, m, d] = today.split('-').map(Number);
+  const yesterday = new Date(Date.UTC(y, m - 1, d - 1)); // day-1=0 → last day of prev month
+  return [
+    yesterday.getUTCFullYear(),
+    String(yesterday.getUTCMonth() + 1).padStart(2, '0'),
+    String(yesterday.getUTCDate()).padStart(2, '0'),
+  ].join('-');
 }
 ```
 
@@ -221,6 +228,6 @@ From radahn's audit — these already exist and are wired:
 - [ ] `#streakCountChip`, `#streakMultiplierBadge`, `#streakToastBox` added to editor in `#loyaltySection`
 - [ ] `Member Page.js` integrated: streak display updates on point-earning event response
 - [ ] Reduced-motion fallback implemented
-- [ ] Tests: `getStreakMultiplier()` boundaries, `updateStreakState()` all branches (same-day no-op with `milestoneBonus = 0`, increment, reset, day-7 milestone, non-points spin), multiplier applied correctly in receiver, ET midnight boundary, badge de-dup
+- [ ] Tests: `getStreakMultiplier()` boundaries, `updateStreakState()` all branches (same-day no-op with `milestoneBonus = 0`, increment, reset, day-7 milestone, non-points spin), multiplier applied correctly in receiver, ET midnight boundary, badge de-dup, `getYesterdayET()` on both US DST transition nights (spring-forward: March clock change; fall-back: November clock change)
 - [ ] **EDITOR_HOOKUP_GUIDE.html updated** (3 new element nicknames: `#streakCountChip`, `#streakMultiplierBadge`, `#streakToastBox`)
 - [ ] **EDITOR-HOOKUP-GUIDE.md updated** (sync with HTML)
