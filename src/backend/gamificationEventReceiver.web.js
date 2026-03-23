@@ -24,6 +24,7 @@ import wixData from 'wix-data';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
 const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
+const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
 
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
@@ -247,4 +248,94 @@ export function updateStreakState(record, todayET, yesterdayET) {
     streakMultiplier: 1,
     milestoneBonus: 0,
   };
+}
+
+// ── Challenge progress helper (exported for testing) ──────────────────────────
+
+/**
+ * Updates MemberChallengeProgress for one member + one challenge.
+ * Handles idempotency (eventIds JSON array), bounded array (trim at 1000),
+ * and challenge completion detection.
+ *
+ * @param {string} memberId
+ * @param {Object} challenge  - Full challenge record from Challenges collection
+ * @param {string} eventId    - Unique event ID for idempotency
+ * @param {Date}   now        - Current timestamp (injected for testability)
+ * @returns {Promise<{
+ *   challengeId: string,
+ *   title: string,
+ *   progressValue: number,
+ *   targetCount: number,
+ *   justCompleted: boolean,
+ *   completedAt: Date|null,
+ *   alreadyProcessed?: boolean,
+ *   alreadyCompleted?: boolean,
+ *   progressError?: boolean,
+ * }>}
+ */
+export async function updateChallengeProgress(memberId, challenge, eventId, now) {
+  const { challengeId, title, targetCount } = challenge;
+  const base = { challengeId, title, targetCount };
+
+  try {
+    const results = await wixData
+      .query(CHALLENGE_PROGRESS_COLLECTION)
+      .eq('memberId', memberId)
+      .eq('challengeId', challengeId)
+      .find();
+
+    let record = results.items[0];
+
+    // If challenge already completed, do nothing
+    if (record && record.completedAt) {
+      return { ...base, progressValue: record.progressValue, justCompleted: false, completedAt: record.completedAt, alreadyCompleted: true };
+    }
+
+    // Parse eventIds — create record if none exists
+    if (!record) {
+      record = {
+        memberId,
+        challengeId,
+        progressValue: 0,
+        eventIds: '[]',
+        completedAt: null,
+        notifiedAt: null,
+      };
+    }
+
+    const eventIds = JSON.parse(record.eventIds || '[]');
+
+    // Idempotency check
+    if (eventIds.includes(eventId)) {
+      return { ...base, progressValue: record.progressValue, justCompleted: false, completedAt: record.completedAt, alreadyProcessed: true };
+    }
+
+    // Bounded array: trim oldest 500 if at 1000
+    if (eventIds.length >= 1000) {
+      eventIds.splice(0, 500);
+    }
+    eventIds.push(eventId);
+
+    const newProgress = record.progressValue + 1;
+    const justCompleted = newProgress >= targetCount;
+    const completedAt = justCompleted ? now : null;
+
+    const updatedRecord = {
+      ...record,
+      progressValue: newProgress,
+      eventIds: JSON.stringify(eventIds),
+      completedAt,
+    };
+
+    if (record._id) {
+      await wixData.update(CHALLENGE_PROGRESS_COLLECTION, updatedRecord);
+    } else {
+      await wixData.insert(CHALLENGE_PROGRESS_COLLECTION, updatedRecord);
+    }
+
+    return { ...base, progressValue: newProgress, justCompleted, completedAt };
+  } catch (err) {
+    logError(`updateChallengeProgress — failed for member ${memberId} challenge ${challengeId}`, err, { silent: true });
+    return { ...base, progressValue: 0, justCompleted: false, completedAt: null, progressError: true };
+  }
 }

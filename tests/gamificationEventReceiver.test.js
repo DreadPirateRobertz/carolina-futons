@@ -26,7 +26,7 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES } from '../src/public/gamificationTokens.js';
 
 beforeEach(() => {
@@ -754,5 +754,144 @@ describe('updateStreakState', () => {
       expect(result.streakMultiplier).toBe(1);
       expect(result.streakStartDate).toBe(TODAY);
     });
+  });
+});
+
+// ── updateChallengeProgress ───────────────────────────────────────────────────
+
+const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
+
+const BASE_CHALLENGE = {
+  _id: 'ch-1',
+  challengeId: 'ch-1',
+  title: 'First Steps',
+  conditionType: 'ORDER_COMPLETE',
+  targetCount: 3,
+  rewardPoints: 100,
+  rewardBadgeId: null,
+  expiresAt: new Date('2027-01-01T00:00:00Z'),
+  active: true,
+};
+
+describe('updateChallengeProgress', () => {
+  beforeEach(() => __reset());
+
+  it('creates a new progress record and increments to 1 on first event', async () => {
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-001', new Date());
+    expect(result.progressValue).toBe(1);
+    expect(result.justCompleted).toBe(false);
+    const inserted = __getInserted(CHALLENGE_PROGRESS_COLLECTION);
+    expect(inserted[0]).toMatchObject({
+      memberId: 'member-1',
+      challengeId: 'ch-1',
+      progressValue: 1,
+    });
+  });
+
+  it('increments existing progress record', async () => {
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      {
+        _id: 'prog-1',
+        memberId: 'member-1',
+        challengeId: 'ch-1',
+        progressValue: 1,
+        eventIds: JSON.stringify(['evt-000']),
+        completedAt: null,
+        notifiedAt: null,
+      },
+    ]);
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-001', new Date());
+    expect(result.progressValue).toBe(2);
+    expect(result.justCompleted).toBe(false);
+  });
+
+  it('does NOT increment when eventId is already in eventIds (idempotency)', async () => {
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      {
+        _id: 'prog-1',
+        memberId: 'member-1',
+        challengeId: 'ch-1',
+        progressValue: 1,
+        eventIds: JSON.stringify(['evt-001']),
+        completedAt: null,
+        notifiedAt: null,
+      },
+    ]);
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-001', new Date());
+    expect(result.alreadyProcessed).toBe(true);
+    expect(result.progressValue).toBe(1);
+  });
+
+  it('sets justCompleted: true and completedAt when progressValue reaches targetCount', async () => {
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      {
+        _id: 'prog-1',
+        memberId: 'member-1',
+        challengeId: 'ch-1',
+        progressValue: 2,
+        eventIds: JSON.stringify(['evt-000', 'evt-001']),
+        completedAt: null,
+        notifiedAt: null,
+      },
+    ]);
+    const now = new Date('2026-03-22T14:00:00Z');
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-002', now);
+    expect(result.progressValue).toBe(3);
+    expect(result.justCompleted).toBe(true);
+    expect(result.completedAt).toEqual(now);
+  });
+
+  it('does NOT increment past targetCount (already completed challenge)', async () => {
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      {
+        _id: 'prog-1',
+        memberId: 'member-1',
+        challengeId: 'ch-1',
+        progressValue: 3,
+        eventIds: JSON.stringify(['evt-000', 'evt-001', 'evt-002']),
+        completedAt: new Date('2026-03-22T10:00:00Z'),
+        notifiedAt: null,
+      },
+    ]);
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-003', new Date());
+    expect(result.alreadyCompleted).toBe(true);
+    expect(result.progressValue).toBe(3);
+  });
+
+  it('trims eventIds to 501 entries when array reaches 1000 before appending', async () => {
+    const bigIds = Array.from({ length: 1000 }, (_, i) => `evt-${i}`);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      {
+        _id: 'prog-1',
+        memberId: 'member-1',
+        challengeId: 'ch-1',
+        progressValue: 1,
+        eventIds: JSON.stringify(bigIds),
+        completedAt: null,
+        notifiedAt: null,
+      },
+    ]);
+
+    let writtenRecord = null;
+    __onUpdate((collection, item) => {
+      if (collection === CHALLENGE_PROGRESS_COLLECTION) writtenRecord = item;
+    });
+
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-new', new Date());
+    expect(result.progressValue).toBe(2);
+    expect(result.justCompleted).toBe(false);
+    expect(writtenRecord).not.toBeNull();
+    const writtenIds = JSON.parse(writtenRecord.eventIds);
+    expect(writtenIds).toHaveLength(501);
+    // Newest 500 kept: evt-500 through evt-999, plus 'evt-new'
+    expect(writtenIds).toContain('evt-999');
+    expect(writtenIds).toContain('evt-new');
+    expect(writtenIds).not.toContain('evt-0'); // oldest trimmed
+  });
+
+  it('returns { progressError: true } without throwing when wix-data query fails', async () => {
+    __setQueryError(CHALLENGE_PROGRESS_COLLECTION, new Error('DB unavailable'));
+    const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-001', new Date());
+    expect(result.progressError).toBe(true);
   });
 });
