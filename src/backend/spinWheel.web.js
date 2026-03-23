@@ -14,6 +14,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { getTierForPoints } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
+import { getTodayET } from 'backend/utils/dateUtils';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -27,12 +28,6 @@ const MEMBER_PENDING_PRIZES = 'MemberPendingPrizes';
 const RATE_LIMIT_MAX = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 const FALLBACK_POINTS = 25;
-
-// ── ET timezone helpers ──────────────────────────────────────────────────────
-
-function getETDateString(date = new Date()) {
-  return date.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-}
 
 /**
  * Milliseconds until next ET midnight. Uses Intl verification loop so the
@@ -70,7 +65,7 @@ function nextETMidnightMs() {
 // ── Eligibility helpers ──────────────────────────────────────────────────────
 
 async function hasDailySpinToday(memberId) {
-  const todayET = getETDateString();
+  const todayET = getTodayET();
   const res = await wixData.query(SPIN_HISTORY)
     .eq('memberId', memberId)
     .eq('spinDate', todayET)
@@ -250,7 +245,7 @@ export const spinWheel = webMethod(
       }
 
       const eventId = `spin_${memberId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const todayET = getETDateString();
+      const todayET = getTodayET();
 
       // 4. SpinHistory write — capture insertedHistory._id
       const insertedHistory = await wixData.insert(SPIN_HISTORY, {
