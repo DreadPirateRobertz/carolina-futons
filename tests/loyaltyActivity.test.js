@@ -13,7 +13,7 @@
  *  - Error handling: graceful degradation on PointsLedger query failure
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __reset as __resetData, __seed, __setQueryError } from './__mocks__/wix-data.js';
+import { __reset as __resetData, __seed, __setQueryError, __getLastFindOptions } from './__mocks__/wix-data.js';
 import { __reset as __resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
 
 // ── Hoisted mock refs ─────────────────────────────────────────────────────────
@@ -229,6 +229,32 @@ describe('getMyActivity — member isolation', () => {
     const res = await getMyActivity();
     expect(res.events).toHaveLength(1);
     expect(res.events[0].id).toBe('mine');
+  });
+});
+
+// ── Edge cases ────────────────────────────────────────────────────────────────
+
+describe('getMyActivity — edge cases', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('queries PointsLedger with suppressAuth: true', async () => {
+    await getMyActivity();
+    expect(__getLastFindOptions('PointsLedger')).toMatchObject({ suppressAuth: true });
+  });
+
+  it('treats limit: 0 as the default limit (20) due to falsy coercion', async () => {
+    const events = Array.from({ length: 25 }, (_, i) => makeEvent({ _id: `evt-${i}` }));
+    __seed('PointsLedger', events);
+    const res = await getMyActivity({ limit: 0 });
+    // Number(0) || 20 resolves to 20 because 0 is falsy
+    expect(res.events).toHaveLength(20);
+  });
+
+  it('clamps negative offset to 0', async () => {
+    __seed('PointsLedger', [makeEvent({ _id: 'evt-1' })]);
+    const res = await getMyActivity({ offset: -5 });
+    expect(res.events).toHaveLength(1);
+    expect(res.events[0].id).toBe('evt-1');
   });
 });
 
