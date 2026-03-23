@@ -3,7 +3,7 @@
  * @description TDD tests for CF-wh4: getProductResources webMethod.
  *
  * Covers:
- *  - Returns empty array for missing productId
+ *  - Returns empty array for invalid/missing productId (validateId guard)
  *  - Returns empty array when no resources exist
  *  - Returns sorted resources (ascending sortOrder)
  *  - Strips internal fields (_id, _owner, etc.) from response
@@ -32,13 +32,18 @@ beforeEach(() => {
 // ── getProductResources ───────────────────────────────────────────────────────
 
 describe('getProductResources', () => {
-  it('returns empty array when productId is missing', async () => {
+  it('returns empty array when productId is null', async () => {
     const result = await getProductResources(null);
     expect(result).toEqual([]);
   });
 
   it('returns empty array when productId is empty string', async () => {
     const result = await getProductResources('');
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array for productId with disallowed characters (validateId guard)', async () => {
+    const result = await getProductResources('prod@evil/../etc');
     expect(result).toEqual([]);
   });
 
