@@ -18,6 +18,7 @@ import {
   getBadgesForAccount,
   STREAK_MULTIPLIER_TIERS,
   getStreakMultiplier,
+  BADGE_DISPLAY_NAMES,
 } from '../src/public/gamificationTokens.js';
 
 // ── TIER_THRESHOLDS ───────────────────────────────────────────────────────────
@@ -420,5 +421,30 @@ describe('getBadgesForAccount — week_wanderer', () => {
   it('loginStreakDays alone does NOT earn week_wanderer (superseded field)', () => {
     const badges = getBadgesForAccount({ loginStreakDays: 100, currentStreakDays: 0 });
     expect(badges).not.toContain('week_wanderer');
+  });
+});
+
+// ── BADGE_DISPLAY_NAMES ───────────────────────────────────────────────────────
+
+describe('BADGE_DISPLAY_NAMES', () => {
+  it('exports an object', () => {
+    expect(typeof BADGE_DISPLAY_NAMES).toBe('object');
+    expect(BADGE_DISPLAY_NAMES).not.toBeNull();
+  });
+
+  it('week_wanderer maps to human-readable name', () => {
+    expect(BADGE_DISPLAY_NAMES['week_wanderer']).toBe('Week Wanderer');
+  });
+
+  it('trail_regular maps to human-readable name', () => {
+    expect(BADGE_DISPLAY_NAMES['trail_regular']).toBe('Trail Regular');
+  });
+
+  it('ar_explorer maps to human-readable name', () => {
+    expect(BADGE_DISPLAY_NAMES['ar_explorer']).toBe('AR Explorer');
+  });
+
+  it('unknown slug is not present (fallback handled in TriggerMoments)', () => {
+    expect(BADGE_DISPLAY_NAMES['unknown_badge_xyz']).toBeUndefined();
   });
 });

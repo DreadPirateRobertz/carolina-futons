@@ -161,3 +161,17 @@ export function getBadgesForAccount(accountHistory = {}) {
 
   return earned;
 }
+
+// ── BADGE_DISPLAY_NAMES ───────────────────────────────────────────────────────
+
+/**
+ * Display names for badge slugs.
+ * Used by TriggerMoments.js to render human-readable badge names.
+ * Extend as new badges are added.
+ */
+export const BADGE_DISPLAY_NAMES = {
+  week_wanderer: 'Week Wanderer',
+  trail_regular: 'Trail Regular',
+  top_reviewer: 'Top Reviewer',
+  ar_explorer: 'AR Explorer',
+};
