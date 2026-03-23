@@ -1,5 +1,21 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 (Wave 19 — cherry-pick pattern, PR #741 fix, crew dispatch)
+
+### What worked well
+- Cherry-pick for isolated new content: PR #740 branch was 5 commits behind main with 4 already merged. Instead of rebasing the whole branch, cherry-picked only `0392ef18` (NaN guard + 3 tests) onto main. Clean, minimal footprint.
+- PR #741 API alignment: identified and merged godfrey's fix (pass `$w` to `initLivingSky`, remove manual tick loop) quickly — recognized it as a necessary stub-era cleanup, not a regression.
+- Crew dispatch cadence: 3 idle crew → 3 gamification beads created (cf-6tv daily quests/godfrey, cf-7sb achievements/miquella, cf-1mp challenge catalog/rennala) → nudged all in under 5 mins.
+- Consistent gamification architecture: new beads follow the same loyaltyService.web.js + wix-data mock + rate limit + TDD pattern already established. Crew won't need to invent anything.
+
+### Gaps / improvement opportunities
+- PR #741 went through full CI cycle before I looked at the queue. Should check `gh pr list` earlier in the session rather than discovering an open PR incidentally.
+- Mobile beads (cf-7l2, cf-fv7, cf-ymo) are open but NOT for cfutons crew — they're for dallas's crew. The `bd ready` output is shared across rigs; always filter by `--assignee` for accurate picture.
+
+### Pattern notes
+- cherry-pick for tiny delta on stale branch: if a PR branch is far behind main and the only new content is 1-2 commits, cherry-pick those commits directly to main rather than rebasing the full branch. Avoids conflict resolution on already-landed code.
+- API stub-to-real drift: when a feature was coded against a stub (cf-hw7 coded before cf-ad3 merged), expect at least one follow-up PR to align API signatures. Plan for it in the review cycle.
+
 ## Session 2026-03-23 (Wave 18 — PR flush + idle crew dispatch)
 
 ### What worked well
