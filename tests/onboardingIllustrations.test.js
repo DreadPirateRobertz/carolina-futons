@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   ONBOARDING_SVGS,
   svgToDataUri,
+  initOnboardingScene,
 } from '../src/public/onboardingIllustrations.js';
 
 import { colors } from '../src/public/sharedTokens.js';
@@ -267,5 +268,69 @@ describe('Onboarding Illustrations', () => {
         expect(ONBOARDING_SVGS[key]).not.toMatch(/href="http/i);
       });
     });
+  });
+});
+
+// ── initOnboardingScene — LivingSkyState wiring ──────────────────────────────
+
+function makeWix(hasFrame = true) {
+  const handlers = {};
+  const frame = hasFrame ? {
+    onMessage: (fn) => { handlers.livingSky = fn; },
+    postMessage: (state) => handlers.livingSky && handlers.livingSky({ data: state }),
+  } : null;
+  const containers = {};
+  return {
+    $w: (id) => {
+      if (id === '#livingSkyFrame') { if (!frame) throw new Error('not found'); return frame; }
+      if (!containers[id]) containers[id] = { html: '' };
+      return containers[id];
+    },
+    containers,
+    trigger: (state) => frame && frame.postMessage(state),
+  };
+}
+
+describe('initOnboardingScene', () => {
+  it('sets initial html from ONBOARDING_SVGS[key]', () => {
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w, containers } = makeWix();
+    initOnboardingScene($w, firstKey, '#onboardingScene');
+    expect(containers['#onboardingScene'].html).toContain('<svg');
+  });
+
+  it('applies sky overlay on LivingSkyState message', () => {
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w, containers, trigger } = makeWix();
+    initOnboardingScene($w, firstKey, '#onboardingScene');
+    trigger({ skyColors: ['#2D4A6A'], starOpacity: 0 });
+    expect(containers['#onboardingScene'].html).toContain('sky-overlay');
+    expect(containers['#onboardingScene'].html).toContain('#2D4A6A');
+  });
+
+  it('adds stars at night', () => {
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w, containers, trigger } = makeWix();
+    initOnboardingScene($w, firstKey, '#onboardingScene');
+    trigger({ skyColors: ['#080C14'], starOpacity: 1 });
+    expect(containers['#onboardingScene'].html).toContain('id="stars"');
+  });
+
+  it('rejects non-hex skyColor', () => {
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w, containers, trigger } = makeWix();
+    initOnboardingScene($w, firstKey, '#onboardingScene');
+    trigger({ skyColors: ['<script>evil</script>'], starOpacity: 0 });
+    expect(containers['#onboardingScene'].html).not.toContain('<script>');
+  });
+
+  it('does not throw when $w is null', () => {
+    expect(() => initOnboardingScene(null, 'welcome', '#scene')).not.toThrow();
+  });
+
+  it('does not throw when livingSkyFrame absent', () => {
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w } = makeWix(false);
+    expect(() => initOnboardingScene($w, firstKey, '#onboardingScene')).not.toThrow();
   });
 });
