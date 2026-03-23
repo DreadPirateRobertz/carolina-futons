@@ -25,36 +25,34 @@ export async function backfillPointsLedger() {
   let checked = 0;
   let updated = 0;
   let skipped = 0;
-  let offset = 0;
-  let hasMore = true;
+  let afterId = null; // cursor: last _id seen
 
-  while (hasMore) {
-    const { items } = await wixData
-      .query(COLLECTION)
-      .skip(offset)
-      .limit(PAGE_SIZE)
-      .find({ suppressAuth: true });
+  // Cursor-based pagination avoids Wix Data's .skip() cap (≤1000 items).
+  // Each page advances by filtering _id > afterId with consistent ascending
+  // ordering, so every row is visited exactly once regardless of collection size.
+  while (true) {
+    let q = wixData.query(COLLECTION).ascending('_id').limit(PAGE_SIZE);
+    if (afterId !== null) q = q.gt('_id', afterId);
+    const { items } = await q.find({ suppressAuth: true });
+
+    if (items.length === 0) break;
 
     for (const item of items) {
       checked++;
-      if (item.memberMilestoneKey) {
+      if (!item.memberMilestoneKey && item.memberId && item.milestone != null) {
+        await wixData.update(
+          COLLECTION,
+          { ...item, memberMilestoneKey: `${item.memberId}:${item.milestone}` },
+          { suppressAuth: true },
+        );
+        updated++;
+      } else {
         skipped++;
-        continue;
       }
-      if (!item.memberId || item.milestone == null) {
-        skipped++;
-        continue;
-      }
-      await wixData.update(
-        COLLECTION,
-        { ...item, memberMilestoneKey: `${item.memberId}:${item.milestone}` },
-        { suppressAuth: true },
-      );
-      updated++;
     }
 
-    hasMore = items.length === PAGE_SIZE;
-    offset += items.length;
+    afterId = items[items.length - 1]._id;
+    if (items.length < PAGE_SIZE) break;
   }
 
   return { checked, updated, skipped };

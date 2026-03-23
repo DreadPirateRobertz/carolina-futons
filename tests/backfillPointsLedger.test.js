@@ -95,6 +95,27 @@ describe('backfillPointsLedger', () => {
     expect(result.skipped).toBe(1);
   });
 
+  it('processes more than PAGE_SIZE (100) rows via cursor pagination', async () => {
+    // Seed 101 rows — all missing memberMilestoneKey.
+    // Use zero-padded IDs so lexicographic sort matches insertion order.
+    const rows = Array.from({ length: 101 }, (_, i) => ({
+      _id: `r${String(i + 1).padStart(3, '0')}`,
+      memberId: `mem-${i + 1}`,
+      milestone: (i % 6) + 1,
+    }));
+    __seed('PointsLedger', rows);
+
+    const result = await backfillPointsLedger();
+
+    expect(result.checked).toBe(101);
+    expect(result.updated).toBe(101);
+    expect(result.skipped).toBe(0);
+
+    const updates = __getUpdated('PointsLedger');
+    expect(updates).toHaveLength(101);
+    expect(updates.every(u => typeof u.memberMilestoneKey === 'string')).toBe(true);
+  });
+
   it('preserves all existing fields when updating', async () => {
     __seed('PointsLedger', [
       {
