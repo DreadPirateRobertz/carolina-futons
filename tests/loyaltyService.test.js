@@ -588,15 +588,31 @@ describe('recordChallengeCompleteEvent', () => {
     expect(ledger).toHaveLength(1);
   });
 
-  it('returns without inserting when memberId is empty', async () => {
+  it('throws TypeError for invalid memberId', async () => {
     __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
-    await recordChallengeCompleteEvent('', 'ch-1', 50);
+    await expect(recordChallengeCompleteEvent('', 'ch-1', 50)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompleteEvent(null, 'ch-1', 50)).rejects.toThrow(TypeError);
     expect(__getInserted('PointsLedger')).toHaveLength(0);
   });
 
   it('returns without inserting when challengeId is empty', async () => {
     await recordChallengeCompleteEvent('mem-1', '', 50);
     expect(__getInserted('PointsLedger')).toHaveLength(0);
+  });
+
+  it('throws TypeError for non-finite or negative points', async () => {
+    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
+    await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', NaN)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', Infinity)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', -1)).rejects.toThrow(TypeError);
+  });
+
+  it('accepts 0 points (free challenge)', async () => {
+    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
+    await recordChallengeCompleteEvent('mem-1', 'ch-1', 0);
+    const ledger = __getInserted('PointsLedger');
+    expect(ledger).toHaveLength(1);
+    expect(ledger[0].points).toBe(0);
   });
 
   it('uses challengeId as fallback description when challenge title not found', async () => {

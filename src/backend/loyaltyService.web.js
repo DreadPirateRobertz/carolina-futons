@@ -666,11 +666,16 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
  * @returns {Promise<void>}
  */
 export async function recordChallengeCompleteEvent(memberId, challengeId, points) {
-  if (!memberId || !challengeId) return;
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('recordChallengeCompleteEvent: invalid memberId');
+  if (!challengeId) return;
+  if (typeof points !== 'number' || !Number.isFinite(points) || points < 0) {
+    throw new TypeError('recordChallengeCompleteEvent: points must be a non-negative finite number');
+  }
 
   const existing = await wixData
     .query(POINTS_LEDGER_COLLECTION)
-    .eq('memberId', memberId)
+    .eq('memberId', cleanId)
     .eq('challengeId', challengeId)
     .eq('type', 'challenge_complete')
     .limit(1)
@@ -685,7 +690,7 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
   const title = challengeRes.items[0]?.title ?? challengeId;
 
   await wixData.insert(POINTS_LEDGER_COLLECTION, {
-    memberId,
+    memberId: cleanId,
     type: 'challenge_complete',
     challengeId,
     description: `${title} completed`,
