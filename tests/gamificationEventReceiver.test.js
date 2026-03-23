@@ -978,6 +978,29 @@ describe('gamification_wishlist_add', () => {
     expect(wishlistInserts).toHaveLength(0);
   });
 
+  it('still updates MemberPoints record when cap is reached (streak continuity)', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
+    const updates = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updates.push(item); });
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(updates).toHaveLength(1); // streak state written even when 0 points earned
+  });
+
+  it('still returns success when WishlistAddLog insert fails (best-effort)', async () => {
+    __setInsertError('WishlistAddLog', new Error('log insert failed'));
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(POINT_VALUES.WISHLIST_ADD);
+  });
+
   it('only counts log entries for the correct member and date', async () => {
     // Same date, different member — should not count against mem-1
     __seed('WishlistAddLog', [
