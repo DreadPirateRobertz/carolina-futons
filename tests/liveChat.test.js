@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
@@ -47,26 +47,32 @@ describe('getOfficeHoursStatus', () => {
   });
 
   it('uses custom office hours from CMS when available', async () => {
-    __seed('ChatConfig', [{
-      _id: 'config-hours',
-      key: 'officeHours',
-      value: JSON.stringify({
-        timezone: 'America/New_York',
-        schedule: {
-          0: { open: '00:00', close: '23:59' }, // Sunday: open all day
-          1: { open: '00:00', close: '23:59' },
-          2: { open: '00:00', close: '23:59' },
-          3: { open: '00:00', close: '23:59' },
-          4: { open: '00:00', close: '23:59' },
-          5: { open: '00:00', close: '23:59' },
-          6: { open: '00:00', close: '23:59' },
-        },
-      }),
-    }]);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday noon EDT
+    try {
+      __seed('ChatConfig', [{
+        _id: 'config-hours',
+        key: 'officeHours',
+        value: JSON.stringify({
+          timezone: 'America/New_York',
+          schedule: {
+            0: { open: '00:00', close: '23:59' }, // Sunday: open all day
+            1: { open: '00:00', close: '23:59' },
+            2: { open: '00:00', close: '23:59' },
+            3: { open: '00:00', close: '23:59' },
+            4: { open: '00:00', close: '23:59' },
+            5: { open: '00:00', close: '23:59' },
+            6: { open: '00:00', close: '23:59' },
+          },
+        }),
+      }]);
 
-    const result = await getOfficeHoursStatus();
-    expect(result.isOnline).toBe(true);
-    expect(result.message).toContain('online');
+      const result = await getOfficeHoursStatus();
+      expect(result.isOnline).toBe(true);
+      expect(result.message).toContain('online');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('falls back to defaults on invalid CMS config', async () => {
