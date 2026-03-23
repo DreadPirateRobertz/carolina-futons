@@ -384,6 +384,61 @@ describe('applyOverrides — product_override with productIds array', () => {
   });
 });
 
+// ── freeWhiteGlove on local delivery addOn ────────────────────────────────────
+
+describe('applyOverrides — freeWhiteGlove walks addOn on local delivery option', () => {
+  it('zeros addOn cost when addOn code starts with white-glove', async () => {
+    __seed('ShippingOverrides', [makeRule({ ruleType: 'global', action: { freeWhiteGlove: true } })]);
+    const localDelivery = {
+      code: 'local-delivery-z1',
+      cost: 0,
+      price: '0.00',
+      currency: 'USD',
+      addOn: { code: 'white-glove', cost: 79, price: '79.00', currency: 'USD' },
+    };
+    const result = await applyOverrides([localDelivery], makeContext());
+    expect(result[0].cost).toBe(0);
+    expect(result[0].addOn.cost).toBe(0);
+    expect(result[0].addOn.price).toBe('0.00');
+  });
+
+  it('does not zero addOn when code does not start with white-glove', async () => {
+    __seed('ShippingOverrides', [makeRule({ ruleType: 'global', action: { freeWhiteGlove: true } })]);
+    const localDelivery = {
+      code: 'local-delivery-z1',
+      cost: 0,
+      price: '0.00',
+      currency: 'USD',
+      addOn: { code: 'assembly', cost: 49, price: '49.00', currency: 'USD' },
+    };
+    const result = await applyOverrides([localDelivery], makeContext());
+    expect(result[0].addOn.cost).toBe(49);
+  });
+
+  it('does not mutate the original option or addOn object', async () => {
+    __seed('ShippingOverrides', [makeRule({ ruleType: 'global', action: { freeWhiteGlove: true } })]);
+    const addOn = { code: 'white-glove', cost: 79, price: '79.00', currency: 'USD' };
+    const localDelivery = { code: 'local-delivery-z1', cost: 0, price: '0.00', currency: 'USD', addOn };
+    await applyOverrides([localDelivery], makeContext());
+    expect(addOn.cost).toBe(79);
+    expect(localDelivery.addOn).toBe(addOn);
+  });
+
+  it('preserves other addOn fields when zeroing', async () => {
+    __seed('ShippingOverrides', [makeRule({ ruleType: 'global', action: { freeWhiteGlove: true } })]);
+    const localDelivery = {
+      code: 'local-delivery-z1',
+      cost: 0,
+      price: '0.00',
+      currency: 'USD',
+      addOn: { code: 'white-glove', cost: 79, price: '79.00', currency: 'USD', terrainSurcharge: 25 },
+    };
+    const result = await applyOverrides([localDelivery], makeContext());
+    expect(result[0].addOn.terrainSurcharge).toBe(25);
+    expect(result[0].addOn.currency).toBe('USD');
+  });
+});
+
 // ── 5-minute cache ────────────────────────────────────────────────────────────
 
 describe('applyOverrides — caching', () => {

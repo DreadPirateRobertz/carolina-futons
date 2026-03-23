@@ -289,15 +289,27 @@ export const getShippingRates = async (options) => {
     // ── Override rules (CMS-driven, fail-open) ───────────────────────────
     const products = [...productIds.map(id => ({ productId: id }))];
     const overrideContext = { zip: destination.postalCode, products, orderSubtotal, memberId: null };
-    // applyOverrides expects {cost: number} — adapt Wix format in/out
-    const internalRates = shippingRates.map(r => ({ ...r, cost: parseFloat(r.cost.price) || 0 }));
+    // applyOverrides expects {cost: number} — adapt Wix format in/out.
+    // Expose any white-glove additionalCharge as addOn so applyOverrides can zero it.
+    const internalRates = shippingRates.map(r => {
+      const internal = { ...r, cost: parseFloat(r.cost.price) || 0 };
+      const wgCharge = (r.cost?.additionalCharges || []).find(c => (c.code || '').startsWith('white-glove'));
+      if (wgCharge) internal.addOn = { ...wgCharge, cost: parseFloat(wgCharge.price) || 0 };
+      return internal;
+    });
     const overridden = await applyOverrides(internalRates, overrideContext);
     // Use Map for O(1) lookup and correctness when duplicate codes exist
     const ratesByCode = new Map(shippingRates.map(r => [r.code, r]));
-    const finalRates = overridden.map(r => ({
-      ...r,
-      cost: { ...(ratesByCode.get(r.code)?.cost || {}), price: r.cost.toFixed(2) },
-    }));
+    const finalRates = overridden.map(r => {
+      const baseCost = ratesByCode.get(r.code)?.cost || {};
+      // Sync zeroed addOn cost back into additionalCharges
+      const additionalCharges = r.addOn && baseCost.additionalCharges?.length
+        ? baseCost.additionalCharges.map(c =>
+            c.code === r.addOn.code ? { ...c, price: String((r.addOn.cost || 0).toFixed(2)) } : c
+          )
+        : (baseCost.additionalCharges || []);
+      return { ...r, cost: { ...baseCost, price: r.cost.toFixed(2), additionalCharges } };
+    });
 
     return { shippingRates: finalRates };
 

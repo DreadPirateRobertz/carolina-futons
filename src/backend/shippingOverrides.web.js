@@ -125,8 +125,19 @@ function applyActions(options, actions) {
       cost = 0;
     }
 
+    // Walk addOn: local delivery options carry white-glove as a nested add-on.
+    // Zero the add-on cost when freeWhiteGlove is active.
+    let { addOn } = opt;
+    if (actions.freeWhiteGlove && addOn && (addOn.code || '').startsWith('white-glove') && addOn.cost > 0) {
+      addOn = { ...addOn, cost: 0, price: '0.00' };
+    }
+
     cost = Math.max(0, cost);
-    return cost === opt.cost ? opt : { ...opt, cost, price: cost.toFixed(2) };
+
+    const costChanged = cost !== opt.cost;
+    const addOnChanged = addOn !== opt.addOn;
+    if (!costChanged && !addOnChanged) return opt;
+    return { ...opt, cost, price: cost.toFixed(2), ...(addOnChanged ? { addOn } : {}) };
   });
 }
 
