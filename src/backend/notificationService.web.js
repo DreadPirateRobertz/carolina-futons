@@ -394,3 +394,142 @@ export const getNotificationHistory = webMethod(
     }
   }
 );
+
+// ── Gamification push triggers ────────────────────────────────────────────────
+
+const NOTIFICATIONS_COLLECTION = 'Notifications';
+const GET_MY_NOTIFICATIONS_RATE_LIMIT = 20;
+const GET_MY_NOTIFICATIONS_WINDOW_MS = 60_000;
+
+/** In-memory rate limit store: memberId → { count, windowStart } */
+const _getMyNotificationsRateLimit = new Map();
+
+/** @internal — exposed for test reset only */
+export function _resetGetMyNotificationsRateLimit() {
+  _getMyNotificationsRateLimit.clear();
+}
+
+/**
+ * Write a gamification push notification to the Notifications CMS collection.
+ * Idempotent for streak milestones (deduplicates on memberId + milestone).
+ * Quest complete notifications are not deduplicated (quests reset daily).
+ *
+ * @param {string} memberId
+ * @param {'streak_milestone'|'daily_quest'} type
+ * @param {string} message
+ * @param {Object} [extra] - extra fields to store (e.g. { milestone: 7 })
+ */
+async function writeNotification(memberId, type, message, extra = {}) {
+  if (!memberId) return;
+
+  try {
+    if (type === 'streak_milestone' && extra.milestone != null) {
+      const existing = await wixData
+        .query(NOTIFICATIONS_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('type', 'streak_milestone')
+        .eq('milestone', extra.milestone)
+        .limit(1)
+        .find({ suppressAuth: true });
+      if (existing.items.length > 0) return;
+    }
+
+    await wixData.insert(NOTIFICATIONS_COLLECTION, {
+      memberId,
+      type,
+      message,
+      read: false,
+      createdAt: new Date(),
+      ...extra,
+    }, { suppressAuth: true });
+  } catch (err) {
+    console.error('[notificationService] writeNotification failed:', err);
+  }
+}
+
+/**
+ * Send a streak milestone push notification.
+ * Idempotent: skips if this member already has a notification for this milestone.
+ *
+ * @param {string} memberId
+ * @param {number} milestone - streak length (e.g. 7, 14, 30)
+ * @param {string} badgeLabel - badge name (e.g. 'Week Warrior')
+ * @returns {Promise<void>}
+ */
+export async function sendStreakMilestoneNotification(memberId, milestone, badgeLabel) {
+  const message = `You earned the ${badgeLabel} badge! 🔥 ${milestone}-day streak!`;
+  await writeNotification(memberId, 'streak_milestone', message, { milestone });
+}
+
+/**
+ * Send a daily quest completion push notification.
+ *
+ * @param {string} memberId
+ * @param {string} questTitle
+ * @param {number} points
+ * @returns {Promise<void>}
+ */
+export async function sendQuestCompleteNotification(memberId, questTitle, points) {
+  const message = `Daily quest complete: ${questTitle}. +${points} pts! ✅`;
+  await writeNotification(memberId, 'daily_quest', message, { questTitle, points });
+}
+
+/**
+ * Get the authenticated member's gamification notifications.
+ * Supports optional unreadOnly filter and limit (capped at 50).
+ * Rate-limited to 20 calls per minute per member.
+ *
+ * @function getMyNotifications
+ * @param {{ limit?: number, unreadOnly?: boolean }} options
+ * @returns {Promise<{ notifications: Array } | { status: 401|429, error: string }>}
+ * @permission SiteMember
+ */
+export const getMyNotifications = webMethod(
+  Permissions.SiteMember,
+  async ({ limit = 20, unreadOnly = false } = {}) => {
+    let member;
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      member = await currentMember.getMember();
+    } catch {
+      return { status: 401, error: 'Unauthenticated' };
+    }
+    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
+    const memberId = member._id;
+
+    const now = Date.now();
+    const rl = _getMyNotificationsRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > GET_MY_NOTIFICATIONS_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _getMyNotificationsRateLimit.set(memberId, rl);
+    if (rl.count > GET_MY_NOTIFICATIONS_RATE_LIMIT) {
+      return { status: 429, error: 'Rate limit exceeded' };
+    }
+
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 20), 50);
+
+    let query = wixData
+      .query(NOTIFICATIONS_COLLECTION)
+      .eq('memberId', memberId)
+      .descending('createdAt');
+
+    if (unreadOnly) {
+      query = query.eq('read', false);
+    }
+
+    const res = await query.limit(safeLimit).find({ suppressAuth: true });
+
+    const notifications = res.items.map(item => ({
+      id: item._id,
+      type: item.type,
+      message: item.message,
+      read: item.read,
+      createdAt: item.createdAt,
+    }));
+
+    return { notifications };
+  }
+);
