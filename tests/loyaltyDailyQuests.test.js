@@ -3,7 +3,7 @@
  * @description CF-6tv: TDD tests for daily quest engine.
  *
  * Covers:
- *  - generateDailyQuests(date): pure helper, 3-quest rotation by date hash
+ *  - generateDailyQuests(date): pure helper, 3-quest rotation by day-of-year modulo offset
  *  - getMyDailyQuests(): webMethod, completion status from QuestCompletions CMS,
  *    rate limiting 30/min per member
  */

@@ -273,7 +273,7 @@ function getNextTier(currentLabel) {
   return null; // Gold is max
 }
 
-// ── Phase 8: Daily quest engine ───────────────────────────────────────────────
+// ── Daily quest engine ────────────────────────────────────────────────────────
 
 const DAILY_QUEST_POOL = [
   { id: 'purchase',       title: 'Place an order today',    action: 'purchase',       pointReward: 50 },
@@ -296,10 +296,12 @@ export function _resetDailyQuestsRateLimit() {
 }
 
 /**
- * Get the day-of-year (1-indexed) for a given Date.
- * Uses Math.round to avoid DST off-by-one on spring-forward days.
- * @param {Date} date
- * @returns {number}
+ * Get the day-of-year (1-indexed) for a given Date in local time.
+ * The input must be a local-time Date within its own calendar year.
+ * Uses Math.round to avoid DST off-by-one on spring-forward days
+ * (elapsed ms ≈ 66.958 days → Math.floor gives 66; Math.round gives 67).
+ * @param {Date} date - Local-time Date object
+ * @returns {number} Day of year, 1-indexed (Jan 1 = 1)
  */
 function getDayOfYear(date) {
   const startOfYear = new Date(date.getFullYear(), 0, 0);
