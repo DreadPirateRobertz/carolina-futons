@@ -259,6 +259,95 @@ export const getLeaderboard = webMethod(
   }
 );
 
+/**
+ * Get all active challenge definitions merged with the current member's progress.
+ * Extends getActiveChallenges with: full catalog (not capped at 5), null-expiresAt
+ * support, 5-min per-member cache, and 30/min rate limit.
+ *
+ * @function getChallengeCatalog
+ * @returns {Promise<{ challenges: Array } | { error: 429 }>}
+ * @permission SiteMember
+ */
+export const getChallengeCatalog = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    const member = await currentMember.getMember();
+    if (!member?._id) return { challenges: [] };
+    const memberId = member._id;
+
+    // Rate limit: 30/min per member
+    const now = Date.now();
+    const rl = _catalogRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > CATALOG_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _catalogRateLimit.set(memberId, rl);
+    if (rl.count > CATALOG_RATE_LIMIT) {
+      return { error: 429 };
+    }
+
+    // Cache: return early if fresh
+    const cached = _catalogCache.get(memberId);
+    if (cached && now < cached.expiresAt) {
+      return cached.data;
+    }
+
+    try {
+      const nowDate = new Date();
+
+      // Fetch all active definitions; filter expired in JS (supports null expiresAt)
+      const defsResult = await wixData
+        .query(CHALLENGE_DEFS_COLLECTION)
+        .eq('active', true)
+        .find({ suppressAuth: true });
+
+      const defs = defsResult.items.filter(d => !d.expiresAt || new Date(d.expiresAt) > nowDate);
+
+      if (defs.length === 0) {
+        const result = { challenges: [] };
+        _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
+        return result;
+      }
+
+      // Fetch all progress for this member in one batch query
+      const progressResult = await wixData
+        .query(CHALLENGE_PROGRESS_COLLECTION)
+        .eq('memberId', memberId)
+        .find({ suppressAuth: true });
+
+      const progressMap = Object.fromEntries(progressResult.items.map(p => [p.challengeId, p]));
+
+      const challenges = defs.map(d => {
+        const prog = progressMap[d._id];
+        const progress = prog ? (prog.completedCount ?? 0) : 0;
+        const completed = progress >= d.goal;
+        const rawCompletedAt = prog?.completedAt ?? null;
+        return {
+          id: d._id,
+          title: d.title,
+          description: d.description ?? null,
+          goal: d.goal,
+          unit: d.unit,
+          pointReward: d.pointReward,
+          expiresAt: d.expiresAt instanceof Date ? d.expiresAt.toISOString() : (d.expiresAt ?? null),
+          progress,
+          completed,
+          completedAt: rawCompletedAt instanceof Date ? rawCompletedAt.toISOString() : rawCompletedAt,
+        };
+      });
+
+      const result = { challenges };
+      _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
+      return result;
+    } catch (err) {
+      console.error('Error getting challenge catalog:', err);
+      return { challenges: [] };
+    }
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 function determineTier(points) {

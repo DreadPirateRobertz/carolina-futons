@@ -8,6 +8,9 @@ import {
   redeemReward,
   getLoyaltyTiers,
   getLeaderboard,
+  getChallengeCatalog,
+  _resetChallengeCatalogCache,
+  _resetChallengeCatalogRateLimit,
 } from '../src/backend/loyaltyService.web.js';
 
 // ── getMyLoyaltyAccount ──────────────────────────────────────────────
@@ -422,5 +425,129 @@ describe('getLeaderboard', () => {
     __setQueryError('LoyaltyAccounts', new Error('DB error'));
     const result = await getLeaderboard();
     expect(result.entries).toEqual([]);
+  });
+});
+
+// ── getChallengeCatalog ──────────────────────────────────────────────
+
+describe('getChallengeCatalog', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    _resetChallengeCatalogCache();
+    _resetChallengeCatalogRateLimit();
+  });
+
+  it('returns active challenges merged with member progress', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Order 3 Times', description: 'Place 3 orders', goal: 3, unit: 'orders', pointReward: 100, expiresAt: null },
+      { _id: 'def-2', active: true, title: 'Leave a Review', description: 'Write review', goal: 1, unit: 'reviews', pointReward: 50, expiresAt: null },
+    ]);
+    __seed('ChallengeProgress', [
+      { memberId: 'mem-1', challengeId: 'def-1', completedCount: 2, completedAt: null },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toHaveLength(2);
+    const order = result.challenges.find(c => c.id === 'def-1');
+    expect(order.progress).toBe(2);
+    expect(order.completed).toBe(false);
+    const review = result.challenges.find(c => c.id === 'def-2');
+    expect(review.progress).toBe(0);
+    expect(review.completed).toBe(false);
+  });
+
+  it('filters out inactive challenges', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Active', goal: 1, unit: 'x', pointReward: 10, expiresAt: null },
+      { _id: 'def-2', active: false, title: 'Inactive', goal: 1, unit: 'x', pointReward: 10, expiresAt: null },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].id).toBe('def-1');
+  });
+
+  it('filters out expired challenges (expiresAt in the past)', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Valid', goal: 1, unit: 'x', pointReward: 10, expiresAt: new Date(Date.now() + 86400000) },
+      { _id: 'def-2', active: true, title: 'Expired', goal: 1, unit: 'x', pointReward: 10, expiresAt: new Date(Date.now() - 1000) },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].id).toBe('def-1');
+  });
+
+  it('includes challenges with null expiresAt (permanent)', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Permanent', goal: 5, unit: 'orders', pointReward: 200, expiresAt: null },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].expiresAt).toBeNull();
+  });
+
+  it('marks completed: true when progress >= goal', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Done', goal: 3, unit: 'orders', pointReward: 100, expiresAt: null },
+    ]);
+    const completedAt = new Date('2026-03-20');
+    __seed('ChallengeProgress', [
+      { memberId: 'mem-1', challengeId: 'def-1', completedCount: 3, completedAt },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges[0].completed).toBe(true);
+    expect(result.challenges[0].completedAt).toBe(completedAt.toISOString());
+  });
+
+  it('returns correct response shape for each challenge', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Shape', description: 'Desc', goal: 5, unit: 'reviews', pointReward: 150, expiresAt: null },
+    ]);
+    const result = await getChallengeCatalog();
+    expect(result.challenges[0]).toMatchObject({
+      id: 'def-1', title: 'Shape', description: 'Desc',
+      goal: 5, unit: 'reviews', pointReward: 150,
+      expiresAt: null, progress: 0, completed: false, completedAt: null,
+    });
+  });
+
+  it('returns cached result on second call within 5min', async () => {
+    __setMember({ _id: 'mem-cache' });
+    __seed('ChallengeDefinitions', [
+      { _id: 'def-1', active: true, title: 'Cached', goal: 1, unit: 'x', pointReward: 10, expiresAt: null },
+    ]);
+    await getChallengeCatalog();
+    __seed('ChallengeDefinitions', []); // mutate store — cache should shield this
+    const result2 = await getChallengeCatalog();
+    expect(result2.challenges).toHaveLength(1);
+  });
+
+  it('returns 429 after 30 calls per minute', async () => {
+    __setMember({ _id: 'mem-rl' });
+    for (let i = 0; i < 30; i++) {
+      _resetChallengeCatalogCache();
+      await getChallengeCatalog();
+    }
+    _resetChallengeCatalogCache();
+    const result = await getChallengeCatalog();
+    expect(result).toEqual({ error: 429 });
+  });
+
+  it('handles empty ChallengeDefinitions gracefully', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toEqual([]);
+  });
+
+  it('returns empty challenges on query error', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setQueryError('ChallengeDefinitions', new Error('DB error'));
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toEqual([]);
   });
 });
