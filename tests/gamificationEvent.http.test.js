@@ -83,6 +83,12 @@ describe('post_gamificationEvent — validation', () => {
     expect(JSON.parse(res.body).error).toMatch(/eventName/i);
   });
 
+  it('returns 400 when eventName is whitespace-only', async () => {
+    const res = await post_gamificationEvent(makeRequest({ eventName: '   ', memberId: 'member-abc', payload: {} }));
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/eventName/i);
+  });
+
   it('returns 400 when memberId is missing', async () => {
     const res = await post_gamificationEvent(makeRequest({ eventName: 'product_viewed', payload: {} }));
     expect(res.status).toBe(400);

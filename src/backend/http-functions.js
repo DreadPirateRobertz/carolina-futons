@@ -1663,13 +1663,11 @@ export async function post_answerQuestion(request) {
 export async function post_gamificationEvent(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   try {
-    // Auth check
     const member = await currentMember.getMember();
     if (!member) {
       return unauthorized({ body: JSON.stringify({ error: 'Authentication required' }), headers: JSON_HEADERS });
     }
 
-    // Parse body
     let body;
     try {
       body = await request.body.json();
@@ -1677,8 +1675,7 @@ export async function post_gamificationEvent(request) {
       return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
-    // Validate required fields
-    const eventName = String(body?.eventName || '').trim();
+    const eventName = sanitize(String(body?.eventName || ''), 100).trim();
     const memberId = String(body?.memberId || '').trim();
     if (!eventName) {
       return badRequest({ body: JSON.stringify({ error: 'Missing required field: eventName' }), headers: JSON_HEADERS });
@@ -1692,14 +1689,13 @@ export async function post_gamificationEvent(request) {
       return unauthorized({ body: JSON.stringify({ error: 'memberId does not match authenticated member' }), headers: JSON_HEADERS });
     }
 
-    // Rate limit: 20 events per minute per member
     const { checkRateLimit } = await import('backend/utils/rateLimit');
     const rateLimitResult = await checkRateLimit('GamificationRateLimit', memberId, { max: 20, windowMs: 60_000 });
     if (!rateLimitResult.allowed) {
       return response({ status: 429, body: JSON.stringify({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
     }
 
-    const payload = body?.payload && typeof body.payload === 'object' ? body.payload : {};
+    const payload = body?.payload && typeof body.payload === 'object' && !Array.isArray(body.payload) ? body.payload : {};
     const result = await receiveGamificationEvent(eventName, payload, memberId);
 
     if (!result.success) {
