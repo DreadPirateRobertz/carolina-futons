@@ -1,0 +1,1322 @@
+[
+  {
+    "productId": "5e6a00c8-fdd7-e0f8-0c32-fcc422e2690e",
+    "name": "Haley 110",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-HALEY110",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "62949841-86ae-7ed1-2472-2b7f6d0ceb69",
+    "name": "Moonshadow",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MOONSHADOW",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e43382af-54a5-61f7-954e-1da9ac15273f",
+    "name": "Murphy Express Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-EXPRESS",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+    "name": "Sealy San Sebastian Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-SEALYSANSE",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ff67091b-4b91-214a-0e43-a7a257644f9b",
+    "name": "Ranchero  Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-RANCHERO",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a36da657-adc9-c52b-26ae-19476e82c645",
+    "name": "Orion Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-ORION",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "96920200-c881-5ae6-14b5-481c9b7230cc",
+    "name": "Northern Exposure Log Futon",
+    "currentSku": "",
+    "sku": "CF-LOG-NORTHERNEX",
+    "category": "LOG",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "51048abf-da35-d963-6124-6ad2f11fac82",
+    "name": "Wilderness Log Futon",
+    "currentSku": "",
+    "sku": "CF-LOG-WILDERNESS",
+    "category": "LOG",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "c21b8c72-e8c4-211e-fcdf-af07b5f2b82e",
+    "name": "Leg length options for Nomad Platform Bed",
+    "currentSku": "",
+    "sku": "CF-CASE-LEGLENGTHO",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "40ec5c9e-779a-16c7-fd22-1b560cf0b60e",
+    "name": "Leg length options for Charleston Platform Bed",
+    "currentSku": "",
+    "sku": "CF-CASE-LEGLENGTHO-2",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+    "name": "Leg length options for Lexington Platform Bed",
+    "currentSku": "",
+    "sku": "CF-CASE-LEGLENGTHO-3",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "78719574-b53a-6176-1fca-cc4624eb6524",
+    "name": "Folding Platform Bed",
+    "currentSku": "",
+    "sku": "CF-BED-FOLDING",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ba0d9e1c-9ebc-84f9-e79b-5220f3cd778a",
+    "name": "Hook-On Nightstand",
+    "currentSku": "",
+    "sku": "CF-CASE-HOOKONNIGH",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "3533644b-b544-a6f4-0b06-09e7a7972124",
+    "name": "Secrets Nightstand",
+    "currentSku": "",
+    "sku": "CF-CASE-SECRETSNIG",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "266c622f-f396-7462-dda4-a8603a8c68de",
+    "name": "Secrets 7-Drawer Dresser",
+    "currentSku": "",
+    "sku": "CF-CASE-SECRETS7DR",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "5c752c3e-5f8a-06c6-4a2b-6734da945b2b",
+    "name": "Secrets 5-Drawer Chest",
+    "currentSku": "",
+    "sku": "CF-CASE-SECRETS5DR",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "f2103705-70a3-067f-5161-ef093f1c4387",
+    "name": "Platform Bed Storage Drawers",
+    "currentSku": "",
+    "sku": "CF-CASE-STORAGEDRA",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "41f82e1d-b5cc-23ac-d759-e2f39d6666b9",
+    "name": "Trundle Bed",
+    "currentSku": "",
+    "sku": "CF-CASE-TRUNDLEBED",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "d50d7a34-1ddf-5ed7-4960-49330329f01e",
+    "name": "Clove 6-Drawer Dresser",
+    "currentSku": "",
+    "sku": "CF-CASE-CLOVE6DRAW",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "83be63a0-5ae1-9365-2957-70cfaeebe58b",
+    "name": "Clove 5-Drawer Chest",
+    "currentSku": "",
+    "sku": "CF-CASE-CLOVE5DRAW",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "b122dd71-c71b-8c9a-c3e6-e8fbf37174a4",
+    "name": "Nomad",
+    "currentSku": "",
+    "sku": "CF-BED-NOMAD",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "3d3738dd-9db1-7fc3-b6df-fd236a285e70",
+    "name": "Lexington",
+    "currentSku": "",
+    "sku": "CF-BED-LEXINGTON",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ee0354b7-1d71-2530-d193-556434597640",
+    "name": "Charleston",
+    "currentSku": "",
+    "sku": "CF-BED-CHARLESTON",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "6e7ecdb2-7e80-57a3-ac4b-8f0fc03d328d",
+    "name": "Ekko Platform Bed",
+    "currentSku": "",
+    "sku": "CF-BED-EKKO",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ab51ab04-e796-4e49-9e95-1bdb5c0da432",
+    "name": "Pagoda",
+    "currentSku": "",
+    "sku": "CF-FRAME-PAGODA",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "d4607c9a-4f85-aace-6f54-a01400dc1e10",
+    "name": "Yuma",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-YUMA",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a67e996c-d1b7-fc72-c859-fc491ba4fa99",
+    "name": "Northampton",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-NORTHAMPTO",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "b0c9923d-aa49-dc4e-e7c5-25719b7f189a",
+    "name": "Cambridge",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-CAMBRIDGE",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e8b02be6-5887-930a-1300-62eb930d41d4",
+    "name": "Mattress Protector",
+    "currentSku": "",
+    "sku": "CF-CASE-MATTRESSPR",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "6d4e4123-22db-8cf4-0bc3-88ed67e715f9",
+    "name": "Galena",
+    "currentSku": "",
+    "sku": "CF-FRAME-GALENA",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "d53d1eb2-eddf-ec0d-0d14-6a58f65964fa",
+    "name": "Canby",
+    "currentSku": "",
+    "sku": "CF-FRAME-CANBY",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "7e97fece-ddf5-da32-f38c-a091a9e93953",
+    "name": "Sedona",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-SEDONA",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "b6448a9c-fe4e-3791-fc81-c46143a39e08",
+    "name": "Mountainaire",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MOUNTAINAI",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "182239ef-4dd3-70e8-37dc-d64e3f1e8576",
+    "name": "Mesa 5000",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MESA5000",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "68eebb79-8b1b-7da5-bbf4-445771a57113",
+    "name": "Mesa 3000",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MESA3000",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "3fbfd637-a987-156e-1b49-f5165580f867",
+    "name": "Mesa 1000",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MESA1000",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "913a35fa-d090-ae40-e0f4-1cef2511237b",
+    "name": "Maricopa",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-MARICOPA",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "bbb50802-8cdd-ce46-2c46-f74f1cbb6cc6",
+    "name": "Gemini II",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-GEMINIII",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "42ca5d48-99de-cfe3-4376-67fc03e12478",
+    "name": "Flagstaff",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-FLAGSTAFF",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "8f62df61-79f7-2a66-b5b1-a001d6f8643a",
+    "name": "Chandler",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-CHANDLER",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "01c37bd0-4e7a-8fde-c59e-151e62d421cd",
+    "name": "Asheville",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-ASHEVILLE",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "9c1743f2-7e15-4f4f-5562-fc3404d5d44a",
+    "name": "Alpine",
+    "currentSku": "",
+    "sku": "CF-MATTRESS-ALPINE",
+    "category": "MATTRESS",
+    "shipping": {
+      "weight": 55,
+      "length": 78,
+      "width": 54,
+      "height": 14,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "44a7a248-2334-f07d-f39e-18968b355dfa",
+    "name": "Center Legs",
+    "currentSku": "",
+    "sku": "CF-CASE-CENTERLEGS",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "aef9f2b6-4e12-ca44-7cb9-1092dc898607",
+    "name": "Twin Trundle Bed",
+    "currentSku": "",
+    "sku": "CF-CASE-TWINTRUNDL",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "366961bb-5f81-0370-b4e6-3e787890baf9",
+    "name": "Rolling Drawers",
+    "currentSku": "",
+    "sku": "CF-CASE-ROLLINGDRA",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "2eabec14-54f2-459f-e62f-8f3ddfaa052b",
+    "name": "Clove 2-Drawer Nightstand",
+    "currentSku": "",
+    "sku": "CF-CASE-CLOVE2DRAW",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "46a3e8c5-dd61-2374-2535-65efca5e1868",
+    "name": "Clove 6-Drawer Lingerie Chest",
+    "currentSku": "",
+    "sku": "CF-CASE-CLOVE6DRAW-2",
+    "category": "CASE",
+    "shipping": {
+      "weight": 45,
+      "length": 36,
+      "width": 20,
+      "height": 36,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "7556c31d-06fd-efcf-b9ae-bbf6bd619fdd",
+    "name": "Thyme",
+    "currentSku": "",
+    "sku": "CF-FRAME-THYME",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "2cfaff7f-d87b-f1e6-69a6-04b2cd1df063",
+    "name": "Tarragon",
+    "currentSku": "",
+    "sku": "CF-FRAME-TARRAGON",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a960b487-eb02-34b7-1b19-1cc6ec86a608",
+    "name": "Tamarind",
+    "currentSku": "",
+    "sku": "CF-FRAME-TAMARIND",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "31c3d546-b0c2-26f4-5ee4-3b54e9576518",
+    "name": "Solstice",
+    "currentSku": "",
+    "sku": "CF-FRAME-SOLSTICE",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "fd26fd95-6e64-895d-010e-963c0cc69d9f",
+    "name": "Rosemary",
+    "currentSku": "",
+    "sku": "CF-FRAME-ROSEMARY",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "31186b22-1466-4ed4-1b2e-235d1e59a478",
+    "name": "Paprika",
+    "currentSku": "",
+    "sku": "CF-FRAME-PAPRIKA",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "84019026-284d-4d1a-cc52-d8bf9fc06053",
+    "name": "Nutmeg",
+    "currentSku": "",
+    "sku": "CF-FRAME-NUTMEG",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ff4fd5d5-9cc7-7646-853b-c63e986f2d19",
+    "name": "Basic Platform Bed",
+    "currentSku": "",
+    "sku": "CF-BED-BASIC",
+    "category": "BED",
+    "shipping": {
+      "weight": 120,
+      "length": 80,
+      "width": 60,
+      "height": 8,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "04e0a1b3-72aa-2b37-f2b8-a94cce65c1e1",
+    "name": "Black Pepper",
+    "currentSku": "",
+    "sku": "CF-FRAME-BLACKPEPPE",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "c593ca2c-cdf6-0d39-8324-e20deb804f0a",
+    "name": "Raleigh",
+    "currentSku": "",
+    "sku": "CF-FRAME-RALEIGH",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "01bedfb6-2e34-3b46-aaf4-37075f0b9dc1",
+    "name": "Monterey",
+    "currentSku": "",
+    "sku": "CF-FRAME-MONTEREY",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e8a435e8-0de7-e1e3-099f-a9831055e488",
+    "name": "Winter",
+    "currentSku": "",
+    "sku": "CF-FRAME-WINTER",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "df5fe9c9-a27c-4efa-2138-6a7885db9253",
+    "name": "Winchester",
+    "currentSku": "",
+    "sku": "CF-FRAME-WINCHESTER",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "455a941f-f9f1-6927-56db-509f9b7aba63",
+    "name": "Venice",
+    "currentSku": "",
+    "sku": "CF-FRAME-VENICE",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "1327fac4-90ad-e120-eb2f-a47d01e23f71",
+    "name": "Trinity",
+    "currentSku": "",
+    "sku": "CF-FRAME-TRINITY",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e18eced6-fa31-396d-beef-1703bc682ffa",
+    "name": "Sunrise",
+    "currentSku": "",
+    "sku": "CF-FRAME-SUNRISE",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "fd99e666-2297-f291-2c43-7a4ecf2980ee",
+    "name": "Solstice",
+    "currentSku": "",
+    "sku": "CF-FRAME-SOLSTICE-2",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a3136816-edaf-6377-2178-b957a245fc2b",
+    "name": "Ruskin",
+    "currentSku": "",
+    "sku": "CF-FRAME-RUSKIN",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "88f62215-85b4-5f54-db80-747ca8bcd29c",
+    "name": "Portofino",
+    "currentSku": "",
+    "sku": "CF-FRAME-PORTOFINO",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a9622ae5-7d7b-5848-b57c-0dc763093df8",
+    "name": "Key West",
+    "currentSku": "",
+    "sku": "CF-FRAME-KEYWEST",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+    "name": "Kingston",
+    "currentSku": "",
+    "sku": "CF-FRAME-KINGSTON",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "b1c25cbc-c642-3919-3b3d-1864e13a6016",
+    "name": "Fuji",
+    "currentSku": "",
+    "sku": "CF-FRAME-FUJI",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "c812814d-4813-bbc0-ce25-54276c61cd2e",
+    "name": "Eureka",
+    "currentSku": "",
+    "sku": "CF-FRAME-EUREKA",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "71b04860-5726-a401-d9dd-79c96b853abe",
+    "name": "Bali",
+    "currentSku": "",
+    "sku": "CF-FRAME-BALI",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "14f82e10-2e6c-f32d-d64d-38c0e84e7074",
+    "name": "Autumn",
+    "currentSku": "",
+    "sku": "CF-FRAME-AUTUMN",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a19578f8-443d-af01-9f0c-94866e5f697e",
+    "name": "Murphy Cube Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-CUBE",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "1d9b58af-5ff1-c239-e791-c5514956b449",
+    "name": "Sagebrush Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-SAGEBRUSH",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "ead13118-940b-2330-fded-cfb3cbcb2352",
+    "name": "Poppy Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-POPPY",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "7338a70b-3998-9584-e64d-7d5e629ae452",
+    "name": "Daisy Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-DAISY",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "c4f4d8d1-cb70-0f39-43c8-f7ba3a06baaf",
+    "name": "Clover Murphy Cabinet Bed",
+    "currentSku": "",
+    "sku": "CF-MURPHY-CLOVER",
+    "category": "MURPHY",
+    "shipping": {
+      "weight": 200,
+      "length": 84,
+      "width": 44,
+      "height": 12,
+      "requiresFreight": true,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "bfa17eaa-5ee1-30d7-b1b1-7efe63f1bc26",
+    "name": "Albany",
+    "currentSku": "",
+    "sku": "CF-FRAME-ALBANY",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "179cd0e8-4afb-4235-7cae-d7e22ccb38e3",
+    "name": "Trelli",
+    "currentSku": "",
+    "sku": "CF-FRAME-TRELLI",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+    "name": "Studio Frame",
+    "currentSku": "",
+    "sku": "CF-FRAME-STUDIOFRAM",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+    "name": "KD Lounger",
+    "currentSku": "",
+    "sku": "CF-FRAME-KDLOUNGER",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "a601d7ae-f11c-55fa-69a9-4235fdf73241",
+    "name": "Denali",
+    "currentSku": "",
+    "sku": "CF-FRAME-DENALI",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "fb78f6bc-88bc-9a61-7c0c-21af775b496f",
+    "name": "Dillon",
+    "currentSku": "",
+    "sku": "CF-FRAME-DILLON",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "7e1452fd-2732-3190-c453-2a75d94db94b",
+    "name": "Durango",
+    "currentSku": "",
+    "sku": "CF-FRAME-DURANGO",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "fc4519da-2c43-8eb4-3c02-5e05d0c750aa",
+    "name": "Lambton",
+    "currentSku": "",
+    "sku": "CF-FRAME-LAMBTON",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "df19c1f7-07d8-a265-42f8-e8dfa824cc6e",
+    "name": "Rockwell",
+    "currentSku": "",
+    "sku": "CF-FRAME-ROCKWELL",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "cd59cd36-b6d2-2cf3-9d48-81793a7bdbbd",
+    "name": "Tiro",
+    "currentSku": "",
+    "sku": "CF-FRAME-TIRO",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  },
+  {
+    "productId": "c8539b66-7a44-fe18-affc-afec4be8562a",
+    "name": "Tozi",
+    "currentSku": "",
+    "sku": "CF-FRAME-TOZI",
+    "category": "FRAME",
+    "shipping": {
+      "weight": 85,
+      "length": 80,
+      "width": 12,
+      "height": 30,
+      "requiresFreight": false,
+      "requiresPallet": false
+    }
+  }
+]
