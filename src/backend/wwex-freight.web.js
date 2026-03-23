@@ -92,10 +92,10 @@ export function shouldUseLTL(packages) {
   if (!packages || packages.length === 0) return false;
   const totalWeight = packages.reduce((sum, p) => sum + (p.weight || 0), 0);
   const hasOversizeItem = packages.some(
-    p => (p.weight || 0) > LTL_THRESHOLDS.maxParcelWeightLbs ||
-         (p.length || 0) > LTL_THRESHOLDS.maxParcelLengthIn
+    p => (p.weight || 0) >= LTL_THRESHOLDS.maxParcelWeightLbs ||
+         (p.length || 0) >= LTL_THRESHOLDS.maxParcelLengthIn
   );
-  return hasOversizeItem || totalWeight > LTL_THRESHOLDS.maxParcelWeightLbs;
+  return hasOversizeItem || totalWeight >= LTL_THRESHOLDS.maxParcelWeightLbs;
 }
 
 /**
