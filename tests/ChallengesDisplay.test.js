@@ -1,0 +1,171 @@
+import { describe, it, expect, vi } from 'vitest';
+import {
+  renderChallengeCard,
+  renderChallengesRail,
+  showCompletionToast,
+  updateChallengeProgress,
+} from '../src/public/ChallengesDisplay.js';
+
+// ── Mock Wix $w element helpers ───────────────────────────────────────────────
+
+function makeText() {
+  let val = '';
+  return { set text(v) { val = v; }, get text() { return val; }, hide: vi.fn(), show: vi.fn() };
+}
+
+function makeProgressBar() {
+  let val = 0;
+  return { set value(v) { val = v; }, get value() { return val; } };
+}
+
+function makeImage() {
+  return { hide: vi.fn(), show: vi.fn() };
+}
+
+function makeBox() {
+  return { hide: vi.fn(), show: vi.fn() };
+}
+
+function makeChallenge(overrides = {}) {
+  return {
+    challengeId: 'ch-1',
+    title: 'First Steps',
+    description: 'Complete your first order.',
+    targetCount: 3,
+    rewardPoints: 50,
+    rewardBadgeId: null,
+    expiresAt: '2026-04-01T00:00:00Z',
+    progressValue: 1,
+    completedAt: null,
+    ...overrides,
+  };
+}
+
+// ── renderChallengeCard ───────────────────────────────────────────────────────
+
+describe('renderChallengeCard', () => {
+  it('sets title text', () => {
+    const $title = makeText();
+    renderChallengeCard({ $title, $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge: makeImage() }, makeChallenge());
+    expect($title.text).toBe('First Steps');
+  });
+
+  it('sets description text', () => {
+    const $description = makeText();
+    renderChallengeCard({ $title: makeText(), $description, $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge: makeImage() }, makeChallenge());
+    expect($description.text).toBe('Complete your first order.');
+  });
+
+  it('sets progress bar value as fraction (progressValue / targetCount)', () => {
+    const $progressBar = makeProgressBar();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar, $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge: makeImage() }, makeChallenge({ progressValue: 1, targetCount: 3 }));
+    // Progress bar value should be approximately 33 (1/3 * 100)
+    expect($progressBar.value).toBeCloseTo(33.3, 0);
+  });
+
+  it('sets progress label as "progressValue / targetCount" string', () => {
+    const $progressLabel = makeText();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel, $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge: makeImage() }, makeChallenge({ progressValue: 2, targetCount: 5 }));
+    expect($progressLabel.text).toBe('2 / 5');
+  });
+
+  it('sets reward label as "+N pts"', () => {
+    const $rewardLabel = makeText();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel, $expiresLabel: makeText(), $completedBadge: makeImage() }, makeChallenge({ rewardPoints: 250 }));
+    expect($rewardLabel.text).toBe('+250 pts');
+  });
+
+  it('shows completedBadge when completedAt is set', () => {
+    const $completedBadge = makeImage();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge }, makeChallenge({ completedAt: '2026-03-22T10:00:00Z' }));
+    expect($completedBadge.show).toHaveBeenCalled();
+  });
+
+  it('hides completedBadge when completedAt is null', () => {
+    const $completedBadge = makeImage();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel: makeText(), $completedBadge }, makeChallenge({ completedAt: null }));
+    expect($completedBadge.hide).toHaveBeenCalled();
+  });
+
+  it('sets expires label from expiresAt ISO string', () => {
+    const $expiresLabel = makeText();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel, $completedBadge: makeImage() }, makeChallenge({ expiresAt: '2026-04-01T00:00:00Z' }));
+    expect($expiresLabel.text).toMatch(/Apr/);
+  });
+});
+
+// ── renderChallengesRail ──────────────────────────────────────────────────────
+
+describe('renderChallengesRail', () => {
+  it('calls onItemReady for each challenge in the list', () => {
+    const onItemReadyFn = vi.fn();
+    const $challengesList = {
+      onItemReady: (fn) => { onItemReadyFn.mockImplementation(fn); },
+      data: [],
+    };
+    const challenges = [makeChallenge(), makeChallenge({ challengeId: 'ch-2', title: 'Trail Regular' })];
+    renderChallengesRail($challengesList, challenges);
+    expect($challengesList.data).toHaveLength(2);
+  });
+});
+
+// ── showCompletionToast ───────────────────────────────────────────────────────
+
+describe('showCompletionToast', () => {
+  it('shows the toast element', () => {
+    const $toast = makeBox();
+    $toast.$toastTitle = makeText();
+    $toast.$toastPoints = makeText();
+    // fire-and-forget: show() is called synchronously before the 4s timer
+    showCompletionToast($toast, { title: 'First Steps', rewardPoints: 50 }, false);
+    expect($toast.show).toHaveBeenCalled();
+  });
+
+  it('sets title and points text on toast', () => {
+    const $toast = makeBox();
+    const $toastTitle = makeText();
+    const $toastPoints = makeText();
+    $toast.$toastTitle = $toastTitle;
+    $toast.$toastPoints = $toastPoints;
+    // fire-and-forget: text is set synchronously before the 4s timer
+    showCompletionToast($toast, { title: 'AR Explorer', rewardPoints: 25 }, false);
+    expect($toastTitle.text).toBe('AR Explorer');
+    expect($toastPoints.text).toMatch(/25/);
+  });
+
+  it('hides the toast after 4000ms', async () => {
+    vi.useFakeTimers();
+    const $toast = makeBox();
+    $toast.$toastTitle = makeText();
+    $toast.$toastPoints = makeText();
+    const p = showCompletionToast($toast, { title: 'Test', rewardPoints: 10 }, false);
+    vi.advanceTimersByTime(4000);
+    await p;
+    expect($toast.hide).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('skips animation and shows completion state instantly when reducedMotion = true', async () => {
+    vi.useFakeTimers();
+    const $toast = makeBox();
+    $toast.$toastTitle = makeText();
+    $toast.$toastPoints = makeText();
+    await showCompletionToast($toast, { title: 'Test', rewardPoints: 10 }, true);
+    expect($toast.show).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+});
+
+// ── updateChallengeProgress (frontend) ───────────────────────────────────────
+
+describe('updateChallengeProgress (frontend)', () => {
+  it('returns updated progressValue and justCompleted flag', () => {
+    const result = updateChallengeProgress('ch-1', 2, 3, false);
+    expect(result).toEqual({ challengeId: 'ch-1', progressValue: 2, targetCount: 3, justCompleted: false });
+  });
+
+  it('marks justCompleted when progressValue equals targetCount', () => {
+    const result = updateChallengeProgress('ch-1', 3, 3, true);
+    expect(result.justCompleted).toBe(true);
+  });
+});
