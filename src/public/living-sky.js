@@ -130,7 +130,7 @@ function getMoonPhase(date) {
 function moonShadowOffset(phase) {
   const angle = (phase / LUNAR_CYCLE) * Math.PI * 2;
   const illum = (1 - Math.cos(angle)) / 2;
-  return (1 - illum * 2) * 14; // ranges −14 (new) to +14 (waning)
+  return (1 - illum * 2) * 14; // +14 = shadow right (new moon), −14 = shadow left (full moon)
 }
 
 // ── Season ────────────────────────────────────────────────────────────────────
@@ -207,6 +207,9 @@ function computeMoonPosition(hour) {
  * @returns {LivingSkyState}
  */
 export function useLivingSky(totalMinutes) {
+  if (typeof totalMinutes !== 'number' || !Number.isFinite(totalMinutes)) {
+    throw new TypeError(`useLivingSky: totalMinutes must be a finite number, got ${totalMinutes}`);
+  }
   // Clamp/wrap to [0, 1440)
   const mins = ((totalMinutes % 1440) + 1440) % 1440;
   const hour = mins / 60;

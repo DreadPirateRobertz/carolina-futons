@@ -168,7 +168,7 @@ describe('useLivingSky(780) — midday (1pm)', () => {
 
   it('navBg is white (daytime nav)', () => {
     const { navBg } = useLivingSky(780);
-    expect(navBg.toLowerCase()).toContain('ff'); // white or near-white
+    expect(navBg.toLowerCase()).toBe('#ffffff');
   });
 });
 
@@ -271,10 +271,13 @@ describe('useLivingSky — precipitationType', () => {
   it('returns "snow" during winter night with cloudOp > 0', () => {
     // Winter: December
     vi.setSystemTime(new Date('2026-12-15T22:00:00'));
-    const state = useLivingSky(300); // 5am — has cloudOp 0.55 in skyTable
+    // 300 min = 5am lands exactly on the h=5 keyframe: cloudOp=0.55 with no interpolation
+    const state = useLivingSky(300);
     expect(state.season).toBe('winter');
     expect(state.cloudOpacity).toBeGreaterThan(0);
     expect(state.precipitationType).toBe('snow');
+    // precipitationOpacity at 5am = 0.55 - |5-12| * 0.02 = 0.41
+    expect(state.precipitationOpacity).toBeCloseTo(0.41, 1);
   });
 
   it('returns "mist" during spring when cloudOp > 0.4', () => {
@@ -284,6 +287,7 @@ describe('useLivingSky — precipitationType', () => {
     expect(state.season).toBe('spring');
     expect(state.cloudOpacity).toBeGreaterThan(0.4);
     expect(state.precipitationType).toBe('mist');
+    expect(state.precipitationOpacity).toBe(0.38);
   });
 
   it('returns "none" during summer', () => {
@@ -315,5 +319,20 @@ describe('useLivingSky — edge cases', () => {
     expect(() => useLivingSky(425.5)).not.toThrow();
     const state = useLivingSky(425.5);
     expect(state.sunPos.opacity).toBeGreaterThan(0);
+  });
+
+  it('throws TypeError for NaN input', () => {
+    expect(() => useLivingSky(NaN)).toThrow(TypeError);
+  });
+
+  it('throws TypeError for undefined input', () => {
+    expect(() => useLivingSky(undefined)).toThrow(TypeError);
+  });
+
+  it('handles negative minutes (wraps correctly to near-midnight)', () => {
+    // -60 min wraps to 1380 min (11pm)
+    const state = useLivingSky(-60);
+    expect(state.sunPos.opacity).toBe(0); // 11pm is night
+    expect(state.starOpacity).toBeGreaterThan(0.4);
   });
 });
