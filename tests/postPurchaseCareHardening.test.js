@@ -192,12 +192,12 @@ describe('getUpsellRecommendations hardening', () => {
     expect(res.recommendations.length).toBeGreaterThan(0);
   });
 
-  it('returns default delayDays 3 when upsell has delayDays undefined', async () => {
+  it('returns default delayDays 3 when upsell has delayDays null', async () => {
     __seed('PostPurchaseUpsells', [
-      { _id: 'u-x', sourceCategory: 'test-cat', sourceProductId: '', recommendedProductId: 'p1', recommendedProductName: 'Test', recommendedCategory: 'test', reason: 'test', active: true, priority: 1 },
+      { _id: 'u-x', sourceCategory: 'test-cat', sourceProductId: '', recommendedProductId: 'p1', recommendedProductName: 'Test', recommendedCategory: 'test', reason: 'test', active: true, priority: 1, delayDays: null },
     ]);
     const res = await getUpsellRecommendations('test-cat', null, 10);
-    // delayDays undefined → the ?? operator defaults to 3 in formatRecommendation
+    // delayDays null → the ?? operator defaults to 3 in formatRecommendation
     expect(res.recommendations[0].delayDays).toBe(3);
   });
 

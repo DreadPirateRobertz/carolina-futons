@@ -347,7 +347,7 @@ describe('evaluateClearanceCandidates — deeper edge cases', () => {
   it('defaults demandScore to 0 when missing from item', async () => {
     const old = new Date(Date.now() - 150 * 24 * 60 * 60 * 1000);
     __seed('ProductDemandMetrics', [
-      { productId: 'a0b1-0008', productName: 'No Score', listedDate: old },
+      { productId: 'a0b1-0008', productName: 'No Score', listedDate: old, demandScore: 0 },
     ]);
 
     const result = await evaluateClearanceCandidates();
