@@ -20,6 +20,7 @@ import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/fa
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1643,6 +1644,75 @@ export async function post_answerQuestion(request) {
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
     console.error('HTTP function error (post_answerQuestion):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+/**
+ * @function post_gamificationEvent
+ * @route POST /_functions/gamificationEvent
+ * Auth: Wix member session (currentMember.getMember()).
+ * Body: { eventName: string, memberId: string, payload?: object }
+ * Rate limit: 20 events per minute per memberId.
+ * Returns: { success, newTotal, tierChanged, newTier }
+ *
+ * Used by the mobile app to POST gamification events from native UI.
+ * memberId in the request body must match the authenticated member's _id
+ * to prevent one member from posting events on behalf of another.
+ */
+export async function post_gamificationEvent(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    const member = await currentMember.getMember();
+    if (!member) {
+      return unauthorized({ body: JSON.stringify({ error: 'Authentication required' }), headers: JSON_HEADERS });
+    }
+
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const eventName = sanitize(String(body?.eventName || ''), 100).trim();
+    const memberId = String(body?.memberId || '').trim();
+    if (!eventName) {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: eventName' }), headers: JSON_HEADERS });
+    }
+    if (!memberId) {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: memberId' }), headers: JSON_HEADERS });
+    }
+
+    // IDOR guard: memberId must match the authenticated member
+    if (memberId !== member._id) {
+      return unauthorized({ body: JSON.stringify({ error: 'memberId does not match authenticated member' }), headers: JSON_HEADERS });
+    }
+
+    const { checkRateLimit } = await import('backend/utils/rateLimit');
+    const rateLimitResult = await checkRateLimit('GamificationRateLimit', memberId, { max: 20, windowMs: 60_000 });
+    if (!rateLimitResult.allowed) {
+      return response({ status: 429, body: JSON.stringify({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
+    }
+
+    const payload = body?.payload && typeof body.payload === 'object' && !Array.isArray(body.payload) ? body.payload : {};
+    const result = await receiveGamificationEvent(eventName, payload, memberId);
+
+    if (!result.success) {
+      return serverError({ body: JSON.stringify({ error: result.error || 'Failed to process event' }), headers: JSON_HEADERS });
+    }
+
+    return ok({
+      body: JSON.stringify({
+        success: true,
+        newTotal: result.newTotal,
+        tierChanged: result.tierChanged,
+        newTier: result.newTier,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (post_gamificationEvent):', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
