@@ -20,6 +20,19 @@ import { sanitize, validateId } from 'backend/utils/sanitize';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 
+// ── Challenge catalog constants ───────────────────────────────────────────────
+const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
+const CHALLENGE_PROGRESS_COLLECTION = 'ChallengeProgress';
+
+// ── Challenge catalog cache + rate limit (module-level, reset via test helpers) ──
+const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CATALOG_RATE_LIMIT = 30;
+const CATALOG_WINDOW_MS = 60 * 1000;
+let _catalogCache = new Map();
+let _catalogRateLimit = new Map();
+export function _resetChallengeCatalogCache() { _catalogCache = new Map(); }
+export function _resetChallengeCatalogRateLimit() { _catalogRateLimit = new Map(); }
+
 // Tier thresholds (points)
 const TIERS = {
   Bronze: { min: 0, discount: 0, label: 'Bronze' },
