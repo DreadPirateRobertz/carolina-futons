@@ -3,6 +3,7 @@
 export const Permissions = {
   Anyone: 'Anyone',
   SiteMember: 'SiteMember',
+  Member: 'Member',
   Admin: 'Admin',
 };
 
