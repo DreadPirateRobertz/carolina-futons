@@ -18,6 +18,8 @@ import {
   initFooterAria,
   initFooterLogo,
   initMountainDivider,
+  buildFooterMountainSVG,
+  initMountainDividerWithSkyWiring,
   applyFooterStyles,
   fixFooterContactFallback,
   initFooter,
@@ -74,6 +76,7 @@ function createMockElement(overrides = {}) {
     onItemReady: vi.fn(),
     onMouseIn: vi.fn(),
     onMouseOut: vi.fn(),
+    onMessage: vi.fn(),
     disable: vi.fn(),
     enable: vi.fn(),
     accessibility: {},
@@ -1151,5 +1154,122 @@ describe('initFooter', () => {
   it('survives $w that always throws', () => {
     const broken$w = () => { throw new Error('boom'); };
     expect(() => initFooter(broken$w)).not.toThrow();
+  });
+});
+
+// ── buildFooterMountainSVG ──────────────────────────────────────────
+
+describe('buildFooterMountainSVG', () => {
+  it('returns an SVG string with correct viewBox, a11y, and responsive attrs', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('viewBox="0 0 1440 80"');
+    expect(svg).toContain('aria-hidden="true"');
+    expect(svg).toContain('preserveAspectRatio="none"');
+  });
+
+  it('includes feTurbulence watercolor filter with correct attributes', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('feTurbulence');
+    expect(svg).toContain('result="cfWatercolor"');
+    expect(svg).toContain('baseFrequency="0.035"');
+  });
+
+  it('feDisplacementMap references cfWatercolor result (no-op guard)', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('feDisplacementMap');
+    expect(svg).toContain('in2="cfWatercolor"');
+    expect(svg).toContain('xChannelSelector="R"');
+  });
+
+  it('includes feGaussianBlur atmospheric haze filter', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('feGaussianBlur');
+  });
+
+  it('contains at least 5 ridgeline path elements', () => {
+    const svg = buildFooterMountainSVG();
+    const pathMatches = svg.match(/<path /g) || [];
+    expect(pathMatches.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('contains pine-trees, birds, and wildflowers groups', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('pine-trees');
+    expect(svg).toContain('birds');
+    expect(svg).toContain('wildflowers');
+  });
+
+  it('uses default distant-ridge color when no ridgeColors provided', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('#5B8FA8'); // default r1 distant blue
+    expect(svg).toContain('#3A2518'); // default espresso dark
+  });
+
+  it('injects custom r1 ridge color into SVG output', () => {
+    const svg = buildFooterMountainSVG({ r1: '#AABBCC' });
+    expect(svg).toContain('#AABBCC');
+  });
+
+  it('injects custom r3 and r4 ridge colors independently', () => {
+    const svg = buildFooterMountainSVG({ r3: '#112233', r4: '#445566' });
+    expect(svg).toContain('#112233');
+    expect(svg).toContain('#445566');
+  });
+
+  it('partial overrides preserve other defaults', () => {
+    const svg = buildFooterMountainSVG({ r1: '#FFFFFF' });
+    expect(svg).toContain('#FFFFFF'); // override applied
+    expect(svg).toContain('#3A2518'); // other defaults preserved
+  });
+});
+
+// ── initMountainDividerWithSkyWiring ────────────────────────────────
+
+describe('initMountainDividerWithSkyWiring', () => {
+  it('sets SVG html on #footerMountainDivider', () => {
+    initMountainDividerWithSkyWiring($w);
+    expect($w('#footerMountainDivider').html).toContain('<svg');
+    expect($w('#footerMountainDivider').html).toContain('viewBox="0 0 1440 80"');
+  });
+
+  it('subscribes to onMessage on #livingSkyFrame', () => {
+    initMountainDividerWithSkyWiring($w);
+    expect($w('#livingSkyFrame').onMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('survives when #livingSkyFrame is absent', () => {
+    const sparse$w = (sel) => sel === '#footerMountainDivider' ? createMockElement() : null;
+    expect(() => initMountainDividerWithSkyWiring(sparse$w)).not.toThrow();
+  });
+
+  it('survives when $w always throws', () => {
+    const broken$w = () => { throw new Error('nope'); };
+    expect(() => initMountainDividerWithSkyWiring(broken$w)).not.toThrow();
+  });
+
+  it('updates SVG colors when LivingSkyState message received (bare state, no type field)', () => {
+    initMountainDividerWithSkyWiring($w);
+    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
+    handler({ data: { ridgeColors: { r1: '#FF1111', r3: '#FF2222', r4: '#FF3333' } } });
+    const html = $w('#footerMountainDivider').html;
+    expect(html).toContain('#FF1111');
+    expect(html).toContain('#FF2222');
+    expect(html).toContain('#FF3333');
+  });
+
+  it('ignores postMessages without ridgeColors', () => {
+    initMountainDividerWithSkyWiring($w);
+    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
+    const htmlBefore = $w('#footerMountainDivider').html;
+    handler({ data: { someOtherPayload: {} } });
+    expect($w('#footerMountainDivider').html).toBe(htmlBefore);
+  });
+
+  it('ignores messages with missing data', () => {
+    initMountainDividerWithSkyWiring($w);
+    const handler = $w('#livingSkyFrame').onMessage.mock.calls[0][0];
+    expect(() => handler({})).not.toThrow();
+    expect(() => handler(null)).not.toThrow();
   });
 });
