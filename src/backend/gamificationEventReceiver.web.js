@@ -18,9 +18,11 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { POINT_VALUES, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
+import { getTodayET, getYesterdayET } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
+const MEMBER_BADGES_COLLECTION = 'MemberBadges';
 const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
@@ -42,10 +44,10 @@ export const receiveGamificationEvent = webMethod(
       return { success: false, error: 'memberId is required' };
     }
 
-    const delta = resolvePoints(eventName, payload);
+    const basePoints = resolvePoints(eventName, payload);
 
     // Unknown event: return current total without writing
-    if (delta === null) {
+    if (basePoints === null) {
       logError(
         `gamificationEventReceiver — unknown event "${eventName}" for member ${memberId}`,
         new Error('Unknown gamification event'),
@@ -70,7 +72,15 @@ export const receiveGamificationEvent = webMethod(
       const record = await findMemberRecord(memberId);
       const oldTotal = record ? record.totalPoints : 0;
       const oldTier = record ? record.tier : getTierForPoints(0);
-      const newTotal = oldTotal + delta;
+
+      // Phase 2: compute streak state (pure, no DB calls)
+      const todayET = getTodayET();
+      const yesterdayET = getYesterdayET();
+      const streakState = updateStreakState(record || {}, todayET, yesterdayET);
+
+      // Apply streak multiplier to base points
+      const adjustedPoints = Math.round(basePoints * streakState.streakMultiplier);
+      const newTotal = oldTotal + adjustedPoints + streakState.milestoneBonus;
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;
 
@@ -78,23 +88,47 @@ export const receiveGamificationEvent = webMethod(
       const currentBonusSpins = record ? (record.bonusSpinsAvailable || 0) : 0;
       const newBonusSpins = currentBonusSpins + bonusSpins;
 
+      const updatedRecord = {
+        totalPoints: newTotal,
+        tier: newTier,
+        bonusSpinsAvailable: newBonusSpins,
+        currentStreakDays: streakState.currentStreakDays,
+        streakStartDate: streakState.streakStartDate,
+        lastActivityDate: streakState.lastActivityDate,
+        streakMultiplier: streakState.streakMultiplier,
+      };
+
       if (record) {
-        await wixData.update(MEMBER_POINTS_COLLECTION, {
-          ...record,
-          totalPoints: newTotal,
-          tier: newTier,
-          bonusSpinsAvailable: newBonusSpins,
-        });
+        await wixData.update(MEMBER_POINTS_COLLECTION, { ...record, ...updatedRecord });
       } else {
-        await wixData.insert(MEMBER_POINTS_COLLECTION, {
-          memberId,
-          totalPoints: newTotal,
-          tier: newTier,
-          bonusSpinsAvailable: newBonusSpins,
-        });
+        await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord });
       }
 
-      return { success: true, newTotal, tierChanged, newTier };
+      // Phase 2: award week_wanderer badge on 7-day milestone (de-dup guarded)
+      if (streakState.milestoneBonus > 0) {
+        try {
+          const existingBadge = await wixData.query(MEMBER_BADGES_COLLECTION)
+            .eq('memberId', memberId)
+            .eq('badgeId', 'week_wanderer')
+            .limit(1)
+            .find({ suppressAuth: true });
+          if (existingBadge.items.length === 0) {
+            await wixData.insert(MEMBER_BADGES_COLLECTION, { memberId, badgeId: 'week_wanderer' });
+          }
+        } catch {
+          // Badge award is best-effort — don't fail the whole event
+        }
+      }
+
+      return {
+        success: true,
+        newTotal,
+        tierChanged,
+        newTier,
+        currentStreakDays: streakState.currentStreakDays,
+        streakMultiplier: streakState.streakMultiplier,
+        milestoneUnlocked: streakState.milestoneBonus > 0,
+      };
     } catch (err) {
       logError(`gamificationEventReceiver — ${eventName} failed for member ${memberId}`, err);
       return { success: false, error: 'Failed to award points' };
@@ -120,6 +154,8 @@ function resolvePoints(eventName, payload) {
       return REFERRAL_SHARED_POINTS;
     case 'gamification_order_complete':
       return Math.floor(payload?.orderTotal || 0);
+    case 'gamification_spin_completed':
+      return 0;
     default:
       return null;
   }
