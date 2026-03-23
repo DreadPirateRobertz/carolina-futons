@@ -2,14 +2,17 @@
  * @module gamificationEventReceiver.web
  * @description Wix backend webMethod for receiving gamification events from the mobile app.
  * Awards points to members based on trackEvent calls and returns updated tier state.
+ * After awarding points, checks BonusSpinGrants for active grants matching the event
+ * and increments bonusSpinsAvailable on MemberPoints accordingly.
  *
  * Supported events:
  *   gamification_add_to_cart      — +5 pts
  *   gamification_submit_review    — +50 pts (+25 bonus if has_photo)
  *   gamification_referral_shared  — +100 pts
+ *   gamification_order_complete   — +Math.floor(orderTotal) pts (0 if missing)
  *   (unknown)                     — no-op, returns current total
  *
- * CF-eo88
+ * CF-eo88, CF-9l0
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -18,6 +21,7 @@ import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
+const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
@@ -70,17 +74,23 @@ export const receiveGamificationEvent = webMethod(
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;
 
+      const bonusSpins = await maybeGrantBonusSpin(eventName);
+      const currentBonusSpins = record ? (record.bonusSpinsAvailable || 0) : 0;
+      const newBonusSpins = currentBonusSpins + bonusSpins;
+
       if (record) {
         await wixData.update(MEMBER_POINTS_COLLECTION, {
           ...record,
           totalPoints: newTotal,
           tier: newTier,
+          bonusSpinsAvailable: newBonusSpins,
         });
       } else {
         await wixData.insert(MEMBER_POINTS_COLLECTION, {
           memberId,
           totalPoints: newTotal,
           tier: newTier,
+          bonusSpinsAvailable: newBonusSpins,
         });
       }
 
@@ -108,6 +118,8 @@ function resolvePoints(eventName, payload) {
       return POINT_VALUES.REVIEW + (payload?.has_photo ? POINT_VALUES.PHOTO_REVIEW_BONUS : 0);
     case 'gamification_referral_shared':
       return REFERRAL_SHARED_POINTS;
+    case 'gamification_order_complete':
+      return Math.floor(payload?.orderTotal || 0);
     default:
       return null;
   }
@@ -125,4 +137,26 @@ async function findMemberRecord(memberId) {
     .limit(1)
     .find({ suppressAuth: true });
   return results.items.length > 0 ? results.items[0] : null;
+}
+
+/**
+ * Query BonusSpinGrants for an active grant matching the event.
+ * Returns the number of bonus spins to award (0 if none).
+ * @param {string} eventName
+ * @returns {Promise<number>}
+ */
+async function maybeGrantBonusSpin(eventName) {
+  try {
+    const results = await wixData.query(BONUS_SPIN_GRANTS_COLLECTION)
+      .eq('triggerEvent', eventName)
+      .eq('active', true)
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (results.items.length > 0) {
+      return results.items[0].spinsGranted || 1;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
 }

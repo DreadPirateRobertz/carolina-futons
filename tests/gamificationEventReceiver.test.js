@@ -24,6 +24,7 @@ import {
   __setUpdateError,
   __getInserted,
   __onUpdate,
+  __onInsert,
 } from './__mocks__/wix-data.js';
 import { receiveGamificationEvent } from '../src/backend/gamificationEventReceiver.web.js';
 
@@ -257,5 +258,171 @@ describe('per-member isolation', () => {
     await receiveGamificationEvent('gamification_referral_shared', {}, 'mem-A');
     const resultB = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-B');
     expect(resultB.newTotal).toBe(5); // mem-B unaffected by mem-A's 100 pts
+  });
+});
+
+// ── gamification_order_complete (Math.floor(orderTotal) pts) ─────────────────
+
+describe('gamification_order_complete', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('awards Math.floor(orderTotal) points for a whole-dollar amount', async () => {
+    const result = await receiveGamificationEvent(
+      'gamification_order_complete',
+      { orderTotal: 75 },
+      'mem-1'
+    );
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(75);
+  });
+
+  it('rounds down fractional orderTotal (49.99 → 49)', async () => {
+    const result = await receiveGamificationEvent(
+      'gamification_order_complete',
+      { orderTotal: 49.99 },
+      'mem-1'
+    );
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(49);
+  });
+
+  it('awards 0 points when orderTotal is missing', async () => {
+    const result = await receiveGamificationEvent(
+      'gamification_order_complete',
+      {},
+      'mem-1'
+    );
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(0);
+  });
+
+  it('awards 0 points when orderTotal is 0', async () => {
+    const result = await receiveGamificationEvent(
+      'gamification_order_complete',
+      { orderTotal: 0 },
+      'mem-1'
+    );
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(0);
+  });
+
+  it('stacks on existing member balance', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 200, tier: 'Trail Blazer' }]);
+    const result = await receiveGamificationEvent(
+      'gamification_order_complete',
+      { orderTotal: 35.50 },
+      'mem-1'
+    );
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(235); // 200 + Math.floor(35.50)
+  });
+});
+
+// ── Bonus spin grants ────────────────────────────────────────────────────────
+
+describe('bonus spin grants', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('increments bonusSpinsAvailable when active grant matches event', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_add_to_cart', active: true, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
+    expect(mpUpdate).toBeDefined();
+    expect(mpUpdate.item.bonusSpinsAvailable).toBe(1);
+  });
+
+  it('does not increment bonusSpinsAvailable when grant is inactive', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_add_to_cart', active: false, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
+    expect(mpUpdate).toBeDefined();
+    expect(mpUpdate.item.bonusSpinsAvailable).toBe(0);
+  });
+
+  it('respects spinsGranted > 1', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_submit_review', active: true, spinsGranted: 3 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_submit_review', { has_photo: false }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(3);
+  });
+
+  it('stacks on existing bonusSpinsAvailable balance', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_referral_shared', active: true, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer', bonusSpinsAvailable: 5 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_referral_shared', {}, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(6);
+  });
+
+  it('order_complete event also triggers bonus spin check', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_order_complete', active: true, spinsGranted: 2 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal: 25 }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(2);
+  });
+
+  it('sets bonusSpinsAvailable on insert for new member with active grant', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_add_to_cart', active: true, spinsGranted: 1 },
+    ]);
+    const inserted = [];
+    __onInsert((collection, item) => inserted.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-new');
+    const mpInsert = inserted.find(i => i.collection === 'MemberPoints');
+    expect(mpInsert).toBeDefined();
+    expect(mpInsert.item.bonusSpinsAvailable).toBe(1);
+  });
+
+  it('no bonus spin when no grants exist for the event', async () => {
+    // No BonusSpinGrants seeded at all
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer', bonusSpinsAvailable: 2 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
+    expect(mpUpdate.item.bonusSpinsAvailable).toBe(2); // unchanged
   });
 });
