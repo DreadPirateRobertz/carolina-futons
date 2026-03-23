@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getTodayET, getYesterdayET } from '../src/backend/utils/dateUtils.js';
+import { getTodayET, getYesterdayET, getNextETMidnightUTC, computeStreakDanger } from '../src/backend/utils/dateUtils.js';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -58,5 +58,98 @@ describe('getYesterdayET', () => {
     vi.setSystemTime(new Date('2026-11-01T06:30:00Z'));
     // getYesterdayET() must return Oct 31, not Nov 1
     expect(getYesterdayET()).toBe('2026-10-31');
+  });
+});
+
+// ── getNextETMidnightUTC ──────────────────────────────────────────────────────
+
+describe('getNextETMidnightUTC', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('returns next ET midnight as UTC ms — standard EST day (UTC-5)', () => {
+    vi.useFakeTimers();
+    // 2026-03-05 14:00 UTC = 9:00 AM EST (UTC-5) — before spring-forward (Mar 8)
+    vi.setSystemTime(new Date('2026-03-05T14:00:00Z'));
+    const result = getNextETMidnightUTC();
+    // Next ET midnight = 2026-03-06 00:00 EST = 2026-03-06T05:00:00Z
+    expect(result).toBe(new Date('2026-03-06T05:00:00Z').getTime());
+  });
+
+  it('returns next ET midnight as UTC ms — standard EDT day (UTC-4)', () => {
+    vi.useFakeTimers();
+    // 2026-03-22 14:00 UTC = 10:00 AM EDT (UTC-4) — well before midnight
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    const result = getNextETMidnightUTC();
+    // Next ET midnight = 2026-03-23 00:00 EDT = 2026-03-23T04:00:00Z
+    expect(result).toBe(new Date('2026-03-23T04:00:00Z').getTime());
+  });
+
+  it('handles spring-forward night: 2026-03-08 (ET clocks go 2am→3am)', () => {
+    vi.useFakeTimers();
+    // 2026-03-08 06:00 UTC = 1:00 AM EST (clocks jump at 2am; still EST at 1am)
+    vi.setSystemTime(new Date('2026-03-08T06:00:00Z'));
+    const result = getNextETMidnightUTC();
+    // Next midnight is 2026-03-09 00:00 EDT (UTC-4) = 2026-03-09T04:00:00Z
+    expect(result).toBe(new Date('2026-03-09T04:00:00Z').getTime());
+  });
+
+  it('handles fall-back night: 2026-11-01 (ET clocks go 2am→1am)', () => {
+    vi.useFakeTimers();
+    // 2026-11-01 06:00 UTC = 2:00 AM EDT (one hour before fall-back repeats 1am)
+    vi.setSystemTime(new Date('2026-11-01T06:00:00Z'));
+    const result = getNextETMidnightUTC();
+    // Next midnight is 2026-11-02 00:00 EST (UTC-5) = 2026-11-02T05:00:00Z
+    expect(result).toBe(new Date('2026-11-02T05:00:00Z').getTime());
+  });
+
+  it('returns a value greater than Date.now()', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-15T20:00:00Z'));
+    expect(getNextETMidnightUTC()).toBeGreaterThan(Date.now());
+  });
+});
+
+// ── computeStreakDanger ───────────────────────────────────────────────────────
+
+describe('computeStreakDanger', () => {
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('returns true when inactive today AND < 4h until ET midnight', () => {
+    vi.useFakeTimers();
+    // 2026-03-22 03:00 UTC = 11:00 PM EDT (1h to midnight)
+    vi.setSystemTime(new Date('2026-03-22T03:00:00Z'));
+    // todayET = '2026-03-21', lastActivityDate = '2026-03-20' (not today)
+    expect(computeStreakDanger('2026-03-20', '2026-03-21')).toBe(true);
+  });
+
+  it('returns false when already active today', () => {
+    vi.useFakeTimers();
+    // 2026-03-22 03:00 UTC = 11:00 PM EDT — < 4h window
+    vi.setSystemTime(new Date('2026-03-22T03:00:00Z'));
+    // lastActivityDate matches todayET → not in danger
+    expect(computeStreakDanger('2026-03-21', '2026-03-21')).toBe(false);
+  });
+
+  it('returns false when > 4h until ET midnight', () => {
+    vi.useFakeTimers();
+    // 2026-03-22 14:00 UTC = 10:00 AM EDT — 14h to midnight
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    expect(computeStreakDanger('2026-03-21', '2026-03-22')).toBe(false);
+  });
+
+  it('returns false when lastActivityDate is null/undefined (new member)', () => {
+    vi.useFakeTimers();
+    // < 4h window
+    vi.setSystemTime(new Date('2026-03-22T03:00:00Z'));
+    expect(computeStreakDanger(null, '2026-03-21')).toBe(false);
+    expect(computeStreakDanger(undefined, '2026-03-21')).toBe(false);
+  });
+
+  it('DST spring-forward: danger window uses correct UTC offset (5am UTC = midnight EDT)', () => {
+    vi.useFakeTimers();
+    // 2026-03-09 03:00 UTC = 11:00 PM EDT on March 8 (1h before spring-forward midnight)
+    vi.setSystemTime(new Date('2026-03-09T03:00:00Z'));
+    // todayET = '2026-03-08', lastActivityDate = '2026-03-07'
+    expect(computeStreakDanger('2026-03-07', '2026-03-08')).toBe(true);
   });
 });
