@@ -6,7 +6,7 @@
  * total before the customer reaches checkout. Handles LTL freight messaging and
  * free-shipping threshold display.
  *
- * ZIP is persisted to session storage under STORAGE_KEY ('cf_shipping_zip') so
+ * ZIP is persisted to local storage under STORAGE_KEY ('cf_shipping_zip') so
  * that a ZIP entered on one page is pre-populated on subsequent visits.
  *
  * Wix element nicknames required on Cart Page:
@@ -213,7 +213,8 @@ async function _render($w, cart, els, storage) {
       } else {
         _showZipPrompt($w, els);
       }
-    } catch (_) {
+    } catch (err) {
+      console.warn('[CartShippingEstimate] rate fetch failed:', err?.message ?? err);
       _showZipPrompt($w, els);
     }
     return;
@@ -256,7 +257,8 @@ async function _handleZipSubmit($w, cart, els, storage) {
         try { el.show(); } catch (_) {}
       });
     }
-  } catch (_) {
+  } catch (err) {
+    console.warn('[CartShippingEstimate] ZIP submit rate fetch failed:', err?.message ?? err);
     _safeCall($w, els.result, el => {
       el.text = 'Estimate unavailable';
       try { el.show(); } catch (_) {}

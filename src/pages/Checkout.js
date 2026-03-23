@@ -416,7 +416,9 @@ async function initAddressValidation() {
         try { $w('#addressZip').value = savedZip; } catch (e) {}
         try { $w('#checkoutShippingZip').value = savedZip; } catch (e) {}
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Checkout] ZIP pre-populate failed:', e?.message ?? e);
+    }
 
     // Field configuration with element IDs and validation field names
     const fields = [
@@ -481,7 +483,7 @@ async function initAddressValidation() {
         if (result.valid) {
           _addressValid = true;
           // Persist the confirmed ZIP so it pre-populates on the next visit.
-          if (address.zip) setStoredZip(address.zip).catch(() => {});
+          if (address.zip) setStoredZip(address.zip).catch(e => console.warn('[Checkout] setStoredZip failed:', e?.message ?? e));
           try {
             $w('#addressErrors').hide();
             $w('#addressSuccess').text = 'Address verified';

@@ -2,7 +2,7 @@
  * @module ShippingIntelligence
  * @description Product page frontend wiring for the Shipping Intelligence Layer.
  *
- * Reads stored postal code (wix-storage-frontend session), calls the backend
+ * Reads stored postal code (wix-storage-frontend local), calls the backend
  * getShippingEstimate webMethod, and updates all product page shipping elements.
  * Shows white-glove upsell banner when a local delivery zone is detected.
  *
@@ -90,7 +90,7 @@ function showError($wFn, msg) {
 /**
  * Initialise the shipping intelligence widget on a Product Page.
  *
- * 1. Reads stored postal code from session storage.
+ * 1. Reads stored postal code from local storage (with member-profile fallback).
  * 2. Shows loading spinner; hides estimate box.
  * 3. Calls getShippingEstimate(productId, postalCode).
  * 4. On success: populates elements, hides spinner, shows box.
@@ -101,7 +101,7 @@ function showError($wFn, msg) {
  * @param {Function} $wFn      - Wix $w selector function
  * @param {string}   productId - Wix catalog product ID
  * @param {Object}  [opts]
- * @param {Object}  [opts.storage] - Injectable wix-storage-frontend session (for testing)
+ * @param {Object}  [opts.storage] - Injectable wix-storage-frontend local (for testing)
  */
 export async function initShippingIntelligence($wFn, productId, opts = {}) {
   const storage = opts.storage ?? local;
