@@ -104,7 +104,7 @@ describe('getOfficeHoursStatus', () => {
 
   it('loads custom office hours from ChatConfig', async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday noon EDT
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
     try {
       // Custom config: always open (all days 00:00–23:59)
       const customHours = {
@@ -137,7 +137,7 @@ describe('getOfficeHoursStatus', () => {
 
   it('returns closesAt when online', async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday noon EDT
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
     try {
       const allOpen = {
         timezone: 'America/New_York',
@@ -160,18 +160,24 @@ describe('getOfficeHoursStatus', () => {
   });
 
   it('returns nextOpen when closed on a day with null schedule', async () => {
-    // All days null except Monday
-    const closedConfig = {
-      timezone: 'America/New_York',
-      schedule: {
-        0: null, 1: { open: '09:00', close: '17:00' }, 2: null,
-        3: null, 4: null, 5: null, 6: null,
-      },
-    };
-    __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(closedConfig) }]);
-    const result = await getOfficeHoursStatus();
-    // Either online (if Monday during hours) or offline with nextOpen
-    expect(typeof result.isOnline).toBe('boolean');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
+    try {
+      // Only Monday open — Wednesday 4pm EDT is definitively closed
+      const closedConfig = {
+        timezone: 'America/New_York',
+        schedule: {
+          0: null, 1: { open: '09:00', close: '17:00' }, 2: null,
+          3: null, 4: null, 5: null, 6: null,
+        },
+      };
+      __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(closedConfig) }]);
+      const result = await getOfficeHoursStatus();
+      expect(result.isOnline).toBe(false);
+      expect(result).toHaveProperty('nextOpen');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('returns isOnline false when all days are closed', async () => {
@@ -187,45 +193,54 @@ describe('getOfficeHoursStatus', () => {
   });
 
   it('handles before-open time correctly', async () => {
-    // Schedule where open is very late so we're "before open"
-    const lateOpen = {
-      timezone: 'America/New_York',
-      schedule: {
-        0: { open: '23:58', close: '23:59' },
-        1: { open: '23:58', close: '23:59' },
-        2: { open: '23:58', close: '23:59' },
-        3: { open: '23:58', close: '23:59' },
-        4: { open: '23:58', close: '23:59' },
-        5: { open: '23:58', close: '23:59' },
-        6: { open: '23:58', close: '23:59' },
-      },
-    };
-    __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(lateOpen) }]);
-    const result = await getOfficeHoursStatus();
-    // Most likely before open (unless test runs exactly at 23:58)
-    expect(typeof result.isOnline).toBe('boolean');
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
+    try {
+      // Schedule opens at 23:58 — 4pm is definitively before open
+      const lateOpen = {
+        timezone: 'America/New_York',
+        schedule: {
+          0: { open: '23:58', close: '23:59' },
+          1: { open: '23:58', close: '23:59' },
+          2: { open: '23:58', close: '23:59' },
+          3: { open: '23:58', close: '23:59' },
+          4: { open: '23:58', close: '23:59' },
+          5: { open: '23:58', close: '23:59' },
+          6: { open: '23:58', close: '23:59' },
+        },
+      };
+      __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(lateOpen) }]);
+      const result = await getOfficeHoursStatus();
+      expect(result.isOnline).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('handles after-close time correctly', async () => {
-    // Schedule where close is very early so we're "after close"
-    const earlyClose = {
-      timezone: 'America/New_York',
-      schedule: {
-        0: { open: '00:00', close: '00:01' },
-        1: { open: '00:00', close: '00:01' },
-        2: { open: '00:00', close: '00:01' },
-        3: { open: '00:00', close: '00:01' },
-        4: { open: '00:00', close: '00:01' },
-        5: { open: '00:00', close: '00:01' },
-        6: { open: '00:00', close: '00:01' },
-      },
-    };
-    __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(earlyClose) }]);
-    const result = await getOfficeHoursStatus();
-    // Almost certainly after close
-    if (!result.isOnline) {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
+    try {
+      // Schedule closes at 00:01 — 4pm is definitively after close
+      const earlyClose = {
+        timezone: 'America/New_York',
+        schedule: {
+          0: { open: '00:00', close: '00:01' },
+          1: { open: '00:00', close: '00:01' },
+          2: { open: '00:00', close: '00:01' },
+          3: { open: '00:00', close: '00:01' },
+          4: { open: '00:00', close: '00:01' },
+          5: { open: '00:00', close: '00:01' },
+          6: { open: '00:00', close: '00:01' },
+        },
+      };
+      __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(earlyClose) }]);
+      const result = await getOfficeHoursStatus();
+      expect(result.isOnline).toBe(false);
       expect(result.message).toContain('closed');
       expect(result.nextOpen).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
     }
   });
 });

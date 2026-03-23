@@ -48,7 +48,7 @@ describe('getOfficeHoursStatus', () => {
 
   it('uses custom office hours from CMS when available', async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday noon EDT
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00')); // fixed Wednesday 4pm EDT
     try {
       __seed('ChatConfig', [{
         _id: 'config-hours',
