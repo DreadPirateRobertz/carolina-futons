@@ -71,16 +71,15 @@ describe('getTodayET', () => {
     expect(getTodayET()).toBe('2026-03-15');
   });
 
-  it('returns previous day when UTC midnight but still ET yesterday (5am UTC = 11pm ET prev day)', () => {
+  it('returns previous ET day when UTC time is before midnight ET (Jan, EST=UTC-5)', () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-03-15T04:00:00Z')); // 4am UTC = 11pm ET March 14
-    expect(getTodayET()).toBe('2026-03-14');
+    vi.setSystemTime(new Date('2026-01-15T04:00:00Z')); // 4am UTC = 11pm EST Jan 14 (EST=UTC-5)
+    expect(getTodayET()).toBe('2026-01-14');
   });
 
-  it('returns correct date at midnight ET (5am UTC in March = midnight ET EDT)', () => {
+  it('returns correct date at midnight ET (4am UTC = 00:00 EDT on March 15, post-spring-forward)', () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-03-15T05:00:00Z')); // 5am UTC = midnight ET (EDT = UTC-4 after spring-forward... wait, March 15 2026: spring-forward is March 8, so EDT is active, UTC-4. 5am UTC = 1am ET)
-    // Actually at 5am UTC = 1am ET (EDT UTC-4 after March 8 spring-forward)
+    vi.setSystemTime(new Date('2026-03-15T04:00:00Z')); // 4am UTC = 00:00 EDT (UTC-4 after March 8 spring-forward)
     expect(getTodayET()).toBe('2026-03-15');
   });
 });
@@ -274,6 +273,12 @@ Expected: FAIL — `getStreakMultiplier is not a function` and `week_wanderer` b
 
 - [ ] **Step 3: Implement in `gamificationTokens.js`**
 
+Add to the existing `POINT_VALUES` object:
+
+```js
+STREAK_7_DAY: 100,  // Milestone bonus when streak crosses to day 7
+```
+
 Add after the existing `POINT_VALUES` block:
 
 ```js
@@ -362,22 +367,9 @@ git commit -m "feat(streak): add STREAK_MULTIPLIER_TIERS + getStreakMultiplier; 
 
 The plan here is TDD: write tests for `updateStreakState()` exported from the receiver module, then implement the helper in the module. Do NOT integrate into the main handler yet — that's Task 4.
 
-- [ ] **Step 1: Export `updateStreakState` from receiver (stub — throws)**
+**Note on signature:** The plan uses a 3-argument signature `(record, todayET, yesterdayET)` rather than the spec's pseudocode `(record, todayET)`. This intentional deviation makes the pure helper fully testable without any clock mocking — the caller (receiver) computes both dates and passes them in. The spec's `yesterdayET = ...` local variable becomes a caller concern.
 
-Add to the bottom of `src/backend/gamificationEventReceiver.web.js`:
-
-```js
-// ── Streak helper (exported for testing) ──────────────────────────────────────
-
-/**
- * @throws {Error} Not yet implemented
- */
-export function updateStreakState(_record, _todayET, _yesterdayET) {
-  throw new Error('updateStreakState: not yet implemented');
-}
-```
-
-- [ ] **Step 2: Write failing tests for `updateStreakState`**
+- [ ] **Step 1: Write failing tests for `updateStreakState`**
 
 Add a new describe block to `tests/gamificationEventReceiver.test.js`:
 
@@ -538,7 +530,30 @@ describe('updateStreakState', () => {
 });
 ```
 
-- [ ] **Step 3: Run — confirm FAIL with "not yet implemented"**
+- [ ] **Step 2: Run — confirm FAIL (function not exported)**
+
+```bash
+npx vitest run tests/gamificationEventReceiver.test.js
+```
+
+Expected: FAIL — `SyntaxError: The requested module does not export 'updateStreakState'` (or similar import error).
+
+- [ ] **Step 3: Add `updateStreakState` stub to receiver (throws — keeps tests failing with meaningful error)**
+
+Add to the bottom of `src/backend/gamificationEventReceiver.web.js`:
+
+```js
+// ── Streak helper (exported for testing) ──────────────────────────────────────
+
+/**
+ * @throws {Error} Not yet implemented
+ */
+export function updateStreakState(_record, _todayET, _yesterdayET) {
+  throw new Error('updateStreakState: not yet implemented');
+}
+```
+
+- [ ] **Step 4: Run — confirm FAIL with "not yet implemented"**
 
 ```bash
 npx vitest run tests/gamificationEventReceiver.test.js
@@ -546,7 +561,7 @@ npx vitest run tests/gamificationEventReceiver.test.js
 
 Expected: FAIL — `Error: updateStreakState: not yet implemented`
 
-- [ ] **Step 4: Implement `updateStreakState()`**
+- [ ] **Step 5: Implement `updateStreakState()`**
 
 Replace the stub in `gamificationEventReceiver.web.js`:
 
@@ -604,7 +619,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
 }
 ```
 
-- [ ] **Step 5: Run — confirm PASS**
+- [ ] **Step 6: Run — confirm PASS**
 
 ```bash
 npx vitest run tests/gamificationEventReceiver.test.js
@@ -612,7 +627,7 @@ npx vitest run tests/gamificationEventReceiver.test.js
 
 Expected: All `updateStreakState` tests PASS. All prior tests still PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add src/backend/gamificationEventReceiver.web.js tests/gamificationEventReceiver.test.js
@@ -749,6 +764,55 @@ describe('streak multiplier — integration', () => {
     expect(mpUpdate.item.streakMultiplier).toBe(2);
     expect(mpUpdate.item.currentStreakDays).toBe(7);
   });
+
+  it('non-points spin (FREE_SHIP) still increments streak with 0 adjusted points', async () => {
+    // Spec: spin_completed qualifies regardless of prize type; multiplier applied to 0 base = 0
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer',
+      currentStreakDays: 2, streakStartDate: '2026-03-20',
+      lastActivityDate: '2026-03-21',  // yesterday
+      streakMultiplier: 1,
+    }]);
+    const result = await receiveGamificationEvent('gamification_spin_completed', { prizeType: 'FREE_SHIP' }, 'mem-1');
+    // Streak increments 2→3 (into 1.5x tier), but basePoints=0 so totalPoints unchanged
+    expect(result.currentStreakDays).toBe(3);
+    expect(result.streakMultiplier).toBe(1.5);
+    expect(result.newTotal).toBe(50);  // no points awarded for non-points prize
+  });
+
+  it('ET midnight boundary — correct streak at 00:01 ET (EST, Jan date)', async () => {
+    // 2026-01-15 05:01 UTC = 00:01 EST (UTC-5): today=2026-01-15, yesterday=2026-01-14
+    vi.setSystemTime(new Date('2026-01-15T05:01:00Z'));
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-01-12',
+      lastActivityDate: '2026-01-14',  // yesterday in ET
+      streakMultiplier: 1.5,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    // Should increment streak from 3→4, keep 1.5x multiplier (not yet 7)
+    expect(result.currentStreakDays).toBe(4);
+    expect(result.streakMultiplier).toBe(1.5);
+  });
+
+  it('badge de-dup — week_wanderer not re-inserted when already in badge set', async () => {
+    // Spec: milestone handler checks existing badge set before inserting
+    __seed('MemberBadges', [{ memberId: 'mem-1', badgeId: 'week_wanderer' }]);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 1.5,
+    }]);
+    const badgeInserts = [];
+    __onInsert((collection, item) => {
+      if (collection === 'MemberBadges') badgeInserts.push(item);
+    });
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    // Milestone fires (points awarded) but badge not re-inserted
+    expect(result.milestoneUnlocked).toBe(true);
+    expect(badgeInserts).toHaveLength(0);
+  });
 });
 ```
 
@@ -821,7 +885,7 @@ export const receiveGamificationEvent = webMethod(
 
       // Apply streak multiplier to base points
       const adjustedPoints = Math.round(basePoints * streakState.streakMultiplier);
-      const bonusSpins = await resolveBonus SpinGrant(eventName, record);
+      const bonusSpins = await resolveBonusSpinGrant(eventName, record);
       const newTotal = oldTotal + adjustedPoints + streakState.milestoneBonus;
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;
