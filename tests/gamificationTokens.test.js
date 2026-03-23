@@ -88,6 +88,14 @@ describe('POINT_VALUES', () => {
     expect(POINT_VALUES.STREAK_7_DAY).toBe(100);
   });
 
+  it('AR_USED is 10', () => {
+    expect(POINT_VALUES.AR_USED).toBe(10);
+  });
+
+  it('WISHLIST_ADD is 2', () => {
+    expect(POINT_VALUES.WISHLIST_ADD).toBe(2);
+  });
+
   it('all point values are positive integers', () => {
     for (const [key, value] of Object.entries(POINT_VALUES)) {
       expect(Number.isInteger(value) && value > 0, `${key} must be positive integer`).toBe(true);

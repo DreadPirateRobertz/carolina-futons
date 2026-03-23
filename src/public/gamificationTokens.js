@@ -25,6 +25,8 @@ export const POINT_VALUES = {
   REFERRAL_ACCEPTED: 200,
   AR_TRY_ON: 25,
   STREAK_7_DAY: 100,
+  AR_USED: 10,           // gamification_ar_used event
+  WISHLIST_ADD: 2,       // gamification_wishlist_add event (5/day cap enforced in receiver)
 };
 
 // ── Streak multiplier tiers ───────────────────────────────────────────────────
