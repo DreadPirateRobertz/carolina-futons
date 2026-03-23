@@ -20,6 +20,7 @@ import { sanitize, validateId } from 'backend/utils/sanitize';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Challenge catalog constants ───────────────────────────────────────────────
 const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
@@ -375,6 +376,125 @@ function getNextTier(currentLabel) {
   if (currentLabel === 'Silver') return TIERS.Gold;
   return null; // Gold is max
 }
+
+// ── Daily quest engine ────────────────────────────────────────────────────────
+
+const DAILY_QUEST_POOL = [
+  { id: 'purchase',       title: 'Place an order today',    action: 'purchase',       pointReward: 50 },
+  { id: 'review',         title: 'Write a product review',  action: 'review',         pointReward: 30 },
+  { id: 'referral',       title: 'Refer a friend',          action: 'referral',       pointReward: 75 },
+  { id: 'browse',         title: 'View 5 products',         action: 'browse',         pointReward: 15 },
+  { id: 'wishlist_share', title: 'Share your wishlist',     action: 'wishlist_share', pointReward: 20 },
+];
+
+const DAILY_QUESTS_PER_DAY = 3;
+const DAILY_QUESTS_RATE_LIMIT = 30;
+const DAILY_QUESTS_WINDOW_MS = 60_000;
+
+/** In-memory rate limit store: memberId → { count, windowStart } */
+const _dailyQuestsRateLimit = new Map();
+
+/** @internal — exposed for test reset only */
+export function _resetDailyQuestsRateLimit() {
+  _dailyQuestsRateLimit.clear();
+}
+
+/**
+ * Get the day-of-year (1-indexed) for a given Date in local time.
+ * The input must be a local-time Date within its own calendar year.
+ * Uses Math.round to avoid DST off-by-one on spring-forward days
+ * (elapsed ms ≈ 66.958 days → Math.floor gives 66; Math.round gives 67).
+ * @param {Date} date - Local-time Date object
+ * @returns {number} Day of year, 1-indexed (Jan 1 = 1)
+ */
+function getDayOfYear(date) {
+  const startOfYear = new Date(date.getFullYear(), 0, 0);
+  return Math.round((date - startOfYear) / 86_400_000);
+}
+
+/**
+ * Deterministic 3-quest selection for a given date.
+ * Base slot = dayOfYear % poolSize, then wraps through the pool to pick 3.
+ *
+ * @param {Date} date
+ * @returns {Array<{ id: string, title: string, action: string, pointReward: number }>}
+ */
+export function generateDailyQuests(date) {
+  const poolSize = DAILY_QUEST_POOL.length;
+  const base = getDayOfYear(date) % poolSize;
+  const quests = [];
+  for (let i = 0; i < DAILY_QUESTS_PER_DAY; i++) {
+    quests.push(DAILY_QUEST_POOL[(base + i) % poolSize]);
+  }
+  return quests;
+}
+
+/**
+ * Return today's 3 daily quests with completion status for the authenticated member.
+ *
+ * @function getMyDailyQuests
+ * @returns {Promise<{ quests: Array, date: string } | { status: 401|429, error: string }>}
+ * @permission SiteMember
+ */
+export const getMyDailyQuests = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getMember failed', err);
+      return { status: 401, error: 'Unauthenticated' };
+    }
+    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
+    const memberId = member._id;
+
+    // Rate limit: 30 requests per minute per member.
+    const now = Date.now();
+    const rl = _dailyQuestsRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > DAILY_QUESTS_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _dailyQuestsRateLimit.set(memberId, rl);
+    if (rl.count > DAILY_QUESTS_RATE_LIMIT) {
+      return { status: 429, error: 'Rate limit exceeded' };
+    }
+
+    const today = new Date();
+    const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const quests = generateDailyQuests(today);
+
+    let completions = [];
+    try {
+      const res = await wixData.query('QuestCompletions')
+        .eq('memberId', memberId)
+        .eq('dateKey', dateKey)
+        .find({ suppressAuth: true });
+      completions = res.items;
+    } catch (err) {
+      logError('[loyaltyService] QuestCompletions query failed', err);
+    }
+
+    const completionByAction = new Map(completions.map(c => [c.action, c]));
+
+    return {
+      quests: quests.map(q => {
+        const record = completionByAction.get(q.action) ?? null;
+        return {
+          id: q.id,
+          title: q.title,
+          action: q.action,
+          pointReward: q.pointReward,
+          completed: record !== null,
+          completedAt: record?.completedAt ?? null,
+        };
+      }),
+      date: dateKey,
+    };
+  }
+);
 
 // ── Achievement system ────────────────────────────────────────────────────────
 
