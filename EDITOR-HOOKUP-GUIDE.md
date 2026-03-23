@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Spin Wheel Phase 1 — spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections: SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes [PR #TBD]; Phase 2 Streak Multipliers — streakCountChip, streakMultiplierBadge, streakToastBox [cf-h7p])
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Phase 2 Streak Multipliers + CF-64k: streakCountChip, streakMultiplierBadge, streakToastBox + Spin Wheel Phase 1: spinWheelSection + 4 CMS collections)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -1404,6 +1404,15 @@ Place the same 5 elements on the Product Page canvas:
 ### Rewards ⚠️ REPEATER
 `rewardsRepeater` (Repeater), `rewardsSection` (Section), `rewardsEmpty` (Text)
 **↳ Inside:** `rewardName` (Text), `rewardDescription` (Text), `rewardCost` (Text), `redeemBtn` (Button), `rewardCouponCode` (Text)
+
+### Streak Display (NEW — CF-64k)
+*Source: `src/pages/Member Page.js` → `initLoyaltyDashboard()`. Backend: `backend/loyaltyService.web.js` → `getMyStreakData()`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `streakCountChip` | Text | Shows "🔥 N-day streak". **Hidden when streak = 0**. Shown/hidden via `shouldShowStreakChip(currentStreakDays)`. |
+| `streakMultiplierBadge` | Text | Shows "Nx points" multiplier badge. **Hidden when multiplier = 1**. Shown only when `streakMultiplier > 1`. |
+| `streakToastBox` | Box | Toast notification for streak extension events. Hidden by default; shown after `receiveGamificationEvent` updates streak. |
 
 ### Daily Spin Wheel (NEW — CF-spin-wheel Phase 1)
 *Source: `src/pages/Member Page.js` — `initSpinSection()` (inline, closure-scoped `$w` + `currentMember._id`). Backend: `backend/spinWheel.web.js`*

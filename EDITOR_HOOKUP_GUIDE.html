@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Spin Wheel Phase 1: spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections (SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes); Phase 2 Streak Multipliers: streakCountChip, streakMultiplierBadge, streakToastBox (cf-h7p)</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Streak Display (CF-64k + Phase 2): streakCountChip, streakMultiplierBadge, streakToastBox + Spin Wheel Phase 1</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -2300,6 +2300,16 @@ Action buttons (right):
         ["rewardName","Text","Name"],["rewardDescription","Text","Description"],
         ["rewardCost","Text","Cost"],["redeemBtn","Button","Redeem"],
         ["rewardCouponCode","Text","Coupon code"]
+      ]},
+      { name: "Streak Display", repeater: null, impl: `<h4>🔥 Implementation — Streak Display (CF-64k)</h4>
+<p><em>Source: <code>src/pages/Member Page.js</code> → <code>initLoyaltyDashboard()</code>. Backend: <code>backend/loyaltyService.web.js</code> → <code>getMyStreakData()</code>.</em></p>
+<ul>
+  <li><strong>#streakCountChip</strong>: Text element showing "🔥 N-day streak". <span class="impl-warn">Hidden when currentStreakDays = 0</span>. Visibility controlled by <code>shouldShowStreakChip()</code> from <code>StreakDisplay.js</code>.</li>
+  <li><strong>#streakMultiplierBadge</strong>: Text badge showing "Nx points" when <code>streakMultiplier &gt; 1</code>. <span class="impl-warn">Hidden when multiplier = 1</span>.</li>
+  <li><strong>#streakToastBox</strong>: Box toast container for streak extension announcements. Hidden by default; shown via <code>refreshStreakAfterEvent()</code> after a gamification event updates streak state.</li>
+</ul>`, elements: [
+        ["streakCountChip","Text","Streak chip"],["streakMultiplierBadge","Text","Multiplier badge"],
+        ["streakToastBox","Box","Toast notification"]
       ]},
       { name: "Daily Spin Wheel", repeater: "pendingPrizesRepeater", impl: `<h4>🎡 Implementation — Daily Spin Wheel (CF-spin-wheel Phase 1)</h4>
 <p><em>Source: <code>src/pages/Member Page.js</code> → <code>initSpinSection()</code> (closure-scoped <code>$w</code> + <code>currentMember._id</code>). Backend: <code>backend/spinWheel.web.js</code>.</em></p>

@@ -157,6 +157,7 @@ vi.mock('wix-data', () => ({
 vi.mock('wix-window-frontend', () => ({
   lightbox: { openLightbox: vi.fn() },
   openModal: vi.fn(),
+  reducedMotion: false,
 }));
 
 vi.mock('backend/wishlistShare.web.js', () => ({
@@ -171,6 +172,7 @@ vi.mock('backend/wishlistShare.web.js', () => ({
 vi.mock('backend/loyaltyService.web', () => ({
   getMyLoyaltyAccount: vi.fn().mockResolvedValue({ success: true, data: { points: 0, tier: 'Bronze' } }),
   redeemReward: vi.fn(),
+  getMyStreakData: vi.fn().mockResolvedValue({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null }),
 }));
 
 vi.mock('backend/errorMonitoring.web', () => ({

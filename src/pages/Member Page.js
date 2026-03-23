@@ -26,10 +26,41 @@ import {
   renderPendingPrizes,
   renderSpinResult,
 } from 'public/SpinWheel.js';
+import {
+  buildStreakChipText,
+  buildMultiplierBadgeText,
+  shouldShowStreakChip,
+  updateStreakDisplay,
+} from 'public/StreakDisplay.js';
 
 let currentMember = null;
 let wishlistData = [];
 let wishlistSortOrder = 'date-desc';
+let _reducedMotion = false; // set by initStreakDisplay on page load; false is a safe default
+
+/**
+ * Call after any receiveGamificationEvent response to refresh the streak display.
+ * @param {{ currentStreakDays: number, streakMultiplier: number, milestoneUnlocked: boolean }} streakResult
+ */
+function refreshStreakAfterEvent(streakResult) {
+  try {
+    updateStreakDisplay(
+      {
+        $chip: $w('#streakCountChip'),
+        $badge: $w('#streakMultiplierBadge'),
+        $toast: $w('#streakToastBox'),
+      },
+      {
+        currentStreakDays: streakResult.currentStreakDays,
+        streakMultiplier: streakResult.streakMultiplier,
+        milestoneUnlocked: streakResult.milestoneUnlocked,
+      },
+      _reducedMotion
+    );
+  } catch (e) {
+    console.error('[MemberPage] refreshStreakAfterEvent failed:', e);
+  }
+}
 
 $w.onReady(async function () {
   collapseOnMobile($w, ['#ordersRepeater', '#wishlistRepeater', '#addressBook']);
@@ -56,6 +87,7 @@ async function initMemberPage() {
       { name: 'storeCredit', init: () => initStoreCreditDashboard($w) },
       { name: 'giftCards', init: () => initGiftCardDashboard($w) },
       { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
+      { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
@@ -190,7 +222,7 @@ async function initDashboard() {
 
 async function initLoyaltyDashboard() {
   try {
-    const { getMyLoyaltyAccount, getAvailableRewards, redeemReward, getLoyaltyTiers } =
+    const { getMyLoyaltyAccount, getAvailableRewards, redeemReward, getLoyaltyTiers, getMyStreakData } =
       await import('backend/loyaltyService.web');
 
     const [account, rewards, tiers] = await Promise.all([
@@ -360,6 +392,42 @@ async function initLoyaltyDashboard() {
 
   } catch (e) {
     console.error('[MemberPage] Error initializing loyalty dashboard:', e);
+  }
+}
+
+// ── Streak Display ───────────────────────────────────────────────────
+
+async function initStreakDisplay() {
+  try {
+    const { getMyStreakData } = await import('backend/loyaltyService.web');
+    const { reducedMotion } = await import('wix-window-frontend');
+    _reducedMotion = reducedMotion;
+
+    const { currentStreakDays, streakMultiplier } = await getMyStreakData();
+
+    // Streak chip — no toast on initial load (streak hasn't just changed)
+    try {
+      if (shouldShowStreakChip(currentStreakDays)) {
+        $w('#streakCountChip').text = buildStreakChipText(currentStreakDays);
+        $w('#streakCountChip').show();
+      } else {
+        $w('#streakCountChip').hide();
+      }
+    } catch (e) {}
+
+    // Multiplier badge
+    try {
+      const badgeText = buildMultiplierBadgeText(streakMultiplier);
+      if (badgeText) {
+        $w('#streakMultiplierBadge').text = badgeText;
+        $w('#streakMultiplierBadge').show();
+      } else {
+        $w('#streakMultiplierBadge').hide();
+      }
+    } catch (e) {}
+
+  } catch (e) {
+    console.error('[MemberPage] Error initializing streak display:', e);
   }
 }
 

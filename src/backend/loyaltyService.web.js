@@ -17,6 +17,8 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 
 // Tier thresholds (points)
 const TIERS = {
@@ -174,6 +176,39 @@ export const getLoyaltyTiers = webMethod(
         benefits: ['All Silver benefits', '10% member discount', 'Free expedited shipping', 'Exclusive products', 'Priority support'],
       },
     ];
+  }
+);
+
+/**
+ * Get the current member's streak data from the MemberPoints CMS collection.
+ * Returns defaults when no record exists or on error.
+ *
+ * @function getMyStreakData
+ * @returns {Promise<{currentStreakDays: number, streakMultiplier: number, streakStartDate: string|null, lastActivityDate: string|null}>}
+ * @permission SiteMember
+ */
+export const getMyStreakData = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    const defaults = { currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null };
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return defaults;
+      const res = await wixData.query('MemberPoints')
+        .eq('memberId', member._id)
+        .limit(1)
+        .find({ suppressAuth: true });
+      const record = res.items[0];
+      if (!record) return defaults;
+      return {
+        currentStreakDays: record.currentStreakDays ?? 0,
+        streakMultiplier: record.streakMultiplier ?? 1,
+        streakStartDate: record.streakStartDate ?? null,
+        lastActivityDate: record.lastActivityDate ?? null,
+      };
+    } catch {
+      return defaults;
+    }
   }
 );
 

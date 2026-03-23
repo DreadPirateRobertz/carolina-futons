@@ -207,6 +207,7 @@ vi.mock('backend/loyaltyService.web', () => ({
   getAvailableRewards: vi.fn(() => Promise.resolve(mockRewards)),
   redeemReward: vi.fn(() => Promise.resolve({ success: true, couponCode: 'SAVE10' })),
   getLoyaltyTiers: vi.fn(() => Promise.resolve(mockTiers)),
+  getMyStreakData: vi.fn(() => Promise.resolve({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null })),
 }));
 
 vi.mock('backend/accountDashboard.web', () => ({
@@ -261,6 +262,7 @@ vi.mock('wix-location-frontend', () => ({
 vi.mock('wix-window-frontend', () => ({
   copyToClipboard: vi.fn(() => Promise.resolve()),
   openUrl: vi.fn(),
+  reducedMotion: false,
 }));
 
 vi.mock('backend/wishlistShare.web.js', () => ({
