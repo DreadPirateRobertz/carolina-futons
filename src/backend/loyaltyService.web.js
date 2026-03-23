@@ -17,10 +17,10 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
-import { logError } from 'backend/utils/errorHandler';
 
 // ── Challenge catalog constants ───────────────────────────────────────────────
 const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
@@ -363,20 +363,6 @@ export const getChallengeCatalog = webMethod(
   }
 );
 
-// ── Internal helpers ──────────────────────────────────────────────────
-
-function determineTier(points) {
-  if (points >= TIERS.Gold.min) return TIERS.Gold;
-  if (points >= TIERS.Silver.min) return TIERS.Silver;
-  return TIERS.Bronze;
-}
-
-function getNextTier(currentLabel) {
-  if (currentLabel === 'Bronze') return TIERS.Silver;
-  if (currentLabel === 'Silver') return TIERS.Gold;
-  return null; // Gold is max
-}
-
 // ── Daily quest engine ────────────────────────────────────────────────────────
 
 const DAILY_QUEST_POOL = [
@@ -450,6 +436,9 @@ export const getMyDailyQuests = webMethod(
     const memberId = member._id;
 
     // Rate limit: 30 requests per minute per member.
+    // NOTE: this Map is module-scoped and is instance-local in serverless environments.
+    // It provides soft rate limiting within a single warm instance; cross-instance
+    // enforcement requires a CMS-backed counter (acceptable for this use case).
     const now = Date.now();
     const rl = _dailyQuestsRateLimit.get(memberId) || { count: 0, windowStart: now };
     if (now - rl.windowStart > DAILY_QUESTS_WINDOW_MS) {
@@ -466,6 +455,7 @@ export const getMyDailyQuests = webMethod(
     const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const quests = generateDailyQuests(today);
 
+    // Fetch completions for this member + today
     let completions = [];
     try {
       const res = await wixData.query('QuestCompletions')
@@ -495,6 +485,20 @@ export const getMyDailyQuests = webMethod(
     };
   }
 );
+
+// ── Internal helpers ──────────────────────────────────────────────────
+
+function determineTier(points) {
+  if (points >= TIERS.Gold.min) return TIERS.Gold;
+  if (points >= TIERS.Silver.min) return TIERS.Silver;
+  return TIERS.Bronze;
+}
+
+function getNextTier(currentLabel) {
+  if (currentLabel === 'Bronze') return TIERS.Silver;
+  if (currentLabel === 'Silver') return TIERS.Gold;
+  return null; // Gold is max
+}
 
 // ── Achievement system ────────────────────────────────────────────────────────
 
@@ -600,3 +604,49 @@ export const getMyAchievements = webMethod(
     }
   }
 );
+
+// ── PointsLedger helpers ──────────────────────────────────────────────────────
+
+/**
+ * Write a PointsLedger entry when a streak milestone is reached.
+ * Idempotent — skips if an entry already exists for memberId + milestone.
+ * Note: the app-level idempotency guard has a TOCTOU window under concurrent
+ * invocations. TODO(cf-7mr): add unique constraint on (memberId, milestone) in
+ * the PointsLedger CMS collection for hard deduplication at the DB level.
+ *
+ * @param {string} memberId
+ * @param {number} milestone - Day count of the milestone. Known labelled values:
+ *   7, 14, 30, 60, 100, 365. Other values are stored with a fallback description.
+ * @param {number} points - Points awarded (typically milestone * 2)
+ * @returns {Promise<void>}
+ * @throws {TypeError} if memberId is invalid or milestone/points are not positive numbers
+ */
+export async function recordStreakMilestoneEvent(memberId, milestone, points) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('recordStreakMilestoneEvent: invalid memberId');
+  if (typeof milestone !== 'number' || !Number.isFinite(milestone) || milestone <= 0) {
+    throw new TypeError('recordStreakMilestoneEvent: milestone must be a positive finite number');
+  }
+  if (typeof points !== 'number' || !Number.isFinite(points) || points <= 0) {
+    throw new TypeError('recordStreakMilestoneEvent: points must be a positive finite number');
+  }
+
+  const existing = await wixData.query('PointsLedger')
+    .eq('memberId', cleanId)
+    .eq('milestone', milestone)
+    .limit(1)
+    .find({ suppressAuth: true });
+  if (existing.items.length > 0) return;
+
+  const label = BADGE_LABELS[milestone];
+  const description = label ? `${milestone}-day streak — ${label}` : `${milestone}-day streak`;
+
+  await wixData.insert('PointsLedger', {
+    memberId: cleanId,
+    milestone,
+    type: 'streak_milestone',
+    description,
+    points,
+    earnedAt: new Date(),
+  }, { suppressAuth: true });
+}
