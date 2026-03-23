@@ -20,6 +20,7 @@ import {
 } from 'public/loyaltyHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
+import { getMyStreakData } from 'backend/loyaltyService.web';
 import {
   buildWheelSegments,
   computeCountdown,
@@ -399,7 +400,6 @@ async function initLoyaltyDashboard() {
 
 async function initStreakDisplay() {
   try {
-    const { getMyStreakData } = await import('backend/loyaltyService.web');
     const { reducedMotion } = await import('wix-window-frontend');
     _reducedMotion = reducedMotion;
 
