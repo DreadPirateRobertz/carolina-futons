@@ -623,6 +623,16 @@ Create `src/backend/gamificationChatbot.web.js` with enough structure to make te
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { getSecret } from 'wix-secrets-backend';
+
+// Lightweight flag check — does NOT create a ChatbotSessions record.
+// Frontend calls this on page load to decide whether to show #chatbotPanel.
+export const getChatbotEnabled = webMethod(
+  Permissions.Anyone,
+  async () => {
+    return { stub: true };
+  }
+);
 
 export const chatWithAssistant = webMethod(
   Permissions.Member,
@@ -1411,7 +1421,7 @@ export function buildLimitReachedState(type) {
   return {
     inputDisabled: true,
     sendDisabled: true,
-    limitText: 'Daily limit reached — resets at midnight MT',
+    limitText: 'Daily limit reached — resets at midnight ET',
   };
 }
 
@@ -1583,7 +1593,8 @@ Before marking Phase 3 complete, confirm each item from the spec's DoD:
 - [ ] `ChatbotKnowledge` CMS collection created and populated (5 topic keys)
 - [ ] `GAMIFICATION_CHATBOT_ENABLED` secret created (empty = off)
 - [ ] `src/backend/gamificationChatbot.web.js` created and all tests pass
-- [ ] Feature flag returns `{ enabled: false }` when absent/empty — verified by test
+- [ ] `getChatbotEnabled()` webMethod implemented (Permissions.Anyone, reads flag only, returns `{ enabled: boolean }`, does NOT write CMS) — verified by test
+- [ ] Feature flag returns `{ enabled: false }` when absent/empty — verified by test (both `getChatbotEnabled` and `chatWithAssistant`)
 - [ ] Daily reset logic verified by test (date boundary crossing resets counts)
 - [ ] Daily message limit (20) enforced — verified by test
 - [ ] Daily token limit (4,000) enforced — verified by test
