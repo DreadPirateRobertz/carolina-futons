@@ -14,6 +14,8 @@
  * @module aboutIllustrations
  */
 
+import { initLivingSky } from 'public/living-sky-wix.js';
+
 // Static SVG inner content from pipeline output (team-portrait.optimized.svg).
 // This is a literal string — no template interpolation, no programmatic generation.
 // All colors verified against sharedTokens.js by pipeline token injection step.
@@ -47,6 +49,15 @@ export function getTimelineSvg() {
  * @param {Function} $w - Wix selector function.
  * @returns {void}
  */
+/**
+ * Initialize the About page illustrations and wire the Living Sky animation.
+ *
+ * Injects static SVG content into #teamPortraitContainer and #timelineContainer,
+ * then subscribes #livingSkyFrame to the Living Sky tick loop via initLivingSky.
+ *
+ * @param {Function} $w - Wix element selector
+ * @returns {{ stop: () => void }} Handle — call stop() to halt the sky animation loop.
+ */
 export function initAboutIllustrations($w) {
   try {
     const teamContainer = $w('#teamPortraitContainer');
@@ -63,5 +74,11 @@ export function initAboutIllustrations($w) {
     }
   } catch (e) {
     console.error('[aboutIllustrations] Failed to inject timeline:', e);
+  }
+  try {
+    return initLivingSky($w);
+  } catch (e) {
+    console.error('[aboutIllustrations] initLivingSky threw:', e);
+    return { stop: () => {} };
   }
 }
