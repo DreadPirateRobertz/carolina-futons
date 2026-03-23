@@ -10,8 +10,8 @@
  * @returns {string}
  */
 export function buildStreakChipText(streakDays) {
-  // 1 and 7+ use hyphenated compound form ("1-day", "7-day").
-  // 2-6 use space-separated plural ("3 days"). 7 is the week milestone.
+  // Compound-modifier form for singular (1) and week milestones (7, 14, 21…).
+  // Days 2-6 use space-separated plural ("3 days streak").
   if (streakDays === 1 || streakDays >= 7) {
     return `🔥 ${streakDays}-day streak`;
   }
