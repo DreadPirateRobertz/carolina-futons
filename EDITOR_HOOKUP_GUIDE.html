@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Streak Display (CF-64k + Phase 2): streakCountChip, streakMultiplierBadge, streakToastBox + Spin Wheel Phase 1</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.2 · Updated 2026-03-23 — Phase 7 Living Sky (CF-ad3): livingSkyFrame + Streak Display (CF-64k + Phase 2) + Spin Wheel Phase 1</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1092,6 +1092,25 @@ Same elements but popup slides up from bottom:
         ["footerLink","Text","Link text (shared child)"],
         ["badgeIcon","Text","Badge icon"],["badgeLabel","Text","Badge label"],
         ["paymentIcon","Text","Payment icon"],["socialIcon","Text","Social icon"]
+      ]},
+      { name: "Living Sky (Phase 7)", impl: `<h4>🌄 Implementation — Living Sky (Phase 7 — CF-ad3)</h4>
+<p><em>Source: <code>masterPage.js</code> → dynamic import <code>public/living-sky-wix.js</code> → <code>initLivingSky($w, { weather })</code>. Core engine: <code>public/living-sky.js</code>.</em></p>
+<p><strong>Layout: Full-width HtmlComponent embedded in the header area (or Home page hero section). Fills its container. Transparent background — sky SVG shows through.</strong></p>
+<div class="layer-diagram">STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#livingSkyFrame — HtmlComponent (hosts living-sky-component.html)
+  └─ Inline SVG — animated Blue Ridge mountain sky
+       sky-stop-0 … sky-stop-3  — sky gradient stops (JS-updated)
+       sun-radial               — sun glow position (JS-updated)
+       r1 … r7                  — 7 ridge layer groups (color JS-updated)
+       SMIL animations          — owl, hawk, vultures</div>
+<ul>
+  <li><strong>#livingSkyFrame</strong>: HtmlComponent. Source: <code>public/living-sky-component.html</code> (upload to Wix Media → set as HtmlComponent URL). Receives <code>LivingSkyState</code> messages via <code>postMessage()</code>. Code updates sky gradient stops, sun glow position, ridge layer colors, and ambient light opacity every 60 seconds to track time-of-day. Place in the masterPage header area or as the hero background on the Home page. <span class="impl-warn">Gracefully absent — missing element is silently caught; removing this element will not break any page.</span></li>
+  <li><strong>Time-of-day engine</strong>: <code>useLivingSky(totalMinutes)</code> returns a <code>LivingSkyState</code> with <code>skyGradient</code> (4 stop colors), <code>ridgeColors</code> (r1–r7), and <code>ambientLight</code> (opacity 0–1). Midnight = deep navy; dawn = warm rose/orange; noon = bright blue; dusk = amber/violet; night = deep navy with moon.</li>
+  <li><strong>Reduced motion</strong>: Single render only — no 60s update loop. SMIL animations inside the SVG are unaffected (browser respects <code>prefers-reduced-motion</code> natively).</li>
+  <li><strong>Phase 8 extension</strong>: <code>initMountainDividerWithSkyWiring()</code> in <code>FooterSection.js</code> also subscribes to LivingSkyState to update the footer mountain divider ridgeColors in sync with the sky.</li>
+</ul>`, elements: [
+        ["livingSkyFrame","HtmlComponent","Animated Living Sky SVG host"]
       ]}
     ]
   },

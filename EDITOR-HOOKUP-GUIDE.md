@@ -801,6 +801,17 @@ For each section below:
 **↳ Inside `footerSocialRepeater`:**
 `socialIcon` (Text)
 
+### Living Sky (Phase 7)
+*Source: `masterPage.js` — dynamic import of `living-sky-wix.js`, 60s tick loop; `src/public/living-sky-component.html` embedded in HtmlComponent*
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `livingSkyFrame` | HtmlComponent | Animated Living Sky SVG host; receives `LivingSkyState` via `postMessage`; `prefers-reduced-motion` = single render, no tick |
+
+**Integration notes:**
+- `masterPage.js` calls `updateSkyToState($w, state)` every 60s, which posts raw state object (no `type` wrapper) to `#livingSkyFrame`
+- Consumers subscribe: `$w('#livingSkyFrame').onMessage(e => ...)` — state shape: `{ ridgeColors: {r1–r7, tree}, skyGradient, ambientLight, weather }`
+- Phase 8: `#footerMountainDivider` and `#contactShowroomSvg` will subscribe to this same stream for dynamic sky/ambient shift
+
 ---
 
 ## PRODUCT PAGE (`Product Page.ve2z7.js`)

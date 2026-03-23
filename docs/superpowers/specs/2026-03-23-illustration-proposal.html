@@ -504,31 +504,88 @@
               <stop offset="100%" stop-color="#FAF7F2"/>
             </linearGradient>
           </defs>
+          <style>
+            @keyframes cs-gps1{0%{r:7;opacity:.6}100%{r:20;opacity:0}}
+            @keyframes cs-gps2{0%{r:4;opacity:.5}100%{r:13;opacity:0}}
+            @keyframes cs-smoke{0%{transform:translateY(0);opacity:.22}100%{transform:translateY(-12px);opacity:0}}
+            @keyframes cs-drop{0%{transform:translateY(-10px)}62%{transform:translateY(1.5px)}82%{transform:translateY(-.5px)}100%{transform:translateY(0)}}
+            .cs-r1{animation:cs-gps1 2.2s ease-out infinite}
+            .cs-r2{animation:cs-gps2 2.2s ease-out .8s infinite}
+            .cs-s1{animation:cs-smoke 3.5s ease-out infinite}
+            .cs-s2{animation:cs-smoke 3.5s ease-out 1.2s infinite}
+            .cs-pin{animation:cs-drop .75s cubic-bezier(.36,.07,.19,.97) .5s both}
+          </style>
+          <!-- Sky -->
           <rect width="200" height="140" fill="url(#cs-sky)"/>
-          <path d="M0,90 C20,85 40,75 65,70 C90,65 110,75 135,70 C160,65 178,58 200,55 L200,140 L0,140Z" fill="#5B8FA8" opacity="0.3"/>
+          <!-- Distant ridges -->
+          <path d="M0,90 C20,85 40,75 65,70 C90,65 110,75 135,70 C160,65 178,58 200,55 L200,140 L0,140Z" fill="#5B8FA8" opacity="0.28"/>
           <path d="M0,105 C22,100 45,92 72,88 C99,84 118,94 145,90 C172,86 185,80 200,78 L200,140 L0,140Z" fill="#3A2518" opacity="0.5"/>
-          <!-- Cabin -->
-          <rect x="75" y="88" width="50" height="30" fill="#5C4033" opacity="0.8" rx="1"/>
-          <polygon points="70,90 100,72 130,90" fill="#3A2518" opacity="0.85"/>
-          <rect x="84" y="103" width="12" height="15" fill="#F2E8D5" opacity="0.6" rx="1"/>
-          <rect x="101" y="96" width="14" height="10" fill="#B8D4E3" opacity="0.5" rx="1"/>
-          <!-- Chimney smoke -->
-          <rect x="97" y="75" width="4" height="14" fill="#3A2518" opacity="0.5" rx="1"/>
-          <ellipse cx="99" cy="72" rx="6" ry="4" fill="#FAF7F2" opacity="0.15"/>
-          <!-- Map pin -->
-          <circle cx="99" cy="58" r="10" fill="#E8845C" opacity="0.15"/>
-          <path d="M99 68 L93 58 C92 54 94 50 99 49 C104 50 106 54 105 58 Z" fill="#E8845C" opacity="0.9"/>
-          <circle cx="99" cy="54" r="3" fill="white" opacity="0.8"/>
-          <!-- Trees -->
-          <path d="M28 110 L31 98 C32 93 34 91 35 93 L38 98 L40 110Z" fill="#4A7C59" opacity="0.55"/>
-          <path d="M158 108 L161 97 C162 92 164 90 165 92 L167 97 L169 108Z" fill="#4A7C59" opacity="0.5"/>
-          <!-- Foreground sand -->
-          <path d="M0,120 C40,116 80,112 120,110 C160,108 185,114 200,112 L200,140 L0,140Z" fill="#E8D5B7" opacity="0.6"/>
+          <!-- Cabin — log body + stone base -->
+          <rect x="72" y="89" width="56" height="29" fill="#5C4033" opacity="0.88" rx="1"/>
+          <rect x="72" y="113" width="56" height="5" fill="#7A5C48" opacity="0.55"/>
+          <line x1="72" y1="95" x2="128" y2="95" stroke="#4A3020" stroke-width=".7" opacity=".3"/>
+          <line x1="72" y1="101" x2="128" y2="101" stroke="#4A3020" stroke-width=".7" opacity=".25"/>
+          <line x1="72" y1="107" x2="128" y2="107" stroke="#4A3020" stroke-width=".7" opacity=".22"/>
+          <!-- Roof — dark shingles + ridge cap -->
+          <polygon points="68,91 100,69 132,91" fill="#2E3D28" opacity="0.92"/>
+          <line x1="100" y1="69" x2="100" y2="73" stroke="#1A2415" stroke-width="1.2" opacity=".6"/>
+          <!-- Porch overhang + posts -->
+          <rect x="80" y="101" width="22" height="2.5" fill="#2E3D28" opacity=".75"/>
+          <line x1="83" y1="103" x2="83" y2="116" stroke="#4A3020" stroke-width=".9" opacity=".4"/>
+          <line x1="99" y1="103" x2="99" y2="116" stroke="#4A3020" stroke-width=".9" opacity=".4"/>
+          <!-- Door — panel detail + brass handle -->
+          <rect x="84" y="104" width="14" height="14" fill="#3A2518" opacity=".78" rx="1"/>
+          <rect x="85" y="105" width="12" height="5" fill="#F2E8D5" opacity=".14"/>
+          <rect x="85" y="111" width="12" height="6" fill="#F2E8D5" opacity=".1"/>
+          <line x1="91" y1="105" x2="91" y2="117" stroke="#5C4033" stroke-width=".6" opacity=".32"/>
+          <circle cx="95.5" cy="111" r="1" fill="#F0C87A" opacity=".65"/>
+          <!-- Left window — 2 panes + warm gold glow -->
+          <rect x="74" y="93" width="14" height="11" fill="#B8D4E3" opacity=".5"/>
+          <line x1="81" y1="93" x2="81" y2="104" stroke="#4A3020" stroke-width=".6" opacity=".32"/>
+          <line x1="74" y1="98.5" x2="88" y2="98.5" stroke="#4A3020" stroke-width=".6" opacity=".32"/>
+          <rect x="74.5" y="93.5" width="6" height="4.5" fill="#F0C87A" opacity=".17"/>
+          <!-- Right window — 2 panes + warm gold glow -->
+          <rect x="102" y="93" width="16" height="11" fill="#B8D4E3" opacity=".5"/>
+          <line x1="110" y1="93" x2="110" y2="104" stroke="#4A3020" stroke-width=".6" opacity=".32"/>
+          <line x1="102" y1="98.5" x2="118" y2="98.5" stroke="#4A3020" stroke-width=".6" opacity=".32"/>
+          <rect x="102.5" y="93.5" width="7" height="4.5" fill="#F0C87A" opacity=".17"/>
+          <!-- Brick chimney — mortar lines + cap -->
+          <rect x="94" y="72" width="7" height="19" fill="#7A4030" opacity=".82"/>
+          <line x1="94" y1="76" x2="101" y2="76" stroke="#5C2818" stroke-width=".6" opacity=".5"/>
+          <line x1="94" y1="80" x2="101" y2="80" stroke="#5C2818" stroke-width=".6" opacity=".5"/>
+          <line x1="94" y1="84" x2="101" y2="84" stroke="#5C2818" stroke-width=".6" opacity=".5"/>
+          <line x1="97.5" y1="72" x2="97.5" y2="76" stroke="#5C2818" stroke-width=".5" opacity=".38"/>
+          <line x1="97.5" y1="80" x2="97.5" y2="84" stroke="#5C2818" stroke-width=".5" opacity=".38"/>
+          <rect x="92" y="70" width="11" height="3" fill="#5C4033" opacity=".8"/>
+          <!-- Animated chimney smoke — 2 staggered wisps -->
+          <ellipse class="cs-s1" cx="97" cy="71" rx="3.5" ry="2.5" fill="#FAF7F2" opacity=".22"/>
+          <ellipse class="cs-s2" cx="99" cy="67" rx="4.5" ry="3" fill="#FAF7F2" opacity=".15"/>
+          <!-- GPS location pin — drops in on load, pulse rings signal active location -->
+          <g class="cs-pin">
+            <circle class="cs-r1" cx="98" cy="52" r="7" fill="none" stroke="#E8845C" stroke-width="1.5"/>
+            <circle class="cs-r2" cx="98" cy="52" r="4" fill="none" stroke="#E8845C" stroke-width="1.5"/>
+            <ellipse cx="98" cy="70" rx="3" ry="1" fill="#3A2518" opacity=".15"/>
+            <path d="M98 69 L92 56 C90 50 93 44 98 43 C103 44 106 50 104 56 Z" fill="#E8845C"/>
+            <circle cx="98" cy="51" r="4.5" fill="white" opacity=".92"/>
+            <circle cx="98" cy="51" r="2" fill="#E8845C"/>
+            <path d="M95.5 69 L98 74 L100.5 69" fill="none" stroke="#E8845C" stroke-width="1.3" stroke-linejoin="round"/>
+          </g>
+          <!-- Distance badge -->
+          <rect x="104" y="44" width="26" height="11" fill="#3A2518" opacity=".84" rx="3"/>
+          <text x="117" y="51.5" font-size="5.5" fill="#F2E8D5" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold">0.3 mi</text>
+          <!-- Trees — left cluster (tall + shorter for depth) -->
+          <path d="M24 112 L27 99 C28 94 31 91 33 94 L36 99 L38 112Z" fill="#4A7C59" opacity=".6"/>
+          <path d="M17 114 L20 104 C21 100 23 98 25 100 L27 104 L28 114Z" fill="#2E4A38" opacity=".5"/>
+          <!-- Trees — right cluster -->
+          <path d="M156 110 L159 98 C160 93 163 91 165 93 L167 98 L169 110Z" fill="#4A7C59" opacity=".55"/>
+          <path d="M163 112 L166 103 C167 99 169 97 171 99 L172 103 L174 112Z" fill="#2E4A38" opacity=".45"/>
+          <!-- Foreground path -->
+          <path d="M0,122 C40,118 80,114 120,112 C160,110 185,116 200,113 L200,140 L0,140Z" fill="#E8D5B7" opacity=".65"/>
         </svg>
       </div>
       <div class="info">
         <h4>contactIllustrations.js</h4>
-        <p>Cozy mountain cabin showroom scene (400×280) + wide hero skyline (1440×220). Static SVG content, Figma pipeline output. Phase 8 target: wire to LivingSkyState for sky/ambient shift.</p>
+        <p>Cozy mountain cabin showroom scene (400×280) + wide hero skyline (1440×220). GPS/location pin drops in on load with two expanding pulse rings and distance badge. Brick chimney with 2 staggered animated smoke wisps. Cabin detail: log-wall texture, stone base course, porch overhang + posts, two 2-pane windows with warm gold glow, panel door + brass handle. Phase 8: wire sky gradient + window ambient light to LivingSkyState.</p>
         <span class="status-tag status-live">Live — static</span>
         <span class="status-tag status-phase8">Phase 8 target</span>
       </div>
@@ -1248,10 +1305,107 @@
   </div>
 </div>
 
+<!-- ── SECTION 7: ELEMENT SPECS ───────────────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <div>
+      <div class="section-title">Illustration Element Specs</div>
+      <div class="section-desc">Technical reference for each illustration component. Defines viewBox, color tokens, animation parameters, and LivingSkyState integration points. Target: implementors working Phase 8 and beyond.</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:0 16px 16px;">
+
+    <div class="brief-card" style="grid-column:1/-1;">
+      <h4>contactIllustrations.js — Contact Showroom Cabin</h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/contactIllustrations.js</code></li>
+        <li><strong>Wix element:</strong> <code>#contactShowroomSvg</code> (HtmlComponent, Contact page)</li>
+        <li><strong>ViewBox:</strong> 400×280 (preview card: 200×140)</li>
+        <li><strong>GPS pin:</strong> teardrop centered above cabin rooftop; CSS drop animation (0.75s cubic-bezier(.36,.07,.19,.97), 0.5s delay); 2 expanding pulse rings (2.2s, ring 2 offset 0.8s delay); direction chevron below pin tip; distance badge (#3A2518 bg, #F2E8D5 text, 0.3 mi)</li>
+        <li><strong>Smoke:</strong> 2 staggered ellipses, translateY(-12px) over 3.5s, fade opacity 0.22→0; 1.2s offset; represents active fire = showroom open</li>
+        <li><strong>Cabin detail layers:</strong> log-wall texture (3 horizontal strokes), stone base course (#7A5C48), porch overhang + 2 posts, left window (14×11) + right window (16×11) — each with 2 panes + gold glow rect, door panels + divider line + brass handle (cx=95.5), brick chimney (7-wide, 3 mortar rows + vertical half-brick, chimney cap)</li>
+        <li><strong>Phase 8 wiring:</strong> sky gradient → <code>state.skyGradient[0–3]</code>; window glow opacity → inverse of <code>state.ambientLight</code> (night: 0.5, day: 0.17); ridge fills → <code>state.ridgeColors.r4</code> (far), <code>state.ridgeColors.r1</code> (near)</li>
+        <li><strong>Night mode trigger:</strong> <code>state.ambientLight &lt; 0.3</code> → add star circles, brighten window glow, darken cabin fill to #2E1A0A</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>FooterSection.js — footerMountainDivider</h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/FooterSection.js</code> → <code>buildFooterMountainSVG()</code></li>
+        <li><strong>Wix element:</strong> <code>#footerMountainDivider</code> (HtmlComponent, masterPage)</li>
+        <li><strong>ViewBox:</strong> 1440×80, <code>preserveAspectRatio="none"</code></li>
+        <li><strong>Layers:</strong> 3 ridge paths + 3 tree silhouettes</li>
+        <li><strong>Static fills:</strong> far #5B8FA8 @ 22%; mid #5C4033 @ 40%; near #3A2518 @ 75%</li>
+        <li><strong>Phase 8 wiring (Option B):</strong> far → <code>ridgeColors.r4</code>; mid → <code>ridgeColors.r2</code>; near → <code>ridgeColors.r1</code></li>
+        <li><strong>SVG filter:</strong> feTurbulence (baseFrequency 0.035, numOctaves 4, seed fixed) + feDisplacementMap (scale 3); <strong>critical:</strong> feTurbulence needs <code>result="cf-noise"</code> and feDisplacementMap needs <code>in2="cf-noise"</code> — missing wire = displacement no-op</li>
+        <li><strong>Consumer:</strong> masterPage postMessage → <code>updateSkyToState()</code> → rebuild SVG with new ridgeColors</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>MountainSkyline.js — headerSkyline</h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/MountainSkyline.js</code></li>
+        <li><strong>Wix element:</strong> <code>#headerSkyline</code> (Box, masterPage)</li>
+        <li><strong>ViewBox:</strong> 1440×200 (7-layer atmospheric depth)</li>
+        <li><strong>Gradient:</strong> 4-stop sky from <code>state.skyGradient</code></li>
+        <li><strong>Ridge tokens:</strong> r1=#3D6B80 (distant), r4=#5B8FA8 (mid), r7=#3A2518 (near foreground)</li>
+        <li><strong>Tree tokens:</strong> canopy fill #4A7C59, linework/shadows #2E4A38</li>
+        <li><strong>Status:</strong> already wired to LivingSkyState — reads from masterPage postMessage</li>
+        <li><strong>Time presets:</strong> sunrise (gold-sky), day (blue-sky), dusk (coral), night (deep navy) — driven by ridgeTable time-of-day value</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>living-sky-component.html — livingSkyFrame</h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/living-sky-component.html</code></li>
+        <li><strong>Wix element:</strong> <code>#livingSkyFrame</code> (HtmlComponent, masterPage + home page)</li>
+        <li><strong>State shape:</strong> <code>{ ridgeColors: {r1,r2,r3,r4,r5,r6,r7,tree}, skyGradient: [stop0,stop1,stop2,stop3], ambientLight: 0–1, weather: string }</code></li>
+        <li><strong>No <code>type</code> field</strong> — raw state object posted; consumers read <code>event.data</code> directly (no <code>event.data.type</code> guard)</li>
+        <li><strong>Tick:</strong> 60s interval in masterPage.js; <code>prefers-reduced-motion</code> → single render only</li>
+        <li><strong>Weather values:</strong> <code>'clear'</code>, <code>'cloudy'</code>, <code>'rain'</code>, <code>'snow'</code>, <code>'fog'</code></li>
+        <li><strong>Consumer pattern:</strong> <code>$w('#livingSkyFrame').onMessage(e =&gt; updateMyElement(e.data))</code></li>
+        <li><strong>skyTable / ridgeTable:</strong> FROZEN — do not modify without Stilgar sign-off</li>
+      </ul>
+    </div>
+
+    <div class="brief-card" style="border-color:rgba(240,200,122,0.3);">
+      <h4>StreakDisplay.js — streak flame <span style="color:var(--gold);font-weight:400;font-size:12px;">(Phase 2 — proposed)</span></h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/StreakDisplay.js</code> (add <code>buildStreakFlameSVG(days, multiplier)</code>)</li>
+        <li><strong>Wix element:</strong> <code>#streakCountChip</code> background / optional <code>#streakFlameIllustration</code></li>
+        <li><strong>ViewBox:</strong> 48×80 (tall narrow)</li>
+        <li><strong>Tier by streak length:</strong> 1–2 days = small single flame; 3–6 = double; 7–13 = tall triple; 14+ = full bonfire</li>
+        <li><strong>Multiplier badge:</strong> 1.5× = gold ring border; 2× = coral outer ring; 3×+ = animated outer glow pulse</li>
+        <li><strong>Colors:</strong> base #E8845C, mid tongue #F0C87A, tip #FAF7F2, dark core #3A2518</li>
+        <li><strong>Blocker:</strong> none — Phase 2 streaks already shipped</li>
+      </ul>
+    </div>
+
+    <div class="brief-card" style="border-color:rgba(74,124,89,0.3);">
+      <h4>ChallengesDisplay.js — challenge trail <span style="color:var(--forest);font-weight:400;font-size:12px;">(Phase 3 — proposed)</span></h4>
+      <ul>
+        <li><strong>File:</strong> <code>src/public/ChallengesDisplay.js</code> (add <code>buildChallengeTrailSVG(progress, difficulty)</code>)</li>
+        <li><strong>Wix element:</strong> <code>#challengeProgressTrail</code> (HtmlComponent per challenge card)</li>
+        <li><strong>ViewBox:</strong> 280×120</li>
+        <li><strong>Progress:</strong> 0–1 float; mountain path stroked left (trailhead) → right (summit); stroke color #4A7C59; unfilled = #3A2518 dashed</li>
+        <li><strong>Difficulty:</strong> easy = 1 ridge; medium = 2-ridge overlap; hard = full 3-ridge 7-layer skyline (reuses <code>illustrationShared.buildRidgePath()</code>)</li>
+        <li><strong>Summit flag:</strong> coral teardrop pin (same GPS style) appears when progress === 1; small mountain-peak badge icon</li>
+        <li><strong>Blocker:</strong> Phase 3 challenges bead must ship first</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
 </div><!-- /container -->
 
 <div class="footnote">
-  Prepared by melania (cfutons/crew) + dallas (cfutons_mobile) · 2026-03-23 · Awaiting Stilgar approval
+  Prepared by melania (cfutons/crew) + dallas (cfutons_mobile) · 2026-03-23 · Iteration 2: cabin GPS/animation detail + element specs · Awaiting Stilgar approval
 </div>
 
 </body>
