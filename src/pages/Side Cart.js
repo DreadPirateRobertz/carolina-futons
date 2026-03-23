@@ -30,6 +30,7 @@ import {
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
 import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
+import { initSideCartShippingEstimate, updateSideCartShippingEstimate } from 'public/CartShippingEstimate.js';
 
 let _sideCartEscapeRegistered = false;
 
@@ -141,6 +142,9 @@ function initSideCart() {
 
   // Init freight upsell banner (registers onItemReady once)
   initFreightUpsellBanner($w, null, { addToCart, trackEvent });
+
+  // Init shipping estimate row (wires ZIP button once)
+  initSideCartShippingEstimate($w, null);
 }
 
 // Register repeater item handlers once to avoid accumulation
@@ -336,6 +340,9 @@ async function refreshSideCart() {
 
     // Freight bundle upsell (show when cart has LTL item)
     await updateFreightUpsellBanner($w, currentCart);
+
+    // Shipping estimate row
+    await updateSideCartShippingEstimate($w, currentCart);
 
     // Cross-sell "Complete the Room" bundles
     await loadSideCartSuggestions(currentCart.lineItems, subtotal);

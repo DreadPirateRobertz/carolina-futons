@@ -37,6 +37,7 @@ import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { initCartRecentlyViewed, updateCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
 import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
+import { initCartShippingEstimate, updateCartShippingEstimate } from 'public/CartShippingEstimate.js';
 
 $w.onReady(async function () {
   initPageSeo('cart');
@@ -88,6 +89,7 @@ async function initCartPage() {
     initCartDelivery($w, cart.lineItems, cartZip, { repeaterSelector: '#cartItemsRepeater' });
 
     await initFreightUpsellBanner($w, cart, { addToCart, trackEvent });
+    await initCartShippingEstimate($w, cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
@@ -535,6 +537,7 @@ function initCartListeners() {
         updateCartFinancing(cart);
         updateCartDeliveryEstimate($w, cart);
         updateFreightUpsellBanner($w, cart);
+        updateCartShippingEstimate($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
         updateCartRecentlyViewed($w, cart?.lineItems || []);
