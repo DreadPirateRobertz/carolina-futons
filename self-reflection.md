@@ -330,3 +330,22 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - dallas is a strong PM — sends well-structured design input, maintains clear API contracts, flags bugs from his crew. Treat his input as architectural input, not just acknowledgments. His gamification input (no polling, SWR revalidateOnFocus + invalidate-on-event) was correct on the merits.
 - Illustration audit before escalation to Stilgar is the right gate. Design discipline > speed on visual work.
 - gt mail address format is "rig/pm" not just pm name (cfutons_mobile/dallas not dallas). Learn this early in session rather than failing and recovering.
+
+## Session 2026-03-23 (Wave 15 — PR reviews, cross-rig coordination, feature prioritization)
+
+### What worked well
+- Caught blocking bug in PR #727 (loyaltyService.web.js importing wix-members-frontend instead of wix-members-backend) by comparing against other backend files. All 8 other backend files correctly use wix-members-backend — the pattern check was the right approach.
+- Ghost bead prevention working: closed cf-h7p immediately on discovering streak EDITOR_HOOKUP_GUIDE work was already in PR #726. Checked before assuming.
+- Cross-rig dependency identification: found that mobile (dallas) needs a REST HTTP endpoint for gamification events, but gamificationEventReceiver.web.js only exposes a Wix webMethod (not callable from mobile). Created cf-xr8 (P1) for the HTTP wrapper and assigned to godfrey — right priority, right assignee.
+- Feature roadmap audit was efficient: read roadmap, checked page files, confirmed most Tier 1 code is done and the bottleneck is editor hookup (Stilgar-blocked), not backend gaps.
+- Comprehensive dallas status reply covered all his outstanding questions (ProductResources live, challenge CMS schema, phase schedule, upcoming endpoint URL).
+
+### Gaps
+- Feature roadmap read was interrupted by compaction at exactly the point where Tier 1 tailed off into Tier 2. Resume loop needed to re-establish context. Should extract key takeaways into memory when reading long docs rather than relying on in-session carry.
+- cf-79w (SVG inline comments) assigned to godfrey then immediately superseded by cf-xr8. The quick pivot was right (P1 > P3) but I sent two nudges instead of waiting until I had the real assignment.
+
+### Pattern notes
+- Backend .web.js files in Wix Velo must import wix-members-backend, never wix-members-frontend. Pattern check = grep other backend files for the correct import, flag deviations immediately.
+- Mobile cross-rig integrations need REST HTTP endpoints (http-functions.js), not webMethods. webMethods are Wix-frontend-to-backend only. When mobile needs to call something, there must be a POST /_api/* function.
+- Feature roadmap "hookup work" items are almost universally editor-blocked. Don't create beads for them until Stilgar grants editor access. The code is done — the bottleneck is human-in-the-editor actions.
+- When reassigning crew, cancel the first nudge before sending the second. Or better: hold the first nudge until priority is confirmed.
