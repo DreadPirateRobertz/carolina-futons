@@ -1314,3 +1314,34 @@ describe('recordChallengeProgress', () => {
     expect(result.error).toBe(429);
   });
 });
+
+// ── recordChallengeProgress — PointsLedger hookup ────────────────────
+
+describe('recordChallengeProgress — PointsLedger hookup', () => {
+  beforeEach(() => { __reset(); _resetRecordChallengeProgressRateLimit(); });
+
+  it('writes PointsLedger record when challenge reaches targetCount', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]); // targetCount: 3, rewardPoints: 50
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, completedAt: null },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    const ledger = __getInserted('PointsLedger');
+    const entry = ledger.find(r => r.type === 'challenge_complete');
+    expect(entry).toBeDefined();
+    expect(entry.memberId).toBe('mem-1');
+    expect(entry.challengeId).toBe('ch-1');
+    expect(entry.points).toBe(50);
+    expect(entry.description).toBe('Order 3 Times completed');
+  });
+
+  it('does NOT write PointsLedger when challenge is not yet complete', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]); // targetCount: 3
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' }); // progress now 1 of 3
+    const ledger = __getInserted('PointsLedger');
+    const entry = ledger.find(r => r.type === 'challenge_complete');
+    expect(entry).toBeUndefined();
+  });
+});

@@ -605,7 +605,12 @@ export const getMyAchievements = webMethod(
   }
 );
 
-// ── PointsLedger helpers ──────────────────────────────────────────────────────
+// ── PointsLedger constants ────────────────────────────────────────────────────
+
+const POINTS_LEDGER_COLLECTION = 'PointsLedger';
+// NOTE: CHALLENGES_COLLECTION is also defined in gamificationEventReceiver.web.js — keep in sync.
+// If the collection is ever renamed, update both files.
+const CHALLENGES_COLLECTION = 'Challenges';
 
 /**
  * Write a PointsLedger entry when a streak milestone is reached.
@@ -631,7 +636,7 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
     throw new TypeError('recordStreakMilestoneEvent: points must be a positive finite number');
   }
 
-  const existing = await wixData.query('PointsLedger')
+  const existing = await wixData.query(POINTS_LEDGER_COLLECTION)
     .eq('memberId', cleanId)
     .eq('milestone', milestone)
     .limit(1)
@@ -641,11 +646,49 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
   const label = BADGE_LABELS[milestone];
   const description = label ? `${milestone}-day streak — ${label}` : `${milestone}-day streak`;
 
-  await wixData.insert('PointsLedger', {
+  await wixData.insert(POINTS_LEDGER_COLLECTION, {
     memberId: cleanId,
     milestone,
     type: 'streak_milestone',
     description,
+    points,
+    earnedAt: new Date(),
+  }, { suppressAuth: true });
+}
+
+/**
+ * Record a challenge completion event in the PointsLedger CMS collection.
+ * Idempotent: skips insert if a record for this member + challenge already exists.
+ *
+ * @param {string} memberId
+ * @param {string} challengeId
+ * @param {number} points — reward points for this challenge
+ * @returns {Promise<void>}
+ */
+export async function recordChallengeCompleteEvent(memberId, challengeId, points) {
+  if (!memberId || !challengeId) return;
+
+  const existing = await wixData
+    .query(POINTS_LEDGER_COLLECTION)
+    .eq('memberId', memberId)
+    .eq('challengeId', challengeId)
+    .eq('type', 'challenge_complete')
+    .limit(1)
+    .find({ suppressAuth: true });
+  if (existing.items.length > 0) return;
+
+  const challengeRes = await wixData
+    .query(CHALLENGES_COLLECTION)
+    .eq('challengeId', challengeId)
+    .limit(1)
+    .find({ suppressAuth: true });
+  const title = challengeRes.items[0]?.title ?? challengeId;
+
+  await wixData.insert(POINTS_LEDGER_COLLECTION, {
+    memberId,
+    type: 'challenge_complete',
+    challengeId,
+    description: `${title} completed`,
     points,
     earnedAt: new Date(),
   }, { suppressAuth: true });
@@ -687,7 +730,7 @@ export const getMyActivity = webMethod(
 
     const defaults = { events: [], hasMore: false, total: 0 };
     try {
-      const res = await wixData.query('PointsLedger')
+      const res = await wixData.query(POINTS_LEDGER_COLLECTION)
         .eq('memberId', member._id)
         .descending('earnedAt')
         .skip(safeOffset)

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __setAccount, __setRewards, accounts, rewards } from './__mocks__/wix-loyalty.v2.js';
-import { __reset as resetData, __seed, __setQueryError } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __setQueryError, __getInserted } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   getMyLoyaltyAccount,
@@ -11,6 +11,7 @@ import {
   getChallengeCatalog,
   _resetChallengeCatalogCache,
   _resetChallengeCatalogRateLimit,
+  recordChallengeCompleteEvent,
 } from '../src/backend/loyaltyService.web.js';
 
 // ── getMyLoyaltyAccount ──────────────────────────────────────────────
@@ -549,5 +550,59 @@ describe('getChallengeCatalog', () => {
     __setQueryError('ChallengeDefinitions', new Error('DB error'));
     const result = await getChallengeCatalog();
     expect(result.challenges).toEqual([]);
+  });
+});
+
+// ── recordChallengeCompleteEvent ─────────────────────────────────────
+
+const BASE_CHALLENGE_FOR_LEDGER = {
+  _id: 'ch-1', challengeId: 'ch-1', title: 'Order 3 Times',
+  conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+  active: true, expiresAt: null,
+};
+
+describe('recordChallengeCompleteEvent', () => {
+  beforeEach(() => { resetData(); resetMembers(); });
+
+  it('inserts a PointsLedger record with correct fields', async () => {
+    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
+    await recordChallengeCompleteEvent('mem-1', 'ch-1', 50);
+    const ledger = __getInserted('PointsLedger');
+    expect(ledger).toHaveLength(1);
+    expect(ledger[0].memberId).toBe('mem-1');
+    expect(ledger[0].type).toBe('challenge_complete');
+    expect(ledger[0].challengeId).toBe('ch-1');
+    expect(ledger[0].description).toBe('Order 3 Times completed');
+    expect(ledger[0].points).toBe(50);
+    expect(ledger[0].earnedAt).toBeInstanceOf(Date);
+  });
+
+  it('is idempotent — does not insert when PointsLedger record already exists', async () => {
+    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
+    __seed('PointsLedger', [
+      { _id: 'pl-1', memberId: 'mem-1', type: 'challenge_complete', challengeId: 'ch-1', points: 50 },
+    ]);
+    await recordChallengeCompleteEvent('mem-1', 'ch-1', 50);
+    const ledger = __getInserted('PointsLedger');
+    // Still only 1 item (the seeded one) — no new insert
+    expect(ledger).toHaveLength(1);
+  });
+
+  it('returns without inserting when memberId is empty', async () => {
+    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
+    await recordChallengeCompleteEvent('', 'ch-1', 50);
+    expect(__getInserted('PointsLedger')).toHaveLength(0);
+  });
+
+  it('returns without inserting when challengeId is empty', async () => {
+    await recordChallengeCompleteEvent('mem-1', '', 50);
+    expect(__getInserted('PointsLedger')).toHaveLength(0);
+  });
+
+  it('uses challengeId as fallback description when challenge title not found', async () => {
+    await recordChallengeCompleteEvent('mem-1', 'unknown-ch', 25);
+    const ledger = __getInserted('PointsLedger');
+    expect(ledger).toHaveLength(1);
+    expect(ledger[0].description).toBe('unknown-ch completed');
   });
 });
