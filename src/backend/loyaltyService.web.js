@@ -280,7 +280,7 @@ export const getLeaderboard = webMethod(
  * support, 5-min per-member cache, and 30/min rate limit.
  *
  * @function getChallengeCatalog
- * @returns {Promise<{ challenges: Array } | { error: 429 }>}
+ * @returns {Promise<{ challenges: Array } | { status: 429, error: string }>}
  * @permission SiteMember
  */
 export const getChallengeCatalog = webMethod(
@@ -300,7 +300,7 @@ export const getChallengeCatalog = webMethod(
     rl.count += 1;
     _catalogRateLimit.set(memberId, rl);
     if (rl.count > CATALOG_RATE_LIMIT) {
-      return { error: 429 };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     // Cache: return early if fresh
