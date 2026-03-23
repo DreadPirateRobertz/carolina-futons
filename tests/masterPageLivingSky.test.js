@@ -4,17 +4,15 @@
  *
  * Covers:
  *  - detectWeatherSeed: deterministic output, valid type, 7-day cycle distribution
- *  - initLivingSky called on page load with weather seed
- *  - tickLivingSky called every 30s via setInterval (fake timers)
- *  - Graceful degradation when living-sky-wix.js import throws
+ *  - initLivingSky($w, { weather }) called on page load — tick loop managed internally
+ *  - Graceful degradation when initLivingSky throws or returns a rejected promise
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Hoisted setup — must run before any module evaluation ────────────────────
 
-const { mockInitLivingSky, mockTickLivingSky } = vi.hoisted(() => ({
-  mockInitLivingSky: vi.fn(),
-  mockTickLivingSky: vi.fn(),
+const { mockInitLivingSky } = vi.hoisted(() => ({
+  mockInitLivingSky: vi.fn().mockReturnValue({ stop: vi.fn() }),
 }));
 
 // $w must be set before masterPage.js is imported
@@ -53,7 +51,6 @@ const { getOnReadyHandler, clearElements } = vi.hoisted(() => {
 
 vi.mock('public/living-sky-wix.js', () => ({
   initLivingSky: mockInitLivingSky,
-  tickLivingSky: mockTickLivingSky,
 }));
 
 vi.mock('backend/seoHelpers.web', () => ({
@@ -153,7 +150,7 @@ function makeDateWithDayOfYear(year, dayOfYear) {
 async function waitFor(fn, timeout = 500) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    try { fn(); return; } catch {}
+    try { fn(); return; } catch {} // eslint-disable-line no-empty
     await new Promise(r => setTimeout(r, 10));
   }
   fn(); // final attempt — let it throw the assertion error
@@ -242,7 +239,7 @@ describe('detectWeatherSeed — 7-day cycle', () => {
 describe('masterPage — living sky wiring on page load', () => {
   beforeEach(() => {
     mockInitLivingSky.mockClear();
-    mockTickLivingSky.mockClear();
+    mockInitLivingSky.mockReturnValue({ stop: vi.fn() });
     clearElements();
   });
 
@@ -251,74 +248,43 @@ describe('masterPage — living sky wiring on page load', () => {
     await waitFor(() => expect(mockInitLivingSky).toHaveBeenCalledTimes(1));
   });
 
+  it('passes $w as the first argument to initLivingSky', async () => {
+    await getOnReadyHandler()();
+    await waitFor(() => expect(mockInitLivingSky).toHaveBeenCalledWith(
+      globalThis.$w,
+      expect.any(Object),
+    ));
+  });
+
   it('passes a weather option to initLivingSky', async () => {
     await getOnReadyHandler()();
     await waitFor(() => expect(mockInitLivingSky).toHaveBeenCalledWith(
-      expect.objectContaining({ weather: expect.any(String) })
+      expect.anything(),
+      expect.objectContaining({ weather: expect.any(String) }),
     ));
   });
 
   it('weather passed to initLivingSky is a valid weather type', async () => {
     await getOnReadyHandler()();
     await waitFor(() => expect(mockInitLivingSky.mock.calls.length).toBeGreaterThan(0));
-    const [opts] = mockInitLivingSky.mock.calls[0];
+    const [, opts] = mockInitLivingSky.mock.calls[0];
     expect(['clear', 'cloudy', 'fog', 'rain', 'storm']).toContain(opts.weather);
   });
-});
 
-// ── Living sky wiring — tick interval ────────────────────────────────────────
-
-describe('masterPage — tickLivingSky interval', () => {
-  let intervalSpy;
-
-  beforeEach(() => {
-    mockInitLivingSky.mockClear();
-    mockTickLivingSky.mockClear();
-    clearElements();
-    intervalSpy = vi.spyOn(globalThis, 'setInterval');
-  });
-
-  afterEach(() => {
+  it('does not register a manual setInterval for sky ticks (loop managed by initLivingSky)', async () => {
+    const intervalSpy = vi.spyOn(globalThis, 'setInterval');
+    await getOnReadyHandler()();
+    await waitFor(() => expect(mockInitLivingSky).toHaveBeenCalledTimes(1));
+    // No 30s or 60s interval should be registered by masterPage for the sky
+    const skyCalls = intervalSpy.mock.calls.filter(([, ms]) => ms === 30_000 || ms === 60_000);
+    expect(skyCalls.length).toBe(0);
     intervalSpy.mockRestore();
-  });
-
-  it('registers exactly one 30s setInterval for tickLivingSky', async () => {
-    await getOnReadyHandler()();
-    await waitFor(() => {
-      const thirtySecCalls = intervalSpy.mock.calls.filter(([, ms]) => ms === 30_000);
-      expect(thirtySecCalls.length).toBe(1);
-    });
-  });
-
-  it('the 30s interval callback calls tickLivingSky', async () => {
-    await getOnReadyHandler()();
-    await waitFor(() => {
-      const call = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
-      expect(call).toBeDefined();
-    });
-    // Verify tickLivingSky has not fired before the interval fires
-    expect(mockTickLivingSky).toHaveBeenCalledTimes(0);
-    const [fn] = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
-    fn();
-    expect(mockTickLivingSky).toHaveBeenCalledTimes(1);
-  });
-
-  it('calling the interval callback twice fires tickLivingSky twice', async () => {
-    await getOnReadyHandler()();
-    await waitFor(() => {
-      expect(intervalSpy.mock.calls.some(([, ms]) => ms === 30_000)).toBe(true);
-    });
-    // Verify tickLivingSky has not fired before the interval fires
-    expect(mockTickLivingSky).toHaveBeenCalledTimes(0);
-    const [fn] = intervalSpy.mock.calls.find(([, ms]) => ms === 30_000);
-    fn(); fn();
-    expect(mockTickLivingSky).toHaveBeenCalledTimes(2);
   });
 });
 
 // ── Graceful degradation ──────────────────────────────────────────────────────
 
-describe('masterPage — graceful degradation when living-sky-wix unavailable', () => {
+describe('masterPage — graceful degradation when initLivingSky throws or rejects', () => {
   beforeEach(() => {
     clearElements();
   });
@@ -332,16 +298,16 @@ describe('masterPage — graceful degradation when living-sky-wix unavailable', 
   });
 
   it('logs console.error and completes when initLivingSky throws synchronously', async () => {
-    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockInitLivingSky.mockImplementationOnce(() => {
       throw new Error('import failed');
     });
     await getOnReadyHandler()();
     await flushImportMicrotasks();
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('[masterPage] initLivingSky threw:'),
       'import failed',
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
