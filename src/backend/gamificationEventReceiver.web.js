@@ -610,9 +610,9 @@ export const recordChallengeProgress = webMethod(
         }
       }
 
-      if (completed) {
+      if (completed && challenge.rewardPoints > 0) {
         try {
-          await recordChallengeCompleteEvent(memberId, challengeId, challenge.rewardPoints || 0);
+          await recordChallengeCompleteEvent(memberId, challengeId, challenge.rewardPoints);
         } catch (err) {
           logError(`recordChallengeProgress — PointsLedger write failed for member ${memberId} challenge ${challengeId}`, err);
         }

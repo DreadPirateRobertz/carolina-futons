@@ -583,9 +583,11 @@ describe('recordChallengeCompleteEvent', () => {
       { _id: 'pl-1', memberId: 'mem-1', type: 'challenge_complete', challengeId: 'ch-1', points: 50 },
     ]);
     await recordChallengeCompleteEvent('mem-1', 'ch-1', 50);
+    // __getInserted returns seeded + newly inserted items.
+    // 1 seeded + 0 new inserts = 1 total confirms idempotency.
     const ledger = __getInserted('PointsLedger');
-    // Still only 1 item (the seeded one) — no new insert
     expect(ledger).toHaveLength(1);
+    expect(ledger[0]._id).toBe('pl-1'); // original record unchanged
   });
 
   it('throws TypeError for invalid memberId', async () => {
@@ -595,24 +597,18 @@ describe('recordChallengeCompleteEvent', () => {
     expect(__getInserted('PointsLedger')).toHaveLength(0);
   });
 
-  it('returns without inserting when challengeId is empty', async () => {
-    await recordChallengeCompleteEvent('mem-1', '', 50);
+  it('throws TypeError for invalid challengeId', async () => {
+    await expect(recordChallengeCompleteEvent('mem-1', '', 50)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompleteEvent('mem-1', null, 50)).rejects.toThrow(TypeError);
     expect(__getInserted('PointsLedger')).toHaveLength(0);
   });
 
-  it('throws TypeError for non-finite or negative points', async () => {
+  it('throws TypeError for non-positive or non-finite points', async () => {
     __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
     await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', NaN)).rejects.toThrow(TypeError);
     await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', Infinity)).rejects.toThrow(TypeError);
     await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', -1)).rejects.toThrow(TypeError);
-  });
-
-  it('accepts 0 points (free challenge)', async () => {
-    __seed('Challenges', [BASE_CHALLENGE_FOR_LEDGER]);
-    await recordChallengeCompleteEvent('mem-1', 'ch-1', 0);
-    const ledger = __getInserted('PointsLedger');
-    expect(ledger).toHaveLength(1);
-    expect(ledger[0].points).toBe(0);
+    await expect(recordChallengeCompleteEvent('mem-1', 'ch-1', 0)).rejects.toThrow(TypeError);
   });
 
   it('uses challengeId as fallback description when challenge title not found', async () => {
