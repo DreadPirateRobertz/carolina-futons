@@ -1056,6 +1056,12 @@ describe('checkWishlistDailyCap', () => {
     const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
     expect(result).toEqual({ canEarn: true, count: 0 });
   });
+
+  it('fails open — returns { canEarn: true, count: 0 } when query throws', async () => {
+    __setQueryError('WishlistAddLog', new Error('DB unavailable'));
+    const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
+    expect(result).toEqual({ canEarn: true, count: 0 });
+  });
 });
 
 // ── recordWishlistAdd ─────────────────────────────────────────────────────────

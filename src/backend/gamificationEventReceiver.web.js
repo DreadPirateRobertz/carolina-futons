@@ -386,6 +386,8 @@ export async function checkWishlistDailyCap(memberId, todayET) {
       .eq('date', todayET)
       .find({ suppressAuth: true });
     const count = results.items.length;
+    // Note: this cap is best-effort under concurrent load — Wix Data has no atomic
+    // increment, so two rapid simultaneous wishlist adds could both pass the check.
     return { canEarn: count < WISHLIST_DAILY_CAP, count };
   } catch (err) {
     // Fail open — member earns points if the cap check itself is broken
