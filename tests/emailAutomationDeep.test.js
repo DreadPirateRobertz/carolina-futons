@@ -875,7 +875,7 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       entity: {
         _id: 'member-nick',
         loginEmail: 'nick@example.com',
@@ -883,8 +883,6 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
         contactDetails: {},
       },
     });
-
-    await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
     expect(welcomeEmails.length).toBe(3);
@@ -895,13 +893,11 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       _id: 'member-raw',
       loginEmail: 'raw@example.com',
       contactDetails: { firstName: 'Raw' },
     });
-
-    await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
     expect(welcomeEmails.length).toBe(3);
@@ -915,7 +911,7 @@ describe('wixEcom_onOrderCreated — field extraction edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixEcom_onOrderCreated({
+    await wixEcom_onOrderCreated({
       entity: {
         number: 'ORD-FALLBACK',
         buyerInfo: { email: 'buyer@example.com', contactId: 'c-1', firstName: 'BuyerFirst' },
@@ -923,8 +919,6 @@ describe('wixEcom_onOrderCreated — field extraction edge cases', () => {
         lineItems: [],
       },
     });
-
-    await new Promise(r => setTimeout(r, 100));
 
     const ppEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
     expect(ppEmails[0].variables.firstName).toBe('BuyerFirst');
@@ -934,7 +928,7 @@ describe('wixEcom_onOrderCreated — field extraction edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixEcom_onOrderCreated({
+    await wixEcom_onOrderCreated({
       entity: {
         number: 'ORD-PNAME',
         buyerInfo: { email: 'buyer@example.com', contactId: 'c-1' },
@@ -946,9 +940,7 @@ describe('wixEcom_onOrderCreated — field extraction edge cases', () => {
       },
     });
 
-    await new Promise(r => setTimeout(r, 100));
     // The event handler extracts item.name || item.productName?.original
-    // but the name field in the line item map is used — check it gets through
     const ppEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
     expect(ppEmails.length).toBe(3);
   });

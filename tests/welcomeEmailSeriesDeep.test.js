@@ -315,7 +315,7 @@ describe('already-existing member — welcome series must not restart', () => {
     let insertCount = 0;
     __onInsert(() => { insertCount++; });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       entity: {
         _id: 'member-existing',
         loginEmail: 'existing@test.com',
@@ -323,7 +323,6 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
-    await new Promise(r => setTimeout(r, 150));
     expect(insertCount).toBe(0);
   });
 
@@ -341,7 +340,7 @@ describe('already-existing member — welcome series must not restart', () => {
     let insertCount = 0;
     __onInsert(() => { insertCount++; });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       entity: {
         _id: 'member-repro',
         loginEmail: 'repro@test.com',
@@ -349,7 +348,6 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
-    await new Promise(r => setTimeout(r, 150));
     expect(insertCount).toBe(0);
   });
 

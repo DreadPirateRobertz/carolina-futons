@@ -111,7 +111,7 @@ export function wixMembers_onMemberCreated(event) {
 
   if (!email) return;
 
-  triggerWelcomeSequence(contactId, email, firstName)
+  return triggerWelcomeSequence(contactId, email, firstName)
     .catch(err => console.error('Error triggering welcome sequence:', err));
 }
 
@@ -134,21 +134,23 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
-  // Send customer-facing order confirmation
-  import('backend/emailService.web')
-    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
-      contactId,
-      email,
-      firstName,
-      orderNumber: String(orderNumber),
-      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-    }))
-    .catch(err => console.error('Error sending order confirmation:', err));
+  return Promise.all([
+    // Send customer-facing order confirmation
+    import('backend/emailService.web')
+      .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+        contactId,
+        email,
+        firstName,
+        orderNumber: String(orderNumber),
+        total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+        itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+      }))
+      .catch(err => console.error('Error sending order confirmation:', err)),
 
-  // Queue post-purchase care sequence
-  triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
-    .catch(err => console.error('Error triggering post-purchase sequence:', err));
+    // Queue post-purchase care sequence
+    triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
+      .catch(err => console.error('Error triggering post-purchase sequence:', err)),
+  ]);
 }
 
 /**
