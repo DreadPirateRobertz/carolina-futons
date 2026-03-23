@@ -81,6 +81,14 @@ const spinMocks = vi.hoisted(() => ({
   spinWheel: vi.fn().mockResolvedValue({ success: false }),
 }));
 
+const streakDisplayMocks = vi.hoisted(() => ({
+  buildStreakChipText: vi.fn((d) => `🔥 ${d}-day streak`),
+  buildMultiplierBadgeText: vi.fn((m) => m > 1 ? `${m}× points` : ''),
+  buildToastText: vi.fn(() => 'Streak extended!'),
+  shouldShowStreakChip: vi.fn((d) => typeof d === 'number' && d >= 1),
+  updateStreakDisplay: vi.fn(),
+}));
+
 // ── vi.mock calls ─────────────────────────────────────────────────────────────
 
 vi.mock('backend/loyaltyService.web', () => ({
@@ -169,11 +177,11 @@ vi.mock('public/SpinWheel.js', () => ({
 }));
 
 vi.mock('public/StreakDisplay.js', () => ({
-  buildStreakChipText: vi.fn((d) => `🔥 ${d}-day streak`),
-  buildMultiplierBadgeText: vi.fn((m) => m > 1 ? `${m}× points` : ''),
-  buildToastText: vi.fn(() => 'Streak extended!'),
-  shouldShowStreakChip: vi.fn((d) => typeof d === 'number' && d >= 1),
-  updateStreakDisplay: vi.fn(),
+  buildStreakChipText: streakDisplayMocks.buildStreakChipText,
+  buildMultiplierBadgeText: streakDisplayMocks.buildMultiplierBadgeText,
+  buildToastText: streakDisplayMocks.buildToastText,
+  shouldShowStreakChip: streakDisplayMocks.shouldShowStreakChip,
+  updateStreakDisplay: streakDisplayMocks.updateStreakDisplay,
 }));
 
 vi.mock('wix-members-frontend', () => ({
@@ -222,6 +230,11 @@ beforeEach(() => {
   spinMocks.getSpinEligibility.mockResolvedValue({
     eligible: false, reason: 'ALREADY_SPUN', nextETMidnightMs: Date.now() + 3600000,
   });
+  // Re-apply StreakDisplay helper implementations (vi.clearAllMocks resets them in Vitest 4)
+  streakDisplayMocks.shouldShowStreakChip.mockImplementation((d) => typeof d === 'number' && d >= 1);
+  streakDisplayMocks.buildStreakChipText.mockImplementation((d) => `🔥 ${d}-day streak`);
+  streakDisplayMocks.buildMultiplierBadgeText.mockImplementation((m) => m > 1 ? `${m}× points` : '');
+  streakDisplayMocks.buildToastText.mockImplementation(() => 'Streak extended!');
 });
 
 async function loadPage() {

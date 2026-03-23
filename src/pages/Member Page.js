@@ -36,7 +36,7 @@ import {
 let currentMember = null;
 let wishlistData = [];
 let wishlistSortOrder = 'date-desc';
-let _reducedMotion = false;
+let _reducedMotion = false; // set by initStreakDisplay on page load; false is a safe default
 
 /**
  * Call after any receiveGamificationEvent response to refresh the streak display.
@@ -382,30 +382,6 @@ async function initLoyaltyDashboard() {
         try { $w('#rewardsEmpty').show(); } catch (e) {}
         try { $w('#rewardsRepeater').collapse(); } catch (e) {}
       }
-    } catch (e) {}
-
-    // ── Streak Display (CF-64k) ────────────────────────────────────────
-    try {
-      const streakData = await getMyStreakData();
-      const { currentStreakDays, streakMultiplier } = streakData;
-      try {
-        const chip = $w('#streakCountChip');
-        if (shouldShowStreakChip(currentStreakDays)) {
-          chip.text = buildStreakChipText(currentStreakDays);
-          await chip.show();
-        } else {
-          await chip.hide();
-        }
-      } catch (e) {}
-      try {
-        const badge = $w('#streakMultiplierBadge');
-        if (streakMultiplier > 1) {
-          badge.text = buildMultiplierBadgeText(streakMultiplier);
-          await badge.show();
-        } else {
-          await badge.hide();
-        }
-      } catch (e) {}
     } catch (e) {}
 
     trackEvent('loyalty_dashboard_view', {
