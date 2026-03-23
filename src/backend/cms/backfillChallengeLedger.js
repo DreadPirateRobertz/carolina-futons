@@ -22,6 +22,8 @@ const PAGE_SIZE = 100;
  * where it is missing.
  *
  * @returns {Promise<{ checked: number, updated: number, skipped: number }>}
+ *   checked — total rows visited; updated — rows that had memberChallengeKey written;
+ *   skipped — rows that already had the key, had wrong type, or were missing memberId/challengeId.
  */
 export async function backfillChallengeLedger() {
   let checked = 0;

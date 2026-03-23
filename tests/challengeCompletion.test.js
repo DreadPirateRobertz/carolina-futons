@@ -16,6 +16,7 @@ import {
   __reset as resetData,
   __seed,
   __onInsert,
+  __onUpdate,
   __setInsertError,
   __setUniqueField,
 } from './__mocks__/wix-data.js';
@@ -213,6 +214,11 @@ describe('recordChallengeCompletionEvent — input validation', () => {
     await expect(recordChallengeCompletionEvent('mem-1', 'ch-abc', Infinity)).rejects.toThrow(TypeError);
     await expect(recordChallengeCompletionEvent('mem-1', 'ch-abc', NaN)).rejects.toThrow(TypeError);
   });
+
+  it('throws TypeError for memberId containing disallowed characters (validateId regex)', async () => {
+    await expect(recordChallengeCompletionEvent('mem@evil', 'ch-abc', 50)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompletionEvent('mem/1', 'ch-abc', 50)).rejects.toThrow(TypeError);
+  });
 });
 
 // ── backfillChallengeLedger ───────────────────────────────────────────────────
@@ -235,7 +241,6 @@ describe('backfillChallengeLedger', () => {
       { _id: 'r-1', memberId: 'mem-1', challengeId: 'ch-a', type: 'challenge_completion' },
     ]);
     const updates = [];
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     __onUpdate((_col, item) => updates.push(item));
 
     await backfillChallengeLedger();
@@ -248,7 +253,6 @@ describe('backfillChallengeLedger', () => {
       { _id: 'r-1', memberId: 'mem-1', challengeId: 'ch-a', memberChallengeKey: 'mem-1:ch-a', type: 'challenge_completion' },
     ]);
     const updates = [];
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     __onUpdate((_col, item) => updates.push(item));
 
     const result = await backfillChallengeLedger();
@@ -263,7 +267,6 @@ describe('backfillChallengeLedger', () => {
       { _id: 'r-1', memberId: 'mem-1', milestone: 30, type: 'streak_milestone' },
     ]);
     const updates = [];
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     __onUpdate((_col, item) => updates.push(item));
 
     const result = await backfillChallengeLedger();
@@ -278,7 +281,6 @@ describe('backfillChallengeLedger', () => {
       { _id: 'r-2', memberId: 'mem-1', type: 'challenge_completion' },   // no challengeId
     ]);
     const updates = [];
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     __onUpdate((_col, item) => updates.push(item));
 
     const result = await backfillChallengeLedger();
@@ -299,7 +301,6 @@ describe('backfillChallengeLedger', () => {
     __seed('PointsLedger', [
       { _id: 'r-1', memberId: 'mem-1', challengeId: 'ch-a', type: 'challenge_completion' },
     ]);
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     const updates = [];
     __onUpdate((_col, item) => updates.push(item));
 
@@ -315,7 +316,6 @@ describe('backfillChallengeLedger', () => {
       { _id: 'r-1', memberId: 'mem-1', challengeId: 'ch-a', type: 'challenge_completion', points: 75, earnedAt: new Date('2025-01-01') },
     ]);
     const updates = [];
-    const { __onUpdate } = await import('./__mocks__/wix-data.js');
     __onUpdate((_col, item) => updates.push(item));
 
     await backfillChallengeLedger();

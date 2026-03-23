@@ -31,23 +31,33 @@ const MEMBER_MILESTONE_INDEX_NAME = 'memberMilestoneKey_unique';
 const MEMBER_CHALLENGE_INDEX_NAME = 'memberChallengeKey_unique';
 
 /**
+ * Create a unique single-field index on `collection` if it does not already exist.
+ *
+ * @param {string} collection - Wix Data collection name.
+ * @param {string} indexName  - Desired index name.
+ * @param {string} fieldPath  - Field path to index.
+ * @returns {Promise<void>}
+ */
+async function ensureUniqueIndex(collection, indexName, fieldPath) {
+  const existing = await indexes.listIndexes(collection);
+  const alreadyExists = (existing.indexes ?? []).some((idx) => idx.name === indexName);
+  if (alreadyExists) return;
+
+  await indexes.createIndex(collection, {
+    name: indexName,
+    fields: [{ path: fieldPath, order: 'ASC' }],
+    unique: true,
+  });
+}
+
+/**
  * Ensure the PointsLedger collection has a unique index on `memberMilestoneKey`.
  * Safe to call repeatedly — skips if the index already exists.
  *
  * @returns {Promise<void>}
  */
 export async function ensurePointsLedgerIndex() {
-  const existing = await indexes.listIndexes(POINTS_LEDGER_COLLECTION);
-  const alreadyExists = (existing.indexes ?? []).some(
-    (idx) => idx.name === MEMBER_MILESTONE_INDEX_NAME,
-  );
-  if (alreadyExists) return;
-
-  await indexes.createIndex(POINTS_LEDGER_COLLECTION, {
-    name: MEMBER_MILESTONE_INDEX_NAME,
-    fields: [{ path: 'memberMilestoneKey', order: 'ASC' }],
-    unique: true,
-  });
+  await ensureUniqueIndex(POINTS_LEDGER_COLLECTION, MEMBER_MILESTONE_INDEX_NAME, 'memberMilestoneKey');
 }
 
 /**
@@ -59,15 +69,5 @@ export async function ensurePointsLedgerIndex() {
  * @returns {Promise<void>}
  */
 export async function ensureChallengeCompletionIndex() {
-  const existing = await indexes.listIndexes(POINTS_LEDGER_COLLECTION);
-  const alreadyExists = (existing.indexes ?? []).some(
-    (idx) => idx.name === MEMBER_CHALLENGE_INDEX_NAME,
-  );
-  if (alreadyExists) return;
-
-  await indexes.createIndex(POINTS_LEDGER_COLLECTION, {
-    name: MEMBER_CHALLENGE_INDEX_NAME,
-    fields: [{ path: 'memberChallengeKey', order: 'ASC' }],
-    unique: true,
-  });
+  await ensureUniqueIndex(POINTS_LEDGER_COLLECTION, MEMBER_CHALLENGE_INDEX_NAME, 'memberChallengeKey');
 }
