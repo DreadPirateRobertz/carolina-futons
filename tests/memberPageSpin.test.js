@@ -67,6 +67,7 @@ vi.mock('backend/loyaltyService.web', () => ({
   getAvailableRewards: vi.fn().mockResolvedValue([]),
   getLoyaltyTiers: vi.fn().mockResolvedValue([]),
   redeemReward: vi.fn().mockResolvedValue({ success: true }),
+  getMyStreakData: vi.fn().mockResolvedValue({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null }),
 }));
 
 vi.mock('backend/accountDashboard.web', () => ({
@@ -142,7 +143,7 @@ vi.mock('wix-members-frontend', () => ({
 }));
 
 vi.mock('wix-location-frontend', () => ({ to: vi.fn(), baseUrl: 'https://www.carolinafutons.com' }));
-vi.mock('wix-window-frontend', () => ({ copyToClipboard: vi.fn(), openUrl: vi.fn() }));
+vi.mock('wix-window-frontend', () => ({ copyToClipboard: vi.fn(), openUrl: vi.fn(), reducedMotion: false }));
 
 // ── Import page module once ──────────────────────────────────────────────────
 
