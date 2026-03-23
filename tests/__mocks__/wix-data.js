@@ -10,6 +10,7 @@ let _queryErrors = {};  // collection -> Error to throw on query
 let _lastFindOptions = {};  // collection -> options passed to find()
 let _insertErrors = {}; // collection -> Error to throw on insert
 let _updateErrors = {}; // collection -> Error to throw on update
+let _uniqueFields = {};  // collection -> field name to enforce uniqueness on
 
 // Reset all mock state between tests
 export function __reset() {
@@ -21,12 +22,20 @@ export function __reset() {
   _queryErrors = {};
   _insertErrors = {};
   _updateErrors = {};
+  _uniqueFields = {};
   _lastFindOptions = {};
 }
 
 // Force the next insert on a collection to throw
 export function __setInsertError(collection, error) {
   _insertErrors[collection] = error;
+}
+
+// Enforce uniqueness on a single field for a collection.
+// Subsequent inserts with a duplicate value for that field throw a
+// "duplicate key" error, matching the Wix Data unique-index behaviour.
+export function __setUniqueField(collection, field) {
+  _uniqueFields[collection] = field;
 }
 
 // Force the next update on a collection to throw
@@ -211,6 +220,13 @@ const wixData = {
       throw err;
     }
     if (!_store[collection]) _store[collection] = [];
+    const uniqueField = _uniqueFields[collection];
+    if (uniqueField && item[uniqueField] !== undefined) {
+      const exists = _store[collection].some(i => i[uniqueField] === item[uniqueField]);
+      if (exists) {
+        throw new Error(`duplicate key value violates unique constraint on field "${uniqueField}" in collection "${collection}"`);
+      }
+    }
     const inserted = { ...item, _id: item._id || `mock-${Date.now()}` };
     _store[collection].push(inserted);
     if (_insertSpy) _insertSpy(collection, inserted);

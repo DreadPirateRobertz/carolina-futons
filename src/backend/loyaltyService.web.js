@@ -613,11 +613,27 @@ const POINTS_LEDGER_COLLECTION = 'PointsLedger';
 const CHALLENGES_COLLECTION = 'Challenges';
 
 /**
+ * Returns true if the error is a Wix Data unique-constraint violation.
+ * Wix surfaces these as errors whose message contains 'duplicate'
+ * (e.g. "WDE0025: duplicate key value violates unique constraint").
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+function isDuplicateKeyError(err) {
+  const msg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+  return msg.includes('duplicate') || msg.includes('wde0025');
+}
+
+/**
  * Write a PointsLedger entry when a streak milestone is reached.
  * Idempotent — skips if an entry already exists for memberId + milestone.
- * Note: the app-level idempotency guard has a TOCTOU window under concurrent
- * invocations. TODO(cf-7mr): add unique constraint on (memberId, milestone) in
- * the PointsLedger CMS collection for hard deduplication at the DB level.
+ *
+ * Deduplication strategy (two layers):
+ *   1. App-level: read-before-write guard (fast path, has TOCTOU window).
+ *   2. DB-level: unique index on `memberMilestoneKey` field enforced by
+ *      ensurePointsLedgerIndex() in src/backend/cms/ensureIndexes.js.
+ *      When the DB rejects a duplicate insert the error is caught and
+ *      silently swallowed — the record already exists, so the goal is met.
  *
  * @param {string} memberId
  * @param {number} milestone - Day count of the milestone. Known labelled values:
@@ -646,14 +662,22 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
   const label = BADGE_LABELS[milestone];
   const description = label ? `${milestone}-day streak — ${label}` : `${milestone}-day streak`;
 
-  await wixData.insert(POINTS_LEDGER_COLLECTION, {
-    memberId: cleanId,
-    milestone,
-    type: 'streak_milestone',
-    description,
-    points,
-    earnedAt: new Date(),
-  }, { suppressAuth: true });
+  try {
+    await wixData.insert(POINTS_LEDGER_COLLECTION, {
+      memberId: cleanId,
+      milestone,
+      memberMilestoneKey: `${cleanId}:${milestone}`,
+      type: 'streak_milestone',
+      description,
+      points,
+      earnedAt: new Date(),
+    }, { suppressAuth: true });
+  } catch (err) {
+    // DB-level unique constraint violation: record was inserted by a concurrent
+    // call between our read and write. Treat as idempotent success.
+    if (isDuplicateKeyError(err)) return;
+    throw err;
+  }
 }
 
 /**
