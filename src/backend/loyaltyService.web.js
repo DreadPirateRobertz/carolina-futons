@@ -212,6 +212,53 @@ export const getMyStreakData = webMethod(
   }
 );
 
+/**
+ * Get the top N members ranked by loyalty points.
+ * Optionally filtered to this week's activity.
+ * Also marks the current member's entry with isCurrentUser: true.
+ *
+ * @function getLeaderboard
+ * @param {{ limit?: number, period?: 'all-time' | 'weekly' }} options
+ * @returns {Promise<{ entries: Array<{ rank, memberId, nickname, points, tier, isCurrentUser }> }>}
+ * @permission SiteMember
+ */
+export const getLeaderboard = webMethod(
+  Permissions.SiteMember,
+  async ({ limit = 20, period = 'all-time' } = {}) => {
+    const MAX_LIMIT = 50;
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 20), MAX_LIMIT);
+    try {
+      const member = await currentMember.getMember();
+      const currentMemberId = member?._id ?? null;
+
+      let query = wixData.query('LoyaltyAccounts').descending('points');
+
+      if (period === 'weekly') {
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        query = query.ge('lastActivityDate', startOfWeek);
+      }
+
+      const res = await query.limit(safeLimit).find({ suppressAuth: true });
+      const entries = res.items.map((item, idx) => ({
+        rank: idx + 1,
+        memberId: item.memberId,
+        nickname: item.nickname ?? '',
+        points: item.points ?? 0,
+        tier: item.tier ?? 'Bronze',
+        isCurrentUser: item.memberId === currentMemberId,
+      }));
+
+      return { entries };
+    } catch (err) {
+      console.error('Error getting leaderboard:', err);
+      return { entries: [] };
+    }
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 function determineTier(points) {

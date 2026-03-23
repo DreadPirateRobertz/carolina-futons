@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __setAccount, __setRewards, accounts, rewards } from './__mocks__/wix-loyalty.v2.js';
+import { __reset as resetData, __seed, __setQueryError } from './__mocks__/wix-data.js';
+import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   getMyLoyaltyAccount,
   getAvailableRewards,
   redeemReward,
   getLoyaltyTiers,
+  getLeaderboard,
 } from '../src/backend/loyaltyService.web.js';
 
 // ── getMyLoyaltyAccount ──────────────────────────────────────────────
@@ -334,5 +337,90 @@ describe('getLoyaltyTiers', () => {
     for (let i = 1; i < tiers.length; i++) {
       expect(tiers[i].minPoints).toBeGreaterThan(tiers[i - 1].minPoints);
     }
+  });
+});
+
+// ── getLeaderboard ───────────────────────────────────────────────────
+
+describe('getLeaderboard', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+  });
+
+  it('returns entries sorted by points DESC', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-b', nickname: 'Bob', points: 100, tier: 'Bronze', lastActivityDate: new Date() },
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-c', nickname: 'Carol', points: 250, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    const result = await getLeaderboard();
+    expect(result.entries.map(e => e.memberId)).toEqual(['mem-a', 'mem-c', 'mem-b']);
+  });
+
+  it('returns correct rank numbers', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-b', nickname: 'Bob', points: 300, tier: 'Bronze', lastActivityDate: new Date() },
+      { memberId: 'mem-c', nickname: 'Carol', points: 100, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    const result = await getLeaderboard();
+    expect(result.entries[0].rank).toBe(1);
+    expect(result.entries[1].rank).toBe(2);
+    expect(result.entries[2].rank).toBe(3);
+  });
+
+  it('marks current member with isCurrentUser: true', async () => {
+    __setMember({ _id: 'mem-b' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-b', nickname: 'Bob', points: 300, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    const result = await getLeaderboard();
+    expect(result.entries.find(e => e.memberId === 'mem-a').isCurrentUser).toBe(false);
+    expect(result.entries.find(e => e.memberId === 'mem-b').isCurrentUser).toBe(true);
+  });
+
+  it('caps limit at 50 entries', async () => {
+    __setMember({ _id: 'mem-0' });
+    const items = Array.from({ length: 60 }, (_, i) => ({
+      memberId: `mem-${i}`, nickname: `User${i}`,
+      points: 1000 - i * 10, tier: 'Bronze', lastActivityDate: new Date(),
+    }));
+    __seed('LoyaltyAccounts', items);
+    const result = await getLeaderboard({ limit: 100 });
+    expect(result.entries.length).toBeLessThanOrEqual(50);
+  });
+
+  it('weekly period filters by lastActivityDate', async () => {
+    __setMember({ _id: 'mem-a' });
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const beforeWeek = new Date(startOfWeek.getTime() - 86400000);
+
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-b', nickname: 'Bob', points: 700, tier: 'Gold', lastActivityDate: beforeWeek },
+    ]);
+    const result = await getLeaderboard({ period: 'weekly' });
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].memberId).toBe('mem-a');
+  });
+
+  it('handles empty collection gracefully', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await getLeaderboard();
+    expect(result.entries).toEqual([]);
+  });
+
+  it('returns empty entries on query error', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setQueryError('LoyaltyAccounts', new Error('DB error'));
+    const result = await getLeaderboard();
+    expect(result.entries).toEqual([]);
   });
 });
