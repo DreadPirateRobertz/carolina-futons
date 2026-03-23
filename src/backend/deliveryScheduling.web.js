@@ -64,6 +64,176 @@ const APPOINTMENT_SLOTS = [
   '16:00', '16:30',
 ];
 
+// Delivery window time slots for the checkout picker
+const WINDOW_TIME_SLOTS = {
+  morning: { label: '9:00 AM – 12:00 PM' },
+  afternoon: { label: '1:00 PM – 5:00 PM' },
+};
+
+/**
+ * Get available delivery windows for the checkout window picker.
+ * Called when customer selects white-glove or local delivery at checkout.
+ *
+ * @function getAvailableDeliveryWindows
+ * @param {string} zip - Customer's delivery ZIP code (validated but not yet used for routing)
+ * @param {string} [startDate] - ISO date string (YYYY-MM-DD) to start search from. Defaults to tomorrow.
+ * @returns {Promise<Array<{date, dayOfWeek, timeSlot, label, available, spotsLeft}>>}
+ * @permission Anyone
+ */
+export const getAvailableDeliveryWindows = webMethod(
+  Permissions.Anyone,
+  async (zip, startDate) => {
+    try {
+      const cleanZip = sanitize(zip || '', 10).trim();
+      if (cleanZip && !/^\d{5}$/.test(cleanZip)) {
+        return [];
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let queryStart;
+      if (startDate && /^\d{4}-\d{2}-\d{2}$/.test(sanitize(startDate, 10))) {
+        queryStart = new Date(sanitize(startDate, 10) + 'T12:00:00');
+        // Must be in the future
+        if (queryStart <= today) queryStart = new Date(today);
+      } else {
+        queryStart = new Date(today);
+      }
+      // Start from at least the day after queryStart
+      queryStart.setDate(queryStart.getDate() + 1);
+
+      const slots = [];
+      for (let i = 0; i < BOOKING_WINDOW_DAYS; i++) {
+        const date = new Date(queryStart);
+        date.setDate(date.getDate() + i);
+
+        if (!DELIVERY_DAYS.includes(date.getDay())) continue;
+
+        const dateStr = date.toISOString().split('T')[0];
+        const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+
+        for (const [timeSlot, meta] of Object.entries(WINDOW_TIME_SLOTS)) {
+          const booked = await countBookedSlots(dateStr, timeSlot, 'white_glove') +
+                         await countBookedSlots(dateStr, timeSlot, 'local');
+          const spotsLeft = MAX_SLOTS_PER_WINDOW - booked;
+
+          slots.push({
+            date: dateStr,
+            dayOfWeek,
+            timeSlot,
+            label: meta.label,
+            available: spotsLeft > 0,
+            spotsLeft: Math.max(0, spotsLeft),
+          });
+        }
+      }
+
+      return slots;
+    } catch (err) {
+      console.error('Error getting delivery windows:', err);
+      return [];
+    }
+  }
+);
+
+/**
+ * Reserve a delivery window for an order placed at checkout.
+ * Stores the selection on the DeliverySchedule collection and returns a confirmation.
+ *
+ * @function reserveDeliveryWindow
+ * @param {Object} data
+ * @param {string} data.orderId - The Wix order ID (or temp checkout ID before order creation)
+ * @param {string} data.date - Delivery date (YYYY-MM-DD)
+ * @param {string} data.timeSlot - 'morning' or 'afternoon'
+ * @param {string} data.deliveryType - 'white_glove' or 'local'
+ * @param {string} [data.customerEmail] - Customer email for confirmation
+ * @param {string} [data.address] - Delivery address
+ * @returns {Promise<{success: boolean, reservationId?: string, message?: string}>}
+ * @permission Anyone
+ */
+export const reserveDeliveryWindow = webMethod(
+  Permissions.Anyone,
+  async (data) => {
+    try {
+      if (!data || !data.orderId || !data.date || !data.timeSlot || !data.deliveryType) {
+        return { success: false, message: 'orderId, date, timeSlot, and deliveryType are required' };
+      }
+
+      const orderId = sanitize(data.orderId, 50);
+      const date = sanitize(data.date, 10);
+      const timeSlot = sanitize(data.timeSlot, 20);
+      const deliveryType = sanitize(data.deliveryType, 20);
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return { success: false, message: 'Invalid date format' };
+      }
+
+      if (!WINDOW_TIME_SLOTS[timeSlot]) {
+        return { success: false, message: 'Invalid time slot' };
+      }
+
+      if (!['white_glove', 'local'].includes(deliveryType)) {
+        return { success: false, message: 'Invalid delivery type' };
+      }
+
+      const dateObj = new Date(date + 'T12:00:00');
+      if (!DELIVERY_DAYS.includes(dateObj.getDay())) {
+        return { success: false, message: 'Deliveries are only available Wednesday through Saturday' };
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dateObj <= today) {
+        return { success: false, message: 'Delivery date must be in the future' };
+      }
+
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + BOOKING_WINDOW_DAYS);
+      if (dateObj > maxDate) {
+        return { success: false, message: `Deliveries can only be scheduled up to ${BOOKING_WINDOW_DAYS} days in advance` };
+      }
+
+      // RACE FIX: Insert with 'pending' first, then check capacity
+      const record = await wixData.insert('DeliverySchedule', {
+        orderId,
+        date,
+        timeWindow: timeSlot,
+        type: deliveryType,
+        status: 'pending',
+        customerEmail: sanitize(data.customerEmail || '', 254),
+        address: sanitize(data.address || '', 500),
+        createdAt: new Date(),
+      });
+
+      const booked = await countBookedSlots(date, timeSlot, 'white_glove') +
+                     await countBookedSlots(date, timeSlot, 'local');
+      if (booked > MAX_SLOTS_PER_WINDOW) {
+        await wixData.remove('DeliverySchedule', record._id);
+        return { success: false, message: 'This time slot is fully booked' };
+      }
+
+      record.status = 'scheduled';
+      await wixData.update('DeliverySchedule', record);
+
+      return {
+        success: true,
+        reservationId: record._id,
+        confirmation: {
+          date,
+          dayOfWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()],
+          timeSlot,
+          label: WINDOW_TIME_SLOTS[timeSlot].label,
+          deliveryType,
+        },
+      };
+    } catch (err) {
+      console.error('Error reserving delivery window:', err);
+      return { success: false, message: 'Failed to reserve delivery window' };
+    }
+  }
+);
+
 /**
  * Get available delivery slots for the next 3 weeks.
  *

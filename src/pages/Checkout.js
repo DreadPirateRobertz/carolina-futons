@@ -30,6 +30,11 @@ import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCredit
 import { initCheckoutGiftCard, finalizeGiftCardRedemption, resetCheckoutGiftCard } from 'public/giftCardHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { initCheckoutShippingIntelligence } from 'public/CheckoutShippingIntelligence.js';
+import {
+  initDeliveryWindowPicker,
+  hideDeliveryWindowPicker,
+  isWindowRequiredForCode,
+} from 'public/DeliveryWindowPicker.js';
 
 // Shared state for cross-section communication
 let _currentCart = null;
@@ -1012,6 +1017,17 @@ async function initShippingIntelligenceSection() {
           updateOrderSummaryDisplay(items, 'NC', code);
         } catch (e) {}
         try { announce($w, `${option.title} selected`); } catch (e) {}
+
+        // CF-5kg: Show delivery window picker for white-glove / local delivery
+        try {
+          if (isWindowRequiredForCode(code)) {
+            const zip = $w('#checkoutShippingZip')?.value?.trim() ||
+                        $w('#addressZip')?.value?.trim() || '';
+            initDeliveryWindowPicker($w, zip, code);
+          } else {
+            hideDeliveryWindowPicker($w);
+          }
+        } catch (e) {}
       },
     });
   } catch (e) {

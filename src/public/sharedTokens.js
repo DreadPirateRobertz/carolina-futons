@@ -561,3 +561,44 @@ export function shadowToCSS(shadow) {
 export function spacingPx(key) {
   return `${spacing[key]}px`;
 }
+
+/**
+ * Delivery window picker configuration.
+ *
+ * Controls which shipping rate codes trigger the window picker,
+ * the available time slots, and capacity limits per slot.
+ *
+ * @type {Object}
+ */
+export const deliveryWindowConfig = {
+  /**
+   * Shipping rate code prefixes that require a delivery window selection.
+   * Any rate whose code starts with one of these triggers the picker.
+   */
+  eligibleCodePrefixes: ['white-glove-', 'local-delivery-'],
+
+  /**
+   * Maximum number of deliveries allowed per date+timeSlot combination.
+   * Configurable here so staff can adjust capacity without touching backend logic.
+   */
+  maxPerSlot: 4,
+
+  /**
+   * How many days ahead customers can schedule a delivery window.
+   */
+  bookingWindowDays: 21,
+
+  /**
+   * Available time slots per day (Wed–Sat only).
+   * Each entry maps a timeSlot key to display metadata.
+   */
+  timeSlots: {
+    morning: { label: '9:00 AM – 12:00 PM', start: '09:00', end: '12:00' },
+    afternoon: { label: '1:00 PM – 5:00 PM', start: '13:00', end: '17:00' },
+  },
+
+  /**
+   * Fallback message shown when no slots are available in the booking window.
+   */
+  noSlotsMessage: 'We will contact you to schedule your delivery.',
+};
