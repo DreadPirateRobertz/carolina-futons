@@ -360,7 +360,7 @@ describe('initShippingIntelligence', () => {
 
   it('shows white glove upsell banner without mutating text when local option has no upsellMessage', async () => {
     session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
-    const noUpsellLocal = { ...LOCAL_OPTION, upsellMessage: null };
+    const noUpsellLocal = { ...LOCAL_OPTION, upsellMessage: null, addOn: WHITE_GLOVE_OPTION };
     getShippingEstimate.mockResolvedValue({ success: true, options: [noUpsellLocal] });
     const $w = makeWixEnv();
     await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
