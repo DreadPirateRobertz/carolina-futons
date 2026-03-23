@@ -894,48 +894,107 @@
 
     <!-- Challenge Trail — Proposed Phase 3 -->
     <div class="asset-card" style="border-color:rgba(74,124,89,0.3);">
-      <div class="preview" style="background:#F5F0E8; padding:12px 8px;">
-        <svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg">
+      <div class="preview" style="background:#1A2A1E; padding:14px 10px;">
+        <style>
+          @keyframes ct-pulse{0%,100%{r:7;opacity:0.9}50%{r:10;opacity:0.4}}
+          @keyframes ct-glow{0%,100%{opacity:0.7}50%{opacity:1}}
+          .ct-prog-ring{animation:ct-pulse 1.8s ease-in-out infinite}
+          .ct-summit-star{animation:ct-glow 2.2s ease-in-out infinite}
+        </style>
+        <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;margin:auto;">
           <defs>
-            <linearGradient id="ct-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.7"/>
-              <stop offset="100%" stop-color="#FAF7F2"/>
+            <linearGradient id="ct2-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1A2E40"/>
+              <stop offset="60%" stop-color="#2E5068"/>
+              <stop offset="100%" stop-color="#4A7C59" stop-opacity="0.3"/>
             </linearGradient>
+            <radialGradient id="ct2-glow" cx="0.57" cy="0.55" r="0.08">
+              <stop offset="0%" stop-color="#5CBF6A" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#5CBF6A" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="ct2-blur"><feGaussianBlur stdDeviation="1.5"/></filter>
           </defs>
-          <rect width="280" height="100" fill="url(#ct-sky)"/>
-          <!-- Background ridges -->
-          <path d="M0,60 C25,54 45,44 68,40 C91,36 110,48 135,43 C160,38 175,30 200,33 C225,36 248,46 280,42 L280,100 L0,100Z" fill="#5B8FA8" opacity="0.18"/>
-          <path d="M0,72 C22,68 42,60 70,56 C98,52 118,62 145,58 C172,54 190,47 218,50 C246,53 262,60 280,57 L280,100 L0,100Z" fill="#4A7C59" opacity="0.28"/>
-          <path d="M0,84 C25,80 48,74 78,71 C108,68 128,76 158,73 C188,70 205,65 235,67 C265,69 272,74 280,72 L280,100 L0,100Z" fill="#3A2518" opacity="0.5"/>
-          <!-- Trail path (progress = 65%) -->
-          <!-- Filled trail -->
-          <path d="M12,88 C30,84 48,78 68,74 C88,70 105,76 128,72 C151,68 168,62 192,64" stroke="#4A7C59" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85"/>
-          <!-- Unfilled trail (dashed) -->
-          <path d="M192,64 C216,66 238,60 268,56" stroke="#3A2518" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="5,4" opacity="0.45"/>
-          <!-- Progress dot -->
-          <circle cx="192" cy="64" r="5" fill="#4A7C59" opacity="0.9"/>
-          <circle cx="192" cy="64" r="2.5" fill="#FAF7F2" opacity="0.95"/>
-          <!-- Trailhead marker (left) -->
-          <circle cx="12" cy="88" r="5" fill="#5B8FA8" opacity="0.85"/>
-          <circle cx="12" cy="88" r="2.5" fill="white" opacity="0.9"/>
-          <!-- Summit GPS pin (right — not yet reached) -->
-          <path d="M268 55 L264 48 C262 43 264 38 268 37 C272 38 274 43 272 48 Z" fill="#E8845C" opacity="0.45"/>
-          <circle cx="268" cy="43" r="3.5" fill="white" opacity="0.5"/>
-          <!-- Trees along trail -->
-          <path d="M55,76 L57,68 C58,64 60,62 61,64 L63,68 L65,76Z" fill="#2E4A38" opacity="0.55"/>
-          <path d="M155,68 L157,61 C158,57 160,55 161,57 L163,61 L165,68Z" fill="#4A7C59" opacity="0.5"/>
-          <path d="M235,63 L237,56 C238,52 240,51 241,52 L243,56 L245,63Z" fill="#2E4A38" opacity="0.45"/>
-          <!-- Progress label -->
-          <rect x="178" y="56" width="22" height="10" fill="#4A7C59" opacity="0.85" rx="2"/>
-          <text x="189" y="63.5" font-size="5.5" fill="white" text-anchor="middle" font-family="monospace" font-weight="bold">65%</text>
-          <!-- Difficulty: medium (2-ridge overlap) -->
-          <text x="12" y="10" font-size="6" fill="#5C4033" font-family="monospace" opacity="0.7">difficulty: medium</text>
-          <text x="12" y="20" font-size="6" fill="#4A7C59" font-family="monospace" opacity="0.7">progress: 65%</text>
+          <rect width="320" height="140" fill="url(#ct2-sky)"/>
+          <!-- Stars in sky -->
+          <circle cx="28" cy="12" r="0.8" fill="white" opacity="0.7"/>
+          <circle cx="62" cy="8" r="0.6" fill="white" opacity="0.5"/>
+          <circle cx="95" cy="15" r="0.9" fill="white" opacity="0.6"/>
+          <circle cx="140" cy="6" r="0.7" fill="white" opacity="0.5"/>
+          <circle cx="170" cy="18" r="0.6" fill="white" opacity="0.4"/>
+          <circle cx="205" cy="9" r="0.8" fill="white" opacity="0.6"/>
+          <circle cx="248" cy="14" r="0.7" fill="white" opacity="0.5"/>
+          <!-- Far ridge — glacier blue -->
+          <path d="M0,68 C20,62 40,52 60,46 C80,40 95,50 120,45 C145,40 162,30 185,28 C208,26 228,36 255,33 C275,31 295,24 320,22 L320,140 L0,140Z" fill="#3D6B80" opacity="0.45"/>
+          <!-- Mid ridge — forest dark -->
+          <path d="M0,85 C22,80 45,72 70,67 C95,62 115,72 145,68 C175,64 192,56 222,58 C252,60 272,68 320,63 L320,140 L0,140Z" fill="#2E4A38" opacity="0.65"/>
+          <!-- Foreground ridge — deep earth -->
+          <path d="M0,105 C25,100 50,93 82,89 C114,85 132,95 165,91 C198,87 218,80 250,82 C280,84 298,90 320,87 L320,140 L0,140Z" fill="#1E2E1A" opacity="0.85"/>
+          <!-- Progress glow halo behind trail position -->
+          <circle cx="182" cy="85" r="18" fill="url(#ct2-glow)"/>
+          <!-- Trail — unfilled (dashed cream) -->
+          <path d="M182,85 C202,82 222,76 248,70 C265,66 280,60 308,55"
+                stroke="#FAF7F2" stroke-width="2.5" fill="none" stroke-linecap="round"
+                stroke-dasharray="6,5" opacity="0.3"/>
+          <!-- Trail — filled (vivid forest green, slight glow) -->
+          <path d="M18,125 C38,120 58,112 82,105 C106,98 122,106 148,100 C174,94 174,88 182,85"
+                stroke="#5CBF6A" stroke-width="4" fill="none" stroke-linecap="round"
+                filter="url(#ct2-blur)" opacity="0.5"/>
+          <path d="M18,125 C38,120 58,112 82,105 C106,98 122,106 148,100 C174,94 174,88 182,85"
+                stroke="#5CBF6A" stroke-width="3" fill="none" stroke-linecap="round" opacity="1"/>
+          <!-- Waypoint 1 — Trailhead (START) -->
+          <circle cx="18" cy="125" r="6" fill="#5B8FA8" opacity="0.9"/>
+          <circle cx="18" cy="125" r="3" fill="white" opacity="0.95"/>
+          <text x="18" y="135" font-size="5.5" fill="#A8CCD8" text-anchor="middle" font-family="monospace" font-weight="bold">START</text>
+          <!-- Waypoint 2 — 25% (completed, gold flag) -->
+          <line x1="82" y1="105" x2="82" y2="91" stroke="#C8960C" stroke-width="1.2" opacity="0.9"/>
+          <path d="M82,91 L90,93 L82,97Z" fill="#C8960C" opacity="0.9"/>
+          <circle cx="82" cy="105" r="4" fill="#C8960C" opacity="0.85"/>
+          <circle cx="82" cy="105" r="2" fill="white" opacity="0.9"/>
+          <text x="82" y="117" font-size="5" fill="#C8960C" text-anchor="middle" font-family="monospace" opacity="0.8">25%</text>
+          <!-- Waypoint 3 — 50% (completed, gold flag) -->
+          <line x1="148" y1="100" x2="148" y2="86" stroke="#C8960C" stroke-width="1.2" opacity="0.9"/>
+          <path d="M148,86 L156,88 L148,92Z" fill="#C8960C" opacity="0.9"/>
+          <circle cx="148" cy="100" r="4" fill="#C8960C" opacity="0.85"/>
+          <circle cx="148" cy="100" r="2" fill="white" opacity="0.9"/>
+          <text x="148" y="112" font-size="5" fill="#C8960C" text-anchor="middle" font-family="monospace" opacity="0.8">50%</text>
+          <!-- Hiker silhouette at progress position (65%) -->
+          <circle cx="182" cy="75" r="3.5" fill="#FAF7F2" opacity="0.9"/>
+          <line x1="182" y1="78.5" x2="182" y2="85" stroke="#FAF7F2" stroke-width="1.5" opacity="0.85"/>
+          <line x1="182" y1="80" x2="178" y2="83" stroke="#FAF7F2" stroke-width="1.2" opacity="0.7"/>
+          <line x1="182" y1="80" x2="186" y2="82" stroke="#FAF7F2" stroke-width="1.2" opacity="0.7"/>
+          <line x1="182" y1="85" x2="179" y2="90" stroke="#FAF7F2" stroke-width="1.3" opacity="0.8"/>
+          <line x1="182" y1="85" x2="185" y2="90" stroke="#FAF7F2" stroke-width="1.3" opacity="0.8"/>
+          <!-- Progress ring pulse around hiker -->
+          <circle class="ct-prog-ring" cx="182" cy="84" r="7" fill="none" stroke="#5CBF6A" stroke-width="1.5" opacity="0.9"/>
+          <!-- Progress badge -->
+          <rect x="167" y="90" width="29" height="11" fill="#4A7C59" rx="3" opacity="0.95"/>
+          <text x="181.5" y="98" font-size="6" fill="white" text-anchor="middle" font-family="monospace" font-weight="bold">65%</text>
+          <!-- Waypoint 4 — 75% (upcoming, hollow) -->
+          <line x1="248" y1="70" x2="248" y2="57" stroke="#FAF7F2" stroke-width="1" opacity="0.25"/>
+          <path d="M248,57 L255,59 L248,62Z" fill="#FAF7F2" opacity="0.2"/>
+          <circle cx="248" cy="70" r="4" fill="none" stroke="#FAF7F2" stroke-width="1.2" opacity="0.3"/>
+          <text x="248" y="80" font-size="5" fill="#FAF7F2" text-anchor="middle" font-family="monospace" opacity="0.3">75%</text>
+          <!-- Summit — coral flag + star burst -->
+          <line x1="308" y1="55" x2="308" y2="36" stroke="#E8845C" stroke-width="1.5" opacity="0.85"/>
+          <path d="M308,36 L318,39 L308,43Z" fill="#E8845C" opacity="0.9"/>
+          <!-- Summit star burst -->
+          <text class="ct-summit-star" x="308" y="32" font-size="10" fill="#F0C87A" text-anchor="middle" opacity="0.85">★</text>
+          <circle cx="308" cy="55" r="5.5" fill="none" stroke="#E8845C" stroke-width="1.2" opacity="0.4"/>
+          <circle cx="308" cy="55" r="3" fill="#E8845C" opacity="0.5"/>
+          <text x="308" y="66" font-size="5" fill="#E8845C" text-anchor="middle" font-family="monospace" opacity="0.6">SUMMIT</text>
+          <!-- Pine trees scattered — foreground -->
+          <path d="M48,108 L50.5,98 C51.5,94 53,92 54,94 L55.5,98 L58,108Z" fill="#2E4A38" opacity="0.7"/>
+          <path d="M110,102 L112.5,93 C113.5,89 115,87 116,89 L117.5,93 L120,102Z" fill="#4A7C59" opacity="0.6"/>
+          <path d="M218,78 L220.5,69 C221.5,65 223,63 224,65 L225.5,69 L228,78Z" fill="#2E4A38" opacity="0.55"/>
+          <path d="M272,62 L274.5,54 C275.5,50 277,48 278,50 L279.5,54 L282,62Z" fill="#1E2E1A" opacity="0.5"/>
+          <!-- Difficulty label top-left -->
+          <rect x="8" y="6" width="72" height="14" fill="#1A2E40" rx="3" opacity="0.8"/>
+          <text x="44" y="15.5" font-size="6" fill="#A8CCD8" text-anchor="middle" font-family="monospace" opacity="0.9">⛰ MEDIUM DIFFICULTY</text>
         </svg>
       </div>
       <div class="info">
         <h4>ChallengesDisplay.js — buildChallengeTrailSVG()</h4>
-        <p>Mountain trail progress: trailhead (left) → summit GPS pin (right). Filled stroke = completed distance, dashed = remaining. Progress dot marks current position. Difficulty: easy=1 ridge, medium=2, hard=full 7-layer skyline. Summit pin turns coral when complete. 280×120 viewBox.</p>
+        <p>Dramatic dusk mountain trail: winding path with vivid green fill + pulsing progress ring at hiker position. Gold flag checkpoints at 25%/50% (completed), hollow at 75% (upcoming), coral summit flag + animated star at peak. Dark sky with stars, 3-layer ridge silhouette, scattered pines. Difficulty: easy=1 ridge, medium=2, hard=full 7-layer skyline. 320×140 viewBox.</p>
         <span class="status-tag status-proposed">Proposed — Phase 3</span>
       </div>
     </div>
