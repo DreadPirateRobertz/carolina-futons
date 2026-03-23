@@ -22,6 +22,7 @@ import {
   __onInsert,
   __onUpdate,
   __getInserted,
+  __setQueryError,
 } from './__mocks__/wix-data.js';
 
 import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
@@ -138,8 +139,8 @@ describe('getStyleConsultation — rate limiting', () => {
     ]);
 
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
-    expect(result.success).toBe(false);
-    expect(result.errorCode).toBe('RATE_LIMITED');
+    expect(result.status).toBe(429);
+    expect(result.error).toBe('Rate limit exceeded');
   });
 
   it('allows a session whose window has expired despite high call count', async () => {
@@ -157,7 +158,41 @@ describe('getStyleConsultation — rate limiting', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 3. Session persistence
+// 3. CMS lookup failure does not bypass rate limit
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('getStyleConsultation — CMS lookup failure does not bypass rate limit', () => {
+  beforeEach(() => {
+    resetData();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('returns AI_ERROR when CMS session query throws', async () => {
+    __setQueryError('StyleConsultantSessions', new Error('cms_malformed_response'));
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('AI_ERROR');
+  });
+
+  it('does not insert a session record when CMS lookup throws', async () => {
+    __setQueryError('StyleConsultantSessions', new Error('cms_malformed_response'));
+    const inserts = [];
+    __onInsert((col, item) => { if (col === 'StyleConsultantSessions') inserts.push(item); });
+    await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(inserts).toHaveLength(0);
+  });
+
+  it('allows a genuine new session when query succeeds with no record', async () => {
+    // No session seeded — query returns empty result (not an error)
+    const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    // Should fail at AI call stage (stubbed), not at rate-limit or session-lookup stage
+    expect(result.errorCode).not.toBe('RATE_LIMITED');
+    expect(result.status).not.toBe(429);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 4. Session persistence
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('getStyleConsultation — session persistence', () => {
@@ -177,7 +212,7 @@ describe('getStyleConsultation — session persistence', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 4. Product recommendations (catalog query)
+// 5. Product recommendations (catalog query)
 // ═══════════════════════════════════════════════════════════════════════
 
 function makeProduct(overrides = {}) {
@@ -266,7 +301,7 @@ describe('_getProductRecommendations', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 5. Full flow — AI call paths (callClaudeVision injected)
+// 6. Full flow — AI call paths (callClaudeVision injected)
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('getStyleConsultation — AI call paths', () => {
@@ -387,7 +422,7 @@ describe('getStyleConsultation — AI call paths', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 6. _wixMediaToCdnUrl — URL conversion
+// 7. _wixMediaToCdnUrl — URL conversion
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('_wixMediaToCdnUrl', () => {
@@ -429,7 +464,7 @@ describe('_wixMediaToCdnUrl', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 7. _callClaudeVision — real implementation (wix-fetch + wix-secrets-backend mocked)
+// 8. _callClaudeVision — real implementation (wix-fetch + wix-secrets-backend mocked)
 // ═══════════════════════════════════════════════════════════════════════
 
 const TEST_API_KEY = 'sk-ant-test-key-xyz';

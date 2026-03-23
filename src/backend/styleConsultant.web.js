@@ -35,8 +35,7 @@
  *
  * Rate limiting: CMS-backed per-session sliding window.
  *   RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
- *   Note: session lookup failure (CMS error) is treated as a new session
- *   (first call always allowed). See CF-vu31 for a tracked improvement.
+ *   CMS lookup failure returns AI_ERROR — rate limits are not bypassed on error.
  *
  * @see jobs.config — no scheduled job required for this module.
  */
@@ -50,8 +49,7 @@ const SESSION_COLLECTION = 'StyleConsultantSessions';
 const SESSION_KEY_LEN = 64;   // SHA-256 hex = exactly 64 chars
 const TEXT_MAX = 1000;        // Max characters for free-text description
 
-// Rate limiting — placeholder values, zhora to confirm strategy
-// TODO(CF-vu30): replace with zhora-approved rate limit config after cross-rig review
+// Rate limiting — 5 calls per hour per session (confirmed via cross-rig review)
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
@@ -144,13 +142,22 @@ function validateSessionKey(key) {
 /**
  * Fetch existing StyleConsultantSessions record for the given sessionKey,
  * or return null if not found.
+ *
+ * Throws if the CMS returns a malformed response (missing `items` array) rather
+ * than silently returning null — this prevents a malformed response from being
+ * mistaken for a new (never-seen) session, which would bypass rate limiting.
+ *
  * @param {string} sessionKey - Validated 64-char hex key
- * @returns {Promise<Object|null>}
+ * @returns {Promise<Object|null>} Session record, or null if definitively not found
+ * @throws {Error} If the CMS query fails or returns a malformed response
  */
 async function lookupSession(sessionKey) {
   const result = await wixData.query(SESSION_COLLECTION)
     .eq('sessionKey', sessionKey)
     .find();
+  if (!result || !Array.isArray(result.items)) {
+    throw new Error('cms_malformed_response');
+  }
   return result.items.length > 0 ? result.items[0] : null;
 }
 
@@ -290,22 +297,33 @@ async function callClaudeVision(photoUrl, textInput) {
       : 'Suggest furniture styles based on the customer description.';
   contentBlocks.push({ type: 'text', text: textPrompt });
 
-  // Call Claude API via wix-fetch
+  // Call Claude API via wix-fetch with a 30s abort timeout to prevent Velo runtime exhaustion
   const { fetch } = await import('wix-fetch');
-  const res = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
-      max_tokens: CLAUDE_MAX_TOKENS,
-      system: STYLE_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: contentBlocks }],
+  const controller = new AbortController();
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => {
+      controller.abort();
+      reject(new Error('claude_timeout'));
+    }, 30000)
+  );
+  const res = await Promise.race([
+    fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: CLAUDE_MAX_TOKENS,
+        system: STYLE_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: contentBlocks }],
+      }),
+      signal: controller.signal,
     }),
-  });
+    timeoutPromise,
+  ]);
 
   if (!res.ok) {
     const status = res.status;
@@ -456,11 +474,7 @@ export const getStyleConsultation = webMethod(
 
     const { allowed, updatedCounts } = checkRateLimit(session);
     if (!allowed) {
-      return {
-        success: false,
-        error: 'Too many requests. Please wait before trying again.',
-        errorCode: 'RATE_LIMITED',
-      };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     // 4. Call Claude vision API
