@@ -1,5 +1,27 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont-6 (Illustration wave — Trail of Fire + sky animations)
+
+### What worked well
+- **Trail of Fire redesign**: crimson-to-black sky, 3-layer CSS flicker keyframes (ct-f1/f2/f3 at 0.52–0.68s), animated torch markers at waypoints, 5 orbiting micro-flames + double pulse ring around hiker, 5-layer bonfire at summit. Stilgar approved, forwarded to crew.
+- **Mountain skyline touch-up**: sun disc + radial gradient glow, two cloud layers with independent animation speeds (30s/46s), V-formation birds with wing-flap keyframes, deeper sky gradient.
+- **Empty cart 36s sky cycle**: 4 separate gradient rects crossfading via CSS keyframes (ec-dawn-f/ec-day-f/ec-dusk-f/ec-night-f), stars+moon tied to night phase, ghost cushion dashed outline pulsing, bluebird perched, tumbling leaf. Much more effective than plain text tag.
+- **Discord credentials memory saved**: `~/.gt-secrets` source pattern now documented in reference_discord_credentials.md — no more searching for tokens.
+- **PRs #764+#769 merged clean**: both full refinery APPROVE. Wrong-branch push caught early by checking `git branch --show-current` first.
+- **Refinery agent false positive handling**: confident overrides with detailed comment preserving audit trail.
+
+### Gaps / improvement opportunities
+- `gt nudge miquella` fails when session is "miquella" (short name) — need full path `cfutons/crew/miquella`. Save this pattern.
+- Non-fast-forward push: happens when remote advances while I'm working on docs. `git pull --rebase && git push` is the clean fix.
+- When CSS animations use `transform-origin`, ensure the SVG element has that property accessible (inline style or class). `transform-origin` in SVG doesn't work the same as HTML — may need `style="transform-origin: ..."` on the element directly.
+
+### Pattern notes
+- For SVG sky animation, 4-phase crossfade: set initial `opacity="0"` on day/dusk/night rects, CSS keyframes control the fade sequence. Dawn rect gets no explicit initial opacity (defaults to 1 = visible at start).
+- CSS `transform-origin` in SVG: use `transform-origin: center bottom` on flame ellipses for natural flicker from the base up.
+- `gt nudge cfutons/crew/miquella` not `gt nudge miquella` — full session path required.
+
+---
+
 ## Session 2026-03-23 cont-5 (Illustration badge alignment + PR #768)
 
 ### What worked well
