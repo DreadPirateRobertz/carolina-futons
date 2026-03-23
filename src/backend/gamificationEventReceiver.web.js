@@ -16,7 +16,7 @@
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
-import { POINT_VALUES, getTierForPoints } from 'public/gamificationTokens.js';
+import { POINT_VALUES, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 
@@ -159,4 +159,56 @@ async function maybeGrantBonusSpin(eventName) {
   } catch {
     return 0;
   }
+}
+
+// ── Streak helper (exported for testing) ──────────────────────────────────────
+
+/**
+ * Compute new streak state based on the member's last activity date.
+ * Pure function — no DB calls. All three branches set milestoneBonus explicitly.
+ *
+ * @param {Object} record - Current MemberPoints record (streak fields may be null for new members)
+ * @param {string} todayET - Today's ET date string e.g. "2026-03-22"
+ * @param {string} yesterdayET - Yesterday's ET date string e.g. "2026-03-21"
+ * @returns {{ currentStreakDays, streakStartDate, lastActivityDate, streakMultiplier, milestoneBonus }}
+ */
+export function updateStreakState(record, todayET, yesterdayET) {
+  const lastActivity = record.lastActivityDate || null;
+  const existingDays = record.currentStreakDays || 0;
+  const existingStart = record.streakStartDate || todayET;
+  const existingMultiplier = record.streakMultiplier || 1;
+
+  // Branch 1: already active today — no change
+  if (lastActivity === todayET) {
+    return {
+      currentStreakDays: existingDays,
+      streakStartDate: existingStart,
+      lastActivityDate: todayET,
+      streakMultiplier: existingMultiplier,
+      milestoneBonus: 0,
+    };
+  }
+
+  // Branch 2: active yesterday — increment streak
+  if (lastActivity === yesterdayET) {
+    const currentStreakDays = existingDays + 1;
+    const streakMultiplier = getStreakMultiplier(currentStreakDays);
+    const milestoneBonus = currentStreakDays === 7 ? POINT_VALUES.STREAK_7_DAY : 0;
+    return {
+      currentStreakDays,
+      streakStartDate: existingStart,
+      lastActivityDate: todayET,
+      streakMultiplier,
+      milestoneBonus,
+    };
+  }
+
+  // Branch 3: missed ≥1 day or no prior activity — reset streak
+  return {
+    currentStreakDays: 1,
+    streakStartDate: todayET,
+    lastActivityDate: todayET,
+    streakMultiplier: 1,
+    milestoneBonus: 0,
+  };
 }

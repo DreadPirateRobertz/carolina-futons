@@ -26,7 +26,8 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState } from '../src/backend/gamificationEventReceiver.web.js';
+import { POINT_VALUES } from '../src/public/gamificationTokens.js';
 
 beforeEach(() => {
   __reset();
@@ -424,5 +425,157 @@ describe('bonus spin grants', () => {
     await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
     expect(mpUpdate.item.bonusSpinsAvailable).toBe(2); // unchanged
+  });
+});
+
+// ── updateStreakState ─────────────────────────────────────────────────────────
+
+describe('updateStreakState', () => {
+  const TODAY = '2026-03-22';
+  const YESTERDAY = '2026-03-21';
+
+  describe('same-day no-op (lastActivityDate === todayET)', () => {
+    it('returns existing streak fields unchanged', () => {
+      const record = {
+        currentStreakDays: 4,
+        streakStartDate: '2026-03-18',
+        lastActivityDate: TODAY,
+        streakMultiplier: 1.5,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(4);
+      expect(result.streakMultiplier).toBe(1.5);
+      expect(result.lastActivityDate).toBe(TODAY);
+    });
+
+    it('returns milestoneBonus = 0 (not undefined) on same-day no-op', () => {
+      const record = {
+        currentStreakDays: 7,
+        streakStartDate: '2026-03-15',
+        lastActivityDate: TODAY,
+        streakMultiplier: 2,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.milestoneBonus).toBe(0);
+    });
+  });
+
+  describe('increment (lastActivityDate === yesterdayET)', () => {
+    it('increments currentStreakDays by 1', () => {
+      const record = {
+        currentStreakDays: 2,
+        streakStartDate: '2026-03-20',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 1,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(3);
+    });
+
+    it('upgrades multiplier when crossing into 1.5x tier (days 2→3)', () => {
+      const record = {
+        currentStreakDays: 2,
+        streakStartDate: '2026-03-20',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 1,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.streakMultiplier).toBe(1.5);
+    });
+
+    it('upgrades multiplier when crossing into 2x tier (days 6→7)', () => {
+      const record = {
+        currentStreakDays: 6,
+        streakStartDate: '2026-03-16',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 1.5,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(7);
+      expect(result.streakMultiplier).toBe(2);
+    });
+
+    it('fires milestoneBonus = STREAK_7_DAY when crossing to day 7', () => {
+      const record = {
+        currentStreakDays: 6,
+        streakStartDate: '2026-03-16',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 1.5,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.milestoneBonus).toBe(POINT_VALUES.STREAK_7_DAY); // 100
+    });
+
+    it('does NOT fire milestoneBonus when crossing to day 8 (already past milestone)', () => {
+      const record = {
+        currentStreakDays: 7,
+        streakStartDate: '2026-03-15',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 2,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.milestoneBonus).toBe(0);
+      expect(result.currentStreakDays).toBe(8);
+    });
+
+    it('sets lastActivityDate to todayET', () => {
+      const record = {
+        currentStreakDays: 3,
+        streakStartDate: '2026-03-19',
+        lastActivityDate: YESTERDAY,
+        streakMultiplier: 1.5,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.lastActivityDate).toBe(TODAY);
+    });
+  });
+
+  describe('reset (missed ≥1 day or no prior activity)', () => {
+    it('resets currentStreakDays to 1 when last activity was 2+ days ago', () => {
+      const record = {
+        currentStreakDays: 10,
+        streakStartDate: '2026-03-01',
+        lastActivityDate: '2026-03-19', // 3 days ago
+        streakMultiplier: 2,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(1);
+    });
+
+    it('resets multiplier to 1 on reset', () => {
+      const record = {
+        currentStreakDays: 10,
+        streakStartDate: '2026-03-01',
+        lastActivityDate: '2026-03-10',
+        streakMultiplier: 2,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.streakMultiplier).toBe(1);
+    });
+
+    it('sets streakStartDate to todayET on reset', () => {
+      const record = {
+        currentStreakDays: 5,
+        streakStartDate: '2026-03-01',
+        lastActivityDate: '2026-03-10',
+        streakMultiplier: 1.5,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.streakStartDate).toBe(TODAY);
+    });
+
+    it('milestoneBonus = 0 on reset', () => {
+      const record = { currentStreakDays: 5, lastActivityDate: '2026-03-10', streakMultiplier: 1.5 };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.milestoneBonus).toBe(0);
+    });
+
+    it('resets correctly for new member with no streak fields (null/undefined)', () => {
+      const record = { currentStreakDays: null, lastActivityDate: null, streakMultiplier: null };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(1);
+      expect(result.streakMultiplier).toBe(1);
+      expect(result.streakStartDate).toBe(TODAY);
+    });
   });
 });
