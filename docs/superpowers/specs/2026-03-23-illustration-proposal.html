@@ -467,29 +467,84 @@
 
     <!-- Mountain Skyline Header -->
     <div class="asset-card">
-      <div class="preview">
-        <svg viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
+      <div class="preview" style="padding:0; overflow:hidden;">
+        <svg viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;">
           <defs>
             <linearGradient id="inv-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.8"/>
-              <stop offset="50%" stop-color="#F0C87A" stop-opacity="0.4"/>
+              <stop offset="0%" stop-color="#2E6BA0"/>
+              <stop offset="28%" stop-color="#87BEDE"/>
+              <stop offset="62%" stop-color="#F0C87A" stop-opacity="0.55"/>
               <stop offset="100%" stop-color="#FAF7F2"/>
             </linearGradient>
+            <radialGradient id="inv-sun-glow" cx="0.78" cy="0.32" r="0.38">
+              <stop offset="0%" stop-color="#FFF0B8" stop-opacity="0.85"/>
+              <stop offset="45%" stop-color="#F0C87A" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>
+            </radialGradient>
+            <style>
+              @keyframes inv-cloud-a{0%{transform:translateX(0)}100%{transform:translateX(72px)}}
+              @keyframes inv-cloud-b{0%{transform:translateX(0)}100%{transform:translateX(52px)}}
+              @keyframes inv-wing{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.8px)}}
+              .inv-ca{animation:inv-cloud-a 30s linear infinite}
+              .inv-cb{animation:inv-cloud-b 46s linear 10s infinite}
+              .inv-w1{animation:inv-wing 1.7s ease-in-out infinite}
+              .inv-w2{animation:inv-wing 1.7s ease-in-out 0.28s infinite}
+              .inv-w3{animation:inv-wing 1.7s ease-in-out 0.55s infinite}
+            </style>
           </defs>
+          <!-- Sky -->
           <rect width="400" height="80" fill="url(#inv-sky)"/>
-          <path d="M0,80 L0,30 C30,25 50,15 80,12 C110,9 130,20 160,17 C190,14 210,5 240,8 C270,11 290,22 320,18 C350,14 375,8 400,10 L400,80Z" fill="#3D6B80" opacity="0.18"/>
-          <path d="M0,80 L0,38 C28,33 48,22 78,18 C108,14 128,26 160,23 C192,20 212,10 242,12 C272,14 292,25 322,22 C352,19 378,13 400,15 L400,80Z" fill="#5B8FA8" opacity="0.3"/>
-          <path d="M0,80 L0,48 C30,44 52,35 82,31 C112,27 135,38 165,35 C195,32 218,23 248,25 C278,27 300,37 330,34 C360,31 382,25 400,26 L400,80Z" fill="#5C4033" opacity="0.45"/>
-          <path d="M0,80 L0,58 C32,54 55,46 88,43 C121,40 144,50 175,48 C206,46 228,38 258,40 C288,42 310,51 340,48 C370,45 388,40 400,41 L400,80Z" fill="#3A2518" opacity="0.6"/>
-          <path d="M88,64 L91,52 C93,46 96,43 98,46 L101,52 L104,64Z" fill="#4A7C59" opacity="0.5"/>
-          <path d="M220,60 L223,50 C225,44 227,41 229,44 L231,50 L233,60Z" fill="#4A7C59" opacity="0.45"/>
-          <path d="M350,62 L353,53 C355,47 357,44 359,47 L361,53 L363,62Z" fill="#4A7C59" opacity="0.4"/>
+          <!-- Sun glow -->
+          <rect width="400" height="80" fill="url(#inv-sun-glow)"/>
+          <!-- Sun disc -->
+          <circle cx="312" cy="22" r="11" fill="#FFF0B8" opacity="0.82"/>
+          <circle cx="312" cy="22" r="7.5" fill="#FCEEA0"/>
+          <!-- Animated cloud A -->
+          <g class="inv-ca" opacity="0.62">
+            <ellipse cx="55" cy="15" rx="26" ry="8.5" fill="white" opacity="0.52"/>
+            <ellipse cx="44" cy="18" rx="17" ry="6.5" fill="white" opacity="0.48"/>
+            <ellipse cx="68" cy="17" rx="19" ry="7" fill="white" opacity="0.42"/>
+          </g>
+          <!-- Animated cloud B (slower) -->
+          <g class="inv-cb" opacity="0.46">
+            <ellipse cx="215" cy="11" rx="20" ry="6.5" fill="white" opacity="0.38"/>
+            <ellipse cx="205" cy="14" rx="13" ry="5" fill="white" opacity="0.34"/>
+            <ellipse cx="227" cy="13" rx="15" ry="5.5" fill="white" opacity="0.36"/>
+          </g>
+          <!-- Distant hazy ridge -->
+          <path d="M0,80 L0,28 C25,23 44,13 72,9 C100,5 120,18 150,13 C180,8 200,0 230,3 C260,6 280,18 310,14 C340,10 368,3 400,6 L400,80Z" fill="#3D6B80" opacity="0.18"/>
+          <!-- Main ridge — dramatic peaks -->
+          <path d="M0,80 L0,36 C22,31 42,20 68,14 C94,8 116,22 144,17 C172,12 192,1 220,4 C248,7 268,21 298,16 C328,11 358,4 386,7 L400,8 L400,80Z" fill="#5B8FA8" opacity="0.30"/>
+          <!-- Front ridge 1 -->
+          <path d="M0,80 L0,46 C26,42 48,32 78,27 C108,22 130,35 160,31 C190,27 212,16 242,19 C272,22 295,34 326,29 C357,24 380,18 400,20 L400,80Z" fill="#5C4033" opacity="0.47"/>
+          <!-- Front ridge 2 — darkest -->
+          <path d="M0,80 L0,56 C28,52 52,44 84,40 C116,36 138,47 170,43 C202,39 224,30 255,32 C286,34 308,45 340,41 C372,37 388,32 400,33 L400,80Z" fill="#3A2518" opacity="0.65"/>
+          <!-- Trees — left cluster (3 varied) -->
+          <path d="M32,66 L36,52 C38,45 41,42 43,45 L46,52 L49,66Z" fill="#4A7C59" opacity="0.55"/>
+          <path d="M23,68 L27,57 C28,52 31,50 33,52 L35,57 L38,68Z" fill="#2E4A38" opacity="0.50"/>
+          <path d="M42,67 L45,58 C46,54 48,52 50,54 L52,58 L54,67Z" fill="#3E6B4A" opacity="0.45"/>
+          <!-- Trees — center -->
+          <path d="M170,62 L174,50 C175,44 178,41 180,44 L182,50 L185,62Z" fill="#4A7C59" opacity="0.48"/>
+          <!-- Trees — right cluster -->
+          <path d="M342,63 L346,51 C347,44 350,42 352,44 L354,51 L357,63Z" fill="#4A7C59" opacity="0.46"/>
+          <path d="M352,65 L355,55 C356,51 358,49 360,51 L362,55 L364,65Z" fill="#2E4A38" opacity="0.42"/>
+          <!-- Birds — V-formation in midsky -->
+          <g transform="translate(128,18)" opacity="0.52">
+            <path class="inv-w1" d="M0,0 C-4,-2.5 -7,-1.5 -10,0" stroke="#3D6B80" stroke-width="1.3" fill="none"/>
+            <path class="inv-w2" d="M1,0 C5,-2.5 8,-1.5 11,0" stroke="#3D6B80" stroke-width="1.3" fill="none"/>
+            <circle cx="0" cy="0" r="1.1" fill="#3D6B80"/>
+            <path class="inv-w3" d="M-2,3.5 C-6,1 -9,2 -12,3.5" stroke="#3D6B80" stroke-width="1" fill="none"/>
+            <path class="inv-w3" d="M2,3.5 C6,1 9,2 12,3.5" stroke="#3D6B80" stroke-width="1" fill="none"/>
+          </g>
+          <!-- Lone distant bird -->
+          <path d="M275,13 C271,11 268,12 265,13" stroke="#5B8FA8" stroke-width="0.85" fill="none" opacity="0.38"/>
         </svg>
       </div>
       <div class="info">
         <h4>MountainSkyline.js</h4>
-        <p>7-layer atmospheric ridgeline for all page headers. Sunrise/sunset gradient presets. 1440×200 viewBox. Supports transparent mode for dark dividers.</p>
+        <p>7-layer atmospheric ridgeline for all page headers. Sunrise/sunset gradient presets. 1440×200 viewBox. Supports transparent mode for dark dividers. Touch-up: deeper sky gradient, sun disc + radial glow, two animated cloud layers, V-formation birds with wing-flap animation, varied tree clusters.</p>
         <span class="status-tag status-live">Live</span>
+        <span class="status-tag" style="background:#7c3aed;color:#fff;">Touch-up: clouds + sun + birds</span>
       </div>
     </div>
 
@@ -615,70 +670,175 @@
 
     <!-- Empty State / Cart Illustrations -->
     <div class="asset-card">
-      <div class="preview">
-        <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
+      <div class="preview" style="padding:0; overflow:hidden;">
+        <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;">
           <defs>
-            <linearGradient id="ec-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#F2A882" stop-opacity="0.9"/>
-              <stop offset="35%" stop-color="#F0C87A" stop-opacity="0.7"/>
-              <stop offset="70%" stop-color="#E8D5B7" stop-opacity="0.6"/>
+            <!-- Sky phases: dawn / day / dusk / night -->
+            <linearGradient id="ec-dawn" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F2A882"/>
+              <stop offset="38%" stop-color="#F0C87A"/>
               <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+            <linearGradient id="ec-day" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4A9AC4"/>
+              <stop offset="50%" stop-color="#B8D4E3"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+            <linearGradient id="ec-dusk" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#8B2335"/>
+              <stop offset="30%" stop-color="#E8634B"/>
+              <stop offset="65%" stop-color="#F0C87A"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+            <linearGradient id="ec-night" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0D1B2A"/>
+              <stop offset="55%" stop-color="#1A2D40"/>
+              <stop offset="100%" stop-color="#243848"/>
             </linearGradient>
             <linearGradient id="ec-wood" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#8B5E3C"/>
               <stop offset="100%" stop-color="#5C3D20"/>
             </linearGradient>
+            <style>
+              /* sky crossfade: 36s cycle → dawn(0-9s) day(9-18s) dusk(18-27s) night(27-36s) */
+              @keyframes ec-dawn-f{0%,5%{opacity:1}22%,80%{opacity:0}92%,100%{opacity:1}}
+              @keyframes ec-day-f{0%,12%{opacity:0}25%,38%{opacity:1}52%,100%{opacity:0}}
+              @keyframes ec-dusk-f{0%,44%{opacity:0}58%,70%{opacity:1}82%,100%{opacity:0}}
+              @keyframes ec-night-f{0%,64%{opacity:0}75%,88%{opacity:1}96%,100%{opacity:0}}
+              .ec-sky-dawn{animation:ec-dawn-f 36s ease-in-out infinite}
+              .ec-sky-day{animation:ec-day-f 36s ease-in-out infinite;opacity:0}
+              .ec-sky-dusk{animation:ec-dusk-f 36s ease-in-out infinite;opacity:0}
+              .ec-sky-night{animation:ec-night-f 36s ease-in-out infinite;opacity:0}
+              /* same timing for night-phase elements */
+              .ec-stars{animation:ec-night-f 36s ease-in-out infinite;opacity:0}
+              /* ghost cushion pulse */
+              @keyframes ec-ghost{0%,100%{opacity:0.3}55%{opacity:0.75}}
+              .ec-ghost{animation:ec-ghost 3.2s ease-in-out infinite}
+              /* frame gentle rock */
+              @keyframes ec-rock{0%,100%{transform:rotate(0deg)}30%{transform:rotate(-0.6deg)}70%{transform:rotate(0.5deg)}}
+              .ec-frame{transform-origin:140px 112px;animation:ec-rock 7s ease-in-out infinite}
+              /* tumbling leaf */
+              @keyframes ec-leaf{0%{transform:translate(0px,50px) rotate(0deg);opacity:0.9}100%{transform:translate(290px,92px) rotate(400deg);opacity:0}}
+              .ec-leaf{animation:ec-leaf 11s linear 2s infinite}
+              /* bluebird hop */
+              @keyframes ec-hop{0%,85%,100%{transform:translateY(0)}92%{transform:translateY(-3px)}}
+              .ec-bird{animation:ec-hop 5s ease-in-out infinite}
+              /* star twinkle */
+              @keyframes ec-twinkle{0%,100%{opacity:0.8}50%{opacity:0.25}}
+              /* "nothing here" text fade */
+              @keyframes ec-txt{0%,20%{opacity:0.5}10%{opacity:0.75}30%,100%{opacity:0.5}}
+              .ec-txt{animation:ec-txt 8s ease-in-out infinite}
+            </style>
           </defs>
-          <rect width="280" height="140" fill="url(#ec-sky)"/>
-          <!-- Sun low on horizon -->
-          <circle cx="222" cy="36" r="18" fill="#F0C87A" opacity="0.55"/>
-          <circle cx="222" cy="36" r="10" fill="#F2A882" opacity="0.5"/>
+
+          <!-- Sky layers (crossfade cycle) -->
+          <rect class="ec-sky-dawn" width="280" height="115" fill="url(#ec-dawn)"/>
+          <rect class="ec-sky-day" width="280" height="115" fill="url(#ec-day)"/>
+          <rect class="ec-sky-dusk" width="280" height="115" fill="url(#ec-dusk)"/>
+          <rect class="ec-sky-night" width="280" height="115" fill="url(#ec-night)"/>
+
+          <!-- Night stars + crescent moon (fade with night sky) -->
+          <g class="ec-stars">
+            <circle cx="38" cy="16" r="0.8" fill="white" style="animation:ec-twinkle 2.9s ease-in-out infinite"/>
+            <circle cx="72" cy="10" r="0.6" fill="white" style="animation:ec-twinkle 3.5s ease-in-out 0.8s infinite"/>
+            <circle cx="108" cy="20" r="0.7" fill="white" style="animation:ec-twinkle 2.6s ease-in-out 1.3s infinite"/>
+            <circle cx="148" cy="8" r="0.9" fill="white" style="animation:ec-twinkle 3.9s ease-in-out 0.4s infinite"/>
+            <circle cx="190" cy="17" r="0.6" fill="white" style="animation:ec-twinkle 3.0s ease-in-out 1.9s infinite"/>
+            <circle cx="222" cy="12" r="0.7" fill="white" style="animation:ec-twinkle 3.3s ease-in-out 0.9s infinite"/>
+            <circle cx="252" cy="6" r="0.8" fill="white" style="animation:ec-twinkle 2.7s ease-in-out 1.6s infinite"/>
+            <!-- Crescent moon -->
+            <circle cx="234" cy="30" r="10" fill="#E8D5B7" opacity="0.82"/>
+            <circle cx="239" cy="27" r="8" fill="#1A2D40"/>
+          </g>
+
+          <!-- Dawn sun (low, warm) -->
+          <g class="ec-sky-dawn">
+            <circle cx="220" cy="38" r="22" fill="#F0C87A" opacity="0.38"/>
+            <circle cx="220" cy="38" r="13" fill="#F2A882" opacity="0.52"/>
+          </g>
+          <!-- Day sun (high, bright) -->
+          <g class="ec-sky-day">
+            <circle cx="175" cy="20" r="16" fill="#FFF0B8" opacity="0.65"/>
+            <circle cx="175" cy="20" r="9" fill="#FCEEA0" opacity="0.78"/>
+          </g>
+
           <!-- Distant ridge -->
-          <path d="M0,82 C20,77 40,67 65,62 C90,57 108,70 135,65 C162,60 178,50 205,54 C232,58 258,67 280,62 L280,140 L0,140Z" fill="#5B8FA8" opacity="0.2"/>
+          <path d="M0,72 C20,66 42,54 68,49 C94,44 116,58 143,53 C170,48 190,38 218,42 C246,46 266,56 280,52 L280,115 L0,115Z" fill="#5B8FA8" opacity="0.22"/>
           <!-- Mid ridge -->
-          <path d="M0,95 C18,90 38,82 65,77 C92,72 112,84 138,79 C164,74 182,66 208,69 C234,72 258,80 280,75 L280,140 L0,140Z" fill="#5C4033" opacity="0.38"/>
+          <path d="M0,85 C18,80 40,71 68,66 C96,61 118,74 144,69 C170,64 190,56 217,59 C244,62 264,71 280,66 L280,115 L0,115Z" fill="#5C4033" opacity="0.36"/>
           <!-- Near ridge -->
-          <path d="M0,110 C22,106 42,98 72,95 C102,92 122,102 150,98 C178,94 198,88 225,90 C252,92 268,98 280,96 L280,140 L0,140Z" fill="#3A2518" opacity="0.58"/>
+          <path d="M0,99 C20,95 42,87 72,84 C102,81 122,91 151,87 C180,83 200,77 227,79 C254,81 270,87 280,85 L280,115 L0,115Z" fill="#3A2518" opacity="0.55"/>
+
           <!-- Trees left -->
-          <path d="M14,110 L18,96 C19,90 22,87 24,90 L27,96 L30,110Z" fill="#4A7C59" opacity="0.65"/>
-          <path d="M6,112 L10,100 C11,96 13,94 15,96 L17,100 L20,112Z" fill="#2E4A38" opacity="0.55"/>
+          <path d="M12,99 L16,85 C17,79 20,76 22,79 L25,85 L28,99Z" fill="#4A7C59" opacity="0.65"/>
+          <path d="M4,101 L8,90 C9,86 11,84 13,86 L15,90 L18,101Z" fill="#2E4A38" opacity="0.55"/>
           <!-- Trees right -->
-          <path d="M248,108 L252,94 C253,88 256,85 258,88 L260,94 L264,108Z" fill="#4A7C59" opacity="0.6"/>
-          <path d="M255,110 L258,99 C259,95 261,93 263,95 L265,99 L267,110Z" fill="#2E4A38" opacity="0.5"/>
+          <path d="M247,97 L251,83 C252,77 255,74 257,77 L259,83 L263,97Z" fill="#4A7C59" opacity="0.60"/>
+          <path d="M254,99 L257,88 C258,84 260,82 262,84 L264,88 L266,99Z" fill="#2E4A38" opacity="0.50"/>
+
           <!-- Porch floor planks -->
-          <rect x="0" y="114" width="280" height="26" fill="#8B6545" opacity="0.8"/>
+          <rect x="0" y="114" width="280" height="26" fill="#8B6545" opacity="0.82"/>
           <line x1="0" y1="120" x2="280" y2="120" stroke="#5C3D20" stroke-width="0.7" opacity="0.3"/>
           <line x1="0" y1="127" x2="280" y2="127" stroke="#5C3D20" stroke-width="0.7" opacity="0.25"/>
           <line x1="56" y1="114" x2="56" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
           <line x1="112" y1="114" x2="112" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
           <line x1="168" y1="114" x2="168" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
           <line x1="224" y1="114" x2="224" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
-          <!-- Futon frame — empty wooden frame on porch -->
-          <rect x="88" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
-          <rect x="187" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
-          <rect x="86" y="90" width="108" height="6" fill="#8B5E3C" opacity="0.9" rx="1.5"/>
-          <rect x="82" y="107" width="116" height="7" fill="#7A5240" opacity="0.85" rx="1"/>
-          <rect x="86" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
-          <rect x="190" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
-          <!-- Seat slats (empty look) -->
-          <line x1="95" y1="107" x2="95" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="110" y1="107" x2="110" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="125" y1="107" x2="125" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="140" y1="107" x2="140" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="155" y1="107" x2="155" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="170" y1="107" x2="170" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <line x1="185" y1="107" x2="185" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
-          <!-- Small tag on frame -->
-          <rect x="128" y="98" width="24" height="10" fill="#FAF7F2" opacity="0.82" rx="1.5"/>
-          <line x1="140" y1="96" x2="140" y2="98" stroke="#8B5E3C" stroke-width="0.8" opacity="0.5"/>
-          <text x="140" y="105.5" font-size="4.5" fill="#5C4033" text-anchor="middle" font-family="Georgia,serif" opacity="0.7">empty</text>
+
+          <!-- Empty futon frame (gently rocking) -->
+          <g class="ec-frame">
+            <rect x="88" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
+            <rect x="187" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
+            <rect x="86" y="90" width="108" height="6" fill="#8B5E3C" opacity="0.9" rx="1.5"/>
+            <rect x="82" y="107" width="116" height="7" fill="#7A5240" opacity="0.85" rx="1"/>
+            <rect x="86" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
+            <rect x="190" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
+            <!-- Seat slats (visible through empty space) -->
+            <line x1="95" y1="107" x2="95" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="110" y1="107" x2="110" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="125" y1="107" x2="125" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="140" y1="107" x2="140" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="155" y1="107" x2="155" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="170" y1="107" x2="170" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <line x1="185" y1="107" x2="185" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+            <!-- GHOST CUSHION — pulsing dashed outline where the cushion WOULD be -->
+            <rect class="ec-ghost" x="84" y="90" width="112" height="18" rx="6" ry="6"
+              fill="rgba(232,211,183,0.12)" stroke="#E8D5B7" stroke-width="1.8"
+              stroke-dasharray="7 4"/>
+            <!-- Ghost pillow hints -->
+            <ellipse class="ec-ghost" cx="108" cy="96" rx="15" ry="6.5"
+              fill="none" stroke="#E8D5B7" stroke-width="1.1" stroke-dasharray="5 3"/>
+            <ellipse class="ec-ghost" cx="170" cy="96" rx="15" ry="6.5"
+              fill="none" stroke="#E8D5B7" stroke-width="1.1" stroke-dasharray="5 3"/>
+          </g>
+
+          <!-- Tumbling autumn leaf -->
+          <g class="ec-leaf">
+            <ellipse rx="5.5" ry="3.2" fill="#E8634B" opacity="0.72" transform="rotate(-18)"/>
+            <line x1="0" y1="0" x2="3.5" y2="5.5" stroke="#8B5E3C" stroke-width="0.9" opacity="0.5"/>
+          </g>
+
+          <!-- Eastern Bluebird perched on right armrest -->
+          <g class="ec-bird" transform="translate(184, 88)">
+            <ellipse cx="0" cy="0" rx="4.2" ry="3" fill="#2B5FA5" opacity="0.82"/>
+            <circle cx="3.2" cy="-2.2" r="2.6" fill="#2B5FA5" opacity="0.82"/>
+            <path d="M5.2,-1 L9.5,-2 L8.5,-0.3Z" fill="#F2A882" opacity="0.88"/>
+            <circle cx="4" cy="-2.8" r="0.55" fill="white"/>
+            <line x1="-2.5" y1="3" x2="-4.5" y2="6.5" stroke="#5C4033" stroke-width="1" opacity="0.7"/>
+            <line x1="1.5" y1="3" x2="-0.5" y2="6.5" stroke="#5C4033" stroke-width="1" opacity="0.7"/>
+          </g>
+
+          <!-- "Nothing here yet" — atmospheric italic in open sky -->
+          <text class="ec-txt" x="140" y="68" font-size="9.5" fill="#8B5E3C" text-anchor="middle"
+            font-family="Georgia,serif" opacity="0.5" font-style="italic">Nothing here yet…</text>
         </svg>
       </div>
       <div class="info">
         <h4>illustrations.js + CartIllustrations.js</h4>
-        <p>Empty cart, wishlist, order history, and onboarding mountain scenes. 280×200 viewBox. Procedurally generated via seeded PRNG in <code>illustrationShared.js</code>. Empty futon frame on porch = awaiting your find.</p>
+        <p>Empty cart, wishlist, order history, and onboarding mountain scenes. 280×140 viewBox. Sky cycles dawn → day → dusk → night every 36s — with stars and crescent moon appearing at night. Ghost cushion outline pulses in the empty seat to make emptiness unmistakable. Bluebird perched on armrest, tumbling autumn leaf, frame gently rocks in wind. Phase 8: sky driven by <code>LivingSkyState</code>.</p>
         <span class="status-tag status-live">Live</span>
         <span class="status-tag status-phase8">Phase 8 target</span>
+        <span class="status-tag" style="background:#7c3aed;color:#fff;">New: Dynamic sky + ghost cushion + bird</span>
       </div>
     </div>
 
