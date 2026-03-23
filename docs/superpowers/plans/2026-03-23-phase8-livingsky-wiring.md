@@ -451,12 +451,26 @@ describe('initAboutIllustrations — LivingSkyState', () => {
   it('subscribes to #livingSkyFrame and applies sky overlay on message', () => {
     const { $w, containers, trigger } = makeWix();
     initAboutIllustrations($w);
-    const teamId = '#aboutTeamPortrait';   // adjust to actual ID if different
-    const initial = containers[teamId] && containers[teamId].html;
     trigger({ skyColors: ['#2A4A6A'], starOpacity: 0 });
-    const updated = containers[teamId] && containers[teamId].html;
+    const updated = containers['#teamPortraitContainer'] && containers['#teamPortraitContainer'].html;
     expect(updated).toContain('sky-overlay');
     expect(updated).toContain('#2A4A6A');
+  });
+
+  it('applies sky overlay to timeline illustration', () => {
+    const { $w, containers, trigger } = makeWix();
+    initAboutIllustrations($w);
+    trigger({ skyColors: ['#3A6A8A'], starOpacity: 0 });
+    const updated = containers['#timelineContainer'] && containers['#timelineContainer'].html;
+    expect(updated).toContain('sky-overlay');
+  });
+
+  it('applies night overlay (starOpacity > 0)', () => {
+    const { $w, containers, trigger } = makeWix();
+    initAboutIllustrations($w);
+    trigger({ skyColors: ['#080C14'], starOpacity: 0.9 });
+    const updated = containers['#teamPortraitContainer'] && containers['#teamPortraitContainer'].html;
+    expect(updated).toContain('sky-overlay');
   });
 
   it('does not throw when livingSkyFrame absent', () => {
@@ -466,7 +480,7 @@ describe('initAboutIllustrations — LivingSkyState', () => {
 });
 ```
 
-> **Note:** After running Step 1, adjust `teamId` above to match the actual `$w(containerId)` call in `initAboutIllustrations`.
+> Container IDs verified from source: `#teamPortraitContainer` (portrait, 900×500) and `#timelineContainer` (timeline, 1200×400). Step 1 grep confirms these.
 
 - [ ] **Step 3: Run tests to confirm they fail**
 
@@ -507,13 +521,13 @@ Then inside `initAboutIllustrations`, after the existing `container.html = ...` 
         const state = event && event.data;
         if (!state) return;
         // Re-render all about illustrations with sky state
-        try { $w('#aboutTeamPortrait').html = _applyAboutSkyState(getTeamPortraitSvg(), state, 400, 300); } catch (_) {}
-        try { $w('#aboutTimeline').html = _applyAboutSkyState(getTimelineSvg(), state, 800, 200); } catch (_) {}
+        try { $w('#teamPortraitContainer').html = _applyAboutSkyState(getTeamPortraitSvg(), state, 900, 500); } catch (_) {}
+        try { $w('#timelineContainer').html = _applyAboutSkyState(getTimelineSvg(), state, 1200, 400); } catch (_) {}
       });
     }
 ```
 
-> **Note:** Replace `getTeamPortraitSvg()`, `getTimelineSvg()`, `#aboutTeamPortrait`, `#aboutTimeline`, `400, 300`, `800, 200` with the actual function names and container IDs observed in Step 1.
+> Container IDs and dimensions verified from source: `#teamPortraitContainer` (900×500 viewBox), `#timelineContainer` (1200×400 viewBox). No substitution needed.
 
 - [ ] **Step 5: Run tests to confirm they pass**
 
