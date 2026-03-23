@@ -7,16 +7,26 @@ import {
 } from '../src/public/StreakDisplay.js';
 
 describe('buildStreakChipText', () => {
-  it('returns "🔥 1-day streak" for 1 day', () => {
-    expect(buildStreakChipText(1)).toBe('🔥 1-day streak');
+  it('returns an HTML string containing an SVG hawk icon for 1 day', () => {
+    const result = buildStreakChipText(1);
+    expect(result).toContain('<svg');
+    expect(result).toContain('Sharp-shinned Hawk');
   });
 
-  it('returns "🔥 7-day streak" for 7 days', () => {
-    expect(buildStreakChipText(7)).toBe('🔥 7-day streak');
+  it('returns "1-day streak" label for 1 day', () => {
+    expect(buildStreakChipText(1)).toContain('1-day streak');
   });
 
-  it('uses "days" (plural) for counts > 1', () => {
+  it('returns "7-day streak" label for 7 days', () => {
+    expect(buildStreakChipText(7)).toContain('7-day streak');
+  });
+
+  it('uses "days" (plural) for counts 2-6', () => {
     expect(buildStreakChipText(3)).toContain('days');
+  });
+
+  it('does not contain the old fire emoji', () => {
+    expect(buildStreakChipText(1)).not.toContain('🔥');
   });
 });
 
