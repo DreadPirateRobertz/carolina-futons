@@ -14,8 +14,6 @@
  * @module aboutIllustrations
  */
 
-import { initLivingSky } from 'public/living-sky-wix.js';
-
 // Static SVG inner content from pipeline output (team-portrait.optimized.svg).
 // This is a literal string — no template interpolation, no programmatic generation.
 // All colors verified against sharedTokens.js by pipeline token injection step.
@@ -44,41 +42,88 @@ export function getTimelineSvg() {
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="100%" height="100%" role="img" aria-labelledby="title-timeline">' + TIMELINE_CONTENT + '</svg>';
 }
 
+// Hex color validation — only accept #RGB / #RRGGBB / #RRGGBBAA values from postMessage
+const SAFE_HEX_RE = /^#[0-9A-Fa-f]{3,8}$/;
+
+// Star positions for about-page night-sky overlay (module-level, no per-call allocation)
+const ABOUT_STAR_POSITIONS = [
+  [50, 18], [120, 10], [200, 22], [280, 8], [380, 15],
+  [460, 25], [560, 12], [640, 20], [740, 8], [820, 18],
+];
+
 /**
- * Initialize About page illustrations by injecting SVGs into $w containers.
- * @param {Function} $w - Wix selector function.
- * @returns {void}
+ * Apply LivingSkyState overlay to an about-page SVG string.
+ * Night mode (starOpacity > 0) injects a star field over the sky area.
+ * Day mode injects a sky color tint overlay only.
+ * Intentionally unexported — use through initAboutIllustrations.
+ * @param {string} svg - Base SVG markup
+ * @param {Object} state - LivingSkyState { skyColors, starOpacity }
+ * @returns {string} Modified SVG, or the original svg when no overlay applies
  */
+function _applyAboutSkyState(svg, state) {
+  const isNight = Number(state.starOpacity) > 0;
+  // Validate skyColors[0] to prevent XSS via postMessage injection
+  const skyColor = state.skyColors && state.skyColors[0];
+  const safeGradient = typeof skyColor === 'string' && SAFE_HEX_RE.test(skyColor)
+    ? skyColor : null;
+  let overlay = '';
+
+  if (safeGradient) {
+    // Day: subtle tint (0.25); night: deeper tint (0.55) to shift sky toward dark
+    const opacity = isNight ? 0.55 : 0.25;
+    overlay += '<rect width="100%" height="100%" fill="' + safeGradient + '" opacity="' + opacity + '" id="sky-overlay"/>';
+  }
+
+  if (isNight) {
+    overlay += '<g id="stars">';
+    for (const [x, y] of ABOUT_STAR_POSITIONS) {
+      overlay += '<circle cx="' + x + '" cy="' + y + '" r="1.2" fill="#FAF7F2" opacity="0.8"/>';
+    }
+    overlay += '</g>';
+  }
+
+  if (!overlay) return svg;
+  return svg.replace('</svg>', overlay + '</svg>');
+}
+
 /**
- * Initialize the About page illustrations and wire the Living Sky animation.
+ * Initialize About page illustrations and subscribe to LivingSkyState updates.
  *
  * Injects static SVG content into #teamPortraitContainer and #timelineContainer,
- * then subscribes #livingSkyFrame to the Living Sky tick loop via initLivingSky.
+ * then subscribes to #livingSkyFrame onMessage events. On each sky state message,
+ * both containers are updated with an atmospheric overlay via _applyAboutSkyState.
  *
- * @param {Function} $w - Wix element selector
- * @returns {{ stop: () => void }} Handle — call stop() to halt the sky animation loop.
+ * @param {Function} $w - Wix selector function
  */
 export function initAboutIllustrations($w) {
+  const teamSvg = getTeamPortraitSvg();
+  const timelineSvg = getTimelineSvg();
+
+  let teamContainer;
   try {
-    const teamContainer = $w('#teamPortraitContainer');
-    if (teamContainer) {
-      teamContainer.html = getTeamPortraitSvg();
-    }
+    teamContainer = $w('#teamPortraitContainer');
+    if (teamContainer) teamContainer.html = teamSvg;
   } catch (e) {
     console.error('[aboutIllustrations] Failed to inject team portrait:', e);
   }
+
+  let timelineContainer;
   try {
-    const timelineContainer = $w('#timelineContainer');
-    if (timelineContainer) {
-      timelineContainer.html = getTimelineSvg();
-    }
+    timelineContainer = $w('#timelineContainer');
+    if (timelineContainer) timelineContainer.html = timelineSvg;
   } catch (e) {
     console.error('[aboutIllustrations] Failed to inject timeline:', e);
   }
-  try {
-    return initLivingSky($w);
-  } catch (e) {
-    console.error('[aboutIllustrations] initLivingSky threw:', e);
-    return { stop: () => {} };
+
+  // Subscribe to LivingSkyState — only wrap the selector call; let onMessage callback errors surface
+  let livingSkyFrame;
+  try { livingSkyFrame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
+  if (livingSkyFrame && typeof livingSkyFrame.onMessage === 'function') {
+    livingSkyFrame.onMessage((event) => {
+      const state = event && event.data;
+      if (!state) return;
+      if (teamContainer) teamContainer.html = _applyAboutSkyState(teamSvg, state);
+      if (timelineContainer) timelineContainer.html = _applyAboutSkyState(timelineSvg, state);
+    });
   }
 }
