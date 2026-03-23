@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 (Wave 23 — illustration iteration 3, PR #752 review, dallas screen doc)
+
+### What worked well
+- File re-read before Edit: context compaction had dropped the file from context; read it first, then the Edit succeeded cleanly. Good discipline.
+- LivingSkyState field fix in Section 6 of illustration doc: caught the stale `skyGradient`/`ambientLight` references while editing the doc and fixed them in the same commit. No separate ticket needed.
+- Tree fill resolution: grepped the actual web SVG source (`contactIllustrations.js`) to get a definitive answer rather than reasoning from memory. `#4A7C59` confirmed by codebase. Immediate nudge to dallas with full context unblocked screen doc.
+- PR #752 review caught 4 blocking issues: feDisplacementMap in2 missing (silent no-op), LivingSkyState type guard never matches sender (entire wiring dead), partial token compliance, inner return hazard. All confirmed by code reader.
+
+### Gaps / improvement opportunities
+- LivingSkyState protocol mismatch is a recurring anti-pattern: PR #754 (previous wave) and PR #752 both had wrong field names or wrong message shape. Should explicitly include LivingSkyState protocol spec in every PR template that touches Living Sky code.
+
+### Pattern notes
+- `feDisplacementMap` requires explicit `in2` attribute pointing to `feTurbulence`'s `result`. Without it = identity transform = no texture. Check EVERY PR that uses feTurbulence.
+- LivingSkyState postMessage sender (`living-sky-wix.js`) posts RAW state — no `type` wrapper. Receivers must guard on `ridgeColors` presence, not `type === 'LivingSkyState'`.
+- Illustration spec docs: when adding palette sections, use existing CSS classes (`.palette-chips`, `.chip`, `.swatch`, `.brief-card`) for consistency. No new CSS needed.
+
+---
+
 ## Session 2026-03-23 (Wave 22 — illustration iteration, hookup guide sync, PR reviews)
 
 ### What worked well
