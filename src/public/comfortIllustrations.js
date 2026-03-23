@@ -46,3 +46,58 @@ export function getComfortSvg(slug) {
   if (!slug || typeof slug !== 'string') return null;
   return SVG_MAP[slug] || null;
 }
+
+// ── LivingSkyState wiring ─────────────────────────────────────────────────────
+
+const _SAFE_HEX = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/;
+
+const _COMFORT_STARS = [
+  [40, 20], [100, 12], [180, 25], [260, 8], [350, 18],
+  [460, 10], [560, 22], [650, 15], [720, 28], [780, 8],
+];
+
+function _applyComfortSkyState(svg, state) {
+  const isNight = Number(state.starOpacity) > 0;
+  const skyColor = state.skyColors && state.skyColors[0];
+  const safeColor = typeof skyColor === 'string' && _SAFE_HEX.test(skyColor) ? skyColor : null;
+  let overlay = '';
+  if (safeColor) {
+    const op = isNight ? 0.6 : 0.22;
+    overlay += `<rect width="800" height="500" fill="${safeColor}" opacity="${op}" id="sky-overlay"/>`;
+  }
+  if (isNight) {
+    overlay += '<g id="stars">';
+    for (const [x, y] of _COMFORT_STARS) {
+      overlay += `<circle cx="${x}" cy="${y}" r="1.5" fill="#FAF7F2" opacity="0.75"/>`;
+    }
+    overlay += '</g>';
+  }
+  if (!overlay) return svg;
+  return svg.replace('</svg>', overlay + '</svg>');
+}
+
+/**
+ * Initialize a comfort illustration on a Wix HtmlComponent.
+ * Sets initial SVG via getComfortSvg(slug) and subscribes to LivingSkyState.
+ * @param {Function} $w
+ * @param {string} slug - 'plush' | 'medium' | 'firm'
+ * @param {string} containerId
+ */
+export function initComfortIllustration($w, slug, containerId) {
+  try {
+    if (!$w) return;
+    const container = $w(containerId);
+    if (!container) return;
+    const baseSvg = getComfortSvg(slug) || '';
+    container.html = baseSvg;
+    let frame;
+    try { frame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
+    if (frame && typeof frame.onMessage === 'function') {
+      frame.onMessage((event) => {
+        const state = event && event.data;
+        if (!state) return;
+        container.html = _applyComfortSkyState(baseSvg, state);
+      });
+    }
+  } catch (e) { console.warn('[comfortIllustrations] initComfortIllustration failed:', e); }
+}
