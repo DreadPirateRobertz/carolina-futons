@@ -26,7 +26,7 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES } from '../src/public/gamificationTokens.js';
 
 beforeEach(() => {
@@ -893,5 +893,155 @@ describe('updateChallengeProgress', () => {
     __setQueryError(CHALLENGE_PROGRESS_COLLECTION, new Error('DB unavailable'));
     const result = await updateChallengeProgress('member-1', BASE_CHALLENGE, 'evt-001', new Date());
     expect(result.progressError).toBe(true);
+  });
+});
+
+// ── gamification_ar_used (+10 pts) ────────────────────────────────────────────
+
+describe('gamification_ar_used', () => {
+  it('awards POINT_VALUES.AR_USED (10) points to a new member', async () => {
+    const result = await receiveGamificationEvent('gamification_ar_used', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(POINT_VALUES.AR_USED);
+  });
+
+  it('awards AR_USED on top of existing balance', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
+    const result = await receiveGamificationEvent('gamification_ar_used', {}, 'mem-1');
+    expect(result.newTotal).toBe(50 + POINT_VALUES.AR_USED);
+  });
+});
+
+// ── gamification_wishlist_add (+2 pts, 5/day cap) ─────────────────────────────
+
+describe('gamification_wishlist_add', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('awards POINT_VALUES.WISHLIST_ADD (2) when under daily cap', async () => {
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(POINT_VALUES.WISHLIST_ADD);
+  });
+
+  it('awards 0 points when daily cap (5/day) is reached', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(50); // 0 effective points
+  });
+
+  it('awards points on exactly the 5th add today (4 existing entries)', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.newTotal).toBe(POINT_VALUES.WISHLIST_ADD);
+  });
+
+  it('writes a WishlistAddLog entry when cap not reached', async () => {
+    await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    const logs = __getInserted('WishlistAddLog');
+    expect(logs).toHaveLength(1);
+    expect(logs[0].memberId).toBe('mem-1');
+    expect(logs[0].date).toBe('2026-03-22');
+  });
+
+  it('does NOT write WishlistAddLog when cap is reached', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    const wishlistInserts = [];
+    __onInsert((collection, item) => {
+      if (collection === 'WishlistAddLog') wishlistInserts.push(item);
+    });
+    await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(wishlistInserts).toHaveLength(0);
+  });
+
+  it('only counts log entries for the correct member and date', async () => {
+    // Same date, different member — should not count against mem-1
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-other', date: '2026-03-22' },
+      { memberId: 'mem-other', date: '2026-03-22' },
+      { memberId: 'mem-other', date: '2026-03-22' },
+      { memberId: 'mem-other', date: '2026-03-22' },
+      { memberId: 'mem-other', date: '2026-03-22' },
+    ]);
+    const result = await receiveGamificationEvent('gamification_wishlist_add', {}, 'mem-1');
+    expect(result.newTotal).toBe(POINT_VALUES.WISHLIST_ADD);
+  });
+});
+
+// ── checkWishlistDailyCap ─────────────────────────────────────────────────────
+
+describe('checkWishlistDailyCap', () => {
+  it('returns { canEarn: true, count: 0 } when no entries today', async () => {
+    const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
+    expect(result).toEqual({ canEarn: true, count: 0 });
+  });
+
+  it('returns { canEarn: true, count: 3 } when 3 entries today', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
+    expect(result).toEqual({ canEarn: true, count: 3 });
+  });
+
+  it('returns { canEarn: false, count: 5 } when at cap', async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+      { memberId: 'mem-1', date: '2026-03-22' },
+    ]);
+    const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
+    expect(result).toEqual({ canEarn: false, count: 5 });
+  });
+
+  it("ignores yesterday's entries when checking today's cap", async () => {
+    __seed('WishlistAddLog', [
+      { memberId: 'mem-1', date: '2026-03-21' },
+      { memberId: 'mem-1', date: '2026-03-21' },
+      { memberId: 'mem-1', date: '2026-03-21' },
+      { memberId: 'mem-1', date: '2026-03-21' },
+      { memberId: 'mem-1', date: '2026-03-21' },
+    ]);
+    const result = await checkWishlistDailyCap('mem-1', '2026-03-22');
+    expect(result).toEqual({ canEarn: true, count: 0 });
+  });
+});
+
+// ── recordWishlistAdd ─────────────────────────────────────────────────────────
+
+describe('recordWishlistAdd', () => {
+  it('inserts a WishlistAddLog entry with memberId and date', async () => {
+    await recordWishlistAdd('mem-1', '2026-03-22');
+    const inserted = __getInserted('WishlistAddLog');
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0]).toMatchObject({ memberId: 'mem-1', date: '2026-03-22' });
   });
 });

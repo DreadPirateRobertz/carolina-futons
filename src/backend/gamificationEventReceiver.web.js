@@ -10,6 +10,8 @@
  *   gamification_submit_review    — +50 pts (+25 bonus if has_photo)
  *   gamification_referral_shared  — +100 pts
  *   gamification_order_complete   — +Math.floor(orderTotal) pts (0 if missing)
+ *   gamification_ar_used          — +POINT_VALUES.AR_USED (10 pts)
+ *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (2 pts), capped at 5/day
  *   (unknown)                     — no-op, returns current total
  *
  * CF-eo88, CF-9l0
@@ -25,6 +27,8 @@ const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
 const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
+const WISHLIST_ADD_LOG_COLLECTION = 'WishlistAddLog';
+const WISHLIST_DAILY_CAP = 5;
 
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
@@ -79,8 +83,17 @@ export const receiveGamificationEvent = webMethod(
       const yesterdayET = getYesterdayET();
       const streakState = updateStreakState(record || {}, todayET, yesterdayET);
 
-      // Apply streak multiplier to base points
-      const adjustedPoints = Math.round(basePoints * streakState.streakMultiplier);
+      // Phase 4: wishlist daily cap — check before applying streak multiplier
+      let effectiveBase = basePoints;
+      let canEarnWishlist = false;
+      if (eventName === 'gamification_wishlist_add') {
+        const { canEarn } = await checkWishlistDailyCap(memberId, todayET);
+        effectiveBase = canEarn ? basePoints : 0;
+        canEarnWishlist = canEarn;
+      }
+
+      // Apply streak multiplier to effective base points
+      const adjustedPoints = Math.round(effectiveBase * streakState.streakMultiplier);
       const newTotal = oldTotal + adjustedPoints + streakState.milestoneBonus;
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;
@@ -103,6 +116,15 @@ export const receiveGamificationEvent = webMethod(
         await wixData.update(MEMBER_POINTS_COLLECTION, { ...record, ...updatedRecord });
       } else {
         await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord });
+      }
+
+      // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
+      if (canEarnWishlist) {
+        try {
+          await recordWishlistAdd(memberId, todayET);
+        } catch (err) {
+          logError(`gamificationEventReceiver — recordWishlistAdd failed for ${memberId}`, err, { silent: true });
+        }
       }
 
       // Phase 2: award week_wanderer badge on 7-day milestone (de-dup guarded)
@@ -157,6 +179,10 @@ function resolvePoints(eventName, payload) {
       return Math.floor(payload?.orderTotal || 0);
     case 'gamification_spin_completed':
       return 0;
+    case 'gamification_ar_used':
+      return POINT_VALUES.AR_USED;
+    case 'gamification_wishlist_add':
+      return POINT_VALUES.WISHLIST_ADD;
     default:
       return null;
   }
@@ -338,4 +364,34 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
     logError(`updateChallengeProgress — failed for member ${memberId} challenge ${challengeId}`, err, { silent: true });
     return { ...base, progressValue: 0, justCompleted: false, completedAt: null, progressError: true };
   }
+}
+
+// ── Phase 4: Wishlist daily cap helpers ───────────────────────────────────────
+
+/**
+ * Check whether a member can earn points for a wishlist add today.
+ * Returns count of today's WishlistAddLog entries for the member.
+ *
+ * @param {string} memberId
+ * @param {string} todayET  - ET date string e.g. "2026-03-22"
+ * @returns {Promise<{ canEarn: boolean, count: number }>}
+ */
+export async function checkWishlistDailyCap(memberId, todayET) {
+  const results = await wixData.query(WISHLIST_ADD_LOG_COLLECTION)
+    .eq('memberId', memberId)
+    .eq('date', todayET)
+    .find({ suppressAuth: true });
+  const count = results.items.length;
+  return { canEarn: count < WISHLIST_DAILY_CAP, count };
+}
+
+/**
+ * Record a wishlist add in WishlistAddLog.
+ * Must be called AFTER the MemberPoints write.
+ *
+ * @param {string} memberId
+ * @param {string} todayET  - ET date string e.g. "2026-03-22"
+ */
+export async function recordWishlistAdd(memberId, todayET) {
+  await wixData.insert(WISHLIST_ADD_LOG_COLLECTION, { memberId, date: todayET });
 }
