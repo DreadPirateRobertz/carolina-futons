@@ -86,10 +86,10 @@ function createQueryBuilder(collection) {
   const builder = {
     eq(field, value) { filters.push(item => getField(item, field) === value); return builder; },
     ne(field, value) { filters.push(item => getField(item, field) !== value); return builder; },
-    gt(field, value) { filters.push(item => (getField(item, field) || 0) > value); return builder; },
-    ge(field, value) { filters.push(item => (getField(item, field) || 0) >= value); return builder; },
-    lt(field, value) { filters.push(item => (getField(item, field) || 0) < value); return builder; },
-    le(field, value) { filters.push(item => (getField(item, field) || 0) <= value); return builder; },
+    gt(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v > value; }); return builder; },
+    ge(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v >= value; }); return builder; },
+    lt(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v < value; }); return builder; },
+    le(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v <= value; }); return builder; },
     hasSome(field, values) {
       filters.push(item => {
         const v = getField(item, field);
