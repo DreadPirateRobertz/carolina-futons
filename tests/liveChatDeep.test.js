@@ -103,23 +103,30 @@ describe('getOfficeHoursStatus', () => {
   });
 
   it('loads custom office hours from ChatConfig', async () => {
-    // Custom config: always open (all days 00:00–23:59)
-    const customHours = {
-      timezone: 'America/New_York',
-      schedule: {
-        0: { open: '00:00', close: '23:59' },
-        1: { open: '00:00', close: '23:59' },
-        2: { open: '00:00', close: '23:59' },
-        3: { open: '00:00', close: '23:59' },
-        4: { open: '00:00', close: '23:59' },
-        5: { open: '00:00', close: '23:59' },
-        6: { open: '00:00', close: '23:59' },
-      },
-    };
-    __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(customHours) }]);
-    const result = await getOfficeHoursStatus();
-    expect(result.isOnline).toBe(true);
-    expect(result.message).toContain('online');
+    // Pin clock to midday ET to avoid near-23:59 wall-clock flake (CF-q5ze)
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00'));
+    try {
+      // Custom config: always open (all days 00:00–23:59)
+      const customHours = {
+        timezone: 'America/New_York',
+        schedule: {
+          0: { open: '00:00', close: '23:59' },
+          1: { open: '00:00', close: '23:59' },
+          2: { open: '00:00', close: '23:59' },
+          3: { open: '00:00', close: '23:59' },
+          4: { open: '00:00', close: '23:59' },
+          5: { open: '00:00', close: '23:59' },
+          6: { open: '00:00', close: '23:59' },
+        },
+      };
+      __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(customHours) }]);
+      const result = await getOfficeHoursStatus();
+      expect(result.isOnline).toBe(true);
+      expect(result.message).toContain('online');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('falls back to defaults when custom config is invalid JSON', async () => {
@@ -130,21 +137,28 @@ describe('getOfficeHoursStatus', () => {
   });
 
   it('returns closesAt when online', async () => {
-    const allOpen = {
-      timezone: 'America/New_York',
-      schedule: {
-        0: { open: '00:00', close: '23:59' },
-        1: { open: '00:00', close: '23:59' },
-        2: { open: '00:00', close: '23:59' },
-        3: { open: '00:00', close: '23:59' },
-        4: { open: '00:00', close: '23:59' },
-        5: { open: '00:00', close: '23:59' },
-        6: { open: '00:00', close: '23:59' },
-      },
-    };
-    __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(allOpen) }]);
-    const result = await getOfficeHoursStatus();
-    expect(result.closesAt).toBe('23:59');
+    // Pin clock to midday ET to avoid near-23:59 wall-clock flake (CF-q5ze)
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-06-11T16:00:00-04:00'));
+    try {
+      const allOpen = {
+        timezone: 'America/New_York',
+        schedule: {
+          0: { open: '00:00', close: '23:59' },
+          1: { open: '00:00', close: '23:59' },
+          2: { open: '00:00', close: '23:59' },
+          3: { open: '00:00', close: '23:59' },
+          4: { open: '00:00', close: '23:59' },
+          5: { open: '00:00', close: '23:59' },
+          6: { open: '00:00', close: '23:59' },
+        },
+      };
+      __seed('ChatConfig', [{ key: 'officeHours', value: JSON.stringify(allOpen) }]);
+      const result = await getOfficeHoursStatus();
+      expect(result.closesAt).toBe('23:59');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('returns nextOpen when closed on a day with null schedule', async () => {
