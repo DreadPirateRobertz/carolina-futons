@@ -76,7 +76,47 @@ const STYLE_CATEGORY_MAP = {
   'space-saving':['wall-huggers', 'murphy-cabinet-beds'],
 };
 
+// Claude API configuration
+const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const CLAUDE_MODEL = 'claude-sonnet-4-6';
+const CLAUDE_MAX_TOKENS = 512;
+const CLAUDE_ANTHROPIC_VERSION = '2023-06-01';
+
+const STYLE_SYSTEM_PROMPT = `You are a furniture and home decor style analyst for Carolina Futons.
+Analyze the provided room photo and/or text description to infer style preferences and furniture needs.
+
+Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
+{
+  "styleTags": ["tag1", "tag2"],
+  "explanation": "Brief 1-2 sentence explanation of the style analysis."
+}
+
+Valid style tags — pick 1-4 most relevant:
+modern, minimalist, industrial, mid-century, coastal, traditional, rustic, bohemian,
+sleeping, sitting, space-saving`;
+
 // ── Helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Convert a Wix Media internal URI to a publicly accessible CDN URL suitable
+ * for inclusion in Claude API image content blocks.
+ *
+ * wix:image://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
+ * wixstatic.com / wixmp.com CDN URLs are returned as-is.
+ *
+ * @param {string} wixUrl
+ * @returns {string|null} Public CDN URL, or null if conversion fails
+ */
+export function _wixMediaToCdnUrl(wixUrl) {
+  if (typeof wixUrl !== 'string' || !wixUrl.trim()) return null;
+  const url = wixUrl.trim();
+  // Already a CDN URL — usable directly
+  if (url.startsWith('https://')) return url;
+  // wix:image://v1/{mediaId}/filename.jpg#...  or  wix:video://v1/...
+  const match = url.match(/^wix:(?:image|video):\/\/v1\/([^/#?]+)/);
+  if (!match) return null;
+  return `https://static.wixstatic.com/media/${match[1]}`;
+}
 
 /**
  * Validate the session key format.
@@ -212,16 +252,72 @@ async function callClaudeVision(photoUrl, textInput) {
   if (_callClaudeVisionImpl) {
     return _callClaudeVisionImpl(photoUrl, textInput);
   }
-  // STUB: replace with real implementation after zhora review
-  // Expected implementation outline:
-  //   1. Fetch ANTHROPIC_API_KEY from wixSecretsManager
-  //   2. Build Claude messages array:
-  //      - system: style analysis prompt scoped to futon/furniture
-  //      - user: text + optional image_url content block
-  //   3. Call claude-sonnet-4-6 via fetch (wix-fetch)
-  //   4. Parse response: extract style tags + explanation
-  //   5. Handle errors: rate limit (429), context length, content policy
-  throw new Error('Claude vision call not yet implemented — pending zhora rate limit review (CF-vu30)');
+
+  // Load API key from Wix Secrets Manager
+  const { getSecret } = await import('wix-secrets-backend');
+  const apiKey = await getSecret('ANTHROPIC_API_KEY');
+
+  // Build user content blocks — image first (if provided), then text prompt
+  const contentBlocks = [];
+
+  if (photoUrl) {
+    const cdnUrl = _wixMediaToCdnUrl(photoUrl);
+    if (cdnUrl) {
+      contentBlocks.push({
+        type: 'image',
+        source: { type: 'url', url: cdnUrl },
+      });
+    }
+  }
+
+  const textPrompt = textInput
+    ? `Analyze this room for furniture style. The customer says: "${textInput}"`
+    : 'Analyze this room photo for furniture style preferences.';
+  contentBlocks.push({ type: 'text', text: textPrompt });
+
+  // Call Claude API via wix-fetch
+  const { fetch } = await import('wix-fetch');
+  const res = await fetch(CLAUDE_API_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: CLAUDE_MAX_TOKENS,
+      system: STYLE_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: contentBlocks }],
+    }),
+  });
+
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 429) throw new Error('claude_rate_limited');
+    if (status === 401) throw new Error('claude_auth_error');
+    if (status === 400) throw new Error('claude_bad_request');
+    throw new Error(`claude_api_error_${status}`);
+  }
+
+  const data = await res.json();
+  const raw = data?.content?.[0]?.text;
+  if (typeof raw !== 'string' || !raw.trim()) throw new Error('claude_empty_response');
+
+  // Parse JSON — Claude may occasionally wrap in a markdown code fence
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (_) {
+    const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (!fence) throw new Error('claude_parse_error');
+    parsed = JSON.parse(fence[1]);
+  }
+
+  const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
+  const explanation = typeof parsed?.explanation === 'string' ? parsed.explanation : '';
+
+  return { styleTags, explanation };
 }
 
 /**
@@ -392,6 +488,7 @@ export const getStyleConsultation = webMethod(
 
 // ── Export internals for testing ─────────────────────────────────────
 export { getProductRecommendations as _getProductRecommendations };
+export { callClaudeVision as _callClaudeVision };
 
 /**
  * Inject a mock implementation for callClaudeVision in tests.
