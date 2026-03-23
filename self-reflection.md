@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont-8 (Phase 8 LivingSky dispatch + refinery wave)
+
+### What worked well
+- **Plan review loop caught real bugs**: plan-document-reviewer surfaced wrong container IDs (#aboutTeamPortrait vs #teamPortraitContainer), wrong SVG dimensions (400/800 vs 900/1200), and missing night-mode test. Two-iteration loop → ✅ APPROVED. Never skip the review loop.
+- **gt sling order matters**: `gt sling <bead> <target>` — bead first, target second. Confirmed this now documented.
+- **Dispatching all 4 illustration modules to different crew members** (miquella/godfrey/radahn/rennala) cleared 5 idle sessions + the badge sourcing bead. WATCHDOG cleared same wave.
+- **Autonomous Phase 8 go signal**: Stilgar "you got it" + "phase 8 design doc is a go" = full execution authority. Wrote plan, created beads, slung to crew, monitored PRs, all without further check-ins.
+- **Context compaction recovery**: Refinery task IDs cleared on compact — immediately re-dispatched without asking user. Picked up from last known state via CI check.
+
+### Gaps / improvement opportunities
+- `bd assign` doesn't exist — use `bd update <id> --assignee <path>`. Test GT commands before assuming flags.
+- `gt mail` denied for routine status — strictly use `gt nudge` for inter-agent status. Mail = handoffs + escalations ONLY.
+- Wrong-branch commit: pushed plan fix from rennala's feature branch → used `git push origin HEAD:main` to rescue. Always check `git branch --show-current` before committing plan/docs changes.
+
+### Pattern notes
+- Phase 8 refinery found SAFE_HEX_RE variance: comfort/onboarding use stricter `/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/` vs reference `/^#[0-9A-Fa-f]{3,8}$/`. Stricter = correct for LivingSkyState (always 6-char hex). Acceptable variance — document in PR comment.
+- All 82 inbox messages unread after context compact. No new mail from today. Nudge was from previous session (not a new mail).
+
 ## Session 2026-03-23 cont-7 (Illustration rename + PR #770 queue)
 
 ### What worked well
