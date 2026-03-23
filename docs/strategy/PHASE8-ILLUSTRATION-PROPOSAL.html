@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CF Illustration Asset Proposal — Web + Mobile</title>
+<style>
+  :root {
+    --espresso: #3A2518;
+    --espresso-light: #5C4033;
+    --mountain: #5B8FA8;
+    --mountain-dark: #3D6B80;
+    --mountain-lt: #A8CCD8;
+    --coral: #E8845C;
+    --coral-lt: #F2A882;
+    --sand: #E8D5B7;
+    --sand-lt: #F2E8D5;
+    --sand-dk: #D4BC96;
+    --forest: #4A7C59;
+    --gold: #F0C87A;
+    --sky-top: #B8D4E3;
+    --off-white: #FAF7F2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--espresso);
+    color: var(--sand-lt);
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+  }
+
+  /* ── Hero ──────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(160deg, var(--mountain-dark) 0%, var(--espresso) 60%);
+    padding: 60px 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 60' preserveAspectRatio='none'%3E%3Cpath d='M0,60 L0,28 C80,22 120,8 200,5 C280,2 320,18 400,15 C480,12 520,0 600,3 C680,6 720,22 800,18 C880,14 920,4 1000,8 C1080,12 1120,26 1200,22 C1280,18 1320,8 1400,12 L1440,14 L1440,60Z' fill='%233A2518'/%3E%3C/svg%3E") no-repeat bottom center;
+    background-size: cover;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--coral);
+    color: white;
+    font-size: 11px;
+    font-family: monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 36px;
+    font-weight: normal;
+    color: var(--off-white);
+    line-height: 1.2;
+    max-width: 680px;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 16px;
+    color: var(--mountain-lt);
+    max-width: 640px;
+    opacity: 0.85;
+  }
+  .meta-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 28px;
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--sand-dk);
+    opacity: 0.7;
+  }
+
+  /* ── Layout ─────────────────────────────────────── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* ── Section ────────────────────────────────────── */
+  .section {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid rgba(91,143,168,0.15);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .section-num {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--coral);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: normal;
+    color: var(--off-white);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--mountain-lt);
+    opacity: 0.75;
+    margin-top: 6px;
+    max-width: 680px;
+  }
+
+  /* ── Asset Grid ──────────────────────────────────── */
+  .asset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .asset-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(91,143,168,0.12);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .asset-card .preview {
+    background: var(--off-white);
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .asset-card .preview svg { max-width: 100%; max-height: 100%; }
+  .asset-card .info {
+    padding: 14px 16px;
+  }
+  .asset-card .info h4 {
+    font-size: 13px;
+    color: var(--off-white);
+    margin-bottom: 4px;
+    font-family: monospace;
+  }
+  .asset-card .info p {
+    font-size: 12px;
+    color: var(--mountain-lt);
+    opacity: 0.7;
+    line-height: 1.5;
+  }
+  .status-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-family: monospace;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+  .status-live { background: rgba(74,124,89,0.25); color: #7DC48B; border: 1px solid rgba(74,124,89,0.3); }
+  .status-phase8 { background: rgba(232,132,92,0.2); color: var(--coral-lt); border: 1px solid rgba(232,132,92,0.3); }
+  .status-proposed { background: rgba(91,143,168,0.2); color: var(--mountain-lt); border: 1px solid rgba(91,143,168,0.3); }
+
+  /* ── Phase Map ───────────────────────────────────── */
+  .phase-map {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .phase-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(91,143,168,0.1);
+    border-radius: 6px;
+  }
+  .phase-row:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(91,143,168,0.2);
+  }
+  .phase-label {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--coral);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .phase-name {
+    font-size: 14px;
+    color: var(--off-white);
+  }
+  .phase-existing {
+    font-size: 12px;
+    color: var(--mountain-lt);
+    opacity: 0.75;
+    line-height: 1.5;
+  }
+  .phase-proposed {
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.85;
+    line-height: 1.5;
+  }
+  .col-header {
+    font-size: 10px;
+    font-family: monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mountain-lt);
+    opacity: 0.5;
+    margin-bottom: 8px;
+  }
+
+  /* ── Choice Cards ────────────────────────────────── */
+  .choice-group {
+    margin-bottom: 48px;
+  }
+  .choice-group h3 {
+    font-size: 17px;
+    font-weight: normal;
+    color: var(--off-white);
+    margin-bottom: 6px;
+  }
+  .choice-group .desc {
+    font-size: 13px;
+    color: var(--mountain-lt);
+    opacity: 0.7;
+    margin-bottom: 24px;
+  }
+  .choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 860px) { .choices { grid-template-columns: 1fr; } }
+  .choice-card {
+    border: 2px solid rgba(91,143,168,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .choice-card.recommended {
+    border-color: var(--coral);
+    box-shadow: 0 0 0 1px rgba(232,132,92,0.2);
+  }
+  .choice-card .choice-preview {
+    background: var(--off-white);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+  }
+  .choice-card .choice-preview svg { display: block; width: 100%; }
+  .choice-card .choice-info {
+    padding: 16px;
+    background: rgba(255,255,255,0.04);
+  }
+  .choice-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .choice-alpha {
+    font-family: monospace;
+    font-size: 12px;
+    background: rgba(91,143,168,0.2);
+    color: var(--mountain-lt);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  .choice-card.recommended .choice-alpha {
+    background: rgba(232,132,92,0.25);
+    color: var(--coral-lt);
+  }
+  .choice-title {
+    font-size: 14px;
+    color: var(--off-white);
+  }
+  .rec-badge {
+    font-size: 9px;
+    font-family: monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--coral);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .choice-body {
+    font-size: 12px;
+    color: var(--mountain-lt);
+    opacity: 0.75;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .pros-cons {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    font-family: monospace;
+  }
+  .pro { color: #7DC48B; }
+  .con { color: #E88;opacity:0.7; }
+
+  /* ── Priority Matrix ─────────────────────────────── */
+  .matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .matrix th {
+    text-align: left;
+    padding: 10px 16px;
+    background: rgba(91,143,168,0.1);
+    color: var(--mountain-lt);
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(91,143,168,0.2);
+  }
+  .matrix td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(91,143,168,0.08);
+    vertical-align: top;
+  }
+  .matrix tr:hover td { background: rgba(255,255,255,0.02); }
+  .matrix .pri-0 { color: var(--coral); font-family: monospace; font-size: 11px; }
+  .matrix .pri-1 { color: var(--gold); font-family: monospace; font-size: 11px; }
+  .matrix .pri-2 { color: var(--mountain-lt); font-family: monospace; font-size: 11px; }
+  .matrix .owner-col { font-family: monospace; font-size: 11px; color: var(--mountain-lt); opacity: 0.7; }
+  .matrix .effort-col { font-family: monospace; font-size: 11px; }
+  .effort-s { color: #7DC48B; }
+  .effort-m { color: var(--gold); }
+  .effort-l { color: var(--coral-lt); }
+
+  /* ── Artist Brief ─────────────────────────────────── */
+  .brief-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .brief-grid { grid-template-columns: 1fr; } }
+  .brief-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(91,143,168,0.1);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .brief-card h4 {
+    font-size: 13px;
+    color: var(--coral-lt);
+    font-family: monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .brief-card ul {
+    padding-left: 16px;
+    font-size: 13px;
+    color: var(--sand-lt);
+    opacity: 0.8;
+    line-height: 1.7;
+  }
+  .palette-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: monospace;
+    color: var(--sand-lt);
+    opacity: 0.75;
+  }
+  .swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* ── Mobile divider ──────────────────────────────── */
+  .mobile-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .mobile-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(91,143,168,0.12);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .mobile-card h4 {
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--off-white);
+    margin-bottom: 6px;
+  }
+  .mobile-card p {
+    font-size: 11px;
+    color: var(--mountain-lt);
+    opacity: 0.7;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  /* ── Footnote ────────────────────────────────────── */
+  .footnote {
+    padding: 32px 0;
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--mountain-lt);
+    opacity: 0.4;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-badge">Illustration Asset Proposal</div>
+    <h1>Carolina Futons — Web + Mobile Illustration System</h1>
+    <p>Complete audit of all illustration assets across web and mobile. Phase 1–7 reinforcement map, Phase 8 wiring choices, priority sequencing, and artist brief. For review by Stilgar before implementation begins.</p>
+    <div class="meta-row">
+      <span>Prepared: 2026-03-23</span>
+      <span>PM: melania (cfutons/crew)</span>
+      <span>Mobile coord: dallas (cfutons_mobile)</span>
+      <span>Decision gate: stilgar approval required before Phase 8</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 1: WEB INVENTORY ───────────────────────────────────── -->
+<div class="container">
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <div>
+      <div class="section-title">Web Illustration Inventory</div>
+      <div class="section-desc">All SVG illustration modules currently in <code>src/public/</code>. Static = built, no LivingSky wiring. Phase 8 = wiring target.</div>
+    </div>
+  </div>
+
+  <div class="asset-grid">
+
+    <!-- Mountain Skyline Header -->
+    <div class="asset-card">
+      <div class="preview">
+        <svg viewBox="0 0 400 80" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="inv-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.8"/>
+              <stop offset="50%" stop-color="#F0C87A" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="80" fill="url(#inv-sky)"/>
+          <path d="M0,80 L0,30 C30,25 50,15 80,12 C110,9 130,20 160,17 C190,14 210,5 240,8 C270,11 290,22 320,18 C350,14 375,8 400,10 L400,80Z" fill="#3D6B80" opacity="0.18"/>
+          <path d="M0,80 L0,38 C28,33 48,22 78,18 C108,14 128,26 160,23 C192,20 212,10 242,12 C272,14 292,25 322,22 C352,19 378,13 400,15 L400,80Z" fill="#5B8FA8" opacity="0.3"/>
+          <path d="M0,80 L0,48 C30,44 52,35 82,31 C112,27 135,38 165,35 C195,32 218,23 248,25 C278,27 300,37 330,34 C360,31 382,25 400,26 L400,80Z" fill="#5C4033" opacity="0.45"/>
+          <path d="M0,80 L0,58 C32,54 55,46 88,43 C121,40 144,50 175,48 C206,46 228,38 258,40 C288,42 310,51 340,48 C370,45 388,40 400,41 L400,80Z" fill="#3A2518" opacity="0.6"/>
+          <path d="M88,64 L91,52 C93,46 96,43 98,46 L101,52 L104,64Z" fill="#4A7C59" opacity="0.5"/>
+          <path d="M220,60 L223,50 C225,44 227,41 229,44 L231,50 L233,60Z" fill="#4A7C59" opacity="0.45"/>
+          <path d="M350,62 L353,53 C355,47 357,44 359,47 L361,53 L363,62Z" fill="#4A7C59" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>MountainSkyline.js</h4>
+        <p>7-layer atmospheric ridgeline for all page headers. Sunrise/sunset gradient presets. 1440×200 viewBox. Supports transparent mode for dark dividers.</p>
+        <span class="status-tag status-live">Live</span>
+      </div>
+    </div>
+
+    <!-- Contact Showroom -->
+    <div class="asset-card">
+      <div class="preview">
+        <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cs-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#B8D4E3"/>
+              <stop offset="40%" stop-color="#F0C87A" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="140" fill="url(#cs-sky)"/>
+          <path d="M0,90 C20,85 40,75 65,70 C90,65 110,75 135,70 C160,65 178,58 200,55 L200,140 L0,140Z" fill="#5B8FA8" opacity="0.3"/>
+          <path d="M0,105 C22,100 45,92 72,88 C99,84 118,94 145,90 C172,86 185,80 200,78 L200,140 L0,140Z" fill="#3A2518" opacity="0.5"/>
+          <!-- Cabin -->
+          <rect x="75" y="88" width="50" height="30" fill="#5C4033" opacity="0.8" rx="1"/>
+          <polygon points="70,90 100,72 130,90" fill="#3A2518" opacity="0.85"/>
+          <rect x="84" y="103" width="12" height="15" fill="#F2E8D5" opacity="0.6" rx="1"/>
+          <rect x="101" y="96" width="14" height="10" fill="#B8D4E3" opacity="0.5" rx="1"/>
+          <!-- Chimney smoke -->
+          <rect x="97" y="75" width="4" height="14" fill="#3A2518" opacity="0.5" rx="1"/>
+          <ellipse cx="99" cy="72" rx="6" ry="4" fill="#FAF7F2" opacity="0.15"/>
+          <!-- Map pin -->
+          <circle cx="99" cy="58" r="10" fill="#E8845C" opacity="0.15"/>
+          <path d="M99 68 L93 58 C92 54 94 50 99 49 C104 50 106 54 105 58 Z" fill="#E8845C" opacity="0.9"/>
+          <circle cx="99" cy="54" r="3" fill="white" opacity="0.8"/>
+          <!-- Trees -->
+          <path d="M28 110 L31 98 C32 93 34 91 35 93 L38 98 L40 110Z" fill="#4A7C59" opacity="0.55"/>
+          <path d="M158 108 L161 97 C162 92 164 90 165 92 L167 97 L169 108Z" fill="#4A7C59" opacity="0.5"/>
+          <!-- Foreground sand -->
+          <path d="M0,120 C40,116 80,112 120,110 C160,108 185,114 200,112 L200,140 L0,140Z" fill="#E8D5B7" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>contactIllustrations.js</h4>
+        <p>Cozy mountain cabin showroom scene (400×280) + wide hero skyline (1440×220). Static SVG content, Figma pipeline output. Phase 8 target: wire to LivingSkyState for sky/ambient shift.</p>
+        <span class="status-tag status-live">Live — static</span>
+        <span class="status-tag status-phase8">Phase 8 target</span>
+      </div>
+    </div>
+
+    <!-- Footer Mountain Divider -->
+    <div class="asset-card">
+      <div class="preview" style="background:#3A2518; padding:0;">
+        <svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;">
+          <path d="M0,40 L0,18 C28,14 45,6 72,4 C99,2 118,12 145,9 C172,6 188,0 215,2 C242,4 258,14 285,11 C312,8 330,3 358,5 L400,7 L400,40Z" fill="#5B8FA8" opacity="0.22"/>
+          <path d="M0,40 L0,26 C30,22 48,14 78,12 C108,10 125,20 155,17 C185,14 202,6 230,8 C258,10 275,19 305,16 C335,13 355,8 385,10 L400,11 L400,40Z" fill="#5C4033" opacity="0.4"/>
+          <path d="M0,40 L0,32 C35,28 55,22 88,19 C121,16 140,25 172,22 C204,19 222,12 252,14 C282,16 300,24 330,21 C360,18 378,14 400,15 L400,40Z" fill="#3A2518" opacity="0.75"/>
+          <path d="M45,36 L47,28 C48,24 50,22 51,24 L53,28 L55,36Z" fill="#4A7C59" opacity="0.4"/>
+          <path d="M185,34 L187,27 C188,23 190,21 191,23 L193,27 L195,34Z" fill="#4A7C59" opacity="0.35"/>
+          <path d="M330,35 L332,28 C333,25 335,23 336,25 L338,28 L340,35Z" fill="#4A7C59" opacity="0.38"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>FooterSection.js — footerMountainDivider</h4>
+        <p>3-layer mountain silhouette above footer. 1440×80 viewBox, preserveAspectRatio="none". Currently static fill colors. Phase 8 target: wire to LivingSkyState.ridgeColors.</p>
+        <span class="status-tag status-live">Live — static</span>
+        <span class="status-tag status-phase8">Phase 8 target</span>
+      </div>
+    </div>
+
+    <!-- Empty State / Cart Illustrations -->
+    <div class="asset-card">
+      <div class="preview">
+        <svg viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="es-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.8"/>
+              <stop offset="50%" stop-color="#F2A882" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+          </defs>
+          <rect width="140" height="100" fill="url(#es-sky)"/>
+          <circle cx="105" cy="22" r="12" fill="#F2A882" opacity="0.65"/>
+          <circle cx="105" cy="22" r="7" fill="#E8845C" opacity="0.5"/>
+          <path d="M0,100 L0,50 C15,45 25,35 42,30 C59,25 68,38 85,33 C102,28 112,18 128,22 C134,24 138,32 140,35 L140,100Z" fill="#5B8FA8" opacity="0.25"/>
+          <path d="M0,100 L0,64 C18,60 30,52 48,48 C66,44 78,54 96,50 C114,46 125,38 140,40 L140,100Z" fill="#3A2518" opacity="0.55"/>
+          <path d="M0,100 L0,75 C22,71 36,65 55,62 C74,59 85,68 103,65 C121,62 130,56 140,55 L140,100Z" fill="#3A2518" opacity="0.68"/>
+          <path d="M22,84 L24,76 C25,72 27,70 28,72 L29,76 L31,84Z" fill="#4A7C59" opacity="0.45"/>
+          <rect width="140" height="100" fill="#E8D5B7" opacity="0.12" rx="0"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>illustrations.js + CartIllustrations.js</h4>
+        <p>Empty cart, wishlist, order history, and onboarding mountain scenes. 280×200 viewBox. Procedurally generated via seeded PRNG in illustrationShared.js.</p>
+        <span class="status-tag status-live">Live</span>
+      </div>
+    </div>
+
+    <!-- About Illustrations -->
+    <div class="asset-card">
+      <div class="preview" style="background:#F5F0E8;">
+        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="120" fill="#F2E8D5"/>
+          <circle cx="150" cy="30" r="22" fill="#F0C87A" opacity="0.5"/>
+          <path d="M0,120 L0,55 C25,48 42,34 65,28 C88,22 105,35 130,29 C155,23 172,14 198,18 L200,18 L200,120Z" fill="#5B8FA8" opacity="0.2"/>
+          <path d="M0,120 L0,70 C28,65 48,55 75,50 C102,45 118,57 145,52 C172,47 188,40 200,38 L200,120Z" fill="#4A7C59" opacity="0.35"/>
+          <path d="M0,120 L0,82 C30,78 52,70 80,67 C108,64 125,73 152,69 C179,65 188,60 200,58 L200,120Z" fill="#3A2518" opacity="0.65"/>
+          <!-- Store front hint -->
+          <rect x="70" y="72" width="60" height="32" fill="#5C4033" opacity="0.6" rx="1"/>
+          <rect x="82" y="82" width="14" height="18" fill="#B8D4E3" opacity="0.4" rx="1"/>
+          <rect x="104" y="82" width="14" height="18" fill="#B8D4E3" opacity="0.4" rx="1"/>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>aboutIllustrations.js</h4>
+        <p>Store history, team, and heritage scenes with mountain backdrop and warm daylight palette.</p>
+        <span class="status-tag status-live">Live</span>
+      </div>
+    </div>
+
+    <!-- Badge / Achievement Icons -->
+    <div class="asset-card">
+      <div class="preview" style="background:#2A1A10; display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; padding:12px;">
+        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" fill="#3D6B80" opacity="0.8" stroke="#5B8FA8" stroke-width="1.5"/>
+          <text x="24" y="30" text-anchor="middle" font-size="20">🏔️</text>
+        </svg>
+        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" fill="#5C4033" opacity="0.8" stroke="#F0C87A" stroke-width="1.5"/>
+          <text x="24" y="30" text-anchor="middle" font-size="20">🔥</text>
+        </svg>
+        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" fill="#2E4A38" opacity="0.8" stroke="#4A7C59" stroke-width="1.5"/>
+          <text x="24" y="30" text-anchor="middle" font-size="20">⭐</text>
+        </svg>
+        <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" fill="#4A2A18" opacity="0.8" stroke="#E8845C" stroke-width="1.5"/>
+          <text x="24" y="30" text-anchor="middle" font-size="20">🎯</text>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>badgeHelpers.js</h4>
+        <p>Achievement badge icon system. Circular frames with CF palette backgrounds. Used by gamification phases 2–5 for reward UI.</p>
+        <span class="status-tag status-live">Live</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SECTION 2: MOBILE INVENTORY ────────────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <div>
+      <div class="section-title">Mobile Illustration Inventory</div>
+      <div class="section-desc">React Native SVG components in cfutons_mobile. All merged to main per dallas. Uses <code>react-native-svg</code> wrapper; pure SVG path data ports cleanly from web viewBoxes.</div>
+    </div>
+  </div>
+
+  <div class="mobile-section-grid">
+    <div class="mobile-card">
+      <h4>App Icon</h4>
+      <p>Mountain silhouette master SVG. burke, PR #271 merged. Exportable to all iOS/Android sizes.</p>
+      <span class="status-tag status-live">Merged</span>
+    </div>
+    <div class="mobile-card">
+      <h4>Splash Screen</h4>
+      <p>Golden hour Living Sky scene with dawn gradient. hicks, PR #281 merged. Uses same ridgeTable values as web Living Sky.</p>
+      <span class="status-tag status-live">Merged</span>
+    </div>
+    <div class="mobile-card">
+      <h4>LivingSkyBackground</h4>
+      <p>4-stop animated LinearGradient sky. burke, PR #288 merged. Responds to useLivingSky state hook.</p>
+      <span class="status-tag status-live">Merged</span>
+    </div>
+    <div class="mobile-card">
+      <h4>LivingSkyMountainSkyline</h4>
+      <p>4-ridge renderer (distant/far/mid/near). ripley, PR #270 merged. viewBox matches web header (1040×150). ridgeTable values frozen.</p>
+      <span class="status-tag status-live">Merged</span>
+    </div>
+    <div class="mobile-card">
+      <h4>WildlifeLayer</h4>
+      <p>Animated birds, fireflies, owls layered over sky. bishop, PR #284 merged. Time-gated: birds=day, fireflies=dusk, owls=night.</p>
+      <span class="status-tag status-live">Merged</span>
+    </div>
+    <div class="mobile-card">
+      <h4>Footer Divider (mobile)</h4>
+      <p>viewBox 0 0 1440 80 — dallas confirms ports directly via react-native-svg wrapper. No mobile-specific version needed; reuse web SVG path data.</p>
+      <span class="status-tag status-phase8">Phase 8 port</span>
+    </div>
+    <div class="mobile-card">
+      <h4>Contact Showroom Scene</h4>
+      <p>CSS animations (smoke) need mobile-specific version (opacity animation via Animated API). Core path geometry ports cleanly. ripley or burke to implement.</p>
+      <span class="status-tag status-proposed">Proposed — ripley/burke</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 3: PHASE REINFORCEMENT MAP ─────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <div>
+      <div class="section-title">Phase 1–7 Illustration Reinforcement</div>
+      <div class="section-desc">Each gamification phase and the illustration work that deepens its visual identity. Column headers: what exists now vs. what we can add.</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:180px 1fr 1fr; gap:8px; margin-bottom:12px; padding:0 16px;">
+    <div class="col-header">Phase</div>
+    <div class="col-header">Existing Illustration Assets</div>
+    <div class="col-header">Reinforcement Opportunities</div>
+  </div>
+
+  <div class="phase-map">
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 1</div>
+        <div class="phase-name">Spin Wheel</div>
+      </div>
+      <div class="phase-existing">
+        Mountain scene background via MountainSkyline.js on the member page. Badge icons for prize slots.
+      </div>
+      <div class="phase-proposed">
+        Wheel segment illustrations using CF palette fills (coral, forest, mountain, gold). Prize reveal animation: mini mountain peak "summited" icon. Low effort — color map to existing badge system.
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 2</div>
+        <div class="phase-name">Streak Multipliers</div>
+      </div>
+      <div class="phase-existing">
+        🔥 badge icon in badgeHelpers.js. #streakCountChip and #streakMultiplierBadge UI elements wired.
+      </div>
+      <div class="phase-proposed">
+        Streak flame illustration: layered SVG flame that grows with streak length (1–3 = small, 7+ = tall). Multiplier badge upgrades visually (gold ring at 2×, coral fire at 3×+). Mobile: same SVG via react-native-svg Animated opacity pulse.
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 3</div>
+        <div class="phase-name">Challenges</div>
+      </div>
+      <div class="phase-existing">
+        badgeHelpers.js circular achievement frames. Trail/hiking metaphor in copywriting.
+      </div>
+      <div class="phase-proposed">
+        Challenge progress trail illustration: a winding mountain path that fills as progress advances (0% = trailhead, 100% = summit flag). Three difficulty tiers: single ridge (easy), double ridge (medium), full 7-layer skyline (hard). Reuses illustrationShared.js mountain path generator.
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 4</div>
+        <div class="phase-name">Leaderboard</div>
+      </div>
+      <div class="phase-existing">
+        Mountain summit metaphor in UI copy. No dedicated illustration.
+      </div>
+      <div class="phase-proposed">
+        Summit podium illustration: 3 mountain peaks at different heights labeled #1/#2/#3 with CF palette fills. Top-3 members get their avatar/initials at the summit. Same 7-layer depth system, compressed to podium form factor (280×160). High visual impact, medium effort.
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 5</div>
+        <div class="phase-name">Daily Quests</div>
+      </div>
+      <div class="phase-existing">
+        badgeHelpers.js quest complete badge. Quest list UI in Member Page.
+      </div>
+      <div class="phase-proposed">
+        Quest scroll illustration: a parchment-style scroll with mountain watermark background. Each completed quest gets a small trail marker check (matching the contact showroom's map pin style). Dawn horizon sky in scroll background ties to Living Sky time-of-day. New day = fresh sunrise in scroll header.
+      </div>
+    </div>
+
+    <div class="phase-row">
+      <div>
+        <div class="phase-label">Phase 6</div>
+        <div class="phase-name">Avatar / Guide</div>
+      </div>
+      <div class="phase-existing">
+        No dedicated avatar illustration yet. Member profile photo fallback.
+      </div>
+      <div class="phase-proposed">
+        Mountain guide character set: 6 avatar variants (different trail outfit colors mapping to loyalty tiers — Trail Blazer → Ridgeline Explorer). Each avatar uses the same base silhouette with swappable color fills. Works as SVG data URI in Wix image element. Mobile: same SVG exported as PNG for React Native Image component.
+      </div>
+    </div>
+
+    <div class="phase-row" style="border-color: rgba(232,132,92,0.3); background: rgba(232,132,92,0.06);">
+      <div>
+        <div class="phase-label" style="color:var(--gold);">Phase 7</div>
+        <div class="phase-name">Living Sky</div>
+      </div>
+      <div class="phase-existing">
+        <strong style="color:var(--off-white);">The entire site illustration system IS the Living Sky phase.</strong> MountainSkyline header, footer divider, contact scene — all feeding from the same sky state engine. Wildlife (birds/fireflies/owls) layered on mobile.
+      </div>
+      <div class="phase-proposed">
+        Phase 8 (below) completes the web wiring. Mobile wildlife layer and splash screen already reinforce Phase 7. The Living Sky is now the connective tissue linking all illustration assets site-wide.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SECTION 4: PHASE 8 CHOICES ─────────────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <div>
+      <div class="section-title">Phase 8 — LivingSky Wiring Choices</div>
+      <div class="section-desc">Two wiring targets. Both assets are already built as static SVGs. Phase 8 makes them dynamic — they shift with time-of-day and weather state from LivingSkyState. Stilgar selects approach for each.</div>
+    </div>
+  </div>
+
+  <!-- 4A: Footer Divider -->
+  <div class="choice-group">
+    <h3>4A — Footer Mountain Divider</h3>
+    <p class="desc">Currently renders with hardcoded fill colors (#5B8FA8, #5C4033, #3A2518). Three approaches for wiring it to the Living Sky engine. All use <code>LivingSkyState.ridgeColors</code> from <code>living-sky-wix.js</code>.</p>
+
+    <div class="choices">
+
+      <!-- Option A: Tint-only -->
+      <div class="choice-card">
+        <div class="choice-preview" style="background:#2A1A10; padding:4px 0;">
+          <svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,50 L0,22 C28,17 45,8 72,5 C99,2 118,14 145,10 C172,6 188,1 215,3 C242,5 258,16 285,12 C312,8 332,3 360,5 L400,7 L400,50Z" fill="#3D6B80" opacity="0.22"/>
+            <path d="M0,50 L0,30 C30,26 48,18 78,15 C108,12 125,22 155,19 C185,16 202,8 230,10 C258,12 275,21 305,18 C335,15 355,10 385,12 L400,13 L400,50Z" fill="#5C4033" opacity="0.42"/>
+            <path d="M0,50 L0,38 C35,34 55,28 88,25 C121,22 140,31 172,28 C204,25 222,18 252,20 C282,22 300,30 330,27 C360,24 378,20 400,21 L400,50Z" fill="#3A2518" opacity="0.75"/>
+          </svg>
+          <svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg" style="margin-top:4px;">
+            <path d="M0,50 L0,22 C28,17 45,8 72,5 C99,2 118,14 145,10 C172,6 188,1 215,3 C242,5 258,16 285,12 C312,8 332,3 360,5 L400,7 L400,50Z" fill="#C96B44" opacity="0.22"/>
+            <path d="M0,50 L0,30 C30,26 48,18 78,15 C108,12 125,22 155,19 C185,16 202,8 230,10 C258,12 275,21 305,18 C335,15 355,10 385,12 L400,13 L400,50Z" fill="#5C4033" opacity="0.42"/>
+            <path d="M0,50 L0,38 C35,34 55,28 88,25 C121,22 140,31 172,28 C204,25 222,18 252,20 C282,22 300,30 330,27 C360,24 378,20 400,21 L400,50Z" fill="#3A2518" opacity="0.75"/>
+          </svg>
+          <div style="font-size:10px; font-family:monospace; color:#888; text-align:center; padding:4px 0 2px;">day (top) → dusk (bottom)</div>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">A</span>
+            <span class="choice-title">Tint-only — distant layer shifts</span>
+          </div>
+          <p class="choice-body">
+            Only the most-distant ridge layer (layer 1) maps to <code>ridgeColors[r4]</code> from LivingSkyState. Middle and front layers remain static espresso/brown. Subtle: day = blue-gray, dusk = warm coral, night = deep indigo.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ Lowest risk</span>
+            <span class="pro">+ 1 line of JS</span>
+            <span class="con">− Less dramatic</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option B: 3-layer reactive (RECOMMENDED) -->
+      <div class="choice-card recommended">
+        <div class="choice-preview" style="background:#2A1A10; padding:4px 0;">
+          <svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,50 L0,22 C28,17 45,8 72,5 C99,2 118,14 145,10 C172,6 188,1 215,3 C242,5 258,16 285,12 C312,8 332,3 360,5 L400,7 L400,50Z" fill="#3D6B80" opacity="0.22"/>
+            <path d="M0,50 L0,30 C30,26 48,18 78,15 C108,12 125,22 155,19 C185,16 202,8 230,10 C258,12 275,21 305,18 C335,15 355,10 385,12 L400,13 L400,50Z" fill="#5C4033" opacity="0.42"/>
+            <path d="M0,50 L0,38 C35,34 55,28 88,25 C121,22 140,31 172,28 C204,25 222,18 252,20 C282,22 300,30 330,27 C360,24 378,20 400,21 L400,50Z" fill="#3A2518" opacity="0.75"/>
+          </svg>
+          <svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg" style="margin-top:4px;">
+            <path d="M0,50 L0,22 C28,17 45,8 72,5 C99,2 118,14 145,10 C172,6 188,1 215,3 C242,5 258,16 285,12 C312,8 332,3 360,5 L400,7 L400,50Z" fill="#9B4A2A" opacity="0.32"/>
+            <path d="M0,50 L0,30 C30,26 48,18 78,15 C108,12 125,22 155,19 C185,16 202,8 230,10 C258,12 275,21 305,18 C335,15 355,10 385,12 L400,13 L400,50Z" fill="#6B3020" opacity="0.48"/>
+            <path d="M0,50 L0,38 C35,34 55,28 88,25 C121,22 140,31 172,28 C204,25 222,18 252,20 C282,22 300,30 330,27 C360,24 378,20 400,21 L400,50Z" fill="#3A2518" opacity="0.8"/>
+          </svg>
+          <svg viewBox="0 0 400 50" xmlns="http://www.w3.org/2000/svg" style="margin-top:4px;">
+            <path d="M0,50 L0,22 C28,17 45,8 72,5 C99,2 118,14 145,10 C172,6 188,1 215,3 C242,5 258,16 285,12 C312,8 332,3 360,5 L400,7 L400,50Z" fill="#1A2A3D" opacity="0.35"/>
+            <path d="M0,50 L0,30 C30,26 48,18 78,15 C108,12 125,22 155,19 C185,16 202,8 230,10 C258,12 275,21 305,18 C335,15 355,10 385,12 L400,13 L400,50Z" fill="#2C1A0E" opacity="0.55"/>
+            <path d="M0,50 L0,38 C35,34 55,28 88,25 C121,22 140,31 172,28 C204,25 222,18 252,20 C282,22 300,30 330,27 C360,24 378,20 400,21 L400,50Z" fill="#1A0F08" opacity="0.85"/>
+          </svg>
+          <div style="font-size:10px; font-family:monospace; color:#888; text-align:center; padding:4px 0 2px;">day → dusk → night</div>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">B</span>
+            <span class="choice-title">3-layer reactive — full depth shift</span>
+            <span class="rec-badge">Recommended</span>
+          </div>
+          <p class="choice-body">
+            All 3 divider layers map to <code>ridgeColors[r4/r3/r1]</code> from LivingSkyState. The whole silhouette shifts warmth with the sky. Day = blue-gray / brown / espresso. Dusk = copper / burnt umber / espresso. Night = deep navy / dark brown / near-black. Mirrors how the header skyline already shifts.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ Cohesive with header</span>
+            <span class="pro">+ Same data source</span>
+            <span class="con">− 3 color reads vs 1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option C: Full sky tint overlay -->
+      <div class="choice-card">
+        <div class="choice-preview" style="background:#2A1A10; padding:4px 0;">
+          <svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="c3-day" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#F2E8D5" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="c3-dusk" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#E8845C" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,60 L0,28 C28,22 45,12 72,8 C99,4 118,18 145,14 C172,10 188,2 215,5 C242,8 258,20 285,16 C312,12 332,6 360,8 L400,10 L400,60Z" fill="#3D6B80" opacity="0.22"/>
+            <path d="M0,60 L0,36 C30,32 48,24 78,21 C108,18 125,28 155,25 C185,22 202,14 230,16 C258,18 275,27 305,24 C335,21 355,16 385,18 L400,19 L400,60Z" fill="#5C4033" opacity="0.42"/>
+            <path d="M0,60 L0,44 C35,40 55,34 88,31 C121,28 140,37 172,34 C204,31 222,24 252,26 C282,28 300,36 330,33 C360,30 378,26 400,27 L400,60Z" fill="#3A2518" opacity="0.75"/>
+            <rect width="400" height="60" fill="url(#c3-day)"/>
+          </svg>
+          <svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg" style="margin-top:2px;">
+            <path d="M0,60 L0,28 C28,22 45,12 72,8 C99,4 118,18 145,14 C172,10 188,2 215,5 C242,8 258,20 285,16 C312,12 332,6 360,8 L400,10 L400,60Z" fill="#3D6B80" opacity="0.22"/>
+            <path d="M0,60 L0,36 C30,32 48,24 78,21 C108,18 125,28 155,25 C185,22 202,14 230,16 C258,18 275,27 305,24 C335,21 355,16 385,18 L400,19 L400,60Z" fill="#5C4033" opacity="0.42"/>
+            <path d="M0,60 L0,44 C35,40 55,34 88,31 C121,28 140,37 172,34 C204,31 222,24 252,26 C282,28 300,36 330,33 C360,30 378,26 400,27 L400,60Z" fill="#3A2518" opacity="0.75"/>
+            <rect width="400" height="60" fill="url(#c3-dusk)"/>
+          </svg>
+          <div style="font-size:10px; font-family:monospace; color:#888; text-align:center; padding:4px 0 2px;">sky color overlay tint</div>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">C</span>
+            <span class="choice-title">Gradient sky overlay</span>
+          </div>
+          <p class="choice-body">
+            Keep static SVG layer fills unchanged; add a semi-transparent <code>&lt;rect&gt;</code> overlay that receives the current sky gradient from LivingSkyState. The sky color "washes" over the divider shape.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ No SVG rebuild</span>
+            <span class="con">− Can muddy the layers</span>
+            <span class="con">− Less true-to-sky</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 4B: Contact Showroom Wiring -->
+  <div class="choice-group">
+    <h3>4B — Contact Showroom Scene Wiring</h3>
+    <p class="desc">The cabin showroom scene is already fully drawn (contactIllustrations.js, 400×280 static SVG). Three approaches to make it react to LivingSkyState — controlling what time of day the scene feels like.</p>
+
+    <div class="choices">
+
+      <!-- Option A: Sky gradient swap -->
+      <div class="choice-card">
+        <div class="choice-preview">
+          <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sa-day" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#B8D4E3"/>
+                <stop offset="40%" stop-color="#F0C87A" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#FAF7F2"/>
+              </linearGradient>
+            </defs>
+            <rect width="200" height="130" fill="url(#sa-day)"/>
+            <path d="M0,80 C20,75 42,65 68,60 C94,55 112,68 140,62 C168,56 182,48 200,46 L200,130 L0,130Z" fill="#5B8FA8" opacity="0.3"/>
+            <path d="M0,95 C22,90 45,82 72,78 C99,74 118,86 145,82 C172,78 185,72 200,70 L200,130 L0,130Z" fill="#3A2518" opacity="0.5"/>
+            <rect x="75" y="84" width="50" height="28" fill="#5C4033" opacity="0.8" rx="1"/>
+            <polygon points="70,86 100,68 130,86" fill="#3A2518" opacity="0.85"/>
+            <rect x="84" y="98" width="12" height="14" fill="#F2E8D5" opacity="0.6" rx="1"/>
+            <rect x="97" y="76" width="4" height="10" fill="#3A2518" opacity="0.5" rx="1"/>
+            <ellipse cx="99" cy="72" rx="5" ry="3" fill="#FAF7F2" opacity="0.2"/>
+            <path d="M99 62 L93 52 C92 48 94 44 99 43 C104 44 106 48 105 52 Z" fill="#E8845C" opacity="0.9"/>
+            <circle cx="99" cy="48" r="3" fill="white" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">A</span>
+            <span class="choice-title">Sky gradient swap only</span>
+          </div>
+          <p class="choice-body">
+            Replace the static <code>#show-sky</code> gradient stop colors with values from <code>LivingSkyState.skyColors</code>. Everything else stays static. The sky above the mountains shifts; cabin stays the same warm illustration regardless of time.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ Minimal change</span>
+            <span class="pro">+ Safe, fast</span>
+            <span class="con">− Cabin stays daytime always</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option B: Full ambient — RECOMMENDED -->
+      <div class="choice-card recommended">
+        <div class="choice-preview">
+          <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sb-night" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0D1A2A"/>
+                <stop offset="40%" stop-color="#1A2535" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#2A1A0E"/>
+              </linearGradient>
+              <radialGradient id="sb-window-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect width="200" height="130" fill="url(#sb-night)"/>
+            <!-- Stars -->
+            <circle cx="30" cy="12" r="1" fill="white" opacity="0.6"/>
+            <circle cx="55" cy="8" r="0.8" fill="white" opacity="0.5"/>
+            <circle cx="80" cy="15" r="1" fill="white" opacity="0.7"/>
+            <circle cx="140" cy="10" r="0.9" fill="white" opacity="0.55"/>
+            <circle cx="170" cy="6" r="1.2" fill="white" opacity="0.5"/>
+            <circle cx="165" cy="20" r="0.7" fill="white" opacity="0.45"/>
+            <!-- Moon -->
+            <circle cx="160" cy="18" r="7" fill="#F2E8D5" opacity="0.3"/>
+            <circle cx="163" cy="16" r="5" fill="#0D1A2A" opacity="0.6"/>
+            <path d="M0,80 C20,75 42,65 68,60 C94,55 112,68 140,62 C168,56 182,48 200,46 L200,130 L0,130Z" fill="#1A2535" opacity="0.8"/>
+            <path d="M0,95 C22,90 45,82 72,78 C99,74 118,86 145,82 C172,78 185,72 200,70 L200,130 L0,130Z" fill="#0D0A06" opacity="0.9"/>
+            <rect x="75" y="84" width="50" height="28" fill="#2A1505" opacity="0.95" rx="1"/>
+            <polygon points="70,86 100,68 130,86" fill="#120A02" opacity="0.95"/>
+            <!-- Window glow at night -->
+            <rect x="84" y="98" width="12" height="14" fill="url(#sb-window-glow)" rx="1"/>
+            <rect x="97" y="92" width="14" height="8" fill="#F0C87A" opacity="0.4" rx="1"/>
+            <ellipse cx="88" cy="95" rx="8" ry="10" fill="url(#sb-window-glow)" opacity="0.4"/>
+            <!-- Chimney -->
+            <rect x="97" y="70" width="4" height="14" fill="#0D0A06" opacity="0.8" rx="1"/>
+            <ellipse cx="99" cy="68" rx="6" ry="3" fill="#FAF7F2" opacity="0.12"/>
+            <path d="M99 62 L93 52 C92 48 94 44 99 43 C104 44 106 48 105 52 Z" fill="#E8845C" opacity="0.9"/>
+            <circle cx="99" cy="48" r="3" fill="white" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">B</span>
+            <span class="choice-title">Full ambient — sky + cabin lighting</span>
+            <span class="rec-badge">Recommended</span>
+          </div>
+          <p class="choice-body">
+            Sky colors map to LivingSkyState. Cabin window fill tint maps to star opacity (<code>state.starOpacity</code>): warm daylight = window transparent, dusk = soft gold glow, night = warm lantern yellow. Stars appear at night. Moon arc at night. Ridge layers shift in darkness. The scene feels alive.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ Deeply coherent with Phase 7</span>
+            <span class="pro">+ No new assets needed</span>
+            <span class="con">− More complex JS state reads</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option C: Static + weather accent -->
+      <div class="choice-card">
+        <div class="choice-preview">
+          <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sc-rain" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#7A9BA8"/>
+                <stop offset="40%" stop-color="#A0B8C8" stop-opacity="0.7"/>
+                <stop offset="100%" stop-color="#D0D8DC"/>
+              </linearGradient>
+            </defs>
+            <rect width="200" height="130" fill="url(#sc-rain)"/>
+            <!-- Rain streaks -->
+            <line x1="20" y1="0" x2="14" y2="40" stroke="#A8CCD8" stroke-width="0.5" opacity="0.4"/>
+            <line x1="45" y1="5" x2="39" y2="45" stroke="#A8CCD8" stroke-width="0.5" opacity="0.35"/>
+            <line x1="70" y1="0" x2="64" y2="40" stroke="#A8CCD8" stroke-width="0.5" opacity="0.4"/>
+            <line x1="95" y1="3" x2="89" y2="43" stroke="#A8CCD8" stroke-width="0.5" opacity="0.3"/>
+            <line x1="125" y1="0" x2="119" y2="38" stroke="#A8CCD8" stroke-width="0.5" opacity="0.4"/>
+            <line x1="155" y1="2" x2="149" y2="42" stroke="#A8CCD8" stroke-width="0.5" opacity="0.35"/>
+            <line x1="180" y1="0" x2="174" y2="40" stroke="#A8CCD8" stroke-width="0.5" opacity="0.4"/>
+            <path d="M0,80 C20,75 42,65 68,62 C94,59 112,70 140,66 C168,62 182,55 200,53 L200,130 L0,130Z" fill="#5B8FA8" opacity="0.25"/>
+            <path d="M0,95 C22,90 45,84 72,80 C99,76 118,88 145,84 C172,80 185,75 200,73 L200,130 L0,130Z" fill="#3A2518" opacity="0.5"/>
+            <rect x="75" y="84" width="50" height="28" fill="#5C4033" opacity="0.75" rx="1"/>
+            <polygon points="70,86 100,68 130,86" fill="#3A2518" opacity="0.8"/>
+            <rect x="84" y="98" width="12" height="14" fill="#F2E8D5" opacity="0.5" rx="1"/>
+            <rect x="97" y="76" width="4" height="10" fill="#3A2518" opacity="0.4" rx="1"/>
+            <!-- Heavy chimney smoke in rain/cold -->
+            <ellipse cx="100" cy="70" rx="8" ry="5" fill="#FAF7F2" opacity="0.2"/>
+            <ellipse cx="102" cy="63" rx="10" ry="6" fill="#FAF7F2" opacity="0.15"/>
+            <path d="M99 62 L93 52 C92 48 94 44 99 43 C104 44 106 48 105 52 Z" fill="#E8845C" opacity="0.9"/>
+            <circle cx="99" cy="48" r="3" fill="white" opacity="0.8"/>
+          </svg>
+        </div>
+        <div class="choice-info">
+          <div class="choice-label">
+            <span class="choice-alpha">C</span>
+            <span class="choice-title">Weather state accent overlay</span>
+          </div>
+          <p class="choice-body">
+            Sky and cabin stays mostly static, but <code>LivingSkyState.weather</code> triggers accent overlays: rain = diagonal streak SVG pattern at low opacity, fog = gaussian blur on ridge layers, clear = default. Chimney smoke density increases in cold/rain. Seasonal accent only — no ambient light changes.
+          </p>
+          <div class="pros-cons">
+            <span class="pro">+ Weather storytelling</span>
+            <span class="pro">+ Low JS complexity</span>
+            <span class="con">− Doesn't use time-of-day at all</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 5: PRIORITY + SEQUENCING ───────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <div>
+      <div class="section-title">Priority & Sequencing</div>
+      <div class="section-desc">Recommended implementation order across both crews. Effort: S = 1–2 hrs, M = half day, L = 1–2 days.</div>
+    </div>
+  </div>
+
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>Priority</th>
+        <th>Asset / Work</th>
+        <th>Crew</th>
+        <th>Effort</th>
+        <th>Phase Tie-In</th>
+        <th>Blocker</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pri-0">P0</span></td>
+        <td><strong>Footer divider — LivingSkyState wiring</strong><br><span style="font-size:11px;color:#888;">FooterSection.js: read ridgeColors, update 3 fill attributes on state message</span></td>
+        <td class="owner-col">godfrey / rennala</td>
+        <td class="effort-col"><span class="effort-s">S</span></td>
+        <td>Phase 8</td>
+        <td>Stilgar choice 4A</td>
+      </tr>
+      <tr>
+        <td><span class="pri-0">P0</span></td>
+        <td><strong>Contact showroom — LivingSkyState wiring</strong><br><span style="font-size:11px;color:#888;">contactIllustrations.js: initContactShowroomScene() reads state, updates sky gradient + window fill</span></td>
+        <td class="owner-col">godfrey / rennala</td>
+        <td class="effort-col"><span class="effort-m">M</span></td>
+        <td>Phase 8</td>
+        <td>Stilgar choice 4B</td>
+      </tr>
+      <tr>
+        <td><span class="pri-1">P1</span></td>
+        <td><strong>Streak flame illustration</strong><br><span style="font-size:11px;color:#888;">SVG flame that scales with streak length. Reinforce Phase 2 streak chip UI.</span></td>
+        <td class="owner-col">miquella (web) / burke (mobile)</td>
+        <td class="effort-col"><span class="effort-m">M</span></td>
+        <td>Phase 2</td>
+        <td>None</td>
+      </tr>
+      <tr>
+        <td><span class="pri-1">P1</span></td>
+        <td><strong>Mobile contact showroom port</strong><br><span style="font-size:11px;color:#888;">React Native SVG version of cabin scene. CSS smoke → Animated opacity. ripley or burke.</span></td>
+        <td class="owner-col">ripley (mobile)</td>
+        <td class="effort-col"><span class="effort-m">M</span></td>
+        <td>Phase 8 (mobile)</td>
+        <td>Phase 8B web approved first</td>
+      </tr>
+      <tr>
+        <td><span class="pri-1">P1</span></td>
+        <td><strong>Challenge progress trail illustration</strong><br><span style="font-size:11px;color:#888;">Mountain path fills as challenge progresses. Reuses illustrationShared.js mountain path generator.</span></td>
+        <td class="owner-col">radahn (web) / hicks (mobile)</td>
+        <td class="effort-col"><span class="effort-m">M</span></td>
+        <td>Phase 3</td>
+        <td>None</td>
+      </tr>
+      <tr>
+        <td><span class="pri-2">P2</span></td>
+        <td><strong>Leaderboard summit podium</strong><br><span style="font-size:11px;color:#888;">3-peak SVG podium with top-3 member avatars at summits. High visual impact for Phase 4.</span></td>
+        <td class="owner-col">miquella (web) / nux (mobile)</td>
+        <td class="effort-col"><span class="effort-m">M</span></td>
+        <td>Phase 4</td>
+        <td>Phase 4 leaderboard bead</td>
+      </tr>
+      <tr>
+        <td><span class="pri-2">P2</span></td>
+        <td><strong>Quest scroll illustration</strong><br><span style="font-size:11px;color:#888;">Parchment scroll with Living Sky dawn tie-in for daily quest panel.</span></td>
+        <td class="owner-col">godfrey (web) / bishop (mobile)</td>
+        <td class="effort-col"><span class="effort-l">L</span></td>
+        <td>Phase 5</td>
+        <td>Phase 5 daily quests shipping</td>
+      </tr>
+      <tr>
+        <td><span class="pri-2">P2</span></td>
+        <td><strong>Mountain guide avatar set</strong><br><span style="font-size:11px;color:#888;">6 tier-linked avatar SVGs. Loyalty tier system prerequisite. Complex, post-Phase 6.</span></td>
+        <td class="owner-col">TBD post-Phase 6</td>
+        <td class="effort-col"><span class="effort-l">L</span></td>
+        <td>Phase 6</td>
+        <td>Phase 6 avatar bead</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── SECTION 6: ARTIST BRIEF ────────────────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <div>
+      <div class="section-title">Artist / Implementation Brief</div>
+      <div class="section-desc">Non-negotiable constraints for anyone touching illustration assets on either codebase.</div>
+    </div>
+  </div>
+
+  <div class="brief-grid">
+
+    <div class="brief-card">
+      <h4>Palette (mandatory)</h4>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#3A2518;"></div> espresso #3A2518</div>
+        <div class="chip"><div class="swatch" style="background:#5C4033;"></div> espresso-lt #5C4033</div>
+        <div class="chip"><div class="swatch" style="background:#5B8FA8;"></div> mountain #5B8FA8</div>
+        <div class="chip"><div class="swatch" style="background:#3D6B80;"></div> mtn-dark #3D6B80</div>
+        <div class="chip"><div class="swatch" style="background:#A8CCD8;"></div> mtn-lt #A8CCD8</div>
+        <div class="chip"><div class="swatch" style="background:#E8845C;"></div> coral #E8845C</div>
+        <div class="chip"><div class="swatch" style="background:#F2A882;"></div> coral-lt #F2A882</div>
+        <div class="chip"><div class="swatch" style="background:#E8D5B7;"></div> sand #E8D5B7</div>
+        <div class="chip"><div class="swatch" style="background:#F2E8D5;"></div> sand-lt #F2E8D5</div>
+        <div class="chip"><div class="swatch" style="background:#4A7C59;"></div> forest #4A7C59</div>
+        <div class="chip"><div class="swatch" style="background:#2E4A38;"></div> forest-dk #2E4A38</div>
+        <div class="chip"><div class="swatch" style="background:#F0C87A;"></div> gold #F0C87A</div>
+        <div class="chip"><div class="swatch" style="background:#B8D4E3;"></div> sky-top #B8D4E3</div>
+        <div class="chip"><div class="swatch" style="background:#FAF7F2;"></div> off-white #FAF7F2</div>
+      </div>
+    </div>
+
+    <div class="brief-card">
+      <h4>Web SVG rules</h4>
+      <ul>
+        <li>All SVGs injected as HTML string via <code>$w('#el').html = svg</code></li>
+        <li>No external references — everything inline</li>
+        <li>Unique gradient/filter IDs per module (prefix: module name)</li>
+        <li>viewBox only — no fixed pixel width/height on root element (use 100%)</li>
+        <li>Colors reference <code>illustrationShared.ILLUSTRATION_COLORS</code> or <code>sharedTokens.colors</code>, never magic strings</li>
+        <li>Tree linework: #2E4A38 (forest-dk) for outlines, #4A7C59 (forest) for fills</li>
+        <li>Mountain linework: #3D6B80 distant, #5B8FA8 mid, #3A2518 near-front</li>
+        <li>Test: seeded PRNG paths must be deterministic (same seed = same ridge)</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>Mobile SVG rules</h4>
+      <ul>
+        <li>Use <code>react-native-svg</code> Svg/Path/Rect/Circle/LinearGradient components</li>
+        <li>No CSS — all styles as props (fill, stroke, opacity)</li>
+        <li>CSS animations → Animated API (opacity, transform)</li>
+        <li>CSS linearGradient → RN LinearGradient component</li>
+        <li>viewBox geometry ports directly from web (same path data)</li>
+        <li>dallas confirms: footer divider viewBox 0 0 1440 80 ports as-is</li>
+        <li>dallas confirms: header skyline viewBox 0 0 1040 150 already ported (PR #270)</li>
+        <li>Tree fill: #2E4A38 confirmed aligned with web (PR #269)</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>LivingSky integration pattern</h4>
+      <ul>
+        <li>Read state from <code>living-sky-wix.js</code> onMessage handler</li>
+        <li>Key fields: <code>state.ridgeColors</code> (r1–r7), <code>state.skyColors</code>, <code>state.starOpacity</code>, <code>state.weather</code></li>
+        <li>Never poll — subscribe to the <code>#livingSkyFrame</code> postMessage stream</li>
+        <li>Defensive: guard all state reads with null checks — Living Sky may not be initialized on all pages</li>
+        <li>Mobile: subscribe to <code>useLivingSky(totalMinutes)</code> hook, pass state to illustration props</li>
+        <li>skyTable / ridgeTable values: FROZEN — do not change without Stilgar sign-off</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footnote">
+  Prepared by melania (cfutons/crew) + dallas (cfutons_mobile) · 2026-03-23 · Awaiting Stilgar approval
+</div>
+
+</body>
+</html>

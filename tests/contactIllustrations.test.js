@@ -1,7 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { colors } from '../src/public/sharedTokens.js';
 
-// Module under test — will be created after tests fail
 import {
   CONTACT_ILLUSTRATIONS,
   svgToDataUri,
@@ -460,6 +459,167 @@ describe('Contact Illustrations', () => {
       const mock$w = () => { throw new Error('element not found'); };
       expect(() => initContactHeroSkyline(mock$w)).not.toThrow();
       expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════
+  // LIVING SKY STATE WIRING (CF-33f)
+  // ══════════════════════════════════════════════════════════════════════
+
+  describe('initContactShowroomScene — LivingSkyState wiring', () => {
+    // Helper: build mock $w with container + optional livingSkyFrame
+    function makeWix({ hasFrame = true, frameHasOnMessage = true } = {}) {
+      let handler = null;
+      const containerEl = { html: '' };
+      const livingSkyEl = frameHasOnMessage
+        ? { onMessage: (fn) => { handler = fn; } }
+        : {};
+      const mock$w = (sel) => {
+        if (sel === '#contactShowroomScene') return containerEl;
+        if (sel === '#livingSkyFrame') return hasFrame ? livingSkyEl : null;
+        return null;
+      };
+      const trigger = (data) => handler && handler({ data });
+      return { mock$w, containerEl, trigger };
+    }
+
+    // Canonical LivingSkyState fixture (living-sky.js:280-298)
+    function makeState({ sky0 = '#5B8FA8', starOpacity = 0, weather = 'clear' } = {}) {
+      return {
+        skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'],
+        ridgeColors: { r1: '#3A2518', r2: '#5B8FA8', r3: '#667788', r4: '#5B8FA8', tree: '#334455' },
+        starOpacity,
+        cloudOpacity: 0,
+        weather,
+      };
+    }
+
+    it('subscribes to #livingSkyFrame onMessage on init', () => {
+      const onMessageSpy = vi.fn();
+      const containerEl = { html: '' };
+      const mock$w = (sel) => {
+        if (sel === '#contactShowroomScene') return containerEl;
+        if (sel === '#livingSkyFrame') return { onMessage: onMessageSpy };
+        return null;
+      };
+      initContactShowroomScene(mock$w);
+      expect(onMessageSpy).toHaveBeenCalledWith(expect.any(Function));
+    });
+
+    it('does not throw when #livingSkyFrame is not found', () => {
+      const { mock$w } = makeWix({ hasFrame: false });
+      expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+    });
+
+    it('does not throw when #livingSkyFrame has no onMessage method', () => {
+      const { mock$w } = makeWix({ frameHasOnMessage: false });
+      expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+    });
+
+    it('is a no-op when state data is null', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const before = containerEl.html;
+      trigger(null);
+      expect(containerEl.html).toBe(before);
+    });
+
+    it('is a no-op when state data is undefined', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const before = containerEl.html;
+      trigger(undefined);
+      expect(containerEl.html).toBe(before);
+    });
+
+    it('updates container html when valid state arrives (injects sky-overlay)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const before = containerEl.html;
+      trigger(makeState({ sky0: '#5B8FA8' }));
+      expect(containerEl.html).not.toBe(before);
+      expect(containerEl.html).toContain('id="sky-overlay"');
+    });
+
+    it('no sky-overlay injected when skyColors is absent in day mode (early return)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const base = containerEl.html;
+      trigger({ starOpacity: 0, weather: 'clear' }); // no skyColors
+      expect(containerEl.html).toBe(base);
+    });
+
+    it('night mode injects stars even when skyColors is absent', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger({ starOpacity: 0.5, weather: 'clear' }); // no skyColors, starOpacity > 0 = night
+      expect(containerEl.html).toMatch(/id="stars"/);
+    });
+
+    it('invalid skyColors[0] (non-hex) is rejected — no sky-overlay injected', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const base = containerEl.html;
+      trigger({ ...makeState(), skyColors: ['linear-gradient(red, blue)', '#4A7D94', '#3D6B80', '#2C5A6A'] });
+      expect(containerEl.html).toBe(base);
+    });
+
+    it('night mode (starOpacity > 0) injects star elements', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.8 }));
+      expect(containerEl.html).toMatch(/id="stars"/);
+    });
+
+    it('night mode injects a moon element', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 1.0 }));
+      expect(containerEl.html).toMatch(/id="moon"/);
+    });
+
+    it('night mode injects window lantern glow', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.9 }));
+      expect(containerEl.html).toMatch(/id="window-glow"/);
+    });
+
+    it('day mode does not inject star or moon elements', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#B8D4E3', starOpacity: 0 }));
+      expect(containerEl.html).not.toMatch(/id="stars"/);
+      expect(containerEl.html).not.toMatch(/id="moon"/);
+    });
+
+    it('night boundary: starOpacity = 0 is day (no stars)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#4A5568', starOpacity: 0 }));
+      expect(containerEl.html).not.toMatch(/id="stars"/);
+    });
+
+    it('night boundary: starOpacity > 0 is night (has stars)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#1A1F3E', starOpacity: 0.1 }));
+      expect(containerEl.html).toMatch(/id="stars"/);
+    });
+
+    it('sky color appears in updated SVG', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#A0B0C8', weather: 'cloudy' }));
+      expect(containerEl.html).toContain('#A0B0C8');
+    });
+
+    it('updated SVG remains a valid SVG', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger(makeState({ sky0: '#B8D4E3' }));
+      expect(containerEl.html.trimStart()).toMatch(/^<svg[\s>]/);
+      expect(containerEl.html.trimEnd()).toMatch(/<\/svg>$/);
     });
   });
 
