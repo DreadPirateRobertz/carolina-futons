@@ -2302,14 +2302,14 @@ Action buttons (right):
         ["rewardCouponCode","Text","Coupon code"]
       ]},
       { name: "Daily Spin Wheel", repeater: "pendingPrizesRepeater", impl: `<h4>🎡 Implementation — Daily Spin Wheel (CF-spin-wheel Phase 1)</h4>
-<p><em>Source: <code>src/pages/Member Page.js</code> → <code>initSpinSection($w, memberId)</code>. Backend: <code>backend/spinWheel.web.js</code>.</em></p>
+<p><em>Source: <code>src/pages/Member Page.js</code> → <code>initSpinSection()</code> (closure-scoped <code>$w</code> + <code>currentMember._id</code>). Backend: <code>backend/spinWheel.web.js</code>.</em></p>
 <p><strong>Layout: Collapsed section below Rewards. Expands on init for logged-in members.</strong></p>
 <ul>
   <li><strong>#spinWheelSection</strong>: Outer Section container. <span class="impl-warn">Collapsed by default</span> — expands via <code>expand()</code> on <code>initSpinSection()</code>.</li>
   <li><strong>#spinWheelSVG</strong>: HtmlComponent. SVG wheel rendered via <code>innerHTML</code>. Prize segments loaded from <code>SpinPrizes</code> CMS (sessionStorage cache, 5-min TTL).</li>
-  <li><strong>#spinButton</strong>: Primary CTA. Labels: "Spin" (ready) / "Spinning…" (in-flight, disabled) / "Try Again" (after throw). Re-enables after spin completes.</li>
+  <li><strong>#spinButton</strong>: Primary CTA. Labels: "Spin Now!" (eligible) / "Spinning…" (in-flight, disabled) / "Try Again" (after throw) / "Come Back Tomorrow" (ineligible, no bonus) / "Unavailable" (ERROR). Re-enables after spin completes.</li>
   <li><strong>#spinCountdown</strong>: <span class="impl-warn">Hidden when eligible</span>. Shows "Next spin in Xh Ym Zs" (ET midnight countdown) when daily used and no bonus available. Shows "Unable to check eligibility — please refresh" on ERROR.</li>
-  <li><strong>#spinResultText</strong>: <span class="impl-warn">Hidden until spin completes</span>. Fades in (200ms) with prize headline or error message.</li>
+  <li><strong>#spinResultText</strong>: <span class="impl-warn">Hidden until spin completes</span>. Fades in (200ms error / 300ms prize win) with prize headline or error message.</li>
   <li><strong>#spinBonusChip</strong>: <span class="impl-warn">Hidden when no bonus spins</span>. Shows "+N bonus" badge. Fades in (200ms) when bonus spins available.</li>
   <li><strong>#spinLottieHub</strong>: Lottie animation. Plays idle/loading loop on init. Stopped during win flow. <em>Skipped if <code>prefers-reduced-motion</code>.</em></li>
   <li><strong>#spinLottieConfetti</strong>: Lottie win confetti. Plays after successful spin. Auto-stops after 3s and restarts hub. <em>Skipped if <code>prefers-reduced-motion</code>.</em></li>

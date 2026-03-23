@@ -1406,15 +1406,15 @@ Place the same 5 elements on the Product Page canvas:
 **↳ Inside:** `rewardName` (Text), `rewardDescription` (Text), `rewardCost` (Text), `redeemBtn` (Button), `rewardCouponCode` (Text)
 
 ### Daily Spin Wheel (NEW — CF-spin-wheel Phase 1)
-*Source: `src/pages/Member Page.js` — `initSpinSection($w, memberId)` (inline). Backend: `backend/spinWheel.web.js`*
+*Source: `src/pages/Member Page.js` — `initSpinSection()` (inline, closure-scoped `$w` + `currentMember._id`). Backend: `backend/spinWheel.web.js`*
 
 | Element ID | Wix Element | Notes |
 |---|---|---|
 | `spinWheelSection` | Section | Outer container — **collapsed by default**. Expands on `initSpinSection()`. |
 | `spinWheelSVG` | HtmlComponent | SVG prize wheel rendered via `innerHTML`. Prizes drawn from `SpinPrizes` CMS (cached in sessionStorage 5 min). |
-| `spinButton` | Button | Primary CTA. Labels: "Spin" / "Spinning…" / "Try Again". Disabled while spinning. |
+| `spinButton` | Button | Primary CTA. Labels: "Spin Now!" (eligible) / "Spinning…" (in-flight, disabled) / "Try Again" (after throw) / "Come Back Tomorrow" (ineligible, no bonus) / "Unavailable" (ERROR). |
 | `spinCountdown` | Text | Hidden when eligible. Shows "Next spin in Xh Ym Zs" when daily spin used and no bonus available. |
-| `spinResultText` | Text | Hidden until spin completes. Fades in (200ms) with prize headline or error message. |
+| `spinResultText` | Text | Hidden until spin completes. Fades in (200ms for errors / 300ms for prize win) with prize headline or error message. |
 | `spinBonusChip` | Text | Hidden when no bonus spins. Shows "+N bonus" when bonus spins available — fades in (200ms). |
 | `spinLottieHub` | Lottie | Idle/loading animation. Plays on init. Stopped during win flow. Skipped if `prefers-reduced-motion`. |
 | `spinLottieConfetti` | Lottie | Inline win confetti. Plays after successful spin. Auto-stops after 3s. Skipped if `prefers-reduced-motion`. |
@@ -2298,7 +2298,7 @@ All major pages now have both backend and frontend code. The following are in de
 | Collection | Purpose | Key Fields |
 |---|---|---|
 | `SpinPrizes` | Active prize pool for the spin wheel | active, weight, prizeType, pointsAwarded, prizeValue, label, color |
-| `BonusSpinGrants` | Bonus spin credits granted from gamification events | memberId, grantsAvailable, source, createdAt |
+| `BonusSpinGrants` | Gamification event → bonus spin grant rules | triggerEvent, active, spinsGranted |
 | `SpinHistory` | Audit log of all spins (daily + bonus) | memberId, spinDate, spinType, prize, pointsAwarded, prizeType, eventId, createdAt |
 | `MemberPendingPrizes` | Unclaimed non-points prizes (e.g. free shipping, discounts) | memberId, prizeType, prizeValue, prizeLabel, spinHistoryId, eventId, claimedAt, createdAt |
 
