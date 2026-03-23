@@ -29,6 +29,7 @@ export const getProductResources = webMethod(
       const res = await wixData.query(PRODUCT_RESOURCES)
         .eq('productId', productId)
         .ascending('sortOrder')
+        .limit(20)
         .find({ suppressAuth: true });
       return res.items.map(({ resourceType, label, url, sortOrder }) => ({
         resourceType,
