@@ -809,85 +809,182 @@
 
     <!-- Streak Flame — Proposed Phase 2 -->
     <div class="asset-card" style="border-color:rgba(240,200,122,0.3);">
-      <div class="preview" style="background:#1A0A04; display:flex; gap:18px; align-items:flex-end; justify-content:center; padding:16px;">
-        <!-- Single flame (1–2 day streak) -->
-        <svg viewBox="0 0 48 80" width="36" height="60" xmlns="http://www.w3.org/2000/svg">
+      <div class="preview" style="background:#0E0804; display:flex; gap:20px; align-items:flex-end; justify-content:center; padding:18px 12px;">
+        <style>
+          @keyframes sf-flick{0%,100%{transform:scaleX(1) scaleY(1)}30%{transform:scaleX(0.92) scaleY(1.06)}65%{transform:scaleX(1.05) scaleY(0.96)}}
+          @keyframes sf-e1{0%{transform:translate(0,0);opacity:0.8}100%{transform:translate(-3px,-22px);opacity:0}}
+          @keyframes sf-e2{0%{transform:translate(0,0);opacity:0.7}100%{transform:translate(4px,-28px);opacity:0}}
+          @keyframes sf-e3{0%{transform:translate(0,0);opacity:0.9}100%{transform:translate(-5px,-18px);opacity:0}}
+          @keyframes sf-e4{0%{transform:translate(0,0);opacity:0.6}100%{transform:translate(6px,-34px);opacity:0}}
+          @keyframes sf-e5{0%{transform:translate(0,0);opacity:0.8}100%{transform:translate(-2px,-40px);opacity:0}}
+          @keyframes sf-glow{0%,100%{opacity:0.35}50%{opacity:0.55}}
+          @keyframes sf-moon{0%,100%{opacity:0.6}50%{opacity:0.9}}
+          .sf1-f{animation:sf-flick 1.7s ease-in-out infinite;transform-origin:40px 72px;}
+          .sf2-a{animation:sf-flick 1.6s ease-in-out infinite;transform-origin:28px 70px;}
+          .sf2-b{animation:sf-flick 1.9s ease-in-out 0.35s infinite;transform-origin:60px 70px;}
+          .sf3-a{animation:sf-flick 1.5s ease-in-out infinite;transform-origin:40px 68px;}
+          .sf3-b{animation:sf-flick 1.8s ease-in-out 0.3s infinite;transform-origin:20px 72px;}
+          .sf3-c{animation:sf-flick 2s ease-in-out 0.6s infinite;transform-origin:60px 72px;}
+          .sf-eg{animation:sf-glow 2s ease-in-out infinite;}
+          .em1{animation:sf-e1 2.1s ease-out 0.3s infinite;}
+          .em2{animation:sf-e2 2.6s ease-out 0.8s infinite;}
+          .em3{animation:sf-e3 1.9s ease-out 1.4s infinite;}
+          .em4{animation:sf-e4 2.8s ease-out 0s infinite;}
+          .em5{animation:sf-e5 2.3s ease-out 1.1s infinite;}
+          .sf-moon{animation:sf-moon 4s ease-in-out infinite;}
+        </style>
+
+        <!-- TIER 1: Single campfire (1–2 day) -->
+        <svg viewBox="0 0 80 120" width="56" height="84" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <style>
-              @keyframes sf-flicker{0%,100%{transform:scaleX(1) scaleY(1)}30%{transform:scaleX(0.93) scaleY(1.05)}60%{transform:scaleX(1.06) scaleY(0.97)}}
-              .sf-f{animation:sf-flicker 1.6s ease-in-out infinite;transform-origin:24px 55px;}
-            </style>
-          </defs>
-          <g class="sf-f">
-            <path d="M24,72 C14,72 8,63 8,54 C8,42 16,38 16,30 C18,35 20,38 24,40 C22,32 26,22 32,16 C32,28 38,32 40,42 C42,50 40,60 38,66 C36,70 30,72 24,72Z" fill="#E8845C"/>
-            <path d="M24,68 C18,68 14,61 16,52 C17,46 20,43 22,38 C22,44 24,47 27,49 C25,42 28,34 32,28 C32,38 36,42 37,50 C38,58 35,66 30,68Z" fill="#F0C87A"/>
-            <path d="M24,62 C20,62 18,57 20,51 C21,46 24,44 24,40 C25,45 27,48 26,53 C28,50 30,46 30,40 C32,46 32,54 30,60 C28,63 26,62 24,62Z" fill="#FAF7F2" opacity="0.88"/>
-          </g>
-          <text x="24" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">1d</text>
-        </svg>
-        <!-- Double flame (3–6 day streak) -->
-        <svg viewBox="0 0 56 80" width="42" height="64" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <style>
-              @keyframes sf2a{0%,100%{transform:scaleX(1) scaleY(1) rotate(0deg)}30%{transform:scaleX(0.92) scaleY(1.06) rotate(-2deg)}65%{transform:scaleX(1.05) scaleY(0.96) rotate(1.5deg)}}
-              @keyframes sf2b{0%,100%{transform:scaleX(1) scaleY(1) rotate(0deg)}40%{transform:scaleX(0.94) scaleY(1.04) rotate(2deg)}70%{transform:scaleX(1.04) scaleY(0.97) rotate(-1deg)}}
-              .sf2a{animation:sf2a 1.7s ease-in-out infinite;transform-origin:18px 55px;}
-              .sf2b{animation:sf2b 1.9s ease-in-out 0.3s infinite;transform-origin:38px 55px;}
-            </style>
-          </defs>
-          <g class="sf2a">
-            <path d="M18,68 C11,68 6,61 7,52 C8,43 14,39 14,31 C16,36 18,39 20,41 C18,33 22,24 27,18 C27,29 32,33 33,42 C34,49 31,58 28,63 C26,66 22,68 18,68Z" fill="#E8845C"/>
-            <path d="M18,64 C13,64 10,58 12,50 C13,44 17,41 18,36 C19,42 21,45 23,47 C21,41 24,34 28,28 C28,37 31,41 32,49 C33,56 30,63 26,65Z" fill="#F0C87A"/>
-            <path d="M18,58 C15,58 13,54 15,48 C16,43 19,41 19,37 C20,42 21,45 21,50 C23,47 25,43 24,37 C26,43 26,51 24,57 C22,60 20,58 18,58Z" fill="#FAF7F2" opacity="0.85"/>
-          </g>
-          <g class="sf2b">
-            <path d="M38,70 C31,70 26,63 27,54 C28,45 34,40 34,32 C36,37 38,40 40,42 C38,34 42,25 47,19 C47,30 52,34 53,43 C54,51 51,60 48,65 C46,68 42,70 38,70Z" fill="#E8845C" opacity="0.9"/>
-            <path d="M38,66 C33,66 30,60 32,52 C33,46 37,43 38,38 C39,44 41,47 43,49 C41,43 44,36 48,30 C48,39 51,43 52,51 C53,58 50,65 46,67Z" fill="#F0C87A" opacity="0.9"/>
-          </g>
-          <text x="28" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">5d</text>
-        </svg>
-        <!-- Bonfire (14+ day streak) -->
-        <svg viewBox="0 0 64 80" width="50" height="72" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <style>
-              @keyframes bf-a{0%,100%{transform:scaleX(1) scaleY(1)}25%{transform:scaleX(0.9) scaleY(1.07)}60%{transform:scaleX(1.07) scaleY(0.95)}}
-              @keyframes bf-b{0%,100%{transform:scaleX(1) scaleY(1)}35%{transform:scaleX(0.93) scaleY(1.05)}70%{transform:scaleX(1.05) scaleY(0.97)}}
-              @keyframes bf-glow{0%,100%{opacity:.28}50%{opacity:.42}}
-              .bf-a{animation:bf-a 1.5s ease-in-out infinite;transform-origin:22px 55px;}
-              .bf-b{animation:bf-b 1.8s ease-in-out 0.4s infinite;transform-origin:42px 55px;}
-              .bf-c{animation:bf-a 2s ease-in-out 0.8s infinite;transform-origin:32px 52px;}
-              .bf-glow{animation:bf-glow 2.2s ease-in-out infinite;}
-            </style>
-            <radialGradient id="bf-halo" cx="0.5" cy="0.9" r="0.5">
-              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.5"/>
+            <radialGradient id="sg1" cx="0.5" cy="1" r="0.6">
+              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.45"/>
               <stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>
             </radialGradient>
           </defs>
-          <!-- Glow halo -->
-          <ellipse class="bf-glow" cx="32" cy="62" rx="28" ry="10" fill="url(#bf-halo)"/>
-          <g class="bf-a">
-            <path d="M22,66 C15,66 10,58 11,49 C12,39 19,34 19,25 C21,31 24,34 26,37 C23,28 28,18 34,11 C34,24 40,28 41,38 C42,47 38,56 34,62 C32,65 26,66 22,66Z" fill="#E8845C"/>
-            <path d="M22,62 C17,62 13,56 15,47 C16,41 20,38 21,32 C22,38 25,41 27,44 C24,37 27,29 32,22 C32,32 36,37 37,46 C38,54 35,62 30,64Z" fill="#F0C87A"/>
+          <!-- Ground glow -->
+          <ellipse class="sf-eg" cx="40" cy="88" rx="24" ry="7" fill="url(#sg1)"/>
+          <!-- Rock ring — 6 stones -->
+          <ellipse cx="24" cy="88" rx="4" ry="2.5" fill="#5C4033" opacity="0.9"/>
+          <ellipse cx="32" cy="91" rx="3.5" ry="2" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="40" cy="92" rx="4" ry="2.2" fill="#5C4033" opacity="0.8"/>
+          <ellipse cx="48" cy="91" rx="3.5" ry="2" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="56" cy="88" rx="4" ry="2.5" fill="#5C4033" opacity="0.9"/>
+          <ellipse cx="40" cy="85" rx="3" ry="1.8" fill="#6B4A38" opacity="0.7"/>
+          <!-- Crossed logs -->
+          <line x1="22" y1="90" x2="58" y2="82" stroke="#3A2010" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+          <line x1="58" y1="90" x2="22" y2="82" stroke="#2E1A0C" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+          <!-- Single animated flame -->
+          <g class="sf1-f">
+            <path d="M40,80 C30,80 23,70 24,60 C25,48 33,43 33,33 C35,40 38,43 40,46 C38,37 43,26 50,18 C50,32 57,37 58,48 C59,58 55,68 51,74 C49,78 44,80 40,80Z" fill="#E8845C"/>
+            <path d="M40,76 C33,76 28,68 30,59 C31,52 35,49 37,43 C38,50 40,53 43,56 C40,48 44,39 49,32 C49,43 54,47 55,57 C56,65 52,74 47,76Z" fill="#F0C87A"/>
+            <path d="M40,70 C36,70 33,64 35,57 C36,51 40,49 40,44 C41,50 43,53 42,58 C45,54 47,50 46,44 C49,51 49,60 46,67 C44,71 42,70 40,70Z" fill="#FAF7F2" opacity="0.85"/>
           </g>
-          <g class="bf-b">
-            <path d="M42,68 C35,68 30,60 31,51 C32,41 39,36 39,27 C41,33 44,36 46,39 C43,30 48,20 54,13 C54,26 60,30 61,40 C62,49 58,59 54,64 C52,67 47,68 42,68Z" fill="#E8845C" opacity="0.85"/>
-            <path d="M42,64 C37,64 33,58 35,49 C36,43 40,40 41,34 C42,40 45,43 47,46 C44,39 47,31 52,24 C52,34 56,39 57,48 C58,56 55,64 50,66Z" fill="#F0C87A" opacity="0.85"/>
+          <!-- Embers -->
+          <circle class="em1" cx="35" cy="82" r="1.2" fill="#F0C87A"/>
+          <circle class="em2" cx="44" cy="80" r="1" fill="#E8845C"/>
+          <!-- Label -->
+          <text x="40" y="108" font-size="8" fill="#C8960C" text-anchor="middle" font-family="monospace" font-weight="bold">1d</text>
+          <text x="40" y="118" font-size="6" fill="#E8845C" text-anchor="middle" font-family="monospace" opacity="0.7">1×</text>
+        </svg>
+
+        <!-- TIER 2: Double bonfire (5–13 day) -->
+        <svg viewBox="0 0 90 120" width="64" height="90" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="sg2" cx="0.5" cy="1" r="0.65">
+              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="#E8845C" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Ground glow -->
+          <ellipse class="sf-eg" cx="45" cy="90" rx="32" ry="9" fill="url(#sg2)"/>
+          <!-- Rock ring -->
+          <ellipse cx="22" cy="90" rx="5" ry="2.8" fill="#5C4033" opacity="0.9"/>
+          <ellipse cx="32" cy="93" rx="4" ry="2.2" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="45" cy="94" rx="5" ry="2.5" fill="#5C4033" opacity="0.8"/>
+          <ellipse cx="58" cy="93" rx="4" ry="2.2" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="68" cy="90" rx="5" ry="2.8" fill="#5C4033" opacity="0.9"/>
+          <ellipse cx="45" cy="87" rx="3.5" ry="2" fill="#6B4A38" opacity="0.7"/>
+          <!-- Crossed logs -->
+          <line x1="18" y1="92" x2="72" y2="82" stroke="#3A2010" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+          <line x1="72" y1="92" x2="18" y2="82" stroke="#2E1A0C" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+          <!-- Left flame -->
+          <g class="sf2-a">
+            <path d="M30,82 C21,82 15,72 16,61 C17,48 25,42 25,31 C27,38 30,42 32,45 C30,36 35,24 43,15 C43,30 51,35 52,47 C53,57 48,68 44,74 C42,79 36,82 30,82Z" fill="#E8845C"/>
+            <path d="M30,77 C24,77 19,70 21,60 C22,53 27,49 28,43 C29,50 32,54 35,57 C32,49 36,39 42,31 C42,43 48,48 49,59 C50,68 46,77 41,79Z" fill="#F0C87A"/>
+            <path d="M30,71 C26,71 23,65 25,58 C26,52 30,50 30,44 C31,51 33,55 32,60 C35,56 37,51 36,44 C39,52 39,62 36,69 C34,73 32,71 30,71Z" fill="#FAF7F2" opacity="0.8"/>
           </g>
-          <g class="bf-c">
-            <path d="M32,60 C25,60 20,53 22,44 C23,36 29,32 29,24 C31,30 33,33 36,35 C33,27 37,18 42,12 C42,23 47,27 48,37 C49,46 45,55 41,59 C39,62 35,60 32,60Z" fill="#FAF7F2" opacity="0.55"/>
+          <!-- Right flame -->
+          <g class="sf2-b">
+            <path d="M60,84 C51,84 45,74 46,63 C47,50 55,44 55,33 C57,40 60,44 62,47 C60,38 65,26 73,17 C73,32 81,37 82,49 C83,59 78,70 74,76 C72,81 66,84 60,84Z" fill="#E8845C" opacity="0.9"/>
+            <path d="M60,79 C54,79 49,72 51,62 C52,55 57,51 58,45 C59,52 62,56 65,59 C62,51 66,41 72,33 C72,45 78,50 79,61 C80,70 76,79 71,81Z" fill="#F0C87A" opacity="0.9"/>
           </g>
-          <!-- Log base -->
-          <line x1="10" y1="68" x2="38" y2="60" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
-          <line x1="54" y1="68" x2="26" y2="60" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
-          <!-- 2× badge ring -->
-          <circle cx="52" cy="18" r="9" fill="none" stroke="#F0C87A" stroke-width="1.8" opacity="0.85"/>
-          <text x="52" y="21.5" font-size="7" fill="#F0C87A" text-anchor="middle" font-family="monospace" font-weight="bold">2×</text>
-          <text x="32" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">14d</text>
+          <!-- Embers -->
+          <circle class="em1" cx="32" cy="84" r="1.3" fill="#F0C87A"/>
+          <circle class="em2" cx="45" cy="82" r="1.1" fill="#E8845C"/>
+          <circle class="em3" cx="58" cy="86" r="1.2" fill="#F0C87A"/>
+          <!-- Label -->
+          <text x="45" y="108" font-size="8" fill="#C8960C" text-anchor="middle" font-family="monospace" font-weight="bold">5d</text>
+          <text x="45" y="118" font-size="6" fill="#E8845C" text-anchor="middle" font-family="monospace" opacity="0.8">1.5×</text>
+        </svg>
+
+        <!-- TIER 3: Massive bonfire (14d+) — full scene -->
+        <svg viewBox="0 0 120 140" width="80" height="106" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="sg3" cx="0.5" cy="1" r="0.65">
+              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#E8845C" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="sg3-atm" cx="0.5" cy="0.85" r="0.5">
+              <stop offset="0%" stop-color="#E8845C" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#E8845C" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Night sky bg with crescent moon -->
+          <rect width="120" height="140" fill="#0A0804" rx="4"/>
+          <!-- Stars -->
+          <circle cx="12" cy="10" r="0.8" fill="white" opacity="0.7"/>
+          <circle cx="35" cy="6" r="0.6" fill="white" opacity="0.5"/>
+          <circle cx="58" cy="12" r="0.9" fill="white" opacity="0.6"/>
+          <circle cx="82" cy="8" r="0.7" fill="white" opacity="0.5"/>
+          <circle cx="105" cy="14" r="0.8" fill="white" opacity="0.6"/>
+          <circle cx="95" cy="5" r="0.6" fill="white" opacity="0.4"/>
+          <!-- Crescent moon -->
+          <circle class="sf-moon" cx="97" cy="18" r="7" fill="#F0C87A" opacity="0.85"/>
+          <circle class="sf-moon" cx="100" cy="16" r="6" fill="#0A0804"/>
+          <!-- Mountain silhouette bg -->
+          <path d="M0,80 C15,72 28,58 42,52 C56,46 60,56 76,50 C90,44 100,36 120,34 L120,140 L0,140Z" fill="#1A2A1E" opacity="0.8"/>
+          <!-- Atmospheric glow from fire -->
+          <ellipse cx="60" cy="100" rx="55" ry="30" fill="url(#sg3-atm)"/>
+          <!-- Ground glow -->
+          <ellipse class="sf-eg" cx="60" cy="108" rx="42" ry="12" fill="url(#sg3)"/>
+          <!-- Rock ring — wider, more rocks -->
+          <ellipse cx="26" cy="108" rx="6" ry="3" fill="#5C4033" opacity="0.9"/>
+          <ellipse cx="37" cy="112" rx="5" ry="2.5" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="50" cy="114" rx="6" ry="3" fill="#5C4033" opacity="0.8"/>
+          <ellipse cx="60" cy="115" rx="5.5" ry="2.8" fill="#6B4A38" opacity="0.75"/>
+          <ellipse cx="70" cy="114" rx="6" ry="3" fill="#5C4033" opacity="0.8"/>
+          <ellipse cx="83" cy="112" rx="5" ry="2.5" fill="#4A3028" opacity="0.85"/>
+          <ellipse cx="94" cy="108" rx="6" ry="3" fill="#5C4033" opacity="0.9"/>
+          <!-- Crossed logs — large X -->
+          <line x1="22" y1="112" x2="98" y2="98" stroke="#3A2010" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+          <line x1="98" y1="112" x2="22" y2="98" stroke="#2E1A0C" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+          <!-- Extra log horizontal -->
+          <line x1="28" y1="105" x2="92" y2="105" stroke="#4A2C14" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+          <!-- Left flame -->
+          <g class="sf3-b">
+            <path d="M32,98 C21,98 13,86 14,73 C15,57 25,50 25,36 C27,44 31,49 33,53 C31,42 37,28 46,18 C46,35 56,41 57,54 C58,65 52,78 47,86 C44,93 38,98 32,98Z" fill="#E8845C" opacity="0.85"/>
+            <path d="M32,93 C25,93 19,85 21,73 C22,65 28,60 29,52 C30,61 34,66 37,70 C34,61 39,49 47,40 C47,54 55,60 56,72 C57,83 52,93 45,96Z" fill="#F0C87A" opacity="0.85"/>
+          </g>
+          <!-- Center flame — tallest -->
+          <g class="sf3-a">
+            <path d="M60,96 C47,96 38,82 39,67 C40,49 51,41 51,24 C54,34 58,39 60,44 C58,32 64,18 74,8 C74,27 84,33 85,49 C86,62 80,76 74,85 C71,91 65,96 60,96Z" fill="#E8845C"/>
+            <path d="M60,90 C51,90 44,80 46,66 C47,57 53,53 55,45 C56,55 60,60 63,64 C60,53 65,40 73,30 C73,46 81,52 82,66 C83,77 78,88 71,92Z" fill="#F0C87A"/>
+            <path d="M60,83 C54,83 50,75 52,66 C53,58 58,55 58,47 C59,56 62,61 61,68 C65,63 67,57 66,48 C70,57 70,69 66,78 C64,83 62,83 60,83Z" fill="#FAF7F2" opacity="0.88"/>
+          </g>
+          <!-- Right flame -->
+          <g class="sf3-c">
+            <path d="M88,98 C77,98 69,86 70,73 C71,57 81,50 81,36 C83,44 87,49 89,53 C87,42 93,28 102,18 C102,35 112,41 113,54 C114,65 108,78 103,86 C100,93 94,98 88,98Z" fill="#E8845C" opacity="0.85"/>
+            <path d="M88,93 C81,93 75,85 77,73 C78,65 84,60 85,52 C86,61 90,66 93,70 C90,61 95,49 103,40 C103,54 111,60 112,72 C113,83 108,93 101,96Z" fill="#F0C87A" opacity="0.85"/>
+          </g>
+          <!-- Many embers -->
+          <circle class="em1" cx="44" cy="100" r="1.5" fill="#F0C87A"/>
+          <circle class="em2" cx="60" cy="96" r="1.2" fill="#FAF7F2"/>
+          <circle class="em3" cx="74" cy="102" r="1.4" fill="#F0C87A"/>
+          <circle class="em4" cx="52" cy="98" r="1.1" fill="#E8845C"/>
+          <circle class="em5" cx="68" cy="95" r="1.3" fill="#F0C87A"/>
+          <!-- 2× multiplier badge ring — prominent -->
+          <circle cx="100" cy="30" r="12" fill="#1C0A04" opacity="0.9"/>
+          <circle cx="100" cy="30" r="12" fill="none" stroke="#F0C87A" stroke-width="2" opacity="0.95"/>
+          <text x="100" y="34.5" font-size="9.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" font-weight="bold">2×</text>
+          <!-- Label -->
+          <text x="60" y="128" font-size="9" fill="#C8960C" text-anchor="middle" font-family="monospace" font-weight="bold">14d</text>
+          <text x="60" y="138" font-size="7" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">DOUBLE POINTS</text>
         </svg>
       </div>
       <div class="info">
         <h4>StreakDisplay.js — buildStreakFlameSVG()</h4>
-        <p>Streak flame tiers: 1–2d = single flame, 3–6d = double, 7–13d = tall triple, 14+ = full animated bonfire with log base. Multiplier badge (2× gold ring shown). Colors: base #E8845C → mid #F0C87A → tip #FAF7F2. 48×80 viewBox.</p>
+        <p>Three bonfire tiers with full campfire scenes: rock ring, crossed log base, animated flames with ember particles. 1d = single flame, 5d = double flame + 1.5× label, 14d+ = massive triple bonfire with night sky, crescent moon, mountain silhouette, 5 animated embers, atmospheric glow, 2× multiplier badge. Colors: base #E8845C → mid #F0C87A → tip #FAF7F2.</p>
         <span class="status-tag status-proposed">Proposed — Phase 2</span>
       </div>
     </div>
