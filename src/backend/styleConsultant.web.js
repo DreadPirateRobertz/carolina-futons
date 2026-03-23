@@ -215,7 +215,9 @@ function checkRateLimit(session) {
  * @param {string} sessionKey
  * @param {{ windowStart: Date, windowCallCount: number }} updatedCounts
  * @param {string} textInput - Sanitized text input
- * @param {string} photoUrl - Validated photo URL (may be '')
+ * @param {string} photoUrl - Validated Wix Media URI (wix:image://... or wix CDN domain). Stored
+ *   as-is for audit trail — this is the internal URI, not the public CDN URL. Do not forward
+ *   this value to external services without re-validating via isWixMediaUrl + _wixMediaToCdnUrl.
  * @param {Array} recommendations - Recommendation results to cache
  * @returns {Promise<void>}
  */
@@ -352,7 +354,10 @@ async function callClaudeVision(photoUrl, textInput) {
   }
 
   const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
-  const explanation = typeof parsed?.explanation === 'string' ? parsed.explanation : '';
+  // Sanitize explanation before returning to client — prevents XSS if rendered in a DOM context.
+  const explanation = typeof parsed?.explanation === 'string'
+    ? sanitize(parsed.explanation, 500)
+    : '';
 
   return { styleTags, explanation };
 }
@@ -518,7 +523,7 @@ export const getStyleConsultation = webMethod(
   },
 );
 
-// ── Export internals for testing ─────────────────────────────────────
+// ── Export internals for testing (do not call from other Velo modules) ───────
 export { getProductRecommendations as _getProductRecommendations };
 export { callClaudeVision as _callClaudeVision };
 
