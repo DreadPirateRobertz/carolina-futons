@@ -218,6 +218,31 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Polecats dispatched: 12 polecats given mol-polecat-work beads per mayor request
 - `bd agent state` warning: system-wide non-fatal noise — `agent` subcommand doesn't exist in installed bd version. Escalated to mayor.
 
+## Session 2026-03-23 (wave 11 — Phase 2 plan + Phase 3-6 specs, autonomous mode)
+
+### What worked well
+- Plan document review loop: caught 8 real issues on first pass (STREAK_7_DAY missing, syntax error, 3 missing test cases, misleading test comments, TDD ordering violation, undocumented spec deviation). All fixed before handing to crew.
+- Parallel spec writing for phases 3-6: dispatched 4 spec-writer agents simultaneously, all produced complete specs with correct format, CMS schemas, DoD checklists, error handling tables. ~170s wall time for 4 specs vs ~700s serial.
+- Dallas integration: replied to 3 queued dallas mails in one structured response with exact API contracts (getActiveChallenges shape, triggers object shape, feature flag pattern). Mobile can now build against real contracts.
+- Autonomous mode execution: proceeding through phases without waiting on Stilgar per standing auth. 10-min crew response window before proceeding — correct discipline.
+- Phase 3 chatbot: correctly identified `styleConsultant.web.js` as the Claude API pattern to reuse (wix-fetch + wix-secrets-backend + ANTHROPIC_API_KEY already in Secrets Manager). No new infrastructure needed.
+
+### Gaps
+- Phase 2 convoy TDD ordering: Task 3 in the plan had stub-before-tests (implementation before tests). Plan reviewer caught it. Would have sent wrong TDD signal to polecats. Fix: always read each task's step sequence top-to-bottom and check tests come before any source file changes.
+- Two ghost beads dispatched (cf-xp9, cf-895) to rennala earlier in session — productSitemap was already fixed. Waste of a polecat slot. Fix: before creating a bead for a "bug", grep git log for recent fixes to that file first.
+- `getTodayET` test 2 had a wrong assertion (4am UTC March 15 after spring-forward = midnight EDT, not 11pm EST). Test would have passed for the wrong reason. More careful DST arithmetic needed when writing test expectations.
+
+### Pattern notes
+- When writing plan tests involving DST: compute the expected ET time explicitly (UTC offset = -5 EST / -4 EDT depending on whether spring-forward has occurred). Spring-forward 2026 = March 8.
+- Spec review loop is worth 2-3 passes — caught 8 issues on pass 1, 0 on pass 2. The investment pays for itself if even 1 HIGH issue is prevented from reaching the crew.
+- Feature flag via Wix Secrets Manager: simplest pattern is a named secret (`GAMIFICATION_CHATBOT_ENABLED`). Absent = disabled. Stilgar controls without code deploy.
+
+### Metrics (this wave)
+- Phase 2: spec approved (3 reviewer passes), plan written + committed, 8 reviewer issues fixed, 6 beads created (cf-6tm/cf-7yu/cf-cf9 slunged; cf-2zy/cf-7hy/cf-dh9 queued)
+- Phases 3-6: specs written + committed (4 new spec files, ~1,575 lines)
+- Dallas: 3 queued mails replied to with API contracts
+- Autonomous mode: granted by Stilgar — continuing all phases without per-decision check-in
+
 ## Session 2026-03-22 (wave 10 — gamification brainstorm + PR review)
 
 ### What worked well
