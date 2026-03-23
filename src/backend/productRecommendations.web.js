@@ -776,3 +776,37 @@ export const getRecommendations = webMethod(
 
 /** @testing Clear the recommendations cache. */
 export function __resetRecCache() { _recCache.clear(); }
+
+/**
+ * Get complementary products to show in the freight bundle upsell banner.
+ * Returns mattresses and accessories suited to pair with a freight item
+ * (Murphy bed or platform bed) already in the cart.
+ *
+ * @param {string[]} excludeProductIds - Product IDs already in cart (excluded from results)
+ * @param {number}   [limit=4]         - Max products to return
+ * @returns {Promise<{success: boolean, products: Array<Object>}>}
+ * @permission Anyone
+ */
+export const getFreightComplementProducts = webMethod(
+  Permissions.Anyone,
+  async (excludeProductIds = [], limit = 4) => {
+    try {
+      const safeLimit = Math.min(Math.max(1, limit), 12);
+      const safeExclude = Array.isArray(excludeProductIds) ? excludeProductIds.slice(0, 50) : [];
+
+      // Prioritise mattresses and accessories — best pairings for freight items
+      const results = await wixData.query('Stores/Products')
+        .hasSome('collections', ['mattresses', 'casegoods-accessories'])
+        .not(wixData.query('Stores/Products').hasSome('_id', safeExclude))
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
+        .ascending('price')
+        .limit(safeLimit)
+        .find();
+
+      return { success: true, products: results.items.map(formatProduct) };
+    } catch (err) {
+      console.error('[productRecommendations] getFreightComplementProducts error:', err);
+      return { success: false, products: [] };
+    }
+  }
+);

@@ -36,6 +36,7 @@ import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
 import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { initCartRecentlyViewed, updateCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
+import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
 
 $w.onReady(async function () {
   initPageSeo('cart');
@@ -86,6 +87,7 @@ async function initCartPage() {
     const cartZip = $w('#cartZipInput')?.value || null;
     initCartDelivery($w, cart.lineItems, cartZip, { repeaterSelector: '#cartItemsRepeater' });
 
+    await initFreightUpsellBanner($w, cart, { addToCart, trackEvent });
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
@@ -141,6 +143,7 @@ function showEmptyCart() {
     try { $w('#tierProgressBar').hide(); } catch (e) {}
     try { $w('#tierProgressText').hide(); } catch (e) {}
     try { $w('#cartDeliverySection').collapse(); } catch (e) {}
+    try { $w('#freightUpsellBanner').collapse(); } catch (e) {}
   } catch (e) {}
 }
 
@@ -531,6 +534,7 @@ function initCartListeners() {
         updateTierProgress(cart);
         updateCartFinancing(cart);
         updateCartDeliveryEstimate($w, cart);
+        updateFreightUpsellBanner($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
         updateCartRecentlyViewed($w, cart?.lineItems || []);

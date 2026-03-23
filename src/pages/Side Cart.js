@@ -16,6 +16,7 @@ import {
   safeMultiply,
 } from 'public/cartService';
 import { announce } from 'public/a11yHelpers.js';
+import { trackEvent } from 'public/engagementTracker';
 import { saveForLater } from 'public/SaveForLater.js';
 import { enableSwipe } from 'public/touchHelpers';
 import { isMobile, collapseOnMobile } from 'public/mobileHelpers';
@@ -28,6 +29,7 @@ import {
 } from 'public/cartStyles.js';
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
+import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
 
 let _sideCartEscapeRegistered = false;
 
@@ -136,6 +138,9 @@ function initSideCart() {
 
   // Register repeater handlers once (not on every refresh)
   initSideCartRepeater();
+
+  // Init freight upsell banner (registers onItemReady once)
+  initFreightUpsellBanner($w, null, { addToCart, trackEvent });
 }
 
 // Register repeater item handlers once to avoid accumulation
@@ -328,6 +333,9 @@ async function refreshSideCart() {
 
     // Tiered discount incentive
     updateSideTierProgress(subtotal);
+
+    // Freight bundle upsell (show when cart has LTL item)
+    await updateFreightUpsellBanner($w, currentCart);
 
     // Cross-sell "Complete the Room" bundles
     await loadSideCartSuggestions(currentCart.lineItems, subtotal);
