@@ -26,12 +26,13 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES } from '../src/public/gamificationTokens.js';
 
 beforeEach(() => {
   __reset();
   vi.clearAllMocks();
+  _resetActiveChallengesRateLimit();
 });
 
 // ── Input validation ──────────────────────────────────────────────────────────
@@ -1072,5 +1073,109 @@ describe('recordWishlistAdd', () => {
     const inserted = __getInserted('WishlistAddLog');
     expect(inserted).toHaveLength(1);
     expect(inserted[0]).toMatchObject({ memberId: 'mem-1', date: '2026-03-22' });
+// ── getActiveChallenges ───────────────────────────────────────────────────────
+
+const CHALLENGES_COLLECTION = 'Challenges';
+
+describe('getActiveChallenges', () => {
+  beforeEach(() => { __reset(); _resetActiveChallengesRateLimit(); });
+  afterEach(() => vi.useRealTimers());
+
+  it('returns empty challenges array when no active challenges exist', async () => {
+    const result = await getActiveChallenges('member-1');
+    expect(result).toEqual({ challenges: [] });
+  });
+
+  it('returns up to 5 active challenges sorted by expiresAt ASC', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'A', conditionType: 'ORDER_COMPLETE', targetCount: 1, rewardPoints: 10, rewardBadgeId: null, expiresAt: new Date('2026-04-05T00:00:00Z'), active: true },
+      { _id: 'ch-2', challengeId: 'ch-2', title: 'B', conditionType: 'REVIEW_SUBMITTED', targetCount: 3, rewardPoints: 20, rewardBadgeId: null, expiresAt: new Date('2026-03-28T00:00:00Z'), active: true },
+      { _id: 'ch-3', challengeId: 'ch-3', title: 'C', conditionType: 'AR_USED', targetCount: 1, rewardPoints: 25, rewardBadgeId: 'ar_explorer', expiresAt: new Date('2026-04-01T00:00:00Z'), active: true },
+    ]);
+    const result = await getActiveChallenges('member-1');
+    expect(result.challenges).toHaveLength(3);
+    // Sorted expiresAt ASC: B (Mar 28), C (Apr 1), A (Apr 5)
+    expect(result.challenges[0].challengeId).toBe('ch-2');
+    expect(result.challenges[1].challengeId).toBe('ch-3');
+    expect(result.challenges[2].challengeId).toBe('ch-1');
+  });
+
+  it('excludes expired challenges (expiresAt < now) even when active = true', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'Active', conditionType: 'ORDER_COMPLETE', targetCount: 1, rewardPoints: 10, rewardBadgeId: null, expiresAt: new Date('2026-04-01T00:00:00Z'), active: true },
+      { _id: 'ch-2', challengeId: 'ch-2', title: 'Expired', conditionType: 'ORDER_COMPLETE', targetCount: 1, rewardPoints: 10, rewardBadgeId: null, expiresAt: new Date('2026-01-01T00:00:00Z'), active: true },
+    ]);
+    const result = await getActiveChallenges('member-1');
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].challengeId).toBe('ch-1');
+  });
+
+  it('slices to maximum 5 challenges', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    const sixChallenges = Array.from({ length: 6 }, (_, i) => ({
+      _id: `ch-${i}`, challengeId: `ch-${i}`, title: `Challenge ${i}`,
+      conditionType: 'ORDER_COMPLETE', targetCount: 1, rewardPoints: 10, rewardBadgeId: null,
+      expiresAt: new Date(`2026-04-0${i + 1}T00:00:00Z`), active: true,
+    }));
+    __seed(CHALLENGES_COLLECTION, sixChallenges);
+    const result = await getActiveChallenges('member-1');
+    expect(result.challenges).toHaveLength(5);
+  });
+
+  it('merges member progress (progressValue, completedAt) into each challenge', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'First Steps', conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50, rewardBadgeId: null, expiresAt: new Date('2026-04-01T00:00:00Z'), active: true },
+    ]);
+    __seed('MemberChallengeProgress', [
+      { _id: 'prog-1', memberId: 'member-1', challengeId: 'ch-1', progressValue: 2, completedAt: null, notifiedAt: null, eventIds: '[]' },
+    ]);
+    const result = await getActiveChallenges('member-1');
+    expect(result.challenges[0].progressValue).toBe(2);
+    expect(result.challenges[0].completedAt).toBeNull();
+  });
+
+  it('defaults progressValue to 0 and completedAt to null when no progress record exists', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'First Steps', conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50, rewardBadgeId: null, expiresAt: new Date('2026-04-01T00:00:00Z'), active: true },
+    ]);
+    const result = await getActiveChallenges('member-1');
+    expect(result.challenges[0].progressValue).toBe(0);
+    expect(result.challenges[0].completedAt).toBeNull();
+  });
+
+  it('returns response shape matching mobile API contract', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'AR Explorer', conditionType: 'AR_USED', targetCount: 1, rewardPoints: 25, rewardBadgeId: 'ar_explorer', expiresAt: new Date('2026-04-01T00:00:00Z'), active: true },
+    ]);
+    const result = await getActiveChallenges('member-1');
+    const c = result.challenges[0];
+    expect(c).toHaveProperty('challengeId');
+    expect(c).toHaveProperty('title');
+    expect(c).toHaveProperty('description');
+    expect(c).toHaveProperty('targetCount');
+    expect(c).toHaveProperty('rewardPoints');
+    expect(c).toHaveProperty('rewardBadgeId');
+    expect(c).toHaveProperty('expiresAt');
+    expect(c).toHaveProperty('progressValue');
+    expect(c).toHaveProperty('completedAt');
+  });
+
+  it('returns { error: 429 } after exceeding rate limit of 10 calls per hour', async () => {
+    for (let i = 0; i < 10; i++) {
+      await getActiveChallenges('member-rate-limit');
+    }
+    const result = await getActiveChallenges('member-rate-limit');
+    expect(result.error).toBe(429);
   });
 });

@@ -20,7 +20,7 @@ import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/fa
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
-import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod } from 'backend/gamificationEventReceiver.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1714,5 +1714,45 @@ export async function post_gamificationEvent(request) {
   } catch (err) {
     console.error('HTTP function error (post_gamificationEvent):', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+// ── Active Challenges Endpoint ────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/activeChallenges?memberId=X
+// Returns active challenges with member progress for the authenticated member.
+// IDOR guard: authenticated member must own the requested memberId.
+// Rate limit: 10 calls/hr per member (shared with webMethod in-memory store).
+
+export async function get_activeChallenges(request) {
+  const json = (obj) => JSON.stringify(obj);
+  const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const memberId = request.query && request.query.memberId;
+
+  try {
+    if (!memberId) {
+      return badRequest({ body: json({ error: 'memberId is required' }), headers: jsonHeaders });
+    }
+
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      console.error(`HTTP function error (activeChallenges): getMember() failed for memberId=${memberId}:`, err);
+      return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
+    }
+    if (!member) {
+      return unauthorized({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
+    }
+    if (member._id !== memberId) {
+      return forbidden({ body: json({ error: 'Access denied' }), headers: jsonHeaders });
+    }
+
+    const result = await _getActiveChallengesWebMethod(memberId);
+
+    if (result.error === 429) {
+      return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
+    }
+
+    return ok({ body: json(result), headers: jsonHeaders });
+  } catch (err) {
+    console.error(`HTTP function error (activeChallenges): memberId=${memberId || 'unknown'}:`, err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }

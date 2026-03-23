@@ -30,6 +30,18 @@ const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
 const WISHLIST_ADD_LOG_COLLECTION = 'WishlistAddLog';
 const WISHLIST_DAILY_CAP = 5;
+const CHALLENGES_COLLECTION = 'Challenges';
+
+// ── getActiveChallenges rate limit (in-memory, per server instance) ───────────
+// 10 calls/hr per member. Resets on server restart — acceptable for Wix serverless.
+const _activeChallengesRateLimit = new Map(); // memberId → { count, windowStart }
+const ACTIVE_CHALLENGES_RATE_LIMIT = 10;
+const ACTIVE_CHALLENGES_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Exported for testing only.
+export function _resetActiveChallengesRateLimit() {
+  _activeChallengesRateLimit.clear();
+}
 
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
@@ -407,3 +419,86 @@ export async function checkWishlistDailyCap(memberId, todayET) {
 export async function recordWishlistAdd(memberId, todayET) {
   await wixData.insert(WISHLIST_ADD_LOG_COLLECTION, { memberId, date: todayET });
 }
+// ── getActiveChallenges ───────────────────────────────────────────────────────
+
+/**
+ * Returns up to 5 active, non-expired challenges for a member, merged with their
+ * progress records. Sorted by expiresAt ASC (soonest-expiring first).
+ * Rate limited to 10 calls/hr per member (in-memory).
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ challenges: Array } | { error: 429 }>}
+ */
+export const getActiveChallenges = webMethod(
+  Permissions.Member,
+  async (memberId) => {
+    if (!memberId) return { challenges: [] };
+
+    // Rate limit: 10 calls/hr per member
+    const now = Date.now();
+    const rl = _activeChallengesRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > ACTIVE_CHALLENGES_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _activeChallengesRateLimit.set(memberId, rl);
+    if (rl.count > ACTIVE_CHALLENGES_RATE_LIMIT) {
+      return { error: 429 };
+    }
+
+    try {
+      const nowDate = new Date();
+
+      // Fetch all active challenge definitions
+      const challengeResults = await wixData
+        .query(CHALLENGES_COLLECTION)
+        .eq('active', true)
+        .find({ suppressAuth: true });
+
+      // Filter expired, sort by expiresAt ASC, cap at 5
+      const active = challengeResults.items
+        .filter(c => c.expiresAt && new Date(c.expiresAt) > nowDate)
+        .sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt))
+        .slice(0, 5);
+
+      if (active.length === 0) return { challenges: [] };
+
+      // Fetch member progress for each challenge in parallel
+      const progressResults = await Promise.all(
+        active.map(c =>
+          wixData
+            .query(CHALLENGE_PROGRESS_COLLECTION)
+            .eq('memberId', memberId)
+            .eq('challengeId', c.challengeId || c._id)
+            .find({ suppressAuth: true })
+            .then(r => ({ challengeId: c.challengeId || c._id, record: r.items[0] || null }))
+            .catch(() => ({ challengeId: c.challengeId || c._id, record: null }))
+        )
+      );
+      const progressMap = Object.fromEntries(progressResults.map(p => [p.challengeId, p.record]));
+
+      const challenges = active.map(c => {
+        const cId = c.challengeId || c._id;
+        const prog = progressMap[cId];
+        return {
+          challengeId: cId,
+          title: c.title,
+          description: c.description || null,
+          conditionType: c.conditionType,
+          targetCount: c.targetCount,
+          rewardPoints: c.rewardPoints,
+          rewardBadgeId: c.rewardBadgeId || null,
+          expiresAt: c.expiresAt instanceof Date ? c.expiresAt.toISOString() : c.expiresAt,
+          progressValue: prog ? prog.progressValue : 0,
+          completedAt: prog ? prog.completedAt : null,
+        };
+      });
+
+      return { challenges };
+    } catch (err) {
+      logError(`getActiveChallenges — failed for member ${memberId}`, err);
+      return { challenges: [] };
+    }
+  }
+);
