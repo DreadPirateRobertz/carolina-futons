@@ -1344,4 +1344,17 @@ describe('recordChallengeProgress — PointsLedger hookup', () => {
     const entry = ledger.find(r => r.type === 'challenge_complete');
     expect(entry).toBeUndefined();
   });
+
+  it('PointsLedger insert error does not prevent success return', async () => {
+    __seed(CHALLENGES_COLLECTION, [BASE_CHALLENGE_DEF]); // targetCount: 3, rewardPoints: 50
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [
+      { _id: 'prog-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, completedAt: null },
+    ]);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    __setInsertError('PointsLedger', new Error('DB unavailable'));
+    const result = await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(result.success).toBe(true);
+    expect(result.completed).toBe(true);
+    expect(result.pointsAwarded).toBe(50);
+  });
 });
