@@ -280,7 +280,7 @@ export const getLeaderboard = webMethod(
  * support, 5-min per-member cache, and 30/min rate limit.
  *
  * @function getChallengeCatalog
- * @returns {Promise<{ challenges: Array } | { error: 429 }>}
+ * @returns {Promise<{ challenges: Array } | { status: 429, error: string }>}
  * @permission SiteMember
  */
 export const getChallengeCatalog = webMethod(

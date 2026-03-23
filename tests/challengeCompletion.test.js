@@ -224,6 +224,8 @@ describe('recordChallengeCompletionEvent — input validation', () => {
   it('throws TypeError for challengeId containing disallowed characters (validateId regex)', async () => {
     await expect(recordChallengeCompletionEvent('mem-1', 'ch@bad', 50)).rejects.toThrow(TypeError);
     await expect(recordChallengeCompletionEvent('mem-1', 'ch/bad', 50)).rejects.toThrow(TypeError);
+    // colon specifically — prevents memberChallengeKey ambiguity (mem-1:ch-a:mem-2 vs mem-1:ch-a + mem-2)
+    await expect(recordChallengeCompletionEvent('mem-1', 'ch:colon', 50)).rejects.toThrow(TypeError);
   });
 });
 
