@@ -76,8 +76,9 @@ export async function saveMemberZip(zip) {
     await currentMember.updateCurrentMember({
       extendedFields: { [MEMBER_FIELD]: zip },
     });
-  } catch (_) {
+  } catch (err) {
     // Non-critical — member profile is a best-effort enhancement.
+    console.warn('[shippingPrefs] saveMemberZip failed:', err?.message ?? err);
   }
 }
 
@@ -102,7 +103,8 @@ export async function loadMemberZip(storage) {
       store.setItem(ZIP_KEY, zip);
     }
     return zip;
-  } catch (_) {
+  } catch (err) {
+    console.warn('[shippingPrefs] loadMemberZip failed:', err?.message ?? err);
     return null;
   }
 }
