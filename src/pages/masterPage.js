@@ -104,21 +104,15 @@ $w.onReady(async function () {
   // Exit-intent lead capture — delayed 10s to avoid premature trigger
   setTimeout(() => initExitIntent(), 10000);
 
-  // Phase 7 living sky — dynamically imported so the page degrades gracefully
-  // if living-sky-wix.js (cf-ad3) hasn't merged yet
+  // Phase 7 living sky — initLivingSky manages its own 60s tick loop internally
   const weather = detectWeatherSeed(new Date());
   import('public/living-sky-wix.js')
-    .then(({ initLivingSky, tickLivingSky }) => {
-      try { initLivingSky({ weather }); } catch (err) {
+    .then(({ initLivingSky }) => {
+      try { initLivingSky($w, { weather }); } catch (err) {
         console.error('[masterPage] initLivingSky threw:', err.message);
       }
-      setInterval(() => {
-        try { tickLivingSky(); } catch (err) {
-          console.error('[masterPage] tickLivingSky threw:', err.message);
-        }
-      }, 30_000);
     })
-    .catch(err => console.warn('[masterPage] living-sky-wix.js not available (cf-ad3 pending):', err.message));
+    .catch(err => console.warn('[masterPage] living-sky-wix.js not available:', err.message));
 });
 
 // ── Accessibility ───────────────────────────────────────────────────
