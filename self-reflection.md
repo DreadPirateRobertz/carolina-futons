@@ -292,3 +292,22 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Direct push to main as workaround failed (polecat branch ≠ main, non-fast-forward)
 - Better path: get workflow scope first, then merge PRs normally
 - Parallel `gt sling` commands chain-fail with exit 137 (OOM/timeout) when agent-state retry loops stack up. Run slings sequentially or one-at-a-time to avoid.
+
+## Session 2026-03-23 (Phase 7 Living Blue Ridge Sky — demo + spec)
+
+### What worked well
+- Rapid iteration on the demo with screenshot feedback: Stilgar's visual rejection of photos ("it didn't come out well") was unambiguous and I reverted immediately without trying to defend the implementation. Right call.
+- Weather system removal was clean: stripped all SVG overlays (fog ellipses, storm clouds, lightning, rain), all JS functions (weatherSkyTint, applyWeather, weatherCloudMult, setWeather), the weather state variable, and the selector UI in one pass. No orphaned code left behind except one `weather` reference in maybeShootingStar — caught and fixed immediately when it threw at runtime.
+- Pure SVG approach for atmospheric depth worked well. The 4-ridge atmospheric perspective + rim light + sun glow radial + cloudOp-driven valley fog gives convincing depth without any photo compositing complexity.
+- Subtle precipitation as season-driven CSS layers (not mode buttons) threads the needle: user gets snowfall in winter without a weather UI that clashed with the aesthetic.
+- Spec doc → reviewer → approval loop ran cleanly. Reviewer returned APPROVED with 5 minor notes, all valid. Notes documented as pending action items.
+
+### Gaps
+- The dallas mail failed twice due to shell interpolation issues with JS code in the message body. Should have used a heredoc or temp file from the start when sending messages containing special characters. Never just retry the same failing approach.
+- Demo server URL took an extra round-trip to discover (/files/ prefix). Should have read server.cjs source at the start rather than guessing.
+- Snow particles may be too subtle at 0.9px radius against a blue sky. Worth checking if size needs bumping to r=1.5 or r=2 for visibility. Verified opacity wiring works but didn't zoom in to confirm visual presence.
+
+### Pattern notes
+- When a user says "go back to the iteration before" — stop, revert completely, THEN add the new direction. Don't try to half-revert and build forward simultaneously. Two clean passes > one messy hybrid.
+- Visual rejection ("it didn't come out well") + direction change in same message = user has already decided. Don't add caveats, don't explain what was tried. Just confirm direction and execute.
+- Season-driven atmospheric effects (snow, mist) are a better UX pattern than manual weather mode buttons for a passive header. The site visitor doesn't choose the weather — the illustration just reflects the season realistically.
