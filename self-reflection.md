@@ -1,5 +1,24 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 cont. (Wave 25 — #751 MERGED, #756 conflict, queue drain, dispatch)
+
+### What worked well
+- Refinery agent on PR #751: confirmed MERGE RECOMMENDED after reading 4 rounds of prior review context. Clear pattern: once refinery says merge, check boxes, CI passes → merge.
+- CI run archaeology: comparing commit count in run log (152 tests) vs godfrey's stated count (158 tests) pinpointed that the 19:55 failure was from the 4th commit, not the 5th — even before checking the branch's CONFLICTING state.
+- Parallel nudge dispatch (godfrey + miquella at same time) instead of sequential — saves time when blockers are independent.
+- Recognizing queue drain early and mailing mayor proactively rather than waiting for watchdog to escalate.
+
+### Gaps / improvement opportunities
+- PR #753 deployment order comment still missing after multiple nudge rounds. Next time: add explicit "DEPLOYMENT ORDER: X before Y, never Y before X, risk = duplicate-key errors during backfill" as a code-level comment, not just a PR comment.
+- Branch CONFLICTING state (PR #756) should have been caught earlier — `gh pr view --json mergeable` is a 1-second check. Add to review checklist.
+
+### Pattern notes
+- When CI has N test files passing but exit code 1 AFTER coverage table, the failing file may be different from the PR's primary file. Always read the full coverage table row, not just the file you're expecting to fail.
+- Merge conflict does NOT prevent commits from appearing in `gh pr view --json commits` — the commit is there but CI won't re-trigger reliably. Check `mergeStateStatus: CONFLICTING` explicitly.
+- 30-min peer review timeout protocol: godfrey (rennala's peer) was busy → PM merges after refinery approval + all boxes checked. This is correct usage of the timeout rule.
+
+---
+
 ## Session 2026-03-23 (Wave 25 — closed #758, diagnosed #756 CI, refinery on #751/#757, blocked #753/#754)
 
 ### What worked well
