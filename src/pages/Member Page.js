@@ -20,6 +20,12 @@ import {
 } from 'public/loyaltyHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
+import {
+  buildWheelSegments,
+  computeCountdown,
+  renderPendingPrizes,
+  renderSpinResult,
+} from 'public/SpinWheel.js';
 
 let currentMember = null;
 let wishlistData = [];
@@ -50,6 +56,7 @@ async function initMemberPage() {
       { name: 'storeCredit', init: () => initStoreCreditDashboard($w) },
       { name: 'giftCards', init: () => initGiftCardDashboard($w) },
       { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
+      { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
       { name: 'accountSettings', init: initAccountSettings },
@@ -353,6 +360,225 @@ async function initLoyaltyDashboard() {
 
   } catch (e) {
     console.error('[MemberPage] Error initializing loyalty dashboard:', e);
+  }
+}
+
+// ── Session Storage Fallback ────────────────────────────────────────
+
+function safeSession() {
+  try {
+    const test = '__ss_test__';
+    sessionStorage.setItem(test, '1');
+    sessionStorage.removeItem(test);
+    return sessionStorage;
+  } catch (e) {
+    const store = {};
+    return {
+      getItem: (k) => Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null,
+      setItem: (k, v) => { store[k] = String(v); },
+      removeItem: (k) => { delete store[k]; },
+    };
+  }
+}
+
+// ── Spin Wheel Section ──────────────────────────────────────────────
+
+async function initSpinSection() {
+  try {
+    const { spinWheel: doSpin, getSpinEligibility } =
+      await import('backend/spinWheel.web');
+
+    const memberId = currentMember?._id;
+    if (!memberId) return;
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    // ── Session-cached SpinPrizes (5 min TTL) ─────────────────────
+    const ss = safeSession();
+    const PRIZES_CACHE_KEY = 'spinPrizes_v1';
+    const PRIZES_CACHE_TTL = 5 * 60 * 1000;
+
+    async function loadCachedPrizes() {
+      try {
+        const raw = ss.getItem(PRIZES_CACHE_KEY);
+        if (raw) {
+          const { ts, prizes } = JSON.parse(raw);
+          if (Date.now() - ts < PRIZES_CACHE_TTL) return prizes;
+        }
+      } catch (e) {}
+      const wixData = (await import('wix-data')).default;
+      const res = await wixData.query('SpinPrizes').eq('active', true).find();
+      const prizes = res.items || [];
+      try { ss.setItem(PRIZES_CACHE_KEY, JSON.stringify({ ts: Date.now(), prizes })); } catch (e) {}
+      return prizes;
+    }
+
+    // ── SVG wheel render ──────────────────────────────────────────
+    function renderSVGWheel(prizes) {
+      try {
+        const svgEl = $w('#spinWheelSVG');
+        if (!svgEl) return;
+        const segments = buildWheelSegments(prizes);
+        if (!segments.length) return;
+        const cx = 100, cy = 100, r = 90;
+        let angle = -90;
+        const paths = segments.map((seg) => {
+          const a1 = (angle * Math.PI) / 180;
+          angle += seg.angle;
+          const a2 = (angle * Math.PI) / 180;
+          const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+          const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+          const large = seg.angle > 180 ? 1 : 0;
+          return `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${seg.color}"/>`;
+        });
+        const svg = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">${paths.join('')}<circle cx="${cx}" cy="${cy}" r="8" fill="#fff"/></svg>`;
+        svgEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      } catch (e) {}
+    }
+
+    // ── UI state ──────────────────────────────────────────────────
+    function updateSpinUI(eligibility) {
+      try {
+        const btn = $w('#spinButton');
+        if (!eligibility.eligible) {
+          try { btn.disable(); } catch (e) {}
+          try { btn.label = 'Come Back Tomorrow'; } catch (e) {}
+          try { $w('#spinBonusChip').hide(); } catch (e) {}
+          const { hours, minutes, seconds } = computeCountdown(
+            Date.now() + (eligibility.nextETMidnightMs || 0),
+          );
+          try {
+            $w('#spinCountdown').text = `Next spin in ${hours}h ${minutes}m ${seconds}s`;
+            $w('#spinCountdown').show();
+          } catch (e) {}
+        } else {
+          try { btn.enable(); } catch (e) {}
+          try { btn.label = 'Spin Now!'; } catch (e) {}
+          try { $w('#spinCountdown').hide(); } catch (e) {}
+          if (eligibility.spinType === 'BONUS') {
+            try {
+              $w('#spinBonusChip').text = `+${eligibility.bonusSpinsRemaining} bonus`;
+              $w('#spinBonusChip').show('fade', { duration: 200 });
+            } catch (e) {}
+          } else {
+            try { $w('#spinBonusChip').hide(); } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+
+    // ── Pending prizes ─────────────────────────────────────────────
+    async function loadPendingPrizes() {
+      try {
+        const wixData = (await import('wix-data')).default;
+        const res = await wixData.query('MemberPendingPrizes')
+          .eq('memberId', memberId)
+          .eq('status', 'PENDING')
+          .find({ suppressAuth: true });
+        const items = renderPendingPrizes(res.items || []);
+        const repeater = $w('#pendingPrizesRepeater');
+        if (!repeater) return;
+        if (items.length === 0) {
+          try { repeater.collapse(); } catch (e) {}
+          return;
+        }
+        repeater.onItemReady(($item, itemData) => {
+          try { $item('#pendingPrizeLabel').text = itemData.label; } catch (e) {}
+        });
+        repeater.data = items.map((p, i) => ({ _id: `pending-${i}`, ...p }));
+        try { repeater.expand(); } catch (e) {}
+      } catch (e) {
+        console.error('[MemberPage] Error loading pending prizes:', e);
+      }
+    }
+
+    // ── Lottie helpers ────────────────────────────────────────────
+    function playLottie(id) {
+      if (prefersReducedMotion) return;
+      try { $w(id).play(); } catch (e) {}
+    }
+
+    function stopLottie(id) {
+      try { $w(id).stop(); } catch (e) {}
+    }
+
+    // ── Init ───────────────────────────────────────────────────────
+    try { $w('#spinWheelSection').expand(); } catch (e) {}
+    playLottie('#spinLottieHub');
+
+    const prizes = await loadCachedPrizes();
+    renderSVGWheel(prizes);
+
+    const eligibility = await getSpinEligibility(memberId);
+    updateSpinUI(eligibility);
+    await loadPendingPrizes();
+
+    // ── Spin button click — registered ONCE ────────────────────────
+    try {
+      $w('#spinButton').onClick(async () => {
+        try {
+          $w('#spinButton').disable();
+          try { $w('#spinButton').label = 'Spinning…'; } catch (e) {}
+          try { $w('#spinResultText').hide(); } catch (e) {}
+
+          const result = await doSpin(memberId);
+
+          if (!result.success) {
+            const msg = result.error === 'RACE_CONDITION'
+              ? 'Already spun today!'
+              : 'Spin failed — try again';
+            try {
+              $w('#spinResultText').text = msg;
+              $w('#spinResultText').show('fade', { duration: 200 });
+            } catch (e) {}
+            const fresh = await getSpinEligibility(memberId);
+            updateSpinUI(fresh);
+            return;
+          }
+
+          const display = renderSpinResult({
+            prize: result.prize?.label || '',
+            prizeType: result.prize?.type || '',
+            pointsAwarded: result.prize?.pointsAwarded || 0,
+          });
+
+          try {
+            $w('#spinResultText').text = display.headline;
+            $w('#spinResultText').show('fade', { duration: 300 });
+          } catch (e) {}
+
+          stopLottie('#spinLottieHub');
+          playLottie('#spinLottieConfetti');
+          try {
+            $w('#spinConfettiOverlay').show('fade', { duration: 200 });
+            setTimeout(() => {
+              try { $w('#spinConfettiOverlay').hide('fade', { duration: 400 }); } catch (e) {}
+              stopLottie('#spinLottieConfetti');
+              playLottie('#spinLottieHub');
+            }, 3000);
+          } catch (e) {}
+
+          const updated = await getSpinEligibility(memberId);
+          updateSpinUI(updated);
+          await loadPendingPrizes();
+
+          trackEvent('spin_wheel', {
+            spinType: result.spinType,
+            prizeType: result.prize?.type,
+            isFallback: result.isFallback,
+          });
+        } catch (err) {
+          console.error('[MemberPage] Spin error:', err);
+          try { $w('#spinButton').enable(); } catch (e) {}
+          try { $w('#spinButton').label = 'Try Again'; } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
+  } catch (e) {
+    console.error('[MemberPage] Error initializing spin section:', e);
   }
 }
 
