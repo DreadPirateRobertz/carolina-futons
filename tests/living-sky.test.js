@@ -14,55 +14,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useLivingSky, getSeason } from '../src/public/living-sky.js';
 
+// ── Test helpers ──────────────────────────────────────────────────────────────
+
+/** Parse a hex color string and return the sum of its RGB channels. */
+function hexChannelSum(hex) {
+  const h = hex.replace('#', '');
+  return parseInt(h.slice(0, 2), 16) + parseInt(h.slice(2, 4), 16) + parseInt(h.slice(4, 6), 16);
+}
+
+/** Parse a hex color string and return the red channel. */
+function hexRed(hex) {
+  return parseInt(hex.replace('#', '').slice(0, 2), 16);
+}
+
 // ── getSeason ─────────────────────────────────────────────────────────────────
 
 describe('getSeason', () => {
-  it('returns winter for December (month 11)', () => {
-    expect(getSeason(new Date('2026-12-15'))).toBe('winter');
-  });
-
-  it('returns winter for January (month 0)', () => {
-    expect(getSeason(new Date('2026-01-15'))).toBe('winter');
-  });
-
-  it('returns winter for February (month 1)', () => {
-    expect(getSeason(new Date('2026-02-15'))).toBe('winter');
-  });
-
-  it('returns spring for March (month 2)', () => {
-    expect(getSeason(new Date('2026-03-15'))).toBe('spring');
-  });
-
-  it('returns spring for April (month 3)', () => {
-    expect(getSeason(new Date('2026-04-15'))).toBe('spring');
-  });
-
-  it('returns spring for May (month 4)', () => {
-    expect(getSeason(new Date('2026-05-15'))).toBe('spring');
-  });
-
-  it('returns summer for June (month 5)', () => {
-    expect(getSeason(new Date('2026-06-15'))).toBe('summer');
-  });
-
-  it('returns summer for July (month 6)', () => {
-    expect(getSeason(new Date('2026-07-15'))).toBe('summer');
-  });
-
-  it('returns summer for August (month 7)', () => {
-    expect(getSeason(new Date('2026-08-15'))).toBe('summer');
-  });
-
-  it('returns fall for September (month 8)', () => {
-    expect(getSeason(new Date('2026-09-15'))).toBe('fall');
-  });
-
-  it('returns fall for October (month 9)', () => {
-    expect(getSeason(new Date('2026-10-15'))).toBe('fall');
-  });
-
-  it('returns fall for November (month 10)', () => {
-    expect(getSeason(new Date('2026-11-15'))).toBe('fall');
+  it.each([
+    ['2026-01-15', 'winter',  0],
+    ['2026-02-15', 'winter',  1],
+    ['2026-03-15', 'spring',  2],
+    ['2026-04-15', 'spring',  3],
+    ['2026-05-15', 'spring',  4],
+    ['2026-06-15', 'summer',  5],
+    ['2026-07-15', 'summer',  6],
+    ['2026-08-15', 'summer',  7],
+    ['2026-09-15', 'fall',    8],
+    ['2026-10-15', 'fall',    9],
+    ['2026-11-15', 'fall',   10],
+    ['2026-12-15', 'winter', 11],
+  ])('returns "%s" → %s (month %i)', (date, expected) => {
+    expect(getSeason(new Date(date))).toBe(expected);
   });
 });
 
@@ -117,15 +99,9 @@ describe('useLivingSky — return shape', () => {
 describe('useLivingSky(0) — deep night (midnight)', () => {
   it('has dark sky colors (top stop very dark)', () => {
     const { skyColors } = useLivingSky(0);
-    // At midnight the top sky stop should be very dark — all channels < 30
     const top = skyColors[0];
     expect(top).toMatch(/^#|^rgb/);
-    // Verify it's a dark color: parse and check luminance is low
-    const hex = top.replace('#', '');
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    expect(r + g + b).toBeLessThan(60); // very dark
+    expect(hexChannelSum(top)).toBeLessThan(60);
   });
 
   it('has high star opacity (night)', () => {
@@ -163,11 +139,8 @@ describe('useLivingSky(420) — sunrise (7am)', () => {
 
   it('has warm horizon colors (sky colors should not be pure dark)', () => {
     const { skyColors } = useLivingSky(420);
-    // Bottom stop at sunrise should be warm/bright
-    const bottom = skyColors[3];
-    const hex = bottom.replace('#', '');
-    const r = parseInt(hex.slice(0, 2), 16);
-    expect(r).toBeGreaterThan(100); // warm/bright red channel
+    // Bottom stop at sunrise should have a warm/bright red channel
+    expect(hexRed(skyColors[3])).toBeGreaterThan(100);
   });
 
   it('has stars fading out (low star opacity at sunrise)', () => {
@@ -229,12 +202,7 @@ describe('useLivingSky(1320) — dusk (10pm)', () => {
 
   it('has dark navBg (night mode)', () => {
     const { navBg } = useLivingSky(1320);
-    // Dark nav bg: parse hex
-    const hex = navBg.replace('#', '');
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    expect(r + g + b).toBeLessThan(80);
+    expect(hexChannelSum(navBg)).toBeLessThan(80);
   });
 });
 
@@ -270,24 +238,22 @@ describe('useLivingSky — moon phase', () => {
   });
 
   it('moonPos.shadowOffset.dx varies over lunar cycle', () => {
-    // Mock Date to simulate different lunar phases
     vi.useFakeTimers();
-    const knownNewMoon = new Date('2025-01-29T12:36:00Z').getTime();
-    const fullMoonDate = new Date(knownNewMoon + 14.77 * 86400000);
-    const newMoonDate  = new Date(knownNewMoon);
+    try {
+      const knownNewMoon = new Date('2025-01-29T12:36:00Z').getTime();
 
-    vi.setSystemTime(newMoonDate);
-    const newMoonState = useLivingSky(0);
+      vi.setSystemTime(new Date(knownNewMoon));
+      const newMoonState = useLivingSky(0);
 
-    vi.setSystemTime(fullMoonDate);
-    const fullMoonState = useLivingSky(0);
+      vi.setSystemTime(new Date(knownNewMoon + 14.77 * 86400000));
+      const fullMoonState = useLivingSky(0);
 
-    vi.useRealTimers();
-
-    // Shadow offset at new moon ≠ full moon
-    expect(newMoonState.moonPos.shadowOffset.dx).not.toBeCloseTo(
-      fullMoonState.moonPos.shadowOffset.dx, 0
-    );
+      expect(newMoonState.moonPos.shadowOffset.dx).not.toBeCloseTo(
+        fullMoonState.moonPos.shadowOffset.dx, 0
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
