@@ -249,14 +249,14 @@ All elements live inside `#chatbotSection` (new section) or `#loyaltySection` (i
 
 ### Responsibilities
 
-- On page load: call `chatWithAssistant` with an empty probe message (or check a lightweight `getChatbotStatus` method — see note) to determine feature flag state. If `enabled: false`: hide `#chatbotPanel`, show `#chatbotComingSoon`.
+- On page load: call `getChatbotEnabled()` to determine feature flag state. If `enabled: false`: hide `#chatbotPanel`, show `#chatbotComingSoon`.
 - Render conversation thread in `#chatbotResponseArea` — user messages right-aligned, assistant messages left-aligned. New messages appended to bottom. Thread scrolls to latest on each reply.
 - On send: disable `#chatbotSendBtn` + show `#chatbotLoadingBear` while waiting. Re-enable on response.
 - Update `#chatbotLimitDisplay` after each response with `dailyMessagesRemaining` from the webMethod return.
-- When `limitReached: true` response received: disable input + send button, update `#chatbotLimitDisplay` to "Daily limit reached — resets at midnight MT".
+- When `limitReached: true` response received: disable input + send button, update `#chatbotLimitDisplay` to "Daily limit reached — resets at midnight ET".
 - Reduced motion: skip fade/type animations on response text. Bear loading animation is still shown (it is informational, not decorative).
 
-> **Note on probe call:** Rather than calling `chatWithAssistant` with an empty message to check flag state (which would create a CMS record), consider adding a lightweight `getChatbotEnabled()` webMethod that reads only the feature flag and returns `{ enabled: boolean }`. This avoids polluting `ChatbotSessions` with probe records. Implementation decision left to the assignee — document the chosen approach in the PR.
+> **`getChatbotEnabled()` webMethod (required):** This is a separate, lightweight webMethod that reads only the `GAMIFICATION_CHATBOT_ENABLED` secret and returns `{ enabled: boolean }`. It does NOT create a `ChatbotSessions` record. Calling `chatWithAssistant` with an empty message to check flag state is explicitly forbidden — it would create a CMS record and consume a daily message slot. The `getChatbotEnabled()` webMethod must be added to the DoD checklist. Rate limit: 20/hr (matches the chatbot session rate limit).
 
 ### Mobile (dallas integration)
 
@@ -279,7 +279,7 @@ All elements live inside `#chatbotSection` (new section) or `#loyaltySection` (i
 |---|---|---|
 | Feature flag off | `{ enabled: false }` | Hide `#chatbotPanel`, show `#chatbotComingSoon` — "Coming Soon" |
 | Member not authenticated | `{ error: 'auth_required' }` (HTTP 401) | Show "Sign in to chat" prompt — do not render input controls |
-| Daily message limit hit | `{ limitReached: true, type: 'messages' }` | Disable input + send, update `#chatbotLimitDisplay` to "Daily limit reached — resets at midnight MT" |
+| Daily message limit hit | `{ limitReached: true, type: 'messages' }` | Disable input + send, update `#chatbotLimitDisplay` to "Daily limit reached — resets at midnight ET" |
 | Daily token limit hit | `{ limitReached: true, type: 'tokens' }` | Same as message limit — disable input, show limit copy |
 | Hourly rate limit hit | `{ error: 'rate_limit_exceeded', retryAfterMs }` | Show "Too many requests — please wait a moment" with optional countdown |
 | Claude API error | `{ error: 'assistant_unavailable' }` | Show inline error in `#chatbotResponseArea`: "The assistant is temporarily unavailable. Please try again." — do not surface API details |
@@ -311,7 +311,7 @@ If a future design decision changes this (e.g., "earn 5 pts for first chatbot in
 - [ ] `ChatbotSessions` CMS collection created in Wix Dashboard (6-field schema above)
 - [ ] `ChatbotKnowledge` CMS collection created in Wix Dashboard — populate at minimum: `sizing`, `care`, `faq`, `returns`, `style_guide` topic keys
 - [ ] `GAMIFICATION_CHATBOT_ENABLED` secret created in Wix Secrets Manager (set to empty string initially — feature off)
-- [ ] `src/backend/gamificationChatbot.web.js` created — feature flag check, auth, rate limits (hourly + daily message + daily token), session history load/trim/save, tool resolution, Claude API call, token accounting, CMS upsert
+- [ ] `src/backend/gamificationChatbot.web.js` created — `getChatbotEnabled()` webMethod (reads flag only, no CMS record, rate-limited 20/hr), `chatWithAssistant` webMethod (feature flag check, auth, rate limits, session history load/trim/save, tool resolution, Claude API call, token accounting, CMS upsert)
 - [ ] Feature flag returns `{ enabled: false }` immediately when secret absent/empty — verified by test
 - [ ] Daily reset logic verified by test (date boundary crossing resets counts)
 - [ ] Daily message limit (20) enforced server-side — verified by test

@@ -142,7 +142,9 @@ New fields added by this spec (Phase 2 — Streaks):
 | `streakMultiplier` | Number | Default 1 |
 
 ### `ChatbotSessions` (new collection — separate from StyleConsultantSessions)
-`StyleConsultantSessions` uses an anonymous SHA-256 session key and cannot be reused for member-auth-gated chatbot. Create a new collection:
+`StyleConsultantSessions` uses an anonymous SHA-256 session key and cannot be reused for member-auth-gated chatbot. Create a new collection.
+
+> **Authoritative schema:** The Phase 3 spec (`2026-03-22-chatbot-phase3.md`) supersedes this table. Phase 3 extends this 4-field base to 6 fields (adds `dailyMessagesUsed` and `hourlyMessageCount`). Implement the 6-field schema from the Phase 3 spec, not the 4-field schema below.
 
 | Field | Type | Notes |
 |-------|------|-------|
