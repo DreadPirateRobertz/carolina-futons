@@ -620,7 +620,8 @@ const CHALLENGES_COLLECTION = 'Challenges';
  * @returns {boolean}
  */
 function isDuplicateKeyError(err) {
-  return typeof err?.message === 'string' && err.message.toLowerCase().includes('duplicate');
+  const msg = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+  return msg.includes('duplicate') || msg.includes('wde0025');
 }
 
 /**
