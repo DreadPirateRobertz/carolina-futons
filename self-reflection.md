@@ -418,3 +418,22 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - `vi.mock` in Vitest 4 CAN fail to intercept dynamic `import()` calls when the same module has been loaded via `vi.importActual` in the same or a related test context. The fix is to make the import static so it resolves at module load time, before any test-time contamination.
 - Merge conflict resolution in multi-file rebases needs explicit closing-brace accounting. When resolving conflicts in `try/catch` blocks or `describe/it` nesting, count open vs. close braces before committing.
 - When two PR branches are parallel (same base commit), rebase the dependent one onto the fix-first one. When the fix merges to main, git rebase will skip the cherry-picked commit automatically.
+
+## Session 2026-03-23 (Wave 20 — squash merge loss recovery, Phase 8 doc, illustration consultation)
+
+### What worked well
+- Root cause depth: "missing export" symptom on PRs #747/#748 traced all the way back to the cf-7sb squash commit deleting 96 lines of daily quest engine from loyaltyService.web.js. Fixed on main directly before nudging crew to rebase — cleaner than telling crew to add back what shouldn't have been removed.
+- Phase 8 illustration choices doc: built `05-phase8-choices.html` with 3 SVG options each for footer divider and contact showroom. Admitted to Stilgar the doc wasn't done pre-compaction rather than bluffing.
+- Cross-rig coordination: dallas had already answered illustration questions before I asked, and had pending alignment questions in inbox. Cleared his blockers (color alignment, sky table stability, Phase 7 status) in one reply.
+- Autonomous illustration consultation: sent 10-min timeout questions to crew + dallas + ripley + burke simultaneously, built the proposal in parallel without waiting for synchronous responses.
+- PR review pipeline: 5-agent reviews running in parallel on PRs #747, #748, #749, #750 simultaneously. PR #749 found critical issue (questTitle/points lost at storage boundary) before merge.
+
+### Gaps
+- squash-merge conflict loss is a recurring pattern (cf-7sb → cf-6tv, previously cf-hw7 → others). Need to add explicit post-merge check: after every squash merge to main, run `npx vitest run` locally to catch deleted exports before crew rebases.
+- Phase 8 illustration doc was not delivered as promised before compaction. Need to treat "Stilgar asked for doc" items as P0 tickets, not background work.
+- gt nudge mayor/rig fails when mayor session isn't running — use `gt mail send mayor/ -s ... -m ...` instead.
+
+### Pattern notes
+- When a squash-merge branch was rebased onto a file that had just received new content (from another squash), the second squash's conflict resolution often drops the new content. The symptom is: tests import a function that doesn't exist in main. Diagnosis: `git show <squash-commit> -- <file> | grep "^-"` reveals what was deleted. Fix: restore the deleted block + commit to main before any downstream rebases.
+- Cross-rig illustration assets: the cfutons web illustration system (illustrations.js, contactIllustrations.js, MountainSkyline.js etc.) is already much further along than expected. Always check src/public/ before scoping illustration work from scratch.
+- Illustration consultation flow: solicit input via nudge with 10-min timeout, build proposal in parallel (don't wait synchronously), fold any replies into the final doc before submission.
