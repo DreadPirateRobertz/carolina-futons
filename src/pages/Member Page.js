@@ -441,10 +441,10 @@ async function initAchievementsSection() {
     if (achievements && achievements.length > 0) {
       const repeater = $w('#achievementsBadgeRepeater');
       repeater.onItemReady(($item, itemData) => {
-        try { $item('#badgeLabel').text = itemData.badgeLabel; } catch (e) {}
+        try { $item('#badgeLabel').text = itemData.badgeLabel; } catch (e) { console.warn('[MemberPage] achievementsBadgeRepeater onItemReady error:', e); }
       });
       repeater.data = achievements.map((a, i) => ({ _id: `achievement-${i}`, ...a }));
-      try { repeater.expand(); } catch (e) {}
+      try { repeater.expand(); } catch (e) { console.warn('[MemberPage] achievementsBadgeRepeater expand error:', e); }
       $w('#achievementsSection').show();
     } else {
       $w('#achievementsSection').hide();
@@ -467,10 +467,10 @@ async function initDailyQuestsSection() {
     $w('#dailyQuestsSection').show();
     const repeater = $w('#dailyQuestsRepeater');
     repeater.onItemReady(($item, itemData) => {
-      try { $item('#questTitle').text = itemData.title; } catch (e) {}
+      try { $item('#questTitle').text = itemData.title; } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater onItemReady error:', e); }
     });
     repeater.data = quests.map(q => ({ _id: q.id, ...q }));
-    try { repeater.expand(); } catch (e) {}
+    try { repeater.expand(); } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater expand error:', e); }
     const completed = quests.filter(q => q.completed).length;
     $w('#questsCompleteText').text = `${completed} of ${quests.length} complete`;
   } catch (e) {

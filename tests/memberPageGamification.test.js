@@ -293,6 +293,28 @@ describe('Member Page — achievements section on load', () => {
     loyaltyMocks.getMyAchievements.mockRejectedValue(new Error('network error'));
     await expect(loadPage()).resolves.not.toThrow();
   });
+
+  it('calls onItemReady on #achievementsBadgeRepeater when achievements present', async () => {
+    loyaltyMocks.getMyAchievements.mockResolvedValue({
+      achievements: [{ milestone: 7, badgeLabel: 'Week Warrior', earnedAt: new Date() }],
+    });
+    await loadPage();
+    expect(getEl('#achievementsBadgeRepeater').onItemReady).toHaveBeenCalled();
+  });
+
+  it('registers onItemReady before setting repeater.data (achievements)', async () => {
+    loyaltyMocks.getMyAchievements.mockResolvedValue({
+      achievements: [{ milestone: 7, badgeLabel: 'Week Warrior', earnedAt: new Date() }],
+    });
+    const repeater = getEl('#achievementsBadgeRepeater');
+    let dataAtRegistration;
+    repeater.onItemReady.mockImplementationOnce(() => {
+      dataAtRegistration = repeater.data;
+    });
+    await loadPage();
+    expect(repeater.onItemReady).toHaveBeenCalled();
+    expect(dataAtRegistration).toEqual([]); // data was empty when onItemReady was registered
+  });
 });
 
 // ── Daily quests section ──────────────────────────────────────────────────────
@@ -358,5 +380,21 @@ describe('Member Page — daily quests section on load', () => {
   it('shows #dailyQuestsSection on happy path', async () => {
     await loadPage();
     expect(getEl('#dailyQuestsSection').show).toHaveBeenCalled();
+  });
+
+  it('calls onItemReady on #dailyQuestsRepeater when quests present', async () => {
+    await loadPage();
+    expect(getEl('#dailyQuestsRepeater').onItemReady).toHaveBeenCalled();
+  });
+
+  it('registers onItemReady before setting repeater.data (quests)', async () => {
+    const repeater = getEl('#dailyQuestsRepeater');
+    let dataAtRegistration;
+    repeater.onItemReady.mockImplementationOnce(() => {
+      dataAtRegistration = repeater.data;
+    });
+    await loadPage();
+    expect(repeater.onItemReady).toHaveBeenCalled();
+    expect(dataAtRegistration).toEqual([]); // data was empty when onItemReady was registered
   });
 });
