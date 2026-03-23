@@ -367,3 +367,20 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - HTTP endpoint naming on Wix: webMethods live in `.web.js` files and are only callable from Wix frontend. External callers (mobile, REST clients) need `get_*` or `post_*` functions in `http-functions.js`. Always check both when a mobile dependency is raised.
 - When all crew beads are editor-blocked and mayor says "assign something", find backend work that doesn't touch the editor. gamificationEventReceiver.web.js and http-functions.js are always good candidates.
 - Phase 7 convoy structure (JS engine + SVG + Wix shim) runs in parallel, but masterPage hookup is sequentially dependent. Create masterPage bead during convoy run, let crew start test scaffolding now, merge after convoy lands.
+
+## Session 2026-03-23 (Wave 17 — PR #733 unblock, streak test fix, syntax repair)
+
+### What worked well
+- Root cause analysis loop: identified that `streak calls: 0` + `errors: []` meant `getMyStreakData` was never called at all (not that it was called with wrong data). Diagnostic capture of console.error narrowed to "dynamic import bypassing vi.mock". The fix (static import) was correct once the cause was clear.
+- Two-stage PR unblock: PR #735 (streak fix) opened by rennala, CI verified, merged with --admin. PR #733 then rebased onto updated main — git correctly skipped the cherry-picked commit. One force push, CI should be green.
+- Merge conflict artifact detection: lint failure on PR #733 traced to missing `}` + `}` in post_gamificationEvent catch block. Separate test file syntax error also found. Both fixed in one commit before rebase.
+- PR sequencing: merged #735 (streak fix) first so #733 could pick it up via rebase. Avoided leaving both with duplicate content.
+
+### Gaps
+- The `vi.importActual` contamination root cause was identified analytically in the prior session but the fix was partially wrong (removing the block but not fixing the import pattern in Member Page.js). The real fix — static import — required a second session. Lesson: when removing the pollution source doesn't fix the test, suspect the dynamic import itself is unintercepted and move to static.
+- Should have run `npx eslint` locally on PR branches BEFORE pushing, not after CI fails. Lint failures are cheap to catch locally.
+
+### Pattern notes
+- `vi.mock` in Vitest 4 CAN fail to intercept dynamic `import()` calls when the same module has been loaded via `vi.importActual` in the same or a related test context. The fix is to make the import static so it resolves at module load time, before any test-time contamination.
+- Merge conflict resolution in multi-file rebases needs explicit closing-brace accounting. When resolving conflicts in `try/catch` blocks or `describe/it` nesting, count open vs. close braces before committing.
+- When two PR branches are parallel (same base commit), rebase the dependent one onto the fix-first one. When the fix merges to main, git rebase will skip the cherry-picked commit automatically.
