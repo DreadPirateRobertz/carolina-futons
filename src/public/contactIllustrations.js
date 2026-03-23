@@ -93,37 +93,46 @@ export function initContactHeroSkyline($w, options) {
   } catch (e) { console.warn('[contactIllustrations] hero element not found:', e); }
 }
 
+// Hex color validation — only accept #RGB / #RRGGBB / #RRGGBBAA values from postMessage
+const SAFE_HEX_RE = /^#[0-9A-Fa-f]{3,8}$/;
+
+// Static star positions for the night sky overlay (module-level to avoid per-call allocation)
+const STAR_POSITIONS = [
+  [30,20],[80,15],[140,25],[190,10],[250,18],[300,12],[350,22],[120,8],[220,5],[280,30],
+];
+
 /**
  * Apply LivingSkyState overlay to a showroom SVG string.
  * Night mode (ambientLight < 0.3) injects stars, moon, and window lantern glow.
  * Day mode injects a sky color tint overlay.
+ * Intentionally unexported — use through initContactShowroomScene.
  * @param {string} svg - Base SVG markup
- * @param {Object} state - LivingSkyState { skyGradient, ambientLight, weather }
- * @returns {string} Modified SVG with sky state applied
+ * @param {Object} state - LivingSkyState { skyGradient, ambientLight }
+ * @returns {string} Modified SVG, or the original svg when no overlay applies
  */
 function applyLivingSkyState(svg, state) {
   const isNight = Number(state.ambientLight) < 0.3;
+  // Validate skyGradient to prevent XSS via postMessage injection
+  const safeGradient = typeof state.skyGradient === 'string' && SAFE_HEX_RE.test(state.skyGradient)
+    ? state.skyGradient : null;
   let overlay = '';
 
-  if (state.skyGradient) {
+  if (safeGradient) {
+    // Day: subtle tint (0.25); night: deeper tint (0.55) to shift sky toward dark
     const opacity = isNight ? 0.55 : 0.25;
-    overlay += '<rect width="400" height="160" fill="' + state.skyGradient + '" opacity="' + opacity + '" id="sky-overlay"/>';
+    overlay += '<rect width="400" height="160" fill="' + safeGradient + '" opacity="' + opacity + '" id="sky-overlay"/>';
   }
 
   if (isNight) {
     overlay += '<g id="stars">';
-    const starPos = [[30,20],[80,15],[140,25],[190,10],[250,18],[300,12],[350,22],[120,8],[220,5],[280,30]];
-    for (const [x, y] of starPos) {
+    for (const [x, y] of STAR_POSITIONS) {
       overlay += '<circle cx="' + x + '" cy="' + y + '" r="1.2" fill="#FAF7F2" opacity="0.8"/>';
     }
     overlay += '</g>';
     overlay += '<circle cx="320" cy="35" r="14" fill="#F2E8D5" opacity="0.7" id="moon"/>'
       + '<circle cx="320" cy="35" r="11" fill="#FAF7F2" opacity="0.6"/>';
-    overlay += '<radialGradient id="lantern-grad" cx="50%" cy="50%" r="50%">'
-      + '<stop offset="0%" stop-color="#F0C87A" stop-opacity="0.65"/>'
-      + '<stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>'
-      + '</radialGradient>'
-      + '<ellipse cx="200" cy="215" rx="45" ry="25" fill="url(#lantern-grad)" id="window-glow"/>';
+    // Window lantern glow — plain fill ellipse (no gradient ref needed, no <defs> modification)
+    overlay += '<ellipse cx="200" cy="215" rx="45" ry="25" fill="#F0C87A" opacity="0.4" id="window-glow"/>';
   }
 
   if (!overlay) return svg;
@@ -133,7 +142,7 @@ function applyLivingSkyState(svg, state) {
 /**
  * Initialize the Contact page showroom scene illustration on a Wix HtmlComponent.
  * Also subscribes to LivingSkyState updates from the masterPage's #livingSkyFrame
- * HtmlComponent, updating the scene sky, ambient light, and night-mode effects.
+ * HtmlComponent. On each message, reassigns container.html with the sky state applied.
  * @param {Function} $w - Wix selector function
  * @param {Object} [options]
  * @param {string} [options.containerId='#contactShowroomScene'] - Container element ID
@@ -148,15 +157,15 @@ export function initContactShowroomScene($w, options) {
     if (!container) return;
     container.html = generateShowroomSVG(opts);
 
-    try {
-      const livingSkyFrame = $w('#livingSkyFrame');
-      if (livingSkyFrame && typeof livingSkyFrame.onMessage === 'function') {
-        livingSkyFrame.onMessage((event) => {
-          const state = event && event.data;
-          if (!state) return;
-          container.html = applyLivingSkyState(generateShowroomSVG(opts), state);
-        });
-      }
-    } catch (_) { /* #livingSkyFrame not present on this page — graceful no-op */ }
-  } catch (e) { console.warn('[contactIllustrations] showroom element not found:', e); }
+    // Subscribe to LivingSkyState — only wrap the selector call; let onMessage callback errors surface
+    let livingSkyFrame;
+    try { livingSkyFrame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
+    if (livingSkyFrame && typeof livingSkyFrame.onMessage === 'function') {
+      livingSkyFrame.onMessage((event) => {
+        const state = event && event.data;
+        if (!state) return;
+        container.html = applyLivingSkyState(generateShowroomSVG(opts), state);
+      });
+    }
+  } catch (e) { console.warn('[contactIllustrations] initContactShowroomScene failed:', e); }
 }

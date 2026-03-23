@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { colors } from '../src/public/sharedTokens.js';
 
-// Module under test — will be created after tests fail
 import {
   CONTACT_ILLUSTRATIONS,
   svgToDataUri,
@@ -497,8 +496,7 @@ describe('Contact Illustrations', () => {
     });
 
     it('does not throw when #livingSkyFrame is not found', () => {
-      const containerEl = { html: '' };
-      const mock$w = (sel) => sel === '#contactShowroomScene' ? containerEl : null;
+      const { mock$w } = makeWix({ hasFrame: false });
       expect(() => initContactShowroomScene(mock$w)).not.toThrow();
     });
 
@@ -523,11 +521,36 @@ describe('Contact Illustrations', () => {
       expect(containerEl.html).toBe(before);
     });
 
-    it('updates container html when valid state arrives', () => {
+    it('updates container html when valid state arrives (injects sky-overlay)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
+      const before = containerEl.html;
       trigger({ skyGradient: '#5B8FA8', ambientLight: 0.8, weather: 'clear' });
-      expect(containerEl.html).toContain('<svg');
+      expect(containerEl.html).not.toBe(before);
+      expect(containerEl.html).toContain('id="sky-overlay"');
+    });
+
+    it('no sky-overlay injected when skyGradient is absent in day mode (early return)', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const base = containerEl.html;
+      trigger({ ambientLight: 0.8, weather: 'clear' }); // no skyGradient
+      expect(containerEl.html).toBe(base);
+    });
+
+    it('night mode injects stars even when skyGradient is absent', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      trigger({ ambientLight: 0.1, weather: 'clear' }); // no skyGradient
+      expect(containerEl.html).toMatch(/id="stars"/);
+    });
+
+    it('invalid skyGradient (non-hex) is rejected — no sky-overlay injected', () => {
+      const { mock$w, containerEl, trigger } = makeWix();
+      initContactShowroomScene(mock$w);
+      const base = containerEl.html;
+      trigger({ skyGradient: 'linear-gradient(red, blue)', ambientLight: 0.8, weather: 'clear' });
+      expect(containerEl.html).toBe(base);
     });
 
     it('night mode (ambientLight < 0.3) injects star elements', () => {
