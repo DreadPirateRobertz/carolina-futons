@@ -1750,7 +1750,7 @@ export async function get_activeChallenges(request) {
 
     const result = await _getActiveChallengesWebMethod(memberId);
 
-    if (result.error === 429) {
+    if (result.status === 429) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
     }
 
@@ -1805,7 +1805,7 @@ export async function post_challengeProgress(request) {
 
     const result = await _recordChallengeProgressWebMethod({ memberId, challengeId });
 
-    if (result.error === 429) {
+    if (result.status === 429) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
     }
     if (!result.success) {
