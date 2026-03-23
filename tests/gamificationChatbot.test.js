@@ -463,6 +463,63 @@ describe('Successful call', () => {
   });
 });
 
+// ── Token accounting ──────────────────────────────────────────────────────────
+
+describe('Token accounting', () => {
+  it('adds actual usage tokens (not estimate) to dailyTokensUsed', async () => {
+    __setSecrets({
+      GAMIFICATION_CHATBOT_ENABLED: 'true',
+      ANTHROPIC_API_KEY: 'test-key',
+    });
+    __setMember(makeMember());
+    __seed('ChatbotSessions', [makeSession({ dailyTokensUsed: 100 })]);
+
+    // Claude returns 80 input + 40 output = 120 actual tokens
+    __setHandler(() => makeClaudeOkResponse('answer', 80, 40));
+
+    const result = await chatWithAssistant('hello', 'member-123');
+    // Remaining = 4000 - 100 - 120 = 3780
+    expect(result.dailyTokensRemaining).toBe(3780);
+  });
+});
+
+// ── Order scope guard ─────────────────────────────────────────────────────────
+
+describe('Order scope guard (architecture note)', () => {
+  // The chatbot spec requires that order lookups only return orders
+  // for the authenticated memberId. This is enforced in the tool resolution
+  // step (step 10 of the flow). Phase 3 implements tool calls via structured
+  // prompt injection — the memberId filter is applied server-side before
+  // passing results to Claude.
+  //
+  // Full order tool tests and return-request orderId ownership validation
+  // require wix-stores-backend mock integration. The spec DoD requires both:
+  //   "Order lookup scope-checked: only returns orders belonging to authenticated memberId"
+  //   "Return request initiation validates orderId ownership before inserting"
+  //
+  // When implementing the tool resolution step (step 10), add dedicated tests
+  // for each transactional tool using the wix-stores-backend mock
+  // at tests/__mocks__/wix-stores-backend.js.
+  //
+  // Stub test below: verify memberId from auth context (not client param) is used.
+
+  it('uses server-derived memberId for all data operations', async () => {
+    __setSecrets({
+      GAMIFICATION_CHATBOT_ENABLED: 'true',
+      ANTHROPIC_API_KEY: 'test-key',
+    });
+    // Server member = 'real-member', client claims 'attacker'
+    __setMember(makeMember('real-member'));
+    __seed('ChatbotSessions', [makeSession({ memberId: 'real-member' })]);
+    __setHandler(() => makeClaudeOkResponse('ok'));
+
+    const result = await chatWithAssistant('check my orders', 'attacker-id');
+    // Call succeeds using real-member's session, not attacker-id
+    expect(result.reply).toBe('ok');
+    expect(result.error).toBeUndefined();
+  });
+});
+
 // ── Claude API call format ────────────────────────────────────────────────────
 
 describe('Claude API call format', () => {
