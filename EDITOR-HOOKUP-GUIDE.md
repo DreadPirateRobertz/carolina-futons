@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Spin Wheel Phase 1 — spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections: SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes [PR #TBD])
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Spin Wheel Phase 1 — spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections: SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes [PR #TBD]; Phase 2 Streak Multipliers — streakCountChip, streakMultiplierBadge, streakToastBox [cf-h7p])
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -1436,6 +1436,15 @@ Place the same 5 elements on the Product Page canvas:
 | `prizeValue` | Number | Numeric value (DISCOUNT_PCT = percentage; others = TBD). |
 | `label` | Text | Display label shown on wheel segment and result. |
 | `color` | Text | Hex color for SVG wheel segment (e.g. `#E07B54`). SVG-escaped automatically. |
+
+### Streak Display (NEW — Phase 2 Streak Multipliers)
+*Source: `src/public/StreakDisplay.js` — `updateStreakDisplay($elements, data, reducedMotion)`. Called from `Member Page.js` after any point-earning event response.*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `streakCountChip` | Text | Hidden when streak < 1 day. Shows "🔥 N-day streak" (compound-modifier form at day 1 and day 7+, space-separated plural for days 2–6). Updated by `buildStreakChipText()`. |
+| `streakMultiplierBadge` | Text | Hidden when multiplier = 1× (no active bonus). Shows "N× points" when streak has unlocked a multiplier (day 3 = 1.5×, day 7+ = 2×). Updated by `buildMultiplierBadgeText()`. |
+| `streakToastBox` | Text | Transient toast — shown on streak increment or milestone. Auto-hides after 3s (5s on milestone). Skipped entirely when `prefers-reduced-motion` is active. Text set by `buildToastText()`. |
 
 ### Order History ⚠️ REPEATER
 `ordersRepeater` (Repeater), `orderFilterDropdown` (Dropdown), `ordersLoadMoreBtn` (Button), `ordersRetryBtn` (Button), `ordersLoader` (Box), `ordersError` (Text), `ordersEmpty` (Box), `startReturnBtn` (Button)

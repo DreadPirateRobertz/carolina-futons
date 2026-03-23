@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Spin Wheel Phase 1: spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections (SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes)</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Spin Wheel Phase 1: spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections (SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes); Phase 2 Streak Multipliers: streakCountChip, streakMultiplierBadge, streakToastBox (cf-h7p)</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -2324,6 +2324,17 @@ Action buttons (right):
         ["spinConfettiOverlay","Box","Confetti overlay"],["pendingPrizesRepeater","Repeater","Pending prizes"]
       ], children: [
         ["pendingPrizeLabel","Text","Prize label"]
+      ]},
+      { name: "Streak Display", impl: `<h4>🔥 Implementation — Streak Display (Phase 2 Streak Multipliers — cf-h7p)</h4>
+<p><em>Source: <code>src/public/StreakDisplay.js</code> → <code>updateStreakDisplay($elements, data, reducedMotion)</code>. Called from <code>Member Page.js</code> after any point-earning event response.</em></p>
+<ul>
+  <li><strong>#streakCountChip</strong>: Text element. <span class="impl-warn">Hidden when streak &lt; 1 day</span>. Shows "🔥 N-day streak" — compound-modifier form at day 1 and day 7+ (e.g. "1-day streak", "7-day streak"), space-separated plural for days 2–6 (e.g. "3 days streak"). Text set by <code>buildStreakChipText()</code>.</li>
+  <li><strong>#streakMultiplierBadge</strong>: Text element. <span class="impl-warn">Hidden when multiplier = 1× (no active bonus)</span>. Shows "N× points" when streak has unlocked a multiplier (day 3 → 1.5×, day 7+ → 2×). Text set by <code>buildMultiplierBadgeText()</code>.</li>
+  <li><strong>#streakToastBox</strong>: Text element used as a transient toast notification. Shown on streak increment or milestone unlock. Auto-hides after 3s (5s for week milestone). <em>Skipped entirely when <code>prefers-reduced-motion</code> is active.</em> Text set by <code>buildToastText()</code>.</li>
+</ul>`, elements: [
+        ["streakCountChip","Text","Daily streak count"],
+        ["streakMultiplierBadge","Text","Active multiplier badge"],
+        ["streakToastBox","Text","Streak toast notification"]
       ]},
       { name: "Order History", repeater: "ordersRepeater", impl: `<h4>📋 Implementation — Order History</h4>
 <p><strong>Layout: Filter dropdown + paginated order cards + loading/error/empty states</strong></p>
