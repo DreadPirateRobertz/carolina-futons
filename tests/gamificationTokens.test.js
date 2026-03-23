@@ -16,6 +16,8 @@ import {
   TIER_NAMES,
   getTierForPoints,
   getBadgesForAccount,
+  STREAK_MULTIPLIER_TIERS,
+  getStreakMultiplier,
 } from '../src/public/gamificationTokens.js';
 
 // ── TIER_THRESHOLDS ───────────────────────────────────────────────────────────
@@ -328,13 +330,13 @@ describe('getBadgesForAccount', () => {
     expect(getBadgesForAccount(history)).not.toContain('curator');
   });
 
-  it('returns week_wanderer for 7+ day login streak', () => {
-    const history = { purchaseCount: 0, productLines: [], arTryOnUsed: false, reviewCount: 0, loginStreakDays: 7 };
+  it('returns week_wanderer for 7+ day activity streak (currentStreakDays)', () => {
+    const history = { purchaseCount: 0, productLines: [], arTryOnUsed: false, reviewCount: 0, currentStreakDays: 7 };
     expect(getBadgesForAccount(history)).toContain('week_wanderer');
   });
 
   it('does not return week_wanderer for 6 day streak', () => {
-    const history = { purchaseCount: 0, productLines: [], arTryOnUsed: false, reviewCount: 0, loginStreakDays: 6 };
+    const history = { purchaseCount: 0, productLines: [], arTryOnUsed: false, reviewCount: 0, currentStreakDays: 6 };
     expect(getBadgesForAccount(history)).not.toContain('week_wanderer');
   });
 
@@ -349,7 +351,7 @@ describe('getBadgesForAccount', () => {
   });
 
   it('returns multiple badges when multiple conditions are met', () => {
-    const history = { purchaseCount: 5, productLines: ['futons', 'covers', 'mattresses'], arTryOnUsed: true, reviewCount: 3, loginStreakDays: 7 };
+    const history = { purchaseCount: 5, productLines: ['futons', 'covers', 'mattresses'], arTryOnUsed: true, reviewCount: 3, currentStreakDays: 7 };
     const badges = getBadgesForAccount(history);
     expect(badges).toContain('first_step');
     expect(badges).toContain('trail_regular');
@@ -367,5 +369,56 @@ describe('getBadgesForAccount', () => {
   it('returns an array (never throws on empty history object)', () => {
     expect(() => getBadgesForAccount({})).not.toThrow();
     expect(Array.isArray(getBadgesForAccount({}))).toBe(true);
+  });
+});
+
+// ── getStreakMultiplier ────────────────────────────────────────────────────────
+
+describe('getStreakMultiplier', () => {
+  it('returns 1 for day 0 (no streak)', () => {
+    expect(getStreakMultiplier(0)).toBe(1);
+  });
+
+  it('returns 1 for day 1', () => {
+    expect(getStreakMultiplier(1)).toBe(1);
+  });
+
+  it('returns 1 for day 2 (top of 1x tier)', () => {
+    expect(getStreakMultiplier(2)).toBe(1);
+  });
+
+  it('returns 1.5 for day 3 (bottom of 1.5x tier)', () => {
+    expect(getStreakMultiplier(3)).toBe(1.5);
+  });
+
+  it('returns 1.5 for day 6 (top of 1.5x tier)', () => {
+    expect(getStreakMultiplier(6)).toBe(1.5);
+  });
+
+  it('returns 2 for day 7 (bottom of 2x tier)', () => {
+    expect(getStreakMultiplier(7)).toBe(2);
+  });
+
+  it('returns 2 for day 30 (well into 2x tier)', () => {
+    expect(getStreakMultiplier(30)).toBe(2);
+  });
+});
+
+// ── getBadgesForAccount — week_wanderer via currentStreakDays ─────────────────
+
+describe('getBadgesForAccount — week_wanderer', () => {
+  it('earns week_wanderer at currentStreakDays >= 7', () => {
+    const badges = getBadgesForAccount({ currentStreakDays: 7 });
+    expect(badges).toContain('week_wanderer');
+  });
+
+  it('does not earn week_wanderer at currentStreakDays = 6', () => {
+    const badges = getBadgesForAccount({ currentStreakDays: 6 });
+    expect(badges).not.toContain('week_wanderer');
+  });
+
+  it('loginStreakDays alone does NOT earn week_wanderer (superseded field)', () => {
+    const badges = getBadgesForAccount({ loginStreakDays: 100, currentStreakDays: 0 });
+    expect(badges).not.toContain('week_wanderer');
   });
 });

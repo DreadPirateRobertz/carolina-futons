@@ -27,6 +27,27 @@ export const POINT_VALUES = {
   STREAK_7_DAY: 100,
 };
 
+// ── Streak multiplier tiers ───────────────────────────────────────────────────
+
+export const STREAK_MULTIPLIER_TIERS = [
+  { minDays: 7, multiplier: 2 },
+  { minDays: 3, multiplier: 1.5 },
+  { minDays: 1, multiplier: 1 },
+];
+
+/**
+ * Returns the streak multiplier for a given number of consecutive ET days.
+ * Tiers: 1-2 days → 1×, 3-6 days → 1.5×, 7+ days → 2×.
+ * @param {number} days
+ * @returns {number}
+ */
+export function getStreakMultiplier(days) {
+  for (const tier of STREAK_MULTIPLIER_TIERS) {
+    if (days >= tier.minDays) return tier.multiplier;
+  }
+  return 1;
+}
+
 // ── Badge color palette ───────────────────────────────────────────────────────
 
 export const BADGE_COLORS = {
@@ -70,8 +91,8 @@ export const BADGE_REGISTRY = {
     label: 'Week Wanderer',
     icon: '🗺️',
     tier: 'TRAIL_BLAZER',
-    description: 'Logged in 7 days in a row.',
-    earnCondition: 'Maintain a 7-day login streak.',
+    description: 'Active in the rewards program 7 days in a row.',
+    earnCondition: 'Earn points or spin the wheel for 7 consecutive days.',
   },
   voice_of_mountain: {
     label: 'Voice of the Mountain',
@@ -116,7 +137,7 @@ export function getTierForPoints(points) {
  * Returns the list of badge IDs earned by an account based on its history.
  * Safe to call with a partial or empty object.
  *
- * @param {{ purchaseCount?: number, productLines?: string[], arTryOnUsed?: boolean, reviewCount?: number, loginStreakDays?: number }} accountHistory
+ * @param {{ purchaseCount?: number, productLines?: string[], arTryOnUsed?: boolean, reviewCount?: number, loginStreakDays?: number, currentStreakDays?: number }} accountHistory
  * @returns {string[]} array of earned badge IDs
  */
 export function getBadgesForAccount(accountHistory = {}) {
@@ -125,7 +146,8 @@ export function getBadgesForAccount(accountHistory = {}) {
     productLines = [],
     arTryOnUsed = false,
     reviewCount = 0,
-    loginStreakDays = 0,
+    loginStreakDays = 0,    // kept for backwards compat — no longer used for week_wanderer
+    currentStreakDays = 0,  // Phase 2: activity-based streak (authoritative for week_wanderer)
   } = accountHistory;
 
   const earned = [];
@@ -134,7 +156,7 @@ export function getBadgesForAccount(accountHistory = {}) {
   if (purchaseCount >= 3) earned.push('trail_regular');
   if (arTryOnUsed) earned.push('visualizer');
   if (Array.isArray(productLines) && new Set(productLines).size >= 3) earned.push('curator');
-  if (loginStreakDays >= 7) earned.push('week_wanderer');
+  if (currentStreakDays >= 7) earned.push('week_wanderer');  // was: loginStreakDays
   if (reviewCount >= 3) earned.push('voice_of_mountain');
 
   return earned;
