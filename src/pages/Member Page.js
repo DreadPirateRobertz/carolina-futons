@@ -428,8 +428,10 @@ async function initSpinSection() {
           const a1 = (angle * Math.PI) / 180;
           angle += seg.angle;
           const a2 = (angle * Math.PI) / 180;
-          const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
-          const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+          const x1 = cx + r * Math.cos(a1);
+          const y1 = cy + r * Math.sin(a1);
+          const x2 = cx + r * Math.cos(a2);
+          const y2 = cy + r * Math.sin(a2);
           const large = seg.angle > 180 ? 1 : 0;
           return `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${seg.color}"/>`;
         });
@@ -443,27 +445,23 @@ async function initSpinSection() {
       try {
         const btn = $w('#spinButton');
         if (!eligibility.eligible) {
-          try { btn.disable(); } catch (e) {}
-          try { btn.label = 'Come Back Tomorrow'; } catch (e) {}
-          try { $w('#spinBonusChip').hide(); } catch (e) {}
+          btn.disable();
+          btn.label = 'Come Back Tomorrow';
+          $w('#spinBonusChip').hide();
           const { hours, minutes, seconds } = computeCountdown(
             Date.now() + (eligibility.nextETMidnightMs || 0),
           );
-          try {
-            $w('#spinCountdown').text = `Next spin in ${hours}h ${minutes}m ${seconds}s`;
-            $w('#spinCountdown').show();
-          } catch (e) {}
+          $w('#spinCountdown').text = `Next spin in ${hours}h ${minutes}m ${seconds}s`;
+          $w('#spinCountdown').show();
         } else {
-          try { btn.enable(); } catch (e) {}
-          try { btn.label = 'Spin Now!'; } catch (e) {}
-          try { $w('#spinCountdown').hide(); } catch (e) {}
+          btn.enable();
+          btn.label = 'Spin Now!';
+          $w('#spinCountdown').hide();
           if (eligibility.spinType === 'BONUS') {
-            try {
-              $w('#spinBonusChip').text = `+${eligibility.bonusSpinsRemaining} bonus`;
-              $w('#spinBonusChip').show('fade', { duration: 200 });
-            } catch (e) {}
+            $w('#spinBonusChip').text = `+${eligibility.bonusSpinsRemaining} bonus`;
+            $w('#spinBonusChip').show('fade', { duration: 200 });
           } else {
-            try { $w('#spinBonusChip').hide(); } catch (e) {}
+            $w('#spinBonusChip').hide();
           }
         }
       } catch (e) {}
@@ -520,8 +518,8 @@ async function initSpinSection() {
       $w('#spinButton').onClick(async () => {
         try {
           $w('#spinButton').disable();
-          try { $w('#spinButton').label = 'Spinning…'; } catch (e) {}
-          try { $w('#spinResultText').hide(); } catch (e) {}
+          $w('#spinButton').label = 'Spinning…';
+          $w('#spinResultText').hide();
 
           const result = await doSpin(memberId);
 
@@ -529,10 +527,8 @@ async function initSpinSection() {
             const msg = result.error === 'RACE_CONDITION'
               ? 'Already spun today!'
               : 'Spin failed — try again';
-            try {
-              $w('#spinResultText').text = msg;
-              $w('#spinResultText').show('fade', { duration: 200 });
-            } catch (e) {}
+            $w('#spinResultText').text = msg;
+            $w('#spinResultText').show('fade', { duration: 200 });
             const fresh = await getSpinEligibility(memberId);
             updateSpinUI(fresh);
             return;
@@ -544,21 +540,17 @@ async function initSpinSection() {
             pointsAwarded: result.prize?.pointsAwarded || 0,
           });
 
-          try {
-            $w('#spinResultText').text = display.headline;
-            $w('#spinResultText').show('fade', { duration: 300 });
-          } catch (e) {}
+          $w('#spinResultText').text = display.headline;
+          $w('#spinResultText').show('fade', { duration: 300 });
 
           stopLottie('#spinLottieHub');
           playLottie('#spinLottieConfetti');
-          try {
-            $w('#spinConfettiOverlay').show('fade', { duration: 200 });
-            setTimeout(() => {
-              try { $w('#spinConfettiOverlay').hide('fade', { duration: 400 }); } catch (e) {}
-              stopLottie('#spinLottieConfetti');
-              playLottie('#spinLottieHub');
-            }, 3000);
-          } catch (e) {}
+          $w('#spinConfettiOverlay').show('fade', { duration: 200 });
+          setTimeout(() => {
+            try { $w('#spinConfettiOverlay').hide('fade', { duration: 400 }); } catch (e) {}
+            stopLottie('#spinLottieConfetti');
+            playLottie('#spinLottieHub');
+          }, 3000);
 
           const updated = await getSpinEligibility(memberId);
           updateSpinUI(updated);
@@ -571,8 +563,8 @@ async function initSpinSection() {
           });
         } catch (err) {
           console.error('[MemberPage] Spin error:', err);
-          try { $w('#spinButton').enable(); } catch (e) {}
-          try { $w('#spinButton').label = 'Try Again'; } catch (e) {}
+          $w('#spinButton').enable();
+          $w('#spinButton').label = 'Try Again';
         }
       });
     } catch (e) {}
