@@ -14,7 +14,7 @@ A daily-streak system that multiplies points earned on all point-earning events.
 
 ## Streak Definition
 
-- **Qualifying activity:** Any event processed by `receiveGamificationEvent` that awards points: `gamification_add_to_cart`, `gamification_submit_review`, `gamification_referral_shared`, `gamification_order_complete`, `gamification_spin_completed`.
+- **Qualifying activity:** Any event processed by `receiveGamificationEvent`: `gamification_add_to_cart`, `gamification_submit_review`, `gamification_referral_shared`, `gamification_order_complete`, `gamification_spin_completed`. For spin events, the spin itself is the qualifying action regardless of prize type — a member who spins and wins a non-points prize (`FREE_SHIP`, `DISCOUNT_PCT`, `SWATCH`) still counts as active that day. The multiplier is only applied to base point amounts; non-points prizes are unaffected.
 - **Daily window:** ET calendar day (`America/New_York`). Same timezone logic as spin wheel.
 - **Streak increment:** If `lastActivityDate` was yesterday's ET date → increment `currentStreakDays` by 1. If `lastActivityDate` was today's ET date → no change (already counted). If `lastActivityDate` was older than yesterday → reset to 1 (today starts a new streak).
 - **Reset condition:** Lazy — evaluated on next qualifying event. No cron job required for reset.
@@ -36,19 +36,21 @@ Multiplier stored in `MemberPoints.streakMultiplier`. Updated on every qualifyin
 
 Examples at 2×: add_to_cart 5 pts → 10 pts; submit_review 50 pts → 100 pts; referral_shared 100 pts → 200 pts.
 
-**Multiplier applies to:** base point awards only. Never to spin prize type (`FREE_SHIP`, `DISCOUNT_PCT`, `SWATCH`). Never to spin point prize directly — the `spinWheel()` webMethod calls `receiveGamificationEvent` for point prizes, so multiplier is applied there via the normal flow.
+**Multiplier applies to:** base point awards only. Never to spin prize type (`FREE_SHIP`, `DISCOUNT_PCT`, `SWATCH`).
 
 ---
 
 ## Milestone: 7-Day Streak
 
-Triggered exactly once when `currentStreakDays` crosses 7 (previous day was 6, today becomes 7).
+Triggered exactly once when `currentStreakDays` crosses 7 (previous value was 6, today becomes 7).
 
 - Award `POINT_VALUES.STREAK_7_DAY` (100 pts) — added to the same point-award write
 - Unlock `week_wanderer` badge — emit `gamification_badge_unlocked` event through receiver pipeline
 - Frontend: milestone toast — "🏔️ 7-day streak! +100 bonus pts + Week Wanderer badge unlocked"
 
-No repeat milestone for day 7 if streak breaks and resets — only on first crossing per streak run. (If streak breaks and member rebuilds to 7, milestone fires again — intentional.)
+No repeat milestone for day 7 within the same streak run (checks `currentStreakDays === 7` after increment). If streak breaks and member rebuilds to 7 days, milestone fires again — intentional.
+
+**Badge de-duplication:** The `gamification_badge_unlocked` event handler must check whether `week_wanderer` is already in the member's badge set before adding it. This prevents double-award if the event replays. `getBadgesForAccount()` in `gamificationTokens.js` is superseded for `week_wanderer` by this milestone emission path — the `loginStreakDays` field used there is unrelated to `currentStreakDays`. See DoD item for required `gamificationTokens.js` updates.
 
 ---
 
@@ -56,11 +58,13 @@ No repeat milestone for day 7 if streak breaks and resets — only on first cros
 
 ### `MemberPoints` — 4 new fields (Phase 2)
 
+> **Note:** The parent spec `2026-03-22-gamification-system-design.md` lists `streakStartDate` and `lastActivityDate` as type **DateTime**. This spec supersedes that definition — implementers use **Text** (ET date string, e.g. `"2026-03-22"`) for both fields. The lazy-reset logic depends on string equality comparison (`===`), which requires Text fields. DateTime fields store timestamp objects and cannot be compared to date strings with `===`. The parent spec's table should be treated as a draft; this spec is authoritative for Phase 2 implementation.
+
 | Field | Type | Notes |
 |-------|------|-------|
 | `currentStreakDays` | Number | Default 0. Incremented/reset on each qualifying event |
-| `streakStartDate` | Text | ET date string of streak start. Set when streak resets |
-| `lastActivityDate` | Text | ET date string of last qualifying event. Used for lazy reset check |
+| `streakStartDate` | **Text** | ET date string of streak start e.g. `"2026-03-22"`. Set when streak resets |
+| `lastActivityDate` | **Text** | ET date string of last qualifying event e.g. `"2026-03-22"`. Used for lazy reset check |
 | `streakMultiplier` | Number | Default 1. One of: 1, 1.5, 2. Updated after streak recalc |
 
 No new CMS collections. All streak state lives in `MemberPoints`.
@@ -71,6 +75,8 @@ No new CMS collections. All streak state lives in `MemberPoints`.
 
 **Extend, do not replace.** Current flow: read record → compute delta → write updated points. Phase 2 extends this to compute streak state in the same read/write cycle.
 
+> **Deliberate deviation from parent spec:** The parent spec describes "async streak updates" as a separate async operation. After crew technical review (2026-03-22), streak recalculation is deliberately synchronised into the same DB write as the point award. This eliminates partial-state risk (member earns points but streak is not updated, or vice versa), keeps the implementation to a single read + single write, and avoids a second network round trip. The "async" in the parent spec referred to the client-side UX concern: the member sees the point award result immediately, and the streak toast appears as a secondary UI update once the response is received — not blocking the primary UX. This is achieved by client-side sequencing, not server-side async.
+
 ### Extended Flow
 
 1. Read `MemberPoints` record (existing step — now also reads streak fields)
@@ -79,10 +85,10 @@ No new CMS collections. All streak state lives in `MemberPoints`.
 4. Apply multiplier: `adjustedPoints = Math.round(basePoints * streakMultiplier)`
 5. Add `milestoneBonus` (100 pts if day-7 crossed, else 0)
 6. Write single `MemberPoints` update: `{ totalPoints: newTotal + milestoneBonus, tier, currentStreakDays, streakStartDate, lastActivityDate, streakMultiplier }`
-7. If `milestoneBonus > 0`: emit `gamification_badge_unlocked` event, add `week_wanderer` to member's badge set
+7. If `milestoneBonus > 0` and `week_wanderer` not already in member's badge set: emit `gamification_badge_unlocked`, award badge
 8. Return: `{ success, newTotal, tierChanged, newTier, currentStreakDays, streakMultiplier, milestoneUnlocked }`
 
-One DB read + one DB write — no extra round trips vs. current. Streak update is not async relative to point award; both are committed in the same write. The "async" from the parent spec refers to the client-side display update (toast appears after the streak response is received, not blocking the primary point-award UX).
+One DB read + one DB write — no extra round trips vs. current.
 
 ### `updateStreakState(record, todayET)` — Pure Helper
 
@@ -92,7 +98,8 @@ yesterdayET = date string for yesterday in ET
 
 if record.lastActivityDate === todayET:
   → no change to streak (already active today)
-  → return existing streak fields unchanged
+  → milestoneBonus = 0
+  → return existing streak fields unchanged (with milestoneBonus = 0)
 
 if record.lastActivityDate === yesterdayET:
   → increment: currentStreakDays = record.currentStreakDays + 1
@@ -107,6 +114,8 @@ else (missed ≥1 day or no prior activity):
 lastActivityDate = todayET
 return { currentStreakDays, streakStartDate, lastActivityDate, streakMultiplier, milestoneBonus }
 ```
+
+**Note:** `milestoneBonus = 0` is explicitly set in ALL branches, including the same-day no-op path. This prevents undefined values from propagating to the point-award calculation in step 5.
 
 ### `getStreakMultiplier(days)` — Pure Function (in `gamificationTokens.js`)
 
@@ -127,20 +136,27 @@ export function getStreakMultiplier(days) {
 
 No division, no floating-point accumulation — simple threshold lookup.
 
-### ET Date Helper
+### ET Date Helper — `dateUtils.js`
 
-Reuse the same ET date pattern from `spinWheel.web.js` (CF-ecs):
+Extract shared ET date helpers into `src/backend/utils/dateUtils.js`. Both `spinWheel.web.js` and the streak logic import from here. `spinWheel.web.js` must be updated to remove its inline copy.
+
 ```js
-function getTodayET() {
+// src/backend/utils/dateUtils.js
+export function getTodayET() {
   return new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date()).split('/').reverse().join('-'); // → "YYYY-MM-DD"
+  }).format(new Date()).split('/').reverse().join('-'); // "YYYY-MM-DD"
 }
-// Also needed: getYesterdayET() — same but for Date(now - 86400000)
-```
 
-Factor into a shared `dateUtils.js` backend helper (used by both `spinWheel.web.js` and the streak logic) to eliminate duplication.
+export function getYesterdayET() {
+  const d = new Date(Date.now() - 86400000);
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(d).split('/').reverse().join('-');
+}
+```
 
 ---
 
@@ -187,20 +203,24 @@ From radahn's audit — these already exist and are wired:
 | `lastActivityDate` malformed/null | Treat as missed — reset streak to 1 |
 | Milestone bonus write fails | Points still awarded, badge not unlocked — log error, retry on next event is acceptable |
 | ET date computation edge case | Same `Intl.DateTimeFormat` verified approach as spin wheel (tests cover midnight ET boundary) |
+| Spin with non-points prize | Counts as streak activity (spin is qualifying action). No points to apply multiplier to — streak state updates, `basePoints = 0`, `adjustedPoints = 0` |
 
 ---
 
 ## Definition of Done
 
-- [ ] `MemberPoints` collection updated with 4 new fields in Wix Dashboard
+- [ ] `MemberPoints` collection updated with 4 new fields in Wix Dashboard (Text type for `streakStartDate` + `lastActivityDate`)
 - [ ] `getStreakMultiplier()` + `STREAK_MULTIPLIER_TIERS` added to `gamificationTokens.js`
-- [ ] `dateUtils.js` backend helper created (shared ET date logic, extracted from spinWheel.web.js)
+- [ ] `week_wanderer` badge `earnCondition` updated in `gamificationTokens.js` (from "login streak" to "activity streak")
+- [ ] `getBadgesForAccount()` in `gamificationTokens.js` updated: `week_wanderer` earned via `currentStreakDays >= 7` (not `loginStreakDays`) — or documented as superseded by milestone emission path with de-dup guard
+- [ ] `dateUtils.js` backend helper created (`getTodayET`, `getYesterdayET`)
+- [ ] `spinWheel.web.js` updated to import ET date helpers from `dateUtils.js` (inline copy removed)
 - [ ] `updateStreakState()` helper implemented and unit tested
-- [ ] `gamificationEventReceiver.web.js` extended: reads streak fields, applies multiplier, writes unified update, emits badge on milestone
+- [ ] `gamificationEventReceiver.web.js` extended: reads streak fields, applies multiplier, writes unified update, emits badge on milestone with de-dup guard
 - [ ] `StreakDisplay.js` frontend module complete
 - [ ] `#streakCountChip`, `#streakMultiplierBadge`, `#streakToastBox` added to editor in `#loyaltySection`
 - [ ] `Member Page.js` integrated: streak display updates on point-earning event response
 - [ ] Reduced-motion fallback implemented
-- [ ] Tests: `getStreakMultiplier()` boundaries, `updateStreakState()` all branches (same-day no-op, increment, reset, day-7 milestone), multiplier applied correctly in receiver, ET midnight boundary
-- [ ] **EDITOR_HOOKUP_GUIDE.html updated** (3 new element nicknames)
+- [ ] Tests: `getStreakMultiplier()` boundaries, `updateStreakState()` all branches (same-day no-op with `milestoneBonus = 0`, increment, reset, day-7 milestone, non-points spin), multiplier applied correctly in receiver, ET midnight boundary, badge de-dup
+- [ ] **EDITOR_HOOKUP_GUIDE.html updated** (3 new element nicknames: `#streakCountChip`, `#streakMultiplierBadge`, `#streakToastBox`)
 - [ ] **EDITOR-HOOKUP-GUIDE.md updated** (sync with HTML)
