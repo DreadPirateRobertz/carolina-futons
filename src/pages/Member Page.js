@@ -469,7 +469,7 @@ async function initDailyQuestsSection() {
     repeater.onItemReady(($item, itemData) => {
       try { $item('#questTitle').text = itemData.title; } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater onItemReady error:', e); }
     });
-    repeater.data = quests.map(q => ({ _id: q.id, ...q }));
+    repeater.data = quests.map((q, i) => ({ _id: `quest-${i}`, ...q }));
     try { repeater.expand(); } catch (e) { console.warn('[MemberPage] dailyQuestsRepeater expand error:', e); }
     const completed = quests.filter(q => q.completed).length;
     $w('#questsCompleteText').text = `${completed} of ${quests.length} complete`;

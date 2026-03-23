@@ -315,6 +315,12 @@ describe('Member Page — achievements section on load', () => {
     expect(repeater.onItemReady).toHaveBeenCalled();
     expect(dataAtRegistration).toEqual([]); // data was empty when onItemReady was registered
   });
+
+  it('hides #achievementsSection when getMyAchievements returns rate-limit response (no achievements key)', async () => {
+    loyaltyMocks.getMyAchievements.mockResolvedValue({ status: 429, error: 'Rate limit exceeded' });
+    await loadPage();
+    expect(getEl('#achievementsSection').hide).toHaveBeenCalled();
+  });
 });
 
 // ── Daily quests section ──────────────────────────────────────────────────────
@@ -396,5 +402,11 @@ describe('Member Page — daily quests section on load', () => {
     await loadPage();
     expect(repeater.onItemReady).toHaveBeenCalled();
     expect(dataAtRegistration).toEqual([]); // data was empty when onItemReady was registered
+  });
+
+  it('hides #dailyQuestsSection when getMyDailyQuests returns rate-limit response (no quests key)', async () => {
+    loyaltyMocks.getMyDailyQuests.mockResolvedValue({ status: 429, error: 'Rate limit exceeded' });
+    await loadPage();
+    expect(getEl('#dailyQuestsSection').hide).toHaveBeenCalled();
   });
 });
