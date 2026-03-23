@@ -64,10 +64,14 @@ export function _invalidateCache() {
  */
 function ruleMatches(rule, context) {
   if (!rule.active) return false;
+  if (rule.endDate && new Date(rule.endDate) < new Date()) return false;
   const cond = rule.condition || {};
 
   switch (rule.ruleType) {
     case 'product_override':
+      if (Array.isArray(cond.productIds)) {
+        return (context.products || []).some(p => cond.productIds.includes(p.productId));
+      }
       return (context.products || []).some(p => p.productId === cond.productId);
     case 'zip_override':
       return !!(cond.zipPrefix && (context.zip || '').startsWith(String(cond.zipPrefix)));
