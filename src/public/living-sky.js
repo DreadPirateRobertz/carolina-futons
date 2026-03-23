@@ -98,8 +98,6 @@ function parseColor(c) {
 }
 
 function lerpColor(c1, c2, t) {
-  if (!c1 || c1 === 'transparent') c1 = '#00000000';
-  if (!c2 || c2 === 'transparent') c2 = '#00000000';
   const p1 = parseColor(c1), p2 = parseColor(c2);
   const r = Math.round(lerp(p1[0], p2[0], t));
   const g = Math.round(lerp(p1[1], p2[1], t));
@@ -152,23 +150,39 @@ export function getSeason(date = new Date()) {
 
 // ── Season ridge color modifier ───────────────────────────────────────────────
 
+// Per-ridge-layer intensity factors for seasonal color shifts
+const FALL_WARMTH  = { r1: 0.85, r2: 0.65, r3: 0.35, r4: 0.12 };
+const WINTER_FADE  = { r1: 0.5,  r2: 0.45, r3: 0.35, r4: 0.2  };
+
 function seasonalColor(hex, element, season) {
   if (season === 'summer') return hex;
   const [r, g, b, a] = parseColor(hex);
   if (a < 0.01) return hex;
   if (season === 'fall') {
-    const warmth = element === 'r1' ? 0.85 : element === 'r2' ? 0.65 : element === 'r3' ? 0.35 : 0.12;
-    return `rgb(${Math.min(255,Math.round(r + 70*warmth))},${Math.round(g * (1-0.25*warmth))},${Math.round(b * (1-0.55*warmth))})`;
+    const w = FALL_WARMTH[element] || 0.12;
+    return `rgb(${Math.min(255, Math.round(r + 70 * w))},${Math.round(g * (1 - 0.25 * w))},${Math.round(b * (1 - 0.55 * w))})`;
   }
   if (season === 'winter') {
     const avg = (r + g + b) / 3;
-    const fade = element === 'r1' ? 0.5 : element === 'r2' ? 0.45 : element === 'r3' ? 0.35 : 0.2;
-    return `rgb(${Math.min(255,Math.round(lerp(r,avg,fade)+18))},${Math.min(255,Math.round(lerp(g,avg,fade)+18))},${Math.min(255,Math.round(lerp(b,avg,fade)+28))})`;
+    const f = WINTER_FADE[element] || 0.2;
+    return `rgb(${Math.min(255, Math.round(lerp(r, avg, f) + 18))},${Math.min(255, Math.round(lerp(g, avg, f) + 18))},${Math.min(255, Math.round(lerp(b, avg, f) + 28))})`;
   }
   if (season === 'spring') {
-    return `rgb(${Math.max(0,Math.round(r-8))},${Math.min(255,Math.round(g+18))},${Math.round(b)})`;
+    return `rgb(${Math.max(0, Math.round(r - 8))},${Math.min(255, Math.round(g + 18))},${Math.round(b)})`;
   }
   return hex;
+}
+
+// ── Precipitation ────────────────────────────────────────────────────────
+
+function computePrecipitation(season, cloudOpacity, hour) {
+  if (season === 'winter' && cloudOpacity > 0) {
+    return { type: 'snow', opacity: Math.max(0, 0.55 - Math.abs(hour - 12) * 0.02) };
+  }
+  if (season === 'spring' && cloudOpacity > 0.4) {
+    return { type: 'mist', opacity: 0.38 };
+  }
+  return { type: 'none', opacity: 0 };
 }
 
 // ── Moon position ─────────────────────────────────────────────────────────────
@@ -222,15 +236,15 @@ export function useLivingSky(totalMinutes) {
     opacity: lerp(sa.sunOp, sb.sunOp, st),
   };
 
-  const starOpacity    = lerp(sa.starOp    || 0, sb.starOp    || 0, st);
-  const cloudOpacity   = lerp(sa.cloudOp   || 0, sb.cloudOp   || 0, st);
-  const birdOpacity    = lerp(sa.birdOp    || 0, sb.birdOp    || 0, st);
-  const fireflyOpacity = lerp(sa.fireflyOp || 0, sb.fireflyOp || 0, st);
-  const owlOpacity     = lerp(sa.owlOp     || 0, sb.owlOp     || 0, st);
-  const rimOpacity     = lerp(sa.rimOp     || 0, sb.rimOp     || 0, st);
-  const rimColor       = lerpColor(sa.rimCol || '#ffffff', sb.rimCol || '#ffffff', st);
-  const navBg          = lerpColor(sa.navBg,   sb.navBg   || sa.navBg,   st);
-  const navText        = lerpColor(sa.navText, sb.navText || sa.navText, st);
+  const starOpacity    = lerp(sa.starOp,    sb.starOp,    st);
+  const cloudOpacity   = lerp(sa.cloudOp,   sb.cloudOp,   st);
+  const birdOpacity    = lerp(sa.birdOp,    sb.birdOp,    st);
+  const fireflyOpacity = lerp(sa.fireflyOp, sb.fireflyOp, st);
+  const owlOpacity     = lerp(sa.owlOp,     sb.owlOp,     st);
+  const rimOpacity     = lerp(sa.rimOp,     sb.rimOp,     st);
+  const rimColor       = lerpColor(sa.rimCol,  sb.rimCol,  st);
+  const navBg          = lerpColor(sa.navBg,   sb.navBg,   st);
+  const navText        = lerpColor(sa.navText, sb.navText, st);
 
   // Interpolate ridge table
   const { a: ra, b: rb, t: rt } = getInterpolated(ridgeTable, hour);
@@ -246,7 +260,7 @@ export function useLivingSky(totalMinutes) {
   // Moon
   const moonPhase = getMoonPhase(now);
   const moonShadowDx = moonShadowOffset(moonPhase);
-  const moonOpacity = lerp(sa.moonOp || 0, sb.moonOp || 0, st);
+  const moonOpacity = lerp(sa.moonOp, sb.moonOp, st);
   const { cx: moonCx, cy: moonCy } = computeMoonPosition(hour);
 
   const moonPos = {
@@ -257,18 +271,8 @@ export function useLivingSky(totalMinutes) {
     shadowOffset: { dx: moonShadowDx, dy: 0 },
   };
 
-  // Precipitation
-  let precipitationType = 'none';
-  if (season === 'winter' && cloudOpacity > 0) {
-    precipitationType = 'snow';
-  } else if (season === 'spring' && cloudOpacity > 0.4) {
-    precipitationType = 'mist';
-  }
-  const precipitationOpacity = season === 'winter' && cloudOpacity > 0
-    ? Math.max(0, 0.55 - Math.abs(hour - 12) * 0.02)
-    : season === 'spring' && cloudOpacity > 0.4
-      ? 0.38
-      : 0;
+  // Precipitation — type and opacity share the same branching conditions
+  const precip = computePrecipitation(season, cloudOpacity, hour);
 
   return {
     skyColors,
@@ -286,7 +290,7 @@ export function useLivingSky(totalMinutes) {
     navBg,
     navText,
     season,
-    precipitationOpacity,
-    precipitationType,
+    precipitationOpacity: precip.opacity,
+    precipitationType: precip.type,
   };
 }
