@@ -103,6 +103,22 @@ $w.onReady(async function () {
 
   // Exit-intent lead capture — delayed 10s to avoid premature trigger
   setTimeout(() => initExitIntent(), 10000);
+
+  // Phase 7 living sky — dynamically imported so the page degrades gracefully
+  // if living-sky-wix.js (cf-ad3) hasn't merged yet
+  const weather = detectWeatherSeed(new Date());
+  import('public/living-sky-wix.js')
+    .then(({ initLivingSky, tickLivingSky }) => {
+      try { initLivingSky({ weather }); } catch (err) {
+        console.error('[masterPage] initLivingSky threw:', err.message);
+      }
+      setInterval(() => {
+        try { tickLivingSky(); } catch (err) {
+          console.error('[masterPage] tickLivingSky threw:', err.message);
+        }
+      }, 30_000);
+    })
+    .catch(err => console.warn('[masterPage] living-sky-wix.js not available (cf-ad3 pending):', err.message));
 });
 
 // ── Accessibility ───────────────────────────────────────────────────
@@ -1185,4 +1201,23 @@ function collectCoreWebVitals() {
   } catch (e) {
     // CWV collection is non-critical
   }
+}
+
+// ── Phase 7: Living sky weather seed ─────────────────────────────────────────
+
+// 7-slot cycle: clear ×3 (~43%), cloudy/fog/rain/storm ×1 each (~14% each)
+const WEATHER_CYCLE = ['clear', 'clear', 'clear', 'cloudy', 'fog', 'rain', 'storm'];
+
+/**
+ * Deterministic weather type for a given date.
+ * Uses (year + dayOfYear) % 7 as a stable 7-slot cycle with no external API.
+ *
+ * @param {Date} date
+ * @returns {'clear'|'cloudy'|'fog'|'rain'|'storm'}
+ */
+export function detectWeatherSeed(date) {
+  const startOfYear = new Date(date.getFullYear(), 0, 0);
+  const dayOfYear = Math.round((date - startOfYear) / 86_400_000);
+  const slot = (date.getFullYear() + dayOfYear) % 7;
+  return WEATHER_CYCLE[slot];
 }
