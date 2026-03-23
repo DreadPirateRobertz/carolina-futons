@@ -23,6 +23,7 @@ import { POINT_VALUES, getTierForPoints, getStreakMultiplier } from 'public/gami
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, getYesterdayET } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
+import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
@@ -606,6 +607,14 @@ export const recordChallengeProgress = webMethod(
             memberId,
             totalPoints: pointsAwarded,
           });
+        }
+      }
+
+      if (completed && challenge.rewardPoints > 0) {
+        try {
+          await recordChallengeCompleteEvent(memberId, challengeId, challenge.rewardPoints);
+        } catch (err) {
+          logError(`recordChallengeProgress — PointsLedger write failed for member ${memberId} challenge ${challengeId}`, err);
         }
       }
 

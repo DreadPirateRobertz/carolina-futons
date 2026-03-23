@@ -605,7 +605,12 @@ export const getMyAchievements = webMethod(
   }
 );
 
-// ── PointsLedger helpers ──────────────────────────────────────────────────────
+// ── PointsLedger constants ────────────────────────────────────────────────────
+
+const POINTS_LEDGER_COLLECTION = 'PointsLedger';
+// NOTE: CHALLENGES_COLLECTION is also defined in gamificationEventReceiver.web.js — keep in sync.
+// If the collection is ever renamed, update both files.
+const CHALLENGES_COLLECTION = 'Challenges';
 
 /**
  * Write a PointsLedger entry when a streak milestone is reached.
@@ -631,7 +636,7 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
     throw new TypeError('recordStreakMilestoneEvent: points must be a positive finite number');
   }
 
-  const existing = await wixData.query('PointsLedger')
+  const existing = await wixData.query(POINTS_LEDGER_COLLECTION)
     .eq('memberId', cleanId)
     .eq('milestone', milestone)
     .limit(1)
@@ -641,11 +646,59 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
   const label = BADGE_LABELS[milestone];
   const description = label ? `${milestone}-day streak — ${label}` : `${milestone}-day streak`;
 
-  await wixData.insert('PointsLedger', {
+  await wixData.insert(POINTS_LEDGER_COLLECTION, {
     memberId: cleanId,
     milestone,
     type: 'streak_milestone',
     description,
+    points,
+    earnedAt: new Date(),
+  }, { suppressAuth: true });
+}
+
+/**
+ * Record a challenge completion event in the PointsLedger CMS collection.
+ * Idempotent: skips insert if a record for this member + challenge already exists.
+ * Note: the app-level idempotency guard has a TOCTOU window under concurrent
+ * invocations. TODO(cf-ipg): add unique constraint on (memberId, challengeId) in
+ * the PointsLedger CMS collection for hard deduplication at the DB level.
+ *
+ * @param {string} memberId
+ * @param {string} challengeId
+ * @param {number} points — reward points for this challenge (must be > 0)
+ * @returns {Promise<void>}
+ * @throws {TypeError} if memberId or challengeId are invalid, or points is not a positive finite number
+ */
+export async function recordChallengeCompleteEvent(memberId, challengeId, points) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('recordChallengeCompleteEvent: invalid memberId');
+  const cleanChallengeId = validateId(challengeId);
+  if (!cleanChallengeId) throw new TypeError('recordChallengeCompleteEvent: invalid challengeId');
+  if (typeof points !== 'number' || !Number.isFinite(points) || points <= 0) {
+    throw new TypeError('recordChallengeCompleteEvent: points must be a positive finite number');
+  }
+
+  const existing = await wixData
+    .query(POINTS_LEDGER_COLLECTION)
+    .eq('memberId', cleanId)
+    .eq('challengeId', cleanChallengeId)
+    .eq('type', 'challenge_complete')
+    .limit(1)
+    .find({ suppressAuth: true });
+  if (existing.items.length > 0) return;
+
+  const challengeRes = await wixData
+    .query(CHALLENGES_COLLECTION)
+    .eq('challengeId', cleanChallengeId)
+    .limit(1)
+    .find({ suppressAuth: true });
+  const title = challengeRes.items[0]?.title ?? cleanChallengeId;
+
+  await wixData.insert(POINTS_LEDGER_COLLECTION, {
+    memberId: cleanId,
+    type: 'challenge_complete',
+    challengeId: cleanChallengeId,
+    description: `${title} completed`,
     points,
     earnedAt: new Date(),
   }, { suppressAuth: true });
@@ -687,7 +740,7 @@ export const getMyActivity = webMethod(
 
     const defaults = { events: [], hasMore: false, total: 0 };
     try {
-      const res = await wixData.query('PointsLedger')
+      const res = await wixData.query(POINTS_LEDGER_COLLECTION)
         .eq('memberId', member._id)
         .descending('earnedAt')
         .skip(safeOffset)

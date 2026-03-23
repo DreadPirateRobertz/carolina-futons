@@ -21,6 +21,11 @@ vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
 }));
 
+const mockRecordChallengeProgress = vi.fn().mockResolvedValue({ success: true });
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  recordChallengeProgress: mockRecordChallengeProgress,
+}));
+
 import {
   wixEcom_onAbandonedCheckoutCreated,
   wixEcom_onAbandonedCheckoutRecovered,
@@ -453,6 +458,60 @@ describe('wixEcom_onOrderCanceled', () => {
     await expect(
       wixEcom_onOrderCanceled({
         entity: { number: 'ORD-ERR', buyerInfo: { email: 'err@test.com' } },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderCreated — purchase challenge hookup ───────────────
+
+describe('wixEcom_onOrderCreated — purchase challenge hookup', () => {
+  it('calls recordChallengeProgress for each active ORDER_COMPLETE challenge when memberId present', async () => {
+    __seed('Challenges', [
+      { _id: 'ch-1', challengeId: 'ch-1', conditionType: 'ORDER_COMPLETE', active: true, targetCount: 3 },
+      { _id: 'ch-2', challengeId: 'ch-2', conditionType: 'ORDER_COMPLETE', active: true, targetCount: 5 },
+      { _id: 'ch-3', challengeId: 'ch-3', conditionType: 'REVIEW', active: true, targetCount: 1 },
+    ]);
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-001',
+        buyerInfo: { email: 'alice@test.com', contactId: 'c1', memberId: 'mem-1' },
+        priceSummary: { total: { amount: 299 } },
+        lineItems: [],
+      },
+    });
+    expect(mockRecordChallengeProgress).toHaveBeenCalledTimes(2);
+    expect(mockRecordChallengeProgress).toHaveBeenCalledWith({ memberId: 'mem-1', challengeId: 'ch-1' });
+    expect(mockRecordChallengeProgress).toHaveBeenCalledWith({ memberId: 'mem-1', challengeId: 'ch-2' });
+    expect(mockRecordChallengeProgress).not.toHaveBeenCalledWith({ memberId: 'mem-1', challengeId: 'ch-3' });
+  });
+
+  it('does not call recordChallengeProgress when no memberId on order', async () => {
+    __seed('Challenges', [
+      { _id: 'ch-1', challengeId: 'ch-1', conditionType: 'ORDER_COMPLETE', active: true, targetCount: 3 },
+    ]);
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-002',
+        buyerInfo: { email: 'bob@test.com', contactId: 'c2' },
+        lineItems: [],
+      },
+    });
+    expect(mockRecordChallengeProgress).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when recordChallengeProgress fails', async () => {
+    __seed('Challenges', [
+      { _id: 'ch-1', challengeId: 'ch-1', conditionType: 'ORDER_COMPLETE', active: true, targetCount: 3 },
+    ]);
+    mockRecordChallengeProgress.mockRejectedValueOnce(new Error('fail'));
+    await expect(
+      wixEcom_onOrderCreated({
+        entity: {
+          number: 'ORD-ERR',
+          buyerInfo: { email: 'err@test.com', memberId: 'mem-err' },
+          lineItems: [],
+        },
       })
     ).resolves.not.toThrow();
   });
