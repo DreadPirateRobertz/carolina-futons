@@ -294,6 +294,12 @@ describe('unsubscribe mid-sequence — processEmailQueue cancels at send time', 
 // ═══════════════════════════════════════════════════════════════════
 
 describe('already-existing member — welcome series must not restart', () => {
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(FIXED_NOW);
+  });
+  afterAll(() => { vi.useRealTimers(); });
+
   beforeEach(() => {
     __reset();
     __resetSecrets();
@@ -323,7 +329,7 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
-    await new Promise(r => setTimeout(r, 150));
+    await vi.runAllTimersAsync();
     expect(insertCount).toBe(0);
   });
 
@@ -349,7 +355,7 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
-    await new Promise(r => setTimeout(r, 150));
+    await vi.runAllTimersAsync();
     expect(insertCount).toBe(0);
   });
 
