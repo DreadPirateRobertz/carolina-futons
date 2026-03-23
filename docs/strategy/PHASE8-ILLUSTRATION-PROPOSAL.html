@@ -962,7 +962,7 @@
             <span class="choice-title">Sky gradient swap only</span>
           </div>
           <p class="choice-body">
-            Replace the static <code>#show-sky</code> gradient stop colors with values from <code>LivingSkyState.skyGradient</code>. Everything else stays static. The sky above the mountains shifts; cabin stays the same warm illustration regardless of time.
+            Replace the static <code>#show-sky</code> gradient stop colors with values from <code>LivingSkyState.skyColors</code>. Everything else stays static. The sky above the mountains shifts; cabin stays the same warm illustration regardless of time.
           </p>
           <div class="pros-cons">
             <span class="pro">+ Minimal change</span>
@@ -1020,7 +1020,7 @@
             <span class="rec-badge">Recommended</span>
           </div>
           <p class="choice-body">
-            Sky gradient maps to LivingSkyState. Cabin window fill tint maps to ambient light level (<code>state.ambientLight</code>): warm daylight = window transparent, dusk = soft gold glow, night = warm lantern yellow. Stars appear at night. Moon arc at night. Ridge layers shift in darkness. The scene feels alive.
+            Sky colors map to LivingSkyState. Cabin window fill tint maps to star opacity (<code>state.starOpacity</code>): warm daylight = window transparent, dusk = soft gold glow, night = warm lantern yellow. Stars appear at night. Moon arc at night. Ridge layers shift in darkness. The scene feels alive.
           </p>
           <div class="pros-cons">
             <span class="pro">+ Deeply coherent with Phase 7</span>
@@ -1237,7 +1237,7 @@
       <h4>LivingSky integration pattern</h4>
       <ul>
         <li>Read state from <code>living-sky-wix.js</code> onMessage handler</li>
-        <li>Key fields: <code>state.ridgeColors</code> (r1–r7), <code>state.skyGradient</code>, <code>state.ambientLight</code>, <code>state.weather</code></li>
+        <li>Key fields: <code>state.ridgeColors</code> (r1–r7), <code>state.skyColors</code>, <code>state.starOpacity</code>, <code>state.weather</code></li>
         <li>Never poll — subscribe to the <code>#livingSkyFrame</code> postMessage stream</li>
         <li>Defensive: guard all state reads with null checks — Living Sky may not be initialized on all pages</li>
         <li>Mobile: subscribe to <code>useLivingSky(totalMinutes)</code> hook, pass state to illustration props</li>
