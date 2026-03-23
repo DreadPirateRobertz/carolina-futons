@@ -186,6 +186,12 @@ vi.mock('wix-members-frontend', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: membersMocks.getMember,
+  },
+}));
+
 vi.mock('wix-location-frontend', () => ({ to: vi.fn(), baseUrl: 'https://www.carolinafutons.com' }));
 vi.mock('wix-window-frontend', () => ({ openLightbox: vi.fn(), reducedMotion: false }));
 

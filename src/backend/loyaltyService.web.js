@@ -18,7 +18,7 @@ import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import wixData from 'wix-data';
-import { currentMember } from 'wix-members-frontend';
+import { currentMember } from 'wix-members-backend';
 
 // Tier thresholds (points)
 const TIERS = {
