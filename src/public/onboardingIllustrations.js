@@ -427,9 +427,11 @@ export function initOnboardingScene($w, key, containerId) {
     try { frame = $w('#livingSkyFrame'); } catch (_) { /* not on this page */ }
     if (frame && typeof frame.onMessage === 'function') {
       frame.onMessage((event) => {
-        const state = event && event.data;
-        if (!state) return;
-        container.html = _applyOnboardingSkyState(baseSvg, state);
+        try {
+          const state = event && event.data;
+          if (!state) return;
+          container.html = _applyOnboardingSkyState(baseSvg, state);
+        } catch (e) { console.error('[onboardingIllustrations] onMessage handler failed:', e); }
       });
     }
   } catch (e) { console.warn('[onboardingIllustrations] initOnboardingScene failed:', e); }

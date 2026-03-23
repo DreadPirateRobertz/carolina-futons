@@ -270,6 +270,24 @@ describe('initComfortIllustration', () => {
     initComfortIllustration($w, 'nonexistent', '#comfortScene');
     expect(containers['#comfortScene'].html).toBe('');
   });
+
+  it('does not propagate onMessage errors — logs console.error (catch-path guard)', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'plush', '#comfortScene');
+    // Poison the container's html setter so the next assignment throws
+    Object.defineProperty(containers['#comfortScene'], 'html', {
+      get: () => '',
+      set: () => { throw new Error('DOM write failed'); },
+      configurable: true,
+    });
+    expect(() => trigger({ skyColors: ['#1A2B3C'], starOpacity: 0 })).not.toThrow();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[comfortIllustrations] onMessage handler failed:'),
+      expect.any(Error),
+    );
+    consoleSpy.mockRestore();
+  });
 });
 
 // ── Quality bar — atmospheric layers ─────────────────────────────────
