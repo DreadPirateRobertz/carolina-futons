@@ -24,6 +24,7 @@ Each feature gets its own design session, crew review, spike if needed, and bead
 | 4 | **Challenges / Missions** | Most complex, after pipeline proven |
 | 5 | **Trigger Moments** | Polish layer, parallel with challenges |
 | 6 | **Chibi Futon Avatar** | Longest art lead time — start assets now, ships last |
+| 7 | **Visual Header & Footer Redesign** | Full site visual refresh — header, footer, and global visual elements designed with visual companion in browser |
 
 **Mobile layer** (push notifications, achievement share card, home screen widget) = post-launch v2, after 500+ MAU.
 
