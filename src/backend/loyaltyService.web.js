@@ -650,3 +650,67 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
     earnedAt: new Date(),
   }, { suppressAuth: true });
 }
+
+// ── Activity feed ─────────────────────────────────────────────────────────────
+
+const ACTIVITY_MAX_LIMIT = 50;
+
+/**
+ * Get the authenticated member's recent loyalty point events.
+ * Reads the PointsLedger CMS collection, sorted by earnedAt descending.
+ *
+ * @function getMyActivity
+ * @param {{ limit?: number, offset?: number }} options - limit is coerced and clamped to [1, 50]; offset is floored to 0
+ * @returns {Promise<{ events: Array, hasMore: boolean, total: number } | { status: 401|429, error: string }>}
+ * @permission SiteMember
+ */
+export const getMyActivity = webMethod(
+  Permissions.SiteMember,
+  async ({ limit = 20, offset = 0 } = {}) => {
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getMyActivity getMember failed', err);
+      return { status: 401, error: 'Unauthenticated' };
+    }
+    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
+
+    const { allowed } = await checkRateLimit('ActivityRateLimit', member._id, {
+      max: 30,
+      windowMs: 60_000,
+    });
+    if (!allowed) return { status: 429, error: 'Rate limit exceeded' };
+
+    const safeLimit  = Math.min(Math.max(1, Number(limit)  || 20), ACTIVITY_MAX_LIMIT);
+    const safeOffset = Math.max(0, Number(offset) || 0);
+
+    const defaults = { events: [], hasMore: false, total: 0 };
+    try {
+      const res = await wixData.query('PointsLedger')
+        .eq('memberId', member._id)
+        .descending('earnedAt')
+        .skip(safeOffset)
+        .limit(safeLimit)
+        .find({ suppressAuth: true });
+
+      const total   = res.totalCount;
+      const events  = res.items.map(item => ({
+        id:          item._id,
+        type:        item.type,
+        description: item.description,
+        points:      item.points,
+        earnedAt:    item.earnedAt,
+      }));
+
+      return {
+        events,
+        hasMore: safeOffset + events.length < total,
+        total,
+      };
+    } catch (err) {
+      logError('[loyaltyService] getMyActivity PointsLedger query failed', err);
+      return defaults;
+    }
+  }
+);
