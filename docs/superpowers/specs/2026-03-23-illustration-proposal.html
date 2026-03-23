@@ -616,50 +616,135 @@
     <!-- Empty State / Cart Illustrations -->
     <div class="asset-card">
       <div class="preview">
-        <svg viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="es-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.8"/>
-              <stop offset="50%" stop-color="#F2A882" stop-opacity="0.4"/>
+            <linearGradient id="ec-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F2A882" stop-opacity="0.9"/>
+              <stop offset="35%" stop-color="#F0C87A" stop-opacity="0.7"/>
+              <stop offset="70%" stop-color="#E8D5B7" stop-opacity="0.6"/>
               <stop offset="100%" stop-color="#FAF7F2"/>
             </linearGradient>
+            <linearGradient id="ec-wood" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#8B5E3C"/>
+              <stop offset="100%" stop-color="#5C3D20"/>
+            </linearGradient>
           </defs>
-          <rect width="140" height="100" fill="url(#es-sky)"/>
-          <circle cx="105" cy="22" r="12" fill="#F2A882" opacity="0.65"/>
-          <circle cx="105" cy="22" r="7" fill="#E8845C" opacity="0.5"/>
-          <path d="M0,100 L0,50 C15,45 25,35 42,30 C59,25 68,38 85,33 C102,28 112,18 128,22 C134,24 138,32 140,35 L140,100Z" fill="#5B8FA8" opacity="0.25"/>
-          <path d="M0,100 L0,64 C18,60 30,52 48,48 C66,44 78,54 96,50 C114,46 125,38 140,40 L140,100Z" fill="#3A2518" opacity="0.55"/>
-          <path d="M0,100 L0,75 C22,71 36,65 55,62 C74,59 85,68 103,65 C121,62 130,56 140,55 L140,100Z" fill="#3A2518" opacity="0.68"/>
-          <path d="M22,84 L24,76 C25,72 27,70 28,72 L29,76 L31,84Z" fill="#4A7C59" opacity="0.45"/>
-          <rect width="140" height="100" fill="#E8D5B7" opacity="0.12" rx="0"/>
+          <rect width="280" height="140" fill="url(#ec-sky)"/>
+          <!-- Sun low on horizon -->
+          <circle cx="222" cy="36" r="18" fill="#F0C87A" opacity="0.55"/>
+          <circle cx="222" cy="36" r="10" fill="#F2A882" opacity="0.5"/>
+          <!-- Distant ridge -->
+          <path d="M0,82 C20,77 40,67 65,62 C90,57 108,70 135,65 C162,60 178,50 205,54 C232,58 258,67 280,62 L280,140 L0,140Z" fill="#5B8FA8" opacity="0.2"/>
+          <!-- Mid ridge -->
+          <path d="M0,95 C18,90 38,82 65,77 C92,72 112,84 138,79 C164,74 182,66 208,69 C234,72 258,80 280,75 L280,140 L0,140Z" fill="#5C4033" opacity="0.38"/>
+          <!-- Near ridge -->
+          <path d="M0,110 C22,106 42,98 72,95 C102,92 122,102 150,98 C178,94 198,88 225,90 C252,92 268,98 280,96 L280,140 L0,140Z" fill="#3A2518" opacity="0.58"/>
+          <!-- Trees left -->
+          <path d="M14,110 L18,96 C19,90 22,87 24,90 L27,96 L30,110Z" fill="#4A7C59" opacity="0.65"/>
+          <path d="M6,112 L10,100 C11,96 13,94 15,96 L17,100 L20,112Z" fill="#2E4A38" opacity="0.55"/>
+          <!-- Trees right -->
+          <path d="M248,108 L252,94 C253,88 256,85 258,88 L260,94 L264,108Z" fill="#4A7C59" opacity="0.6"/>
+          <path d="M255,110 L258,99 C259,95 261,93 263,95 L265,99 L267,110Z" fill="#2E4A38" opacity="0.5"/>
+          <!-- Porch floor planks -->
+          <rect x="0" y="114" width="280" height="26" fill="#8B6545" opacity="0.8"/>
+          <line x1="0" y1="120" x2="280" y2="120" stroke="#5C3D20" stroke-width="0.7" opacity="0.3"/>
+          <line x1="0" y1="127" x2="280" y2="127" stroke="#5C3D20" stroke-width="0.7" opacity="0.25"/>
+          <line x1="56" y1="114" x2="56" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
+          <line x1="112" y1="114" x2="112" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
+          <line x1="168" y1="114" x2="168" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
+          <line x1="224" y1="114" x2="224" y2="140" stroke="#5C3D20" stroke-width="0.5" opacity="0.18"/>
+          <!-- Futon frame — empty wooden frame on porch -->
+          <rect x="88" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
+          <rect x="187" y="92" width="5" height="24" fill="url(#ec-wood)" opacity="0.85" rx="1"/>
+          <rect x="86" y="90" width="108" height="6" fill="#8B5E3C" opacity="0.9" rx="1.5"/>
+          <rect x="82" y="107" width="116" height="7" fill="#7A5240" opacity="0.85" rx="1"/>
+          <rect x="86" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
+          <rect x="190" y="114" width="4" height="8" fill="url(#ec-wood)" opacity="0.7" rx="0.5"/>
+          <!-- Seat slats (empty look) -->
+          <line x1="95" y1="107" x2="95" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="110" y1="107" x2="110" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="125" y1="107" x2="125" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="140" y1="107" x2="140" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="155" y1="107" x2="155" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="170" y1="107" x2="170" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <line x1="185" y1="107" x2="185" y2="114" stroke="#5C4033" stroke-width="0.6" opacity="0.28"/>
+          <!-- Small tag on frame -->
+          <rect x="128" y="98" width="24" height="10" fill="#FAF7F2" opacity="0.82" rx="1.5"/>
+          <line x1="140" y1="96" x2="140" y2="98" stroke="#8B5E3C" stroke-width="0.8" opacity="0.5"/>
+          <text x="140" y="105.5" font-size="4.5" fill="#5C4033" text-anchor="middle" font-family="Georgia,serif" opacity="0.7">empty</text>
         </svg>
       </div>
       <div class="info">
         <h4>illustrations.js + CartIllustrations.js</h4>
-        <p>Empty cart, wishlist, order history, and onboarding mountain scenes. 280×200 viewBox. Procedurally generated via seeded PRNG in illustrationShared.js.</p>
+        <p>Empty cart, wishlist, order history, and onboarding mountain scenes. 280×200 viewBox. Procedurally generated via seeded PRNG in <code>illustrationShared.js</code>. Empty futon frame on porch = awaiting your find.</p>
         <span class="status-tag status-live">Live</span>
+        <span class="status-tag status-phase8">Phase 8 target</span>
       </div>
     </div>
 
-    <!-- About Illustrations -->
+    <!-- About / Comfort Illustrations -->
     <div class="asset-card">
-      <div class="preview" style="background:#F5F0E8;">
-        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-          <rect width="200" height="120" fill="#F2E8D5"/>
-          <circle cx="150" cy="30" r="22" fill="#F0C87A" opacity="0.5"/>
-          <path d="M0,120 L0,55 C25,48 42,34 65,28 C88,22 105,35 130,29 C155,23 172,14 198,18 L200,18 L200,120Z" fill="#5B8FA8" opacity="0.2"/>
-          <path d="M0,120 L0,70 C28,65 48,55 75,50 C102,45 118,57 145,52 C172,47 188,40 200,38 L200,120Z" fill="#4A7C59" opacity="0.35"/>
-          <path d="M0,120 L0,82 C30,78 52,70 80,67 C108,64 125,73 152,69 C179,65 188,60 200,58 L200,120Z" fill="#3A2518" opacity="0.65"/>
-          <!-- Store front hint -->
-          <rect x="70" y="72" width="60" height="32" fill="#5C4033" opacity="0.6" rx="1"/>
-          <rect x="82" y="82" width="14" height="18" fill="#B8D4E3" opacity="0.4" rx="1"/>
-          <rect x="104" y="82" width="14" height="18" fill="#B8D4E3" opacity="0.4" rx="1"/>
+      <div class="preview" style="background:#1A0E04; padding:0;">
+        <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cf-night" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0D1B2A"/>
+              <stop offset="60%" stop-color="#1A2D40"/>
+              <stop offset="100%" stop-color="#243848"/>
+            </linearGradient>
+            <radialGradient id="cf-fire" cx="0.08" cy="0.85" r="0.55">
+              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.38"/>
+              <stop offset="55%" stop-color="#E8845C" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#E8845C" stop-opacity="0"/>
+            </radialGradient>
+            <style>@keyframes cf-star{0%,100%{opacity:.75}50%{opacity:.35}}</style>
+          </defs>
+          <!-- Interior wall warmth -->
+          <rect width="280" height="140" fill="#1C0E04"/>
+          <!-- Fireplace glow from left -->
+          <rect width="280" height="140" fill="url(#cf-fire)"/>
+          <!-- Picture window — mountain night scene -->
+          <rect x="62" y="14" width="156" height="90" fill="url(#cf-night)" rx="1"/>
+          <!-- Stars in window -->
+          <circle cx="90" cy="26" r="0.7" fill="white" opacity="0.8" style="animation:cf-star 3.2s ease-in-out infinite"/>
+          <circle cx="112" cy="20" r="0.9" fill="white" opacity="0.7" style="animation:cf-star 2.8s ease-in-out 0.6s infinite"/>
+          <circle cx="142" cy="24" r="0.6" fill="white" opacity="0.85" style="animation:cf-star 3.6s ease-in-out 1.1s infinite"/>
+          <circle cx="168" cy="18" r="0.8" fill="white" opacity="0.75" style="animation:cf-star 2.5s ease-in-out 0.3s infinite"/>
+          <circle cx="195" cy="28" r="0.7" fill="white" opacity="0.8" style="animation:cf-star 3.9s ease-in-out 0.9s infinite"/>
+          <circle cx="208" cy="22" r="0.6" fill="white" opacity="0.7" style="animation:cf-star 3.1s ease-in-out 1.5s infinite"/>
+          <circle cx="78" cy="34" r="0.55" fill="white" opacity="0.65" style="animation:cf-star 4.2s ease-in-out 0.7s infinite"/>
+          <circle cx="122" cy="32" r="0.6" fill="white" opacity="0.7" style="animation:cf-star 2.9s ease-in-out 1.8s infinite"/>
+          <!-- Moon -->
+          <circle cx="196" cy="30" r="8" fill="#E8D5B7" opacity="0.8"/>
+          <circle cx="200" cy="28" r="6.5" fill="#1A2D40"/>
+          <!-- Night mountain ridges in window -->
+          <path d="M62,104 C80,94 96,84 116,78 C136,72 150,82 168,76 C186,70 198,62 218,66 L218,104Z" fill="#3D6B80" opacity="0.55"/>
+          <path d="M62,104 C76,99 94,92 116,88 C138,84 152,94 172,90 C192,86 206,80 218,82 L218,104Z" fill="#3A2518" opacity="0.72"/>
+          <!-- Window frame woodwork -->
+          <rect x="62" y="14" width="156" height="90" fill="none" stroke="#7A5240" stroke-width="4.5"/>
+          <line x1="140" y1="14" x2="140" y2="104" stroke="#7A5240" stroke-width="2.5"/>
+          <line x1="62" y1="59" x2="218" y2="59" stroke="#7A5240" stroke-width="2.5"/>
+          <!-- Window sill -->
+          <rect x="57" y="102" width="166" height="6" fill="#5C4033" opacity="0.9" rx="0.5"/>
+          <!-- Futon silhouette (backlit by window) -->
+          <rect x="20" y="114" width="240" height="10" fill="#2A1208" opacity="0.95" rx="1.5"/>
+          <rect x="16" y="106" width="9" height="20" fill="#22100A" opacity="0.9" rx="0.5"/>
+          <rect x="255" y="106" width="9" height="20" fill="#22100A" opacity="0.9" rx="0.5"/>
+          <!-- Throw blanket folds -->
+          <path d="M55,110 C75,106 98,112 120,107 C142,102 165,109 188,104 L188,116 C165,120 142,114 120,119 C98,124 75,118 55,122Z" fill="#5B8FA8" opacity="0.38"/>
+          <!-- Pillow on futon -->
+          <rect x="102" y="104" width="26" height="11" fill="#E8D5B7" opacity="0.22" rx="2.5"/>
+          <!-- Warm floor glow -->
+          <ellipse cx="140" cy="130" rx="90" ry="5" fill="#F0C87A" opacity="0.1"/>
+          <!-- Floor -->
+          <rect x="0" y="126" width="280" height="14" fill="#160902" opacity="0.85"/>
         </svg>
       </div>
       <div class="info">
-        <h4>aboutIllustrations.js</h4>
-        <p>Store history, team, and heritage scenes with mountain backdrop and warm daylight palette.</p>
-        <span class="status-tag status-live">Live</span>
+        <h4>aboutIllustrations.js + comfort scenes</h4>
+        <p>Interior night view: mountain window with twinkling stars + crescent moon, futon silhouette backlit by the mountains, fireplace warmth from left. Store history + heritage scenes. Phase 8: stars driven by <code>state.starOpacity</code>, ridge fills by <code>ridgeColors</code>.</p>
+        <span class="status-tag status-live">Live — static</span>
+        <span class="status-tag status-phase8">Phase 8 target</span>
       </div>
     </div>
 
@@ -687,6 +772,139 @@
         <h4>badgeHelpers.js</h4>
         <p>Achievement badge icon system. Circular frames with CF palette backgrounds. Used by gamification phases 2–5 for reward UI.</p>
         <span class="status-tag status-live">Live</span>
+      </div>
+    </div>
+
+    <!-- Streak Flame — Proposed Phase 2 -->
+    <div class="asset-card" style="border-color:rgba(240,200,122,0.3);">
+      <div class="preview" style="background:#1A0A04; display:flex; gap:18px; align-items:flex-end; justify-content:center; padding:16px;">
+        <!-- Single flame (1–2 day streak) -->
+        <svg viewBox="0 0 48 80" width="36" height="60" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              @keyframes sf-flicker{0%,100%{transform:scaleX(1) scaleY(1)}30%{transform:scaleX(0.93) scaleY(1.05)}60%{transform:scaleX(1.06) scaleY(0.97)}}
+              .sf-f{animation:sf-flicker 1.6s ease-in-out infinite;transform-origin:24px 55px;}
+            </style>
+          </defs>
+          <g class="sf-f">
+            <path d="M24,72 C14,72 8,63 8,54 C8,42 16,38 16,30 C18,35 20,38 24,40 C22,32 26,22 32,16 C32,28 38,32 40,42 C42,50 40,60 38,66 C36,70 30,72 24,72Z" fill="#E8845C"/>
+            <path d="M24,68 C18,68 14,61 16,52 C17,46 20,43 22,38 C22,44 24,47 27,49 C25,42 28,34 32,28 C32,38 36,42 37,50 C38,58 35,66 30,68Z" fill="#F0C87A"/>
+            <path d="M24,62 C20,62 18,57 20,51 C21,46 24,44 24,40 C25,45 27,48 26,53 C28,50 30,46 30,40 C32,46 32,54 30,60 C28,63 26,62 24,62Z" fill="#FAF7F2" opacity="0.88"/>
+          </g>
+          <text x="24" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">1d</text>
+        </svg>
+        <!-- Double flame (3–6 day streak) -->
+        <svg viewBox="0 0 56 80" width="42" height="64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              @keyframes sf2a{0%,100%{transform:scaleX(1) scaleY(1) rotate(0deg)}30%{transform:scaleX(0.92) scaleY(1.06) rotate(-2deg)}65%{transform:scaleX(1.05) scaleY(0.96) rotate(1.5deg)}}
+              @keyframes sf2b{0%,100%{transform:scaleX(1) scaleY(1) rotate(0deg)}40%{transform:scaleX(0.94) scaleY(1.04) rotate(2deg)}70%{transform:scaleX(1.04) scaleY(0.97) rotate(-1deg)}}
+              .sf2a{animation:sf2a 1.7s ease-in-out infinite;transform-origin:18px 55px;}
+              .sf2b{animation:sf2b 1.9s ease-in-out 0.3s infinite;transform-origin:38px 55px;}
+            </style>
+          </defs>
+          <g class="sf2a">
+            <path d="M18,68 C11,68 6,61 7,52 C8,43 14,39 14,31 C16,36 18,39 20,41 C18,33 22,24 27,18 C27,29 32,33 33,42 C34,49 31,58 28,63 C26,66 22,68 18,68Z" fill="#E8845C"/>
+            <path d="M18,64 C13,64 10,58 12,50 C13,44 17,41 18,36 C19,42 21,45 23,47 C21,41 24,34 28,28 C28,37 31,41 32,49 C33,56 30,63 26,65Z" fill="#F0C87A"/>
+            <path d="M18,58 C15,58 13,54 15,48 C16,43 19,41 19,37 C20,42 21,45 21,50 C23,47 25,43 24,37 C26,43 26,51 24,57 C22,60 20,58 18,58Z" fill="#FAF7F2" opacity="0.85"/>
+          </g>
+          <g class="sf2b">
+            <path d="M38,70 C31,70 26,63 27,54 C28,45 34,40 34,32 C36,37 38,40 40,42 C38,34 42,25 47,19 C47,30 52,34 53,43 C54,51 51,60 48,65 C46,68 42,70 38,70Z" fill="#E8845C" opacity="0.9"/>
+            <path d="M38,66 C33,66 30,60 32,52 C33,46 37,43 38,38 C39,44 41,47 43,49 C41,43 44,36 48,30 C48,39 51,43 52,51 C53,58 50,65 46,67Z" fill="#F0C87A" opacity="0.9"/>
+          </g>
+          <text x="28" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">5d</text>
+        </svg>
+        <!-- Bonfire (14+ day streak) -->
+        <svg viewBox="0 0 64 80" width="50" height="72" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>
+              @keyframes bf-a{0%,100%{transform:scaleX(1) scaleY(1)}25%{transform:scaleX(0.9) scaleY(1.07)}60%{transform:scaleX(1.07) scaleY(0.95)}}
+              @keyframes bf-b{0%,100%{transform:scaleX(1) scaleY(1)}35%{transform:scaleX(0.93) scaleY(1.05)}70%{transform:scaleX(1.05) scaleY(0.97)}}
+              @keyframes bf-glow{0%,100%{opacity:.28}50%{opacity:.42}}
+              .bf-a{animation:bf-a 1.5s ease-in-out infinite;transform-origin:22px 55px;}
+              .bf-b{animation:bf-b 1.8s ease-in-out 0.4s infinite;transform-origin:42px 55px;}
+              .bf-c{animation:bf-a 2s ease-in-out 0.8s infinite;transform-origin:32px 52px;}
+              .bf-glow{animation:bf-glow 2.2s ease-in-out infinite;}
+            </style>
+            <radialGradient id="bf-halo" cx="0.5" cy="0.9" r="0.5">
+              <stop offset="0%" stop-color="#F0C87A" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- Glow halo -->
+          <ellipse class="bf-glow" cx="32" cy="62" rx="28" ry="10" fill="url(#bf-halo)"/>
+          <g class="bf-a">
+            <path d="M22,66 C15,66 10,58 11,49 C12,39 19,34 19,25 C21,31 24,34 26,37 C23,28 28,18 34,11 C34,24 40,28 41,38 C42,47 38,56 34,62 C32,65 26,66 22,66Z" fill="#E8845C"/>
+            <path d="M22,62 C17,62 13,56 15,47 C16,41 20,38 21,32 C22,38 25,41 27,44 C24,37 27,29 32,22 C32,32 36,37 37,46 C38,54 35,62 30,64Z" fill="#F0C87A"/>
+          </g>
+          <g class="bf-b">
+            <path d="M42,68 C35,68 30,60 31,51 C32,41 39,36 39,27 C41,33 44,36 46,39 C43,30 48,20 54,13 C54,26 60,30 61,40 C62,49 58,59 54,64 C52,67 47,68 42,68Z" fill="#E8845C" opacity="0.85"/>
+            <path d="M42,64 C37,64 33,58 35,49 C36,43 40,40 41,34 C42,40 45,43 47,46 C44,39 47,31 52,24 C52,34 56,39 57,48 C58,56 55,64 50,66Z" fill="#F0C87A" opacity="0.85"/>
+          </g>
+          <g class="bf-c">
+            <path d="M32,60 C25,60 20,53 22,44 C23,36 29,32 29,24 C31,30 33,33 36,35 C33,27 37,18 42,12 C42,23 47,27 48,37 C49,46 45,55 41,59 C39,62 35,60 32,60Z" fill="#FAF7F2" opacity="0.55"/>
+          </g>
+          <!-- Log base -->
+          <line x1="10" y1="68" x2="38" y2="60" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <line x1="54" y1="68" x2="26" y2="60" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+          <!-- 2× badge ring -->
+          <circle cx="52" cy="18" r="9" fill="none" stroke="#F0C87A" stroke-width="1.8" opacity="0.85"/>
+          <text x="52" y="21.5" font-size="7" fill="#F0C87A" text-anchor="middle" font-family="monospace" font-weight="bold">2×</text>
+          <text x="32" y="79" font-size="7.5" fill="#F0C87A" text-anchor="middle" font-family="monospace" opacity="0.9">14d</text>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>StreakDisplay.js — buildStreakFlameSVG()</h4>
+        <p>Streak flame tiers: 1–2d = single flame, 3–6d = double, 7–13d = tall triple, 14+ = full animated bonfire with log base. Multiplier badge (2× gold ring shown). Colors: base #E8845C → mid #F0C87A → tip #FAF7F2. 48×80 viewBox.</p>
+        <span class="status-tag status-proposed">Proposed — Phase 2</span>
+      </div>
+    </div>
+
+    <!-- Challenge Trail — Proposed Phase 3 -->
+    <div class="asset-card" style="border-color:rgba(74,124,89,0.3);">
+      <div class="preview" style="background:#F5F0E8; padding:12px 8px;">
+        <svg viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ct-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#FAF7F2"/>
+            </linearGradient>
+          </defs>
+          <rect width="280" height="100" fill="url(#ct-sky)"/>
+          <!-- Background ridges -->
+          <path d="M0,60 C25,54 45,44 68,40 C91,36 110,48 135,43 C160,38 175,30 200,33 C225,36 248,46 280,42 L280,100 L0,100Z" fill="#5B8FA8" opacity="0.18"/>
+          <path d="M0,72 C22,68 42,60 70,56 C98,52 118,62 145,58 C172,54 190,47 218,50 C246,53 262,60 280,57 L280,100 L0,100Z" fill="#4A7C59" opacity="0.28"/>
+          <path d="M0,84 C25,80 48,74 78,71 C108,68 128,76 158,73 C188,70 205,65 235,67 C265,69 272,74 280,72 L280,100 L0,100Z" fill="#3A2518" opacity="0.5"/>
+          <!-- Trail path (progress = 65%) -->
+          <!-- Filled trail -->
+          <path d="M12,88 C30,84 48,78 68,74 C88,70 105,76 128,72 C151,68 168,62 192,64" stroke="#4A7C59" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.85"/>
+          <!-- Unfilled trail (dashed) -->
+          <path d="M192,64 C216,66 238,60 268,56" stroke="#3A2518" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="5,4" opacity="0.45"/>
+          <!-- Progress dot -->
+          <circle cx="192" cy="64" r="5" fill="#4A7C59" opacity="0.9"/>
+          <circle cx="192" cy="64" r="2.5" fill="#FAF7F2" opacity="0.95"/>
+          <!-- Trailhead marker (left) -->
+          <circle cx="12" cy="88" r="5" fill="#5B8FA8" opacity="0.85"/>
+          <circle cx="12" cy="88" r="2.5" fill="white" opacity="0.9"/>
+          <!-- Summit GPS pin (right — not yet reached) -->
+          <path d="M268 55 L264 48 C262 43 264 38 268 37 C272 38 274 43 272 48 Z" fill="#E8845C" opacity="0.45"/>
+          <circle cx="268" cy="43" r="3.5" fill="white" opacity="0.5"/>
+          <!-- Trees along trail -->
+          <path d="M55,76 L57,68 C58,64 60,62 61,64 L63,68 L65,76Z" fill="#2E4A38" opacity="0.55"/>
+          <path d="M155,68 L157,61 C158,57 160,55 161,57 L163,61 L165,68Z" fill="#4A7C59" opacity="0.5"/>
+          <path d="M235,63 L237,56 C238,52 240,51 241,52 L243,56 L245,63Z" fill="#2E4A38" opacity="0.45"/>
+          <!-- Progress label -->
+          <rect x="178" y="56" width="22" height="10" fill="#4A7C59" opacity="0.85" rx="2"/>
+          <text x="189" y="63.5" font-size="5.5" fill="white" text-anchor="middle" font-family="monospace" font-weight="bold">65%</text>
+          <!-- Difficulty: medium (2-ridge overlap) -->
+          <text x="12" y="10" font-size="6" fill="#5C4033" font-family="monospace" opacity="0.7">difficulty: medium</text>
+          <text x="12" y="20" font-size="6" fill="#4A7C59" font-family="monospace" opacity="0.7">progress: 65%</text>
+        </svg>
+      </div>
+      <div class="info">
+        <h4>ChallengesDisplay.js — buildChallengeTrailSVG()</h4>
+        <p>Mountain trail progress: trailhead (left) → summit GPS pin (right). Filled stroke = completed distance, dashed = remaining. Progress dot marks current position. Difficulty: easy=1 ridge, medium=2, hard=full 7-layer skyline. Summit pin turns coral when complete. 280×120 viewBox.</p>
+        <span class="status-tag status-proposed">Proposed — Phase 3</span>
       </div>
     </div>
 
@@ -1021,7 +1239,7 @@
             <span class="choice-title">Sky gradient swap only</span>
           </div>
           <p class="choice-body">
-            Replace the static <code>#show-sky</code> gradient stop colors with values from <code>LivingSkyState.skyGradient</code>. Everything else stays static. The sky above the mountains shifts; cabin stays the same warm illustration regardless of time.
+            Replace the static <code>#show-sky</code> gradient stop colors with values from <code>LivingSkyState.skyColors</code> (array of hex strings). Everything else stays static. The sky above the mountains shifts; cabin stays the same warm illustration regardless of time.
           </p>
           <div class="pros-cons">
             <span class="pro">+ Minimal change</span>
@@ -1079,7 +1297,7 @@
             <span class="rec-badge">Recommended</span>
           </div>
           <p class="choice-body">
-            Sky gradient maps to LivingSkyState. Cabin window fill tint maps to ambient light level (<code>state.ambientLight</code>): warm daylight = window transparent, dusk = soft gold glow, night = warm lantern yellow. Stars appear at night. Moon arc at night. Ridge layers shift in darkness. The scene feels alive.
+            Sky gradient maps to LivingSkyState <code>skyColors</code> array. Cabin window fill tint maps to star presence (<code>state.starOpacity &gt; 0</code>): daylight = window transparent, dusk = soft gold glow, night = warm lantern yellow. Stars appear when <code>starOpacity &gt; 0</code>. Moon arc at night. Ridge layers shift with <code>ridgeColors</code>. The scene feels alive.
           </p>
           <div class="pros-cons">
             <span class="pro">+ Deeply coherent with Phase 7</span>
@@ -1413,8 +1631,8 @@
         <li><strong>GPS pin:</strong> teardrop centered above cabin rooftop; CSS drop animation (0.75s cubic-bezier(.36,.07,.19,.97), 0.5s delay); 2 expanding pulse rings (2.2s, ring 2 offset 0.8s delay); direction chevron below pin tip; distance badge (#3A2518 bg, #F2E8D5 text, 0.3 mi)</li>
         <li><strong>Smoke:</strong> 2 staggered ellipses, translateY(-12px) over 3.5s, fade opacity 0.22→0; 1.2s offset; represents active fire = showroom open</li>
         <li><strong>Cabin detail layers:</strong> log-wall texture (3 horizontal strokes), stone base course (#7A5C48), porch overhang + 2 posts, left window (14×11) + right window (16×11) — each with 2 panes + gold glow rect, door panels + divider line + brass handle (cx=95.5), brick chimney (7-wide, 3 mortar rows + vertical half-brick, chimney cap)</li>
-        <li><strong>Phase 8 wiring:</strong> sky gradient → <code>state.skyGradient[0–3]</code>; window glow opacity → inverse of <code>state.ambientLight</code> (night: 0.5, day: 0.17); ridge fills → <code>state.ridgeColors.r4</code> (far), <code>state.ridgeColors.r1</code> (near)</li>
-        <li><strong>Night mode trigger:</strong> <code>state.ambientLight &lt; 0.3</code> → add star circles, brighten window glow, darken cabin fill to #2E1A0A</li>
+        <li><strong>Phase 8 wiring:</strong> sky gradient → <code>state.skyColors</code> array; window glow opacity → driven by <code>state.starOpacity</code> (night &gt;0: 0.5, day 0: 0.17); ridge fills → <code>state.ridgeColors.r4</code> (far), <code>state.ridgeColors.r1</code> (near)</li>
+        <li><strong>Night mode trigger:</strong> <code>state.starOpacity &gt; 0</code> → add star circles, brighten window glow, darken cabin fill to #2E1A0A</li>
       </ul>
     </div>
 
@@ -1438,7 +1656,7 @@
         <li><strong>File:</strong> <code>src/public/MountainSkyline.js</code></li>
         <li><strong>Wix element:</strong> <code>#headerSkyline</code> (Box, masterPage)</li>
         <li><strong>ViewBox:</strong> 1440×200 (7-layer atmospheric depth)</li>
-        <li><strong>Gradient:</strong> 4-stop sky from <code>state.skyGradient</code></li>
+        <li><strong>Gradient:</strong> sky colors from <code>state.skyColors</code> array (variable length)</li>
         <li><strong>Ridge tokens:</strong> r1=#3D6B80 (distant), r4=#5B8FA8 (mid), r7=#3A2518 (near foreground)</li>
         <li><strong>Tree tokens:</strong> canopy fill #4A7C59, linework/shadows #2E4A38</li>
         <li><strong>Status:</strong> already wired to LivingSkyState — reads from masterPage postMessage</li>
@@ -1451,7 +1669,7 @@
       <ul>
         <li><strong>File:</strong> <code>src/public/living-sky-component.html</code></li>
         <li><strong>Wix element:</strong> <code>#livingSkyFrame</code> (HtmlComponent, masterPage + home page)</li>
-        <li><strong>State shape:</strong> <code>{ ridgeColors: {r1,r2,r3,r4,r5,r6,r7,tree}, skyGradient: [stop0,stop1,stop2,stop3], ambientLight: 0–1, weather: string }</code></li>
+        <li><strong>State shape:</strong> <code>{ ridgeColors: {r1,r2,r3,r4,r5,r6,r7,tree}, skyColors: ['#hex',...], starOpacity: 0–1, weather: string }</code></li>
         <li><strong>No <code>type</code> field</strong> — raw state object posted; consumers read <code>event.data</code> directly (no <code>event.data.type</code> guard)</li>
         <li><strong>Tick:</strong> 60s interval in masterPage.js; <code>prefers-reduced-motion</code> → single render only</li>
         <li><strong>Weather values:</strong> <code>'clear'</code>, <code>'cloudy'</code>, <code>'rain'</code>, <code>'snow'</code>, <code>'fog'</code></li>
