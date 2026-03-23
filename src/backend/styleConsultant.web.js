@@ -436,13 +436,13 @@ async function getProductRecommendations(styleTags) {
  * @function getStyleConsultation
  * @param {string} sessionKey - 64-char hex fingerprint hash
  * @param {{ photoUrl?: string, textDescription?: string }} input
- * @returns {Promise<{
- *   success: boolean,
- *   recommendations?: Array<{ productId: string, name: string, score: number, explanation: string }>,
- *   sessionKey?: string,
- *   error?: string,
- *   errorCode?: 'INVALID_SESSION_KEY' | 'INVALID_INPUT' | 'RATE_LIMITED' | 'AI_ERROR' | 'NO_RESULTS'
- * }>}
+ * @returns {Promise<
+ *   | { success: true, sessionKey: string, styleTags: string[], explanation: string,
+ *       recommendations: Array<{ productId: string, name: string, score: number, explanation: string }> }
+ *   | { success: false, error: string,
+ *       errorCode: 'INVALID_SESSION_KEY' | 'INVALID_INPUT' | 'AI_ERROR' | 'NO_RESULTS' }
+ *   | { status: 429, error: string }
+ * >}
  */
 export const getStyleConsultation = webMethod(
   Permissions.Anyone,
