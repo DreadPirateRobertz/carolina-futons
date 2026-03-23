@@ -18,6 +18,7 @@ import {
   __onInsert,
   __onUpdate,
   __setInsertError,
+  __setUpdateError,
   __setUniqueField,
 } from './__mocks__/wix-data.js';
 import {
@@ -219,6 +220,11 @@ describe('recordChallengeCompletionEvent — input validation', () => {
     await expect(recordChallengeCompletionEvent('mem@evil', 'ch-abc', 50)).rejects.toThrow(TypeError);
     await expect(recordChallengeCompletionEvent('mem/1', 'ch-abc', 50)).rejects.toThrow(TypeError);
   });
+
+  it('throws TypeError for challengeId containing disallowed characters (validateId regex)', async () => {
+    await expect(recordChallengeCompletionEvent('mem-1', 'ch@bad', 50)).rejects.toThrow(TypeError);
+    await expect(recordChallengeCompletionEvent('mem-1', 'ch/bad', 50)).rejects.toThrow(TypeError);
+  });
 });
 
 // ── backfillChallengeLedger ───────────────────────────────────────────────────
@@ -339,5 +345,14 @@ describe('backfillChallengeLedger', () => {
 
     expect(result.checked).toBe(101);
     expect(result.updated).toBe(101);
+  });
+
+  it('re-throws wixData.update errors (does not swallow)', async () => {
+    __seed('PointsLedger', [
+      { _id: 'r-1', memberId: 'mem-1', challengeId: 'ch-a', type: 'challenge_completion' },
+    ]);
+    __setUpdateError('PointsLedger', new Error('Write timeout'));
+
+    await expect(backfillChallengeLedger()).rejects.toThrow('Write timeout');
   });
 });

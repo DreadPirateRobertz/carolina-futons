@@ -12,6 +12,11 @@
  *   (2) THEN run ensurePointsLedgerIndex() to create the unique index.
  *   Running ensurePointsLedgerIndex() first risks duplicate-key errors during
  *   the backfill if any (memberId, milestone) pair already appears more than once.
+ *   (3) Run backfillChallengeLedger() FIRST to populate memberChallengeKey on
+ *       all existing challenge_completion rows.
+ *   (4) THEN run ensureChallengeCompletionIndex() to create the unique index.
+ *   Running ensureChallengeCompletionIndex() first risks duplicate-key errors
+ *   during backfill if any (memberId, challengeId) pair appears more than once.
  *
  * Wix unique indexes are single-field only. Compound (memberId, X) uniqueness
  * is encoded as a single computed key field in "<memberId>:<x>" format.

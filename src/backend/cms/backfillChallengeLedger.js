@@ -7,6 +7,13 @@
  * Safe to run multiple times — rows that already have `memberChallengeKey`
  * set are skipped.  Returns a summary object for logging/testing.
  *
+ * DEPLOYMENT ORDER:
+ *   (1) Run backfillChallengeLedger() FIRST to populate memberChallengeKey on
+ *       all existing rows.
+ *   (2) THEN run ensureChallengeCompletionIndex() to create the unique index.
+ *   Running ensureChallengeCompletionIndex() first risks duplicate-key errors
+ *   during backfill if any (memberId, challengeId) pair appears more than once.
+ *
  * Usage (Wix backend script or one-shot web method):
  *   import { backfillChallengeLedger } from 'backend/cms/backfillChallengeLedger';
  *   const result = await backfillChallengeLedger();

@@ -300,7 +300,7 @@ export const getChallengeCatalog = webMethod(
     rl.count += 1;
     _catalogRateLimit.set(memberId, rl);
     if (rl.count > CATALOG_RATE_LIMIT) {
-      return { error: 429 };
+      return { status: 429, error: 'Rate limit exceeded' };
     }
 
     // Cache: return early if fresh
@@ -745,16 +745,15 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
 export async function recordChallengeCompletionEvent(memberId, challengeId, points) {
   const cleanId = validateId(memberId);
   if (!cleanId) throw new TypeError('recordChallengeCompletionEvent: invalid memberId');
-  if (typeof challengeId !== 'string' || !challengeId.trim()) {
-    throw new TypeError('recordChallengeCompletionEvent: challengeId must be a non-empty string');
-  }
+  const cleanChallengeId = validateId(challengeId);
+  if (!cleanChallengeId) throw new TypeError('recordChallengeCompletionEvent: invalid challengeId');
   if (typeof points !== 'number' || !Number.isFinite(points) || points <= 0) {
     throw new TypeError('recordChallengeCompletionEvent: points must be a positive finite number');
   }
 
   const existing = await wixData.query(POINTS_LEDGER_COLLECTION)
     .eq('memberId', cleanId)
-    .eq('challengeId', challengeId)
+    .eq('challengeId', cleanChallengeId)
     .limit(1)
     .find({ suppressAuth: true });
   if (existing.items.length > 0) return;
@@ -762,8 +761,8 @@ export async function recordChallengeCompletionEvent(memberId, challengeId, poin
   try {
     await wixData.insert(POINTS_LEDGER_COLLECTION, {
       memberId: cleanId,
-      challengeId,
-      memberChallengeKey: `${cleanId}:${challengeId}`,
+      challengeId: cleanChallengeId,
+      memberChallengeKey: `${cleanId}:${cleanChallengeId}`,
       type: 'challenge_completion',
       points,
       earnedAt: new Date(),
