@@ -111,7 +111,7 @@ export function wixMembers_onMemberCreated(event) {
 
   if (!email) return;
 
-  triggerWelcomeSequence(contactId, email, firstName)
+  return triggerWelcomeSequence(contactId, email, firstName)
     .catch(err => console.error('Error triggering welcome sequence:', err));
 }
 
