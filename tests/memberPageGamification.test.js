@@ -348,4 +348,15 @@ describe('Member Page — daily quests section on load', () => {
     loyaltyMocks.getMyDailyQuests.mockRejectedValue(new Error('service unavailable'));
     await expect(loadPage()).resolves.not.toThrow();
   });
+
+  it('hides #dailyQuestsSection when quests is null (feature flag off)', async () => {
+    loyaltyMocks.getMyDailyQuests.mockResolvedValue({ quests: null });
+    await loadPage();
+    expect(getEl('#dailyQuestsSection').hide).toHaveBeenCalled();
+  });
+
+  it('shows #dailyQuestsSection on happy path', async () => {
+    await loadPage();
+    expect(getEl('#dailyQuestsSection').show).toHaveBeenCalled();
+  });
 });

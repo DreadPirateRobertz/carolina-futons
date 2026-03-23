@@ -439,7 +439,12 @@ async function initAchievementsSection() {
   try {
     const { achievements } = await getMyAchievements();
     if (achievements && achievements.length > 0) {
-      $w('#achievementsBadgeRepeater').data = achievements;
+      const repeater = $w('#achievementsBadgeRepeater');
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#badgeLabel').text = itemData.badgeLabel; } catch (e) {}
+      });
+      repeater.data = achievements.map((a, i) => ({ _id: `achievement-${i}`, ...a }));
+      try { repeater.expand(); } catch (e) {}
       $w('#achievementsSection').show();
     } else {
       $w('#achievementsSection').hide();
@@ -455,7 +460,17 @@ async function initAchievementsSection() {
 async function initDailyQuestsSection() {
   try {
     const { quests } = await getMyDailyQuests();
-    $w('#dailyQuestsRepeater').data = quests;
+    if (!quests || !quests.length) {
+      $w('#dailyQuestsSection').hide();
+      return;
+    }
+    $w('#dailyQuestsSection').show();
+    const repeater = $w('#dailyQuestsRepeater');
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#questTitle').text = itemData.title; } catch (e) {}
+    });
+    repeater.data = quests.map(q => ({ _id: q.id, ...q }));
+    try { repeater.expand(); } catch (e) {}
     const completed = quests.filter(q => q.completed).length;
     $w('#questsCompleteText').text = `${completed} of ${quests.length} complete`;
   } catch (e) {
