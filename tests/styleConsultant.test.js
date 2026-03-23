@@ -139,8 +139,10 @@ describe('getStyleConsultation — rate limiting', () => {
     ]);
 
     const result = await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
+    expect(result.success).toBe(false);
     expect(result.status).toBe(429);
     expect(result.error).toBe('Rate limit exceeded');
+    expect(result.errorCode).toBe('RATE_LIMITED');
   });
 
   it('allows a session whose window has expired despite high call count', async () => {
@@ -688,5 +690,51 @@ describe('_callClaudeVision — real implementation', () => {
       },
     }));
     await expect(_callClaudeVision('', 'test')).rejects.toThrow('claude_parse_error');
+  });
+
+  it('throws claude_timeout when fetch does not resolve before 30s', async () => {
+    // Catch immediately — see void timeoutPromise.catch() in callClaudeVision for why.
+    vi.useFakeTimers();
+    try {
+      __setHandler(() => new Promise(() => {})); // never resolves
+      let caughtError;
+      const pending = _callClaudeVision('', 'any text').catch(e => { caughtError = e; });
+      await vi.advanceTimersByTimeAsync(30001);
+      await pending; // wait for the .catch() handler to fire
+      expect(caughtError?.message).toBe('claude_timeout');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('truncates explanation to EXPLANATION_MAX (500) characters', async () => {
+    const longExplanation = 'A'.repeat(600);
+    __setHandler(() => makeClaudeResponse(['modern'], longExplanation));
+    const result = await _callClaudeVision('', 'any text');
+    expect(result.explanation.length).toBeLessThanOrEqual(500);
+  });
+
+  it('strips HTML tags from explanation before returning', async () => {
+    __setHandler(() => makeClaudeResponse(['modern'], '<script>alert("xss")</script>Modern style.'));
+    const result = await _callClaudeVision('', 'any text');
+    expect(result.explanation).not.toContain('<script>');
+    expect(result.explanation).toContain('Modern style.');
+  });
+
+  it('clears the timeout timer when fetch resolves before 30s (no leak)', async () => {
+    // Verifies .finally(() => clearTimeout(timeoutId)) fires on normal success.
+    // If clearTimeout is removed, this test still passes — so we spy to confirm it ran.
+    vi.useFakeTimers();
+    try {
+      __setHandler(() => makeClaudeResponse(['modern'], 'Modern.'));
+      const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+      await _callClaudeVision('', 'any text');
+      expect(clearSpy).toHaveBeenCalled();
+      clearSpy.mockRestore();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 });
