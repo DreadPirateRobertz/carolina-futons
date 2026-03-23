@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { colors } from '../src/public/sharedTokens.js';
-import { getComfortSvg, COMFORT_SLUGS } from '../src/public/comfortIllustrations.js';
+import { getComfortSvg, COMFORT_SLUGS, initComfortIllustration } from '../src/public/comfortIllustrations.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -194,6 +194,82 @@ describe('Quality bar — element count', () => {
       expect(count).toBeGreaterThanOrEqual(15);
     });
   }
+});
+
+// ── initComfortIllustration — LivingSkyState wiring ──────────────────
+
+function makeWix(hasFrame = true) {
+  const handlers = {};
+  const frame = hasFrame ? {
+    onMessage: (fn) => { handlers.livingSky = fn; },
+    postMessage: (state) => handlers.livingSky && handlers.livingSky({ data: state }),
+  } : null;
+  const containers = {};
+  return {
+    $w: (id) => {
+      if (id === '#livingSkyFrame') { if (!frame) throw new Error('not found'); return frame; }
+      if (!containers[id]) containers[id] = { html: '' };
+      return containers[id];
+    },
+    containers,
+    trigger: (state) => frame && frame.postMessage(state),
+  };
+}
+
+describe('initComfortIllustration', () => {
+  it('sets initial html for plush slug', () => {
+    const { $w, containers } = makeWix();
+    initComfortIllustration($w, 'plush', '#comfortScene');
+    expect(containers['#comfortScene'].html).toContain('<svg');
+  });
+
+  it('applies sky overlay on LivingSkyState message', () => {
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'plush', '#comfortScene');
+    trigger({ skyColors: ['#3A5A7A'], starOpacity: 0 });
+    expect(containers['#comfortScene'].html).toContain('#3A5A7A');
+    expect(containers['#comfortScene'].html).toContain('sky-overlay');
+  });
+
+  it('adds stars at night', () => {
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'medium', '#comfortScene');
+    trigger({ skyColors: ['#0A0E1A'], starOpacity: 0.9 });
+    expect(containers['#comfortScene'].html).toContain('id="stars"');
+  });
+
+  it('rejects non-hex skyColor', () => {
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'firm', '#comfortScene');
+    trigger({ skyColors: ['" onmouseover="alert(1)'], starOpacity: 0 });
+    expect(containers['#comfortScene'].html).not.toContain('onmouseover');
+  });
+
+  it('does not throw when livingSkyFrame absent', () => {
+    const { $w } = makeWix(false);
+    expect(() => initComfortIllustration($w, 'plush', '#comfortScene')).not.toThrow();
+  });
+
+  it('does not throw when $w is null', () => {
+    expect(() => initComfortIllustration(null, 'plush', '#comfortScene')).not.toThrow();
+  });
+
+  it('second trigger replaces first — overlay does not accumulate', () => {
+    const { $w, containers, trigger } = makeWix();
+    initComfortIllustration($w, 'plush', '#comfortScene');
+    trigger({ skyColors: ['#3A5A7A'], starOpacity: 0 });
+    trigger({ skyColors: ['#1B2E3C'], starOpacity: 0 });
+    // Only the second color present; first color not stacked
+    expect(containers['#comfortScene'].html).toContain('#1B2E3C');
+    expect(containers['#comfortScene'].html).not.toContain('#3A5A7A');
+    expect((containers['#comfortScene'].html.match(/sky-overlay/g) || []).length).toBe(1);
+  });
+
+  it('sets empty html for unknown slug', () => {
+    const { $w, containers } = makeWix();
+    initComfortIllustration($w, 'nonexistent', '#comfortScene');
+    expect(containers['#comfortScene'].html).toBe('');
+  });
 });
 
 // ── Quality bar — atmospheric layers ─────────────────────────────────
