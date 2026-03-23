@@ -139,8 +139,9 @@ export const receiveGamificationEvent = webMethod(
           if (existingBadge.items.length === 0) {
             await wixData.insert(MEMBER_BADGES_COLLECTION, { memberId, badgeId: 'week_wanderer' });
           }
-        } catch {
+        } catch (err) {
           // Badge award is best-effort — don't fail the whole event
+          logError(`gamificationEventReceiver — week_wanderer badge award failed for ${memberId}`, err, { silent: true });
         }
       }
 

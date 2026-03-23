@@ -57,7 +57,7 @@ beforeEach(() => {
 
 describe('post_gamificationEvent — authentication', () => {
   it('returns 401 when no member is authenticated', async () => {
-    const req = makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} });
+    const req = makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} });
     const res = await post_gamificationEvent(req);
     expect(res.status).toBe(401);
   });
@@ -90,14 +90,14 @@ describe('post_gamificationEvent — validation', () => {
   });
 
   it('returns 400 when memberId is missing', async () => {
-    const res = await post_gamificationEvent(makeRequest({ eventName: 'product_viewed', payload: {} }));
+    const res = await post_gamificationEvent(makeRequest({ eventName: 'gamification_add_to_cart', payload: {} }));
     expect(res.status).toBe(400);
     expect(JSON.parse(res.body).error).toMatch(/memberId/i);
   });
 
   it('returns 401 when memberId in body does not match authenticated member', async () => {
     const res = await post_gamificationEvent(makeRequest({
-      eventName: 'product_viewed',
+      eventName: 'gamification_add_to_cart',
       memberId: 'member-different',
       payload: {},
     }));
@@ -115,7 +115,7 @@ describe('post_gamificationEvent — rate limiting', () => {
   it('returns 429 when rate limit is exceeded (20 requests in window)', async () => {
     __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 20)]);
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(429);
     expect(JSON.parse(res.body).error).toMatch(/rate limit/i);
@@ -124,7 +124,7 @@ describe('post_gamificationEvent — rate limiting', () => {
   it('allows request when count is below the limit', async () => {
     __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 19)]);
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(200);
   });
@@ -132,7 +132,7 @@ describe('post_gamificationEvent — rate limiting', () => {
   it('allows request when rate limit window has expired', async () => {
     __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 20, Date.now() - 70_000)]);
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(200);
   });
@@ -147,7 +147,7 @@ describe('post_gamificationEvent — success', () => {
 
   it('returns 200 with success, newTotal, tierChanged, newTier', async () => {
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: { productId: 'prod-123' } })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: { productId: 'prod-123' } })
     );
     expect(res.status).toBe(200);
     const body = JSON.parse(res.body);
@@ -162,7 +162,7 @@ describe('post_gamificationEvent — success', () => {
       success: true, newTotal: 1000, tierChanged: true, newTier: 'silver',
     });
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     const body = JSON.parse(res.body);
     expect(res.status).toBe(200);
@@ -183,10 +183,10 @@ describe('post_gamificationEvent — success', () => {
 
   it('defaults payload to {} when not provided in body', async () => {
     await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc' })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc' })
     );
     expect(receiveGamificationEvent).toHaveBeenCalledWith(
-      'product_viewed',
+      'gamification_add_to_cart',
       {},
       'member-abc',
     );
@@ -205,7 +205,7 @@ describe('post_gamificationEvent — error handling', () => {
       success: false, error: 'Failed to retrieve points',
     });
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(500);
   });
@@ -213,7 +213,7 @@ describe('post_gamificationEvent — error handling', () => {
   it('returns 500 on unexpected exception from receiveGamificationEvent', async () => {
     receiveGamificationEvent.mockRejectedValueOnce(new Error('Unexpected DB failure'));
     const res = await post_gamificationEvent(
-      makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
+      makeRequest({ eventName: 'gamification_add_to_cart', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(500);
   });

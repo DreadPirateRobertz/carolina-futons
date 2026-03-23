@@ -21,6 +21,7 @@ import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'b
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1655,10 +1656,13 @@ export async function post_answerQuestion(request) {
  * Body: { eventName: string, memberId: string, payload?: object }
  * Rate limit: 20 events per minute per memberId.
  * Returns: { success, newTotal, tierChanged, newTier }
+ * Note: streak fields (currentStreakDays, streakMultiplier, milestoneUnlocked) from
+ * receiveGamificationEvent are intentionally omitted — mobile reads them separately.
  *
  * Used by the mobile app to POST gamification events from native UI.
  * memberId in the request body must match the authenticated member's _id
  * to prevent one member from posting events on behalf of another.
+ * Auth: mobile app must send a valid Wix member session cookie.
  */
 export async function post_gamificationEvent(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -1671,7 +1675,8 @@ export async function post_gamificationEvent(request) {
     let body;
     try {
       body = await request.body.json();
-    } catch (_) {
+    } catch (parseErr) {
+      console.warn('post_gamificationEvent — invalid JSON body:', parseErr.message);
       return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -1689,7 +1694,6 @@ export async function post_gamificationEvent(request) {
       return unauthorized({ body: JSON.stringify({ error: 'memberId does not match authenticated member' }), headers: JSON_HEADERS });
     }
 
-    const { checkRateLimit } = await import('backend/utils/rateLimit');
     const rateLimitResult = await checkRateLimit('GamificationRateLimit', memberId, { max: 20, windowMs: 60_000 });
     if (!rateLimitResult.allowed) {
       return response({ status: 429, body: JSON.stringify({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
