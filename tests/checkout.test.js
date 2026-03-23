@@ -158,6 +158,11 @@ vi.mock('wix-window-frontend', () => ({
   onBeforeUnload: vi.fn(),
 }));
 
+vi.mock('public/shippingPrefs', () => ({
+  getStoredZip: vi.fn().mockResolvedValue(null),
+  setStoredZip: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ── Test Data ───────────────────────────────────────────────────────
 
 const mockCart = {
@@ -1738,5 +1743,43 @@ describe('protection plan — ARIA', () => {
 
     expect($tierItem('#tierSelectBtn').accessibility.ariaLabel).toContain('Add Basic');
     expect($tierItem('#tierSelectBtn').accessibility.ariaLabel).toContain('$29.99');
+  });
+});
+
+// ── ZIP persistence (cf-63x) ──────────────────────────────────────────────────
+
+describe('ZIP pre-population', () => {
+  it('pre-populates #addressZip and #checkoutShippingZip when getStoredZip returns a ZIP', async () => {
+    const { getStoredZip } = await import('public/shippingPrefs');
+    getStoredZip.mockResolvedValue('28792');
+    await loadPage();
+    expect(getEl('#addressZip').value).toBe('28792');
+    expect(getEl('#checkoutShippingZip').value).toBe('28792');
+  });
+
+  it('does not set ZIP fields when getStoredZip returns null', async () => {
+    const { getStoredZip } = await import('public/shippingPrefs');
+    getStoredZip.mockResolvedValue(null);
+    await loadPage();
+    // value should be empty (default mock element value is '')
+    expect(getEl('#addressZip').value).toBeFalsy();
+  });
+
+  it('calls setStoredZip with the validated ZIP after address validation succeeds', async () => {
+    await loadPage();
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    const { setStoredZip } = await import('public/shippingPrefs');
+
+    getEl('#addressFullName').value = 'Jane Doe';
+    getEl('#addressLine1').value = '123 Main St';
+    getEl('#addressCity').value = 'Hendersonville';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28792';
+
+    const handler = getEl('#validateAddressBtn').onClick.mock.calls[0][0];
+    await handler();
+
+    expect(setStoredZip).toHaveBeenCalledWith('28792');
   });
 });
