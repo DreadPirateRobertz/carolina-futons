@@ -8,7 +8,7 @@
  *    rate limiting 30/min per member
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
+import { __reset as __resetData, __seed, __setQueryError } from './__mocks__/wix-data.js';
 import { __reset as __resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
 // wix-data, wix-members-backend, wix-loyalty.v2 are auto-aliased to tests/__mocks__/
 // by vitest.config.js — no vi.mock() calls needed
@@ -97,8 +97,8 @@ describe('generateDailyQuests — determinism', () => {
     for (let d = 1; d <= 5; d++) {
       results.add(JSON.stringify(generateDailyQuests(new Date(2026, 0, d))));
     }
-    // 5 days with pool size 5 — each day should differ
-    expect(results.size).toBeGreaterThanOrEqual(2);
+    // Pool size 5, selecting 3 consecutive — each of the 5 days has a distinct base slot
+    expect(results.size).toBe(5);
   });
 
   it('dates with the same dayOfYear % poolSize produce the same quests', () => {
@@ -114,7 +114,7 @@ describe('generateDailyQuests — determinism', () => {
 describe('getMyDailyQuests — authentication', () => {
   it('returns 401 when no member is authenticated', async () => {
     const res = await getMyDailyQuests();
-    expect(res.status ?? 401).toBe(401);
+    expect(res.status).toBe(401);
   });
 });
 
@@ -230,12 +230,46 @@ describe('getMyDailyQuests — rate limiting', () => {
   it('returns 429 after 30 requests within the rate limit window', async () => {
     for (let i = 0; i < 30; i++) await getMyDailyQuests();
     const res = await getMyDailyQuests(); // 31st
-    expect(res.status ?? 200).toBe(429);
+    expect(res.status).toBe(429);
   });
 
   it('allows exactly 30 requests within the window', async () => {
     for (let i = 0; i < 29; i++) await getMyDailyQuests();
     const res = await getMyDailyQuests(); // 30th
     expect(res).toHaveProperty('quests');
+  });
+
+  it('rate limit is per-member — exhausting one member does not affect another', async () => {
+    for (let i = 0; i < 30; i++) await getMyDailyQuests(); // exhaust member-q1
+    __resetMembers();
+    __setMember({ _id: 'member-q2', loginEmail: 'other@example.com' });
+    const res = await getMyDailyQuests();
+    expect(res).toHaveProperty('quests');
+  });
+
+  it('resets the window after DAILY_QUESTS_WINDOW_MS has elapsed', async () => {
+    vi.useFakeTimers();
+    for (let i = 0; i < 30; i++) await getMyDailyQuests(); // exhaust window
+    vi.advanceTimersByTime(61_000); // advance past 60s window
+    const res = await getMyDailyQuests(); // should be allowed again
+    expect(res).toHaveProperty('quests');
+    vi.useRealTimers();
+  });
+});
+
+// ── getMyDailyQuests — error handling ────────────────────────────────────────
+
+describe('getMyDailyQuests — error handling', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('returns quests with completed: false when QuestCompletions query throws', async () => {
+    __setQueryError('QuestCompletions', new Error('CMS unavailable'));
+    const res = await getMyDailyQuests();
+    // Should degrade gracefully — quests returned as all incomplete
+    expect(res).toHaveProperty('quests');
+    expect(res.quests).toHaveLength(3);
+    for (const q of res.quests) {
+      expect(q.completed).toBe(false);
+    }
   });
 });

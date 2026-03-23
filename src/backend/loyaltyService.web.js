@@ -17,6 +17,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 
@@ -335,11 +336,20 @@ export function generateDailyQuests(date) {
 export const getMyDailyQuests = webMethod(
   Permissions.SiteMember,
   async () => {
-    const member = await currentMember.getMember();
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getMember failed', err);
+      return { status: 401, error: 'Unauthenticated' };
+    }
     if (!member?._id) return { status: 401, error: 'Unauthenticated' };
     const memberId = member._id;
 
-    // Rate limit: 30 requests per minute per member
+    // Rate limit: 30 requests per minute per member.
+    // NOTE: this Map is module-scoped and is instance-local in serverless environments.
+    // It provides soft rate limiting within a single warm instance; cross-instance
+    // enforcement requires a CMS-backed counter (acceptable for this use case).
     const now = Date.now();
     const rl = _dailyQuestsRateLimit.get(memberId) || { count: 0, windowStart: now };
     if (now - rl.windowStart > DAILY_QUESTS_WINDOW_MS) {
@@ -365,7 +375,7 @@ export const getMyDailyQuests = webMethod(
         .find({ suppressAuth: true });
       completions = res.items;
     } catch (err) {
-      console.error('[loyaltyService] QuestCompletions query failed:', err.message);
+      logError('[loyaltyService] QuestCompletions query failed', err);
     }
 
     const completionByAction = new Map(completions.map(c => [c.action, c]));
