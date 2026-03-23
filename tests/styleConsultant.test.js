@@ -676,4 +676,36 @@ describe('_callClaudeVision — real implementation', () => {
     }));
     await expect(_callClaudeVision('', 'test')).rejects.toThrow('claude_parse_error');
   });
+
+  it('throws claude_timeout when fetch does not resolve before 30s', async () => {
+    // Catch the pending promise immediately so vitest never sees an unhandled
+    // rejection while advancing fake timers (vitest hooks the rejection before
+    // microtasks can link it to Promise.race's handler).
+    vi.useFakeTimers();
+    try {
+      __setHandler(() => new Promise(() => {})); // never resolves
+      let caughtError;
+      const pending = _callClaudeVision('', 'any text').catch(e => { caughtError = e; });
+      await vi.advanceTimersByTimeAsync(30001);
+      await pending; // wait for the .catch() handler to fire
+      expect(caughtError?.message).toBe('claude_timeout');
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it('truncates explanation to EXPLANATION_MAX (500) characters', async () => {
+    const longExplanation = 'A'.repeat(600);
+    __setHandler(() => makeClaudeResponse(['modern'], longExplanation));
+    const result = await _callClaudeVision('', 'any text');
+    expect(result.explanation.length).toBeLessThanOrEqual(500);
+  });
+
+  it('strips HTML tags from explanation before returning', async () => {
+    __setHandler(() => makeClaudeResponse(['modern'], '<script>alert("xss")</script>Modern style.'));
+    const result = await _callClaudeVision('', 'any text');
+    expect(result.explanation).not.toContain('<script>');
+    expect(result.explanation).toContain('Modern style.');
+  });
 });

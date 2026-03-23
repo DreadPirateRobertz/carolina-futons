@@ -48,6 +48,7 @@ const SESSION_COLLECTION = 'StyleConsultantSessions';
 // Input constraints
 const SESSION_KEY_LEN = 64;   // SHA-256 hex = exactly 64 chars
 const TEXT_MAX = 1000;        // Max characters for free-text description
+const EXPLANATION_MAX = 500;  // Max characters for Claude explanation before sanitization
 
 // Rate limiting — 5 calls per hour per session (confirmed via cross-rig review)
 const RATE_LIMIT_MAX = 5;
@@ -302,12 +303,17 @@ async function callClaudeVision(photoUrl, textInput) {
   // Call Claude API via wix-fetch with a 30s abort timeout to prevent Velo runtime exhaustion
   const { fetch } = await import('wix-fetch');
   const controller = new AbortController();
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
       controller.abort();
       reject(new Error('claude_timeout'));
-    }, 30000)
-  );
+    }, 30000);
+  });
+  // Promise.race handles this rejection, but fake-timer test environments fire
+  // the callback synchronously before race's internal handler is linked.
+  // This .catch() marks the rejection as handled without affecting race behavior.
+  void timeoutPromise.catch(() => {});
   const res = await Promise.race([
     fetch(CLAUDE_API_URL, {
       method: 'POST',
@@ -323,7 +329,7 @@ async function callClaudeVision(photoUrl, textInput) {
         messages: [{ role: 'user', content: contentBlocks }],
       }),
       signal: controller.signal,
-    }),
+    }).finally(() => clearTimeout(timeoutId)),
     timeoutPromise,
   ]);
 
@@ -356,7 +362,7 @@ async function callClaudeVision(photoUrl, textInput) {
   const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
   // Sanitize explanation before returning to client — prevents XSS if rendered in a DOM context.
   const explanation = typeof parsed?.explanation === 'string'
-    ? sanitize(parsed.explanation, 500)
+    ? sanitize(parsed.explanation, EXPLANATION_MAX)
     : '';
 
   return { styleTags, explanation };
