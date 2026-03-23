@@ -21,6 +21,7 @@ import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'b
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
+import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1815,5 +1816,70 @@ export async function post_challengeProgress(request) {
   } catch (err) {
     console.error('HTTP function error (challengeProgress):', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
+  }
+}
+
+// ── Leaderboard Endpoint ──────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/leaderboard
+// Returns top N members ranked by loyalty points for the mobile Leaderboard screen.
+// Auth: Wix member session required.
+// Query params: limit (default 20, max 50), period ('all-time' | 'weekly')
+// Rate limit: 30/min per member.
+
+// In-memory rate limit store (per server instance, resets on deploy — acceptable for Wix serverless)
+const _leaderboardRateLimit = new Map(); // memberId → { count, windowStart }
+const LEADERBOARD_RATE_LIMIT = 30;
+const LEADERBOARD_WINDOW_MS = 60_000; // 1 minute
+
+// Exported for testing only.
+export function _resetLeaderboardRateLimit() {
+  _leaderboardRateLimit.clear();
+}
+
+export async function get_leaderboard(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const json = (obj) => JSON.stringify(obj);
+
+  let member;
+  try {
+    member = await currentMember.getMember();
+  } catch (err) {
+    console.error('HTTP function error (leaderboard): getMember() failed:', err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+  if (!member) {
+    return unauthorized({ body: json({ error: 'Authentication required' }), headers: JSON_HEADERS });
+  }
+
+  try {
+    const params = request.query || {};
+    const rawLimit = params.limit !== undefined ? Number(params.limit) : 20;
+    const period = params.period || 'all-time';
+
+    if (!['all-time', 'weekly'].includes(period)) {
+      return badRequest({ body: json({ error: 'Invalid period — must be all-time or weekly' }), headers: JSON_HEADERS });
+    }
+    if (rawLimit > 50) {
+      return badRequest({ body: json({ error: 'limit must be <= 50' }), headers: JSON_HEADERS });
+    }
+
+    // Rate limit check
+    const memberId = member._id;
+    const now = Date.now();
+    const rl = _leaderboardRateLimit.get(memberId);
+    if (rl && now - rl.windowStart < LEADERBOARD_WINDOW_MS) {
+      if (rl.count >= LEADERBOARD_RATE_LIMIT) {
+        return response({ status: 429, body: json({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
+      }
+      rl.count++;
+    } else {
+      _leaderboardRateLimit.set(memberId, { count: 1, windowStart: now });
+    }
+
+    const result = await _getLeaderboardWebMethod({ limit: rawLimit, period });
+    return ok({ body: json(result), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (leaderboard):', err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }

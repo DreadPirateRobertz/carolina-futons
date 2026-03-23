@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onUpdate, __setQueryError, __getLastFindOptions, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
-import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
+import { __setMember, __reset as resetMembers, currentMember as membersMock } from './__mocks__/wix-members-backend.js';
 import { _resetActiveChallengesRateLimit, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import {
   get_health,
@@ -25,6 +25,8 @@ import {
   post_klaviyoWebhook,
   get_activeChallenges,
   post_challengeProgress,
+  get_leaderboard,
+  _resetLeaderboardRateLimit,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -1691,6 +1693,71 @@ describe('post_challengeProgress', () => {
       await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-rl', challengeId: 'ch-1' }));
     }
     const result = await post_challengeProgress(makeChallengeProgressRequest({ memberId: 'mem-rl', challengeId: 'ch-1' }));
+    expect(result.status).toBe(429);
+  });
+});
+
+// ── GET /_functions/leaderboard ───────────────────────────────────────────────
+
+const makeLeaderboardRequest = ({ limit, period } = {}) => {
+  const query = {};
+  if (limit !== undefined) query.limit = String(limit);
+  if (period !== undefined) query.period = period;
+  return { query };
+};
+
+describe('get_leaderboard', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    _resetLeaderboardRateLimit();
+  });
+
+  it('returns 200 with entries for valid request', async () => {
+    __setMember({ _id: 'mem-1' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-1', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+    ]);
+    const result = await get_leaderboard(makeLeaderboardRequest());
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body).toHaveProperty('entries');
+    expect(body.entries).toHaveLength(1);
+    expect(body.entries[0].memberId).toBe('mem-1');
+  });
+
+  it('returns 400 on invalid period param', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await get_leaderboard(makeLeaderboardRequest({ period: 'monthly' }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/period/i);
+  });
+
+  it('returns 400 on limit > 50', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await get_leaderboard(makeLeaderboardRequest({ limit: 51 }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/limit/i);
+  });
+
+  it('returns 401 when no member is authenticated', async () => {
+    const result = await get_leaderboard(makeLeaderboardRequest());
+    expect(result.status).toBe(401);
+    expect(JSON.parse(result.body).error).toMatch(/auth/i);
+  });
+
+  it('returns 500 on service error', async () => {
+    membersMock.getMember.mockRejectedValueOnce(new Error('Service unavailable'));
+    const result = await get_leaderboard(makeLeaderboardRequest());
+    expect(result.status).toBe(500);
+  });
+
+  it('returns 429 after rate limit exceeded', async () => {
+    __setMember({ _id: 'mem-rl' });
+    for (let i = 0; i < 30; i++) {
+      await get_leaderboard(makeLeaderboardRequest());
+    }
+    const result = await get_leaderboard(makeLeaderboardRequest());
     expect(result.status).toBe(429);
   });
 });
