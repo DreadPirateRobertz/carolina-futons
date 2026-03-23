@@ -21,7 +21,6 @@ import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
-import { logError } from 'backend/utils/errorHandler';
 
 // ── Challenge catalog constants ───────────────────────────────────────────────
 const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
