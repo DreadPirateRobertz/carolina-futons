@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carolina Futons — MCP Plugin Integrations</title>
+<style>
+  :root {
+    --navy: #1E2A3A;
+    --blue: #2B5EA7;
+    --light-blue: #F0F5F8;
+    --accent: #4A90D9;
+    --green: #27AE60;
+    --red: #E74C3C;
+    --orange: #F39C12;
+    --gray: #7F8C8D;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light-blue); color: var(--navy); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, var(--navy), var(--blue)); color: white; padding: 2rem; text-align: center; }
+  .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .header p { opacity: 0.85; font-size: 0.95rem; }
+  .status-bar { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; }
+  .status-pill { background: rgba(255,255,255,0.15); padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.85rem; }
+  .status-pill.ok { background: rgba(39,174,96,0.3); }
+  .status-pill.warn { background: rgba(243,156,18,0.3); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; }
+  .card { background: white; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; transition: transform 0.2s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .card-head { padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid #eee; }
+  .card-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .card-head h2 { font-size: 1.1rem; }
+  .card-head .badge { font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
+  .badge-ok { background: #E8F5E9; color: var(--green); }
+  .badge-partial { background: #FFF3E0; color: var(--orange); }
+  .badge-info { background: #E3F2FD; color: var(--blue); }
+  .card-body { padding: 1.2rem 1.5rem; }
+  .card-body p { font-size: 0.9rem; color: #555; margin-bottom: 1rem; }
+  .use-cases { list-style: none; }
+  .use-cases li { padding: 0.4rem 0; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+  .use-cases li::before { content: ''; display: none; }
+  .use-case-icon { flex-shrink: 0; width: 20px; text-align: center; }
+  .section-title { font-size: 1.3rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent); }
+  .detail-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; }
+  .detail-table th { background: var(--light-blue); padding: 0.6rem 1rem; text-align: left; font-weight: 600; }
+  .detail-table td { padding: 0.6rem 1rem; border-bottom: 1px solid #eee; }
+  .detail-table tr:hover td { background: #fafcfe; }
+  .code { font-family: 'SF Mono', Monaco, monospace; font-size: 0.8rem; background: #f4f4f4; padding: 0.15rem 0.4rem; border-radius: 3px; }
+  .config-section { background: white; border-radius: 12px; box-shadow: var(--card-shadow); padding: 1.5rem; margin-top: 1.5rem; }
+  .config-section h3 { font-size: 1rem; margin-bottom: 1rem; color: var(--blue); }
+  .flow-diagram { background: #f8fafc; border: 1px solid #e0e7ee; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; font-size: 0.85rem; }
+  .flow-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0; }
+  .flow-num { width: 28px; height: 28px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .flow-arrow { text-align: center; color: var(--gray); font-size: 0.8rem; padding: 0.2rem 0 0.2rem 2.3rem; }
+  .api-installed { margin-top: 1.5rem; }
+  .api-installed h3 { font-size: 1rem; margin-bottom: 0.8rem; }
+  .install-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; }
+  .install-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .install-dot.ok { background: var(--green); }
+  .install-dot.blocked { background: var(--red); }
+  .install-dot.pending { background: var(--orange); }
+  footer { text-align: center; padding: 2rem; color: var(--gray); font-size: 0.8rem; }
+  @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .container { padding: 1rem; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Carolina Futons &mdash; Plugin Integration Dashboard</h1>
+  <p>MCP server connections, what they do, and how we use them for staging site operations</p>
+  <div class="status-bar">
+    <span class="status-pill ok">6 Plugins Connected</span>
+    <span class="status-pill ok">All Operational</span>
+    <span class="status-pill">Generated 2026-03-16</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ============ PLUGIN CARDS ============ -->
+  <h2 class="section-title">Plugin Integrations</h2>
+  <div class="grid">
+
+    <!-- WIX MCP -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#E8EAF6;color:#3F51B5;">&#9878;</div>
+        <div>
+          <h2>Wix MCP</h2>
+          <span class="badge badge-ok">ACTIVE</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>The backbone.</strong> Direct REST API access to our Wix staging site (My Site / halworker85). Every dashboard configuration action goes through this plugin.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#128722;</span> <strong>eCommerce setup</strong> &mdash; installed Wix eCommerce, Stores, Checkout, Cart apps via API</li>
+          <li><span class="use-case-icon">&#128666;</span> <strong>Shipping config</strong> &mdash; created delivery profiles, added UPS/USPS/Pickup/Local carriers with fallback rates</li>
+          <li><span class="use-case-icon">&#127380;</span> <strong>Pricing Plans</strong> &mdash; created CF+ Monthly ($14.99) and Annual ($119.99) membership plans</li>
+          <li><span class="use-case-icon">&#128451;</span> <strong>CMS provisioning</strong> &mdash; created 28 data collections (FAQs, shipping zones, design quiz, etc.)</li>
+          <li><span class="use-case-icon">&#128270;</span> <strong>App installation</strong> &mdash; installed eCommerce, Inbox, Pricing Plans, Invoices apps</li>
+          <li><span class="use-case-icon">&#128202;</span> <strong>Marketing tags</strong> &mdash; Facebook Pixel verified on live site (blocked on staging — not Premium)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- PLAYWRIGHT -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#E8F5E9;color:#2E7D32;">&#127916;</div>
+        <div>
+          <h2>Playwright</h2>
+          <span class="badge badge-ok">ACTIVE</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>Primary browser driver.</strong> Headless Chromium for navigating live/staging sites, taking screenshots, interacting with the Wix editor, and verifying published changes.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#128248;</span> <strong>Visual verification</strong> &mdash; screenshot live site to confirm CSS/content changes after publish</li>
+          <li><span class="use-case-icon">&#128187;</span> <strong>Editor automation</strong> &mdash; Wix Studio editor interactions (documentServices API, element hookup)</li>
+          <li><span class="use-case-icon">&#128269;</span> <strong>Page snapshots</strong> &mdash; accessibility tree dumps for element mapping and audit</li>
+          <li><span class="use-case-icon">&#128736;</span> <strong>Form testing</strong> &mdash; fill and submit contact forms, test checkout flows</li>
+          <li><span class="use-case-icon">&#127760;</span> <strong>Navigation testing</strong> &mdash; verify all nav links, shop dropdowns, footer links resolve correctly</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- GMAIL -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#FCE4EC;color:#C62828;">&#9993;</div>
+        <div>
+          <h2>Gmail</h2>
+          <span class="badge badge-ok">ACTIVE</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>Connected to chrisdealglass@gmail.com</strong> (Stilgar's account). Search emails, read threads, draft replies. Used for Wix account management and vendor communication.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#128236;</span> <strong>Wix notifications</strong> &mdash; read order confirmations, app install receipts, billing alerts</li>
+          <li><span class="use-case-icon">&#128221;</span> <strong>Draft responses</strong> &mdash; compose vendor emails (Night &amp; Day Furniture, UPS, etc.)</li>
+          <li><span class="use-case-icon">&#128270;</span> <strong>Search history</strong> &mdash; find previous Wix support tickets, account setup emails</li>
+          <li><span class="use-case-icon">&#128274;</span> <strong>Account recovery</strong> &mdash; access password reset emails for halworker85 and business accounts</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SERENA -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#F3E5F5;color:#7B1FA2;">&#128300;</div>
+        <div>
+          <h2>Serena</h2>
+          <span class="badge badge-ok">ACTIVE</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>Semantic code intelligence.</strong> Understands our Velo codebase structure — symbols, references, relationships. Used for targeted code reading and surgical edits.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#128450;</span> <strong>Symbol navigation</strong> &mdash; find functions, classes, exports across src/ without reading full files</li>
+          <li><span class="use-case-icon">&#128279;</span> <strong>Reference tracking</strong> &mdash; find all callers of a function before renaming or changing its signature</li>
+          <li><span class="use-case-icon">&#9999;</span> <strong>Symbolic editing</strong> &mdash; replace entire function bodies, insert new exports, rename symbols</li>
+          <li><span class="use-case-icon">&#128506;</span> <strong>Architecture overview</strong> &mdash; get file-level symbol maps without loading full content</li>
+          <li><span class="use-case-icon">&#128269;</span> <strong>Pattern search</strong> &mdash; regex search across codebase for API calls, TODOs, config values</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CONTEXT7 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#E0F7FA;color:#00695C;">&#128218;</div>
+        <div>
+          <h2>Context7</h2>
+          <span class="badge badge-ok">ACTIVE</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>Live documentation lookup.</strong> Pulls current docs and code examples for any library — Wix SDK, Velo APIs, Node packages. Prevents stale-docs mistakes.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#128214;</span> <strong>Wix Velo docs</strong> &mdash; current API signatures for wix-data, wix-ecom, wix-members, etc.</li>
+          <li><span class="use-case-icon">&#128161;</span> <strong>Code examples</strong> &mdash; working snippets from official docs, tested and versioned</li>
+          <li><span class="use-case-icon">&#128200;</span> <strong>Library discovery</strong> &mdash; resolve package names → docs with quality scores and snippet counts</li>
+          <li><span class="use-case-icon">&#128736;</span> <strong>SDK migration</strong> &mdash; check V2→V3 API changes (e.g., pricing plans schema evolution)</li>
+        </ul>
+        <p style="margin-top:0.5rem;"><em>Available libraries: Wix Developers (29,761 snippets), Wix REST API (867), Wix Design System (2,270), Wix Build Apps (3,045)</em></p>
+      </div>
+    </div>
+
+    <!-- PUPPETEER -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:#FFF8E1;color:#F57F17;">&#129302;</div>
+        <div>
+          <h2>Puppeteer</h2>
+          <span class="badge badge-info">BACKUP</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p><strong>Backup browser driver.</strong> Alternative to Playwright for simpler navigation tasks. Used when Playwright's snapshot engine isn't needed or as fallback.</p>
+        <ul class="use-cases">
+          <li><span class="use-case-icon">&#127760;</span> <strong>Simple navigation</strong> &mdash; load pages, verify HTTP status codes</li>
+          <li><span class="use-case-icon">&#128187;</span> <strong>JS evaluation</strong> &mdash; run arbitrary JavaScript in page context (useful for Wix editor hacks)</li>
+          <li><span class="use-case-icon">&#128248;</span> <strong>Screenshots</strong> &mdash; capture page renders for visual comparison</li>
+          <li><span class="use-case-icon">&#128203;</span> <strong>Form filling</strong> &mdash; fill input fields, click buttons, select dropdowns</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ HOW IT ALL WORKS TOGETHER ============ -->
+  <h2 class="section-title">How They Work Together</h2>
+  <div class="config-section">
+    <h3>Typical Dashboard Configuration Flow</h3>
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <span class="flow-num">1</span>
+        <span><strong>Context7</strong> looks up the current Wix REST API docs for the feature we need</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">2</span>
+        <span><strong>Wix MCP</strong> calls the API (install app, create plan, add carrier, provision CMS collection)</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">3</span>
+        <span><strong>Serena</strong> reads our Velo codebase to find where the new IDs/slugs need to be wired in</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">4</span>
+        <span>IDs saved to <span class="code">secrets.env</span> &rarr; crew writes code &rarr; PR merged via GitHub CLI</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">5</span>
+        <span><strong>Playwright</strong> navigates to the live/staging site to verify the change is working</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top:1.5rem;">Editor Hookup Flow (Stilgar in editor, Melania on dashboard)</h3>
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <span class="flow-num">1</span>
+        <span><strong>Melania</strong> installs apps + creates configs via <strong>Wix MCP</strong></span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">2</span>
+        <span><strong>Stilgar</strong> opens Wix Studio editor &rarr; assigns element nicknames &rarr; wires Velo bindings</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">3</span>
+        <span><strong>Playwright</strong> takes page snapshot to confirm elements are connected</span>
+      </div>
+      <div class="flow-arrow">&darr;</div>
+      <div class="flow-step">
+        <span class="flow-num">4</span>
+        <span><strong>Gmail</strong> monitors Wix publish notifications for success/failure</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ WHAT WE INSTALLED THIS SESSION ============ -->
+  <h2 class="section-title">API Installs This Session (2026-03-16)</h2>
+  <div class="config-section">
+    <div class="api-installed">
+      <h3>Apps Installed on Staging</h3>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Wix eCommerce</strong> <span class="code">1380b703-ce81-ff05-f115-39571d94dfcd</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Wix Inbox</strong> <span class="code">141fbfae-511e-6817-c9f0-48993a7547d1</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Wix Pricing Plans</strong> <span class="code">1522827f-c56c-a5c9-2ac9-00f9e6ae12d3</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Wix Invoices</strong> <span class="code">13ee94c1-b635-8505-3391-97919052c16f</span></div>
+    </div>
+
+    <div class="api-installed">
+      <h3>Delivery Carriers Added</h3>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>UPS</strong> &mdash; live rates + $49.99 fallback <span class="code">138afa6d-d5b7-4e10-bf87-c8c2e83df82d</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Local Pickup</strong> &mdash; $0 (Hendersonville showroom) <span class="code">50d8c12f-715e-41ad-be25-d0f61375dbee</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Local Delivery</strong> &mdash; $49.99 flat <span class="code">fc9314bc-a317-4a2b-a9d4-5ad21cc57856</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>USPS</strong> (existing) <span class="code">f4d83b06-b408-4f3b-afd4-de8db311d7d8</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Basic Shipping</strong> (existing) <span class="code">45c44b27-ca7b-4891-8c0d-1747d588b835</span></div>
+    </div>
+
+    <div class="api-installed">
+      <h3>Pricing Plans Created</h3>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>CF+ Monthly</strong> &mdash; $14.99/mo, slug: <span class="code">cf-plus-monthly</span>, ID: <span class="code">85e98967-6754-4cbb-ac67-f3613ee5ae24</span></div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>CF+ Annual</strong> &mdash; $119.99/yr, slug: <span class="code">cf-plus-annual</span>, ID: <span class="code">d494d2a1-a1e2-43a3-b1bf-4d0474ddb604</span></div>
+    </div>
+
+    <div class="api-installed">
+      <h3>CMS Collections (28 total on staging)</h3>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>11 new this session</strong> &mdash; FAQs, ShippingZones, BuyingGuides, DesignQuizResults, PromotionalBanners, StoreLocations, CustomerTestimonials, ReturnRequests, ProductBundles, GiftCards, PremiumMemberships</div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>17 from prior sessions</strong> &mdash; Products, Categories, Blog, Contacts, Inventory, Orders, Coupons, Discounts, etc.</div>
+    </div>
+
+    <div class="api-installed">
+      <h3>Blocked / Pending</h3>
+      <div class="install-item"><span class="install-dot blocked"></span> <strong>Marketing Tags</strong> &mdash; staging not Premium (403). FB Pixel, GA4, TikTok blocked until go-live</div>
+      <div class="install-item"><span class="install-dot blocked"></span> <strong>Back In Stock</strong> &mdash; API returns NOT_SUPPORTED even after eCommerce install. Needs dashboard toggle</div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Wix Payments</strong> &mdash; connected via Playwright dashboard automation. Credit/Debit, Apple Pay, Google Pay, PayPal, Afterpay, Affirm enabled. Activates at Premium upgrade.</div>
+      <div class="install-item"><span class="install-dot ok"></span> <strong>Manual Payments</strong> &mdash; connected for in-store cash/check at Hendersonville showroom</div>
+    </div>
+  </div>
+
+  <!-- ============ SECRETS REGISTERED ============ -->
+  <h2 class="section-title">Secrets Registered (secrets.env)</h2>
+  <div class="config-section">
+    <p style="font-size:0.85rem;color:#555;margin-bottom:1rem;">All IDs from API installs this session are saved to <span class="code">/Users/hal/gt/cfutons/refinery/rig/scripts/secrets.env</span>. This file is .gitignored. Crew code reads these values at runtime.</p>
+    <table class="detail-table">
+      <thead>
+        <tr><th>Variable</th><th>Purpose</th><th>Added</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="code">WIX_ECOMMERCE_INSTANCE_ID</td><td>eCommerce app instance</td><td>This session</td></tr>
+        <tr><td class="code">WIX_INBOX_INSTANCE_ID</td><td>Inbox app instance</td><td>This session</td></tr>
+        <tr><td class="code">WIX_PRICING_PLANS_INSTANCE_ID</td><td>Pricing Plans app instance</td><td>This session</td></tr>
+        <tr><td class="code">WIX_INVOICES_INSTANCE_ID</td><td>Invoices app instance</td><td>This session</td></tr>
+        <tr><td class="code">DELIVERY_PROFILE_ID</td><td>Main delivery profile</td><td>This session</td></tr>
+        <tr><td class="code">DOMESTIC_REGION_ID</td><td>US domestic shipping region</td><td>This session</td></tr>
+        <tr><td class="code">INTERNATIONAL_REGION_ID</td><td>International shipping region</td><td>This session</td></tr>
+        <tr><td class="code">UPS_CARRIER_APP_ID</td><td>UPS carrier (live rates + $49.99 fallback)</td><td>This session</td></tr>
+        <tr><td class="code">PICKUP_CARRIER_APP_ID</td><td>Local pickup ($0)</td><td>This session</td></tr>
+        <tr><td class="code">LOCAL_DELIVERY_CARRIER_APP_ID</td><td>Local delivery ($49.99)</td><td>This session</td></tr>
+        <tr><td class="code">USPS_CARRIER_APP_ID</td><td>USPS carrier</td><td>This session</td></tr>
+        <tr><td class="code">BASIC_SHIPPING_CARRIER_APP_ID</td><td>Basic flat-rate shipping</td><td>This session</td></tr>
+        <tr><td class="code">CF_PLUS_MONTHLY_PLAN_ID</td><td>CF+ Monthly plan</td><td>This session</td></tr>
+        <tr><td class="code">CF_PLUS_MONTHLY_VARIANT_ID</td><td>Monthly pricing variant</td><td>This session</td></tr>
+        <tr><td class="code">CF_PLUS_ANNUAL_PLAN_ID</td><td>CF+ Annual plan</td><td>This session</td></tr>
+        <tr><td class="code">CF_PLUS_ANNUAL_VARIANT_ID</td><td>Annual pricing variant</td><td>This session</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85rem;color:#555;margin-top:1rem;"><strong>Prior session secrets also in file:</strong> UPS credentials, Wix backend key, headless client IDs, discount codes, social media creds, GA4 IDs, Facebook Pixel ID, Codecov tokens, Apple/Expo credentials, Night&amp;Day dealer login.</p>
+  </div>
+
+  <!-- ============ PLUGIN REFERENCE ============ -->
+  <h2 class="section-title">Quick Reference: Plugin Tool Names</h2>
+  <div class="config-section">
+    <table class="detail-table">
+      <thead>
+        <tr><th>Plugin</th><th>Key Tools</th><th>When To Use</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Wix MCP</strong></td>
+          <td><span class="code">CallWixSiteAPI</span>, <span class="code">SearchWixRESTDocumentation</span>, <span class="code">ReadFullDocsArticle</span>, <span class="code">ManageWixSite</span>, <span class="code">ListWixSites</span></td>
+          <td>Any Wix dashboard config, app installs, data CRUD, site management</td>
+        </tr>
+        <tr>
+          <td><strong>Playwright</strong></td>
+          <td><span class="code">browser_navigate</span>, <span class="code">browser_snapshot</span>, <span class="code">browser_click</span>, <span class="code">browser_fill_form</span>, <span class="code">browser_take_screenshot</span>, <span class="code">browser_evaluate</span></td>
+          <td>Visual verification, editor automation, form testing, page audits</td>
+        </tr>
+        <tr>
+          <td><strong>Gmail</strong></td>
+          <td><span class="code">gmail_search_messages</span>, <span class="code">gmail_read_message</span>, <span class="code">gmail_create_draft</span>, <span class="code">gmail_get_profile</span></td>
+          <td>Wix notifications, vendor comms, account recovery</td>
+        </tr>
+        <tr>
+          <td><strong>Serena</strong></td>
+          <td><span class="code">find_symbol</span>, <span class="code">get_symbols_overview</span>, <span class="code">find_referencing_symbols</span>, <span class="code">replace_symbol_body</span>, <span class="code">search_for_pattern</span></td>
+          <td>Code intelligence — navigate symbols, trace references, surgical edits</td>
+        </tr>
+        <tr>
+          <td><strong>Context7</strong></td>
+          <td><span class="code">resolve-library-id</span>, <span class="code">query-docs</span></td>
+          <td>Look up current library docs, code examples, API schemas</td>
+        </tr>
+        <tr>
+          <td><strong>Puppeteer</strong></td>
+          <td><span class="code">puppeteer_navigate</span>, <span class="code">puppeteer_screenshot</span>, <span class="code">puppeteer_evaluate</span>, <span class="code">puppeteer_click</span></td>
+          <td>Backup browser driver, simple page loads, JS evaluation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  Carolina Futons &copy; 2026 &mdash; Generated by Melania (cfutons/crew/melania) | Gas Town
+</footer>
+
+</body>
+</html>
