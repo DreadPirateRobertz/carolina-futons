@@ -1294,7 +1294,7 @@
       <h4>LivingSky integration pattern</h4>
       <ul>
         <li>Read state from <code>living-sky-wix.js</code> onMessage handler</li>
-        <li>Key fields: <code>state.ridgeColors</code> (r1–r7), <code>state.skyGradient</code>, <code>state.ambientLight</code>, <code>state.weather</code></li>
+        <li>Key fields: <code>state.ridgeColors</code> (r1–r7, tree), <code>state.skyColors[0]</code> (sky gradient), <code>state.starOpacity</code> (night indicator), <code>state.weather</code></li>
         <li>Never poll — subscribe to the <code>#livingSkyFrame</code> postMessage stream</li>
         <li>Defensive: guard all state reads with null checks — Living Sky may not be initialized on all pages</li>
         <li>Mobile: subscribe to <code>useLivingSky(totalMinutes)</code> hook, pass state to illustration props</li>
@@ -1305,10 +1305,95 @@
   </div>
 </div>
 
-<!-- ── SECTION 7: ELEMENT SPECS ───────────────────────────────────── -->
+<!-- ── SECTION 7: PHASE 7 REFINEMENT DIRECTION ───────────────────── -->
 <div class="section">
   <div class="section-header">
     <span class="section-num">07</span>
+    <div>
+      <div class="section-title">Phase 7 Refinement Direction</div>
+      <div class="section-desc">Blue Ridge aesthetics research: corrected fall palette, haze physics, cloud layer rules, seasonal variants. Drives Phase 8 Living Sky color calibration. Bead: cf-p7r.</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:0 16px 16px;">
+
+    <div class="brief-card">
+      <h4>Fall Foliage — Corrected Palette</h4>
+      <p style="font-size:13px; margin-bottom:8px;">Stagger peak color across ridge layers — foreground trees turn first (gold), background ridges lag 1–2 weeks (still amber). No uniform orange wash.</p>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#D4AF37;"></div> #D4AF37 Hickory gold (foreground)</div>
+        <div class="chip"><div class="swatch" style="background:#FF8C42;"></div> #FF8C42 Maple orange</div>
+        <div class="chip"><div class="swatch" style="background:#C85A2A;"></div> #C85A2A Warm sienna (mid-fall)</div>
+        <div class="chip"><div class="swatch" style="background:#654321;"></div> #654321 Oak burgundy</div>
+        <div class="chip"><div class="swatch" style="background:#9B7E9B;"></div> #9B7E9B Mauve (serviceberry accent)</div>
+        <div class="chip"><div class="swatch" style="background:#4A7C59;"></div> #4A7C59 Evergreen retain</div>
+      </div>
+    </div>
+
+    <div class="brief-card">
+      <h4>Blue Ridge Haze — Physics-Based</h4>
+      <p style="font-size:13px; margin-bottom:8px;">Isoprene scatter shifts ridge fill color toward blue at distance. <strong>Not an overlay filter</strong> — change fill per ridge layer. Near = warm, distant = cool-blue.</p>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#6B8E99;"></div> #6B8E99 Near (r2)</div>
+        <div class="chip"><div class="swatch" style="background:#7FA8D1;"></div> #7FA8D1 Mid (r4)</div>
+        <div class="chip"><div class="swatch" style="background:#9FB6D4;"></div> #9FB6D4 Far (r6)</div>
+        <div class="chip"><div class="swatch" style="background:#C5D3E0;"></div> #C5D3E0 Distant (r7)</div>
+      </div>
+      <p style="font-size:12px; margin-top:8px; opacity:0.7;">Map to ridgeColors r1–r7 from LivingSkyState. Living Sky tick loop drives the shift automatically.</p>
+    </div>
+
+    <div class="brief-card">
+      <h4>Cloud Layer Rules</h4>
+      <p style="font-size:13px; margin-bottom:8px;"><strong>Stilgar rule: NO stormy clouds.</strong> Three allowed types:</p>
+      <ul>
+        <li><strong>Valley fog</strong> — low band under ridgeline; #A8BCC9; opacity 60–80%; blur 8–12px; morning mist in hollows. Most characteristic Blue Ridge feature.</li>
+        <li><strong>Light cumulus</strong> — soft white puffs; #F5F5F5; opacity 30–50%; blur 3–5px; scattered, not massed. Summer afternoons.</li>
+        <li><strong>Cirrus wisps</strong> — feathery high streaks; #EAECEF; opacity 20–30%; no blur. Fair-weather indicator.</li>
+      </ul>
+    </div>
+
+    <div class="brief-card">
+      <h4>Seasonal Sky Variants</h4>
+      <p style="font-size:12px; font-weight:bold; margin-bottom:4px;">Sunset / golden hour</p>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#FDB694;"></div> #FDB694 Peach horizon</div>
+        <div class="chip"><div class="swatch" style="background:#FD7942;"></div> #FD7942 Coral band</div>
+        <div class="chip"><div class="swatch" style="background:#E4581D;"></div> #E4581D Deep amber</div>
+        <div class="chip"><div class="swatch" style="background:#4B557D;"></div> #4B557D Dusk purple</div>
+      </div>
+      <p style="font-size:12px; font-weight:bold; margin-top:10px; margin-bottom:4px;">Winter (bare canopy)</p>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#B0C4D4;"></div> #B0C4D4 Cool steel sky</div>
+        <div class="chip"><div class="swatch" style="background:#8FA8BC;"></div> #8FA8BC Blue-gray ridge</div>
+        <div class="chip"><div class="swatch" style="background:#D6DFE8;"></div> #D6DFE8 Snow-light horizon</div>
+      </div>
+      <p style="font-size:12px; font-weight:bold; margin-top:10px; margin-bottom:4px;">Summer haze (peak isoprene)</p>
+      <div class="palette-chips">
+        <div class="chip"><div class="swatch" style="background:#A8C8D8;"></div> #A8C8D8 Deep blue haze</div>
+        <div class="chip"><div class="swatch" style="background:#7FB8D4;"></div> #7FB8D4 Mid blue wash</div>
+        <div class="chip"><div class="swatch" style="background:#C8DCE8;"></div> #C8DCE8 Pale sky merge</div>
+      </div>
+    </div>
+
+    <div class="brief-card" style="grid-column:1/-1;">
+      <h4>Full Mountain Scene — Swap Criteria</h4>
+      <p style="font-size:13px; margin-bottom:8px;">Occasionally replace cabin thumbnail with full panoramic mountain scene. Trigger when ALL conditions met:</p>
+      <ul>
+        <li>Scene includes 4+ distinct ridge layers (depth illusion)</li>
+        <li>Valley fog band present (below ridge 2)</li>
+        <li>Dramatic sky: sunset, sunrise, or light cumulus only (no storm)</li>
+        <li>No cabin visible — pure landscape view</li>
+      </ul>
+      <p style="font-size:12px; margin-top:8px; opacity:0.7;">Swap trigger: <code>weather === 'clear'</code> AND <code>starOpacity &lt; 0.05</code> (full daylight). Max frequency: 1 per 6-hour window. Full-scene SVG = separate export in <code>contactIllustrations.js</code>. Bead: <strong>cf-p7r</strong>.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SECTION 8: ELEMENT SPECS ───────────────────────────────────── -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">08</span>
     <div>
       <div class="section-title">Illustration Element Specs</div>
       <div class="section-desc">Technical reference for each illustration component. Defines viewBox, color tokens, animation parameters, and LivingSkyState integration points. Target: implementors working Phase 8 and beyond.</div>
@@ -1405,7 +1490,7 @@
 </div><!-- /container -->
 
 <div class="footnote">
-  Prepared by melania (cfutons/crew) + dallas (cfutons_mobile) · 2026-03-23 · Iteration 2: cabin GPS/animation detail + element specs · Awaiting Stilgar approval
+  Prepared by melania (cfutons/crew) + dallas (cfutons_mobile) · 2026-03-23 · Iteration 3: Phase 7 refinement direction (Blue Ridge palette, haze, clouds, seasonal variants) · Awaiting Stilgar approval
 </div>
 
 </body>
