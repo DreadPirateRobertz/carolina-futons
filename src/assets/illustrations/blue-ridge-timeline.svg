@@ -19,6 +19,7 @@
     <linearGradient id="tl-ground" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#E8D5B7"/>
       <stop offset="50%" stop-color="#D4BC96"/>
+      <!-- intentional: ground gradient, not canopy -->
       <stop offset="85%" stop-color="#5C4033"/>
       <stop offset="100%" stop-color="#3A2518" stop-opacity="0.5"/>
     </linearGradient>
@@ -91,6 +92,7 @@
     <g id="foreground">
       <path d="M0 272 Q80 260 180 265 Q300 252 440 260 Q580 248 720 258 Q860 245 1000 255 Q1110 248 1200 252 L1200 400 L0 400Z" fill="url(#tl-ground)"/>
       <path d="M40 300 Q100 290 170 296 Q260 284 350 292 Q450 278 550 288 Q650 275 750 285 Q850 272 950 282 Q1040 270 1140 278" fill="none" stroke="#3A2518" stroke-width="3.5" stroke-dasharray="12,8" opacity="0.45"/>
+      <!-- intentional: worn trail color, not tree -->
       <path d="M45 306 Q105 296 175 302 Q265 290 355 298 Q455 284 555 294 Q655 281 755 291 Q855 278 955 288 Q1045 276 1145 284" fill="none" stroke="#5C4033" stroke-width="1.5" stroke-dasharray="6,10" opacity="0.25"/>
       <g id="milestone-era-1991" transform="translate(120, 290)">
         <circle cx="0" cy="0" r="24" fill="url(#tl-milestone-glow)"/>
