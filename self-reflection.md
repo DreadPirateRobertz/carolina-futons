@@ -349,3 +349,21 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Mobile cross-rig integrations need REST HTTP endpoints (http-functions.js), not webMethods. webMethods are Wix-frontend-to-backend only. When mobile needs to call something, there must be a POST /_api/* function.
 - Feature roadmap "hookup work" items are almost universally editor-blocked. Don't create beads for them until Stilgar grants editor access. The code is done — the bottleneck is human-in-the-editor actions.
 - When reassigning crew, cancel the first nudge before sending the second. Or better: hold the first nudge until priority is confirmed.
+
+## Session 2026-03-23 (Wave 16 — cross-rig acks, crew assignments, Phase 7 convoy)
+
+### What worked well
+- Ghost bead check discipline: before creating getActiveChallenges bead (cf-blf), grepped codebase first. Confirmed ChallengesDisplay.js calls it as injected fn but backend webMethod is missing. Created bead confidently rather than guessing.
+- Crew assignment logic: both godfrey (cf-hw7 Phase 7 masterPage) and radahn (cf-blf getActiveChallenges) got assignments that are non-editor-blocked and high-value cross-rig. No idle crew.
+- Dallas coordination: batched all three unread acks into one reply covering cf-xr8 URL + auth + getActiveChallenges ETA. Closed the loop cleanly.
+- Miquella unblock: correctly identified that Wix MCP 403 blocks mesa rename (separate task) but NOT cf-4el (pure JS engine). Redirected her immediately.
+- hicks (mobile crew) clarification on polecat beads was fast and clear — one nudge, right answer.
+
+### Gaps
+- Session compaction creates context loss around bead assignments and nudge state. Need to check assignee list at session start to avoid re-assigning work already in flight.
+- mol-polecat-work epics dominate `bd list` visually. Should filter them out when scanning for crew-assignable work.
+
+### Pattern notes
+- HTTP endpoint naming on Wix: webMethods live in `.web.js` files and are only callable from Wix frontend. External callers (mobile, REST clients) need `get_*` or `post_*` functions in `http-functions.js`. Always check both when a mobile dependency is raised.
+- When all crew beads are editor-blocked and mayor says "assign something", find backend work that doesn't touch the editor. gamificationEventReceiver.web.js and http-functions.js are always good candidates.
+- Phase 7 convoy structure (JS engine + SVG + Wix shim) runs in parallel, but masterPage hookup is sequentially dependent. Create masterPage bead during convoy run, let crew start test scaffolding now, merge after convoy lands.
