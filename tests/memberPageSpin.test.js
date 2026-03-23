@@ -423,5 +423,92 @@ describe('Member Page — initSpinSection', () => {
       expect(prizes).toHaveLength(1);
       expect(prizes[0]._id).toBe('sp-1');
     });
+
+    it('re-fetches from wix-data when cache TTL has expired', async () => {
+      // Pre-seed a stale cache entry (6 min old, beyond 5-min TTL)
+      const staleTs = Date.now() - 6 * 60 * 1000;
+      sessionStorage.setItem('spinPrizes_v1', JSON.stringify({ ts: staleTs, prizes: [] }));
+      await initPage({ prizes: [POINTS_PRIZE] });
+      // Cache should now hold the freshly fetched prize
+      const cached = JSON.parse(sessionStorage.getItem('spinPrizes_v1'));
+      expect(cached.prizes).toHaveLength(1);
+      expect(cached.prizes[0]._id).toBe('sp-1');
+    });
+
+    it('uses in-memory fallback when sessionStorage is unavailable', async () => {
+      const orig = globalThis.sessionStorage;
+      globalThis.sessionStorage = {
+        getItem: () => null,
+        setItem: () => { throw new Error('SecurityError'); },
+        removeItem: () => {},
+        clear: () => {},
+      };
+      try {
+        await initPage({ prizes: [POINTS_PRIZE] });
+        // Page still renders the wheel even without a working sessionStorage
+        expect(getEl('#spinWheelSVG').src).toMatch(/^data:image\/svg\+xml/);
+        // Nothing was persisted to the mocked sessionStorage
+        expect(globalThis.sessionStorage.getItem('spinPrizes_v1')).toBeNull();
+      } finally {
+        globalThis.sessionStorage = orig;
+      }
+    });
+  });
+
+  // ── RATE_LIMITED ──────────────────────────────────────────────────────────
+
+  describe('RATE_LIMITED', () => {
+    it('disables button and shows countdown when eligibility reason is RATE_LIMITED', async () => {
+      await initPage({
+        eligibility: { eligible: false, reason: 'RATE_LIMITED', nextETMidnightMs: 3600 * 1000 },
+      });
+      expect(getEl('#spinButton').disable).toHaveBeenCalled();
+      expect(getEl('#spinCountdown').show).toHaveBeenCalled();
+      expect(getEl('#spinCountdown').text).toMatch(/Next spin in/);
+    });
+
+    it('shows generic fail message when spinWheel returns RATE_LIMITED error', async () => {
+      spinMocks.spinWheel.mockResolvedValue({ success: false, error: 'RATE_LIMITED' });
+      await initPage();
+      const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+      await handler();
+      expect(getEl('#spinResultText').text).toContain('try again');
+    });
+  });
+
+  // ── Confetti overlay timer ────────────────────────────────────────────────
+
+  describe('confetti overlay timer', () => {
+    it('auto-hides #spinConfettiOverlay after 3 s', async () => {
+      spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
+      await initPage();
+      vi.useFakeTimers();
+      try {
+        const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+        await handler();
+        expect(getEl('#spinConfettiOverlay').show).toHaveBeenCalled();
+        await vi.runAllTimersAsync();
+        expect(getEl('#spinConfettiOverlay').hide).toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  // ── Reduced-motion ────────────────────────────────────────────────────────
+
+  describe('reduced-motion', () => {
+    it('skips confetti Lottie play when prefers-reduced-motion is active', async () => {
+      globalThis.window = { matchMedia: () => ({ matches: true }) };
+      try {
+        spinMocks.spinWheel.mockResolvedValue(SPIN_SUCCESS);
+        await initPage();
+        const handler = getEl('#spinButton').onClick.mock.calls[0][0];
+        await handler();
+        expect(getEl('#spinLottieConfetti').play).not.toHaveBeenCalled();
+      } finally {
+        delete globalThis.window;
+      }
+    });
   });
 });
