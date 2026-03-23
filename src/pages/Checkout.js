@@ -5,6 +5,7 @@
 // express checkout
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
+import { ZIP_KEY, setStoredZip } from 'public/shippingPrefs';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
 import { announce, applyFocusRing } from 'public/a11yHelpers.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
@@ -408,6 +409,16 @@ async function initAddressValidation() {
     // Apply browser autofill hints to address fields
     applyAutocompleteHints($w);
 
+    // Pre-populate ZIP from localStorage so returning customers don't re-type it.
+    try {
+      const { local } = await import('wix-storage-frontend');
+      const savedZip = local.getItem(ZIP_KEY);
+      if (savedZip) {
+        try { $w('#addressZip').value = savedZip; } catch (e) {}
+        try { $w('#checkoutShippingZip').value = savedZip; } catch (e) {}
+      }
+    } catch (e) {}
+
     // Field configuration with element IDs and validation field names
     const fields = [
       { id: '#addressFullName', errorId: '#addressFullNameError', name: 'fullName', label: 'Full name' },
@@ -470,6 +481,8 @@ async function initAddressValidation() {
 
         if (result.valid) {
           _addressValid = true;
+          // Persist the confirmed ZIP so it pre-populates on the next visit.
+          if (address.zip) setStoredZip(address.zip).catch(() => {});
           try {
             $w('#addressErrors').hide();
             $w('#addressSuccess').text = 'Address verified';

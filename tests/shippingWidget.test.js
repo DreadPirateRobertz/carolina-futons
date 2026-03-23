@@ -16,6 +16,10 @@ vi.mock('backend/shippingIntelligence.web', () => ({
 vi.mock('backend/errorMonitoring.web', () => ({
   logError: vi.fn(),
 }));
+vi.mock('public/shippingPrefs', () => ({
+  ZIP_KEY: 'cf_shipping_zip',
+  setStoredZip: vi.fn().mockResolvedValue(undefined),
+}));
 
 import { isValidZip, initShippingWidget } from '../src/public/ShippingWidget.js';
 import { getShippingEstimate } from 'backend/shippingIntelligence.web';
@@ -113,7 +117,7 @@ describe('initShippingWidget', () => {
   // ── pre-population ──────────────────────────────────────────────────
 
   it('pre-populates zip from storage when saved', async () => {
-    const storage = makeStorage({ cf_zip: '28701' });
+    const storage = makeStorage({ 'cf_shipping_zip': '28701' });
     const $w = makeWixEnv();
     await initShippingWidget($w, 'prod-1', { storage });
     expect($w.__els['#shippingZipInput'].value).toBe('28701');
@@ -202,14 +206,15 @@ describe('initShippingWidget', () => {
 
   // ── success rendering ───────────────────────────────────────────────
 
-  it('saves zip to storage on success', async () => {
+  it('saves zip via setStoredZip on success', async () => {
+    const { setStoredZip } = await import('public/shippingPrefs');
     getShippingEstimate.mockResolvedValue(BASE_RESULT);
     const storage = makeStorage();
     const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
     await initShippingWidget($w, 'prod-1', { storage });
     const handler = $w.__els['#shippingCalculateBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect(storage.setItem).toHaveBeenCalledWith('cf_zip', '28701');
+    expect(setStoredZip).toHaveBeenCalledWith('28701', storage);
   });
 
   it('shows #shippingOptionsSection on success', async () => {

@@ -45,8 +45,10 @@ import { fetchCheckoutShippingRates, isValidZip } from 'public/CheckoutShippingI
 import { hasLTLItemInCart } from 'public/FreightUpsellBanner';
 import { isFreeShippingEnabled, getShippingProgress } from 'public/cartService';
 import { announce } from 'public/a11yHelpers';
+import { ZIP_KEY, setStoredZip } from 'public/shippingPrefs';
 
-export const STORAGE_KEY = 'cf_shipping_zip';
+/** @deprecated Use ZIP_KEY from 'public/shippingPrefs' instead. */
+export const STORAGE_KEY = ZIP_KEY;
 export const FREIGHT_MSG = 'Freight shipping — final rate at checkout';
 export const FREE_MSG = 'FREE ✓';
 
@@ -142,7 +144,7 @@ function _collapseOrHide($w, sel) {
 }
 
 async function _defaultStorage() {
-  return import('wix-storage-frontend').then(m => m.session);
+  return import('wix-storage-frontend').then(m => m.local);
 }
 
 // ── Internal rendering ─────────────────────────────────────────────────────────
@@ -235,7 +237,7 @@ async function _handleZipSubmit($w, cart, els, storage) {
     return;
   }
 
-  storage.setItem(STORAGE_KEY, zip);
+  await setStoredZip(zip, storage);
   _showLoading($w, els);
 
   const lineItems = cart?.lineItems || [];
