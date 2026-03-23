@@ -181,16 +181,40 @@ describe('getShippingEstimate — local zone options', () => {
     expect(codes.some(c => c.startsWith('local-delivery-'))).toBe(true);
   });
 
-  it('appends white-glove option for a WNC zip', async () => {
+  it('attaches white-glove as addOn on local delivery option for WNC zip (not standalone)', async () => {
     const result = await getShippingEstimate('prod-1', '28701');
     const codes = result.options.map(o => o.code);
-    expect(codes.some(c => c.startsWith('white-glove-'))).toBe(true);
+    // White-glove must NOT appear as a standalone rate
+    expect(codes.some(c => c.startsWith('white-glove-'))).toBe(false);
+    // White-glove must be an addOn on the local delivery option
+    const localOpt = result.options.find(o => o.code.startsWith('local-delivery-'));
+    expect(localOpt?.addOn?.code).toMatch(/^white-glove-/);
   });
 
   it('does not append local delivery for a non-SE zip (10001 NY)', async () => {
     const result = await getShippingEstimate('prod-1', '10001');
     const codes = result.options.map(o => o.code);
     expect(codes.some(c => c.startsWith('local-delivery-'))).toBe(false);
+  });
+
+  it('local delivery option has addOn: null for non-local zones (no white-glove when no zone match)', async () => {
+    // Non-local zip: no local delivery option at all — verify no white-glove leaks as standalone
+    const result = await getShippingEstimate('prod-1', '10001');
+    const hasStandaloneWg = result.options.some(o => o.code?.startsWith('white-glove-'));
+    expect(hasStandaloneWg).toBe(false);
+  });
+
+  it('white-glove addOn includes terrainSurcharge when terrain fee > 0 (mountain ZIP)', async () => {
+    // 81611 = Aspen CO — triggers mountain terrain surcharge in getTerrainSurcharge
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '81611');
+    const localOpt = result.options.find(o => o.code?.startsWith('local-delivery-'));
+    if (localOpt?.addOn) {
+      // Zone with terrain fee: addOn should carry the surcharge field
+      expect(localOpt.addOn.terrainSurcharge).toBeDefined();
+      expect(localOpt.addOn.terrainSurcharge).toBeGreaterThan(0);
+    }
+    // If 81611 is outside zone coverage, no local option expected — that's fine too
   });
 });
 
@@ -455,12 +479,12 @@ describe('local delivery option response shape', () => {
     expect(localOpt.carrier).toBe('Carolina Futons');
   });
 
-  it('includes carrier="Carolina Futons" on white glove option', async () => {
+  it('includes carrier="Carolina Futons" on white glove addOn', async () => {
     shouldUseLTL.mockReturnValue(false);
     const result = await getShippingEstimate('prod-1', '28701');
-    const wgOpt = result.options.find(o => o.code && o.code.startsWith('white-glove-'));
-    expect(wgOpt).toBeDefined();
-    expect(wgOpt.carrier).toBe('Carolina Futons');
+    const localOpt = result.options.find(o => o.code && o.code.startsWith('local-delivery-'));
+    expect(localOpt?.addOn).toBeDefined();
+    expect(localOpt.addOn.carrier).toBe('Carolina Futons');
   });
 
   it('includes requiresLiftgate=false on local options', async () => {

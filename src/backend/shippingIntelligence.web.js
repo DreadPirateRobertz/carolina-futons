@@ -319,7 +319,7 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount, ov
     // Local delivery
     const deliveryPrice = orderSubtotal >= freeThreshold ? 0 : zone.delivery;
     const localDelivery = zone.deliveryDays || '';
-    options.push({
+    const deliveryOption = {
       code: `local-delivery-${zone.code}`,
       title: `${zone.icon || '🚚'} ${zone.name} Delivery${deliveryPrice === 0 ? ' (Free)' : ''}`,
       cost: deliveryPrice,
@@ -335,10 +335,14 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount, ov
       highlight: zone.highlight || false,
       icon: zone.icon || '🚚',
       isEstimate: false,
-    });
+      addOn: null,
+    };
 
-    // White glove
-    const wgPrice = orderSubtotal >= wgFreeThreshold ? 0 : zone.whiteGlove + terrainFee;
+    // White-glove is an add-on to local delivery, not a standalone option.
+    // Attach it to the delivery option so callers see one local rate with an
+    // optional upgrade, not two competing shipping choices.
+    const wgBase = Number(zone.whiteGlove) || 0;
+    const wgPrice = orderSubtotal >= wgFreeThreshold ? 0 : wgBase + terrainFee;
     const wgTitle = [
       zone.whiteGloveIcon || '✨',
       wgPrice === 0
@@ -364,7 +368,8 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount, ov
       isEstimate: false,
     };
     if (terrainFee > 0) wgOption.terrainSurcharge = terrainFee;
-    options.push(wgOption);
+    deliveryOption.addOn = wgOption;
+    options.push(deliveryOption);
   }
 
   if (options.length === 0) {
