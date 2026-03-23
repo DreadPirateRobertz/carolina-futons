@@ -47,7 +47,7 @@ audit.collections.forEach(c => { colMap[c.id] = c.name; });
 
 /**
  * Classify a product into a category for the SKU prefix.
- * Returns: MURPHY | BED | FRAME | MATTRESS | LOG | CASE | ACCESSORY
+ * Returns: MURPHY | BED | FRAME | MATTRESS | LOG | CASE
  */
 function classifyCategory(product) {
   const name = product.name.toLowerCase();
@@ -132,7 +132,7 @@ function modelToken(name, category) {
   // Uppercase and cap at 10 chars
   model = model.toUpperCase().slice(0, 10);
 
-  // Remove trailing numbers that aren't part of the model (e.g. "110" in "Haley 110" → keep as HALEY110)
+  // Numeric suffixes are preserved (e.g. "Haley 110" → HALEY110)
   return model || 'UNKNOWN';
 }
 
@@ -216,7 +216,7 @@ writeFileSync(outPath, JSON.stringify(assignments, null, 2));
 console.log(`\nAssignments saved to: ${outPath}`);
 
 if (DRY_RUN) {
-  console.log('\n[DRY RUN] No changes made. Remove --dry-run to apply.');
+  console.log('\n[DRY RUN] No API calls made. Remove --dry-run to apply.');
   process.exit(0);
 }
 
@@ -260,13 +260,13 @@ for (const a of assignments) {
   await new Promise(r => setTimeout(r, 210));
 }
 console.log(`\nSKU update: ${skuOk} ok, ${skuErr} errors`);
+if (skuErr > 0) process.exitCode = 1;
 
 // ── Part 2: Populate ProductShippingProfiles CMS collection ───────────────
 
 console.log('\n=== Part 2: Populating ProductShippingProfiles ===\n');
 
 // Check if collection exists by trying to query it
-let collectionExists = true;
 try {
   await wixRequest(
     `https://www.wixapis.com/wix-data/v2/items/query`,
@@ -275,14 +275,15 @@ try {
   );
 } catch (err) {
   if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('does not exist')) {
-    collectionExists = false;
     console.error('ERROR: ProductShippingProfiles collection does not exist.');
     console.error('Please create it in Wix Studio CMS first with fields:');
     console.error('  productId (text), sku (text), weight (number), length (number),');
     console.error('  width (number), height (number), requiresFreight (boolean), requiresPallet (boolean)');
     console.error('\nShipping profile data has been saved to content/sku-assignments.json for reference.');
-    process.exit(1);
+  } else {
+    console.error('ERROR: Could not reach ProductShippingProfiles collection:', err.message);
   }
+  process.exit(1);
 }
 
 // Bulk upsert shipping profiles
@@ -337,4 +338,5 @@ for (const a of assignments) {
 }
 
 console.log(`\nCMS update: ${cmsOk} ok, ${cmsErr} errors`);
+if (cmsErr > 0) process.exitCode = 1;
 console.log('\nDone. Review any errors above and re-run as needed.');
