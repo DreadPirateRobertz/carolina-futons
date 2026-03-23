@@ -8,6 +8,7 @@
  * CF-pf9
  */
 import { BADGE_REGISTRY } from './gamificationTokens.js';
+import { colors } from './sharedTokens.js';
 
 /** Escape characters that are unsafe inside SVG attribute values. */
 function escAttr(str) {
@@ -29,8 +30,8 @@ export function renderBadgeIcon(badge) {
   if (!badge.svgPath) return badge.icon || '';
 
   const label = escAttr(badge.svgLabel || badge.label || '');
-  const color = escAttr(badge.svgColor || '#2B5FA5');
-  const path = badge.svgPath; // SVG path data is structural; attribute escaping not applicable
+  const color = escAttr(badge.svgColor || colors.badgeForestBlue);
+  const path = escAttr(badge.svgPath);
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="${label}">` +
@@ -65,7 +66,7 @@ const STREAK_HAWK_PATH =
   'C34 22 34 19 33 16 L36 15 C38 13 37 11 35 12 L31 13 ' +
   'C30 11 27 9 24 9Z';
 
-const STREAK_HAWK_COLOR = '#D4860A'; // Amber
+const STREAK_HAWK_COLOR = colors.badgeAmber;
 
 /**
  * Returns the inline SVG for the streak chip (Sharp-shinned Hawk).

@@ -5,6 +5,7 @@
  * No Wix imports — fully portable.
  * CF-8f5o
  */
+import { colors } from './sharedTokens.js';
 
 // ── Tier thresholds (minimum points to reach each tier) ──────────────────────
 
@@ -53,9 +54,9 @@ export function getStreakMultiplier(days) {
 // ── Badge color palette ───────────────────────────────────────────────────────
 
 export const BADGE_COLORS = {
-  PREMIUM: '#3D1C02',     // Espresso
-  ACHIEVEMENT: '#2B5FA5', // Mountain Blue
-  URGENCY: '#E8634B',     // Coral
+  PREMIUM: colors.badgeEspresso,     // Espresso brown
+  ACHIEVEMENT: colors.badgeForestBlue, // Forest Blue
+  URGENCY: colors.badgeCoral,        // Coral
 };
 
 // ── Badge registry ────────────────────────────────────────────────────────────
@@ -69,7 +70,7 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Complete your first order.',
     // Eastern Bluebird — perched songbird, profile silhouette
     svgLabel: 'Eastern Bluebird',
-    svgColor: '#E8634B', // Coral
+    svgColor: colors.badgeCoral,
     svgPath:
       'M25 12 C22 11 19 12 18 15 L14 14 C12 13 11 15 13 17 L16 18 ' +
       'C15 21 15 25 17 28 L13 33 L15 35 L19 31 ' +
@@ -85,7 +86,7 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Complete 3 or more orders.',
     // Black Bear — side profile, rounded bear silhouette
     svgLabel: 'Black Bear',
-    svgColor: '#3D1C02', // Espresso
+    svgColor: colors.badgeEspresso,
     svgPath:
       'M16 14 C13 12 11 14 12 17 C10 17 9 19 10 21 ' +
       'C8 22 8 25 10 27 L9 32 C9 35 11 37 13 37 L14 40 L16 40 L17 37 ' +
@@ -102,7 +103,7 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Try the AR viewer at least once.',
     // Great Horned Owl — front-facing with distinctive ear tufts
     svgLabel: 'Great Horned Owl',
-    svgColor: '#5B8FA8', // Mountain Blue
+    svgColor: colors.mountainBlue,
     svgPath:
       'M20 8 L19 11 L16 13 C13 15 12 18 14 20 ' +
       'C11 22 11 26 14 27 C12 30 13 34 16 35 L14 39 L17 39 L19 36 ' +
@@ -118,7 +119,7 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Buy from 3 different product categories.',
     // Luna Moth — spread wings with elongated hindwing tail streamers
     svgLabel: 'Luna Moth',
-    svgColor: '#2B5FA5', // Forest Blue
+    svgColor: colors.badgeForestBlue,
     svgPath:
       'M24 15 C22 13 17 11 13 13 C9 15 8 19 10 22 ' +
       'C7 23 6 27 9 29 C7 32 9 36 12 37 L11 40 L13 41 L15 38 ' +
@@ -136,7 +137,7 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Earn points or spin the wheel for 7 consecutive days.',
     // Red-Tailed Hawk — soaring buteo, broad wings and fanned tail
     svgLabel: 'Red-Tailed Hawk',
-    svgColor: '#C8960C', // Gold
+    svgColor: colors.badgeGold,
     svgPath:
       'M24 10 C22 10 20 12 19 14 L8 11 C6 10 5 13 7 14 L17 18 ' +
       'C15 21 15 26 17 29 L10 35 L12 37 L19 32 ' +

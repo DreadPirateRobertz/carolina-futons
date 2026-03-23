@@ -78,6 +78,18 @@ export const colors = {
   /** Semi-transparent navy overlay for hero images and modals */
   overlay: 'rgba(30, 58, 95, 0.6)',
 
+  // ── Gamification / badge illustration palette ─────────────────
+  /** Warm coral — Eastern Bluebird badge (first_step); urgency indicators */
+  badgeCoral: '#E8634B',
+  /** Warm espresso brown — Black Bear badge (trail_regular); premium tier */
+  badgeEspresso: '#3D1C02',
+  /** Deep forest blue — Luna Moth badge (curator); achievement tier */
+  badgeForestBlue: '#2B5FA5',
+  /** Mountain gold — Red-Tailed Hawk badge (week_wanderer) */
+  badgeGold: '#C8960C',
+  /** Amber — Sharp-shinned Hawk streak chip */
+  badgeAmber: '#D4860A',
+
   // ── Semantic / status ──────────────────────────────────────────
   /** Success feedback — order confirmations, in-stock indicators */
   success: '#4A7C59',
