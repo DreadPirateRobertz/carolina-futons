@@ -36,9 +36,8 @@
 import { getShippingEstimate } from 'backend/shippingIntelligence.web';
 import { logError }             from 'backend/errorMonitoring.web';
 import { setupAccessibleDialog } from 'public/a11yHelpers';
-import { session }              from 'wix-storage-frontend';
-
-const POSTAL_CODE_KEY = 'cf_postal_code';
+import { ZIP_KEY, loadMemberZip } from 'public/shippingPrefs';
+import { local }                  from 'wix-storage-frontend';
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
 
@@ -105,7 +104,7 @@ function showError($wFn, msg) {
  * @param {Object}  [opts.storage] - Injectable wix-storage-frontend session (for testing)
  */
 export async function initShippingIntelligence($wFn, productId, opts = {}) {
-  const storage = opts.storage ?? session;
+  const storage = opts.storage ?? local;
 
   // Wire accessible modal regardless of whether data loads — elements may be
   // pre-hidden by design and should still respond to keyboard navigation.
@@ -125,8 +124,8 @@ export async function initShippingIntelligence($wFn, productId, opts = {}) {
   // Guard: productId required
   if (!productId) { showError($wFn); return; }
 
-  // Read stored postal code
-  const postalCode = storage.getItem(POSTAL_CODE_KEY);
+  // Read stored postal code — fall back to member profile for cross-device persistence
+  const postalCode = storage.getItem(ZIP_KEY) ?? (await loadMemberZip(storage));
   if (!postalCode) { showError($wFn); return; }
 
   // Show loading state

@@ -22,8 +22,7 @@
  */
 import { getShippingEstimate } from 'backend/shippingIntelligence.web';
 import { logError } from 'backend/errorMonitoring.web';
-
-const STORAGE_KEY = 'cf_zip';
+import { ZIP_KEY, setStoredZip } from 'public/shippingPrefs';
 const ORIGIN_TEXT = 'Ships from Hendersonville, NC';
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -65,7 +64,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
   const originEl = safeGet($wFn, '#shippingOriginText');
   if (originEl) originEl.text = ORIGIN_TEXT;
 
-  const savedZip = storage.getItem(STORAGE_KEY);
+  const savedZip = storage.getItem(ZIP_KEY);
   const zipInput = safeGet($wFn, '#shippingZipInput');
   if (zipInput && savedZip) zipInput.value = savedZip;
 
@@ -105,7 +104,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
       }
 
       renderResults($wFn, result);
-      storage.setItem(STORAGE_KEY, zip);
+      await setStoredZip(zip, storage);
 
       const optionsSection = safeGet($wFn, '#shippingOptionsSection');
       if (optionsSection) optionsSection.show();
