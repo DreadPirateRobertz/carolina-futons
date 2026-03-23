@@ -226,7 +226,7 @@ describe('initShippingIntelligence', () => {
     session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
     getShippingEstimate.mockResolvedValue({
       success: true,
-      options: [LOCAL_OPTION, WHITE_GLOVE_OPTION],
+      options: [{ ...LOCAL_OPTION, addOn: WHITE_GLOVE_OPTION }],
     });
     const $w = makeWixEnv();
     await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
@@ -245,7 +245,7 @@ describe('initShippingIntelligence', () => {
     session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
     getShippingEstimate.mockResolvedValue({
       success: true,
-      options: [LOCAL_OPTION, WHITE_GLOVE_OPTION],
+      options: [{ ...LOCAL_OPTION, addOn: WHITE_GLOVE_OPTION }],
     });
     const $w = makeWixEnv();
     await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
