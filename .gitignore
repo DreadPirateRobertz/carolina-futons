@@ -47,6 +47,13 @@ s0-recon-findings.md
 content-qa-report-*.md
 element-priority-audit.md
 
+# Gas Town internal tooling — never expose publicly
+AGENTS.md
+backup/
+.mail/
+witness/.beads/
+witness/
+
 # Stale site snapshots — point-in-time research, not source of truth
 cms-snapshot.md
 code-panel-snapshot.md
