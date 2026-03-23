@@ -11,7 +11,7 @@
  *   5. All colors from sharedTokens
  *   6. Detail elements (birds, trees, etc.)
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { colors } from '../src/public/sharedTokens.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -333,5 +333,77 @@ describe('initAboutIllustrations($w)', () => {
     const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
     const $w = () => null;
     expect(() => initAboutIllustrations($w)).not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVINGSKY WIRING — initAboutIllustrations subscribes #livingSkyFrame
+// ═══════════════════════════════════════════════════════════════════
+
+const mockStop = vi.fn();
+const mockInitLivingSky = vi.fn().mockReturnValue({ stop: mockStop });
+
+vi.mock('public/living-sky-wix.js', () => ({
+  initLivingSky: mockInitLivingSky,
+}));
+
+describe('initAboutIllustrations($w) — LivingSkyState wiring (CF-p8c)', () => {
+  function makeW() {
+    const elements = new Map();
+    return (sel) => {
+      if (!elements.has(sel)) {
+        elements.set(sel, { html: '', postMessage: vi.fn() });
+      }
+      return elements.get(sel);
+    };
+  }
+
+  beforeAll(() => {
+    mockInitLivingSky.mockClear();
+    mockStop.mockClear();
+  });
+
+  it('calls initLivingSky with $w to wire #livingSkyFrame', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const $w = makeW();
+    initAboutIllustrations($w);
+    expect(mockInitLivingSky).toHaveBeenCalledWith($w);
+  });
+
+  it('returns a stop handle from initLivingSky', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const handle = initAboutIllustrations(makeW());
+    expect(typeof handle?.stop).toBe('function');
+  });
+
+  it('stop() from returned handle halts the sky animation loop', async () => {
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const handle = initAboutIllustrations(makeW());
+    handle.stop();
+    expect(mockStop).toHaveBeenCalled();
+  });
+
+  it('returns { stop: noop } and logs when initLivingSky throws', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockInitLivingSky.mockImplementationOnce(() => { throw new Error('sky-boom'); });
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const handle = initAboutIllustrations(makeW());
+    expect(typeof handle?.stop).toBe('function');
+    expect(() => handle.stop()).not.toThrow();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[aboutIllustrations] initLivingSky threw:'),
+      expect.any(Error),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('still injects SVGs into containers even when initLivingSky throws', async () => {
+    mockInitLivingSky.mockImplementationOnce(() => { throw new Error('sky-boom'); });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { initAboutIllustrations } = await import('../src/public/aboutIllustrations.js');
+    const $w = makeW();
+    initAboutIllustrations($w);
+    expect($w('#teamPortraitContainer').html).toMatch(/^<svg[\s>]/);
+    expect($w('#timelineContainer').html).toMatch(/^<svg[\s>]/);
   });
 });
