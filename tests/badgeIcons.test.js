@@ -84,6 +84,15 @@ describe('renderBadgeIcon', () => {
       const badge = { label: 'Test', svgPath: 'M0 0Z', svgColor: '#fff', svgLabel: '<script>alert(1)</script>' };
       expect(renderBadgeIcon(badge)).not.toContain('<script>');
     });
+
+    it('escapes malicious svgPath that attempts attribute break and tag injection', () => {
+      const badge = { label: 'Test', svgPath: 'M0 0" /><img src=x onerror=alert(1)>', svgColor: '#fff', svgLabel: 'Test' };
+      const svg = renderBadgeIcon(badge);
+      // " in svgPath must be encoded as &quot; so the d="" attribute cannot be prematurely closed
+      expect(svg).toContain('&quot;');
+      // < must be encoded so no raw HTML tags can be injected into the SVG
+      expect(svg).not.toContain('<img');
+    });
   });
 });
 
