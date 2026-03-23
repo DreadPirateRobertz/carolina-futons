@@ -25,7 +25,6 @@ const MEMBER_MILESTONE_INDEX_NAME = 'memberMilestoneKey_unique';
  * @returns {Promise<void>}
  */
 export async function ensurePointsLedgerIndex() {
-  // Check if index already exists.
   const existing = await indexes.listIndexes(POINTS_LEDGER_COLLECTION);
   const alreadyExists = existing.indexes?.some(
     (idx) => idx.name === MEMBER_MILESTONE_INDEX_NAME,

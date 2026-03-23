@@ -25,9 +25,9 @@ export async function backfillPointsLedger() {
   let checked = 0;
   let updated = 0;
   let skipped = 0;
-  let afterId = null; // cursor: last _id seen
+  let afterId = null;
 
-  // Cursor-based pagination avoids Wix Data's .skip() cap (≤1000 items).
+  // Cursor-based pagination avoids Wix Data's .skip() cap (<=1000 items).
   // Each page advances by filtering _id > afterId with consistent ascending
   // ordering, so every row is visited exactly once regardless of collection size.
   while (true) {

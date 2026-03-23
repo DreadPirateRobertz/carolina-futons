@@ -14,6 +14,7 @@ import {
   __reset as resetData,
   __seed,
   __onInsert,
+  __setInsertError,
   __setUniqueField,
 } from './__mocks__/wix-data.js';
 import {
@@ -107,7 +108,6 @@ describe('recordStreakMilestoneEvent — DB-level duplicate rejection', () => {
   });
 
   it('still re-throws non-duplicate insert errors', async () => {
-    const { __setInsertError } = await import('./__mocks__/wix-data.js');
     __seed('PointsLedger', []);
     __setInsertError('PointsLedger', new Error('Connection timeout'));
 
