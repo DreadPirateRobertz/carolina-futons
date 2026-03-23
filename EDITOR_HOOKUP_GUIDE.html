@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-21 — Direct documentServices API confirmed, bulk rename script added</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-23 — Spin Wheel Phase 1: spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections (SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes)</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -2300,6 +2300,30 @@ Action buttons (right):
         ["rewardName","Text","Name"],["rewardDescription","Text","Description"],
         ["rewardCost","Text","Cost"],["redeemBtn","Button","Redeem"],
         ["rewardCouponCode","Text","Coupon code"]
+      ]},
+      { name: "Daily Spin Wheel", repeater: "pendingPrizesRepeater", impl: `<h4>🎡 Implementation — Daily Spin Wheel (CF-spin-wheel Phase 1)</h4>
+<p><em>Source: <code>src/pages/Member Page.js</code> → <code>initSpinSection($w, memberId)</code>. Backend: <code>backend/spinWheel.web.js</code>.</em></p>
+<p><strong>Layout: Collapsed section below Rewards. Expands on init for logged-in members.</strong></p>
+<ul>
+  <li><strong>#spinWheelSection</strong>: Outer Section container. <span class="impl-warn">Collapsed by default</span> — expands via <code>expand()</code> on <code>initSpinSection()</code>.</li>
+  <li><strong>#spinWheelSVG</strong>: HtmlComponent. SVG wheel rendered via <code>innerHTML</code>. Prize segments loaded from <code>SpinPrizes</code> CMS (sessionStorage cache, 5-min TTL).</li>
+  <li><strong>#spinButton</strong>: Primary CTA. Labels: "Spin" (ready) / "Spinning…" (in-flight, disabled) / "Try Again" (after throw). Re-enables after spin completes.</li>
+  <li><strong>#spinCountdown</strong>: <span class="impl-warn">Hidden when eligible</span>. Shows "Next spin in Xh Ym Zs" (ET midnight countdown) when daily used and no bonus available. Shows "Unable to check eligibility — please refresh" on ERROR.</li>
+  <li><strong>#spinResultText</strong>: <span class="impl-warn">Hidden until spin completes</span>. Fades in (200ms) with prize headline or error message.</li>
+  <li><strong>#spinBonusChip</strong>: <span class="impl-warn">Hidden when no bonus spins</span>. Shows "+N bonus" badge. Fades in (200ms) when bonus spins available.</li>
+  <li><strong>#spinLottieHub</strong>: Lottie animation. Plays idle/loading loop on init. Stopped during win flow. <em>Skipped if <code>prefers-reduced-motion</code>.</em></li>
+  <li><strong>#spinLottieConfetti</strong>: Lottie win confetti. Plays after successful spin. Auto-stops after 3s and restarts hub. <em>Skipped if <code>prefers-reduced-motion</code>.</em></li>
+  <li><strong>#spinConfettiOverlay</strong>: Box overlay. Fades in (200ms) on win, fades out (400ms) after 3s.</li>
+  <li><strong>#pendingPrizesRepeater</strong>: Repeater of unclaimed (non-points) prizes from <code>MemberPendingPrizes</code> CMS. Collapsed when empty.</li>
+</ul>
+<p><strong>SpinPrizes CMS collection</strong> — required fields: <code>active</code> (Boolean), <code>weight</code> (Number), <code>prizeType</code> (Text: POINTS / FREE_SHIPPING / DISCOUNT_PCT), <code>pointsAwarded</code> (Number), <code>prizeValue</code> (Number), <code>label</code> (Text), <code>color</code> (Text — hex, SVG-escaped).</p>`, elements: [
+        ["spinWheelSection","Section","Container"],["spinWheelSVG","HtmlComponent","SVG wheel"],
+        ["spinButton","Button","Spin CTA"],["spinCountdown","Text","Countdown"],
+        ["spinResultText","Text","Result"],["spinBonusChip","Text","Bonus chip"],
+        ["spinLottieHub","Lottie","Idle animation"],["spinLottieConfetti","Lottie","Win confetti"],
+        ["spinConfettiOverlay","Box","Confetti overlay"],["pendingPrizesRepeater","Repeater","Pending prizes"]
+      ], children: [
+        ["pendingPrizeLabel","Text","Prize label"]
       ]},
       { name: "Order History", repeater: "ordersRepeater", impl: `<h4>📋 Implementation — Order History</h4>
 <p><strong>Layout: Filter dropdown + paginated order cards + loading/error/empty states</strong></p>

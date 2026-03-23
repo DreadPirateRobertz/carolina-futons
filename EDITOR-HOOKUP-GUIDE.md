@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-22 (Added Editor Hookup Steps; Product Badge System nicknames — pdpBadgeContainer, pdpBadgeText, productBadgeRepeater; QuickView modal; CartUpsell; Social Proof; CF+ Upgrade Prompt Modal — membershipPromptModal, membershipPromptClose, membershipPromptTitle, membershipPromptBenefits, membershipUpgradeBtn [Member Page + Product Page]; Continue Shopping — continueShoppingSection, continueShoppingRepeater [PR #665]; Comparison Tray — comparisonTray, comparisonSlot1-3, comparisonSlotImage/Name/Remove1-3, compareNowBtn, clearComparisonBtn, comparisonCount [PR #667])
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Spin Wheel Phase 1 — spinWheelSection, spinWheelSVG, spinButton, spinCountdown, spinResultText, spinBonusChip, spinLottieHub, spinLottieConfetti, spinConfettiOverlay, pendingPrizesRepeater + 4 CMS collections: SpinPrizes, BonusSpinGrants, SpinHistory, MemberPendingPrizes [PR #TBD])
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -1405,6 +1405,38 @@ Place the same 5 elements on the Product Page canvas:
 `rewardsRepeater` (Repeater), `rewardsSection` (Section), `rewardsEmpty` (Text)
 **↳ Inside:** `rewardName` (Text), `rewardDescription` (Text), `rewardCost` (Text), `redeemBtn` (Button), `rewardCouponCode` (Text)
 
+### Daily Spin Wheel (NEW — CF-spin-wheel Phase 1)
+*Source: `src/pages/Member Page.js` — `initSpinSection($w, memberId)` (inline). Backend: `backend/spinWheel.web.js`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `spinWheelSection` | Section | Outer container — **collapsed by default**. Expands on `initSpinSection()`. |
+| `spinWheelSVG` | HtmlComponent | SVG prize wheel rendered via `innerHTML`. Prizes drawn from `SpinPrizes` CMS (cached in sessionStorage 5 min). |
+| `spinButton` | Button | Primary CTA. Labels: "Spin" / "Spinning…" / "Try Again". Disabled while spinning. |
+| `spinCountdown` | Text | Hidden when eligible. Shows "Next spin in Xh Ym Zs" when daily spin used and no bonus available. |
+| `spinResultText` | Text | Hidden until spin completes. Fades in (200ms) with prize headline or error message. |
+| `spinBonusChip` | Text | Hidden when no bonus spins. Shows "+N bonus" when bonus spins available — fades in (200ms). |
+| `spinLottieHub` | Lottie | Idle/loading animation. Plays on init. Stopped during win flow. Skipped if `prefers-reduced-motion`. |
+| `spinLottieConfetti` | Lottie | Inline win confetti. Plays after successful spin. Auto-stops after 3s. Skipped if `prefers-reduced-motion`. |
+| `spinConfettiOverlay` | Box | Full-screen confetti overlay. Fades in (200ms) on win, fades out (400ms) after 3s. |
+| `pendingPrizesRepeater` | Repeater | Pending (unclaimed) prizes. Collapsed when empty. |
+
+**↳ Inside `pendingPrizesRepeater`:**
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `pendingPrizeLabel` | Text | Prize display name (e.g. "Free Shipping", "15% Off") |
+
+**CMS — SpinPrizes collection** (required for wheel to render prizes):
+| Field | Type | Notes |
+|---|---|---|
+| `active` | Boolean | `true` = included in draw. `false` = never drawn. |
+| `weight` | Number | Draw weight (higher = more likely). |
+| `prizeType` | Text | `POINTS`, `FREE_SHIPPING`, `DISCOUNT_PCT`, etc. |
+| `pointsAwarded` | Number | Points granted (POINTS prizes only). |
+| `prizeValue` | Number | Numeric value (DISCOUNT_PCT = percentage; others = TBD). |
+| `label` | Text | Display label shown on wheel segment and result. |
+| `color` | Text | Hex color for SVG wheel segment (e.g. `#E07B54`). SVG-escaped automatically. |
+
 ### Order History ⚠️ REPEATER
 `ordersRepeater` (Repeater), `orderFilterDropdown` (Dropdown), `ordersLoadMoreBtn` (Button), `ordersRetryBtn` (Button), `ordersLoader` (Box), `ordersError` (Text), `ordersEmpty` (Box), `startReturnBtn` (Button)
 **↳ Inside:** `orderNumber` (Text), `orderDate` (Text), `orderTotal` (Text), `orderItemCount` (Text), `orderStatusBadge` (Text), `orderStatus` (Text), `orderDeliveryEta` (Text), `orderTrackBtn` (Button), `orderReorderBtn` (Button), `orderStartReturnBtn` (Button), `orderItemsGallery` (Gallery)
@@ -2260,6 +2292,17 @@ All major pages now have both backend and frontend code. The following are in de
 | `BundleConfigs` | Saved bundle configurations (for sharing + reuse) | bundleId, items[], totalWeight, lastShippingQuote |
 | `CustomerRoomPhotos` | UGC room photos + metadata | photoUrl, caption, productId, style, status, likes |
 | `ShippingRateCache` | Cached UPS/WWEX rate results (TTL 15min) | productId+zip key, rates[], cachedAt |
+
+## CMS COLLECTIONS — Spin Wheel (CF-spin-wheel Phase 1)
+
+| Collection | Purpose | Key Fields |
+|---|---|---|
+| `SpinPrizes` | Active prize pool for the spin wheel | active, weight, prizeType, pointsAwarded, prizeValue, label, color |
+| `BonusSpinGrants` | Bonus spin credits granted from gamification events | memberId, grantsAvailable, source, createdAt |
+| `SpinHistory` | Audit log of all spins (daily + bonus) | memberId, spinDate, spinType, prize, pointsAwarded, prizeType, eventId, createdAt |
+| `MemberPendingPrizes` | Unclaimed non-points prizes (e.g. free shipping, discounts) | memberId, prizeType, prizeValue, prizeLabel, spinHistoryId, eventId, claimedAt, createdAt |
+
+Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to existing `MemberPoints` collection).
 
 ## PAGES THAT NEED CREATING (updated Sprint 5)
 
