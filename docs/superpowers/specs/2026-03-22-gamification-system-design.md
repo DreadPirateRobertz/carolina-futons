@@ -256,7 +256,23 @@ Member-only rank chip on loyalty screen. No public page — protects high-value 
 
 ## Art Assets Note
 
-Chibi avatar character design has the longest lead time of any feature in the sequence. Start commissioning/designing the character now — Trail Blazer through Blue Ridge Legend tier variants, accessory unlock items, idle animation — even though it ships last. This work runs in parallel with all other phases.
+**Phase 1–5 (current):** Using free LottieFiles bear character set as avatar placeholder. All Lottie Simple License. Native Wix integration available.
+
+| Moment | Animation | LottieFiles ID |
+|--------|-----------|---------------|
+| Account icon / idle | Waving Bear | `waving-bear-3e2qFVfuGO` |
+| Loyalty screen ambient | Bear Drinking Tea | `bear-drinking-tea-NjXL1qGxqj` |
+| Tier-up / spin win | Cute Bear Dancing | `cute-bear-dancing-AfMGeP3e3h` |
+| Challenge complete | Bear Clapping | `bear-clapping-4hjv0nfIf9` |
+| Loading state | Loading Bear | `loading-bear-nSFUgnPuv6` |
+| Spin wheel | Spin Wheel (SM Rony) | `spin-wheel-PF5xGgYspK` |
+| Confetti overlay | Confetti (transparent bg) | `confetti-on-transparent-background-ajhx1TPBa7` |
+| Spin win burst | Confetti (Emas DP) | `confetti-Ljf8PgS2P4` |
+| Badge / success | Success Confetti | `success-confetti-f5PdexvrBK` |
+
+Required emote states for full system (ripley mobile spec): idle wave → earn/excited → streak active/happy → streak danger/worried → streak broken/sad.
+
+**Phase 6 (custom chibi, deferred):** Commission a custom futon-themed bear avatar when budget approved. SVG base + accessories, Lottie JSON idle animation. Fiverr Pro / ArtStation / Behance. Style: cozy sleeping/mountain bear, Blue Ridge color palette, NOT generic trail/outdoor. Budget ~$300–1,500 depending on scope. Revisit when gamification reaches Phase 4+.
 
 ---
 
