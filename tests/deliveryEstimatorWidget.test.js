@@ -253,4 +253,42 @@ describe('estimateDelivery', () => {
     expect(result.shippingCost).toBe(39.99); // cheapest
     expect(result.allRates).toHaveLength(2);
   });
+
+  // CF-tv2p: catch block — getUPSRates returns null (not empty array, not thrown)
+  it('falls back to static estimate when getUPSRates returns null', async () => {
+    getUPSRates.mockResolvedValue(null);
+
+    const result = await estimateDelivery('10001', futonFrame);
+    expect(result.success).toBe(true);
+    expect(result.isEstimate).toBe(true);
+    expect(result.shippingCost).toBeGreaterThan(0);
+    expect(getUPSRates).toHaveBeenCalledOnce();
+  });
+
+  // CF-tv2p: catch block — getUPSRates returns null, does NOT throw
+  it('does not throw when getUPSRates returns null', async () => {
+    getUPSRates.mockResolvedValue(null);
+
+    await expect(estimateDelivery('28792', futonFrame)).resolves.not.toThrow();
+  });
+
+  // CF-tv2p: ZIP validation — only digits, fewer than 5 → rejects before API call
+  it('rejects 4-digit all-numeric ZIP before calling getUPSRates', async () => {
+    const result = await estimateDelivery('2870', futonFrame);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('zip');
+    expect(getUPSRates).not.toHaveBeenCalled();
+  });
+
+  it('rejects 3-digit all-numeric ZIP before calling getUPSRates', async () => {
+    const result = await estimateDelivery('287', futonFrame);
+    expect(result.success).toBe(false);
+    expect(getUPSRates).not.toHaveBeenCalled();
+  });
+
+  it('rejects 1-digit ZIP before calling getUPSRates', async () => {
+    const result = await estimateDelivery('2', futonFrame);
+    expect(result.success).toBe(false);
+    expect(getUPSRates).not.toHaveBeenCalled();
+  });
 });

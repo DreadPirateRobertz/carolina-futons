@@ -12,6 +12,8 @@
  *  - Multiple items each updated independently
  *  - deliveryZoneText set to origin text when zip present
  *  - opts.repeaterSelector overrides default repeater ID
+ *  - catch block coverage: setItemText + initCartDelivery warn on error (CF-tv2p)
+ *  - ZIP validation: only-digit < 5 chars rejected before API call (CF-tv2p)
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -352,5 +354,95 @@ describe('initCartDelivery — opts.repeaterSelector', () => {
     const $w = make$w('#sideCartRepeater', repeater);
     initCartDelivery($w, [PARCEL_ITEM], VALID_ZIP_NATIONAL);
     expect(repeater.forEachItem).toHaveBeenCalledOnce();
+  });
+});
+
+// ── catch block coverage (CF-tv2p) ──────────────────────────────────────
+
+describe('initCartDelivery — catch block coverage', () => {
+  it('warns via console.warn when repeater.forEachItem throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const brokenRepeater = {
+      forEachItem: vi.fn(() => { throw new Error('repeater exploded'); }),
+    };
+    const $w = () => brokenRepeater;
+    expect(() => initCartDelivery($w, [PARCEL_ITEM], VALID_ZIP_NATIONAL)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[CartDeliveryEstimates]'),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('warns via console.warn when $w(selector) throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const throwing$w = () => { throw new Error('$w boom'); };
+    expect(() => initCartDelivery(throwing$w, [PARCEL_ITEM], VALID_ZIP_NATIONAL)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[CartDeliveryEstimates]'),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('warns via console.warn when element setter throws inside setItemText', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Element that throws on .text assignment
+    const throwingElement = {
+      get text() { return ''; },
+      set text(_v) { throw new Error('element unavailable'); },
+    };
+    const brokenRepeater = {
+      forEachItem: vi.fn((fn) => {
+        const $item = (_sel) => throwingElement;
+        fn($item, PARCEL_ITEM, 0);
+      }),
+    };
+    const $w = () => brokenRepeater;
+    expect(() => initCartDelivery($w, [PARCEL_ITEM], VALID_ZIP_NATIONAL)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[CartDeliveryEstimates]'),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+});
+
+// ── ZIP validation: digits-only < 5 chars (CF-tv2p) ─────────────────────
+
+describe('initCartDelivery — ZIP validation edge cases', () => {
+  it('treats 4-digit all-numeric ZIP as invalid → shows no-zip prompt', () => {
+    const repeater = makeRepeater([PARCEL_ITEM]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    initCartDelivery($w, [PARCEL_ITEM], '2870'); // 4 digits, no letters
+    // zone resolves to null → no-zip prompt, not API call
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .toBe('Enter your zip for delivery estimate');
+    expect(getShippingZone).not.toHaveBeenCalled();
+  });
+
+  it('treats 3-digit all-numeric ZIP as invalid → shows no-zip prompt', () => {
+    const repeater = makeRepeater([PARCEL_ITEM]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    initCartDelivery($w, [PARCEL_ITEM], '287');
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .toBe('Enter your zip for delivery estimate');
+    expect(getShippingZone).not.toHaveBeenCalled();
+  });
+
+  it('treats 1-digit ZIP as invalid → shows no-zip prompt', () => {
+    const repeater = makeRepeater([PARCEL_ITEM]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    initCartDelivery($w, [PARCEL_ITEM], '2');
+    expect(repeater._elements[0]['#deliveryEstimateText'].text)
+      .toBe('Enter your zip for delivery estimate');
+    expect(getShippingZone).not.toHaveBeenCalled();
+  });
+
+  it('accepts 5-digit all-numeric ZIP → calls getShippingZone', () => {
+    const repeater = makeRepeater([PARCEL_ITEM]);
+    const $w = make$w('#sideCartRepeater', repeater);
+    initCartDelivery($w, [PARCEL_ITEM], '28701');
+    expect(getShippingZone).toHaveBeenCalledWith('28701');
   });
 });
