@@ -1,5 +1,24 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 (Wave 25 — closed #758, diagnosed #756 CI, refinery on #751/#757, blocked #753/#754)
+
+### What worked well
+- PR #756 CI failure root-cause diagnosis without running locally: coverage threshold (88% functions) + 81.81% = coverage gap, not test failures. Math alone identified it.
+- PR #758 closure rationale was airtight: polluted branch (CF-wh4 commits embedded) + unchecked test plan = two independent blockers, easy to document.
+- Checking the actual implementation file (`contactIllustrations.js`) vs the PR description and HTML doc separately: the 4th fix commit corrected the code but NOT the accompanying doc. Would have missed this by only verifying the source file.
+- Deployment run-order blocker on PR #753 found by re-reading the ensureIndexes.js header — no `backfill BEFORE index` warning = latent migration bomb.
+
+### Gaps / improvement opportunities
+- When a "fix stale fields" commit exists in a PR, check ALL touched files — not just the primary implementation. Docs/HTML added in earlier commits of the same PR can still be stale after a source-only fix commit.
+- PR description test plan text should always match the actual test code field names and boundary conditions. A stale test plan checkbox is a trust signal failure even when the implementation is correct.
+
+### Pattern notes
+- V8 function coverage gap pattern: callbacks passed to `onClick`, `onItemReady`, `forEach` are defined (counts as "declared") but the function body only executes if the callback is invoked. Tests that verify registration (`expect(el.onClick).toHaveBeenCalled()`) do NOT cover the callback body. Must extract and invoke the callback to get function coverage.
+- Coverage failure diagnosis: if CI exit code 1 comes AFTER the test count (all tests pass), it's a coverage threshold breach, not a test failure. Read the coverage table from CI output and compare against vitest.config thresholds.
+- Fix commits that address "field name corrections" in code may leave docs and spec HTML files untouched — always cross-check the HTML doc for the same stale strings.
+
+---
+
 ## Session 2026-03-23 (Wave 24 — PR sweep: merged #748, #752; closed #755; reviewed #751/#753/#756/#754)
 
 ### What worked well
