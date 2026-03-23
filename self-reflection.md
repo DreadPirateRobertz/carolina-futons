@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-03-23 (Wave 18 — PR flush + idle crew dispatch)
+
+### What worked well
+- Dolt crash recovery: recognized stale PID (connection refused despite PID present), checked LOCK files, restarted clean. No data lost.
+- PR rebase pattern: both #732 and #734 had the same root cause (streak test failures pre-dating PR #735 fix). Recognized immediately, rebased both branches onto main — both green in one pass.
+- Watchdog response time: from idle alert to all 9 crew dispatched (5 cfutons + 4 mobile) in <5 mins. No hesitation, no over-planning.
+- Phase 7 mobile beads: created 4 coherent, dependency-ordered beads (cf-fv7→cf-2le→cf-7l2, cf-hhf independent) covering full mobile living sky integration.
+
+### Gaps / improvement opportunities
+- Should have checked bd list BEFORE creating new beads — Dolt was down and the timeout cost time. `bd list` health check should be first action when addressing a thin queue.
+- The `stash pop` after rebasing cf-ad3 restored stale local changes to `Member Page.js` and `memberPageStreak.test.js`. Should have anticipated this — the stash was from before PR #735 merged. Always check stash contents after a rebase involving files that changed upstream.
+- When both PRs were already merged by the time I tried to merge them: the rebase force-push triggered CI which completed quickly and something (rennala?) merged them. Not a problem but I should check PR state before attempting merge.
+
+### Pattern notes
+- Dolt crash symptom: `gt dolt status` shows "running (PID N)" but "connection refused" in verification — means process died but PID file wasn't cleaned. No LOCK files needed. Just restart.
+- Stash + rebase footgun: `git stash` before checkout to rebase, then `git stash pop` after returning to main can restore files that were fixed upstream. Always `git diff HEAD stash@{0}` before popping to check relevance.
+- When PRs share a common pre-existing failure (like streak tests), the fix only needs to be applied once (merge #735), then rebase all downstream PRs — they all get healed at once.
+
 ## Session 2026-03-22 (Sprint 4 wave 2 + review cycle)
 
 ### What worked well
