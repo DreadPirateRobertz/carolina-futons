@@ -4,18 +4,24 @@
  * DOM wiring happens in Member Page.js.
  * CF-phase2-streak
  */
+import { getStreakChipIcon } from './badgeIcons.js';
 
 /**
+ * Returns an HTML string for the streak chip — Sharp-shinned Hawk SVG + day count.
+ * Assign to $chip.html (not .text) in updateStreakDisplay.
+ *
+ * Compound-modifier form for singular (1) and week milestones (7, 14, 21…).
+ * Days 2-6 use space-separated plural ("3 days streak").
+ *
  * @param {number} streakDays
  * @returns {string}
  */
 export function buildStreakChipText(streakDays) {
-  // Compound-modifier form for singular (1) and week milestones (7, 14, 21…).
-  // Days 2-6 use space-separated plural ("3 days streak").
+  const icon = getStreakChipIcon();
   if (streakDays === 1 || streakDays >= 7) {
-    return `🔥 ${streakDays}-day streak`;
+    return `${icon} ${streakDays}-day streak`;
   }
-  return `🔥 ${streakDays} days streak`;
+  return `${icon} ${streakDays} days streak`;
 }
 
 /**
@@ -60,7 +66,7 @@ export function updateStreakDisplay($elements, data, reducedMotion = false) {
   const { currentStreakDays, streakMultiplier, milestoneUnlocked } = data;
 
   if (shouldShowStreakChip(currentStreakDays)) {
-    $chip.text = buildStreakChipText(currentStreakDays);
+    $chip.html = buildStreakChipText(currentStreakDays);
     $chip.show();
   } else {
     $chip.hide();
