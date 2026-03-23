@@ -14,9 +14,19 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __reset as __resetData, __seed, __setQueryError, __getLastFindOptions } from './__mocks__/wix-data.js';
-import { __reset as __resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
+import { __reset as __resetMembers, __setMember, currentMember } from './__mocks__/wix-members-backend.js';
 
-// ── Hoisted mock refs ─────────────────────────────────────────────────────────
+// ── Module mocks — must precede the loyaltyService import ────────────────────
+
+vi.mock('wix-web-module', () => ({
+  Permissions: { Anyone: 'Anyone', Admin: 'Admin', SiteMember: 'SiteMember' },
+  webMethod: (_perm, fn) => fn,
+}));
+
+vi.mock('wix-loyalty.v2', () => ({
+  accounts: { getMyAccount: vi.fn() },
+  rewards: { listRewards: vi.fn(), redeemReward: vi.fn() },
+}));
 
 const rateLimitMock = vi.hoisted(() => ({
   checkRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
@@ -24,6 +34,10 @@ const rateLimitMock = vi.hoisted(() => ({
 
 vi.mock('backend/utils/rateLimit', () => ({
   checkRateLimit: rateLimitMock.checkRateLimit,
+}));
+
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: vi.fn(),
 }));
 
 import { getMyActivity } from '../src/backend/loyaltyService.web.js';
@@ -56,6 +70,12 @@ beforeEach(() => {
 
 describe('getMyActivity — authentication', () => {
   it('returns 401 when no member is authenticated', async () => {
+    const res = await getMyActivity();
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 401 when getMember() throws', async () => {
+    currentMember.getMember.mockRejectedValueOnce(new Error('Session service unavailable'));
     const res = await getMyActivity();
     expect(res.status).toBe(401);
   });
