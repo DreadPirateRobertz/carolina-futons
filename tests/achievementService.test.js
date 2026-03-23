@@ -239,7 +239,7 @@ describe('getMyAchievements', () => {
     rateLimitMock.checkRateLimit.mockResolvedValue({ allowed: false });
     const { getMyAchievements } = await import('../src/backend/loyaltyService.web.js');
     const result = await getMyAchievements();
-    expect(result).toEqual({ error: 'Rate limit exceeded' });
+    expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
     expect(rateLimitMock.checkRateLimit).toHaveBeenCalledWith(
       'AchievementsRateLimit', 'mem-1', { max: 20, windowMs: 60_000 }
     );

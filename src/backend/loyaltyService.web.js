@@ -583,7 +583,7 @@ export const getMyAchievements = webMethod(
       if (!member?._id) return defaults;
 
       const { allowed } = await checkRateLimit('AchievementsRateLimit', member._id, { max: 20, windowMs: 60_000 });
-      if (!allowed) return { error: 'Rate limit exceeded' };
+      if (!allowed) return { status: 429, error: 'Rate limit exceeded' };
 
       const res = await wixData.query('StreakAchievements')
         .eq('memberId', member._id)
