@@ -875,7 +875,7 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       entity: {
         _id: 'member-nick',
         loginEmail: 'nick@example.com',
@@ -883,8 +883,6 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
         contactDetails: {},
       },
     });
-
-    await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
     expect(welcomeEmails.length).toBe(3);
@@ -895,13 +893,11 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
-    wixMembers_onMemberCreated({
+    await wixMembers_onMemberCreated({
       _id: 'member-raw',
       loginEmail: 'raw@example.com',
       contactDetails: { firstName: 'Raw' },
     });
-
-    await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
     expect(welcomeEmails.length).toBe(3);
