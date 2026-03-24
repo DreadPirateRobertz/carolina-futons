@@ -29,6 +29,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10% minimum drop to trigger alert
 const NOTIFICATION_COOLDOWN_DAYS = 7; // Don't re-notify same product within 7 days
@@ -472,6 +473,21 @@ export async function sendStreakMilestoneNotification(memberId, milestone, badge
 export async function sendQuestCompleteNotification(memberId, questTitle, points) {
   const message = `Daily quest complete: ${questTitle}. +${points} pts! ✅`;
   await writeNotification(memberId, 'daily_quest', message, { questTitle, points });
+}
+
+/**
+ * Send a challenge reminder notification, gated by member gamification preferences.
+ * Skipped when notificationsEnabled is false or challengeReminders is 'never'.
+ *
+ * @param {string} memberId
+ * @param {string} message
+ * @returns {Promise<void>}
+ */
+export async function sendChallengeReminder(memberId, message) {
+  if (!memberId) return;
+  const prefs = await getGamePrefsForMember(memberId);
+  if (!prefs.notificationsEnabled || prefs.challengeReminders === 'never') return;
+  await writeNotification(memberId, 'challenge_reminder', message);
 }
 
 /**

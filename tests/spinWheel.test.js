@@ -11,6 +11,7 @@
  *  - decrementBonusSpin: conditional −1 on BONUS, no decrement on DAILY
  *  - SpinHistory write fields (memberId, spinDate, spinType, eventId, createdAt instanceof Date)
  *  - Rate limiting (20/hr)
+ *  - CF-thb: spinWheelVisible: false → PREF_DISABLED
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -432,5 +433,35 @@ describe('MemberPointsLedger — catch-path: ledger failure does not break spinW
 
     expect(result.success).toBe(true);
     expect(result.prize.type).toBe('POINTS');
+  });
+});
+
+// ── CF-thb: spinWheelVisible preference gate ─────────────────────────────────
+
+describe('getSpinEligibility — spinWheelVisible preference gate', () => {
+  it('returns eligible:false, reason:PREF_DISABLED when spinWheelVisible is false', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-1', memberId: 'mem-pref', spinWheelVisible: false,
+    }]);
+    const result = await getSpinEligibility('mem-pref');
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toBe('PREF_DISABLED');
+  });
+
+  it('does not suppress spin wheel when spinWheelVisible is true', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-2', memberId: 'mem-pref2', spinWheelVisible: true,
+    }]);
+    const result = await getSpinEligibility('mem-pref2');
+    // Should not be PREF_DISABLED — eligible:true (no spins today)
+    expect(result.reason).not.toBe('PREF_DISABLED');
+    expect(result.eligible).toBe(true);
+  });
+
+  it('does not suppress spin wheel when member has no preferences record (default true)', async () => {
+    // No MemberGamificationPreferences seeded — default spinWheelVisible is true
+    const result = await getSpinEligibility('mem-no-prefs');
+    expect(result.reason).not.toBe('PREF_DISABLED');
+    expect(result.eligible).toBe(true);
   });
 });

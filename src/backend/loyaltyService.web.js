@@ -21,6 +21,7 @@ import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 // ── Challenge catalog constants ───────────────────────────────────────────────
 const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
@@ -257,7 +258,14 @@ export const getLeaderboard = webMethod(
       }
 
       const res = await query.limit(safeLimit).find({ suppressAuth: true });
-      const entries = res.items.map((item, idx) => ({
+
+      // Filter to members who have opted in to the leaderboard (privacy-default: false)
+      const prefsChecks = await Promise.all(
+        res.items.map(item => getGamePrefsForMember(item.memberId))
+      );
+      const optedInItems = res.items.filter((_, idx) => prefsChecks[idx].leaderboardOptIn === true);
+
+      const entries = optedInItems.map((item, idx) => ({
         rank: idx + 1,
         memberId: item.memberId,
         nickname: item.nickname ?? '',

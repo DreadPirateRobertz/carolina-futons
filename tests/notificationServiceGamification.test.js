@@ -165,3 +165,64 @@ describe('getMyNotifications', () => {
     expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
   });
 });
+
+// ── CF-thb: sendChallengeReminder preference gates ───────────────────────────
+
+describe('sendChallengeReminder', () => {
+  // Will import sendChallengeReminder after it exists
+  let sendChallengeReminder;
+
+  beforeEach(async () => {
+    ({ sendChallengeReminder } = await import('../src/backend/notificationService.web.js'));
+  });
+
+  it('writes a challenge_reminder notification when prefs allow it', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-1', memberId: 'mem-1',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    await sendChallengeReminder('mem-1', 'Complete your daily quest');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].type).toBe('challenge_reminder');
+    expect(inserted[0].memberId).toBe('mem-1');
+  });
+
+  it('does not write notification when notificationsEnabled is false', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-2', memberId: 'mem-2',
+      notificationsEnabled: false, challengeReminders: 'daily',
+    }]);
+    await sendChallengeReminder('mem-2', 'Complete your daily quest');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('does not write notification when challengeReminders is never', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-3', memberId: 'mem-3',
+      notificationsEnabled: true, challengeReminders: 'never',
+    }]);
+    await sendChallengeReminder('mem-3', 'Complete your daily quest');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('writes notification when member has no prefs record (defaults: enabled + daily)', async () => {
+    // No MemberGamificationPreferences record → defaults (notificationsEnabled: true, challengeReminders: 'daily')
+    await sendChallengeReminder('mem-no-prefs', 'Check your challenges!');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].type).toBe('challenge_reminder');
+  });
+
+  it('writes notification when challengeReminders is weekly', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-4', memberId: 'mem-4',
+      notificationsEnabled: true, challengeReminders: 'weekly',
+    }]);
+    await sendChallengeReminder('mem-4', 'Weekly challenge available!');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(1);
+  });
+});
