@@ -875,3 +875,32 @@ export const recoverStreak = webMethod(
     }
   }
 );
+
+/**
+ * Returns streak summary for the member dashboard StreakTrackerWidget.
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ currentStreak: number, longestStreak: number, lastActivityDate: string|null } | null>}
+ */
+export const getStreakData = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member || !member._id) return null;
+      if (member._id !== memberId) return null;
+
+      const record = await findMemberRecord(memberId);
+      if (!record) return { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
+
+      const currentStreak = record.currentStreakDays || 0;
+      const longestStreak = record.longestStreakDays ?? currentStreak;
+      const lastActivityDate = record.lastActivityDate || null;
+
+      return { currentStreak, longestStreak, lastActivityDate };
+    } catch (err) {
+      console.error('[gamificationEventReceiver] getStreakData failed:', err);
+      return null;
+    }
+  }
+);
