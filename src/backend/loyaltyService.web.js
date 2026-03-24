@@ -273,7 +273,10 @@ export const getLeaderboard = webMethod(
           for (const pref of prefsRes.items) {
             if (pref.leaderboardOptIn === true) optedInSet.add(pref.memberId);
           }
-        } catch { /* defaults to empty set — all filtered out on error */ }
+        } catch (err) {
+          logError('[loyaltyService] getLeaderboard prefs batch query failed', err);
+          /* optedInSet stays empty — all members filtered out, better than silently using stale data */
+        }
       }
       const optedInItems = res.items.filter(item => optedInSet.has(item.memberId));
 

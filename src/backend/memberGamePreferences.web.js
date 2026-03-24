@@ -18,6 +18,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'MemberGamificationPreferences';
 
@@ -78,7 +79,8 @@ export const getMemberGamePreferences = webMethod(
         .find({ suppressAuth: true });
 
       return buildPrefs(memberId, res.items?.[0] ?? null);
-    } catch {
+    } catch (err) {
+      logError('[memberGamePreferences] getMemberGamePreferences query failed', err);
       return buildPrefs(memberId, null);
     }
   },
@@ -102,7 +104,8 @@ export async function getGamePrefsForMember(memberId) {
       .find({ suppressAuth: true });
 
     return buildPrefs(memberId, res.items?.[0] ?? null);
-  } catch {
+  } catch (err) {
+    logError('[memberGamePreferences] getGamePrefsForMember query failed', err);
     return { ...DEFAULT_GAME_PREFS, memberId };
   }
 }

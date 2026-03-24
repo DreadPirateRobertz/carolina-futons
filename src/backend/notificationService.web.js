@@ -478,6 +478,8 @@ export async function sendQuestCompleteNotification(memberId, questTitle, points
 /**
  * Send a challenge reminder notification, gated by member gamification preferences.
  * Skipped when notificationsEnabled is false or challengeReminders is 'never'.
+ * Note: 'daily' vs 'weekly' cadence is not enforced here — callers are responsible
+ * for invoking at the appropriate frequency.
  *
  * @param {string} memberId
  * @param {string} message
@@ -487,7 +489,11 @@ export async function sendChallengeReminder(memberId, message) {
   if (!memberId) return;
   const prefs = await getGamePrefsForMember(memberId);
   if (!prefs.notificationsEnabled || prefs.challengeReminders === 'never') return;
-  await writeNotification(memberId, 'challenge_reminder', message);
+  try {
+    await writeNotification(memberId, 'challenge_reminder', message);
+  } catch (err) {
+    console.error('[notificationService] sendChallengeReminder writeNotification failed:', err);
+  }
 }
 
 /**
