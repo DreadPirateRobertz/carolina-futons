@@ -17,6 +17,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
+  __setInsertError,
   __getInserted,
   __getUpdated,
 } from './__mocks__/wix-data.js';
@@ -408,5 +409,28 @@ describe('MemberPointsLedger — spinWheel inserts ledger entry for POINTS prize
 
     const entries = __getInserted('MemberPointsLedger');
     expect(entries).toHaveLength(0);
+  });
+});
+
+// ── MemberPointsLedger — catch-path resilience ────────────────────────────────
+
+describe('MemberPointsLedger — catch-path: ledger failure does not break spinWheel', () => {
+  it('returns {success:true} with prize even when MemberPointsLedger insert throws', async () => {
+    __seed('SpinPrizes', [{
+      _id: 'sp-1', active: true, weight: 10,
+      prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points',
+    }]);
+    __seed('SpinHistory', []);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-spin-catch',
+      totalPoints: 100, tier: 'Bronze', bonusSpinsAvailable: 0,
+    }]);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    __setInsertError('MemberPointsLedger', new Error('ledger unavailable'));
+
+    const result = await spinWheel('mem-spin-catch');
+
+    expect(result.success).toBe(true);
+    expect(result.prize.type).toBe('POINTS');
   });
 });

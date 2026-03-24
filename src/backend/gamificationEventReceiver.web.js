@@ -149,22 +149,39 @@ export const receiveGamificationEvent = webMethod(
         await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord });
       }
 
-      // Audit ledger — only write when points actually changed
-      const totalDelta = newTotal - oldTotal;
-      if (totalDelta !== 0) {
+      // Audit ledger — write separate entries for earn and milestone bonus
+      const baseTraceId = `${memberId}_${eventName}_${payload?.ts ?? Date.now()}`;
+      if (adjustedPoints !== 0) {
         try {
           await insertLedgerEntry({
             memberId,
-            traceId: `${memberId}_${eventName}_${payload?.ts ?? Date.now()}`,
+            traceId: baseTraceId,
             operationType: 'earn',
-            delta: totalDelta,
+            delta: adjustedPoints,
             reason: eventName,
             previousBalance: oldTotal,
-            newBalance: newTotal,
-            sourceData: { eventName, streakMultiplier: streakState.streakMultiplier, milestoneBonus: streakState.milestoneBonus },
+            newBalance: oldTotal + adjustedPoints,
+            sourceData: { eventName, streakMultiplier: streakState.streakMultiplier },
           });
         } catch (err) {
           logError(`gamificationEventReceiver — ledger insert failed for ${memberId}`, err);
+        }
+      }
+      if (streakState.milestoneBonus > 0) {
+        const afterEarn = oldTotal + adjustedPoints;
+        try {
+          await insertLedgerEntry({
+            memberId,
+            traceId: `${baseTraceId}_milestone`,
+            operationType: 'bonus',
+            delta: streakState.milestoneBonus,
+            reason: 'streak_milestone_bonus',
+            previousBalance: afterEarn,
+            newBalance: afterEarn + streakState.milestoneBonus,
+            sourceData: { eventName, milestoneBonus: streakState.milestoneBonus },
+          });
+        } catch (err) {
+          logError(`gamificationEventReceiver — milestone ledger insert failed for ${memberId}`, err);
         }
       }
 
