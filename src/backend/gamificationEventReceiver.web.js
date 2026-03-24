@@ -593,7 +593,7 @@ export const getActiveChallenges = webMethod(
         .eq('status', 'active')
         .limit(1)
         .find({ suppressAuth: true });
-      const isCFPlus = premiumResult.items.length > 0;
+      const isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
 
       // Filter expired + CF+ gate, sort by expiresAt ASC, cap at 5
       const active = challengeResults.items

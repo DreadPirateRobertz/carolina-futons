@@ -309,7 +309,13 @@ export const getLeaderboard = webMethod(
 export const getChallengeCatalog = webMethod(
   Permissions.SiteMember,
   async () => {
-    const member = await currentMember.getMember();
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getChallengeCatalog getMember failed', err);
+      return { challenges: [] };
+    }
     if (!member?._id) return { challenges: [] };
     const memberId = member._id;
 
@@ -350,7 +356,7 @@ export const getChallengeCatalog = webMethod(
         .eq('status', 'active')
         .limit(1)
         .find({ suppressAuth: true });
-      const isCFPlus = premiumResult.items.length > 0;
+      const isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
       const visibleDefs = defs.filter(d => !d.cfPlusOnly || isCFPlus);
 
       if (visibleDefs.length === 0) {
@@ -390,7 +396,7 @@ export const getChallengeCatalog = webMethod(
       _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
       return result;
     } catch (err) {
-      console.error('Error getting challenge catalog:', err);
+      logError('[loyaltyService] getChallengeCatalog failed', err);
       return { challenges: [] };
     }
   }
@@ -1007,7 +1013,13 @@ export function _resetChallengeLeaderboardRateLimit() {
 export const getChallengeLeaderboard = webMethod(
   Permissions.SiteMember,
   async (challengeId, limit = 10) => {
-    const member = await currentMember.getMember();
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getChallengeLeaderboard getMember failed', err);
+      return { leaderboard: [] };
+    }
     if (!member?._id) return { leaderboard: [] };
     const memberId = member._id;
 
