@@ -15,6 +15,7 @@ import wixData from 'wix-data';
 import { getTierForPoints } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET } from 'backend/utils/dateUtils';
+import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -123,18 +124,21 @@ async function awardPoints(memberId, points) {
 
   if (res.items.length > 0) {
     const rec = res.items[0];
-    const newTotal = (rec.totalPoints || 0) + points;
+    const previousBalance = rec.totalPoints || 0;
+    const newBalance = previousBalance + points;
     await wixData.update(MEMBER_POINTS, {
       ...rec,
-      totalPoints: newTotal,
-      tier: getTierForPoints(newTotal),
+      totalPoints: newBalance,
+      tier: getTierForPoints(newBalance),
     });
+    return { previousBalance, newBalance };
   } else {
     await wixData.insert(MEMBER_POINTS, {
       memberId,
       totalPoints: points,
       tier: getTierForPoints(points),
     });
+    return { previousBalance: 0, newBalance: points };
   }
 }
 
@@ -274,7 +278,21 @@ export const spinWheel = webMethod(
 
       // 6. Award prize
       if (prize.prizeType === 'POINTS') {
-        await awardPoints(memberId, prize.pointsAwarded);
+        const { previousBalance, newBalance } = await awardPoints(memberId, prize.pointsAwarded);
+        try {
+          await insertLedgerEntry({
+            memberId,
+            traceId: `${memberId}_spin_${eventId}`,
+            operationType: 'earn',
+            delta: prize.pointsAwarded,
+            reason: 'spin_wheel_prize',
+            previousBalance,
+            newBalance,
+            sourceData: { prizeLabel: prize.label, spinType, eventId },
+          });
+        } catch (err) {
+          logError(`spinWheel — ledger insert failed for ${memberId}`, err);
+        }
       } else {
         await awardNonPointsPrize(memberId, prize, insertedHistory._id, eventId);
       }
