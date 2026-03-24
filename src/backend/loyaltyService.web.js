@@ -861,3 +861,112 @@ export const getMyActivity = webMethod(
     }
   }
 );
+
+// ── Burn rate ──────────────────────────────────────────────────────────────────
+
+/**
+ * Calculate the member's loyalty point burn rate and project when they can
+ * next redeem a reward.
+ *
+ * Queries PointsLedger for points earned in the last 30 days, fetches the
+ * current balance, and finds the cheapest active reward to project a date.
+ *
+ * @function getMyBurnRate
+ * @returns {Promise<{
+ *   avgMonthlyPoints: number,
+ *   currentBalance: number,
+ *   nearestRewardCost: number|null,
+ *   nearestRewardName: string|null,
+ *   projectedRewardDate: string|null,
+ *   daysTill: number|null,
+ *   message: string|null,
+ * } | { status: 401, error: string }>}
+ * @permission SiteMember
+ */
+export const getMyBurnRate = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      logError('[loyaltyService] getMyBurnRate getMember failed', err);
+      return { status: 401, error: 'Unauthenticated' };
+    }
+    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
+
+    const { allowed } = await checkRateLimit('BurnRateLimit', member._id, {
+      max: 30,
+      windowMs: 60_000,
+    });
+    if (!allowed) return { status: 429, error: 'Rate limit exceeded' };
+
+    const defaults = {
+      avgMonthlyPoints: 0,
+      currentBalance: 0,
+      nearestRewardCost: null,
+      nearestRewardName: null,
+      projectedRewardDate: null,
+      daysTill: null,
+      message: null,
+    };
+
+    let currentBalance = 0;
+    try {
+      const account = await accounts.getMyAccount();
+      currentBalance = account?.points?.balance ?? 0;
+    } catch (err) {
+      logError('[loyaltyService] getMyBurnRate getMyAccount failed', err);
+    }
+
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    let avgMonthlyPoints = 0;
+    try {
+      const res = await wixData.query(POINTS_LEDGER_COLLECTION)
+        .eq('memberId', member._id)
+        .ge('earnedAt', cutoff)
+        .find({ suppressAuth: true });
+      avgMonthlyPoints = res.items.reduce((sum, item) => sum + (item.points || 0), 0);
+    } catch (err) {
+      logError('[loyaltyService] getMyBurnRate PointsLedger query failed', err);
+      return { ...defaults, currentBalance };
+    }
+
+    let nearestRewardCost = null;
+    let nearestRewardName = null;
+    try {
+      // rewards.listRewards() returns public catalog data — no suppressAuth needed
+      const rewardResult = await rewards.listRewards();
+      const active = (rewardResult.rewards || []).filter(r => r.active);
+      if (active.length > 0) {
+        const cheapest = active.reduce((min, r) =>
+          (r.requiredPoints ?? Infinity) < (min.requiredPoints ?? Infinity) ? r : min
+        );
+        nearestRewardCost = cheapest.requiredPoints ?? null;
+        nearestRewardName = cheapest.name || null;
+      }
+    } catch (err) {
+      logError('[loyaltyService] getMyBurnRate listRewards failed', err);
+    }
+
+    let daysTill = null;
+    let projectedRewardDate = null;
+    let message = null;
+
+    if (nearestRewardCost !== null) {
+      if (currentBalance >= nearestRewardCost) {
+        daysTill = 0;
+        projectedRewardDate = new Date().toISOString();
+        message = 'You have enough to redeem now!';
+      } else if (avgMonthlyPoints > 0) {
+        const dailyRate = avgMonthlyPoints / 30;
+        const needed = nearestRewardCost - currentBalance;
+        daysTill = Math.ceil(needed / dailyRate);
+        projectedRewardDate = new Date(Date.now() + daysTill * 24 * 60 * 60 * 1000).toISOString();
+        message = `~${daysTill} days away`;
+      }
+    }
+
+    return { avgMonthlyPoints, currentBalance, nearestRewardCost, nearestRewardName, projectedRewardDate, daysTill, message };
+  }
+);
