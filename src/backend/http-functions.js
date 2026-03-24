@@ -15,7 +15,7 @@ import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
-import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
@@ -2003,6 +2003,61 @@ export async function get_leaderboard(request) {
     return ok({ body: json(result), headers: JSON_HEADERS });
   } catch (err) {
     console.error('HTTP function error (leaderboard):', err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+// ── Badges Endpoint ────────────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/badges?memberId=...
+// Public — no auth required. Returns all earned badges for a member.
+// Consumed by: mobile cm-p8-social (dallas) and web member page.
+
+const BADGE_CATALOG = {
+  week_wanderer: { name: 'Week Warrior', iconUrl: '/badges/week-warrior.png', tier: 'bronze' },
+};
+
+/**
+ * @function get_badges
+ * @route GET /_functions/badges?memberId={userId}
+ * @returns {{ memberId, badges: [{id, name, iconUrl, earnedAt, tier}], totalCount }}
+ */
+export async function get_badges(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const json = (obj) => JSON.stringify(obj);
+  const params = request.query || {};
+
+  const rawId = params.memberId;
+  if (!rawId) {
+    return badRequest({ body: json({ error: 'memberId query parameter is required' }), headers: JSON_HEADERS });
+  }
+  const cleanId = validateId(rawId);
+  if (!cleanId) {
+    return badRequest({ body: json({ error: 'Invalid memberId' }), headers: JSON_HEADERS });
+  }
+
+  try {
+    const result = await wixData
+      .query('MemberBadges')
+      .eq('memberId', cleanId)
+      .find({ suppressAuth: true });
+
+    const badges = result.items.map((item) => {
+      const meta = BADGE_CATALOG[item.badgeId] || { name: item.badgeId, iconUrl: null, tier: null };
+      return {
+        id: item.badgeId,
+        name: meta.name,
+        iconUrl: meta.iconUrl,
+        tier: meta.tier,
+        earnedAt: item._createdDate || null,
+      };
+    });
+
+    return ok({
+      body: json({ memberId: cleanId, badges, totalCount: badges.length }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (badges):', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }

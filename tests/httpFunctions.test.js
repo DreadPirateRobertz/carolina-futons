@@ -28,6 +28,7 @@ import {
   get_leaderboard,
   _resetLeaderboardRateLimit,
   get_cleanupRateLimitCron,
+  get_badges,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -2013,6 +2014,73 @@ describe('get_cleanupRateLimitCron', () => {
     const { __setQueryError } = await import('./__mocks__/wix-data.js');
     __setQueryError('GamificationActionRateLimit', new Error('DB down'));
     const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
+    expect(result.status).toBe(500);
+  });
+});
+
+// ── GET /_functions/badges ─────────────────────────────────────────────────────
+
+const makeBadgesRequest = (memberId) => ({ query: memberId ? { memberId } : {} });
+
+describe('get_badges', () => {
+  beforeEach(() => resetData());
+
+  it('returns 200 with earned badges for a valid memberId', async () => {
+    __seed('MemberBadges', [{
+      _id: 'mem-b1_week_wanderer', memberId: 'mem-b1',
+      badgeId: 'week_wanderer', _createdDate: new Date('2026-03-01T12:00:00Z'),
+    }]);
+
+    const result = await get_badges(makeBadgesRequest('mem-b1'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.memberId).toBe('mem-b1');
+    expect(body.badges).toHaveLength(1);
+    expect(body.totalCount).toBe(1);
+    const b = body.badges[0];
+    expect(b.id).toBe('week_wanderer');
+    expect(typeof b.name).toBe('string');
+    expect(b.name.length).toBeGreaterThan(0);
+    expect(b.earnedAt).toBeTruthy();
+  });
+
+  it('returns empty badges array for a member with no badges', async () => {
+    const result = await get_badges(makeBadgesRequest('mem-nobadges'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.memberId).toBe('mem-nobadges');
+    expect(body.badges).toEqual([]);
+    expect(body.totalCount).toBe(0);
+  });
+
+  it('returns 400 when memberId is missing', async () => {
+    const result = await get_badges(makeBadgesRequest());
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/memberId/i);
+  });
+
+  it('returns 400 when memberId fails validation', async () => {
+    const result = await get_badges(makeBadgesRequest('<script>alert(1)</script>'));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/invalid/i);
+  });
+
+  it('returns 200 with multiple badges for a member with several', async () => {
+    __seed('MemberBadges', [
+      { _id: 'b1', memberId: 'mem-multi', badgeId: 'week_wanderer', _createdDate: new Date('2026-02-01') },
+      { _id: 'b2', memberId: 'mem-multi', badgeId: 'week_wanderer', _createdDate: new Date('2026-03-01') },
+    ]);
+
+    const result = await get_badges(makeBadgesRequest('mem-multi'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.totalCount).toBe(2);
+    expect(body.badges).toHaveLength(2);
+  });
+
+  it('returns 500 on DB error', async () => {
+    __setQueryError('MemberBadges', new Error('DB unavailable'));
+    const result = await get_badges(makeBadgesRequest('mem-b1'));
     expect(result.status).toBe(500);
   });
 });
