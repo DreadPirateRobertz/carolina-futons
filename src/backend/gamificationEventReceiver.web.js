@@ -136,6 +136,8 @@ export const receiveGamificationEvent = webMethod(
       // Fixed-award events (birthday, anniversary) are exempt — their value must not scale.
       const multiplier = FIXED_AWARD_EVENTS.has(eventName) ? 1 : streakState.streakMultiplier;
       const adjustedPoints = Math.round(effectiveBase * multiplier);
+      // milestoneBonus is intentionally NOT multiplied — a streak milestone reward
+      // doubling because of an active streak would be self-referential.
       const newTotal = oldTotal + adjustedPoints + streakState.milestoneBonus;
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;

@@ -43,7 +43,7 @@ export const STREAK_MULTIPLIER_TIERS = [
 
 /**
  * Returns the streak multiplier for a given number of consecutive ET days.
- * Tiers: 1-2 days → 1×, 3-6 days → 2×, 7+ days → 3×.
+ * Tiers: 0-2 days → 1×, 3-6 days → 2×, 7+ days → 3×.
  * Does NOT apply to fixed-award events (birthday, anniversary) — see FIXED_AWARD_EVENTS.
  * @param {number} days
  * @returns {number}
