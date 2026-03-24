@@ -15,7 +15,7 @@ import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
-import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
@@ -2003,6 +2003,83 @@ export async function get_leaderboard(request) {
     return ok({ body: json(result), headers: JSON_HEADERS });
   } catch (err) {
     console.error('HTTP function error (leaderboard):', err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+// ── Badge Showcase Endpoint ───────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/badges?memberId={id}
+// Public (SiteVisitor) — used by mobile Phase 8 social layer and web member page.
+// Returns earned badges for a member with metadata joined from the Badges catalog.
+// Rate limit: 30 req/min per requested memberId (prevents enumeration).
+
+// Exported for testing only — badges rate limit is CMS-backed (no in-memory state to clear).
+// Call in beforeEach alongside resetData() to match the convention of all rate-limited endpoints.
+export function _resetBadgesRateLimit() { /* no-op: CMS state cleared by resetData() */ }
+
+export async function get_badges(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=30' };
+  const json = (obj) => JSON.stringify(obj);
+
+  const params = request.query || {};
+  const rawId = params.memberId;
+  const memberId = validateId(rawId);
+  if (!memberId) {
+    return badRequest({
+      body: json({ error: 'memberId is required and must be a valid ID' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    // Per-memberId rate limit — protects against member enumeration
+    const { checkRateLimit } = await import('backend/utils/rateLimit');
+    const rlResult = await checkRateLimit('BadgesPublicRateLimit', memberId, { max: 30, windowMs: 60_000 });
+    if (!rlResult.allowed) {
+      return response({
+        status: 429,
+        body: json({ error: 'Rate limit exceeded — try again in a moment' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    // Fetch member's earned badges (limit 100 — Wix default is 50, explicit cap prevents silent truncation)
+    const memberBadgesResult = await wixData
+      .query('MemberBadges')
+      .eq('memberId', memberId)
+      .descending('_createdDate')
+      .limit(100)
+      .find({ suppressAuth: true });
+
+    if (memberBadgesResult.items.length === 0) {
+      return ok({ body: json({ memberId, badges: [], totalCount: 0 }), headers: JSON_HEADERS });
+    }
+
+    // Fetch badge catalog metadata for all earned badge IDs
+    const badgeIds = [...new Set(memberBadgesResult.items.map(item => item.badgeId))];
+    const catalogResult = await wixData
+      .query('Badges')
+      .hasSome('_id', badgeIds)
+      .find({ suppressAuth: true });
+    const catalogMap = {};
+    for (const b of catalogResult.items) {
+      catalogMap[b._id] = b;
+    }
+
+    const badges = memberBadgesResult.items.map(item => {
+      const meta = catalogMap[item.badgeId] || {};
+      return {
+        id: item.badgeId,
+        name: meta.name ?? item.badgeId,
+        iconUrl: meta.iconUrl ?? null,
+        earnedAt: item._createdDate ?? null,
+        tier: meta.tier ?? null,
+      };
+    });
+
+    return ok({ body: json({ memberId, badges, totalCount: badges.length }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (badges):', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }

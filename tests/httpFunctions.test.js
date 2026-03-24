@@ -28,6 +28,8 @@ import {
   get_leaderboard,
   _resetLeaderboardRateLimit,
   get_cleanupRateLimitCron,
+  get_badges,
+  _resetBadgesRateLimit,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -2014,5 +2016,157 @@ describe('get_cleanupRateLimitCron', () => {
     __setQueryError('GamificationActionRateLimit', new Error('DB down'));
     const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
     expect(result.status).toBe(500);
+  });
+});
+
+// ── get_badges ────────────────────────────────────────────────────────────────
+
+describe('get_badges', () => {
+  function badgesRequest(memberId) {
+    return { query: memberId !== undefined ? { memberId } : {} };
+  }
+
+  const MEMBER_ID = 'member-abc';
+
+  const CATALOG_ITEMS = [
+    { _id: 'badge-gold', name: 'Gold Star', iconUrl: 'https://cdn.example.com/gold.png', tier: 'gold' },
+    { _id: 'badge-silver', name: 'Silver Shield', iconUrl: 'https://cdn.example.com/silver.png', tier: 'silver' },
+  ];
+
+  function memberBadge(id, memberId, badgeId, createdDate) {
+    return { _id: id, memberId, badgeId, _createdDate: new Date(createdDate) };
+  }
+
+  beforeEach(() => {
+    resetData();
+    _resetBadgesRateLimit();
+    __seed('MemberBadges', []);
+    __seed('Badges', []);
+    __seed('BadgesPublicRateLimit', []);
+  });
+
+  it('returns 400 when memberId is missing', async () => {
+    const res = await get_badges(badgesRequest());
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/memberId/i);
+  });
+
+  it('returns 400 when memberId contains invalid characters', async () => {
+    const res = await get_badges(badgesRequest('mem<script>'));
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/memberId/i);
+  });
+
+  it('returns 400 when memberId is whitespace-only', async () => {
+    const res = await get_badges(badgesRequest('   '));
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 200 with empty badges array when member has no badges', async () => {
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.memberId).toBe(MEMBER_ID);
+    expect(body.badges).toEqual([]);
+    expect(body.totalCount).toBe(0);
+  });
+
+  it('returns 200 with badge list when member has earned badges', async () => {
+    __seed('MemberBadges', [
+      memberBadge(`${MEMBER_ID}_badge-gold`, MEMBER_ID, 'badge-gold', '2026-01-10T00:00:00Z'),
+      memberBadge(`${MEMBER_ID}_badge-silver`, MEMBER_ID, 'badge-silver', '2026-01-05T00:00:00Z'),
+    ]);
+    __seed('Badges', CATALOG_ITEMS);
+
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.memberId).toBe(MEMBER_ID);
+    expect(body.totalCount).toBe(2);
+    expect(body.badges).toHaveLength(2);
+
+    const gold = body.badges.find(b => b.id === 'badge-gold');
+    expect(gold.name).toBe('Gold Star');
+    expect(gold.iconUrl).toBe('https://cdn.example.com/gold.png');
+    expect(gold.tier).toBe('gold');
+    expect(gold.earnedAt).toBeDefined();
+  });
+
+  it('falls back to badgeId as name when catalog entry is missing', async () => {
+    __seed('MemberBadges', [
+      memberBadge(`${MEMBER_ID}_badge-unknown`, MEMBER_ID, 'badge-unknown', '2026-01-01T00:00:00Z'),
+    ]);
+    // Badges catalog intentionally empty
+
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.badges[0].id).toBe('badge-unknown');
+    expect(body.badges[0].name).toBe('badge-unknown');
+    expect(body.badges[0].iconUrl).toBeNull();
+    expect(body.badges[0].tier).toBeNull();
+  });
+
+  it('returns badges sorted descending by earnedAt', async () => {
+    __seed('MemberBadges', [
+      memberBadge(`${MEMBER_ID}_badge-silver`, MEMBER_ID, 'badge-silver', '2026-01-05T00:00:00Z'),
+      memberBadge(`${MEMBER_ID}_badge-gold`, MEMBER_ID, 'badge-gold', '2026-01-10T00:00:00Z'),
+    ]);
+    __seed('Badges', CATALOG_ITEMS);
+
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    const body = JSON.parse(res.body);
+    // descending by _createdDate — gold (Jan 10) should come before silver (Jan 5)
+    expect(body.badges[0].id).toBe('badge-gold');
+    expect(body.badges[1].id).toBe('badge-silver');
+  });
+
+  it('includes Cache-Control: public, max-age=30 header on success', async () => {
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(200);
+    const headers = res.headers || {};
+    const cacheControl = headers['Cache-Control'] || headers['cache-control'] || '';
+    expect(cacheControl).toMatch(/public/);
+    expect(cacheControl).toMatch(/max-age=30/);
+  });
+
+  it('returns 429 when rate limit is exceeded', async () => {
+    __seed('BadgesPublicRateLimit', [
+      { _id: `rl-${MEMBER_ID}`, key: MEMBER_ID, count: 30, windowStart: new Date(Date.now() - 5_000) },
+    ]);
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(429);
+    expect(JSON.parse(res.body).error).toMatch(/rate limit/i);
+  });
+
+  it('allows request when rate limit count is below the max', async () => {
+    __seed('BadgesPublicRateLimit', [
+      { _id: `rl-${MEMBER_ID}`, key: MEMBER_ID, count: 29, windowStart: new Date(Date.now() - 5_000) },
+    ]);
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(200);
+  });
+
+  it('uses suppressAuth on MemberBadges and Badges queries', async () => {
+    const { __getLastFindOptions } = await import('./__mocks__/wix-data.js');
+    __seed('MemberBadges', [
+      memberBadge(`${MEMBER_ID}_badge-gold`, MEMBER_ID, 'badge-gold', '2026-01-10T00:00:00Z'),
+    ]);
+    __seed('Badges', CATALOG_ITEMS);
+
+    await get_badges(badgesRequest(MEMBER_ID));
+
+    const memberBadgesFindOpts = __getLastFindOptions('MemberBadges');
+    const badgesFindOpts = __getLastFindOptions('Badges');
+    expect(memberBadgesFindOpts?.suppressAuth).toBe(true);
+    expect(badgesFindOpts?.suppressAuth).toBe(true);
+  });
+
+  it('returns 500 on DB error', async () => {
+    const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setQueryError('MemberBadges', new Error('DB timeout'));
+    const res = await get_badges(badgesRequest(MEMBER_ID));
+    expect(res.status).toBe(500);
+    expect(JSON.parse(res.body).error).toMatch(/internal server error/i);
   });
 });
