@@ -935,13 +935,14 @@ export const getMyBurnRate = webMethod(
     let nearestRewardCost = null;
     let nearestRewardName = null;
     try {
+      // rewards.listRewards() returns public catalog data — no suppressAuth needed
       const rewardResult = await rewards.listRewards();
       const active = (rewardResult.rewards || []).filter(r => r.active);
       if (active.length > 0) {
         const cheapest = active.reduce((min, r) =>
-          (r.requiredPoints || 0) < (min.requiredPoints || 0) ? r : min
+          (r.requiredPoints ?? Infinity) < (min.requiredPoints ?? Infinity) ? r : min
         );
-        nearestRewardCost = cheapest.requiredPoints || 0;
+        nearestRewardCost = cheapest.requiredPoints ?? null;
         nearestRewardName = cheapest.name || null;
       }
     } catch (err) {
