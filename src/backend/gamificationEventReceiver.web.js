@@ -684,6 +684,7 @@ export const recoverStreak = webMethod(
       return { success: false, error: 'memberId is required' };
     }
     try {
+      const todayET = getTodayET();
       const record = await findMemberRecord(memberId);
       if (!record) {
         return { success: false, error: 'no record found for member' };
@@ -696,7 +697,6 @@ export const recoverStreak = webMethod(
       // Cooldown: once per 30 days
       const lastRecovery = record.lastStreakRecoveryDate || null;
       if (lastRecovery) {
-        const todayET = getTodayET();
         const [ly, lm, ld] = lastRecovery.split('-').map(Number);
         const [ty, tm, td] = todayET.split('-').map(Number);
         const daysDiff = Math.floor(
@@ -706,8 +706,6 @@ export const recoverStreak = webMethod(
           return { success: false, error: `streak recovery on 30 day cooldown (${daysDiff} days elapsed)` };
         }
       }
-
-      const todayET = getTodayET();
       const newTotal = record.totalPoints - STREAK_RECOVERY_COST;
       const updatedRecord = {
         ...record,
