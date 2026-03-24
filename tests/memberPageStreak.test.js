@@ -305,3 +305,6 @@ describe('Member Page — streak display on load', () => {
     expect(chip.show).not.toHaveBeenCalled();
   });
 });
+
+vi.mock('public/ZipLeaderboardDisplay.js', () => ({ initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('backend/zipLeaderboard.web.js', () => ({ getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }) }));

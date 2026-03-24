@@ -159,3 +159,6 @@ describe('Member Page – onReady handler (logged-out path)', () => {
     await expect(onReadyHandler()).resolves.not.toThrow();
   });
 });
+
+vi.mock('public/ZipLeaderboardDisplay.js', () => ({ initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('backend/zipLeaderboard.web.js', () => ({ getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }) }));
