@@ -229,6 +229,29 @@ export async function wixEcom_onOrderCreated(event) {
 }
 
 /**
+ * Fired when an order is approved (payment confirmed).
+ * Awards gamification points for the purchase — this is the canonical
+ * earn event for web purchases. Without this handler web customers
+ * accumulate zero points regardless of purchase history.
+ *
+ * CF-e2r: P0 wiring gap — identified by Godfrey audit.
+ */
+export async function wixEcom_onOrderApproved(event) {
+  const order = event.entity || event;
+  const memberId = order.buyerInfo?.memberId || '';
+  const orderTotal = Number(order.priceSummary?.total?.amount || order.totals?.total || 0);
+
+  if (!memberId) return;
+
+  try {
+    const { receiveGamificationEvent } = await import('backend/gamificationEventReceiver.web');
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal }, memberId);
+  } catch (err) {
+    console.error('[events] wixEcom_onOrderApproved: gamification earn failed', err);
+  }
+}
+
+/**
  * Fired when an order is fulfilled (all items shipped).
  * Delegates to notificationOrchestrator to send "order shipped" SMS.
  */

@@ -22,7 +22,7 @@ vi.mock('backend/utils/sanitize', () => ({
 }));
 
 const mockRecordChallengeProgress = vi.fn().mockResolvedValue({ success: true });
-const mockReceiveGamificationEvent = vi.fn().mockResolvedValue({ success: true, pointsEarned: 0 });
+const mockReceiveGamificationEvent = vi.fn().mockResolvedValue({ success: true, pointsEarned: 50 });
 vi.mock('backend/gamificationEventReceiver.web', () => ({
   recordChallengeProgress: mockRecordChallengeProgress,
   receiveGamificationEvent: mockReceiveGamificationEvent,
@@ -40,6 +40,7 @@ import {
   wixMembers_onMemberCreated,
   wixEcom_onOrderCreated,
   wixEcom_onOrderCanceled,
+  wixEcom_onOrderApproved,
 } from '../src/backend/events.js';
 
 beforeEach(() => {
@@ -624,6 +625,60 @@ describe('wixEcom_onOrderCreated — referral wiring', () => {
           number: 'ORD-102',
           buyerInfo: { email: 'err@test.com', memberId: 'mem-err' },
           lineItems: [],
+        },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderApproved — P0 gamification earn wiring (CF-e2r) ───
+
+describe('wixEcom_onOrderApproved', () => {
+  it('calls receiveGamificationEvent with gamification_order_complete and orderTotal', async () => {
+    await wixEcom_onOrderApproved({
+      entity: {
+        buyerInfo: { memberId: 'mem-1' },
+        priceSummary: { total: { amount: '149.99' } },
+      },
+    });
+
+    expect(mockReceiveGamificationEvent).toHaveBeenCalledWith(
+      'gamification_order_complete',
+      { orderTotal: 149.99 },
+      'mem-1',
+    );
+  });
+
+  it('skips when memberId is absent (guest checkout)', async () => {
+    await wixEcom_onOrderApproved({
+      entity: {
+        buyerInfo: {},
+        priceSummary: { total: { amount: '99.00' } },
+      },
+    });
+
+    expect(mockReceiveGamificationEvent).not.toHaveBeenCalled();
+  });
+
+  it('passes orderTotal of 0 when priceSummary is missing', async () => {
+    await wixEcom_onOrderApproved({
+      entity: { buyerInfo: { memberId: 'mem-2' } },
+    });
+
+    expect(mockReceiveGamificationEvent).toHaveBeenCalledWith(
+      'gamification_order_complete',
+      { orderTotal: 0 },
+      'mem-2',
+    );
+  });
+
+  it('does not throw when receiveGamificationEvent fails', async () => {
+    mockReceiveGamificationEvent.mockRejectedValueOnce(new Error('earn failed'));
+    await expect(
+      wixEcom_onOrderApproved({
+        entity: {
+          buyerInfo: { memberId: 'mem-3' },
+          priceSummary: { total: { amount: '50.00' } },
         },
       })
     ).resolves.not.toThrow();

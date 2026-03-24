@@ -37,6 +37,7 @@ import {
   shouldShowStreakChip,
   updateStreakDisplay,
 } from 'public/StreakDisplay.js';
+import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
 
 let currentMember = null;
 let wishlistData = [];
@@ -92,6 +93,7 @@ async function initMemberPage() {
       { name: 'storeCredit', init: () => initStoreCreditDashboard($w) },
       { name: 'giftCards', init: () => initGiftCardDashboard($w) },
       { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
+      { name: 'challengesSection', init: initChallengesSection },
       { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
@@ -228,6 +230,17 @@ async function initDashboard() {
 }
 
 // ── Loyalty Dashboard ───────────────────────────────────────────────
+
+async function initChallengesSection() {
+  if (!currentMember?._id) return;
+  const { getActiveChallenges } = await import('backend/gamificationEventReceiver.web');
+  await initChallengesDisplay(
+    currentMember._id,
+    getActiveChallenges,
+    $w('#challengesSection'),
+    $w('#challengesList'),
+  );
+}
 
 async function initLoyaltyDashboard() {
   try {
