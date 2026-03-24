@@ -21,7 +21,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { POINT_VALUES, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
-import { getTodayET, getYesterdayET } from 'backend/utils/dateUtils';
+import { getTodayET, getYesterdayOf, tsToETDate } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
 import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 
@@ -104,11 +104,12 @@ export const receiveGamificationEvent = webMethod(
       const oldTier = record ? record.tier : getTierForPoints(0);
 
       // Phase 2: compute streak state (pure, no DB calls)
-      const todayET = getTodayET();
-      const yesterdayET = getYesterdayET();
+      // Use payload.ts (event origin time) when present to avoid streak breaks from webhook lag.
+      const todayET = payload?.ts ? tsToETDate(payload.ts) : getTodayET();
+      const yesterdayET = getYesterdayOf(todayET);
       const streakState = updateStreakState(record || {}, todayET, yesterdayET);
 
-      // Phase 4: wishlist daily cap — check before applying streak multiplier
+      // Phase 4: wishlist daily cap — use same event-derived date as streak logic
       const capResult = eventName === 'gamification_wishlist_add'
         ? await checkWishlistDailyCap(memberId, todayET)
         : null;

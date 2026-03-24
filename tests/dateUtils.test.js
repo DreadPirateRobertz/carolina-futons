@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getTodayET, getYesterdayET, getNextETMidnightUTC, computeStreakDanger } from '../src/backend/utils/dateUtils.js';
+import { getTodayET, getYesterdayET, getYesterdayOf, tsToETDate, getNextETMidnightUTC, computeStreakDanger } from '../src/backend/utils/dateUtils.js';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -106,6 +106,58 @@ describe('getNextETMidnightUTC', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-15T20:00:00Z'));
     expect(getNextETMidnightUTC()).toBeGreaterThan(Date.now());
+  });
+});
+
+// ── tsToETDate ────────────────────────────────────────────────────────────────
+
+describe('tsToETDate', () => {
+  it('converts Unix timestamp (seconds) to ET date — standard EST day', () => {
+    // 2026-01-15 12:00:00 UTC = 7:00 AM EST (UTC-5) → ET date is 2026-01-15
+    const ts = Math.floor(new Date('2026-01-15T12:00:00Z').getTime() / 1000);
+    expect(tsToETDate(ts)).toBe('2026-01-15');
+  });
+
+  it('returns previous ET day when UTC timestamp is before ET midnight (EST)', () => {
+    // 2026-01-15 04:30:00 UTC = 11:30 PM EST Jan 14 (UTC-5) → ET date is 2026-01-14
+    const ts = Math.floor(new Date('2026-01-15T04:30:00Z').getTime() / 1000);
+    expect(tsToETDate(ts)).toBe('2026-01-14');
+  });
+
+  it('converts Unix timestamp to ET date — EDT day (UTC-4)', () => {
+    // 2026-03-22 03:30:00 UTC = 11:30 PM EDT March 21 (UTC-4) → ET date is 2026-03-21
+    const ts = Math.floor(new Date('2026-03-22T03:30:00Z').getTime() / 1000);
+    expect(tsToETDate(ts)).toBe('2026-03-21');
+  });
+
+  it('handles an event at exactly ET midnight (not before) → correct current day', () => {
+    // 2026-03-22 04:00:00 UTC = 00:00:00 EDT March 22 (UTC-4) → ET date is 2026-03-22
+    const ts = Math.floor(new Date('2026-03-22T04:00:00Z').getTime() / 1000);
+    expect(tsToETDate(ts)).toBe('2026-03-22');
+  });
+});
+
+// ── getYesterdayOf ────────────────────────────────────────────────────────────
+
+describe('getYesterdayOf', () => {
+  it('returns the day before a given ET date string', () => {
+    expect(getYesterdayOf('2026-03-22')).toBe('2026-03-21');
+  });
+
+  it('handles month boundary', () => {
+    expect(getYesterdayOf('2026-03-01')).toBe('2026-02-28');
+  });
+
+  it('handles year boundary', () => {
+    expect(getYesterdayOf('2026-01-01')).toBe('2025-12-31');
+  });
+
+  it('getYesterdayET() is equivalent to getYesterdayOf(getTodayET())', () => {
+    // Both must agree — getYesterdayET is now implemented as getYesterdayOf(getTodayET())
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    expect(getYesterdayET()).toBe(getYesterdayOf(getTodayET()));
+    vi.useRealTimers();
   });
 });
 

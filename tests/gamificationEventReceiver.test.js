@@ -1358,3 +1358,78 @@ describe('recordChallengeProgress — PointsLedger hookup', () => {
     expect(result.pointsAwarded).toBe(50);
   });
 });
+
+// ── Streak clock fix (CF-hard-clockfix) ──────────────────────────────────────
+// Webhook delivery lag must not break a fair streak.
+// payload.ts (Unix seconds, event origin time) is used instead of Date.now().
+
+describe('streak clock — payload.ts used when present', () => {
+  beforeEach(() => {
+    __reset();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('preserves streak when webhook arrives after ET midnight but ts shows event was before midnight', async () => {
+    // Member active through 2026-03-21 with a 6-day streak.
+    // Event fired at 11:58 PM ET on 2026-03-22 (ts = 2026-03-23T03:58:00Z).
+    // Webhook delivered 7 minutes late: processing time = 2026-03-23T04:05:00Z (12:05 AM ET March 23).
+    //
+    // Without fix: todayET='2026-03-23', yesterday='2026-03-22', lastActivity='2026-03-21' → RESET (streak=1)
+    // With fix:    todayET=tsToETDate(ts)='2026-03-22', yesterday='2026-03-21', lastActivity='2026-03-21' → INCREMENT (streak=7)
+    vi.setSystemTime(new Date('2026-03-23T04:05:00Z')); // processing time
+    __seed('MemberPoints', [{
+      _id: 'mp-clock-1', memberId: 'mem-clock', totalPoints: 500, tier: 'Mountain Maven',
+      currentStreakDays: 6, streakStartDate: '2026-03-17',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1.5,
+    }]);
+    // ts = 11:58 PM ET on 2026-03-22 = 2026-03-23T03:58:00Z
+    const eventTs = Math.floor(new Date('2026-03-23T03:58:00Z').getTime() / 1000);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', { ts: eventTs }, 'mem-clock');
+    expect(result.success).toBe(true);
+    expect(result.currentStreakDays).toBe(7);  // incremented, not reset
+    expect(result.milestoneUnlocked).toBe(true); // day-7 milestone
+  });
+
+  it('resets streak when ts shows a genuine 2-day gap', async () => {
+    // Member last active 2026-03-20. Event ts is March 22 noon ET (real 2-day gap).
+    vi.setSystemTime(new Date('2026-03-22T16:00:00Z')); // noon ET processing time
+    __seed('MemberPoints', [{
+      _id: 'mp-clock-2', memberId: 'mem-clock2', totalPoints: 300, tier: 'Trail Blazer',
+      currentStreakDays: 5, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-20', streakMultiplier: 1.5,
+    }]);
+    const eventTs = Math.floor(new Date('2026-03-22T16:00:00Z').getTime() / 1000); // noon ET March 22
+    const result = await receiveGamificationEvent('gamification_add_to_cart', { ts: eventTs }, 'mem-clock2');
+    expect(result.success).toBe(true);
+    expect(result.currentStreakDays).toBe(1); // reset — genuine gap
+  });
+
+  it('falls back to processing time when payload.ts is absent', async () => {
+    // Normal event with no ts — uses current clock date as before (no regression)
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z')); // today ET = 2026-03-22
+    __seed('MemberPoints', [{
+      _id: 'mp-clock-3', memberId: 'mem-clock3', totalPoints: 200, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1.5,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-clock3');
+    expect(result.success).toBe(true);
+    expect(result.currentStreakDays).toBe(4); // yesterday active → increment
+  });
+
+  it('falls back to processing time when payload.ts is zero or negative', async () => {
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed('MemberPoints', [{
+      _id: 'mp-clock-4', memberId: 'mem-clock4', totalPoints: 100, tier: 'Trail Blazer',
+      currentStreakDays: 2, streakStartDate: '2026-03-20',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', { ts: 0 }, 'mem-clock4');
+    expect(result.success).toBe(true);
+    expect(result.currentStreakDays).toBe(3); // processing time used, yesterday active → increment
+  });
+});
