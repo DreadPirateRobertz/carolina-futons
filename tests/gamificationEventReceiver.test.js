@@ -22,6 +22,7 @@ import {
   __setQueryError,
   __setInsertError,
   __setUpdateError,
+  __setUniqueField,
   __getInserted,
   __onUpdate,
   __onInsert,
@@ -1986,5 +1987,85 @@ describe('MemberPointsLedger — catch-path: ledger failure does not break recov
 
     expect(result.success).toBe(true);
     expect(result.newTotal).toBe(500 - STREAK_RECOVERY_COST);
+  });
+});
+
+// ── receiveGamificationEvent — pointsEarned + badgeUnlocked ──────────────────
+
+describe('receiveGamificationEvent — pointsEarned and badgeUnlocked', () => {
+  beforeEach(() => {
+    __reset();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('returns pointsEarned equal to base points for a new member (no streak)', async () => {
+    // No MemberPoints seeded → fresh member, multiplier=1, milestoneBonus=0
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.pointsEarned).toBe(5); // ADD_TO_CART_POINTS * 1 = 5
+  });
+
+  it('includes streakMultiplier in pointsEarned', async () => {
+    // 3-day streak → 1.5× multiplier; lastActivity yesterday → streak continues
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, still 1.5×
+      streakMultiplier: 1.5,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.pointsEarned).toBe(8); // Math.round(5 * 1.5) = 8, milestoneBonus=0
+  });
+
+  it('returns badgeUnlocked null when no milestone reached', async () => {
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.badgeUnlocked).toBeNull();
+  });
+
+  it('returns badgeUnlocked week_wanderer when 7-day milestone badge is newly awarded', async () => {
+    // 6-day streak; lastActivity yesterday → event crosses to day 7 → milestone fires
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21', // yesterday → streak 6→7
+      streakMultiplier: 1.5,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.badgeUnlocked).toBe('week_wanderer');
+  });
+
+  it('returns badgeUnlocked null when week_wanderer badge was already awarded', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 1.5,
+    }]);
+    // Pre-existing badge record — de-dup guard sets badgeUnlocked = null
+    __setUniqueField('MemberBadges', '_id');
+    __seed('MemberBadges', [{ _id: 'mem-1_week_wanderer', memberId: 'mem-1', badgeId: 'week_wanderer' }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.badgeUnlocked).toBeNull();
+  });
+
+  it('includes milestoneBonus in pointsEarned on 7-day milestone', async () => {
+    // streak 6→7: multiplier becomes 2×, milestoneBonus = 100
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 1.5,
+    }]);
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    // Math.round(5 * 2) = 10 (adjustedPoints), + 100 (STREAK_7_DAY milestoneBonus)
+    expect(result.pointsEarned).toBe(10 + POINT_VALUES.STREAK_7_DAY);
   });
 });

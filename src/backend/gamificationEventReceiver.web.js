@@ -197,6 +197,7 @@ export const receiveGamificationEvent = webMethod(
       // Phase 2: award week_wanderer badge on 7-day milestone.
       // Idempotent via computed _id = '${memberId}_week_wanderer' — DB-level unique key
       // prevents duplicate awards even under concurrent webhook delivery.
+      let badgeUnlocked = null;
       if (streakState.milestoneBonus > 0) {
         try {
           await wixData.insert(MEMBER_BADGES_COLLECTION, {
@@ -204,6 +205,7 @@ export const receiveGamificationEvent = webMethod(
             memberId,
             badgeId: 'week_wanderer',
           });
+          badgeUnlocked = 'week_wanderer';
         } catch (err) {
           const msg = String(err?.message ?? err).toLowerCase();
           const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
@@ -219,6 +221,8 @@ export const receiveGamificationEvent = webMethod(
         currentStreakDays: streakState.currentStreakDays,
         streakMultiplier: streakState.streakMultiplier,
         milestoneUnlocked: streakState.milestoneBonus > 0,
+        pointsEarned: adjustedPoints + streakState.milestoneBonus,
+        badgeUnlocked,
       };
     } catch (err) {
       logError(`gamificationEventReceiver — ${eventName} failed for member ${memberId}`, err);

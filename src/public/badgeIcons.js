@@ -52,6 +52,28 @@ export function getBadgeIcon(badgeKey) {
   return renderBadgeIcon(BADGE_REGISTRY[badgeKey]);
 }
 
+// ── Tier badge icon map ───────────────────────────────────────────────────────
+
+/** Maps gamification tier names to the representative animal badge in BADGE_REGISTRY. */
+const TIER_BADGE_MAP = {
+  'Trail Blazer': 'first_step',       // Eastern Bluebird
+  'Mountain Guide': 'trail_regular',  // Black Bear
+  'Summit Master': 'week_wanderer',   // Red-Tailed Hawk
+  'Blue Ridge Legend': 'week_wanderer', // Red-Tailed Hawk (apex)
+};
+
+/**
+ * Returns the tier progression badge SVG for the given tier name.
+ * Tier sequence: Trail Blazer (Bluebird) → Mountain Guide (Bear) → Summit Master/Legend (Hawk).
+ *
+ * @param {string|null|undefined} tierName - e.g. 'Trail Blazer', 'Mountain Guide'
+ * @returns {string} SVG markup, or '' if tierName is unknown/nullish
+ */
+export function getTierBadgeIcon(tierName) {
+  const badgeKey = TIER_BADGE_MAP[tierName];
+  return badgeKey ? getBadgeIcon(badgeKey) : '';
+}
+
 // ── Sharp-shinned Hawk — streak chip icon ─────────────────────────────────────
 //
 // Distinct from the Red-Tailed Hawk (week_wanderer): Sharp-shinned is a compact

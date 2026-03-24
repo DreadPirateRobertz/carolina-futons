@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderBadgeIcon, getBadgeIcon, getStreakChipIcon } from '../src/public/badgeIcons.js';
+import { renderBadgeIcon, getBadgeIcon, getStreakChipIcon, getTierBadgeIcon } from '../src/public/badgeIcons.js';
 import { BADGE_REGISTRY } from '../src/public/gamificationTokens.js';
 
 describe('renderBadgeIcon', () => {
@@ -192,5 +192,43 @@ describe('getStreakChipIcon', () => {
     // Extract d= attributes
     const getPath = (svg) => svg.match(/d="([^"]+)"/)?.[1];
     expect(getPath(streakSvg)).not.toBe(getPath(weekWandererSvg));
+  });
+});
+
+// ── getTierBadgeIcon ──────────────────────────────────────────────────────────
+
+describe('getTierBadgeIcon', () => {
+  it('Trail Blazer returns Eastern Bluebird SVG', () => {
+    expect(getTierBadgeIcon('Trail Blazer')).toContain('Eastern Bluebird');
+  });
+
+  it('Mountain Guide returns Black Bear SVG', () => {
+    expect(getTierBadgeIcon('Mountain Guide')).toContain('Black Bear');
+  });
+
+  it('Summit Master returns Red-Tailed Hawk SVG', () => {
+    expect(getTierBadgeIcon('Summit Master')).toContain('Red-Tailed Hawk');
+  });
+
+  it('Blue Ridge Legend returns Red-Tailed Hawk SVG', () => {
+    expect(getTierBadgeIcon('Blue Ridge Legend')).toContain('Red-Tailed Hawk');
+  });
+
+  it('unknown tier returns empty string', () => {
+    expect(getTierBadgeIcon('Unknown Tier')).toBe('');
+  });
+
+  it('null returns empty string', () => {
+    expect(getTierBadgeIcon(null)).toBe('');
+  });
+
+  it('undefined returns empty string', () => {
+    expect(getTierBadgeIcon(undefined)).toBe('');
+  });
+
+  it('returned SVG is valid inline SVG with role img', () => {
+    const svg = getTierBadgeIcon('Trail Blazer');
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('role="img"');
   });
 });

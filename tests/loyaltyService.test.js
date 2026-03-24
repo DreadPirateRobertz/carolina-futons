@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __setAccount, __setRewards, accounts, rewards } from './__mocks__/wix-loyalty.v2.js';
-import { __reset as resetData, __seed, __setQueryError, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __setQueryError, __getInserted, __getLastFindOptions } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   getMyLoyaltyAccount,
@@ -12,6 +12,7 @@ import {
   _resetChallengeCatalogCache,
   _resetChallengeCatalogRateLimit,
   recordChallengeCompleteEvent,
+  getMyBurnRate,
 } from '../src/backend/loyaltyService.web.js';
 
 // ── getMyLoyaltyAccount ──────────────────────────────────────────────
@@ -708,5 +709,155 @@ describe('getLeaderboard — leaderboardOptIn gate', () => {
     expect(result.entries[0].rank).toBe(1);
     expect(result.entries[1].memberId).toBe('mem-b');
     expect(result.entries[1].rank).toBe(2);
+  });
+});
+
+// ── getMyBurnRate ──────────────────────────────────────────────────────────────
+
+describe('getMyBurnRate', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    __setAccount(null);
+    __setRewards([]);
+  });
+
+  it('returns 401 when no member is authenticated', async () => {
+    const result = await getMyBurnRate();
+    expect(result).toEqual({ status: 401, error: 'Unauthenticated' });
+  });
+
+  it('returns 401 when member has no _id', async () => {
+    __setMember({});
+    const result = await getMyBurnRate();
+    expect(result).toEqual({ status: 401, error: 'Unauthenticated' });
+  });
+
+  it('returns zero avgMonthlyPoints when no ledger entries exist', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 50 } });
+    const result = await getMyBurnRate();
+    expect(result.avgMonthlyPoints).toBe(0);
+    expect(result.currentBalance).toBe(50);
+  });
+
+  it('sums points from PointsLedger entries in the last 30 days', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    const recent = new Date(Date.now() - 5 * 86400000); // 5 days ago
+    __seed('PointsLedger', [
+      { _id: 'pl-1', memberId: 'mem-1', points: 100, earnedAt: recent },
+      { _id: 'pl-2', memberId: 'mem-1', points: 50, earnedAt: recent },
+    ]);
+    const result = await getMyBurnRate();
+    expect(result.avgMonthlyPoints).toBe(150);
+  });
+
+  it('excludes entries older than 30 days', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    const old = new Date(Date.now() - 31 * 86400000);
+    const recent = new Date(Date.now() - 5 * 86400000);
+    __seed('PointsLedger', [
+      { _id: 'pl-1', memberId: 'mem-1', points: 999, earnedAt: old },
+      { _id: 'pl-2', memberId: 'mem-1', points: 40, earnedAt: recent },
+    ]);
+    const result = await getMyBurnRate();
+    expect(result.avgMonthlyPoints).toBe(40);
+  });
+
+  it('only counts ledger entries for the authenticated member', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    const recent = new Date(Date.now() - 5 * 86400000);
+    __seed('PointsLedger', [
+      { _id: 'pl-1', memberId: 'mem-1', points: 30, earnedAt: recent },
+      { _id: 'pl-2', memberId: 'mem-2', points: 999, earnedAt: recent },
+    ]);
+    const result = await getMyBurnRate();
+    expect(result.avgMonthlyPoints).toBe(30);
+  });
+
+  it('returns null reward fields when no rewards exist', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 100 } });
+    const result = await getMyBurnRate();
+    expect(result.nearestRewardCost).toBeNull();
+    expect(result.nearestRewardName).toBeNull();
+    expect(result.projectedRewardDate).toBeNull();
+    expect(result.daysTill).toBeNull();
+  });
+
+  it('returns daysTill 0 and redeem message when balance >= nearest reward cost', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 200 } });
+    __setRewards([{ _id: 'rw-1', name: 'Free Shipping', requiredPoints: 100, active: true }]);
+    const result = await getMyBurnRate();
+    expect(result.daysTill).toBe(0);
+    expect(result.nearestRewardCost).toBe(100);
+    expect(result.nearestRewardName).toBe('Free Shipping');
+    expect(result.message).toMatch(/redeem/i);
+  });
+
+  it('projects reward date from burn rate', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    const recent = new Date(Date.now() - 5 * 86400000);
+    // 300 pts in last 30 days → 10 pts/day; need 100 → daysTill 10
+    __seed('PointsLedger', [
+      { _id: 'pl-1', memberId: 'mem-1', points: 300, earnedAt: recent },
+    ]);
+    __setRewards([{ _id: 'rw-1', name: 'Discount', requiredPoints: 100, active: true }]);
+    const result = await getMyBurnRate();
+    expect(result.daysTill).toBe(10);
+    expect(result.projectedRewardDate).toBeTruthy();
+  });
+
+  it('selects the cheapest active reward from multiple', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    __setRewards([
+      { _id: 'rw-1', name: 'Expensive', requiredPoints: 500, active: true },
+      { _id: 'rw-2', name: 'Cheap', requiredPoints: 100, active: true },
+      { _id: 'rw-3', name: 'Middle', requiredPoints: 250, active: true },
+    ]);
+    const result = await getMyBurnRate();
+    expect(result.nearestRewardName).toBe('Cheap');
+    expect(result.nearestRewardCost).toBe(100);
+  });
+
+  it('ignores inactive rewards', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    __setRewards([
+      { _id: 'rw-1', name: 'Inactive Cheap', requiredPoints: 50, active: false },
+      { _id: 'rw-2', name: 'Active', requiredPoints: 200, active: true },
+    ]);
+    const result = await getMyBurnRate();
+    expect(result.nearestRewardName).toBe('Active');
+    expect(result.nearestRewardCost).toBe(200);
+  });
+
+  it('uses suppressAuth: true when querying PointsLedger', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    await getMyBurnRate();
+    expect(__getLastFindOptions('PointsLedger')).toMatchObject({ suppressAuth: true });
+  });
+
+  it('returns zero defaults when wixData query throws', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    __setQueryError('PointsLedger', new Error('DB error'));
+    const result = await getMyBurnRate();
+    expect(result.avgMonthlyPoints).toBe(0);
+    expect(result.projectedRewardDate).toBeNull();
+  });
+
+  it('returns currentBalance 0 when getMyAccount returns null', async () => {
+    __setMember({ _id: 'mem-1' });
+    __setAccount(null);
+    const result = await getMyBurnRate();
+    expect(result.currentBalance).toBe(0);
   });
 });
