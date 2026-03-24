@@ -514,32 +514,32 @@ describe('streak multiplier — integration', () => {
     vi.useRealTimers();
   });
 
-  it('applies 1.5x multiplier (3-day streak) to add_to_cart base 5 → 8', async () => {
+  it('applies 2x multiplier (3-day streak) to add_to_cart base 5 → 10', async () => {
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 3, streakStartDate: '2026-03-19',
-      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, stays 1.5x
-      streakMultiplier: 1.5,
+      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, stays 2x
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    // Math.round(5 * 1.5) = 8
+    // Math.round(5 * 2) = 10
     expect(result.success).toBe(true);
-    expect(result.newTotal).toBe(8);
-    expect(result.streakMultiplier).toBe(1.5);
+    expect(result.newTotal).toBe(10);
+    expect(result.streakMultiplier).toBe(2);
   });
 
-  it('applies 2x multiplier (day 7+) to submit_review base 50 → 100', async () => {
+  it('applies 3x multiplier (day 7+) to submit_review base 50 → 150', async () => {
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 7, streakStartDate: '2026-03-15',
-      lastActivityDate: '2026-03-21', // yesterday → streak 7→8, multiplier stays 2x, no milestone
-      streakMultiplier: 2,
+      lastActivityDate: '2026-03-21', // yesterday → streak 7→8, multiplier stays 3x, no milestone
+      streakMultiplier: 3,
     }]);
     const result = await receiveGamificationEvent('gamification_submit_review', { has_photo: false }, 'mem-1');
-    // Math.round(50 * 2) = 100, milestoneBonus = 0 (only fires exactly at day 7)
+    // Math.round(50 * 3) = 150, milestoneBonus = 0 (only fires exactly at day 7)
     expect(result.success).toBe(true);
-    expect(result.newTotal).toBe(100);
-    expect(result.streakMultiplier).toBe(2);
+    expect(result.newTotal).toBe(150);
+    expect(result.streakMultiplier).toBe(3);
   });
 
   it('fires milestoneBonus of 100 pts + milestoneUnlocked when streak crosses to day 7', async () => {
@@ -547,11 +547,11 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21', // yesterday → streak 6→7
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    // streak → 7, multiplier → 2x, Math.round(5 * 2) = 10, milestoneBonus = 100
-    expect(result.newTotal).toBe(110);
+    // streak → 7, multiplier → 3x, Math.round(5 * 3) = 15, milestoneBonus = 100
+    expect(result.newTotal).toBe(115);
     expect(result.milestoneUnlocked).toBe(true);
   });
 
@@ -563,7 +563,7 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21', // yesterday → streak 6→7 (milestone fires)
-      streakMultiplier: 1.5, bonusSpinsAvailable: 0,
+      streakMultiplier: 2, bonusSpinsAvailable: 0,
     }]);
     const updated = [];
     __onUpdate((collection, item) => updated.push({ collection, item }));
@@ -581,7 +581,7 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 3, streakStartDate: '2026-03-19',
       lastActivityDate: '2026-03-21', // yesterday → streak 3→4, no milestone
-      streakMultiplier: 1.5, bonusSpinsAvailable: 0,
+      streakMultiplier: 2, bonusSpinsAvailable: 0,
     }]);
     const updated = [];
     __onUpdate((collection, item) => updated.push({ collection, item }));
@@ -595,12 +595,12 @@ describe('streak multiplier — integration', () => {
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 2, streakStartDate: '2026-03-20',
-      lastActivityDate: '2026-03-21', // yesterday → 2→3 days, 1x→1.5x
+      lastActivityDate: '2026-03-21', // yesterday → 2→3 days, 1x→2x
       streakMultiplier: 1,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     expect(result.currentStreakDays).toBe(3);
-    expect(result.streakMultiplier).toBe(1.5);
+    expect(result.streakMultiplier).toBe(2);
   });
 
   it('resets streak to 1 when last activity was 2+ days ago', async () => {
@@ -619,16 +619,16 @@ describe('streak multiplier — integration', () => {
 
   it('does not increment streak on same-day second event', async () => {
     __seed('MemberPoints', [{
-      _id: 'mp-1', memberId: 'mem-1', totalPoints: 8, tier: 'Trail Blazer',
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 10, tier: 'Trail Blazer',
       currentStreakDays: 4, streakStartDate: '2026-03-19',
       lastActivityDate: '2026-03-22', // today — already active
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    // Same-day no-op: streak stays at 4, multiplier stays 1.5x
-    // Math.round(5 * 1.5) = 8; total = 8 + 8 = 16
+    // Same-day no-op: streak stays at 4, multiplier stays 2x
+    // Math.round(5 * 2) = 10; total = 10 + 10 = 20
     expect(result.currentStreakDays).toBe(4);
-    expect(result.newTotal).toBe(16);
+    expect(result.newTotal).toBe(20);
   });
 
   it('persists streak fields in the MemberPoints update', async () => {
@@ -643,7 +643,7 @@ describe('streak multiplier — integration', () => {
     await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
     expect(mpUpdate.item.currentStreakDays).toBe(3);
-    expect(mpUpdate.item.streakMultiplier).toBe(1.5);
+    expect(mpUpdate.item.streakMultiplier).toBe(2);
     expect(mpUpdate.item.lastActivityDate).toBe('2026-03-22');
   });
 
@@ -651,14 +651,14 @@ describe('streak multiplier — integration', () => {
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer',
       currentStreakDays: 2, streakStartDate: '2026-03-20',
-      lastActivityDate: '2026-03-21', // yesterday → 2→3 days, 1.5x
+      lastActivityDate: '2026-03-21', // yesterday → 2→3 days, 1x→2x
       streakMultiplier: 1,
     }]);
     const result = await receiveGamificationEvent('gamification_spin_completed', { prizeType: 'FREE_SHIP' }, 'mem-1');
-    // basePoints=0, Math.round(0 * 1.5) = 0 → total unchanged
+    // basePoints=0, Math.round(0 * 2) = 0 → total unchanged
     expect(result.success).toBe(true);
     expect(result.currentStreakDays).toBe(3);
-    expect(result.streakMultiplier).toBe(1.5);
+    expect(result.streakMultiplier).toBe(2);
     expect(result.newTotal).toBe(50);
   });
 
@@ -669,12 +669,12 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 3, streakStartDate: '2026-01-12',
       lastActivityDate: '2026-01-14', // yesterday in ET
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    // streak 3→4, stays 1.5x
+    // streak 3→4, stays 2x
     expect(result.currentStreakDays).toBe(4);
-    expect(result.streakMultiplier).toBe(1.5);
+    expect(result.streakMultiplier).toBe(2);
   });
 
   it('week_wanderer badge inserted when not yet in MemberBadges', async () => {
@@ -682,7 +682,7 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21',
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const badgeInserts = [];
     __onInsert((collection, item) => {
@@ -702,7 +702,7 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21',
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const badgeInserts = [];
     __onInsert((collection, item) => {
@@ -722,7 +722,7 @@ describe('streak multiplier — integration', () => {
       _id: 'mp-1', memberId: 'mem-2', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21',
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const [r1, r2] = await Promise.all([
       receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-2'),
@@ -779,7 +779,7 @@ describe('updateStreakState', () => {
       expect(result.currentStreakDays).toBe(3);
     });
 
-    it('upgrades multiplier when crossing into 1.5x tier (days 2→3)', () => {
+    it('upgrades multiplier when crossing into 2x tier (days 2→3)', () => {
       const record = {
         currentStreakDays: 2,
         streakStartDate: '2026-03-20',
@@ -787,19 +787,19 @@ describe('updateStreakState', () => {
         streakMultiplier: 1,
       };
       const result = updateStreakState(record, TODAY, YESTERDAY);
-      expect(result.streakMultiplier).toBe(1.5);
+      expect(result.streakMultiplier).toBe(2);
     });
 
-    it('upgrades multiplier when crossing into 2x tier (days 6→7)', () => {
+    it('upgrades multiplier when crossing into 3x tier (days 6→7)', () => {
       const record = {
         currentStreakDays: 6,
         streakStartDate: '2026-03-16',
         lastActivityDate: YESTERDAY,
-        streakMultiplier: 1.5,
+        streakMultiplier: 2,
       };
       const result = updateStreakState(record, TODAY, YESTERDAY);
       expect(result.currentStreakDays).toBe(7);
-      expect(result.streakMultiplier).toBe(2);
+      expect(result.streakMultiplier).toBe(3);
     });
 
     it('fires milestoneBonus = STREAK_7_DAY when crossing to day 7', () => {
@@ -807,7 +807,7 @@ describe('updateStreakState', () => {
         currentStreakDays: 6,
         streakStartDate: '2026-03-16',
         lastActivityDate: YESTERDAY,
-        streakMultiplier: 1.5,
+        streakMultiplier: 2,
       };
       const result = updateStreakState(record, TODAY, YESTERDAY);
       expect(result.milestoneBonus).toBe(POINT_VALUES.STREAK_7_DAY); // 100
@@ -830,7 +830,7 @@ describe('updateStreakState', () => {
         currentStreakDays: 3,
         streakStartDate: '2026-03-19',
         lastActivityDate: YESTERDAY,
-        streakMultiplier: 1.5,
+        streakMultiplier: 2,
       };
       const result = updateStreakState(record, TODAY, YESTERDAY);
       expect(result.lastActivityDate).toBe(TODAY);
@@ -2018,16 +2018,16 @@ describe('receiveGamificationEvent — pointsEarned and badgeUnlocked', () => {
   });
 
   it('includes streakMultiplier in pointsEarned', async () => {
-    // 3-day streak → 1.5× multiplier; lastActivity yesterday → streak continues
+    // 3-day streak → 2× multiplier; lastActivity yesterday → streak continues
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 3, streakStartDate: '2026-03-19',
-      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, still 1.5×
-      streakMultiplier: 1.5,
+      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, still 2×
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     expect(result.success).toBe(true);
-    expect(result.pointsEarned).toBe(8); // Math.round(5 * 1.5) = 8, milestoneBonus=0
+    expect(result.pointsEarned).toBe(10); // Math.round(5 * 2) = 10, milestoneBonus=0
   });
 
   it('returns badgeUnlocked null when no milestone reached', async () => {
@@ -2053,7 +2053,7 @@ describe('receiveGamificationEvent — pointsEarned and badgeUnlocked', () => {
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21',
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     // Pre-existing badge record — de-dup guard sets badgeUnlocked = null
     __setUniqueField('MemberBadges', '_id');
@@ -2064,17 +2064,17 @@ describe('receiveGamificationEvent — pointsEarned and badgeUnlocked', () => {
   });
 
   it('includes milestoneBonus in pointsEarned on 7-day milestone', async () => {
-    // streak 6→7: multiplier becomes 2×, milestoneBonus = 100
+    // streak 6→7: multiplier becomes 3×, milestoneBonus = 100
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-21',
-      streakMultiplier: 1.5,
+      streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
     expect(result.success).toBe(true);
-    // Math.round(5 * 2) = 10 (adjustedPoints), + 100 (STREAK_7_DAY milestoneBonus)
-    expect(result.pointsEarned).toBe(10 + POINT_VALUES.STREAK_7_DAY);
+    // Math.round(5 * 3) = 15 (adjustedPoints), + 100 (STREAK_7_DAY milestoneBonus)
+    expect(result.pointsEarned).toBe(15 + POINT_VALUES.STREAK_7_DAY);
   });
 });
 
