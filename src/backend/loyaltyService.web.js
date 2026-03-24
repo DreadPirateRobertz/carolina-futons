@@ -343,7 +343,17 @@ export const getChallengeCatalog = webMethod(
 
       const defs = defsResult.items.filter(d => !d.expiresAt || new Date(d.expiresAt) > nowDate);
 
-      if (defs.length === 0) {
+      // CF+ exclusive gate: check once, filter cfPlusOnly definitions for non-CF+ members
+      const premiumResult = await wixData
+        .query('PremiumMemberships')
+        .eq('memberId', memberId)
+        .eq('status', 'active')
+        .limit(1)
+        .find({ suppressAuth: true });
+      const isCFPlus = premiumResult.items.length > 0;
+      const visibleDefs = defs.filter(d => !d.cfPlusOnly || isCFPlus);
+
+      if (visibleDefs.length === 0) {
         const result = { challenges: [] };
         _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
         return result;
@@ -357,7 +367,7 @@ export const getChallengeCatalog = webMethod(
 
       const progressMap = Object.fromEntries(progressResult.items.map(p => [p.challengeId, p]));
 
-      const challenges = defs.map(d => {
+      const challenges = visibleDefs.map(d => {
         const prog = progressMap[d._id];
         const progress = prog ? (prog.completedCount ?? 0) : 0;
         const completed = progress >= d.goal;
@@ -968,5 +978,79 @@ export const getMyBurnRate = webMethod(
     }
 
     return { avgMonthlyPoints, currentBalance, nearestRewardCost, nearestRewardName, projectedRewardDate, daysTill, message };
+  }
+);
+
+// ── getChallengeLeaderboard ───────────────────────────────────────────────────
+
+const CHALLENGE_LEADERBOARD_CAP = 20;
+const CHALLENGE_LEADERBOARD_RATE_LIMIT = 20;
+const CHALLENGE_LEADERBOARD_WINDOW_MS = 60_000; // 1 min
+const _challengeLeaderboardRateLimit = new Map();
+
+/** @internal — exposed for test reset only */
+export function _resetChallengeLeaderboardRateLimit() {
+  _challengeLeaderboardRateLimit.clear();
+}
+
+/**
+ * Returns the first N members to complete a given challenge (per-challenge leaderboard).
+ * Sorted by completedAt ASC — earliest completions rank highest.
+ * Rate limited to 20 calls/min per member (in-memory).
+ *
+ * @function getChallengeLeaderboard
+ * @param {string} challengeId
+ * @param {number} [limit=10] - Max entries returned (capped at 20)
+ * @returns {Promise<{ leaderboard: Array<{ rank, memberId, displayName, completedAt }> } | { status: 429, error: string }>}
+ * @permission SiteMember
+ */
+export const getChallengeLeaderboard = webMethod(
+  Permissions.SiteMember,
+  async (challengeId, limit = 10) => {
+    const member = await currentMember.getMember();
+    if (!member?._id) return { leaderboard: [] };
+    const memberId = member._id;
+
+    const now = Date.now();
+    const rl = _challengeLeaderboardRateLimit.get(memberId) || { count: 0, windowStart: now };
+    if (now - rl.windowStart > CHALLENGE_LEADERBOARD_WINDOW_MS) {
+      rl.count = 0;
+      rl.windowStart = now;
+    }
+    rl.count += 1;
+    _challengeLeaderboardRateLimit.set(memberId, rl);
+    if (rl.count > CHALLENGE_LEADERBOARD_RATE_LIMIT) {
+      return { status: 429, error: 'Rate limit exceeded' };
+    }
+
+    const cleanId = validateId(challengeId);
+    if (!cleanId) return { leaderboard: [] };
+
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 10), CHALLENGE_LEADERBOARD_CAP);
+
+    try {
+      // Fetch members who completed this challenge, sorted by earliest completion
+      const result = await wixData
+        .query(CHALLENGE_PROGRESS_COLLECTION)
+        .eq('challengeId', cleanId)
+        .isNotEmpty('completedAt')
+        .ascending('completedAt')
+        .limit(safeLimit)
+        .find({ suppressAuth: true });
+
+      const leaderboard = result.items.map((item, idx) => ({
+        rank: idx + 1,
+        memberId: item.memberId,
+        displayName: item.displayName || '',
+        completedAt: item.completedAt instanceof Date
+          ? item.completedAt.toISOString()
+          : (item.completedAt ?? null),
+      }));
+
+      return { leaderboard };
+    } catch (err) {
+      logError('getChallengeLeaderboard — failed', err);
+      return { leaderboard: [] };
+    }
   }
 );
