@@ -332,8 +332,9 @@ export const getChallengeCatalog = webMethod(
       return { status: 429, error: 'Rate limit exceeded' };
     }
 
-    // CF+ exclusive gate: check BEFORE cache to prevent lapsed subscribers from
-    // seeing exclusive content from a stale CF+ cache entry
+    // CF+ exclusive gate: memberId here is from getMember() above (trusted, authenticated source).
+    // Check BEFORE cache to prevent lapsed subscribers from seeing exclusive content
+    // from a stale CF+ cache entry.
     let isCFPlus = false;
     try {
       const premiumResult = await wixData
