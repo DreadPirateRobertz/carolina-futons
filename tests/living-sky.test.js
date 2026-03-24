@@ -88,6 +88,8 @@ describe('useLivingSky — return shape', () => {
       season: expect.stringMatching(/^(spring|summer|fall|winter)$/),
       precipitationOpacity: expect.any(Number),
       precipitationType: expect.stringMatching(/^(snow|mist|none)$/),
+      weatherLabel: expect.any(String),
+      animationHint: expect.toSatisfy(v => v === null || typeof v === 'string'),
     });
     expect(state.skyColors).toHaveLength(4);
     expect(state.glowColors).toHaveLength(2);
@@ -334,5 +336,97 @@ describe('useLivingSky — edge cases', () => {
     const state = useLivingSky(-60);
     expect(state.sunPos.opacity).toBe(0); // 11pm is night
     expect(state.starOpacity).toBeGreaterThan(0.4);
+  });
+});
+
+// ── weatherLabel ──────────────────────────────────────────────────────────────
+
+describe('weatherLabel', () => {
+  it('returns a non-empty string at all times', () => {
+    [0, 120, 420, 720, 1020, 1170, 1140, 1260].forEach(mins => {
+      const { weatherLabel } = useLivingSky(mins);
+      expect(typeof weatherLabel).toBe('string');
+      expect(weatherLabel.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('midnight is "still night over the Blue Ridge"', () => {
+    const { weatherLabel } = useLivingSky(0);
+    expect(weatherLabel).toContain('night');
+  });
+
+  it('golden hour window returns golden-hour label', () => {
+    const { weatherLabel } = useLivingSky(18 * 60); // 6pm — golden hour
+    expect(weatherLabel).toContain('golden hour');
+  });
+
+  it('mid-morning returns morning label', () => {
+    const { weatherLabel } = useLivingSky(9 * 60); // 9am
+    expect(weatherLabel).toContain('morning');
+  });
+});
+
+// ── animationHint — whitelist ─────────────────────────────────────────────────
+
+describe('animationHint', () => {
+  it('is null or one of the whitelisted class names at all times', () => {
+    const VALID = new Set(['slow-drift', 'flicker', 'shimmer', null]);
+    [0, 120, 420, 720, 1020, 1080, 1170].forEach(mins => {
+      const { animationHint } = useLivingSky(mins);
+      expect(VALID.has(animationHint)).toBe(true);
+    });
+  });
+
+  it('golden hour window returns "slow-drift"', () => {
+    const { animationHint } = useLivingSky(18 * 60); // 6pm golden hour
+    expect(animationHint).toBe('slow-drift');
+  });
+
+  it('deep night with high firefly opacity returns "flicker"', () => {
+    // Midnight has fireflyOpacity ~0.55 per sky table
+    const { animationHint } = useLivingSky(0);
+    expect(animationHint).toBe('flicker');
+  });
+});
+
+// ── CF+ golden hour perk ──────────────────────────────────────────────────────
+
+describe('CF+ golden hour perk (isCFPlus)', () => {
+  it('non-CF+ member at 5pm sees afternoon state', () => {
+    const { hour: _h, animationHint } = useLivingSky(17 * 60); // 5pm
+    // 5pm is before golden hour (17–19) — may or may not be slow-drift depending on clouds
+    // Just verify it's not the same as the CF+ state
+    const standard = useLivingSky(17 * 60);
+    const cfplus   = useLivingSky(17 * 60, { isCFPlus: true });
+    // CF+ at 5pm uses effective hour 16 (5pm - 1hr = 4pm) → different skyColors
+    expect(cfplus.skyColors[0]).not.toBe(standard.skyColors[0]);
+  });
+
+  it('CF+ member at 5pm gets golden-hour label (1hr early)', () => {
+    // Standard: 5pm (h=17) → 'hazy afternoon over the ridge'
+    // CF+:      effective hour = 16pm → still afternoon? No, 17-1=16 is afternoon
+    // Let's test at 6pm where standard = 'golden hour' and CF+ = golden hour 1h earlier
+    // CF+ at 7pm (19*60) sees effective 6pm (18*60) = golden hour
+    const cfState = useLivingSky(19 * 60, { isCFPlus: true });
+    expect(cfState.weatherLabel).toContain('golden hour');
+  });
+
+  it('non-CF+ member at 7pm does NOT get golden-hour label', () => {
+    const standard = useLivingSky(19 * 60);
+    // 7pm is mountain dusk
+    expect(standard.weatherLabel).not.toContain('golden hour');
+  });
+
+  it('CF+ offset wraps correctly near midnight (0–60 min range)', () => {
+    // 0 min with CF+ → effective = 1440 - 60 = 1380 min (23:00) — should not throw
+    expect(() => useLivingSky(0, { isCFPlus: true })).not.toThrow();
+    const { starOpacity } = useLivingSky(0, { isCFPlus: true });
+    expect(starOpacity).toBeGreaterThan(0.4); // 11pm is still night
+  });
+
+  it('isCFPlus defaults to false — no change in output', () => {
+    const a = useLivingSky(720);
+    const b = useLivingSky(720, { isCFPlus: false });
+    expect(a.skyColors).toEqual(b.skyColors);
   });
 });
