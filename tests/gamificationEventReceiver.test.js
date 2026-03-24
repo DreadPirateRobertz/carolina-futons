@@ -428,6 +428,66 @@ describe('bonus spin grants', () => {
     const mpUpdate = updated.find(u => u.collection === 'MemberPoints');
     expect(mpUpdate.item.bonusSpinsAvailable).toBe(2); // unchanged
   });
+
+  it('minOrderTotal — grants bonus spin when orderTotal meets threshold', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_order_complete', active: true, spinsGranted: 1, minOrderTotal: 100 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal: 150 }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(1);
+  });
+
+  it('minOrderTotal — does NOT grant bonus spin when orderTotal is below threshold', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_order_complete', active: true, spinsGranted: 1, minOrderTotal: 100 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal: 75 }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(0);
+  });
+
+  it('minOrderTotal — grants bonus spin when orderTotal exactly equals threshold', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_order_complete', active: true, spinsGranted: 1, minOrderTotal: 100 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal: 100 }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(1);
+  });
+
+  it('minOrderTotal — omitted minOrderTotal treats all orders as qualifying', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-1', triggerEvent: 'gamification_order_complete', active: true, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer', bonusSpinsAvailable: 0 },
+    ]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_order_complete', { orderTotal: 5 }, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(1);
+  });
 });
 
 // ── Streak multiplier — integration with receiveGamificationEvent ─────────────
@@ -483,6 +543,42 @@ describe('streak multiplier — integration', () => {
     // streak → 7, multiplier → 2x, Math.round(5 * 2) = 10, milestoneBonus = 100
     expect(result.newTotal).toBe(110);
     expect(result.milestoneUnlocked).toBe(true);
+  });
+
+  it('grants bonus spin from gamification_streak_milestone grant when milestone fires', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-m', triggerEvent: 'gamification_streak_milestone', active: true, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21', // yesterday → streak 6→7 (milestone fires)
+      streakMultiplier: 1.5, bonusSpinsAvailable: 0,
+    }]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(1);
+  });
+
+  it('does NOT grant streak milestone bonus spin when milestone does not fire', async () => {
+    __seed('BonusSpinGrants', [
+      { _id: 'bsg-m', triggerEvent: 'gamification_streak_milestone', active: true, spinsGranted: 1 },
+    ]);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-21', // yesterday → streak 3→4, no milestone
+      streakMultiplier: 1.5, bonusSpinsAvailable: 0,
+    }]);
+    const updated = [];
+    __onUpdate((collection, item) => updated.push({ collection, item }));
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    const mpUpdates = updated.filter(u => u.collection === 'MemberPoints');
+    const lastUpdate = mpUpdates[mpUpdates.length - 1];
+    expect(lastUpdate.item.bonusSpinsAvailable).toBe(0);
   });
 
   it('returns currentStreakDays and streakMultiplier in result', async () => {

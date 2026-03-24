@@ -123,9 +123,12 @@ export const receiveGamificationEvent = webMethod(
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;
 
-      const bonusSpins = await maybeGrantBonusSpin(eventName);
+      const bonusSpins = await maybeGrantBonusSpin(eventName, payload);
+      const milestoneSpins = streakState.milestoneBonus > 0
+        ? await maybeGrantBonusSpin('gamification_streak_milestone', payload)
+        : 0;
       const currentBonusSpins = record ? (record.bonusSpinsAvailable || 0) : 0;
-      const newBonusSpins = currentBonusSpins + bonusSpins;
+      const newBonusSpins = currentBonusSpins + bonusSpins + milestoneSpins;
 
       const updatedRecord = {
         totalPoints: newTotal,
@@ -233,7 +236,7 @@ async function findMemberRecord(memberId) {
  * @param {string} eventName
  * @returns {Promise<number>}
  */
-async function maybeGrantBonusSpin(eventName) {
+async function maybeGrantBonusSpin(eventName, payload) {
   try {
     const results = await wixData.query(BONUS_SPIN_GRANTS_COLLECTION)
       .eq('triggerEvent', eventName)
@@ -241,7 +244,12 @@ async function maybeGrantBonusSpin(eventName) {
       .limit(1)
       .find({ suppressAuth: true });
     if (results.items.length > 0) {
-      return results.items[0].spinsGranted || 1;
+      const grant = results.items[0];
+      const minTotal = grant.minOrderTotal || 0;
+      const orderTotal = payload?.orderTotal || 0;
+      if (orderTotal >= minTotal) {
+        return grant.spinsGranted || 1;
+      }
     }
     return 0;
   } catch (err) {

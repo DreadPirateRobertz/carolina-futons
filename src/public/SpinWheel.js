@@ -125,3 +125,87 @@ export function renderSpinResult({ prize, prizeType, pointsAwarded } = {}) {
     prizeType: prizeType || '',
   };
 }
+
+// ── createSpinWheelAudio ──────────────────────────────────────────────
+
+/**
+ * Create Web Audio API helpers for the spin wheel.
+ * AudioContext is created lazily on first call (must be on a user gesture).
+ * Returns no-op functions when prefers-reduced-motion is set or AudioContext
+ * is unavailable (e.g. SSR / test environments).
+ *
+ * @param {Window|null} [win] - Window object; defaults to the global window (injectable for tests).
+ * @returns {{ playTick: () => void, playWin: () => void }}
+ */
+export function createSpinWheelAudio(win) {
+  const w = win !== undefined ? win : (typeof window !== 'undefined' ? window : null);
+  if (!w) return { playTick: () => {}, playWin: () => {} };
+
+  const reducedMotion = typeof w.matchMedia === 'function'
+    && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) return { playTick: () => {}, playWin: () => {} };
+
+  const AudioCtx = w.AudioContext || w.webkitAudioContext;
+  if (!AudioCtx) return { playTick: () => {}, playWin: () => {} };
+
+  let ctx = null;
+  function getCtx() {
+    if (!ctx) ctx = new AudioCtx();
+    return ctx;
+  }
+  function playTone(freq, duration) {
+    try {
+      const context = getCtx();
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      osc.connect(gain);
+      gain.connect(context.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.15, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
+      osc.start();
+      osc.stop(context.currentTime + duration);
+    } catch (e) { /* AudioContext unavailable or suspended */ }
+  }
+
+  return {
+    playTick: () => playTone(800, 0.05),
+    playWin: () => playTone(1200, 0.3),
+  };
+}
+
+// ── buildShareCard ────────────────────────────────────────────────────
+
+/** Escape characters that are unsafe inside SVG text content. */
+function escapeSvgText(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Build a branded SVG share card for a spin win.
+ * Suitable for display in an <img> src, Blob URL, or HtmlComponent.
+ *
+ * @param {{prize: string, prizeType: string, pointsAwarded?: number}} result
+ * @returns {string} SVG markup string
+ */
+export function buildShareCard({ prize, prizeType, pointsAwarded } = {}) {
+  const isPoints = prizeType === 'POINTS';
+  const headline = escapeSvgText(
+    isPoints
+      ? `I won ${pointsAwarded ?? 0} bonus points!`
+      : `I won ${prize || 'a prize'}!`,
+  );
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" role="img" aria-label="Spin win share card">',
+    '<rect width="400" height="200" rx="12" fill="#2d6a4f"/>',
+    '<text x="200" y="72" font-family="sans-serif" font-size="26" font-weight="bold" fill="#FAF7F2" text-anchor="middle">Carolina Futons</text>',
+    `<text x="200" y="118" font-family="sans-serif" font-size="22" fill="#FAF7F2" text-anchor="middle">${headline}</text>`,
+    '<text x="200" y="162" font-family="sans-serif" font-size="13" fill="#b5e8c8" text-anchor="middle">Spin the wheel at carolinafutons.com</text>',
+    '</svg>',
+  ].join('');
+}
