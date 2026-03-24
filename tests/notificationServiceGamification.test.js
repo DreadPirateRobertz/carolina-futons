@@ -299,8 +299,11 @@ describe('sendChallengeReminder — cadence enforcement', () => {
       notificationsEnabled: true, challengeReminders: 'daily',
     }]);
     __setQueryError(NOTIFICATIONS_COLLECTION, new Error('DB down'));
-    // Should not throw, and should attempt to send
-    await expect(sendChallengeReminder('mem-5', 'Daily challenge!')).resolves.not.toThrow();
+    await sendChallengeReminder('mem-5', 'Daily challenge!');
+    // Fail-open: reminder is sent despite cadence check DB error
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    const reminderInserted = inserted.some(r => r.type === 'challenge_reminder' && r.memberId === 'mem-5');
+    expect(reminderInserted).toBe(true);
   });
 });
 
@@ -326,7 +329,7 @@ describe('sendStreakDangerNotification', () => {
     expect(inserted[0].type).toBe('streak_danger');
     expect(inserted[0].memberId).toBe('mem-1');
     expect(inserted[0].deepLink).toBe('/loyalty?tab=streak');
-    expect(inserted[0].dangerDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(inserted[0].dangerDate).toBe('2026-03-22'); // ET date at 2026-03-23T00:30Z = March 22 EDT
   });
 
   it('does not insert when member was active today', async () => {

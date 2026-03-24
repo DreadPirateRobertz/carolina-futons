@@ -436,9 +436,7 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .limit(1)
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
-    }
-
-    if (type === 'streak_danger' && extra.dangerDate) {
+    } else if (type === 'streak_danger' && extra.dangerDate) {
       const existing = await wixData
         .query(NOTIFICATIONS_COLLECTION)
         .eq('memberId', memberId)
@@ -500,7 +498,7 @@ export async function sendQuestCompleteNotification(memberId, questTitle, points
  * @returns {Promise<void>}
  */
 export async function sendStreakDangerNotification(memberId, lastActivityDate) {
-  if (!memberId) return;
+  if (!memberId || !validateId(memberId)) return;
   const todayET = getTodayET();
   if (!computeStreakDanger(lastActivityDate, todayET)) return;
   const message = '⚠️ Your streak is at risk! Complete a qualifying action before midnight ET to keep it alive.';
@@ -537,9 +535,11 @@ export async function sendChallengeReminder(memberId, message) {
       .descending('createdAt')
       .limit(1)
       .find({ suppressAuth: true });
-    if (lastRes.items.length > 0) {
+    if (lastRes.items.length > 0 && lastRes.items[0].createdAt) {
       const lastSentMs = new Date(lastRes.items[0].createdAt).getTime();
       if (Date.now() - lastSentMs < minGapMs) return;
+      // Note: if createdAt is missing on an old record, lastSentMs=NaN → comparison
+      // evaluates false → fail open (sends reminder). This is the desired behavior.
     }
   } catch (err) {
     logError('[notificationService] sendChallengeReminder cadence check failed', err);
