@@ -192,12 +192,29 @@ vi.mock('public/cartService', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+// Mock performanceHelpers to run ALL sections eagerly (critical + deferred).
+// Without this, prioritizeSections fires deferred sections as a floating
+// Promise (fire-and-forget), which settles at different times across Node
+// versions. On Node 20 the 50ms setTimeout flush was not enough, causing
+// '#featuredRepeater'.data to still be [] when the assertion ran.
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const results = await Promise.allSettled(
+      sections.map(s => {
+        try { return Promise.resolve(s.init()); } catch (e) { return Promise.reject(e); }
+      })
+    );
+    return { critical: results };
+  }),
+  lazyLoadImage: vi.fn(),
+}));
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
-// Flush microtask queue so fire-and-forget deferred sections in
-// prioritizeSections() have time to settle (hq-r3ie moved featuredProducts
-// from critical to deferred).
-const flushDeferred = () => new Promise(r => setTimeout(r, 50));
+// Flush deferred tasks — kept as a no-op-safe helper since all sections
+// now run eagerly via the performanceHelpers mock above. Calls remain in
+// tests for readability but are not load-bearing on either Node 20 or 22.
+const flushDeferred = () => new Promise(r => setTimeout(r, 0));
 
 // ── Import Page ─────────────────────────────────────────────────────
 
