@@ -199,20 +199,67 @@ function computeMoonPosition(hour) {
   return { cx, cy };
 }
 
+// ── weatherLabel helpers ──────────────────────────────────────────────────────
+
+/**
+ * Derive a human-readable ambient label from hour, season, and precipitation.
+ * @param {number} hour - Effective hour (0–24).
+ * @param {string} season - 'spring'|'summer'|'fall'|'winter'
+ * @param {string} precipType - 'snow'|'mist'|'none'
+ * @returns {string}
+ */
+function computeWeatherLabel(hour, season, precipType) {
+  if (precipType === 'snow') return 'winter snow drifting through the mountain hollows';
+  if (precipType === 'mist') return 'mist rising off the ridge';
+  if (hour < 5)  return 'still night over the Blue Ridge';
+  if (hour < 7)  return season === 'winter' ? 'cold mountain dawn' : 'misty mountain dawn';
+  if (hour < 10) return 'crisp mountain morning';
+  if (hour < 14) return 'clear Blue Ridge afternoon';
+  if (hour < 17) return 'hazy afternoon over the ridge';
+  if (hour < 19) return 'golden hour on the mountain';
+  if (hour < 21) return 'mountain dusk settling in';
+  return 'night over the Blue Ridge';
+}
+
+/** Whitelisted animation hints — only these strings may appear in LivingSkyState. */
+const VALID_ANIMATION_HINTS = new Set(['slow-drift', 'flicker', 'shimmer']);
+
+/**
+ * Derive a whitelisted CSS animation-class hint from sky conditions.
+ * Returns null when no special animation is warranted.
+ * @param {number} hour
+ * @param {string} precipType
+ * @param {number} fireflyOpacity
+ * @param {number} cloudOpacity
+ * @returns {'slow-drift'|'flicker'|'shimmer'|null}
+ */
+function computeAnimationHint(hour, precipType, fireflyOpacity, cloudOpacity) {
+  if (precipType !== 'none') return 'shimmer';
+  if (fireflyOpacity > 0.3)  return 'flicker';
+  if (cloudOpacity > 0.5 || (hour >= 17 && hour < 19)) return 'slow-drift';
+  return null;
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
  * Compute the full LivingSkyState for a given time of day.
+ *
  * @param {number} totalMinutes - Minutes since midnight (0..1440). 1440 wraps to 0.
+ * @param {object} [opts]
+ * @param {boolean} [opts.isCFPlus=false] - CF+ perk: see golden hour 60 min earlier.
  * @returns {LivingSkyState}
  */
-export function useLivingSky(totalMinutes) {
+export function useLivingSky(totalMinutes, { isCFPlus = false } = {}) {
   if (typeof totalMinutes !== 'number' || !Number.isFinite(totalMinutes)) {
     throw new TypeError(`useLivingSky: totalMinutes must be a finite number, got ${totalMinutes}`);
   }
   // Clamp/wrap to [0, 1440)
   const mins = ((totalMinutes % 1440) + 1440) % 1440;
-  const hour = mins / 60;
+  // CF+ golden hour perk: subtract 60 min before table lookup so golden hour
+  // appears 1 hr earlier. Clamped/wrapped to stay in [0, 1440).
+  const effectiveMins = isCFPlus ? (((mins - 60) % 1440) + 1440) % 1440 : mins;
+  const hour = effectiveMins / 60;
 
   const now = new Date();
   const season = getSeason(now);
@@ -277,6 +324,9 @@ export function useLivingSky(totalMinutes) {
   // Precipitation — type and opacity share the same branching conditions
   const precip = computePrecipitation(season, cloudOpacity, hour);
 
+  const weatherLabel  = computeWeatherLabel(hour, season, precip.type);
+  const animationHint = computeAnimationHint(hour, precip.type, fireflyOpacity, cloudOpacity);
+
   return {
     skyColors,
     glowColors,
@@ -295,5 +345,7 @@ export function useLivingSky(totalMinutes) {
     season,
     precipitationOpacity: precip.opacity,
     precipitationType: precip.type,
+    weatherLabel,
+    animationHint,
   };
 }
