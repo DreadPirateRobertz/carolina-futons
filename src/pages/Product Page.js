@@ -246,32 +246,30 @@ async function initProductPage() {
       { name: 'chatWidget', init: async () => {
         const { getChatGreeting, chatWithAssistant: sendChat } = await import('backend/gamificationChatbot.web');
         const productName = state.product?.name || '';
-        const productId = state.product?._id || '';
-        const greetResult = await getChatGreeting({ productName, productId });
+        const greetResult = await getChatGreeting({ productName });
         if (!greetResult.enabled) return;
+        // Wire send button first — only show widget if wiring succeeds (avoids dead UI)
+        $w('#chatSendBtn').onClick(async () => {
+          try {
+            const message = $w('#chatInput').value;
+            if (!message.trim()) return;
+            $w('#chatSendBtn').disable();
+            const result = await sendChat(message);
+            if (result?.error === 'auth_required') {
+              const { authentication } = await import('wix-members-frontend');
+              authentication.promptLogin({ modal: true });
+            } else if (result?.reply) {
+              $w('#chatResponseText').text = result.reply;
+              $w('#chatInput').value = '';
+            }
+          } catch (e) {
+            console.error('[ProductPage] chatWidget send failed:', e);
+          } finally {
+            $w('#chatSendBtn').enable();
+          }
+        });
         try { $w('#chatGreetingText').text = greetResult.greeting; } catch (e) {}
         try { $w('#chatAssistantWidget').show(); } catch (e) {}
-        try {
-          $w('#chatSendBtn').onClick(async () => {
-            try {
-              const message = $w('#chatInput').value;
-              if (!message.trim()) return;
-              $w('#chatSendBtn').disable();
-              const result = await sendChat(message);
-              if (result?.error === 'auth_required') {
-                const { authentication } = await import('wix-members-frontend');
-                authentication.promptLogin({ modal: true });
-              } else if (result?.reply) {
-                $w('#chatResponseText').text = result.reply;
-                $w('#chatInput').value = '';
-              }
-            } catch (e) {
-              console.error('[ProductPage] chatWidget send failed:', e);
-            } finally {
-              $w('#chatSendBtn').enable();
-            }
-          });
-        } catch (e) { console.error('[ProductPage] chatWidget wiring failed:', e); }
       }, critical: false },
     ];
 

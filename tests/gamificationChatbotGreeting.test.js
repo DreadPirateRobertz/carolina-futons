@@ -29,9 +29,12 @@ beforeEach(() => {
 describe('getChatGreeting — feature flag', () => {
   it('returns { enabled: false } when GAMIFICATION_CHATBOT_ENABLED secret is absent', async () => {
     // No secrets seeded — getSecret throws
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { getChatGreeting } = await vi.importActual('../src/backend/gamificationChatbot.web.js');
     const result = await getChatGreeting();
     expect(result).toEqual({ enabled: false });
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('getChatGreeting'), expect.anything());
+    warnSpy.mockRestore();
   });
 
   it('returns { enabled: false } when flag is "false"', async () => {
@@ -91,6 +94,13 @@ describe('getChatGreeting — greeting content', () => {
     expect(result.enabled).toBe(true);
     expect(result.greeting).not.toContain('   ');
   });
+
+  it('returns generic greeting when productName is a non-string (number)', async () => {
+    const { getChatGreeting } = await vi.importActual('../src/backend/gamificationChatbot.web.js');
+    const result = await getChatGreeting({ productName: 42 });
+    expect(result.enabled).toBe(true);
+    expect(result.greeting).not.toContain('42');
+  });
 });
 
 // ── chatWidget — Product Page wiring ─────────────────────────────────────────
@@ -148,7 +158,7 @@ vi.mock('public/mobileHelpers', () => ({ collapseOnMobile: vi.fn(), initBackToTo
 vi.mock('public/productPageUtils.js', () => ({ buildGridAlt: vi.fn(() => ''), isCallForPrice: vi.fn(() => false), CALL_FOR_PRICE_TEXT: '' }));
 vi.mock('wix-location-frontend', () => ({ default: { query: {}, path: [] }, to: vi.fn() }));
 vi.mock('public/performanceHelpers.js', () => ({ prioritizeSections: vi.fn(async (sections) => { await Promise.allSettled(sections.map(s => s.init())); return { critical: [] }; }) }));
-vi.mock('public/galleryConfig.js', () => ({ getImageDimensions: vi.fn(() => ({ width: 800, height: 600 })) }));
+vi.mock('public/galleryConfig.js', () => ({ getImageDimensions: vi.fn(() => ({ width: 800, height: 600 })), getGalleryConfig: vi.fn(() => ({})) }));
 vi.mock('public/ProductGallery.js', () => ({ initImageGallery: vi.fn(), initProductBadge: vi.fn(), initProductVideo: vi.fn() }));
 vi.mock('public/ProductOptions.js', () => ({ initVariantSelector: vi.fn(), initSwatchSelector: vi.fn() }));
 vi.mock('public/ProductDetails.js', () => ({ initBreadcrumbs: vi.fn(), initProductInfoAccordion: vi.fn(), initSocialShare: vi.fn(), initDeliveryEstimate: vi.fn(), injectProductSchema: vi.fn(), initSwatchRequest: vi.fn(), initSwatchCTA: vi.fn() }));
@@ -156,7 +166,7 @@ vi.mock('public/AddToCart.js', () => ({ initQuantitySelector: vi.fn(), initAddTo
 vi.mock('public/BrowseReminder.js', () => ({ initBrowseTracking: vi.fn(), _createBrowseState: vi.fn(() => ({})) }));
 vi.mock('public/a11yHelpers.js', () => ({ makeClickable: vi.fn(), announce: vi.fn() }));
 vi.mock('public/productCardHelpers.js', () => ({ setCardImage: vi.fn() }));
-vi.mock('public/socialProofToast', () => ({ initProductSocialProof: vi.fn() }));
+vi.mock('public/socialProofToast', () => ({ initProductSocialProof: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('backend/promotions.web', () => ({ getFlashSales: vi.fn().mockResolvedValue([]) }));
 vi.mock('public/flashSaleHelpers', () => ({ initProductUrgencyBadge: vi.fn() }));
 vi.mock('public/ProductPagePolish.js', () => ({ applyProductPageTokens: vi.fn() }));
@@ -200,7 +210,7 @@ describe('chatWidget — PDP wiring', () => {
     await loadPage();
     const [context] = chatbotMocks.getChatGreeting.mock.calls[0];
     expect(context).toHaveProperty('productName');
-    expect(context).toHaveProperty('productId');
+    expect(context.productName).toBe(MOCK_PRODUCT.name);
   });
 
   it('calls chatWithAssistant with message on send button click', async () => {
@@ -260,5 +270,28 @@ describe('chatWidget — PDP wiring', () => {
     const clickHandler = getEl('#chatSendBtn').onClick.mock.calls[0]?.[0];
     await clickHandler();
     expect(getEl('#chatSendBtn').enable).toHaveBeenCalled();
+  });
+
+  it('disables send button before calling chatWithAssistant', async () => {
+    let disabledBeforeCall = false;
+    chatbotMocks.chatWithAssistant.mockImplementation(async () => {
+      disabledBeforeCall = getEl('#chatSendBtn').disable.mock.calls.length > 0;
+      return { reply: 'Answer.' };
+    });
+    await loadPage();
+    getEl('#chatInput').value = 'Hi';
+    const clickHandler = getEl('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(disabledBeforeCall).toBe(true);
+  });
+
+  it('auth_required path: does not update #chatResponseText or clear #chatInput', async () => {
+    chatbotMocks.chatWithAssistant.mockResolvedValue({ error: 'auth_required' });
+    await loadPage();
+    getEl('#chatInput').value = 'Hello';
+    const clickHandler = getEl('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(getEl('#chatResponseText').text).toBe('');
+    expect(getEl('#chatInput').value).toBe('Hello');
   });
 });

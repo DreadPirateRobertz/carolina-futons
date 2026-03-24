@@ -94,14 +94,14 @@ export const getChatGreeting = webMethod(
       const { getSecret } = await import('wix-secrets-backend');
       const flag = await getSecret('GAMIFICATION_CHATBOT_ENABLED');
       flagEnabled = flag === 'true';
-    } catch (_) {
+    } catch (err) {
+      console.warn('[gamificationChatbot] getChatGreeting: flag fetch failed, defaulting to disabled:', err?.message);
       flagEnabled = false;
     }
     if (!flagEnabled) return { enabled: false };
 
-    const productName = (typeof context?.productName === 'string' && context.productName.trim())
-      ? context.productName.trim()
-      : null;
+    const name = context?.productName;
+    const productName = (typeof name === 'string' && name.trim()) ? name.trim() : null;
     const greeting = productName
       ? `Hi! I'm the Carolina Futons Assistant. Ask me anything about ${productName} — sizing, materials, delivery, or how to earn points on your purchase.`
       : "Hi! I'm the Carolina Futons Assistant. Ask me about any product — sizing, materials, delivery, or how to earn rewards on your purchase.";
