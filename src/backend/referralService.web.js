@@ -293,6 +293,80 @@ export const completeReferral = webMethod(
   }
 );
 
+// ── _processReferralOnOrderCreated (cf-bu2) ──────────────────────────
+//
+// Backend-callable (not a webMethod). Called from wixEcom_onOrderCreated
+// when a member places an order. Looks up any signed_up referral for the
+// member and issues both referrer + referee credits.
+//
+// Returns { success: true, referrerCredit, refereeCredit } or { skipped: true }.
+// Never throws — caller should treat skipped as "no referral to process."
+
+export async function _processReferralOnOrderCreated(refereeMemberId, orderNumber) {
+  if (!refereeMemberId || !orderNumber) return { skipped: true };
+
+  try {
+    const result = await wixData
+      .query(REFERRALS_COLLECTION)
+      .eq('refereeMemberId', refereeMemberId)
+      .eq('status', 'signed_up')
+      .find({ suppressAuth: true });
+
+    if (result.items.length === 0) return { skipped: true };
+
+    const referral = { ...result.items[0] };
+
+    // Claim by marking processing — prevents double-credit if event fires twice
+    referral.status = 'processing';
+    referral.orderNumber = orderNumber;
+    await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
+
+    // Idempotent referrer credit
+    const existingReferrerCredit = await wixData
+      .query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referrer_bonus')
+      .find({ suppressAuth: true });
+    if (existingReferrerCredit.items.length === 0) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: referral.referrerMemberId,
+        amount: REFERRER_CREDIT_AMOUNT,
+        source: 'referrer_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    // Idempotent referee credit
+    const existingRefereeCredit = await wixData
+      .query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referee_bonus')
+      .find({ suppressAuth: true });
+    if (existingRefereeCredit.items.length === 0) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: refereeMemberId,
+        amount: REFEREE_CREDIT_AMOUNT,
+        source: 'referee_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    referral.status = 'credited';
+    await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
+
+    return { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
+  } catch (err) {
+    console.error('[referralService] _processReferralOnOrderCreated failed:', err);
+    return { skipped: true };
+  }
+}
+
 // ── getMyReferrals ──────────────────────────────────────────────────
 
 export const getMyReferrals = webMethod(

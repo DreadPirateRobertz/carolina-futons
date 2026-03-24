@@ -26,6 +26,11 @@ vi.mock('backend/gamificationEventReceiver.web', () => ({
   recordChallengeProgress: mockRecordChallengeProgress,
 }));
 
+const mockProcessReferralOnOrderCreated = vi.fn().mockResolvedValue({ skipped: true });
+vi.mock('backend/referralService.web', () => ({
+  _processReferralOnOrderCreated: mockProcessReferralOnOrderCreated,
+}));
+
 import {
   wixEcom_onAbandonedCheckoutCreated,
   wixEcom_onAbandonedCheckoutRecovered,
@@ -509,6 +514,45 @@ describe('wixEcom_onOrderCreated — purchase challenge hookup', () => {
       wixEcom_onOrderCreated({
         entity: {
           number: 'ORD-ERR',
+          buyerInfo: { email: 'err@test.com', memberId: 'mem-err' },
+          lineItems: [],
+        },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderCreated — referral wiring (cf-bu2) ─────────────────────────
+
+describe('wixEcom_onOrderCreated — referral wiring', () => {
+  it('calls _processReferralOnOrderCreated when memberId is present', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-100',
+        buyerInfo: { email: 'alice@test.com', memberId: 'mem-1' },
+        lineItems: [],
+      },
+    });
+    expect(mockProcessReferralOnOrderCreated).toHaveBeenCalledWith('mem-1', 'ORD-100');
+  });
+
+  it('does not call _processReferralOnOrderCreated when memberId is absent', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-101',
+        buyerInfo: { email: 'guest@test.com' },
+        lineItems: [],
+      },
+    });
+    expect(mockProcessReferralOnOrderCreated).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when _processReferralOnOrderCreated rejects', async () => {
+    mockProcessReferralOnOrderCreated.mockRejectedValueOnce(new Error('referral error'));
+    await expect(
+      wixEcom_onOrderCreated({
+        entity: {
+          number: 'ORD-102',
           buyerInfo: { email: 'err@test.com', memberId: 'mem-err' },
           lineItems: [],
         },

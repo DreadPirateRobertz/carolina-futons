@@ -212,6 +212,14 @@ export async function wixEcom_onOrderCreated(event) {
     } catch (err) {
       console.error('[events] Error recording challenge progress on order:', err);
     }
+
+    // cf-bu2: complete any pending referral attribution for web checkouts
+    try {
+      const { _processReferralOnOrderCreated } = await import('backend/referralService.web');
+      await _processReferralOnOrderCreated(memberId, orderNumber);
+    } catch (err) {
+      console.error('[events] Error processing referral on order:', err);
+    }
   }
 }
 
