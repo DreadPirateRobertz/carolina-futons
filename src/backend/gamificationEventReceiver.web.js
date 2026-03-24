@@ -26,6 +26,7 @@ import wixData from 'wix-data';
 import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
+import { dispatchBusEvent } from 'backend/utils/eventBusDispatcher';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
@@ -187,6 +188,15 @@ export const receiveGamificationEvent = webMethod(
         } catch (err) {
           logError(`gamificationEventReceiver — milestone ledger insert failed for ${memberId}`, err);
         }
+      }
+
+      // Cross-rig event bus — web→mobile dispatch (best-effort)
+      const totalDelta = newTotal - oldTotal;
+      if (totalDelta !== 0) {
+        try { await dispatchBusEvent({ event: 'points_earned', userId: memberId, delta: totalDelta, newTotal }); } catch (_) {}
+      }
+      if (tierChanged) {
+        try { await dispatchBusEvent({ event: 'tier_upgraded', userId: memberId, newTier, previousTier: oldTier }); } catch (_) {}
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
@@ -736,6 +746,10 @@ export const recordChallengeProgress = webMethod(
         }
       } catch (err) {
         logError(`recordChallengeProgress — analytics insert failed for member ${memberId}`, err);
+      }
+
+      if (completed) {
+        try { await dispatchBusEvent({ event: 'challenge_completed', userId: memberId, challengeId }); } catch (_) {}
       }
 
       return { success: true, newProgress, completed, pointsAwarded };
