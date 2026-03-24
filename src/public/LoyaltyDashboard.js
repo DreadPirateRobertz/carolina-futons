@@ -20,6 +20,7 @@
  *   $w.onReady(() => initLoyaltyDashboard());
  */
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
+import { getMyBurnRate } from 'backend/loyaltyService.web';
 import {
   formatProgressText,
   getProgressPercent,
@@ -70,6 +71,15 @@ function getStorage(opts) {
  */
 function getAccountFn(opts) {
   return opts.getMyLoyaltyAccount || getMyLoyaltyAccount;
+}
+
+/**
+ * Resolve injectable getMyBurnRate from opts or use the backend import.
+ * @param {Object} opts
+ * @returns {Function}
+ */
+function getBurnRateFn(opts) {
+  return opts.getMyBurnRate || getMyBurnRate;
 }
 
 // ── Render helpers ────────────────────────────────────────────────────
@@ -183,6 +193,52 @@ export function showTierUpModal($wFn, tier) {
   }
 }
 
+// ── Burn rate ─────────────────────────────────────────────────────────
+
+/**
+ * Formats a burn-rate result into a human-readable pace message.
+ * Exported for unit testing.
+ *
+ * @param {Object} burnRate - Result from getMyBurnRate
+ * @returns {string} e.g. "At this pace, Free Shipping by Apr 15"
+ */
+export function formatBurnRateText(burnRate) {
+  if (!burnRate || burnRate.status === 401) return '';
+  if (burnRate.daysTill === 0 && burnRate.nearestRewardName) {
+    return `You can redeem ${burnRate.nearestRewardName} now!`;
+  }
+  if (burnRate.projectedRewardDate && burnRate.nearestRewardName) {
+    const d = new Date(burnRate.projectedRewardDate);
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const day   = d.getDate();
+    return `At this pace, ${burnRate.nearestRewardName} by ${month} ${day}`;
+  }
+  return '';
+}
+
+/**
+ * Update the #burnRateText element with the member's projected reward date.
+ * No-ops if the element does not exist on this page.
+ *
+ * @param {Function} $wFn
+ * @param {Object} burnRate - Result from getMyBurnRate
+ */
+export function renderBurnRate($wFn, burnRate) {
+  try {
+    const el = $wFn('#burnRateText');
+    if (!el) return;
+    const text = formatBurnRateText(burnRate);
+    if (text) {
+      el.text = text;
+      el.show();
+    } else {
+      el.hide();
+    }
+  } catch (err) {
+    console.warn('[LoyaltyDashboard] renderBurnRate failed:', err?.message ?? err);
+  }
+}
+
 // ── Public API ────────────────────────────────────────────────────────
 
 /**
@@ -195,13 +251,15 @@ export function showTierUpModal($wFn, tier) {
  * @param {Object} [opts]
  * @param {Function} [opts.$w]                     - Injectable $w for testing
  * @param {Function} [opts.getMyLoyaltyAccount]    - Injectable backend call for testing
+ * @param {Function} [opts.getMyBurnRate]          - Injectable backend call for testing
  * @param {Object}   [opts.storage]                - Injectable sessionStorage for testing
  * @returns {Promise<Object|null>} The account object, or null on error
  */
 export async function initLoyaltyDashboard(opts = {}) {
-  const $wFn     = get$w(opts);
-  const getAcct  = getAccountFn(opts);
-  const storage  = getStorage(opts);
+  const $wFn       = get$w(opts);
+  const getAcct    = getAccountFn(opts);
+  const getBurnRt  = getBurnRateFn(opts);
+  const storage    = getStorage(opts);
 
   let account;
   try {
@@ -214,6 +272,14 @@ export async function initLoyaltyDashboard(opts = {}) {
   renderProgressBar($wFn, account);
   renderTierBadge($wFn, account);
   checkTierUp($wFn, account, storage);
+
+  // Burn rate — best-effort; never blocks the main render
+  try {
+    const burnRate = await getBurnRt();
+    renderBurnRate($wFn, burnRate);
+  } catch (_) {
+    // silent — burn rate is ambient info, not critical path
+  }
 
   return account;
 }

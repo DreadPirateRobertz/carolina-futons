@@ -74,6 +74,11 @@ $w.onReady(async function () {
   }));
   injectBusinessSchema().catch(e => console.warn('[masterPage] Schema injection failed:', e.message));
 
+  // Loyalty tier chip in nav — ambient brand presence across all pages
+  import('public/GamificationProductChip.js').then(({ initMemberTierChip }) => {
+    initMemberTierChip({ $w });
+  }).catch(() => {});
+
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
   setTimeout(() => {
     import('public/LiveChat.js').then(({ initLiveChat }) => {

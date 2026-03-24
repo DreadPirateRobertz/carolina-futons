@@ -30,6 +30,7 @@ import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
 import { buildYouTubeEmbed } from 'public/videoHelpers.js';
+import { initMemberTierChip } from 'public/GamificationProductChip.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -111,6 +112,7 @@ async function initProductPage() {
       { name: 'bundleSection', init: () => initBundleSection($w, state), critical: false },
       { name: 'backInStock', init: () => initBackInStockNotification($w, state), critical: false },
       { name: 'wishlistButton', init: () => initWishlistButton($w, state), critical: false },
+      { name: 'memberTierChip', init: () => initMemberTierChip({ $w }), critical: false },
       { name: 'designTokens', init: () => applyProductPageTokens($w), critical: true },
       // JSON-LD structured data via wix-seo-frontend (SSR-compatible, must be critical for crawlers)
       { name: 'productMeta', init: () => injectProductSeoMeta(state.product), critical: true },

@@ -16,6 +16,8 @@ import {
   renderTierBadge,
   checkTierUp,
   showTierUpModal,
+  renderBurnRate,
+  formatBurnRateText,
 } from '../src/public/LoyaltyDashboard.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -398,5 +400,137 @@ describe('initLoyaltyDashboard', () => {
     expect(bar.progress).toBeNull();
     expect(badge.text).toBeNull();
     expect(modal.show).not.toHaveBeenCalled();
+  });
+});
+
+// ── formatBurnRateText ────────────────────────────────────────────────
+
+describe('formatBurnRateText', () => {
+  it('returns empty string when burnRate is null', () => {
+    expect(formatBurnRateText(null)).toBe('');
+  });
+
+  it('returns empty string when status is 401', () => {
+    expect(formatBurnRateText({ status: 401, error: 'Unauthenticated' })).toBe('');
+  });
+
+  it('returns empty string when no nearestRewardName', () => {
+    expect(formatBurnRateText({ nearestRewardName: null, projectedRewardDate: null })).toBe('');
+  });
+
+  it('returns redeem message when daysTill is 0', () => {
+    const text = formatBurnRateText({ daysTill: 0, nearestRewardName: 'Free Pillow', projectedRewardDate: null });
+    expect(text).toMatch(/redeem/i);
+    expect(text).toContain('Free Pillow');
+  });
+
+  it('returns pace message with reward name and date', () => {
+    // Use noon UTC to avoid timezone shifts rendering the wrong day
+    const date = new Date('2026-04-15T12:00:00Z');
+    const text = formatBurnRateText({
+      nearestRewardName: 'Free Shipping',
+      projectedRewardDate: date.toISOString(),
+      daysTill: 23,
+    });
+    expect(text).toContain('Free Shipping');
+    expect(text).toMatch(/Apr\s+15/);
+    expect(text).toMatch(/at this pace/i);
+  });
+
+  it('returns empty string when projectedRewardDate is null and not redeemable', () => {
+    const text = formatBurnRateText({
+      nearestRewardName: 'Discount',
+      projectedRewardDate: null,
+      daysTill: null,
+    });
+    expect(text).toBe('');
+  });
+});
+
+// ── renderBurnRate ────────────────────────────────────────────────────
+
+describe('renderBurnRate', () => {
+  function makeEl() {
+    return { text: null, show: vi.fn(), hide: vi.fn() };
+  }
+
+  it('sets text and calls show when burn rate has a projected date', () => {
+    const el = makeEl();
+    const $wFn = (id) => (id === '#burnRateText' ? el : null);
+    renderBurnRate($wFn, {
+      nearestRewardName: 'Free Pillow',
+      projectedRewardDate: new Date('2026-04-20').toISOString(),
+      daysTill: 28,
+    });
+    expect(el.text).toContain('Free Pillow');
+    expect(el.show).toHaveBeenCalledOnce();
+    expect(el.hide).not.toHaveBeenCalled();
+  });
+
+  it('calls hide when burn rate has no message', () => {
+    const el = makeEl();
+    const $wFn = (id) => (id === '#burnRateText' ? el : null);
+    renderBurnRate($wFn, null);
+    expect(el.hide).toHaveBeenCalledOnce();
+    expect(el.show).not.toHaveBeenCalled();
+  });
+
+  it('no-ops when #burnRateText element is absent', () => {
+    const $wFn = () => null;
+    expect(() => renderBurnRate($wFn, { nearestRewardName: 'x', projectedRewardDate: new Date().toISOString(), daysTill: 5 })).not.toThrow();
+  });
+
+  it('no-ops gracefully when $wFn throws', () => {
+    const $wFn = () => { throw new Error('element not mounted'); };
+    expect(() => renderBurnRate($wFn, {})).not.toThrow();
+  });
+});
+
+// ── initLoyaltyDashboard — burn rate wiring ───────────────────────────
+
+describe('initLoyaltyDashboard — burn rate integration', () => {
+  let bar, badge, modal, burnRateEl, $wFn, storage;
+
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockReturnValue(undefined);
+    vi.spyOn(console, 'warn').mockReturnValue(undefined);
+    bar       = { progress: null, label: null };
+    badge     = { text: null, style: { color: null } };
+    modal     = { show: vi.fn(), hide: vi.fn() };
+    burnRateEl = { text: null, show: vi.fn(), hide: vi.fn() };
+    $wFn = (id) => {
+      if (id === '#loyaltyProgressBar') return bar;
+      if (id === '#loyaltyTierBadge')   return badge;
+      if (id === '#tierUpModal')        return modal;
+      if (id === '#tierUpModalText')    return modal;
+      if (id === '#burnRateText')       return burnRateEl;
+      return null;
+    };
+    storage = makeStorage();
+  });
+
+  it('renders burn rate text when getMyBurnRate returns projected date', async () => {
+    await initLoyaltyDashboard({
+      $w: $wFn,
+      getMyLoyaltyAccount: async () => ({ points: { balance: 100 }, tier: 'Bronze', pointsToNextTier: 400 }),
+      getMyBurnRate: async () => ({
+        nearestRewardName: 'Free Pillow',
+        projectedRewardDate: new Date('2026-04-20').toISOString(),
+        daysTill: 28,
+      }),
+      storage,
+    });
+    expect(burnRateEl.text).toContain('Free Pillow');
+    expect(burnRateEl.show).toHaveBeenCalledOnce();
+  });
+
+  it('does not throw when getMyBurnRate throws', async () => {
+    const result = await initLoyaltyDashboard({
+      $w: $wFn,
+      getMyLoyaltyAccount: async () => ({ points: { balance: 100 }, tier: 'Bronze', pointsToNextTier: 400 }),
+      getMyBurnRate: async () => { throw new Error('burn rate unavailable'); },
+      storage,
+    });
+    expect(result).not.toBeNull(); // account still returned
   });
 });
