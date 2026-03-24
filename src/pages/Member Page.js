@@ -21,7 +21,7 @@ import {
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
 import { getMyStreakData, getMyAchievements, getMyDailyQuests } from 'backend/loyaltyService.web';
-import { getActiveChallenges } from 'backend/gamificationEventReceiver.web';
+import { getActiveChallenges, recoverStreak } from 'backend/gamificationEventReceiver.web';
 import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
 import { initZipLeaderboardSection } from 'public/ZipLeaderboardDisplay.js';
 import { getZipLeaderboard } from 'backend/zipLeaderboard.web.js';
@@ -422,7 +422,7 @@ async function initStreakDisplay() {
     const { reducedMotion } = await import('wix-window-frontend');
     _reducedMotion = reducedMotion;
 
-    const { currentStreakDays, streakMultiplier } = await getMyStreakData();
+    const { currentStreakDays, streakMultiplier, totalPoints, lastStreakRecoveryDate } = await getMyStreakData();
 
     // Streak chip — no toast on initial load (streak hasn't just changed)
     try {
@@ -442,6 +442,43 @@ async function initStreakDisplay() {
         $w('#streakMultiplierBadge').show();
       } else {
         $w('#streakMultiplierBadge').hide();
+      }
+    } catch (e) {}
+
+    // Streak recovery CTA — show when streak is broken and recovery is available
+    try {
+      const recoveryOnCooldown = (() => {
+        if (!lastStreakRecoveryDate) return false;
+        const [ly, lm, ld] = lastStreakRecoveryDate.split('-').map(Number);
+        const today = new Date();
+        const daysDiff = Math.floor(
+          (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+            - Date.UTC(ly, lm - 1, ld)) / 86400000
+        );
+        return daysDiff < 30;
+      })();
+      const canRecover = currentStreakDays === 0 && totalPoints >= 50 && !recoveryOnCooldown;
+      if (canRecover) {
+        $w('#streakRecoveryCTA').show();
+        $w('#streakRecoveryCTA').onClick(async () => {
+          try {
+            $w('#streakRecoveryCTA').disable();
+            const result = await recoverStreak(currentMember._id);
+            if (result.success) {
+              $w('#streakCountChip').text = buildStreakChipText(result.currentStreakDays);
+              $w('#streakCountChip').show();
+              $w('#streakRecoveryCTA').hide();
+              announce('Streak recovered! You\'re back on track.');
+            } else {
+              $w('#streakRecoveryCTA').enable();
+            }
+          } catch (e) {
+            console.error('[MemberPage] recoverStreak failed:', e);
+            $w('#streakRecoveryCTA').enable();
+          }
+        });
+      } else {
+        $w('#streakRecoveryCTA').hide();
       }
     } catch (e) {}
 

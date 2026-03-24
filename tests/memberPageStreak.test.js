@@ -68,6 +68,11 @@ const streakMocks = vi.hoisted(() => ({
   getMyStreakData: vi.fn(),
 }));
 
+const gamificationMocks = vi.hoisted(() => ({
+  getActiveChallenges: vi.fn().mockResolvedValue([]),
+  recoverStreak: vi.fn(),
+}));
+
 const loyaltyMocks = vi.hoisted(() => ({
   getMyLoyaltyAccount: vi.fn().mockResolvedValue({
     points: 0, tier: 'Trail Blazer', nextTier: null, progress: 0, pointsToNext: 0,
@@ -122,6 +127,10 @@ vi.mock('backend/wishlistShare.web.js', () => ({
 }));
 
 vi.mock('backend/errorMonitoring.web', () => ({ logError: vi.fn() }));
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  getActiveChallenges: gamificationMocks.getActiveChallenges,
+  recoverStreak: gamificationMocks.recoverStreak,
+}));
 vi.mock('backend/notificationService.web', () => ({ toggleProductAlerts: vi.fn() }));
 
 vi.mock('public/engagementTracker', () => ({ trackEvent: vi.fn() }));
@@ -221,7 +230,11 @@ beforeEach(() => {
     streakMultiplier: 1,
     streakStartDate: null,
     lastActivityDate: null,
+    totalPoints: 0,
+    lastStreakRecoveryDate: null,
   });
+  gamificationMocks.getActiveChallenges.mockResolvedValue([]);
+  gamificationMocks.recoverStreak.mockResolvedValue({ success: true, newTotal: 50, currentStreakDays: 1 });
   // Re-apply default mocks after clearAllMocks
   loyaltyMocks.getMyLoyaltyAccount.mockResolvedValue({
     points: 0, tier: 'Trail Blazer', nextTier: null, progress: 0, pointsToNext: 0,
@@ -308,3 +321,122 @@ describe('Member Page — streak display on load', () => {
 
 vi.mock('public/ZipLeaderboardDisplay.js', () => ({ initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('backend/zipLeaderboard.web.js', () => ({ getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }) }));
+
+// ── Streak recovery CTA ───────────────────────────────────────────────────────
+
+describe('Member Page — streak recovery CTA', () => {
+  it('shows #streakRecoveryCTA when streak=0, points>=50, no cooldown', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').show).toHaveBeenCalled();
+  });
+
+  it('hides #streakRecoveryCTA when streak is active (>0)', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 3, streakMultiplier: 1.5,
+      streakStartDate: '2026-03-21', lastActivityDate: '2026-03-23',
+      totalPoints: 200, lastStreakRecoveryDate: null,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').hide).toHaveBeenCalled();
+  });
+
+  it('hides #streakRecoveryCTA when points < 50', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 20, lastStreakRecoveryDate: null,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').hide).toHaveBeenCalled();
+  });
+
+  it('hides #streakRecoveryCTA when recovery is on 30-day cooldown', async () => {
+    // lastStreakRecoveryDate is 5 days ago — cooldown not elapsed
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const dateStr = fiveDaysAgo.toISOString().slice(0, 10);
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 200, lastStreakRecoveryDate: dateStr,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').hide).toHaveBeenCalled();
+  });
+
+  it('shows #streakRecoveryCTA when prior recovery was >30 days ago', async () => {
+    const thirtyOneDaysAgo = new Date();
+    thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
+    const dateStr = thirtyOneDaysAgo.toISOString().slice(0, 10);
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: dateStr,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').show).toHaveBeenCalled();
+  });
+
+  it('calls recoverStreak with memberId on CTA click', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    await loadPage();
+    const cta = getEl('#streakRecoveryCTA');
+    // Simulate click
+    const clickHandler = cta.onClick.mock.calls[0]?.[0];
+    expect(clickHandler).toBeDefined();
+    await clickHandler();
+    expect(gamificationMocks.recoverStreak).toHaveBeenCalledWith('mem-1');
+  });
+
+  it('hides CTA and shows streak chip after successful recovery', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    gamificationMocks.recoverStreak.mockResolvedValue({ success: true, newTotal: 50, currentStreakDays: 1 });
+    await loadPage();
+    const cta = getEl('#streakRecoveryCTA');
+    const clickHandler = cta.onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(cta.hide).toHaveBeenCalled();
+    expect(getEl('#streakCountChip').show).toHaveBeenCalled();
+  });
+
+  it('re-enables CTA when recoverStreak returns success:false', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    gamificationMocks.recoverStreak.mockResolvedValue({ success: false, error: 'cooldown' });
+    await loadPage();
+    const cta = getEl('#streakRecoveryCTA');
+    const clickHandler = cta.onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(cta.enable).toHaveBeenCalled();
+  });
+
+  it('re-enables CTA when recoverStreak throws', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    gamificationMocks.recoverStreak.mockRejectedValue(new Error('network'));
+    await loadPage();
+    const cta = getEl('#streakRecoveryCTA');
+    const clickHandler = cta.onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(cta.enable).toHaveBeenCalled();
+  });
+});

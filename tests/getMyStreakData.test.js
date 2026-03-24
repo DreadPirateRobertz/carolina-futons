@@ -45,10 +45,25 @@ describe('getMyStreakData (backend webMethod)', () => {
     expect(result.streakMultiplier).toBe(1.5);
   });
 
+  it('returns totalPoints and lastStreakRecoveryDate from MemberPoints record', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-2', memberId: 'mem-1', totalPoints: 250, tier: 'Trail Blazer',
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: '2026-03-20',
+      lastStreakRecoveryDate: '2026-03-10',
+    }]);
+    const { getMyStreakData } = await vi.importActual('../src/backend/loyaltyService.web.js');
+    const result = await getMyStreakData();
+    expect(result.totalPoints).toBe(250);
+    expect(result.lastStreakRecoveryDate).toBe('2026-03-10');
+  });
+
   it('returns zeros/defaults when no MemberPoints record exists', async () => {
     const { getMyStreakData } = await vi.importActual('../src/backend/loyaltyService.web.js');
     const result = await getMyStreakData();
     expect(result.currentStreakDays).toBe(0);
     expect(result.streakMultiplier).toBe(1);
+    expect(result.totalPoints).toBe(0);
+    expect(result.lastStreakRecoveryDate).toBeNull();
   });
 });
