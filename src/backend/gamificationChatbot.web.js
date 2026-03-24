@@ -78,6 +78,37 @@ export async function callClaude(messages, apiKey) {
 // Export for testing only — underscore prefix signals internal use
 export { callClaude as _callClaude };
 
+/**
+ * Return the initial chat greeting for any visitor (no auth required).
+ * Shows the assistant widget on the PDP for cold visitors and members alike.
+ * The message is contextualised with the current product name when provided.
+ *
+ * @param {{ productName?: string, productId?: string }} [context]
+ * @returns {Promise<{ enabled: false } | { enabled: true, greeting: string }>}
+ */
+export const getChatGreeting = webMethod(
+  Permissions.Anyone,
+  async (context = {}) => {
+    let flagEnabled = false;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      const flag = await getSecret('GAMIFICATION_CHATBOT_ENABLED');
+      flagEnabled = flag === 'true';
+    } catch (err) {
+      console.warn('[gamificationChatbot] getChatGreeting: flag fetch failed, defaulting to disabled:', err?.message);
+      flagEnabled = false;
+    }
+    if (!flagEnabled) return { enabled: false };
+
+    const name = context?.productName;
+    const productName = (typeof name === 'string' && name.trim()) ? name.trim() : null;
+    const greeting = productName
+      ? `Hi! I'm the Carolina Futons Assistant. Ask me anything about ${productName} — sizing, materials, delivery, or how to earn points on your purchase.`
+      : "Hi! I'm the Carolina Futons Assistant. Ask me about any product — sizing, materials, delivery, or how to earn rewards on your purchase.";
+    return { enabled: true, greeting };
+  }
+);
+
 export const chatWithAssistant = webMethod(
   Permissions.Member,
   async (message, _clientMemberId) => {

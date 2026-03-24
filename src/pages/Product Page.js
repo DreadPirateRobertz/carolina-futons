@@ -240,6 +240,37 @@ async function initProductPage() {
         const zipPrefix = wixLocationFrontend.query?.zipPrefix || null;
         await initPDPSocialProofBadge($w, state, getNeighborCount, { zipPrefix });
       }, critical: false },
+      // CF-e0y2: Gamification chat widget — cold visitors see greeting; members get full chat.
+      // getChatGreeting is Permissions.Anyone; chatWithAssistant is Permissions.Member.
+      // Non-member send → auth_required → promptLogin modal.
+      { name: 'chatWidget', init: async () => {
+        const { getChatGreeting, chatWithAssistant: sendChat } = await import('backend/gamificationChatbot.web');
+        const productName = state.product?.name || '';
+        const greetResult = await getChatGreeting({ productName });
+        if (!greetResult.enabled) return;
+        // Wire send button first — only show widget if wiring succeeds (avoids dead UI)
+        $w('#chatSendBtn').onClick(async () => {
+          try {
+            const message = $w('#chatInput').value;
+            if (!message.trim()) return;
+            $w('#chatSendBtn').disable();
+            const result = await sendChat(message);
+            if (result?.error === 'auth_required') {
+              const { authentication } = await import('wix-members-frontend');
+              authentication.promptLogin({ modal: true });
+            } else if (result?.reply) {
+              $w('#chatResponseText').text = result.reply;
+              $w('#chatInput').value = '';
+            }
+          } catch (e) {
+            console.error('[ProductPage] chatWidget send failed:', e);
+          } finally {
+            $w('#chatSendBtn').enable();
+          }
+        });
+        try { $w('#chatGreetingText').text = greetResult.greeting; } catch (e) {}
+        try { $w('#chatAssistantWidget').show(); } catch (e) {}
+      }, critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
