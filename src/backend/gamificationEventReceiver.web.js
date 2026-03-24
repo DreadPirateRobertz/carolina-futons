@@ -586,9 +586,19 @@ export const getActiveChallenges = webMethod(
         .eq('active', true)
         .find({ suppressAuth: true });
 
-      // Filter expired, sort by expiresAt ASC, cap at 5
+      // CF+ exclusive gate: filter cfPlusOnly challenges for non-CF+ members
+      const premiumResult = await wixData
+        .query('PremiumMemberships')
+        .eq('memberId', memberId)
+        .eq('status', 'active')
+        .limit(1)
+        .find({ suppressAuth: true });
+      const isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
+
+      // Filter expired + CF+ gate, sort by expiresAt ASC, cap at 5
       const active = challengeResults.items
         .filter(c => c.expiresAt && new Date(c.expiresAt) > nowDate)
+        .filter(c => !c.cfPlusOnly || isCFPlus)
         .sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt))
         .slice(0, 5);
 

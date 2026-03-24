@@ -111,6 +111,20 @@ function createQueryBuilder(collection) {
       });
       return builder;
     },
+    isNotEmpty(field) {
+      filters.push(item => {
+        const v = getField(item, field);
+        return v !== null && v !== undefined && v !== '';
+      });
+      return builder;
+    },
+    isEmpty(field) {
+      filters.push(item => {
+        const v = getField(item, field);
+        return v === null || v === undefined || v === '';
+      });
+      return builder;
+    },
     startsWith(field, value) {
       // Matches items where the field value begins with the given prefix string.
       filters.push(item => {
