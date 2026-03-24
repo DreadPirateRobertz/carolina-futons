@@ -96,7 +96,6 @@ async function initMemberPage() {
       { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
-      { name: 'challengesDisplay', init: initChallengesDisplaySection },
       { name: 'zipLeaderboard', init: initZipLeaderboardSectionWrapper },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
