@@ -9,6 +9,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
+import { getTodayET, isBirthdayWindow, getAnniversaryYear } from 'backend/utils/dateUtils';
 import crypto from 'crypto';
 
 /** Point values for each bonus activity. */
@@ -109,8 +111,78 @@ export const awardBonusPoints = webMethod(
         reason: activityType,
       };
     } catch (err) {
-      console.error(`[loyaltyBonusPoints] FAILED — account: ${accountId}, activity: ${activityType}, error:`, err);
+      logError(`[loyaltyBonusPoints] FAILED — account: ${accountId}, activity: ${activityType}`, err);
       return { success: false, message: 'Failed to award bonus points' };
     }
   }
 );
+
+// ── Calendar rewards (CF-p6v2) ────────────────────────────────────────────────
+
+export const ANNIVERSARY_POINTS = { 1: 150, 2: 250 };
+
+/**
+ * Award the 7-day birthday window reward (100 pts).
+ * Idempotent: uses memberId + year as the idempotency key so Wix deduplicates
+ * even if called multiple times within the same calendar year.
+ *
+ * @param {string} accountId - Wix loyalty account ID
+ * @param {string|null} birthdayMMDD - "MM-DD"
+ * @param {string} memberId - Used to build the idempotency key
+ * @returns {Promise<{success: boolean, pointsAwarded?: number, reason?: string}>}
+ */
+export async function checkBirthdayReward(accountId, birthdayMMDD, memberId) {
+  if (!accountId || !birthdayMMDD) return { success: false, reason: 'missing_params' };
+
+  const todayET = getTodayET();
+  if (!isBirthdayWindow(birthdayMMDD, todayET)) {
+    return { success: false, reason: 'outside_window' };
+  }
+
+  const year = todayET.slice(0, 4);
+  try {
+    await accounts.earnPoints(accountId, {
+      points: BONUS_POINTS.BIRTHDAY,
+      description: 'Bonus: birthday week reward',
+      appId: APP_ID,
+      idempotencyKey: `${memberId}_birthday_${year}`,
+    });
+    return { success: true, pointsAwarded: BONUS_POINTS.BIRTHDAY };
+  } catch (err) {
+    logError(`[loyaltyBonusPoints] checkBirthdayReward failed — account: ${accountId}`, err);
+    return { success: false, message: 'Failed to award birthday points' };
+  }
+}
+
+/**
+ * Award the 1-year or 2-year purchase anniversary reward.
+ * Only fires on the exact calendar-day anniversary.
+ * Idempotent: memberId + anniversaryYear + year as the idempotency key.
+ *
+ * @param {string} accountId - Wix loyalty account ID
+ * @param {string|null} firstPurchaseDateStr - "YYYY-MM-DD"
+ * @param {string} memberId - Used to build the idempotency key
+ * @returns {Promise<{success: boolean, anniversaryYear?: number, pointsAwarded?: number, reason?: string}>}
+ */
+export async function checkAnniversaryReward(accountId, firstPurchaseDateStr, memberId) {
+  if (!accountId) return { success: false, reason: 'missing_params' };
+
+  const todayET = getTodayET();
+  const anniversaryYear = getAnniversaryYear(firstPurchaseDateStr, todayET);
+  if (!anniversaryYear) return { success: false, reason: 'not_anniversary' };
+
+  const pts = ANNIVERSARY_POINTS[anniversaryYear];
+  const year = todayET.slice(0, 4);
+  try {
+    await accounts.earnPoints(accountId, {
+      points: pts,
+      description: `Bonus: ${anniversaryYear}-year purchase anniversary`,
+      appId: APP_ID,
+      idempotencyKey: `${memberId}_anniversary_${anniversaryYear}_${year}`,
+    });
+    return { success: true, anniversaryYear, pointsAwarded: pts };
+  } catch (err) {
+    logError(`[loyaltyBonusPoints] checkAnniversaryReward failed — account: ${accountId}`, err);
+    return { success: false, message: 'Failed to award anniversary points' };
+  }
+}
