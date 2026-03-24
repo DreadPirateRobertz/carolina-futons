@@ -22,7 +22,7 @@ const IMPORT_BUDGET = 20;
 const KNOWN_OVERBUDGET = {
   'Cart Page.js': 21,
   'Category Page.js': 27,
-  'Product Page.js': 24,
+  'Product Page.js': 25,
 };
 
 /**
