@@ -263,3 +263,49 @@ describe('updateSpendToTierBar', () => {
     expect($w('#tierProgressText').text).toBe('This order earns you Mountain Guide status!');
   });
 });
+
+// ── onCartChanged live update sequence ────────────────────────────────────────
+// Simulates the Cart Page flow: init on load, then updateSpendToTierBar on
+// each cart change via onCartChanged debounce. Verifies the bar recalculates
+// with the new subtotal rather than caching the initial value.
+
+describe('updateSpendToTierBar — live cart change after init', () => {
+  it('recalculates bar value and text when subtotal changes after init', async () => {
+    const $w = make$w();
+    const getLoyaltyAccount = vi.fn().mockResolvedValue(MEMBER_ACCOUNT);
+
+    // Page load: subtotal=100 → endowed=50, remaining=$250
+    await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
+    expect($w('#tierProgressBar').value).toBe(50);
+    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+
+    // Cart changed (item added): subtotal=300 → endowed=90, remaining=$50
+    updateSpendToTierBar($w, { cartSubtotal: 300, loyaltyData: MEMBER_ACCOUNT });
+    expect($w('#tierProgressBar').value).toBe(90);
+    expect($w('#tierProgressText').text).toBe('Add $50 more for Mountain Guide!');
+  });
+
+  it('shows tier-earn message when cart change pushes subtotal over threshold', async () => {
+    const $w = make$w();
+    const getLoyaltyAccount = vi.fn().mockResolvedValue(MEMBER_ACCOUNT);
+
+    // Page load: subtotal=100 (short of threshold)
+    await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
+    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+
+    // Cart changed: subtotal=350 (exactly meets pointsToNext=350) → 100%, earn message
+    updateSpendToTierBar($w, { cartSubtotal: 350, loyaltyData: MEMBER_ACCOUNT });
+    expect($w('#tierProgressBar').value).toBe(100);
+    expect($w('#tierProgressText').text).toBe('This order earns you Mountain Guide status!');
+  });
+
+  it('no-ops when onCartChanged fires before loyalty account loads (loyaltyData null)', () => {
+    // Simulates the race: onCartChanged fires during page init before
+    // getLoyaltyAccount() has resolved and populated _cartLoyaltyData.
+    const $w = make$w();
+    updateSpendToTierBar($w, { cartSubtotal: 200, loyaltyData: null });
+    expect($w('#tierProgressBar').show).not.toHaveBeenCalled();
+    expect($w('#tierProgressBar').hide).not.toHaveBeenCalled();
+    expect($w('#tierProgressText').show).not.toHaveBeenCalled();
+  });
+});
