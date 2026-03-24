@@ -27,9 +27,10 @@ import { logError } from 'backend/utils/errorHandler';
 async function fetchTop10() {
   const result = await wixData
     .query('MemberPoints')
+    .eq('leaderboardOptIn', true)
     .descending('totalPoints')
     .limit(10)
-    .find();
+    .find({ suppressAuth: true });
 
   return result.items.map((item, i) => ({
     rank:        i + 1,
@@ -61,7 +62,7 @@ export const getLeaderboard = webMethod(
  * @returns {Promise<{success: boolean, snapshotDate: string}>}
  */
 export const snapshotLeaderboard = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     const snapshotDate = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/New_York',
@@ -81,7 +82,7 @@ export const snapshotLeaderboard = webMethod(
         snapshotDate,
         entries: JSON.stringify(entries),
         createdAt: new Date().toISOString(),
-      });
+      }, { suppressAuth: true });
     } catch (e) {
       logError('leaderboardService.snapshotLeaderboard.insert', e);
       return { success: false, snapshotDate };

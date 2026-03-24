@@ -27,11 +27,12 @@ import {
 
 function makeEntry(overrides = {}) {
   return {
-    _id:         overrides._id         || 'pt-1',
-    memberId:    overrides.memberId    || 'mem-1',
-    displayName: overrides.displayName || 'Alice',
-    totalPoints: overrides.totalPoints ?? 100,
-    tier:        overrides.tier        || 'Silver',
+    _id:              overrides._id              || 'pt-1',
+    memberId:         overrides.memberId         || 'mem-1',
+    displayName:      overrides.displayName      || 'Alice',
+    totalPoints:      overrides.totalPoints      ?? 100,
+    tier:             overrides.tier             || 'Silver',
+    leaderboardOptIn: overrides.leaderboardOptIn ?? true,
     ...overrides,
   };
 }
@@ -90,12 +91,22 @@ describe('getLeaderboard', () => {
   });
 
   it('defaults null fields', async () => {
-    __seed('MemberPoints', [{ _id: 'pt-null' }]);
+    __seed('MemberPoints', [{ _id: 'pt-null', leaderboardOptIn: true }]);
     const [entry] = await getLeaderboard();
     expect(entry.memberId).toBeNull();
     expect(entry.displayName).toBeNull();
     expect(entry.totalPoints).toBe(0);
     expect(entry.tier).toBeNull();
+  });
+
+  it('excludes members who have not opted in to leaderboard', async () => {
+    __seed('MemberPoints', [
+      makeEntry({ _id: 'pt-in',  memberId: 'mem-in',  leaderboardOptIn: true,  totalPoints: 500 }),
+      makeEntry({ _id: 'pt-out', memberId: 'mem-out', leaderboardOptIn: false, totalPoints: 999 }),
+    ]);
+    const result = await getLeaderboard();
+    expect(result).toHaveLength(1);
+    expect(result[0].memberId).toBe('mem-in');
   });
 });
 
