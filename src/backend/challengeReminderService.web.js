@@ -103,6 +103,9 @@ export async function getChallengesNeedingReminder(cadence, nowMs) {
  * @param {string} recordId  _id of the MemberChallengeProgress record
  * @param {number} [nowMs]  Current time in ms (defaults to Date.now())
  * @returns {Promise<Object|null>}  DB-confirmed updated record, or null if not found
+ *
+ * suppressAuth: true is required on both wixData calls — this function runs in a
+ * scheduled job context with no member session, so Wix would otherwise reject the reads.
  */
 export async function markReminderSent(recordId, nowMs) {
   const now = nowMs !== undefined ? nowMs : Date.now();

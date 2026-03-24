@@ -238,4 +238,16 @@ describe('markReminderSent — suppressAuth', () => {
     await markReminderSent('mcp-1', NOW);
     expect(__getLastUpdateOptions('MemberChallengeProgress')).toEqual({ suppressAuth: true });
   });
+
+  it('still passes suppressAuth: true to wixData.get on not-found path', async () => {
+    // No seed — record does not exist
+    await markReminderSent('nonexistent', NOW);
+    expect(__getLastGetOptions('MemberChallengeProgress')).toEqual({ suppressAuth: true });
+  });
+
+  it('does not call wixData.update when record is not found', async () => {
+    // No seed — get returns null, update must not be called
+    await markReminderSent('nonexistent', NOW);
+    expect(__getLastUpdateOptions('MemberChallengeProgress')).toBeUndefined();
+  });
 });
