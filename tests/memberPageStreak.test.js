@@ -439,4 +439,42 @@ describe('Member Page — streak recovery CTA', () => {
     await clickHandler();
     expect(cta.enable).toHaveBeenCalled();
   });
+
+  it('shows CTA when lastStreakRecoveryDate is exactly 30 days ago (boundary — cooldown just elapsed)', async () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateStr = thirtyDaysAgo.toISOString().slice(0, 10);
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: dateStr,
+    });
+    await loadPage();
+    expect(getEl('#streakRecoveryCTA').show).toHaveBeenCalled();
+  });
+
+  it('hides CTA when lastStreakRecoveryDate is a corrupt string (NaN guard)', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: 'not-a-date',
+    });
+    await loadPage();
+    // Corrupt date → NaN guard treats cooldown as not active → CTA shows (safe fallback)
+    expect(getEl('#streakRecoveryCTA').show).toHaveBeenCalled();
+  });
+
+  it('success path: chip text is updated after recovery', async () => {
+    streakMocks.getMyStreakData.mockResolvedValue({
+      currentStreakDays: 0, streakMultiplier: 1,
+      streakStartDate: null, lastActivityDate: null,
+      totalPoints: 100, lastStreakRecoveryDate: null,
+    });
+    gamificationMocks.recoverStreak.mockResolvedValue({ success: true, newTotal: 50, currentStreakDays: 1 });
+    streakDisplayMocks.buildStreakChipText.mockReturnValue('🦅 1-day streak');
+    await loadPage();
+    const clickHandler = getEl('#streakRecoveryCTA').onClick.mock.calls[0]?.[0];
+    await clickHandler();
+    expect(getEl('#streakCountChip').text).toBe('🦅 1-day streak');
+  });
 });

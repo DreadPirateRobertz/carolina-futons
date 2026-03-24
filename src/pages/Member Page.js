@@ -445,11 +445,13 @@ async function initStreakDisplay() {
       }
     } catch (e) {}
 
-    // Streak recovery CTA — show when streak is broken and recovery is available
+    // Streak recovery CTA — show when streak is broken (=0), points >= 50, 30-day cooldown elapsed
     try {
       const recoveryOnCooldown = (() => {
         if (!lastStreakRecoveryDate) return false;
-        const [ly, lm, ld] = lastStreakRecoveryDate.split('-').map(Number);
+        const parts = lastStreakRecoveryDate.split('-').map(Number);
+        if (parts.length !== 3 || parts.some(isNaN)) return false; // guard corrupt strings
+        const [ly, lm, ld] = parts;
         const today = new Date();
         const daysDiff = Math.floor(
           (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
@@ -457,30 +459,34 @@ async function initStreakDisplay() {
         );
         return daysDiff < 30;
       })();
-      const canRecover = currentStreakDays === 0 && totalPoints >= 50 && !recoveryOnCooldown;
+      const memberId = currentMember?._id;
+      const canRecover = currentStreakDays === 0 && totalPoints >= 50 && !recoveryOnCooldown && !!memberId;
+      const $cta = $w('#streakRecoveryCTA');
       if (canRecover) {
-        $w('#streakRecoveryCTA').show();
-        $w('#streakRecoveryCTA').onClick(async () => {
+        $cta.show();
+        $cta.onClick(async () => {
           try {
-            $w('#streakRecoveryCTA').disable();
-            const result = await recoverStreak(currentMember._id);
+            $cta.disable();
+            const result = await recoverStreak(memberId);
             if (result.success) {
               $w('#streakCountChip').text = buildStreakChipText(result.currentStreakDays);
               $w('#streakCountChip').show();
-              $w('#streakRecoveryCTA').hide();
-              announce('Streak recovered! You\'re back on track.');
+              $cta.hide();
+              announce("Streak recovered! You're back on track.");
             } else {
-              $w('#streakRecoveryCTA').enable();
+              $cta.enable();
             }
           } catch (e) {
             console.error('[MemberPage] recoverStreak failed:', e);
-            $w('#streakRecoveryCTA').enable();
+            $cta.enable();
           }
         });
       } else {
-        $w('#streakRecoveryCTA').hide();
+        $cta.hide();
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('[MemberPage] Error wiring streak recovery CTA:', e);
+    }
 
   } catch (e) {
     console.error('[MemberPage] Error initializing streak display:', e);
