@@ -12,7 +12,6 @@
  * CF-e2r
  */
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
-import { getTierBadgeIcon } from 'public/badgeIcons.js';
 import { getTierIcon, getTierColor } from 'public/loyaltyHelpers';
 
 /**

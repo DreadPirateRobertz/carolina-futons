@@ -19,8 +19,7 @@
  *   import { initLoyaltyDashboard } from 'public/LoyaltyDashboard';
  *   $w.onReady(() => initLoyaltyDashboard());
  */
-import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
-import { getMyBurnRate } from 'backend/loyaltyService.web';
+import { getMyLoyaltyAccount, getMyBurnRate } from 'backend/loyaltyService.web';
 import {
   formatProgressText,
   getProgressPercent,
