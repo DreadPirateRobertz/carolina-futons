@@ -208,8 +208,8 @@ export function formatBurnRateText(burnRate) {
   }
   if (burnRate.projectedRewardDate && burnRate.nearestRewardName) {
     const d = new Date(burnRate.projectedRewardDate);
-    const month = d.toLocaleString('en-US', { month: 'short' });
-    const day   = d.getDate();
+    const month = d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+    const day   = d.getUTCDate();
     return `At this pace, ${burnRate.nearestRewardName} by ${month} ${day}`;
   }
   return '';
@@ -255,10 +255,10 @@ export function renderBurnRate($wFn, burnRate) {
  * @returns {Promise<Object|null>} The account object, or null on error
  */
 export async function initLoyaltyDashboard(opts = {}) {
-  const $wFn       = get$w(opts);
-  const getAcct    = getAccountFn(opts);
-  const getBurnRt  = getBurnRateFn(opts);
-  const storage    = getStorage(opts);
+  const $wFn        = get$w(opts);
+  const getAcct     = getAccountFn(opts);
+  const getBurnRate = getBurnRateFn(opts);
+  const storage     = getStorage(opts);
 
   let account;
   try {
@@ -274,7 +274,7 @@ export async function initLoyaltyDashboard(opts = {}) {
 
   // Burn rate — best-effort; never blocks the main render
   try {
-    const burnRate = await getBurnRt();
+    const burnRate = await getBurnRate();
     renderBurnRate($wFn, burnRate);
   } catch (_) {
     // silent — burn rate is ambient info, not critical path

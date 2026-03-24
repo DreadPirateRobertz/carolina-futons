@@ -239,7 +239,7 @@ export async function wixEcom_onOrderCreated(event) {
 export async function wixEcom_onOrderApproved(event) {
   const order = event.entity || event;
   const memberId = order.buyerInfo?.memberId || '';
-  const orderTotal = Number(order.priceSummary?.total?.amount || order.totals?.total || 0);
+  const orderTotal = Number(order.priceSummary?.total?.amount ?? order.totals?.total?.amount ?? 0);
 
   if (!memberId) return;
 
