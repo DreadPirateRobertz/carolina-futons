@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   SEGMENT_COLORS,
   buildWheelSegments,
   computeCountdown,
   renderPendingPrizes,
   renderSpinResult,
+  createSpinWheelAudio,
+  buildShareCard,
 } from '../src/public/SpinWheel.js';
 
 // ── SEGMENT_COLORS ────────────────────────────────────────────────────
@@ -242,5 +244,129 @@ describe('renderSpinResult', () => {
     expect(result.prize).toBe('');
     expect(result.prizeType).toBe('');
     expect(result.isPoints).toBe(false);
+  });
+});
+
+// ── createSpinWheelAudio ──────────────────────────────────────────────
+
+function makeWin(opts = {}) {
+  return {
+    matchMedia: opts.reducedMotion
+      ? (q) => ({ matches: q.includes('reduce') })
+      : () => ({ matches: false }),
+    AudioContext: opts.AudioContext || undefined,
+    webkitAudioContext: opts.webkitAudioContext || undefined,
+  };
+}
+
+describe('createSpinWheelAudio', () => {
+  it('returns no-op functions when window is null (SSR / test env)', () => {
+    const { playTick, playWin } = createSpinWheelAudio(null);
+    expect(() => playTick()).not.toThrow();
+    expect(() => playWin()).not.toThrow();
+  });
+
+  it('returns no-op functions when prefers-reduced-motion is set', () => {
+    const { playTick, playWin } = createSpinWheelAudio(makeWin({ reducedMotion: true }));
+    expect(() => playTick()).not.toThrow();
+    expect(() => playWin()).not.toThrow();
+  });
+
+  it('returns no-op functions when AudioContext is unavailable', () => {
+    const { playTick, playWin } = createSpinWheelAudio(makeWin());
+    expect(() => playTick()).not.toThrow();
+    expect(() => playWin()).not.toThrow();
+  });
+
+  it('returns playTick and playWin functions when AudioContext is available and reduced motion is off', () => {
+    const mockOsc = {
+      connect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      frequency: { value: 0 },
+      type: '',
+    };
+    const mockGain = {
+      connect: vi.fn(),
+      gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
+    };
+    const mockCtx = {
+      createOscillator: vi.fn(() => mockOsc),
+      createGain: vi.fn(() => mockGain),
+      destination: {},
+      currentTime: 0,
+    };
+    const AudioContextMock = vi.fn(function() { return mockCtx; });
+    const { playTick, playWin } = createSpinWheelAudio(makeWin({ AudioContext: AudioContextMock }));
+    playTick();
+    expect(mockCtx.createOscillator).toHaveBeenCalled();
+    expect(mockOsc.frequency.value).toBe(800);
+    playWin();
+    expect(mockOsc.frequency.value).toBe(1200);
+  });
+
+  it('AudioContext is created lazily — not before first play call', () => {
+    const AudioContextSpy = vi.fn(function() {
+      return {
+        createOscillator: vi.fn(function() {
+          return { connect: vi.fn(), start: vi.fn(), stop: vi.fn(), frequency: { value: 0 }, type: '' };
+        }),
+        createGain: vi.fn(function() {
+          return { connect: vi.fn(), gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() } };
+        }),
+        destination: {},
+        currentTime: 0,
+      };
+    });
+    createSpinWheelAudio(makeWin({ AudioContext: AudioContextSpy })); // must NOT call new AudioContext yet
+    expect(AudioContextSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ── buildShareCard ────────────────────────────────────────────────────
+
+describe('buildShareCard', () => {
+  it('returns an SVG string for a POINTS prize', () => {
+    const svg = buildShareCard({ prize: '', prizeType: 'POINTS', pointsAwarded: 150 });
+    expect(svg).toMatch(/^<svg/);
+    expect(svg).toContain('150');
+    expect(svg).toContain('Carolina Futons');
+  });
+
+  it('returns an SVG string for a non-points prize', () => {
+    const svg = buildShareCard({ prize: 'Free Shipping', prizeType: 'FREE_SHIP' });
+    expect(svg).toContain('Free Shipping');
+    expect(svg).toContain('I won');
+  });
+
+  it('handles missing result fields gracefully', () => {
+    const svg = buildShareCard({});
+    expect(svg).toMatch(/^<svg/);
+    expect(svg).toContain('a prize');
+  });
+
+  it('handles undefined argument gracefully', () => {
+    expect(() => buildShareCard()).not.toThrow();
+  });
+
+  it('escapes unsafe characters in prize name (XSS guard)', () => {
+    const svg = buildShareCard({ prize: '<script>alert(1)</script>', prizeType: 'SWATCH' });
+    expect(svg).not.toContain('<script>');
+    expect(svg).toContain('&lt;script&gt;');
+  });
+
+  it('escapes ampersands in prize name', () => {
+    const svg = buildShareCard({ prize: 'Pillow & Blanket', prizeType: 'SWATCH' });
+    expect(svg).toContain('Pillow &amp; Blanket');
+  });
+
+  it('includes brand URL in share card', () => {
+    const svg = buildShareCard({ prize: 'Free Swatch', prizeType: 'SWATCH' });
+    expect(svg).toContain('carolinafutons.com');
+  });
+
+  it('includes aria-label for accessibility', () => {
+    const svg = buildShareCard({ prize: 'x', prizeType: 'FREE_SHIP' });
+    expect(svg).toContain('aria-label');
   });
 });
