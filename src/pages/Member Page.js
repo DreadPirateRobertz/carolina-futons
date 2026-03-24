@@ -37,7 +37,6 @@ import {
   shouldShowStreakChip,
   updateStreakDisplay,
 } from 'public/StreakDisplay.js';
-import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
 
 let currentMember = null;
 let wishlistData = [];
