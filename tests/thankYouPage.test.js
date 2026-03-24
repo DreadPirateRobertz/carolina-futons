@@ -125,6 +125,9 @@ import { makeClickable } from 'public/a11yHelpers';
 import { limitForViewport } from 'public/mobileHelpers';
 import { getReferralLink } from 'backend/referralService.web';
 import { submitReview } from 'backend/reviewsService.web';
+import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
+import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
+import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 
 // Mock data defined after imports (vi.mock factories are hoisted above const)
 const mockFeaturedProducts = [futonFrame, wallHuggerFrame, futonMattress];
@@ -203,6 +206,17 @@ vi.mock('wix-location-frontend', () => ({
 }));
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+vi.mock('public/PostPurchaseReveal.js', () => ({
+  initPostPurchaseReveal: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn().mockResolvedValue({
+    tier: 'Trail Blazer', points: 450, progress: 90, pointsToNext: 50, nextTier: 'Mountain Guide',
+  }),
+}));
+vi.mock('backend/zipLeaderboard.web', () => ({
+  getZipLeaderboard: vi.fn().mockResolvedValue({ myRank: 8, zipPrefix: '287' }),
+}));
 
 // ── Import Page ─────────────────────────────────────────────────────
 
@@ -231,6 +245,9 @@ describe('Thank You Page', () => {
     getReferralLink.mockResolvedValue({ success: true, referralCode: 'ABC12345' });
     submitReview.mockResolvedValue({ success: true, reviewId: 'rev-001' });
     globalThis.sessionStorage.getItem.mockReturnValue(null);
+    initPostPurchaseReveal.mockResolvedValue(undefined);
+    getMyLoyaltyAccount.mockResolvedValue({ tier: 'Trail Blazer', points: 450, progress: 90, pointsToNext: 50, nextTier: 'Mountain Guide' });
+    getZipLeaderboard.mockResolvedValue({ myRank: 8, zipPrefix: '287' });
   });
 
   // ── Order Summary ─────────────────────────────────────────────
@@ -1028,6 +1045,35 @@ describe('Thank You Page', () => {
       expect(submitTestimonial).toHaveBeenCalledWith(expect.objectContaining({
         name: undefined,
       }));
+    });
+  });
+
+  // ── PostPurchaseReveal wiring ──────────────────────────────────
+
+  describe('PostPurchaseReveal section', () => {
+    it('calls initPostPurchaseReveal during page init', async () => {
+      await onReadyHandler();
+      expect(initPostPurchaseReveal).toHaveBeenCalledTimes(1);
+    });
+
+    it('passes the global $w selector as first argument', async () => {
+      await onReadyHandler();
+      expect(initPostPurchaseReveal.mock.calls[0][0]).toBe(globalThis.$w);
+    });
+
+    it('passes orderTotal from context and service callbacks in opts', async () => {
+      await onReadyHandler();
+      const [, opts] = initPostPurchaseReveal.mock.calls[0];
+      expect(opts.orderTotal).toBe(mockOrderContext.total);
+      expect(opts.getLoyaltyAccount).toBe(getMyLoyaltyAccount);
+      expect(opts.getLeaderboard).toBe(getZipLeaderboard);
+    });
+
+    it('does not block other sections if initPostPurchaseReveal throws', async () => {
+      initPostPurchaseReveal.mockRejectedValueOnce(new Error('reveal error'));
+      await onReadyHandler();
+      // allSettled — page title still renders even when reveal section rejects
+      expect(getEl('#thankYouTitle').text).toBe('Thank You for Your Order!');
     });
   });
 
