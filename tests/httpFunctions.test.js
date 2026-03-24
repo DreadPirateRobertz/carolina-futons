@@ -1761,3 +1761,153 @@ describe('get_leaderboard', () => {
     expect(result.status).toBe(429);
   });
 });
+
+// ── GET /_functions/leaderboard?type=points|streak (public) ───────────────────
+
+const makePublicLeaderboardRequest = ({ type, limit } = {}) => {
+  const query = {};
+  if (type !== undefined) query.type = type;
+  if (limit !== undefined) query.limit = String(limit);
+  return { query };
+};
+
+const POINTS_MEMBERS = [
+  { _id: 'mp-1', memberId: 'mem-1', displayName: 'Alice', totalPoints: 500, currentStreakDays: 7, tier: 'silver' },
+  { _id: 'mp-2', memberId: 'mem-2', displayName: 'Bob',   totalPoints: 300, currentStreakDays: 3, tier: 'bronze' },
+  { _id: 'mp-3', memberId: 'mem-3', displayName: 'Carol', totalPoints: 100, currentStreakDays: 12, tier: 'bronze' },
+];
+
+describe('get_leaderboard — public (type=points)', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    __seed('MemberPoints', POINTS_MEMBERS);
+    __seed('LeaderboardPublicRateLimit', []); // fresh rate limit bucket each test
+  });
+
+  it('returns 200 with members array sorted by totalPoints descending', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.type).toBe('points');
+    expect(body.members).toHaveLength(3);
+    expect(body.members[0].totalPoints).toBeGreaterThanOrEqual(body.members[1].totalPoints);
+    expect(body.members[1].totalPoints).toBeGreaterThanOrEqual(body.members[2].totalPoints);
+  });
+
+  it('returns all required fields per member', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    const { members } = JSON.parse(result.body);
+    const m = members[0];
+    expect(m).toHaveProperty('memberId');
+    expect(m).toHaveProperty('displayName');
+    expect(m).toHaveProperty('totalPoints');
+    expect(m).toHaveProperty('currentStreakDays');
+    expect(m).toHaveProperty('tier');
+    expect(m).toHaveProperty('badgeId');
+  });
+
+  it('includes badgeId from MemberBadges (latest per member)', async () => {
+    __seed('MemberBadges', [
+      { _id: 'b-1', memberId: 'mem-1', badgeId: 'week_wanderer', _createdDate: new Date('2026-01-01') },
+      { _id: 'b-2', memberId: 'mem-1', badgeId: 'top_reviewer',  _createdDate: new Date('2026-02-01') },
+    ]);
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    const { members } = JSON.parse(result.body);
+    const alice = members.find(m => m.memberId === 'mem-1');
+    expect(alice.badgeId).toBe('top_reviewer');
+  });
+
+  it('sets badgeId to null when member has no badge', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    const { members } = JSON.parse(result.body);
+    expect(members[0].badgeId).toBeNull();
+  });
+
+  it('uses suppressAuth: true for MemberPoints query', async () => {
+    await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(__getLastFindOptions('MemberPoints')).toEqual({ suppressAuth: true });
+  });
+
+  it('respects limit param', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points', limit: 2 }));
+    const { members, limit } = JSON.parse(result.body);
+    expect(members).toHaveLength(2);
+    expect(limit).toBe(2);
+  });
+
+  it('returns 400 for limit > 50', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points', limit: 51 }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/limit/i);
+  });
+
+  it('returns 400 for invalid type', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'invalid' }));
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/type/i);
+  });
+
+  it('does not require authentication (no member set)', async () => {
+    // resetMembers() already called in beforeEach — no member set
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(200);
+  });
+
+  it('returns 500 on MemberPoints query error', async () => {
+    const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setQueryError('MemberPoints', new Error('DB failure'));
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(500);
+  });
+
+  it('uses suppressAuth: true for MemberBadges query', async () => {
+    __seed('MemberBadges', [
+      { _id: 'b-1', memberId: 'mem-1', badgeId: 'explorer', _createdDate: new Date() },
+    ]);
+    await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(__getLastFindOptions('MemberBadges')).toEqual({ suppressAuth: true });
+  });
+
+  it('returns Cache-Control: public, max-age=60 on successful response', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(200);
+    expect(result.headers['Cache-Control']).toBe('public, max-age=60');
+  });
+
+  it('returns 429 when global rate limit is exceeded (60 req/min)', async () => {
+    // Seed the rate limit bucket at max count within the window
+    __seed('LeaderboardPublicRateLimit', [{
+      _id: 'rl-global', key: 'global', count: 60,
+      windowStart: new Date(Date.now() - 30_000), // 30s ago — still in window
+    }]);
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(429);
+    expect(JSON.parse(result.body).error).toMatch(/rate limit/i);
+  });
+});
+
+describe('get_leaderboard — public (type=streak)', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+    __seed('MemberPoints', POINTS_MEMBERS);
+    __seed('LeaderboardPublicRateLimit', []);
+  });
+
+  it('returns 200 with members sorted by currentStreakDays descending', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'streak' }));
+    expect(result.status).toBe(200);
+    const { members, type } = JSON.parse(result.body);
+    expect(type).toBe('streak');
+    expect(members[0].currentStreakDays).toBeGreaterThanOrEqual(members[1].currentStreakDays);
+    expect(members[1].currentStreakDays).toBeGreaterThanOrEqual(members[2].currentStreakDays);
+  });
+
+  it('returns correct top member by streak', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'streak' }));
+    const { members } = JSON.parse(result.body);
+    // Carol has highest streak (12 days)
+    expect(members[0].memberId).toBe('mem-3');
+  });
+});
