@@ -31,6 +31,7 @@ import {
   __getInserted,
   __getUpdated,
   __setQueryError,
+  __setUpdateError,
 } from './__mocks__/wix-data.js';
 
 const memberMocks = vi.hoisted(() => ({ getMember: vi.fn() }));
@@ -132,7 +133,8 @@ describe('awardBadge — duplicate', () => {
       awardedAt: new Date(), notified: false,
     }]);
     await awardBadge('mem-1', 'streak_7');
-    expect(__getUpdated('MemberBadges')).toHaveLength(0);
+    // Store should still have exactly 1 item (the seeded one; no second insert)
+    expect(__getInserted('MemberBadges')).toHaveLength(1);
   });
 });
 
@@ -260,9 +262,20 @@ describe('markBadgeNotified', () => {
     expect(result.error).toBe('forbidden');
   });
 
-  it('returns error on DB failure', async () => {
+  it('returns error on query failure', async () => {
     __setQueryError('MemberBadges', new Error('Network error'));
     const result = await markBadgeNotified('mem-1', 'review_5');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('returns error on update failure (update path covered)', async () => {
+    __seed('MemberBadges', [{
+      _id: 'mb-upd', memberId: 'mem-1', badgeId: 'streak_30',
+      awardedAt: new Date(), notified: false,
+    }]);
+    __setUpdateError('MemberBadges', new Error('Update failed'));
+    const result = await markBadgeNotified('mem-1', 'streak_30');
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });

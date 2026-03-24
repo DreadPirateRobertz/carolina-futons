@@ -90,6 +90,11 @@ export const awardBadge = webMethod(
 
       return { awarded: true, badge };
     } catch (err) {
+      // Composite unique index on (memberId, badgeId) in CMS may throw a
+      // duplicate-key error under concurrent requests. Treat as alreadyAwarded.
+      if (err?.message?.includes('duplicate key')) {
+        return { alreadyAwarded: true };
+      }
       console.error('[achievementBadgeService] awardBadge failed:', err);
       return { success: false, error: 'Unable to award badge' };
     }
@@ -111,6 +116,8 @@ const GET_BADGES_LIMIT = 100;
 export const getMemberBadges = webMethod(
   Permissions.Anyone,
   async (memberId) => {
+    if (!memberId || typeof memberId !== 'string') return { badges: [] };
+
     try {
       const result = await wixData.query(COLLECTION)
         .eq('memberId', memberId)
