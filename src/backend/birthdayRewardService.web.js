@@ -154,6 +154,7 @@ export const checkAndSendBirthdayRewards = webMethod(
       profilesResult = await wixData
         .query('MemberProfiles')
         .isNotEmpty('birthdayMonth')
+        .isNotEmpty('birthdayDay')
         .limit(1000)
         .find();
     } catch (e) {

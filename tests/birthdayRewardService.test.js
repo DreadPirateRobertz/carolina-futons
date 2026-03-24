@@ -45,6 +45,8 @@ const TODAY_ET = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/New_York',
   year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(TODAY);
+// Year as seen by ET-aware services (checkAndSendBirthdayRewards, checkAndSendPurchaseAnniversaryRewards).
+const TODAY_ET_YEAR = Number(TODAY_ET.slice(0, 4));
 
 // Compute a firstPurchaseDate that is exactly N years before today (ET), as YYYY-MM-DD.
 function firstPurchaseNYearsAgo(n) {
@@ -157,7 +159,7 @@ describe('checkAndSendBirthdayRewards — deduplication', () => {
     expect(records.length).toBe(1);
     expect(records[0].memberId).toBe('mem-1');
     expect(records[0].rewardType).toBe('birthday');
-    expect(records[0].year).toBe(TODAY.getFullYear());
+    expect(records[0].year).toBe(TODAY_ET_YEAR);
   });
 
   it('skips member who already received birthday reward this year', async () => {
@@ -166,7 +168,7 @@ describe('checkAndSendBirthdayRewards — deduplication', () => {
       _id: 'ded-1',
       memberId: 'mem-1',
       rewardType: 'birthday',
-      year: TODAY.getFullYear(),
+      year: TODAY_ET_YEAR,
     }]);
     const result = await checkAndSendBirthdayRewards();
     expect(result.sent).toBe(0);
@@ -179,7 +181,7 @@ describe('checkAndSendBirthdayRewards — deduplication', () => {
       _id: 'ded-1',
       memberId: 'mem-1',
       rewardType: 'birthday',
-      year: TODAY.getFullYear() - 1,
+      year: TODAY_ET_YEAR - 1,
     }]);
     const result = await checkAndSendBirthdayRewards();
     expect(result.sent).toBe(1);
@@ -431,7 +433,7 @@ describe('checkAndSendPurchaseAnniversaryRewards — deduplication', () => {
       _id: 'ded-1',
       memberId: 'mem-1',
       rewardType: 'purchase_anniversary_1yr',
-      year: TODAY.getFullYear(),
+      year: TODAY_ET_YEAR,
     }]);
     const result = await checkAndSendPurchaseAnniversaryRewards();
     expect(result.sent).toBe(0);
@@ -442,6 +444,6 @@ describe('checkAndSendPurchaseAnniversaryRewards — deduplication', () => {
     await checkAndSendPurchaseAnniversaryRewards();
     const records = __getInserted('BirthdayRewards');
     expect(records[0].rewardType).toBe('purchase_anniversary_2yr');
-    expect(records[0].year).toBe(TODAY.getFullYear());
+    expect(records[0].year).toBe(TODAY_ET_YEAR);
   });
 });

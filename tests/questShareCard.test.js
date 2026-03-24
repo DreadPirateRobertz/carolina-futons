@@ -133,6 +133,12 @@ describe('shareQuestCompletion', () => {
     const result = await shareQuestCompletion({ questName: QUEST, navigator: {}, clipboard: null });
     expect(result).toBe('unavailable');
   });
+
+  it('returns "unavailable" when clipboard.writeText rejects', async () => {
+    const clip = { writeText: vi.fn().mockRejectedValue(new Error('NotAllowedError')) };
+    const result = await shareQuestCompletion({ questName: QUEST, navigator: {}, clipboard: clip });
+    expect(result).toBe('unavailable');
+  });
 });
 
 // ── showQuestShareCard ───────────────────────────────────────────────────────
