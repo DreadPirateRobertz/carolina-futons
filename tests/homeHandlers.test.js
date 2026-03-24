@@ -259,13 +259,13 @@ describe('Home page onReady', () => {
     expect(seo.critical).toBe(false);
   });
 
-  it('has exactly 3 critical and 16 deferred sections', async () => {
+  it('has exactly 3 critical and 17 deferred sections', async () => {
     await onReadyHandler();
     const sections = prioritizeSections.mock.calls[0][0];
     const critical = sections.filter(s => s.critical);
     const deferred = sections.filter(s => !s.critical);
     expect(critical).toHaveLength(3);
-    expect(deferred).toHaveLength(16);
+    expect(deferred).toHaveLength(17);
   });
 
   it('every section has a name and init function', async () => {

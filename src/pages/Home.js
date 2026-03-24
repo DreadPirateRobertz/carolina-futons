@@ -81,6 +81,10 @@ $w.onReady(async function () {
     { name: 'ridgeline', init: initRidgelineHeader, critical: false },
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
     { name: 'homeSeo', init: () => initPageSeo('home'), critical: false },
+    { name: 'gamificationTour', init: async () => {
+        const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
+        await initGamificationTourOverlay();
+      }, critical: false },
   ];
 
   const { critical: criticalResults } = await prioritizeSections(sections, {
