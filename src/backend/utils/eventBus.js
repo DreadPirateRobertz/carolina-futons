@@ -40,10 +40,10 @@ export function validateIncomingEvent(body) {
 
 /**
  * Log an event to EventTraceLog. Idempotent — skips insert if eventId already recorded.
- * @param {{ eventId, traceId, event, ts, status }} params
+ * @param {{ eventId, traceId, event, userId, source, ts, status }} params
  * @returns {Promise<void>}
  */
-export async function logEventTrace({ eventId, traceId, event, ts, status }) {
+export async function logEventTrace({ eventId, traceId, event, userId, source, ts, status }) {
   // Idempotency check: skip if this eventId was already recorded
   const existing = await wixData
     .query(EVENT_TRACE_COLLECTION)
@@ -54,7 +54,7 @@ export async function logEventTrace({ eventId, traceId, event, ts, status }) {
 
   await wixData.insert(
     EVENT_TRACE_COLLECTION,
-    { _id: eventId, eventId, traceId, event, ts: ts || Math.floor(Date.now() / 1000), status },
+    { _id: eventId, eventId, traceId, event, userId: userId || null, source: source || null, ts: ts || Math.floor(Date.now() / 1000), status },
     { suppressAuth: true }
   );
 }

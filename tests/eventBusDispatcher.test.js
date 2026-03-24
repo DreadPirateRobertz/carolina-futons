@@ -73,4 +73,17 @@ describe('dispatchBusEvent', () => {
 
     await expect(dispatchBusEvent({ event: 'challenge_completed', userId: 'mem-1' })).resolves.toBeUndefined();
   });
+
+  it('does not dispatch unknown event types (OUTBOUND_EVENTS guard)', async () => {
+    __setSecrets({
+      MOBILE_BUS_URL: 'https://mobile.example.com/bus',
+      BUS_SECRET: 'secret-123',
+    });
+    let dispatched = false;
+    __setHandler(() => { dispatched = true; return { ok: true, status: 200 }; });
+
+    await dispatchBusEvent({ event: 'unknown_event', userId: 'mem-1' });
+
+    expect(dispatched).toBe(false);
+  });
 });

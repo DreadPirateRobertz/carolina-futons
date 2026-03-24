@@ -5,7 +5,7 @@
  * CF-44r
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { post_busEvent } from '../src/backend/http-functions.js';
 
@@ -159,5 +159,42 @@ describe('post_busEvent — EventTraceLog deduplication', () => {
     // No additional insert — still just the seeded 1
     const logs = __getInserted('EventTraceLog');
     expect(logs).toHaveLength(1);
+  });
+});
+
+// ── EventTraceLog includes userId and source (review fix) ─────────────────────
+
+describe('post_busEvent — EventTraceLog captures userId and source', () => {
+  it('stores userId and source from body in the trace log', async () => {
+    const body = validBody({ userId: 'mem-trace-1', source: 'mobile' });
+    const result = await post_busEvent(makeRequest(body));
+    expect(result.status).toBe(200);
+
+    const logs = __getInserted('EventTraceLog');
+    expect(logs).toHaveLength(1);
+    expect(logs[0].userId).toBe('mem-trace-1');
+    expect(logs[0].source).toBe('mobile');
+  });
+});
+
+// ── Rate limiting (review fix) ────────────────────────────────────────────────
+
+describe('post_busEvent — rate limiting', () => {
+  it('returns 429 after exceeding 30 requests per minute from the same userId', async () => {
+    // Seed the rate limit collection as if the window is already maxed out
+    __seed('BusEventRateLimit', [{
+      _id: 'rl-1',
+      key: 'mem-rl-1',
+      count: 30,
+      windowStart: new Date(Date.now() - 1000), // within the window
+    }]);
+
+    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-1' })));
+    expect(result.status).toBe(429);
+  });
+
+  it('allows requests when under the rate limit', async () => {
+    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-2' })));
+    expect(result.status).toBe(200);
   });
 });

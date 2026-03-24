@@ -2164,8 +2164,10 @@ export async function get_badges(request) {
 // ── Cross-Rig Event Bus — Inbound (Mobile → Web) ───────────────────────────────
 // URL: POST https://www.carolinafutons.com/_functions/busEvent
 // Authenticated via x-bus-secret header (stored in Wix Secrets as BUS_SECRET).
+// Secret read and comparison happen atomically in the same request — no TOCTOU risk.
 // Handles mobile→web events: streak_extended, challenge_started, redemption_initiated.
 // All events are idempotently logged to EventTraceLog via eventId as _id.
+// Rate-limited per userId (BusEventRateLimit collection): 30 req/min.
 //
 // Schema: { eventId, schemaVersion: '1.0', traceId, event, userId, source, ts, ...extras }
 
@@ -2177,11 +2179,11 @@ export async function post_busEvent(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const json = (obj) => JSON.stringify(obj);
 
-  // 1. Authenticate via shared secret
+  // 1. Authenticate via shared secret (timing-safe comparison)
   try {
     const expectedSecret = await getSecret('BUS_SECRET');
     const providedSecret = request.headers?.['x-bus-secret'];
-    if (!providedSecret || providedSecret !== expectedSecret) {
+    if (!providedSecret || !expectedSecret || !timingSafeEqual(providedSecret, expectedSecret)) {
       return forbidden({ body: json({ error: 'Forbidden — invalid bus secret' }), headers: JSON_HEADERS });
     }
   } catch (_) {
@@ -2202,12 +2204,25 @@ export async function post_busEvent(request) {
     return badRequest({ body: json({ error: validationError }), headers: JSON_HEADERS });
   }
 
-  // 4. Log to EventTraceLog (idempotent — skips on duplicate eventId)
+  // 4. Rate limit per userId (30 req/min)
+  try {
+    const { checkRateLimit } = await import('backend/utils/rateLimit');
+    const rlResult = await checkRateLimit('BusEventRateLimit', body.userId, { max: 30, windowMs: 60_000 });
+    if (!rlResult.allowed) {
+      return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: JSON_HEADERS });
+    }
+  } catch (_) {
+    // Rate limit check failure is non-fatal — allow through
+  }
+
+  // 5. Log to EventTraceLog (idempotent — skips on duplicate eventId)
   try {
     await logEventTrace({
       eventId: body.eventId,
       traceId: body.traceId || null,
       event: body.event,
+      userId: body.userId || null,
+      source: body.source || null,
       ts: body.ts || null,
       status: 'received',
     });

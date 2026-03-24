@@ -5,7 +5,7 @@
  */
 import { fetch } from 'wix-fetch';
 import { getSecret } from 'wix-secrets-backend';
-import { BUS_SCHEMA_VERSION } from 'backend/utils/eventBus';
+import { BUS_SCHEMA_VERSION, OUTBOUND_EVENTS } from 'backend/utils/eventBus';
 
 /**
  * Dispatch a web→mobile bus event to the mobile endpoint.
@@ -15,6 +15,9 @@ import { BUS_SCHEMA_VERSION } from 'backend/utils/eventBus';
  * @returns {Promise<void>}
  */
 export async function dispatchBusEvent({ event, userId, delta, newTotal, ...extras }) {
+  // Guard: only dispatch known outbound events
+  if (!OUTBOUND_EVENTS.has(event)) return;
+
   let mobileUrl, busSecret;
   try {
     mobileUrl = await getSecret('MOBILE_BUS_URL');

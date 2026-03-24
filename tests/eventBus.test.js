@@ -80,6 +80,13 @@ describe('logEventTrace', () => {
     expect(logs[0]._id).toBe('evt-t1');
   });
 
+  it('stores userId and source when provided', async () => {
+    await logEventTrace({ eventId: 'evt-t2', traceId: 'trace_z', event: 'streak_extended', userId: 'mem-9', source: 'mobile', ts: 1, status: 'received' });
+    const logs = __getInserted('EventTraceLog');
+    expect(logs[0].userId).toBe('mem-9');
+    expect(logs[0].source).toBe('mobile');
+  });
+
   it('skips insert when eventId already exists (idempotent)', async () => {
     __seed('EventTraceLog', [{ _id: 'evt-dup', eventId: 'evt-dup', event: 'streak_extended', status: 'received' }]);
     await logEventTrace({ eventId: 'evt-dup', traceId: 'trace_y', event: 'streak_extended', ts: 1, status: 'received' });
