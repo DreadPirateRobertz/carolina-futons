@@ -10,6 +10,11 @@
  * CF-hard-ratelimit / cf-20v
  */
 
+// NOTE: checkGamificationRateLimit uses a read-then-write pattern (not atomic).
+// Two concurrent requests for the same userId:actionType can both pass when count = max-1.
+// Accepted risk for this deployment: Wix serverless concurrency is low, and the fail-open
+// design means a worst-case double-award is bounded by the daily cap (500/day).
+
 import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Action-type limits ────────────────────────────────────────────────────────
