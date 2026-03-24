@@ -125,6 +125,9 @@ import { makeClickable } from 'public/a11yHelpers';
 import { limitForViewport } from 'public/mobileHelpers';
 import { getReferralLink } from 'backend/referralService.web';
 import { submitReview } from 'backend/reviewsService.web';
+import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
+import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
+import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 
 // Mock data defined after imports (vi.mock factories are hoisted above const)
 const mockFeaturedProducts = [futonFrame, wallHuggerFrame, futonMattress];
@@ -203,6 +206,15 @@ vi.mock('wix-location-frontend', () => ({
 }));
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+vi.mock('public/PostPurchaseReveal.js', () => ({
+  initPostPurchaseReveal: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn().mockResolvedValue({ tier: 'Trail Blazer', points: 450, progress: 90, pointsToNext: 50, nextTier: 'Mountain Guide' }),
+}));
+vi.mock('backend/zipLeaderboard.web', () => ({
+  getZipLeaderboard: vi.fn().mockResolvedValue({ myRank: 8, zipPrefix: '287' }),
+}));
 
 // ── Import Page ─────────────────────────────────────────────────────
 
@@ -1028,6 +1040,38 @@ describe('Thank You Page', () => {
       expect(submitTestimonial).toHaveBeenCalledWith(expect.objectContaining({
         name: undefined,
       }));
+    });
+  });
+
+  // ── PostPurchaseReveal wiring ──────────────────────────────────
+
+  describe('PostPurchaseReveal section', () => {
+    it('calls initPostPurchaseReveal during page init', async () => {
+      await onReadyHandler();
+      expect(initPostPurchaseReveal).toHaveBeenCalledTimes(1);
+    });
+
+    it('passes $w as first argument', async () => {
+      await onReadyHandler();
+      expect(initPostPurchaseReveal).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Object)
+      );
+    });
+
+    it('passes orderTotal from context and service callbacks in opts', async () => {
+      await onReadyHandler();
+      const [, opts] = initPostPurchaseReveal.mock.calls[0];
+      expect(opts.orderTotal).toBe(mockOrderContext.total);
+      expect(opts.getLoyaltyAccount).toBe(getMyLoyaltyAccount);
+      expect(opts.getLeaderboard).toBe(getZipLeaderboard);
+    });
+
+    it('does not block other sections if initPostPurchaseReveal throws', async () => {
+      initPostPurchaseReveal.mockRejectedValueOnce(new Error('reveal error'));
+      await onReadyHandler();
+      // allSettled — order summary still initializes
+      expect(getEl('#thankYouTitle').text).toBe('Thank You for Your Order!');
     });
   });
 
