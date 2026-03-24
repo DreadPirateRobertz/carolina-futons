@@ -492,7 +492,7 @@ export async function sendChallengeReminder(memberId, message) {
   try {
     await writeNotification(memberId, 'challenge_reminder', message);
   } catch (err) {
-    console.error('[notificationService] sendChallengeReminder writeNotification failed:', err);
+    logError('[notificationService] sendChallengeReminder writeNotification failed', err);
   }
 }
 
