@@ -13,17 +13,6 @@
  */
 
 /**
- * Build the badge text from count + points.
- * @param {number} count
- * @param {number} points
- * @param {boolean} isNational
- * @returns {string}
- */
-function buildBadgeText(count, points) {
-  return `${count} members competing nearby — earn ${points} points on this purchase`;
-}
-
-/**
  * Initialize the PDP social proof badge.
  *
  * @param {Function} $w - Wix element selector
@@ -34,9 +23,13 @@ function buildBadgeText(count, points) {
 export async function initPDPSocialProofBadge($w, state, getNeighborCountFn, opts = {}) {
   const badge = $w('#socialProofBadge');
 
+  function hideBadge() {
+    try { badge.hide(); } catch (e) { console.warn('[PDPSocialProofBadge] badge.hide failed:', e); }
+  }
+
   // Guard: no product loaded
   if (!state?.product) {
-    try { badge.hide(); } catch (e) {}
+    hideBadge();
     return;
   }
 
@@ -45,21 +38,19 @@ export async function initPDPSocialProofBadge($w, state, getNeighborCountFn, opt
 
   try {
     const result = await getNeighborCountFn(zipPrefix);
-    const { count, isNational } = result;
 
-    if (!count || count <= 0) {
-      try { badge.hide(); } catch (e) {}
+    // Guard malformed or error result — don't show badge on DB failures
+    if (!result || typeof result.count !== 'number' || result.error || result.count <= 0) {
+      hideBadge();
       return;
     }
 
-    const text = buildBadgeText(count, points);
+    const text = `${result.count} Charlotte members competing — earn ${points} points on this purchase`;
     badge.text = text;
-    try {
-      badge.accessibility.ariaLabel = text;
-    } catch (e) {}
+    try { badge.accessibility.ariaLabel = text; } catch (e) {}
     badge.show();
   } catch (err) {
     console.warn('[PDPSocialProofBadge] Failed to load neighbor count:', err);
-    try { badge.hide(); } catch (e) {}
+    hideBadge();
   }
 }

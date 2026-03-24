@@ -7,6 +7,9 @@
  *
  * Consumed by PDPSocialProofBadge.js to render:
  *   "X Charlotte members competing — earn N points on this purchase"
+ *
+ * Error shape: { count: 0, zipPrefix: null, isNational: true, error: true }
+ * Callers can check result.error to distinguish DB failure from a real empty result.
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -27,7 +30,7 @@ function normalizeZipPrefix(raw) {
  * Falls back to national count when zipPrefix is null/invalid.
  *
  * @param {string|null} rawZipPrefix - 3-digit ZIP prefix from client (URL param)
- * @returns {Promise<{ count: number, zipPrefix: string|null, isNational: boolean }>}
+ * @returns {Promise<{ count: number, zipPrefix: string|null, isNational: boolean, error?: true }>}
  */
 export const getNeighborCount = webMethod(
   Permissions.Anyone,
@@ -47,12 +50,12 @@ export const getNeighborCount = webMethod(
 
       return {
         count,
-        zipPrefix: zipPrefix ?? null,
+        zipPrefix,
         isNational: !zipPrefix,
       };
     } catch (err) {
       console.error('[socialProofBadge] getNeighborCount failed:', err);
-      return { count: 0, zipPrefix: null, isNational: true };
+      return { count: 0, zipPrefix: null, isNational: true, error: true };
     }
   }
 );

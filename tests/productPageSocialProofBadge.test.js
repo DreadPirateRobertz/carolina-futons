@@ -157,12 +157,14 @@ beforeEach(() => {
 
 describe('Product Page — social proof badge wiring', () => {
   it('calls initPDPSocialProofBadge when the page loads', async () => {
-    if (onReadyHandler) await onReadyHandler();
+    if (!onReadyHandler) throw new Error('Product Page $w.onReady handler was not registered — import failed');
+    await onReadyHandler();
     expect(mockInitPDPSocialProofBadge).toHaveBeenCalled();
   });
 
   it('passes $w, state, and getNeighborCount to initPDPSocialProofBadge', async () => {
-    if (onReadyHandler) await onReadyHandler();
+    if (!onReadyHandler) throw new Error('Product Page $w.onReady handler was not registered — import failed');
+    await onReadyHandler();
     const [_$w, stateArg, fnArg] = mockInitPDPSocialProofBadge.mock.calls[0];
     expect(typeof _$w).toBe('function');
     expect(stateArg).toHaveProperty('product');
@@ -170,7 +172,8 @@ describe('Product Page — social proof badge wiring', () => {
   });
 
   it('passes zipPrefix from URL query param to initPDPSocialProofBadge', async () => {
-    if (onReadyHandler) await onReadyHandler();
+    if (!onReadyHandler) throw new Error('Product Page $w.onReady handler was not registered — import failed');
+    await onReadyHandler();
     const [, , , opts] = mockInitPDPSocialProofBadge.mock.calls[0];
     expect(opts?.zipPrefix).toBe('282');
   });

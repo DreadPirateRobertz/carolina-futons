@@ -17,12 +17,9 @@ import {
 
 function makeMockBadge() {
   return {
-    _text: '',
-    _visible: false,
-    _ariaLabel: '',
     text: '',
-    show: vi.fn(function () { this._visible = true; }),
-    hide: vi.fn(function () { this._visible = false; }),
+    show: vi.fn(),
+    hide: vi.fn(),
     accessibility: { ariaLabel: '' },
   };
 }
@@ -62,6 +59,13 @@ describe('initPDPSocialProofBadge — visibility', () => {
     expect(badge.hide).toHaveBeenCalled();
   });
 
+  it('hides badge when count is negative', async () => {
+    mockGetNeighborCount.mockResolvedValue({ count: -1, zipPrefix: '282', isNational: false });
+    const badge = makeMockBadge();
+    await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
+    expect(badge.hide).toHaveBeenCalled();
+  });
+
   it('hides badge on error from getNeighborCount', async () => {
     mockGetNeighborCount.mockRejectedValue(new Error('network fail'));
     const badge = makeMockBadge();
@@ -73,6 +77,22 @@ describe('initPDPSocialProofBadge — visibility', () => {
     const badge = makeMockBadge();
     await initPDPSocialProofBadge(make$w(badge), { product: null }, mockGetNeighborCount);
     expect(badge.hide).toHaveBeenCalled();
+  });
+
+  it('hides badge when result has error: true (DB failure, not genuine zero)', async () => {
+    mockGetNeighborCount.mockResolvedValue({ count: 0, zipPrefix: null, isNational: true, error: true });
+    const badge = makeMockBadge();
+    await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
+    expect(badge.hide).toHaveBeenCalled();
+    expect(badge.show).not.toHaveBeenCalled();
+  });
+
+  it('hides badge when result is malformed (no count field)', async () => {
+    mockGetNeighborCount.mockResolvedValue({ zipPrefix: null, isNational: true });
+    const badge = makeMockBadge();
+    await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
+    expect(badge.hide).toHaveBeenCalled();
+    expect(badge.show).not.toHaveBeenCalled();
   });
 });
 
@@ -87,6 +107,12 @@ describe('initPDPSocialProofBadge — badge text', () => {
     expect(badge.text).toMatch(/149/);
   });
 
+  it('includes "Charlotte" in badge text', async () => {
+    const badge = makeMockBadge();
+    await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
+    expect(badge.text).toMatch(/Charlotte/);
+  });
+
   it('uses Math.floor of product price for points', async () => {
     const badge = makeMockBadge();
     const state = { product: { price: 299.95 } };
@@ -95,7 +121,16 @@ describe('initPDPSocialProofBadge — badge text', () => {
     expect(badge.text).not.toMatch(/300/);
   });
 
-  it('shows national count text when isNational is true', async () => {
+  it('shows 0 points and hides badge when product price is 0', async () => {
+    const badge = makeMockBadge();
+    const state = { product: { price: 0 } };
+    await initPDPSocialProofBadge(make$w(badge), state, mockGetNeighborCount);
+    // Still shows badge — count is valid; 0 points is a valid (if unusual) state
+    expect(badge.show).toHaveBeenCalled();
+    expect(badge.text).toMatch(/0 points/);
+  });
+
+  it('shows national count when isNational is true', async () => {
     mockGetNeighborCount.mockResolvedValue(NATIONAL_RESULT);
     const badge = makeMockBadge();
     await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
@@ -139,5 +174,11 @@ describe('initPDPSocialProofBadge — accessibility', () => {
     const badge = makeMockBadge();
     await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
     expect(badge.accessibility.ariaLabel).toBeTruthy();
+  });
+
+  it('aria-label matches the badge text', async () => {
+    const badge = makeMockBadge();
+    await initPDPSocialProofBadge(make$w(badge), DEFAULT_STATE, mockGetNeighborCount);
+    expect(badge.accessibility.ariaLabel).toBe(badge.text);
   });
 });

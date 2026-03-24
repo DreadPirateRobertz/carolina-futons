@@ -139,10 +139,12 @@ describe('getNeighborCount — suppressAuth', () => {
 // ── Error handling ────────────────────────────────────────────────────────────
 
 describe('getNeighborCount — error handling', () => {
-  it('returns { count: 0, isNational: true } gracefully on DB error', async () => {
+  it('returns { count: 0, isNational: true, error: true } gracefully on DB error', async () => {
     __setQueryError('MemberPoints', new Error('DB down'));
     const result = await getNeighborCount('282');
     expect(result.count).toBe(0);
     expect(result.isNational).toBe(true);
+    // error: true distinguishes DB failure from a real zero-member result
+    expect(result.error).toBe(true);
   });
 });
