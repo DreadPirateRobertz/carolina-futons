@@ -593,3 +593,49 @@ export const getReferralStats = webMethod(
     }
   }
 );
+
+const SITE_URL = 'https://www.carolinafutons.com';
+
+/**
+ * Returns the referral link and completed-referral count for the given member.
+ * Combines getReferralLink and getReferralStats into a single call for the
+ * member dashboard ReferralWidget.
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ referralUrl: string, completedReferrals: number } | { error: string }>}
+ */
+export const getReferralStatus = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member || !member._id) return { error: 'auth_required' };
+      if (member._id !== memberId) return { error: 'forbidden' };
+
+      // Fetch referral code (create if needed) and completed count in parallel
+      const [linkResult, statsResult] = await Promise.allSettled([
+        getReferralLink(),
+        getReferralStats(),
+      ]);
+
+      const referralCode =
+        linkResult.status === 'fulfilled' && linkResult.value.success
+          ? linkResult.value.referralCode
+          : null;
+
+      const completedReferrals =
+        statsResult.status === 'fulfilled' && statsResult.value.success
+          ? statsResult.value.stats.completedReferrals
+          : 0;
+
+      const referralUrl = referralCode
+        ? `${SITE_URL}/shop?ref=${referralCode}`
+        : `${SITE_URL}/shop`;
+
+      return { referralUrl, completedReferrals };
+    } catch (err) {
+      console.error('[referralService] getReferralStatus failed:', err);
+      return { error: 'Unable to load referral status' };
+    }
+  }
+);
