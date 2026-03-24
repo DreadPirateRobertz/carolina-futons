@@ -107,6 +107,13 @@ function createQueryBuilder(collection) {
       });
       return builder;
     },
+    startsWith(field, value) {
+      filters.push(item => {
+        const v = getField(item, field);
+        return typeof v === 'string' && v.startsWith(value);
+      });
+      return builder;
+    },
     or(subQuery1, subQuery2) {
       // .or() combines two sub-query builders — item passes if either matches
       const f1 = subQuery1 && subQuery1.__getFilters ? subQuery1.__getFilters() : [];
