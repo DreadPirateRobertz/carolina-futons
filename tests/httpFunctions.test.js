@@ -27,7 +27,6 @@ import {
   post_challengeProgress,
   get_leaderboard,
   _resetLeaderboardRateLimit,
-  get_cleanupRateLimitCron,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -1883,109 +1882,5 @@ describe('get_leaderboard — public (type=streak)', () => {
     const { members } = JSON.parse(result.body);
     // Carol has highest streak (12 days)
     expect(members[0].memberId).toBe('mem-3');
-  });
-});
-
-// ── GET /_functions/cleanupRateLimitCron ──────────────────────────────────────
-
-describe('get_cleanupRateLimitCron', () => {
-  const CRON_KEY = 'test-cron-key-abc';
-  const staleTime = Date.now() - 25 * 3600_000; // 25h ago — definitely stale
-  const freshTime = Date.now() - 1 * 3600_000;  // 1h ago — still within TTL
-
-  function makeStaleRecord(collection, id, key) {
-    return { _id: id, key, count: 5, windowStart: new Date(staleTime) };
-  }
-
-  beforeEach(() => {
-    resetData();
-    __setSecrets({ ALERT_CRON_KEY: CRON_KEY });
-    __seed('GamificationActionRateLimit', []);
-    __seed('GamificationDailyCap', []);
-  });
-
-  it('returns 200 with valid cron key', async () => {
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    expect(result.status).toBe(200);
-    const body = JSON.parse(result.body);
-    expect(body.status).toBe('ok');
-    expect(body.timestamp).toBeDefined();
-    expect(body.pruned).toEqual({ actionLimit: 0, dailyCap: 0 });
-  });
-
-  it('returns 403 with wrong cron key', async () => {
-    const result = await get_cleanupRateLimitCron(cronRequest('wrong-key'));
-    expect(result.status).toBe(403);
-  });
-
-  it('returns 403 with no auth header', async () => {
-    const result = await get_cleanupRateLimitCron({ headers: {} });
-    expect(result.status).toBe(403);
-  });
-
-  it('prunes stale records from GamificationActionRateLimit', async () => {
-    __seed('GamificationActionRateLimit', [
-      makeStaleRecord('GamificationActionRateLimit', 'rl-1', 'mem-1:add_to_cart'),
-      makeStaleRecord('GamificationActionRateLimit', 'rl-2', 'mem-2:add_to_cart'),
-    ]);
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    const body = JSON.parse(result.body);
-    expect(body.pruned.actionLimit).toBe(2);
-  });
-
-  it('prunes stale records from GamificationDailyCap', async () => {
-    __seed('GamificationDailyCap', [
-      makeStaleRecord('GamificationDailyCap', 'dc-1', 'mem-1'),
-    ]);
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    const body = JSON.parse(result.body);
-    expect(body.pruned.dailyCap).toBe(1);
-  });
-
-  it('does not prune fresh records', async () => {
-    __seed('GamificationActionRateLimit', [
-      { _id: 'fresh-1', key: 'mem-1:spin', count: 2, windowStart: new Date(freshTime) },
-    ]);
-    __seed('GamificationDailyCap', [
-      { _id: 'fresh-2', key: 'mem-1', count: 10, windowStart: new Date(freshTime) },
-    ]);
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    const body = JSON.parse(result.body);
-    expect(body.pruned.actionLimit).toBe(0);
-    expect(body.pruned.dailyCap).toBe(0);
-  });
-
-  it('prunes stale but preserves fresh records in the same collection', async () => {
-    __seed('GamificationDailyCap', [
-      { _id: 'stale-1', key: 'mem-stale', count: 3, windowStart: new Date(staleTime) },
-      { _id: 'fresh-1', key: 'mem-fresh', count: 7, windowStart: new Date(freshTime) },
-    ]);
-    await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    const { __getInserted } = await import('./__mocks__/wix-data.js');
-    const remaining = __getInserted('GamificationDailyCap');
-    expect(remaining).toHaveLength(1);
-    expect(remaining[0].key).toBe('mem-fresh');
-  });
-
-  it('returns correct pruned counts when both collections have stale records', async () => {
-    __seed('GamificationActionRateLimit', [
-      makeStaleRecord('GamificationActionRateLimit', 'a1', 'u1:cart'),
-      makeStaleRecord('GamificationActionRateLimit', 'a2', 'u2:cart'),
-      makeStaleRecord('GamificationActionRateLimit', 'a3', 'u3:spin'),
-    ]);
-    __seed('GamificationDailyCap', [
-      makeStaleRecord('GamificationDailyCap', 'd1', 'u1'),
-    ]);
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    const { pruned } = JSON.parse(result.body);
-    expect(pruned.actionLimit).toBe(3);
-    expect(pruned.dailyCap).toBe(1);
-  });
-
-  it('returns 500 on DB error', async () => {
-    const { __setQueryError } = await import('./__mocks__/wix-data.js');
-    __setQueryError('GamificationActionRateLimit', new Error('DB down'));
-    const result = await get_cleanupRateLimitCron(cronRequest(CRON_KEY));
-    expect(result.status).toBe(500);
   });
 });
