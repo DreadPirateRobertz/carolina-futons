@@ -100,6 +100,18 @@ describe('buildShareCardDataUrl', () => {
     const svg = decodeDataUrl(buildShareCardDataUrl({ badgeLabel: '', questName: 'Q', brand: 'Acme' }));
     expect(svg).toContain('Acme');
   });
+
+  it('treats undefined badgeLabel as empty string (s ?? branch)', () => {
+    const url = buildShareCardDataUrl({ questName: QUEST });
+    expect(url).toMatch(/^data:image\/svg\+xml;base64,/);
+  });
+
+  it('uses Buffer.from when btoa is unavailable', () => {
+    vi.stubGlobal('btoa', undefined);
+    const url = buildShareCardDataUrl({ badgeLabel: BADGE, questName: QUEST });
+    expect(url).toMatch(/^data:image\/svg\+xml;base64,/);
+    vi.unstubAllGlobals();
+  });
 });
 
 // ── shareQuestCompletion ─────────────────────────────────────────────────────
@@ -141,7 +153,7 @@ describe('shareQuestCompletion', () => {
   });
 
   it('returns "unavailable" when clipboard.writeText rejects', async () => {
-    const clip = { writeText: vi.fn().mockRejectedValue(new Error('NotAllowedError')) };
+    const clip = { writeText: vi.fn().mockRejectedValue('NotAllowedError') };
     const result = await shareQuestCompletion({ questName: QUEST, navigator: {}, clipboard: clip });
     expect(result).toBe('unavailable');
   });
@@ -211,5 +223,89 @@ describe('showQuestShareCard', () => {
     await showQuestShareCard({ $w, questName: QUEST });
     const svg = decodeDataUrl(imgEl.src);
     expect(svg).toContain('🏆');
+  });
+
+  it('logs when card.show throws', async () => {
+    card.show.mockImplementation(() => { throw 'Wix error'; });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE });
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] show failed:', 'Wix error');
+    warn.mockRestore();
+  });
+
+  it('logs when close button wiring throws', async () => {
+    closeBtn.onClick.mockImplementation(() => { throw 'onClick error'; });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE });
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] close button wiring failed:', 'onClick error');
+    warn.mockRestore();
+  });
+
+  it('logs when share button wiring throws', async () => {
+    shareBtn.onClick.mockImplementation(() => { throw 'onClick error'; });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE });
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] share button wiring failed:', 'onClick error');
+    warn.mockRestore();
+  });
+
+  it('still shows when image element is absent', async () => {
+    const $wNoImg = make$w(card, null, closeBtn, shareBtn);
+    await showQuestShareCard({ $w: $wNoImg, questName: QUEST, badgeLabel: BADGE });
+    expect(card.show).toHaveBeenCalledOnce();
+  });
+
+  it('uses globalThis.$w when $w not passed in opts', async () => {
+    vi.stubGlobal('$w', $w);
+    await showQuestShareCard({ questName: QUEST, badgeLabel: BADGE });
+    expect(card.show).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
+
+  it('share button logs unavailable outcome', async () => {
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE, navigator: {}, clipboard: null });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await shareBtn._handler();
+    expect(warn).toHaveBeenCalledWith(
+      '[QuestShareCard] share unavailable — neither Web Share API nor clipboard accessible'
+    );
+    warn.mockRestore();
+  });
+
+  it('logs and returns when $w throws getting card element', async () => {
+    const $wThrows = vi.fn(() => { throw 'DOM error'; });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await showQuestShareCard({ $w: $wThrows, questName: QUEST, badgeLabel: BADGE });
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] failed to get #questShareCard:', 'DOM error');
+    warn.mockRestore();
+  });
+
+  it('logs when image src assignment throws', async () => {
+    const badImg = {};
+    Object.defineProperty(badImg, 'src', { set() { throw 'src error'; }, configurable: true });
+    const $wBadImg = make$w(card, badImg, closeBtn, shareBtn);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await showQuestShareCard({ $w: $wBadImg, questName: QUEST, badgeLabel: BADGE });
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] image render failed:', 'src error');
+    warn.mockRestore();
+  });
+
+  it('logs when card.hide throws inside close handler', async () => {
+    card.hide.mockImplementation(() => { throw 'hide error'; });
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    closeBtn._handler();
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] card.hide failed:', 'hide error');
+    warn.mockRestore();
+  });
+
+  it('logs when shareQuestCompletion throws inside share handler', async () => {
+    // A navigator getter that throws causes shareQuestCompletion to reject
+    const badNav = { get share() { throw 'nav error'; } };
+    await showQuestShareCard({ $w, questName: QUEST, badgeLabel: BADGE, navigator: badNav });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await shareBtn._handler();
+    expect(warn).toHaveBeenCalledWith('[QuestShareCard] shareQuestCompletion threw:', 'nav error');
+    warn.mockRestore();
   });
 });

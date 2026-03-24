@@ -8,7 +8,7 @@
  *   BirthdayRewards — dedup ledger (memberId + rewardType + year)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted, __setQueryError } from 'wix-data';
+import { __reset, __seed, __getInserted, __setQueryError, __setInsertError } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
 
 // ── Mock couponsService.web (already-built helpers) ───────────────────
@@ -238,6 +238,38 @@ describe('checkAndSendBirthdayRewards — resilience', () => {
     expect(result).toEqual({ sent: 0, skipped: 0, failed: 0 });
     expect(couponMocks.createBirthdayCoupon).not.toHaveBeenCalled();
   });
+
+  it('increments failed when isAlreadySent query throws', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    __setQueryError('BirthdayRewards', new Error('DB error'));
+    const result = await checkAndSendBirthdayRewards();
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+  });
+
+  it('increments failed when createBirthdayCoupon throws', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    couponMocks.createBirthdayCoupon.mockRejectedValueOnce(new Error('Network error'));
+    const result = await checkAndSendBirthdayRewards();
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+  });
+
+  it('still returns sent after dedup insert throws (email already sent)', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    __setInsertError('BirthdayRewards', new Error('DB write error'));
+    const result = await checkAndSendBirthdayRewards();
+    // Email was sent; dedup insert failure does not change 'sent' outcome
+    expect(result.sent).toBe(1);
+  });
+
+  it('increments failed when coupon returns success:false without message', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    couponMocks.createBirthdayCoupon.mockResolvedValueOnce({ success: false });
+    const result = await checkAndSendBirthdayRewards();
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+  });
 });
 
 // ── checkAndSendAnniversaryRewards ────────────────────────────────────
@@ -334,6 +366,14 @@ describe('checkAndSendAnniversaryRewards — resilience', () => {
     const result = await checkAndSendAnniversaryRewards();
     expect(result).toEqual({ sent: 0, skipped: 0, failed: 0 });
     expect(couponMocks.createTierUpgradeCoupon).not.toHaveBeenCalled();
+  });
+
+  it('skips member whose join anniversary date does not match today', async () => {
+    // FAR_MONTH is 6 months away — guaranteed different month from today
+    const d = new Date(TODAY.getFullYear() - 1, FAR_MONTH - 1, FAR_DAY);
+    __seed('MemberProfiles', [makeProfile({ joinDate: d })]);
+    const result = await checkAndSendAnniversaryRewards();
+    expect(result.sent).toBe(0);
   });
 });
 

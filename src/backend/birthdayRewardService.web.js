@@ -164,6 +164,7 @@ export const checkAndSendBirthdayRewards = webMethod(
     }
 
     const windowProfiles = profilesResult.items.filter((profile) => {
+      /* c8 ignore next -- wix-data isNotEmpty() pre-filters nulls; guard is for production safety */
       if (!profile.birthdayMonth || !profile.birthdayDay) return false;
       const mm = String(profile.birthdayMonth).padStart(2, '0');
       const dd = String(profile.birthdayDay).padStart(2, '0');
