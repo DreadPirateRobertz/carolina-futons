@@ -16,6 +16,9 @@ import { submitReview } from 'backend/reviewsService.web';
 import { finalizeGiftCardRedemption } from 'public/giftCardHelpers.js';
 import { initGiftCardUpsell } from 'public/giftCardUpsell.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
+import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
+import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -53,6 +56,11 @@ $w.onReady(async function () {
     { name: 'testimonialPrompt', init: initTestimonialPrompt },
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
+    { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
+      orderTotal: orderCtx?.total || 0,
+      getLoyaltyAccount: getMyLoyaltyAccount,
+      getLeaderboard: getZipLeaderboard,
+    }) },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
