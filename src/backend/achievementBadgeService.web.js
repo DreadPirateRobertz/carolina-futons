@@ -1,25 +1,34 @@
 /**
  * @module achievementBadgeService
  * @description Award and query achievement badges for members.
- * Badges are stored in the MemberBadges CMS collection.
  *
- * memberId ownership is always validated server-side — callers cannot
- * read or write another member's badges.
+ * webMethod awardBadge(memberId, badgeId) (Permissions.SiteMember)
+ *   - IDOR guard: caller must own memberId.
+ *   - Returns { alreadyAwarded: true } if badge already exists.
+ *   - Returns { awarded: true, badge } on success.
+ *   - Returns { error, status: 400 } for unknown badgeId.
  *
- * @setup
- * Create CMS collection "MemberBadges" with fields:
- * - memberId  (Text)     — Wix member ID
- * - badgeId   (Text)     — Badge identifier key from BADGES
- * - awardedAt (DateTime) — When the badge was awarded
- * - notified  (Boolean)  — Whether the member has been shown the badge notification
+ * webMethod getMemberBadges(memberId) (Permissions.Anyone)
+ *   - Returns array of { badgeId, label, awardedAt, notified }.
+ *
+ * webMethod markBadgeNotified(memberId, badgeId) (Permissions.SiteMember)
+ *   - IDOR guard: caller must own memberId.
+ *   - Returns { updated: true } or { notFound: true }.
+ *
+ * CMS collection: MemberBadges — memberId, badgeId, awardedAt, notified
+ *
+ * CF-7tdf
+ *
+ * @requires wix-web-module
+ * @requires wix-data
+ * @requires wix-members-backend
  */
-import { Permissions, webMethod } from 'wix-web-module';
+import { webMethod, Permissions } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'MemberBadges';
-
-// ── Badge registry ────────────────────────────────────────────────────────────
 
 export const BADGES = {
   FIRST_PURCHASE: { id: 'first_purchase', label: 'First Purchase',  points: 50  },
@@ -30,149 +39,128 @@ export const BADGES = {
   WISHLIST_10:    { id: 'wishlist_10',    label: '10 Wishlist Adds', points: 75  },
 };
 
-// Build a lookup map from badge id string → BADGES entry for O(1) validation.
+/** Map badgeId → BADGES entry for O(1) lookup. */
 const BADGE_BY_ID = Object.fromEntries(
-  Object.values(BADGES).map((b) => [b.id, b])
+  Object.values(BADGES).map(b => [b.id, b])
 );
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-async function requireOwnMember(memberId) {
-  let member;
-  try {
-    member = await currentMember.getMember();
-  } catch (_) {
-    return { error: 'auth_required' };
-  }
-  if (!member || !member._id) return { error: 'auth_required' };
-  if (member._id !== memberId) return { error: 'forbidden' };
-  return { memberId: member._id };
-}
-
-// ── awardBadge ────────────────────────────────────────────────────────────────
-
 /**
- * Award a badge to the authenticated member.
- * No-ops (returns alreadyAwarded: true) if the badge was previously awarded.
- *
- * @param {string} memberId
- * @param {string} badgeId  — Must be a known BADGES id (e.g. 'first_purchase')
- * @returns {Promise<{ awarded?: boolean, badge?: Object, alreadyAwarded?: boolean, error?: string }>}
+ * Award a badge to a member (idempotent).
  */
 export const awardBadge = webMethod(
   Permissions.SiteMember,
   async (memberId, badgeId) => {
-    const auth = await requireOwnMember(memberId);
-    if (auth.error) return { success: false, error: auth.error };
+    // IDOR guard
+    let session;
+    try {
+      session = await currentMember.getMember();
+    } catch (e) {
+      logError(`achievementBadgeService.awardBadge.auth [member=${memberId}]`, e);
+      return null;
+    }
+    if (!session || session._id !== memberId) return null;
 
-    const badge = BADGE_BY_ID[badgeId];
-    if (!badge) {
-      return { success: false, error: `Unknown badgeId "${badgeId}"`, status: 400 };
+    if (!BADGE_BY_ID[badgeId]) {
+      return { error: `Unknown badgeId: ${String(badgeId).slice(0, 50)}`, status: 400 };
     }
 
+    let existing;
     try {
-      const existing = await wixData.query(COLLECTION)
+      existing = await wixData
+        .query(COLLECTION)
         .eq('memberId', memberId)
         .eq('badgeId', badgeId)
-        .limit(1)
         .find({ suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.awardBadge.query [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
 
-      if (existing.items.length > 0) {
-        return { alreadyAwarded: true };
-      }
+    if (existing.items.length > 0) return { alreadyAwarded: true };
 
+    try {
       await wixData.insert(COLLECTION, {
         memberId,
         badgeId,
         awardedAt: new Date(),
         notified: false,
       }, { suppressAuth: true });
-
-      return { awarded: true, badge };
-    } catch (err) {
-      // Composite unique index on (memberId, badgeId) in CMS may throw a
-      // duplicate-key error under concurrent requests. Treat as alreadyAwarded.
-      if (err?.message?.includes('duplicate key')) {
-        return { alreadyAwarded: true };
-      }
-      console.error('[achievementBadgeService] awardBadge failed:', err);
-      return { success: false, error: 'Unable to award badge' };
+    } catch (e) {
+      logError(`achievementBadgeService.awardBadge.insert [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
     }
+
+    return { awarded: true, badge: BADGE_BY_ID[badgeId] };
   }
 );
 
-// ── getMemberBadges ───────────────────────────────────────────────────────────
-
-const GET_BADGES_LIMIT = 100;
-
 /**
- * Return all badges awarded to a member.
- * Public (Permissions.Anyone) — badge lists are intentionally visible to any
- * caller (e.g. leaderboard, profile pages). Capped at GET_BADGES_LIMIT (100).
- *
- * @param {string} memberId
- * @returns {Promise<{ badges: Array<{ badgeId, label, awardedAt }> }>}
+ * Get all badges earned by a member.
+ * Returns array of { badgeId, label, awardedAt, notified }.
  */
 export const getMemberBadges = webMethod(
   Permissions.Anyone,
   async (memberId) => {
-    if (!memberId || typeof memberId !== 'string') return { badges: [] };
+    if (!memberId) return [];
 
     try {
-      const result = await wixData.query(COLLECTION)
+      const result = await wixData
+        .query(COLLECTION)
         .eq('memberId', memberId)
-        .limit(GET_BADGES_LIMIT)
+        .ascending('awardedAt')
         .find({ suppressAuth: true });
 
-      const badges = result.items.map((record) => ({
-        badgeId:   record.badgeId,
-        label:     BADGE_BY_ID[record.badgeId]?.label ?? record.badgeId,
-        awardedAt: record.awardedAt,
+      return result.items.map(item => ({
+        badgeId:   item.badgeId,
+        label:     BADGE_BY_ID[item.badgeId]?.label ?? item.badgeId,
+        awardedAt: item.awardedAt,
+        notified:  item.notified ?? false,
       }));
-
-      return { badges };
-    } catch (err) {
-      console.error('[achievementBadgeService] getMemberBadges failed:', err);
-      return { success: false, error: 'Unable to retrieve badges' };
+    } catch (e) {
+      logError(`achievementBadgeService.getMemberBadges [member=${memberId}]`, e);
+      return [];
     }
   }
 );
 
-// ── markBadgeNotified ─────────────────────────────────────────────────────────
-
 /**
- * Mark a badge notification as seen for the authenticated member.
- *
- * @param {string} memberId
- * @param {string} badgeId
- * @returns {Promise<{ updated?: boolean, notFound?: boolean, error?: string }>}
+ * Mark a badge as notified (user has seen the "new badge" highlight).
  */
 export const markBadgeNotified = webMethod(
   Permissions.SiteMember,
   async (memberId, badgeId) => {
-    const auth = await requireOwnMember(memberId);
-    if (auth.error) return { success: false, error: auth.error };
-
+    // IDOR guard
+    let session;
     try {
-      const result = await wixData.query(COLLECTION)
+      session = await currentMember.getMember();
+    } catch (e) {
+      logError(`achievementBadgeService.markBadgeNotified.auth [member=${memberId}]`, e);
+      return null;
+    }
+    if (!session || session._id !== memberId) return null;
+
+    let result;
+    try {
+      result = await wixData
+        .query(COLLECTION)
         .eq('memberId', memberId)
         .eq('badgeId', badgeId)
-        .limit(1)
         .find({ suppressAuth: true });
-
-      if (result.items.length === 0) {
-        return { notFound: true };
-      }
-
-      await wixData.update(COLLECTION, {
-        ...result.items[0],
-        notified: true,
-      }, { suppressAuth: true });
-
-      return { updated: true };
-    } catch (err) {
-      console.error('[achievementBadgeService] markBadgeNotified failed:', err);
-      return { success: false, error: 'Unable to update badge' };
+    } catch (e) {
+      logError(`achievementBadgeService.markBadgeNotified.query [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
     }
+
+    if (result.items.length === 0) return { notFound: true };
+
+    const record = { ...result.items[0], notified: true };
+    try {
+      await wixData.update(COLLECTION, record, { suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.markBadgeNotified.update [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
+
+    return { updated: true };
   }
 );
