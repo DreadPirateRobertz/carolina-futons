@@ -265,6 +265,17 @@ const wixData = {
     }
     return null;
   },
+
+  async bulkRemove(collection, ids) {
+    if (!_store[collection]) _store[collection] = [];
+    const idSet = new Set(ids);
+    const removed = _store[collection].filter(i => idSet.has(i._id));
+    _store[collection] = _store[collection].filter(i => !idSet.has(i._id));
+    if (_removeSpy) {
+      for (const item of removed) _removeSpy(collection, item._id);
+    }
+    return { removed: removed.length };
+  },
 };
 
 // Return options last passed to find() for a collection (e.g. { suppressAuth: true }).
