@@ -30,6 +30,7 @@ import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
 import { buildYouTubeEmbed } from 'public/videoHelpers.js';
+import { initPDPSocialProofBadge } from 'public/PDPSocialProofBadge.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -226,6 +227,14 @@ async function initProductPage() {
       { name: 'sizeGuide', init: async () => {
         const { initSizeGuide } = await import('public/SizeGuide.js');
         await initSizeGuide($w);
+      }, critical: false },
+      // CF-ic1: PDP social proof badge — "X members competing — earn N points on this purchase"
+      // Pre-auth: logged-out visitors see neighbor count (no login required).
+      // ZIP source: ?zipPrefix URL param; fallback to national count.
+      { name: 'socialProofBadge', init: async () => {
+        const { getNeighborCount } = await import('backend/socialProofBadge.web');
+        const zipPrefix = wixLocationFrontend.query?.zipPrefix || null;
+        await initPDPSocialProofBadge($w, state, getNeighborCount, { zipPrefix });
       }, critical: false },
     ];
 
