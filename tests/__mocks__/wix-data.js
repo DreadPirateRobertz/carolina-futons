@@ -8,6 +8,8 @@ let _updateSpy = null;
 let _removeSpy = null;
 let _queryErrors = {};  // collection -> Error to throw on query
 let _lastFindOptions = {};  // collection -> options passed to find()
+let _lastGetOptions = {};   // collection -> options passed to get()
+let _lastUpdateOptions = {}; // collection -> options passed to update()
 let _insertErrors = {}; // collection -> Error to throw on insert
 let _updateErrors = {}; // collection -> Error to throw on update
 let _uniqueFields = {};  // collection -> field name to enforce uniqueness on
@@ -24,6 +26,8 @@ export function __reset() {
   _updateErrors = {};
   _uniqueFields = {};
   _lastFindOptions = {};
+  _lastGetOptions = {};
+  _lastUpdateOptions = {};
 }
 
 // Force the next insert on a collection to throw
@@ -216,7 +220,8 @@ const wixData = {
     return createFilterBuilder();
   },
 
-  async get(collection, id) {
+  async get(collection, id, options) {
+    _lastGetOptions[collection] = options;
     const items = _store[collection] || [];
     return items.find(item => item._id === id) || null;
   },
@@ -248,7 +253,8 @@ const wixData = {
     return inserted;
   },
 
-  async update(collection, item) {
+  async update(collection, item, options) {
+    _lastUpdateOptions[collection] = options;
     if (_updateErrors[collection]) {
       const err = _updateErrors[collection];
       delete _updateErrors[collection];
@@ -290,6 +296,16 @@ const wixData = {
 // Returns undefined if find() has not been called for that collection, or after __reset().
 export function __getLastFindOptions(collection) {
   return _lastFindOptions[collection];
+}
+
+// Return options last passed to get() for a collection.
+export function __getLastGetOptions(collection) {
+  return _lastGetOptions[collection];
+}
+
+// Return options last passed to update() for a collection.
+export function __getLastUpdateOptions(collection) {
+  return _lastUpdateOptions[collection];
 }
 
 export default wixData;

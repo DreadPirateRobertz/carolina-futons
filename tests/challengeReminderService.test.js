@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __getUpdated, __setQueryError, __setUpdateError } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getUpdated, __setQueryError, __setUpdateError, __getLastGetOptions, __getLastUpdateOptions } from './__mocks__/wix-data.js';
 import {
   shouldSendChallengeReminder,
   getChallengesNeedingReminder,
@@ -217,5 +217,25 @@ describe('getChallengesNeedingReminder — error handling', () => {
     // __reset() clears all seeds — empty collection
     const result = await getChallengesNeedingReminder('daily', NOW);
     expect(result).toEqual([]);
+  });
+});
+
+// ── suppressAuth assertions ───────────────────────────────────────────────────
+
+describe('markReminderSent — suppressAuth', () => {
+  it('passes suppressAuth: true to wixData.get', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    await markReminderSent('mcp-1', NOW);
+    expect(__getLastGetOptions('MemberChallengeProgress')).toEqual({ suppressAuth: true });
+  });
+
+  it('passes suppressAuth: true to wixData.update', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    await markReminderSent('mcp-1', NOW);
+    expect(__getLastUpdateOptions('MemberChallengeProgress')).toEqual({ suppressAuth: true });
   });
 });
