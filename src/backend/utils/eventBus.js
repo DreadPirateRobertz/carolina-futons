@@ -34,7 +34,7 @@ export function validateIncomingEvent(body) {
   if (body.schemaVersion !== BUS_SCHEMA_VERSION) return `Unsupported schemaVersion — expected ${BUS_SCHEMA_VERSION}`;
   if (!body?.event) return 'Missing required field: event';
   if (!INBOUND_EVENTS.has(body.event)) return `Unknown event "${body.event}" — must be one of: ${[...INBOUND_EVENTS].join(', ')}`;
-  if (!body?.userId) return 'Missing required field: userId';
+  // userId is advisory — server always uses session-resolved memberId, so omitting it is not an error.
   return null;
 }
 

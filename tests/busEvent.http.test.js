@@ -103,10 +103,10 @@ describe('post_busEvent — validation', () => {
     expect(JSON.parse(result.body).error).toMatch(/event/i);
   });
 
-  it('returns 400 when userId is missing', async () => {
+  it('succeeds when userId is absent from payload (advisory field — server uses session)', async () => {
+    __setMember(VALID_MEMBER);
     const result = await post_busEvent(makeRequest(validBody({ userId: undefined })));
-    expect(result.status).toBe(400);
-    expect(JSON.parse(result.body).error).toMatch(/userId/i);
+    expect(result.status).toBe(200);
   });
 
   it('returns 400 on invalid JSON body', async () => {
@@ -150,6 +150,7 @@ describe('post_busEvent — challenge_started', () => {
     const logs = __getInserted('EventTraceLog');
     expect(logs[0].event).toBe('challenge_started');
     expect(logs[0].status).toBe('received');
+    expect(logs[0].userId).toBe('mem-1');
   });
 });
 
@@ -165,6 +166,7 @@ describe('post_busEvent — redemption_initiated', () => {
     const logs = __getInserted('EventTraceLog');
     expect(logs[0].event).toBe('redemption_initiated');
     expect(logs[0].status).toBe('received');
+    expect(logs[0].userId).toBe('mem-1');
   });
 });
 
@@ -192,14 +194,17 @@ describe('post_busEvent — EventTraceLog deduplication', () => {
 // ── EventTraceLog includes userId and source (review fix) ─────────────────────
 
 describe('post_busEvent — EventTraceLog captures userId and source', () => {
-  it('stores userId and source from body in the trace log', async () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('stores session-resolved userId and source from body in the trace log', async () => {
+    // userId in log is always the session-resolved memberId, not the payload value
     const body = validBody({ userId: 'mem-trace-1', source: 'mobile' });
     const result = await post_busEvent(makeRequest(body));
     expect(result.status).toBe(200);
 
     const logs = __getInserted('EventTraceLog');
     expect(logs).toHaveLength(1);
-    expect(logs[0].userId).toBe('mem-trace-1');
+    expect(logs[0].userId).toBe(VALID_MEMBER._id); // session-resolved, not payload
     expect(logs[0].source).toBe('mobile');
   });
 });
@@ -207,21 +212,23 @@ describe('post_busEvent — EventTraceLog captures userId and source', () => {
 // ── Rate limiting (review fix) ────────────────────────────────────────────────
 
 describe('post_busEvent — rate limiting', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 429 after exceeding 30 requests per minute from the same userId', async () => {
-    // Seed the rate limit collection as if the window is already maxed out
+    // Rate limit key is session-resolved memberId, not payload userId
     __seed('BusEventRateLimit', [{
       _id: 'rl-1',
-      key: 'mem-rl-1',
+      key: VALID_MEMBER._id,
       count: 30,
       windowStart: new Date(Date.now() - 1000), // within the window
     }]);
 
-    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-1' })));
+    const result = await post_busEvent(makeRequest(validBody()));
     expect(result.status).toBe(429);
   });
 
   it('allows requests when under the rate limit', async () => {
-    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-2' })));
+    const result = await post_busEvent(makeRequest(validBody()));
     expect(result.status).toBe(200);
   });
 });
