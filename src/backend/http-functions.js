@@ -22,6 +22,8 @@ import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
 import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
+import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
+import { getSecret } from 'wix-secrets-backend';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -2157,4 +2159,62 @@ export async function get_badges(request) {
     console.error('HTTP function error (badges):', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
+}
+
+// ── Cross-Rig Event Bus — Inbound (Mobile → Web) ───────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/busEvent
+// Authenticated via x-bus-secret header (stored in Wix Secrets as BUS_SECRET).
+// Handles mobile→web events: streak_extended, challenge_started, redemption_initiated.
+// All events are idempotently logged to EventTraceLog via eventId as _id.
+//
+// Schema: { eventId, schemaVersion: '1.0', traceId, event, userId, source, ts, ...extras }
+
+/**
+ * @function post_busEvent
+ * @route POST /_functions/busEvent
+ */
+export async function post_busEvent(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  const json = (obj) => JSON.stringify(obj);
+
+  // 1. Authenticate via shared secret
+  try {
+    const expectedSecret = await getSecret('BUS_SECRET');
+    const providedSecret = request.headers?.['x-bus-secret'];
+    if (!providedSecret || providedSecret !== expectedSecret) {
+      return forbidden({ body: json({ error: 'Forbidden — invalid bus secret' }), headers: JSON_HEADERS });
+    }
+  } catch (_) {
+    return forbidden({ body: json({ error: 'Forbidden — bus secret not configured' }), headers: JSON_HEADERS });
+  }
+
+  // 2. Parse body
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({ body: json({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+  }
+
+  // 3. Validate schema
+  const validationError = validateIncomingEvent(body);
+  if (validationError) {
+    return badRequest({ body: json({ error: validationError }), headers: JSON_HEADERS });
+  }
+
+  // 4. Log to EventTraceLog (idempotent — skips on duplicate eventId)
+  try {
+    await logEventTrace({
+      eventId: body.eventId,
+      traceId: body.traceId || null,
+      event: body.event,
+      ts: body.ts || null,
+      status: 'received',
+    });
+  } catch (err) {
+    console.error('HTTP function error (busEvent — EventTraceLog write):', err);
+    // Non-fatal: continue even if logging fails
+  }
+
+  return ok({ body: json({ received: true, eventId: body.eventId }), headers: JSON_HEADERS });
 }
