@@ -2163,8 +2163,9 @@ export async function get_badges(request) {
 
 // ── Cross-Rig Event Bus — Inbound (Mobile → Web) ───────────────────────────────
 // URL: POST https://www.carolinafutons.com/_functions/busEvent
-// Authenticated via x-bus-secret header (stored in Wix Secrets as BUS_SECRET).
-// Secret read and comparison happen atomically in the same request — no TOCTOU risk.
+// Auth: Wix session Bearer token (Authorization header, validated by Wix runtime).
+// memberId is resolved server-side from the token — payload.userId is advisory only.
+// Returns 401 on expired/missing token so mobile can refresh and retry.
 // Handles mobile→web events: streak_extended, challenge_started, redemption_initiated.
 // All events are idempotently logged to EventTraceLog via eventId as _id.
 // Rate-limited per userId (BusEventRateLimit collection): 30 req/min.
@@ -2179,16 +2180,18 @@ export async function post_busEvent(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
   const json = (obj) => JSON.stringify(obj);
 
-  // 1. Authenticate via shared secret (timing-safe comparison)
+  // 1. Authenticate — resolve caller identity from Wix session token.
+  // Never trust payload.userId; memberId is authoritative from the session.
+  let member;
   try {
-    const expectedSecret = await getSecret('BUS_SECRET');
-    const providedSecret = request.headers?.['x-bus-secret'];
-    if (!providedSecret || !expectedSecret || !timingSafeEqual(providedSecret, expectedSecret)) {
-      return forbidden({ body: json({ error: 'Forbidden — invalid bus secret' }), headers: JSON_HEADERS });
-    }
+    member = await currentMember.getMember();
   } catch (_) {
-    return forbidden({ body: json({ error: 'Forbidden — bus secret not configured' }), headers: JSON_HEADERS });
+    member = null;
   }
+  if (!member) {
+    return unauthorized({ body: json({ error: 'Unauthorized — valid member session required' }), headers: JSON_HEADERS });
+  }
+  const resolvedMemberId = member._id;
 
   // 2. Parse body
   let body;
@@ -2207,7 +2210,7 @@ export async function post_busEvent(request) {
   // 4. Rate limit per userId (30 req/min)
   try {
     const { checkRateLimit } = await import('backend/utils/rateLimit');
-    const rlResult = await checkRateLimit('BusEventRateLimit', body.userId, { max: 30, windowMs: 60_000 });
+    const rlResult = await checkRateLimit('BusEventRateLimit', resolvedMemberId, { max: 30, windowMs: 60_000 });
     if (!rlResult.allowed) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: JSON_HEADERS });
     }
@@ -2215,13 +2218,14 @@ export async function post_busEvent(request) {
     // Rate limit check failure is non-fatal — allow through
   }
 
-  // 5. Log to EventTraceLog (idempotent — skips on duplicate eventId)
+  // 5. Log to EventTraceLog (idempotent — skips on duplicate eventId).
+  // userId in the trace is always the session-resolved memberId, never the payload value.
   try {
     await logEventTrace({
       eventId: body.eventId,
       traceId: body.traceId || null,
       event: body.event,
-      userId: body.userId || null,
+      userId: resolvedMemberId,
       source: body.source || null,
       ts: body.ts || null,
       status: 'received',
