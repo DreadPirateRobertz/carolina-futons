@@ -4,8 +4,9 @@
  *
  * Renders the ZIP micro-leaderboard on Member Page:
  * - Shows top-10 members in caller's 3-digit ZIP prefix ranked by totalPoints
- * - Highlights the caller's own row (isMe: true)
- * - Hides section when leaderboard is empty or zipPrefix is null
+ * - Highlights the caller's own row (isMe: true) using colors.sand token
+ * - Hides section when zipPrefix is null or 429
+ * - Shows emptyMessage when zipPrefix set but no opted-in neighbors
  * - Shows myRank in a summary element when caller is in top 10
  * - Shows "outside top 10" message when myRank is null but leaderboard is non-empty
  */
@@ -16,6 +17,10 @@ import {
   initZipLeaderboardSection,
 } from '../src/public/ZipLeaderboardDisplay.js';
 
+vi.mock('public/designTokens.js', () => ({
+  colors: { sand: '#E8D5B7', espresso: '#3A2518', mountainBlue: '#5B8FA8' },
+}));
+
 // ── Element helpers ───────────────────────────────────────────────────────────
 
 function makeText() {
@@ -24,17 +29,29 @@ function makeText() {
 }
 
 function makeBox() {
-  return { hide: vi.fn(), show: vi.fn(), collapse: vi.fn(), expand: vi.fn() };
+  return {
+    hide: vi.fn(), show: vi.fn(), collapse: vi.fn(), expand: vi.fn(),
+    style: { backgroundColor: '' },
+  };
+}
+
+function makeItemFn() {
+  const elements = {};
+  return (id) => {
+    if (!elements[id]) elements[id] = makeBox();
+    return elements[id];
+  };
 }
 
 function makeRepeater() {
   let data = [];
-  const onItemReadyFn = vi.fn();
+  let onItemReadyCb = null;
   return {
     get data() { return data; },
     set data(v) { data = v; },
-    onItemReady: vi.fn((fn) => { onItemReadyFn.mockImplementation(fn); }),
-    _onItemReadyFn: onItemReadyFn,
+    onItemReady: vi.fn((fn) => { onItemReadyCb = fn; }),
+    // Helper to fire the onItemReady callback for a given item
+    _fireItemReady($item, itemData) { if (onItemReadyCb) onItemReadyCb($item, itemData); },
   };
 }
 
@@ -49,28 +66,60 @@ function makeEntry(overrides = {}) {
   };
 }
 
-// ── renderZipLeaderboard ──────────────────────────────────────────────────────
+// ── renderZipLeaderboard — empty / null / 429 state ───────────────────────────
 
-describe('renderZipLeaderboard — empty / null state', () => {
-  it('hides section when leaderboard is empty', () => {
-    const $section = makeBox();
-    renderZipLeaderboard({ $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() }, { leaderboard: [], myRank: null, zipPrefix: null });
-    expect($section.hide).toHaveBeenCalled();
-  });
-
+describe('renderZipLeaderboard — hides section', () => {
   it('hides section when zipPrefix is null', () => {
     const $section = makeBox();
-    renderZipLeaderboard({ $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() }, { leaderboard: [], myRank: null, zipPrefix: null });
+    renderZipLeaderboard(
+      { $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [], myRank: null, zipPrefix: null }
+    );
     expect($section.hide).toHaveBeenCalled();
   });
 
-  it('shows emptyMessage and hides section when leaderboard is empty but zipPrefix is set', () => {
+  it('hides section on 429 status response', () => {
     const $section = makeBox();
-    const $emptyMessage = makeBox();
-    renderZipLeaderboard({ $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage }, { leaderboard: [], myRank: null, zipPrefix: '282' });
+    renderZipLeaderboard(
+      { $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { status: 429, error: 'Rate limit exceeded' }
+    );
+    expect($section.hide).toHaveBeenCalled();
+  });
+
+  it('hides section when result is null/undefined', () => {
+    const $section = makeBox();
+    renderZipLeaderboard(
+      { $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      null
+    );
     expect($section.hide).toHaveBeenCalled();
   });
 });
+
+// ── renderZipLeaderboard — empty leaderboard with valid zipPrefix ──────────────
+
+describe('renderZipLeaderboard — empty leaderboard with valid zipPrefix', () => {
+  it('shows section when zipPrefix is set even if leaderboard is empty', () => {
+    const $section = makeBox();
+    renderZipLeaderboard(
+      { $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [], myRank: null, zipPrefix: '282' }
+    );
+    expect($section.show).toHaveBeenCalled();
+  });
+
+  it('shows emptyMessage when leaderboard is empty but zipPrefix is set', () => {
+    const $emptyMessage = makeBox();
+    renderZipLeaderboard(
+      { $section: makeBox(), $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage },
+      { leaderboard: [], myRank: null, zipPrefix: '282' }
+    );
+    expect($emptyMessage.show).toHaveBeenCalled();
+  });
+});
+
+// ── renderZipLeaderboard — populated state ────────────────────────────────────
 
 describe('renderZipLeaderboard — populated state', () => {
   function makeElements() {
@@ -102,7 +151,7 @@ describe('renderZipLeaderboard — populated state', () => {
     expect(els.$repeater.data[0].memberId).toBe('mem-2');
   });
 
-  it('sets zipPrefixText to the zipPrefix value', () => {
+  it('sets zipPrefixText to include the zipPrefix value', () => {
     const els = makeElements();
     renderZipLeaderboard(els, { leaderboard, myRank: 2, zipPrefix: '282' });
     expect(els.$zipPrefixText.text).toContain('282');
@@ -120,6 +169,13 @@ describe('renderZipLeaderboard — populated state', () => {
     expect(els.$myRankText.show).toHaveBeenCalled();
   });
 
+  it('shows myRankText with rank 1 for top member', () => {
+    const els = makeElements();
+    renderZipLeaderboard(els, { leaderboard, myRank: 1, zipPrefix: '282' });
+    expect(els.$myRankText.text).toContain('1');
+    expect(els.$myRankText.show).toHaveBeenCalled();
+  });
+
   it('hides myRankText when myRank is null (caller outside top 10)', () => {
     const els = makeElements();
     renderZipLeaderboard(els, { leaderboard, myRank: null, zipPrefix: '282' });
@@ -131,18 +187,58 @@ describe('renderZipLeaderboard — populated state', () => {
     renderZipLeaderboard(els, { leaderboard, myRank: 2, zipPrefix: '282' });
     expect(els.$repeater.onItemReady).toHaveBeenCalled();
   });
+
+  it('hides emptyMessage when leaderboard has entries', () => {
+    const els = makeElements();
+    renderZipLeaderboard(els, { leaderboard, myRank: 2, zipPrefix: '282' });
+    expect(els.$emptyMessage.hide).toHaveBeenCalled();
+  });
 });
 
-// ── renderZipLeaderboard — rate limit response ────────────────────────────────
+// ── renderZipLeaderboard — onItemReady callback ───────────────────────────────
 
-describe('renderZipLeaderboard — rate limit', () => {
-  it('hides section on 429 status response', () => {
-    const $section = makeBox();
+describe('renderZipLeaderboard — onItemReady callback', () => {
+  it('sets backgroundColor to colors.sand on isMe row', () => {
+    const $repeater = makeRepeater();
     renderZipLeaderboard(
-      { $section, $repeater: makeRepeater(), $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
-      { status: 429, error: 'Rate limit exceeded' }
+      { $section: makeBox(), $repeater, $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [makeEntry({ isMe: true, rank: 1, totalPoints: 500 })], myRank: 1, zipPrefix: '282' }
     );
-    expect($section.hide).toHaveBeenCalled();
+    const $item = makeItemFn();
+    $repeater._fireItemReady($item, { rank: 1, displayName: 'Alice', totalPoints: 500, isMe: true });
+    expect($item('#zipEntryBox').style.backgroundColor).toBe('#E8D5B7');
+  });
+
+  it('sets backgroundColor to empty string on non-isMe rows', () => {
+    const $repeater = makeRepeater();
+    renderZipLeaderboard(
+      { $section: makeBox(), $repeater, $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [makeEntry({ isMe: false, rank: 2, totalPoints: 300 })], myRank: null, zipPrefix: '282' }
+    );
+    const $item = makeItemFn();
+    $repeater._fireItemReady($item, { rank: 2, displayName: 'Bob', totalPoints: 300, isMe: false });
+    expect($item('#zipEntryBox').style.backgroundColor).toBe('');
+  });
+
+  it('falls back displayName to "Member" when missing', () => {
+    const $repeater = makeRepeater();
+    renderZipLeaderboard(
+      { $section: makeBox(), $repeater, $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [makeEntry({ displayName: '', rank: 1 })], myRank: 1, zipPrefix: '282' }
+    );
+    const $item = makeItemFn();
+    $repeater._fireItemReady($item, { rank: 1, displayName: '', totalPoints: 100, isMe: false });
+    expect($item('#zipDisplayNameText').text).toBe('Member');
+  });
+
+  it('passes isMe field through to repeater data', () => {
+    const $repeater = makeRepeater();
+    const entry = makeEntry({ isMe: true, memberId: 'mem-1' });
+    renderZipLeaderboard(
+      { $section: makeBox(), $repeater, $myRankText: makeText(), $zipPrefixText: makeText(), $emptyMessage: makeBox() },
+      { leaderboard: [entry], myRank: 1, zipPrefix: '282' }
+    );
+    expect($repeater.data[0].isMe).toBe(true);
   });
 });
 

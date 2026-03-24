@@ -10,7 +10,15 @@
  *   #zipMyRankText          — text: "You're ranked #N in your area"
  *   #zipPrefixText          — text: "Top neighbors in 282xx"
  *   #zipLeaderboardEmpty    — box shown when no opted-in neighbors found
+ *
+ * Repeater item elements:
+ *   #zipRankText        — "1", "2", …
+ *   #zipDisplayNameText — member display name
+ *   #zipPointsText      — "1,000 pts"
+ *   #zipEntryBox        — row box; background set to colors.sand for caller's row
  */
+
+import { colors } from 'public/designTokens.js';
 
 /**
  * Render the ZIP leaderboard into the provided elements.
@@ -22,8 +30,8 @@
 export function renderZipLeaderboard(els, result) {
   const { $section, $repeater, $myRankText, $zipPrefixText, $emptyMessage } = els;
 
-  // Rate limit or error — hide everything silently
-  if (!result || result.status === 429 || !result.leaderboard || result.leaderboard.length === 0) {
+  // Rate limit or no ZIP data — hide section entirely
+  if (!result || result.status === 429 || !result.zipPrefix) {
     $section.hide();
     return;
   }
@@ -32,13 +40,22 @@ export function renderZipLeaderboard(els, result) {
 
   $zipPrefixText.text = `Top neighbors in ${zipPrefix}xx`;
 
+  // No opted-in neighbors in this ZIP prefix — show empty state
+  if (!leaderboard || leaderboard.length === 0) {
+    try { $emptyMessage.show(); } catch (e) {}
+    $section.show();
+    return;
+  }
+
+  try { $emptyMessage.hide(); } catch (e) {}
+
   $repeater.onItemReady(($item, itemData) => {
     try { $item('#zipRankText').text = String(itemData.rank); } catch (e) {}
     try { $item('#zipDisplayNameText').text = itemData.displayName || 'Member'; } catch (e) {}
     try { $item('#zipPointsText').text = `${(itemData.totalPoints || 0).toLocaleString()} pts`; } catch (e) {}
     try {
       const row = $item('#zipEntryBox');
-      if (itemData.isMe) row.style.backgroundColor = '#E8D5B7'; // Sand token — highlights caller
+      if (itemData.isMe) row.style.backgroundColor = colors.sand;
       else row.style.backgroundColor = '';
     } catch (e) {}
   });
