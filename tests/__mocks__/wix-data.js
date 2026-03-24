@@ -220,6 +220,13 @@ const wixData = {
       throw err;
     }
     if (!_store[collection]) _store[collection] = [];
+    // Always enforce _id uniqueness (Wix Data guarantees this at the DB layer)
+    if (item._id !== undefined) {
+      const idExists = _store[collection].some(i => i._id === item._id);
+      if (idExists) {
+        throw new Error(`duplicate key value violates unique constraint on field "_id" in collection "${collection}"`);
+      }
+    }
     const uniqueField = _uniqueFields[collection];
     if (uniqueField && item[uniqueField] !== undefined) {
       const exists = _store[collection].some(i => i[uniqueField] === item[uniqueField]);

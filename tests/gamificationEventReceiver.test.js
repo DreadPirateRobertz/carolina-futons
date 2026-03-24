@@ -571,29 +571,11 @@ describe('streak multiplier — integration', () => {
     expect(result.streakMultiplier).toBe(1.5);
   });
 
-  it('badge de-dup — week_wanderer not re-inserted when already in MemberBadges', async () => {
-    __seed('MemberBadges', [{ _id: 'mb-1', memberId: 'mem-1', badgeId: 'week_wanderer' }]);
-    __seed('MemberPoints', [{
-      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
-      currentStreakDays: 6, streakStartDate: '2026-03-16',
-      lastActivityDate: '2026-03-21', // yesterday → streak 6→7, milestone fires
-      streakMultiplier: 1.5,
-    }]);
-    const badgeInserts = [];
-    __onInsert((collection, item) => {
-      if (collection === 'MemberBadges') badgeInserts.push(item);
-    });
-    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
-    expect(result.milestoneUnlocked).toBe(true);
-    expect(badgeInserts).toHaveLength(0); // badge already exists — not re-inserted
-  });
-
   it('week_wanderer badge inserted when not yet in MemberBadges', async () => {
-    // No MemberBadges seeded — badge should be inserted on first 7-day milestone
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',
-      lastActivityDate: '2026-03-21', // yesterday → streak 6→7
+      lastActivityDate: '2026-03-21',
       streakMultiplier: 1.5,
     }]);
     const badgeInserts = [];
@@ -604,6 +586,46 @@ describe('streak multiplier — integration', () => {
     expect(badgeInserts).toHaveLength(1);
     expect(badgeInserts[0].badgeId).toBe('week_wanderer');
     expect(badgeInserts[0].memberId).toBe('mem-1');
+    expect(badgeInserts[0]._id).toBe('mem-1_week_wanderer'); // computed unique key
+  });
+
+  it('badge de-dup (TOCTOU guard) — duplicate _id insert treated as no-op, event still succeeds', async () => {
+    // Seed badge using the computed _id so the mock _id-uniqueness check fires on second insert
+    __seed('MemberBadges', [{ _id: 'mem-1_week_wanderer', memberId: 'mem-1', badgeId: 'week_wanderer' }]);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 1.5,
+    }]);
+    const badgeInserts = [];
+    __onInsert((collection, item) => {
+      if (collection === 'MemberBadges') badgeInserts.push(item);
+    });
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+    expect(result.success).toBe(true);          // event succeeds despite duplicate
+    expect(result.milestoneUnlocked).toBe(true);
+    expect(badgeInserts).toHaveLength(0);       // insert blocked by duplicate _id
+  });
+
+  it('concurrent badge award — only one row inserted when both requests hit the DB', async () => {
+    // The mock runs sequentially (JS is single-threaded in tests), so this is not true simultaneous insertion.
+    // What this test verifies is the idempotent path: the DB-level unique _id constraint rejects the second
+    // insert, leaving exactly one badge row. The real race condition is closed at the DB level, not here.
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-2', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 1.5,
+    }]);
+    const [r1, r2] = await Promise.all([
+      receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-2'),
+      receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-2'),
+    ]);
+    expect(r1.success).toBe(true);
+    expect(r2.success).toBe(true);
+    const allBadges = __getInserted('MemberBadges').filter(b => b.memberId === 'mem-2' && b.badgeId === 'week_wanderer');
+    expect(allBadges).toHaveLength(1);
   });
 });
 

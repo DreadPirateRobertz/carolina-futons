@@ -153,19 +153,20 @@ export const receiveGamificationEvent = webMethod(
         }
       }
 
-      // Phase 2: award week_wanderer badge on 7-day milestone (de-dup guarded)
+      // Phase 2: award week_wanderer badge on 7-day milestone.
+      // Idempotent via computed _id = '${memberId}_week_wanderer' — DB-level unique key
+      // prevents duplicate awards even under concurrent webhook delivery.
       if (streakState.milestoneBonus > 0) {
         try {
-          const existingBadge = await wixData.query(MEMBER_BADGES_COLLECTION)
-            .eq('memberId', memberId)
-            .eq('badgeId', 'week_wanderer')
-            .limit(1)
-            .find({ suppressAuth: true });
-          if (existingBadge.items.length === 0) {
-            await wixData.insert(MEMBER_BADGES_COLLECTION, { memberId, badgeId: 'week_wanderer' });
-          }
-        } catch {
-          // Badge award is best-effort — don't fail the whole event
+          await wixData.insert(MEMBER_BADGES_COLLECTION, {
+            _id: `${memberId}_week_wanderer`,
+            memberId,
+            badgeId: 'week_wanderer',
+          });
+        } catch (err) {
+          const msg = String(err?.message ?? err).toLowerCase();
+          const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
+          logError(`gamificationEventReceiver — badge award failed for ${memberId}`, err, { silent: isDuplicate });
         }
       }
 
