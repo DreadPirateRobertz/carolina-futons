@@ -1839,7 +1839,58 @@ export function _resetLeaderboardRateLimit() {
 export async function get_leaderboard(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
   const json = (obj) => JSON.stringify(obj);
+  const params = request.query || {};
 
+  // ── Public path: ?type=points|streak (SiteVisitor, no auth required) ────────
+  if (params.type !== undefined) {
+    const type = params.type;
+    if (!['points', 'streak'].includes(type)) {
+      return badRequest({ body: json({ error: 'Invalid type — must be points or streak' }), headers: JSON_HEADERS });
+    }
+    const rawLimit = params.limit !== undefined ? Number(params.limit) : 20;
+    if (!Number.isFinite(rawLimit) || rawLimit < 1 || rawLimit > 50) {
+      return badRequest({ body: json({ error: 'limit must be between 1 and 50' }), headers: JSON_HEADERS });
+    }
+    const safeLimit = Math.floor(rawLimit);
+    try {
+      const sortField = type === 'points' ? 'totalPoints' : 'currentStreakDays';
+      const pointsResult = await wixData
+        .query('MemberPoints')
+        .descending(sortField)
+        .limit(safeLimit)
+        .find({ suppressAuth: true });
+
+      const memberIds = pointsResult.items.map(item => item.memberId);
+      const badgesByMember = {};
+      if (memberIds.length > 0) {
+        const badgesResult = await wixData
+          .query('MemberBadges')
+          .hasSome('memberId', memberIds)
+          .descending('_createdDate')
+          .find({ suppressAuth: true });
+        for (const badge of badgesResult.items) {
+          if (!badgesByMember[badge.memberId]) {
+            badgesByMember[badge.memberId] = badge.badgeId;
+          }
+        }
+      }
+
+      const members = pointsResult.items.map(item => ({
+        memberId: item.memberId,
+        displayName: item.displayName ?? null,
+        totalPoints: item.totalPoints ?? 0,
+        currentStreakDays: item.currentStreakDays ?? 0,
+        tier: item.tier ?? null,
+        badgeId: badgesByMember[item.memberId] ?? null,
+      }));
+      return ok({ body: json({ members, type, limit: safeLimit }), headers: JSON_HEADERS });
+    } catch (err) {
+      console.error('HTTP function error (leaderboard/public):', err);
+      return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
+    }
+  }
+
+  // ── Member-auth path: ?period=all-time|weekly ────────────────────────────────
   let member;
   try {
     member = await currentMember.getMember();
@@ -1852,7 +1903,6 @@ export async function get_leaderboard(request) {
   }
 
   try {
-    const params = request.query || {};
     const rawLimit = params.limit !== undefined ? Number(params.limit) : 20;
     const period = params.period || 'all-time';
 
