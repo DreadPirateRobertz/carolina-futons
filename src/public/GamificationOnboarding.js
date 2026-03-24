@@ -78,13 +78,18 @@ export async function initOnboarding(memberId, opts = {}) {
     await $w('#gamificationOnboardingOverlay').show();
 
     $w('#onboardingNextBtn').onClick(async () => {
-      if (currentStep < ONBOARDING_STEPS.length - 1) {
-        currentStep += 1;
-        renderStep($w, currentStep);
-      } else {
-        // Last step — close and mark seen
-        markSeen(storage);
-        await $w('#gamificationOnboardingOverlay').hide();
+      try {
+        if (currentStep < ONBOARDING_STEPS.length - 1) {
+          currentStep += 1;
+          renderStep($w, currentStep);
+        } else {
+          // Last step — hide first, then mark seen so a hide() failure
+          // does not permanently lock the user out of onboarding.
+          await $w('#gamificationOnboardingOverlay').hide();
+          markSeen(storage);
+        }
+      } catch (err) {
+        console.warn('[GamificationOnboarding] Next handler failed:', err?.message);
       }
     });
 
@@ -96,8 +101,13 @@ export async function initOnboarding(memberId, opts = {}) {
     });
 
     $w('#onboardingCloseBtn').onClick(async () => {
-      markSeen(storage);
-      await $w('#gamificationOnboardingOverlay').hide();
+      try {
+        // Hide first, then mark seen — same ordering as Next on last step.
+        await $w('#gamificationOnboardingOverlay').hide();
+        markSeen(storage);
+      } catch (err) {
+        console.warn('[GamificationOnboarding] Close handler failed:', err?.message);
+      }
     });
   } catch (err) {
     console.warn('[GamificationOnboarding] initOnboarding failed gracefully:', err?.message);

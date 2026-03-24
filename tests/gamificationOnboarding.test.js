@@ -193,12 +193,14 @@ describe('Next button', () => {
     expect(elems.stepIndicator.text).toBe('3 / 3');
   });
 
-  it('marks seen and hides overlay when clicking Next on the last step', async () => {
+  it('hides overlay then marks seen when clicking Next on the last step', async () => {
     await elems.handlers.next(); // → step 2
     await elems.handlers.next(); // → step 3
     await elems.handlers.next(); // last step → close
-    expect(storage.setItem).toHaveBeenCalledWith('gamification_onboarding_seen', 'true');
     expect(elems.overlay.hide).toHaveBeenCalledOnce();
+    expect(storage.setItem).toHaveBeenCalledWith('gamification_onboarding_seen', 'true');
+    // hide() must resolve before markSeen is called
+    expect(storage.setItem).toHaveBeenCalledAfter(elems.overlay.hide);
   });
 
   it('does not call show again after advancing steps', async () => {
@@ -248,14 +250,11 @@ describe('Close button', () => {
     await initOnboarding('mem-1', { storage });
   });
 
-  it('marks seen when close is clicked', async () => {
-    await elems.handlers.close();
-    expect(storage.setItem).toHaveBeenCalledWith('gamification_onboarding_seen', 'true');
-  });
-
-  it('hides overlay when close is clicked', async () => {
+  it('hides overlay then marks seen when close is clicked', async () => {
     await elems.handlers.close();
     expect(elems.overlay.hide).toHaveBeenCalledOnce();
+    expect(storage.setItem).toHaveBeenCalledWith('gamification_onboarding_seen', 'true');
+    expect(storage.setItem).toHaveBeenCalledAfter(elems.overlay.hide);
   });
 
   it('does not advance step when close is clicked on step 1', async () => {
@@ -285,6 +284,32 @@ describe('initOnboarding — graceful error recovery', () => {
     const storage = makeStorage();
 
     await initOnboarding('mem-1', { storage });
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not mark seen when Close hide() throws', async () => {
+    const elems = makeElements();
+    elems.overlay.hide = vi.fn().mockRejectedValue(new Error('hide failed'));
+    const $w = make$w(elems);
+    globalThis.$w = $w;
+    const storage = makeStorage();
+
+    await initOnboarding('mem-1', { storage });
+    await elems.handlers.close();
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not mark seen when last-step Next hide() throws', async () => {
+    const elems = makeElements();
+    elems.overlay.hide = vi.fn().mockRejectedValue(new Error('hide failed'));
+    const $w = make$w(elems);
+    globalThis.$w = $w;
+    const storage = makeStorage();
+
+    await initOnboarding('mem-1', { storage });
+    await elems.handlers.next(); // step 2
+    await elems.handlers.next(); // step 3
+    await elems.handlers.next(); // last step → attempts hide
     expect(storage.setItem).not.toHaveBeenCalled();
   });
 });
