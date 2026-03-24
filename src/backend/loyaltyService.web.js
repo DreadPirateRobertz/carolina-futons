@@ -259,11 +259,23 @@ export const getLeaderboard = webMethod(
 
       const res = await query.limit(safeLimit).find({ suppressAuth: true });
 
-      // Filter to members who have opted in to the leaderboard (privacy-default: false)
-      const prefsChecks = await Promise.all(
-        res.items.map(item => getGamePrefsForMember(item.memberId))
-      );
-      const optedInItems = res.items.filter((_, idx) => prefsChecks[idx].leaderboardOptIn === true);
+      // Filter to members who have opted in to the leaderboard (privacy-default: false).
+      // Single batch query to avoid N+1 round-trips.
+      const memberIds = res.items.map(item => item.memberId).filter(Boolean);
+      let optedInSet = new Set();
+      if (memberIds.length > 0) {
+        try {
+          const prefsRes = await wixData
+            .query('MemberGamificationPreferences')
+            .hasSome('memberId', memberIds)
+            .limit(memberIds.length)
+            .find({ suppressAuth: true });
+          for (const pref of prefsRes.items) {
+            if (pref.leaderboardOptIn === true) optedInSet.add(pref.memberId);
+          }
+        } catch { /* defaults to empty set — all filtered out on error */ }
+      }
+      const optedInItems = res.items.filter(item => optedInSet.has(item.memberId));
 
       const entries = optedInItems.map((item, idx) => ({
         rank: idx + 1,

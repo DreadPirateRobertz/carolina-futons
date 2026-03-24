@@ -70,13 +70,17 @@ export const getMemberGamePreferences = webMethod(
     if (!member?._id) return { status: 401, error: 'Unauthenticated' };
 
     const memberId = member._id;
-    const res = await wixData
-      .query(COLLECTION)
-      .eq('memberId', memberId)
-      .limit(1)
-      .find({ suppressAuth: true });
+    try {
+      const res = await wixData
+        .query(COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
 
-    return buildPrefs(memberId, res.items?.[0] ?? null);
+      return buildPrefs(memberId, res.items?.[0] ?? null);
+    } catch {
+      return buildPrefs(memberId, null);
+    }
   },
 );
 

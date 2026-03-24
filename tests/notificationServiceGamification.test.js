@@ -10,6 +10,7 @@ import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-ba
 import {
   sendStreakMilestoneNotification,
   sendQuestCompleteNotification,
+  sendChallengeReminder,
   getMyNotifications,
   _resetGetMyNotificationsRateLimit,
 } from '../src/backend/notificationService.web.js';
@@ -169,13 +170,6 @@ describe('getMyNotifications', () => {
 // ── CF-thb: sendChallengeReminder preference gates ───────────────────────────
 
 describe('sendChallengeReminder', () => {
-  // Will import sendChallengeReminder after it exists
-  let sendChallengeReminder;
-
-  beforeEach(async () => {
-    ({ sendChallengeReminder } = await import('../src/backend/notificationService.web.js'));
-  });
-
   it('writes a challenge_reminder notification when prefs allow it', async () => {
     __seed('MemberGamificationPreferences', [{
       _id: 'pref-1', memberId: 'mem-1',
