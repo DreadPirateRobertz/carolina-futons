@@ -161,7 +161,7 @@ export const markBadgeNotified = webMethod(
       await wixData.update(COLLECTION, record, { suppressAuth: true });
     } catch (e) {
       logError(`achievementBadgeService.markBadgeNotified.update [member=${memberId}, badge=${badgeId}]`, e);
-      return null;
+      return { success: false, error: 'Unable to update badge' };
     }
 
     return { updated: true };
