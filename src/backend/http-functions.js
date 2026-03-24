@@ -1821,10 +1821,9 @@ export async function post_challengeProgress(request) {
 
 // ── Leaderboard Endpoint ──────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/leaderboard
-// Returns top N members ranked by loyalty points for the mobile Leaderboard screen.
-// Auth: Wix member session required.
-// Query params: limit (default 20, max 50), period ('all-time' | 'weekly')
-// Rate limit: 30/min per member.
+// Two paths:
+//   ?type=points|streak  — public (SiteVisitor), no auth, global 60 req/min rate limit
+//   ?period=all-time|weekly — member auth required, 30 req/min per member
 
 // In-memory rate limit store (per server instance, resets on deploy — acceptable for Wix serverless)
 const _leaderboardRateLimit = new Map(); // memberId → { count, windowStart }
@@ -1843,6 +1842,7 @@ export async function get_leaderboard(request) {
 
   // ── Public path: ?type=points|streak (SiteVisitor, no auth required) ────────
   if (params.type !== undefined) {
+    const PUBLIC_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=60' };
     const type = params.type;
     if (!['points', 'streak'].includes(type)) {
       return badRequest({ body: json({ error: 'Invalid type — must be points or streak' }), headers: JSON_HEADERS });
@@ -1853,6 +1853,13 @@ export async function get_leaderboard(request) {
     }
     const safeLimit = Math.floor(rawLimit);
     try {
+      // Global rate limit (CMS-backed, shared across serverless instances) — prevents billing DoS
+      const { checkRateLimit } = await import('backend/utils/rateLimit');
+      const rlResult = await checkRateLimit('LeaderboardPublicRateLimit', 'global', { max: 60, windowMs: 60_000 });
+      if (!rlResult.allowed) {
+        return response({ status: 429, body: json({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
+      }
+
       const sortField = type === 'points' ? 'totalPoints' : 'currentStreakDays';
       const pointsResult = await wixData
         .query('MemberPoints')
@@ -1863,10 +1870,13 @@ export async function get_leaderboard(request) {
       const memberIds = pointsResult.items.map(item => item.memberId);
       const badgesByMember = {};
       if (memberIds.length > 0) {
+        // Fetch up to safeLimit*10 badge rows (capped at 1000) to avoid silent truncation
+        // when members hold many badges.
         const badgesResult = await wixData
           .query('MemberBadges')
           .hasSome('memberId', memberIds)
           .descending('_createdDate')
+          .limit(Math.min(safeLimit * 10, 1000))
           .find({ suppressAuth: true });
         for (const badge of badgesResult.items) {
           if (!badgesByMember[badge.memberId]) {
@@ -1883,7 +1893,7 @@ export async function get_leaderboard(request) {
         tier: item.tier ?? null,
         badgeId: badgesByMember[item.memberId] ?? null,
       }));
-      return ok({ body: json({ members, type, limit: safeLimit }), headers: JSON_HEADERS });
+      return ok({ body: json({ members, type, limit: safeLimit }), headers: PUBLIC_HEADERS });
     } catch (err) {
       console.error('HTTP function error (leaderboard/public):', err);
       return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });

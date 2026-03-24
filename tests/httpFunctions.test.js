@@ -1782,6 +1782,7 @@ describe('get_leaderboard — public (type=points)', () => {
     resetData();
     resetMembers();
     __seed('MemberPoints', POINTS_MEMBERS);
+    __seed('LeaderboardPublicRateLimit', []); // fresh rate limit bucket each test
   });
 
   it('returns 200 with members array sorted by totalPoints descending', async () => {
@@ -1859,6 +1860,31 @@ describe('get_leaderboard — public (type=points)', () => {
     const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
     expect(result.status).toBe(500);
   });
+
+  it('uses suppressAuth: true for MemberBadges query', async () => {
+    __seed('MemberBadges', [
+      { _id: 'b-1', memberId: 'mem-1', badgeId: 'explorer', _createdDate: new Date() },
+    ]);
+    await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(__getLastFindOptions('MemberBadges')).toEqual({ suppressAuth: true });
+  });
+
+  it('returns Cache-Control: public, max-age=60 on successful response', async () => {
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(200);
+    expect(result.headers['Cache-Control']).toBe('public, max-age=60');
+  });
+
+  it('returns 429 when global rate limit is exceeded (60 req/min)', async () => {
+    // Seed the rate limit bucket at max count within the window
+    __seed('LeaderboardPublicRateLimit', [{
+      _id: 'rl-global', key: 'global', count: 60,
+      windowStart: new Date(Date.now() - 30_000), // 30s ago — still in window
+    }]);
+    const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
+    expect(result.status).toBe(429);
+    expect(JSON.parse(result.body).error).toMatch(/rate limit/i);
+  });
 });
 
 describe('get_leaderboard — public (type=streak)', () => {
@@ -1866,6 +1892,7 @@ describe('get_leaderboard — public (type=streak)', () => {
     resetData();
     resetMembers();
     __seed('MemberPoints', POINTS_MEMBERS);
+    __seed('LeaderboardPublicRateLimit', []);
   });
 
   it('returns 200 with members sorted by currentStreakDays descending', async () => {
