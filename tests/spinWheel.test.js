@@ -23,6 +23,7 @@ import {
   __getUpdated,
 } from './__mocks__/wix-data.js';
 import { spinWheel, getSpinEligibility } from '../src/backend/spinWheel.web.js';
+import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
 
 // Compute today's ET date the same way the implementation does
 const TODAY_ET = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -463,5 +464,42 @@ describe('getSpinEligibility — spinWheelVisible preference gate', () => {
     const result = await getSpinEligibility('mem-no-prefs');
     expect(result.reason).not.toBe('PREF_DISABLED');
     expect(result.eligible).toBe(true);
+  });
+});
+
+// ── AnalyticsEvents pipeline (CF-3wl) ─────────────────────────────────────────
+
+describe('AnalyticsEvents — spin_wheel_spin and spin_wheel_prize on successful spin', () => {
+  it('inserts a spin_wheel_spin event on a successful DAILY spin', async () => {
+    __seed('SpinPrizes', [{ _id: 'sp-1', active: true, weight: 10, prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points' }]);
+    __seed('SpinHistory', []);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    await spinWheel('mem-sw-1');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const spinRow = rows.find(r => r.eventType === 'spin_wheel_spin');
+    expect(spinRow).toBeTruthy();
+    expect(spinRow.memberId).toBe('mem-sw-1');
+    expect(spinRow.source).toBe('gamification');
+    const p = JSON.parse(spinRow.payload);
+    expect(p.spinType).toBe('DAILY');
+  });
+
+  it('inserts a spin_wheel_prize event with prize details on a successful spin', async () => {
+    __seed('SpinPrizes', [{ _id: 'sp-1', active: true, weight: 10, prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points' }]);
+    __seed('SpinHistory', []);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    await spinWheel('mem-sw-2');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const prizeRow = rows.find(r => r.eventType === 'spin_wheel_prize');
+    expect(prizeRow).toBeTruthy();
+    expect(prizeRow.memberId).toBe('mem-sw-2');
+    expect(prizeRow.source).toBe('gamification');
+    const p = JSON.parse(prizeRow.payload);
+    expect(p.prizeType).toBe('POINTS');
+    expect(p.pointsAwarded).toBe(50);
   });
 });

@@ -17,6 +17,7 @@ import { logError } from 'backend/utils/errorHandler';
 import { getTodayET } from 'backend/utils/dateUtils';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
+import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -305,6 +306,14 @@ export const spinWheel = webMethod(
       // 7. Decrement bonus spin (BONUS only)
       if (spinType === 'BONUS') {
         await decrementBonusSpin(memberId);
+      }
+
+      // CF-3wl: AnalyticsEvents pipeline — best-effort, never throws
+      try {
+        await insertAnalyticsEvent({ memberId, eventType: 'spin_wheel_spin', source: 'gamification', payload: { spinType, eventId } });
+        await insertAnalyticsEvent({ memberId, eventType: 'spin_wheel_prize', source: 'gamification', payload: { prizeType: prize.prizeType, pointsAwarded: prize.pointsAwarded || 0, label: prize.label } });
+      } catch (err) {
+        logError('spinWheel — analytics insert failed', err);
       }
 
       return {

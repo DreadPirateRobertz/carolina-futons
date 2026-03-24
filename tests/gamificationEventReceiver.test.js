@@ -30,6 +30,7 @@ import {
 import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES, STREAK_RECOVERY_COST } from '../src/public/gamificationTokens.js';
 import { getTodayET, getYesterdayOf } from '../src/backend/utils/dateUtils.js';
+import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
 
 beforeEach(() => {
   __reset();
@@ -2074,5 +2075,191 @@ describe('receiveGamificationEvent — pointsEarned and badgeUnlocked', () => {
     expect(result.success).toBe(true);
     // Math.round(5 * 2) = 10 (adjustedPoints), + 100 (STREAK_7_DAY milestoneBonus)
     expect(result.pointsEarned).toBe(10 + POINT_VALUES.STREAK_7_DAY);
+  });
+});
+
+// ── AnalyticsEvents pipeline (CF-3wl) ─────────────────────────────────────────
+
+describe('AnalyticsEvents — tier_upgrade written on tier change', () => {
+  it('inserts a tier_upgrade event when member crosses a tier boundary', async () => {
+    // 499 pts + add_to_cart (5 pts) = 504 → crosses Mountain Guide (500)
+    __seed('MemberPoints', [{ _id: 'mp-ae1', memberId: 'mem-ae-1', totalPoints: 499, tier: 'Trail Blazer' }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-1');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const tierRow = rows.find(r => r.eventType === 'tier_upgrade');
+    expect(tierRow).toBeTruthy();
+    expect(tierRow.memberId).toBe('mem-ae-1');
+    expect(tierRow.source).toBe('gamification');
+    const p = JSON.parse(tierRow.payload);
+    expect(p.newTier).toBe('Mountain Guide');
+    expect(tierRow.timestamp).toBeInstanceOf(Date);
+  });
+
+  it('does NOT insert a tier_upgrade event when tier is unchanged', async () => {
+    // 100 pts + add_to_cart (5 pts) = 105 → stays Trail Blazer
+    __seed('MemberPoints', [{ _id: 'mp-ae2', memberId: 'mem-ae-2', totalPoints: 100, tier: 'Trail Blazer' }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-2');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(rows.find(r => r.eventType === 'tier_upgrade')).toBeUndefined();
+  });
+});
+
+describe('AnalyticsEvents — badge_earned written on week_wanderer award', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z')); // today=2026-03-22, yesterday=2026-03-21
+  });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('inserts a badge_earned event when week_wanderer badge is awarded at day-7 milestone', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-ae3', memberId: 'mem-ae-3', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 6, streakStartDate: '2026-03-16',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1.5,
+    }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-3');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const badgeRow = rows.find(r => r.eventType === 'badge_earned');
+    expect(badgeRow).toBeTruthy();
+    expect(badgeRow.memberId).toBe('mem-ae-3');
+    expect(badgeRow.source).toBe('gamification');
+    const p = JSON.parse(badgeRow.payload);
+    expect(p.badgeId).toBe('week_wanderer');
+  });
+
+  it('does NOT insert a badge_earned event when no milestone fires', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-ae4', memberId: 'mem-ae-4', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1.5,
+    }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-4');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(rows.find(r => r.eventType === 'badge_earned')).toBeUndefined();
+  });
+});
+
+describe('AnalyticsEvents — streak_extended written on streak increment', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z')); // today=2026-03-22, yesterday=2026-03-21
+  });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('inserts a streak_extended event when streak increments', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-ae5', memberId: 'mem-ae-5', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-21', streakMultiplier: 1.5,
+    }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-5');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const streakRow = rows.find(r => r.eventType === 'streak_extended');
+    expect(streakRow).toBeTruthy();
+    expect(streakRow.memberId).toBe('mem-ae-5');
+    expect(streakRow.source).toBe('gamification');
+    const p = JSON.parse(streakRow.payload);
+    expect(p.currentStreakDays).toBe(4);
+  });
+
+  it('does NOT insert a streak_extended event when already active today', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-ae6', memberId: 'mem-ae-6', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 3, streakStartDate: '2026-03-19',
+      lastActivityDate: '2026-03-22', // already today → no increment
+      streakMultiplier: 1.5,
+    }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ae-6');
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(rows.find(r => r.eventType === 'streak_extended')).toBeUndefined();
+  });
+});
+
+describe('AnalyticsEvents — challenge_started written on first progress unit', () => {
+  it('inserts a challenge_started event on first progress for a member', async () => {
+    __seed('Challenges', [{
+      _id: 'ch-ae1', challengeId: 'ch-ae1', title: 'First Steps',
+      conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+      rewardBadgeId: null, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), active: true,
+    }]);
+
+    await recordChallengeProgress({ memberId: 'mem-ae-7', challengeId: 'ch-ae1' });
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const startRow = rows.find(r => r.eventType === 'challenge_started');
+    expect(startRow).toBeTruthy();
+    expect(startRow.memberId).toBe('mem-ae-7');
+    expect(startRow.source).toBe('gamification');
+    const p = JSON.parse(startRow.payload);
+    expect(p.challengeId).toBe('ch-ae1');
+  });
+
+  it('does NOT insert challenge_started when member already has progress', async () => {
+    __seed('Challenges', [{
+      _id: 'ch-ae2', challengeId: 'ch-ae2', title: 'Keep Going',
+      conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+      rewardBadgeId: null, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), active: true,
+    }]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [{
+      _id: 'cp-ae1', memberId: 'mem-ae-8', challengeId: 'ch-ae2', progressValue: 1, completedAt: null,
+    }]);
+
+    await recordChallengeProgress({ memberId: 'mem-ae-8', challengeId: 'ch-ae2' });
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(rows.find(r => r.eventType === 'challenge_started')).toBeUndefined();
+  });
+});
+
+describe('AnalyticsEvents — challenge_completed written when challenge finishes', () => {
+  it('inserts a challenge_completed event when progress reaches targetCount', async () => {
+    __seed('Challenges', [{
+      _id: 'ch-ae3', challengeId: 'ch-ae3', title: 'Order 3 Times',
+      conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+      rewardBadgeId: null, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), active: true,
+    }]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [{
+      _id: 'cp-ae2', memberId: 'mem-ae-9', challengeId: 'ch-ae3', progressValue: 2, completedAt: null,
+    }]);
+    __seed('MemberPoints', [{ _id: 'mp-ae9', memberId: 'mem-ae-9', totalPoints: 100, tier: 'Trail Blazer' }]);
+
+    await recordChallengeProgress({ memberId: 'mem-ae-9', challengeId: 'ch-ae3' });
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    const completeRow = rows.find(r => r.eventType === 'challenge_completed');
+    expect(completeRow).toBeTruthy();
+    expect(completeRow.memberId).toBe('mem-ae-9');
+    expect(completeRow.source).toBe('gamification');
+    const p = JSON.parse(completeRow.payload);
+    expect(p.challengeId).toBe('ch-ae3');
+    expect(p.pointsAwarded).toBe(50);
+  });
+
+  it('does NOT insert challenge_completed when challenge is not yet finished', async () => {
+    __seed('Challenges', [{
+      _id: 'ch-ae4', challengeId: 'ch-ae4', title: 'Keep Going',
+      conditionType: 'ORDER_COMPLETE', targetCount: 3, rewardPoints: 50,
+      rewardBadgeId: null, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), active: true,
+    }]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, [{
+      _id: 'cp-ae3', memberId: 'mem-ae-10', challengeId: 'ch-ae4', progressValue: 1, completedAt: null,
+    }]);
+
+    await recordChallengeProgress({ memberId: 'mem-ae-10', challengeId: 'ch-ae4' });
+
+    const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(rows.find(r => r.eventType === 'challenge_completed')).toBeUndefined();
   });
 });
