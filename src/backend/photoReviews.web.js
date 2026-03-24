@@ -29,6 +29,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -98,6 +99,14 @@ export const submitPhotoReview = webMethod(
       };
 
       const inserted = await wixData.insert('PhotoReviews', record);
+
+      // Fire gamification event — non-blocking; failure must never break the submit
+      receiveGamificationEvent(
+        'gamification_submit_review',
+        { has_photo: true },
+        memberId,
+      ).catch(err => console.warn('[photoReviews] gamification event failed:', err));
+
       return { success: true, id: inserted._id };
     } catch (err) {
       console.error('[photoReviews] Error submitting photo review:', err);
