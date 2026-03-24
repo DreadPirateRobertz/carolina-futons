@@ -25,8 +25,8 @@ const MEMBER_ID_PARAMS = /\b(memberId|userId|contactId|memberParam|ownerId)\b|fr
 // Query patterns that use the param in a data query
 const QUERY_PATTERN = /\.eq\s*\(/;
 
-// Ownership check: calling getMember or currentMember
-const OWNERSHIP_CHECK = /getMember\s*\(\)|currentMember\s*\./;
+// Ownership check: calling getMember, currentMember, or a recognized ownership helper
+const OWNERSHIP_CHECK = /getMember\s*\(\)|currentMember\s*\.|requireOwnMember\s*\(/;
 
 /**
  * Extract all SiteMember webMethod function bodies from a file's source text.
