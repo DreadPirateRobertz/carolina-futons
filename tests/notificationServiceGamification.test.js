@@ -264,6 +264,21 @@ describe('sendChallengeReminder — cadence enforcement', () => {
     expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
   });
 
+  it('sends at the exact 20h boundary (not < 20h, so gate passes)', async () => {
+    // System time: 2026-03-22T14:00:00Z; last sent exactly 20h before = 2026-03-21T18:00:00Z
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-6', memberId: 'mem-6',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-6', memberId: 'mem-6', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-21T18:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-6', 'Daily challenge!');
+    // elapsed == 20h == minGapMs → condition (< minGapMs) is false → sends
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
+  });
+
   it('skips sending when weekly reminder was sent < 6 days ago', async () => {
     __seed('MemberGamificationPreferences', [{
       _id: 'pref-3', memberId: 'mem-3',
@@ -360,6 +375,12 @@ describe('sendStreakDangerNotification', () => {
   it('does not insert when memberId is null', async () => {
     vi.setSystemTime(new Date('2026-03-23T00:30:00Z'));
     await sendStreakDangerNotification(null, '2026-03-21');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
+  });
+
+  it('does not insert when lastActivityDate is null (no streak to protect)', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z')); // < 4h till midnight ET
+    await sendStreakDangerNotification('mem-1', null);
     expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
   });
 

@@ -422,6 +422,7 @@ export function _resetGetMyNotificationsRateLimit() {
  * @param {'streak_milestone'|'daily_quest'|'challenge_reminder'|'streak_danger'} type
  * @param {string} message
  * @param {Object} [extra] - extra fields (e.g. { milestone, dangerDate, deepLink })
+ * @returns {Promise<void>} Best-effort: logs on insert failure rather than throwing.
  */
 async function writeNotification(memberId, type, message, extra = {}) {
   if (!memberId) return;
@@ -499,8 +500,14 @@ export async function sendQuestCompleteNotification(memberId, questTitle, points
  */
 export async function sendStreakDangerNotification(memberId, lastActivityDate) {
   if (!memberId || !validateId(memberId)) return;
-  const todayET = getTodayET();
-  if (!computeStreakDanger(lastActivityDate, todayET)) return;
+  let todayET;
+  try {
+    todayET = getTodayET();
+    if (!computeStreakDanger(lastActivityDate, todayET)) return;
+  } catch (err) {
+    logError('[notificationService] sendStreakDangerNotification date computation failed', err);
+    return;
+  }
   const message = '⚠️ Your streak is at risk! Complete a qualifying action before midnight ET to keep it alive.';
   await writeNotification(memberId, 'streak_danger', message, {
     dangerDate: todayET,

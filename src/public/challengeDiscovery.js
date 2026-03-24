@@ -52,11 +52,17 @@ export async function initChallengeDiscoveryChip(elements, memberId, getActiveCh
     return;
   }
 
+  const allowedConditions = CONTEXT_CONDITIONS[context];
+  if (!allowedConditions) {
+    console.warn('[challengeDiscovery] unknown context:', context);
+    _hideChip($chip);
+    return;
+  }
+
   try {
     const result = await getActiveChallengesFn(memberId);
     const challenges = result?.challenges ?? [];
 
-    const allowedConditions = CONTEXT_CONDITIONS[context] ?? [];
     const match = challenges.find(c =>
       allowedConditions.includes(c.conditionType) &&
       !c.completedAt
@@ -68,7 +74,8 @@ export async function initChallengeDiscoveryChip(elements, memberId, getActiveCh
     }
 
     _showChip($chip, $chipTitle, $chipProg, match);
-  } catch {
+  } catch (err) {
+    console.error('[challengeDiscovery] initChallengeDiscoveryChip failed', err);
     _hideChip($chip);
   }
 }
@@ -82,7 +89,8 @@ function _showChip($chip, $chipTitle, $chipProg, challenge) {
     $chipTitle.text = challenge.title;
     $chipProg.text = `${challenge.progressValue} / ${challenge.targetCount}`;
     $chip.show();
-  } catch {
+  } catch (err) {
+    console.error('[challengeDiscovery] _showChip failed', err);
     _hideChip($chip);
   }
 }

@@ -133,4 +133,64 @@ describe('initChallengeDiscoveryChip', () => {
     await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
     expect(elements.$chip.show).toHaveBeenCalled();
   });
+
+  it('shows chip for page_view context when page_view challenge is active', async () => {
+    const pvChallenge = {
+      challengeId: 'ch-4',
+      title: 'Browse 5 products',
+      conditionType: 'page_view',
+      targetCount: 5,
+      progressValue: 2,
+      completedAt: null,
+    };
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [pvChallenge] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'page_view');
+    expect(elements.$chip.show).toHaveBeenCalled();
+    expect(elements.$chipTitle.text).toBe('Browse 5 products');
+    expect(elements.$chipProg.text).toBe('2 / 5');
+  });
+
+  it('accepts gamification_page_view conditionType as page_view context match', async () => {
+    const pvChallenge = {
+      challengeId: 'ch-5',
+      title: 'Browse products',
+      conditionType: 'gamification_page_view',
+      targetCount: 5,
+      progressValue: 1,
+      completedAt: null,
+    };
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [pvChallenge] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'page_view');
+    expect(elements.$chip.show).toHaveBeenCalled();
+  });
+
+  it('hides chip when page_view challenge is completed', async () => {
+    const pvDone = {
+      challengeId: 'ch-6',
+      title: 'Browse products',
+      conditionType: 'page_view',
+      targetCount: 5,
+      progressValue: 5,
+      completedAt: '2026-03-22T10:00:00Z',
+    };
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [pvDone] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'page_view');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+  });
+
+  it('hides chip for unknown context even when challenges exist', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [ADD_TO_CART_CHALLENGE] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'unknown_ctx');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    // getActiveChallenges should not be called — we bail before the network call
+    expect(mockGetActiveChallenges).not.toHaveBeenCalled();
+  });
+
+  it('shows second incomplete challenge when first is completed (completed shadows incomplete)', async () => {
+    const incomplete = { ...ADD_TO_CART_CHALLENGE, challengeId: 'ch-10', title: 'Second chance', progressValue: 2 };
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [COMPLETED_CHALLENGE, incomplete] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.show).toHaveBeenCalled();
+    expect(elements.$chipTitle.text).toBe('Second chance');
+  });
 });
