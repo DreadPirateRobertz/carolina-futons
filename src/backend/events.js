@@ -200,7 +200,12 @@ export async function wixEcom_onOrderCreated(event) {
 
   if (memberId) {
     try {
-      const { recordChallengeProgress } = await import('backend/gamificationEventReceiver.web');
+      const { receiveGamificationEvent, recordChallengeProgress } = await import('backend/gamificationEventReceiver.web');
+
+      // Award points for purchase — web customers earn points on every order.
+      // CF-tf1: this call was missing, leaving web-only customers with zero points.
+      await receiveGamificationEvent('gamification_order_complete', { orderTotal: Number(total) }, memberId);
+
       const challengeQuery = await wixData
         .query('Challenges')
         .eq('conditionType', 'ORDER_COMPLETE')
@@ -210,7 +215,7 @@ export async function wixEcom_onOrderCreated(event) {
         await recordChallengeProgress({ memberId, challengeId: challenge.challengeId });
       }
     } catch (err) {
-      console.error('[events] Error recording challenge progress on order:', err);
+      console.error('[events] Error recording gamification on order:', err);
     }
   }
 }
