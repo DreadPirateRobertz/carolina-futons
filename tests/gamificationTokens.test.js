@@ -398,20 +398,20 @@ describe('getStreakMultiplier', () => {
     expect(getStreakMultiplier(2)).toBe(1);
   });
 
-  it('returns 1.5 for day 3 (bottom of 1.5x tier)', () => {
-    expect(getStreakMultiplier(3)).toBe(1.5);
+  it('returns 2 for day 3 (bottom of 2x tier)', () => {
+    expect(getStreakMultiplier(3)).toBe(2);
   });
 
-  it('returns 1.5 for day 6 (top of 1.5x tier)', () => {
-    expect(getStreakMultiplier(6)).toBe(1.5);
+  it('returns 2 for day 6 (top of 2x tier)', () => {
+    expect(getStreakMultiplier(6)).toBe(2);
   });
 
-  it('returns 2 for day 7 (bottom of 2x tier)', () => {
-    expect(getStreakMultiplier(7)).toBe(2);
+  it('returns 3 for day 7 (bottom of 3x tier)', () => {
+    expect(getStreakMultiplier(7)).toBe(3);
   });
 
-  it('returns 2 for day 30 (well into 2x tier)', () => {
-    expect(getStreakMultiplier(30)).toBe(2);
+  it('returns 3 for day 30 (well into 3x tier)', () => {
+    expect(getStreakMultiplier(30)).toBe(3);
   });
 });
 

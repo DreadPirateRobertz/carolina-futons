@@ -8,9 +8,9 @@
  * Supported events:
  *   gamification_add_to_cart      — +5 pts
  *   gamification_submit_review    — +50 pts (+25 bonus if has_photo)
- *   gamification_referral_shared   — +100 pts
- *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (200 pts)
- *   gamification_order_complete    — +Math.floor(orderTotal) pts (0 if missing)
+ *   gamification_referral_shared   — +100 pts (streak-multiplied)
+ *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (200 pts, streak-multiplied)
+ *   gamification_order_complete    — +Math.floor(orderTotal) pts (streak-multiplied)
  *   gamification_ar_used          — +POINT_VALUES.AR_USED (10 pts)
  *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (2 pts), capped at 5/day
  *   gamification_spin_completed   — +0 pts (tracked for bonus-spin grant only)
@@ -62,6 +62,13 @@ export function _resetRecordChallengeProgressRateLimit() {
 // Point values not in POINT_VALUES (which covers review/AR/referral-accepted/etc.)
 const ADD_TO_CART_POINTS = 5;
 const REFERRAL_SHARED_POINTS = 100; // distinct from REFERRAL_ACCEPTED (200 pts for completed referrals)
+
+// Events whose point awards are fixed and must NOT be multiplied by the streak multiplier.
+// Birthday and anniversary bonuses are flat rewards — doubling them would be incorrect.
+const FIXED_AWARD_EVENTS = new Set([
+  'gamification_birthday_bonus',
+  'gamification_anniversary_bonus',
+]);
 
 /**
  * Receive a gamification event and award points to the member.
@@ -125,8 +132,10 @@ export const receiveGamificationEvent = webMethod(
         ? basePoints
         : 0;
 
-      // Apply streak multiplier to effective base points
-      const adjustedPoints = Math.round(effectiveBase * streakState.streakMultiplier);
+      // Apply streak multiplier to effective base points.
+      // Fixed-award events (birthday, anniversary) are exempt — their value must not scale.
+      const multiplier = FIXED_AWARD_EVENTS.has(eventName) ? 1 : streakState.streakMultiplier;
+      const adjustedPoints = Math.round(effectiveBase * multiplier);
       const newTotal = oldTotal + adjustedPoints + streakState.milestoneBonus;
       const newTier = getTierForPoints(newTotal);
       const tierChanged = newTier !== oldTier;

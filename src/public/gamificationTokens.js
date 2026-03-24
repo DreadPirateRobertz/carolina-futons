@@ -36,14 +36,15 @@ export const STREAK_RECOVERY_COST = 50;
 // ── Streak multiplier tiers ───────────────────────────────────────────────────
 
 export const STREAK_MULTIPLIER_TIERS = [
-  { minDays: 7, multiplier: 2 },
-  { minDays: 3, multiplier: 1.5 },
+  { minDays: 7, multiplier: 3 },
+  { minDays: 3, multiplier: 2 },
   { minDays: 1, multiplier: 1 },
 ];
 
 /**
  * Returns the streak multiplier for a given number of consecutive ET days.
- * Tiers: 1-2 days → 1×, 3-6 days → 1.5×, 7+ days → 2×.
+ * Tiers: 1-2 days → 1×, 3-6 days → 2×, 7+ days → 3×.
+ * Does NOT apply to fixed-award events (birthday, anniversary) — see FIXED_AWARD_EVENTS.
  * @param {number} days
  * @returns {number}
  */
