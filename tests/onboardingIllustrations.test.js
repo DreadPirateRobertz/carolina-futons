@@ -333,4 +333,23 @@ describe('initOnboardingScene', () => {
     const { $w } = makeWix(false);
     expect(() => initOnboardingScene($w, firstKey, '#onboardingScene')).not.toThrow();
   });
+
+  it('does not propagate onMessage errors — logs console.error (catch-path guard)', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const firstKey = Object.keys(ONBOARDING_SVGS)[0];
+    const { $w, containers, trigger } = makeWix();
+    initOnboardingScene($w, firstKey, '#onboardingScene');
+    // Poison the container's html setter so the next assignment throws
+    Object.defineProperty(containers['#onboardingScene'], 'html', {
+      get: () => '',
+      set: () => { throw new Error('DOM write failed'); },
+      configurable: true,
+    });
+    expect(() => trigger({ skyColors: ['#1A2B3C'], starOpacity: 0 })).not.toThrow();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[onboardingIllustrations] onMessage handler failed:'),
+      expect.any(Error),
+    );
+    consoleSpy.mockRestore();
+  });
 });
