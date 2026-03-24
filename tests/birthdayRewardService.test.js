@@ -26,6 +26,7 @@ vi.mock('backend/couponsService.web', () => ({
 import {
   checkAndSendBirthdayRewards,
   checkAndSendAnniversaryRewards,
+  checkAndSendPurchaseAnniversaryRewards,
 } from '../src/backend/birthdayRewardService.web.js';
 
 // ── Date helpers ──────────────────────────────────────────────────────
@@ -33,6 +34,26 @@ import {
 const TODAY = new Date();
 const TODAY_MONTH = TODAY.getMonth() + 1; // 1-based
 const TODAY_DAY   = TODAY.getDate();
+
+// Month and day that is always ≥ 4 days from today — 6 months away, midmonth.
+// Used to seed a profile that is definitively outside the ±3-day birthday window.
+const FAR_MONTH = ((TODAY_MONTH + 5) % 12) + 1;
+const FAR_DAY   = 15;
+
+// ET date string for today — derived from Intl to match getTodayET() in service.
+const TODAY_ET = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/New_York',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(TODAY);
+
+// Compute a firstPurchaseDate that is exactly N years before today (ET), as YYYY-MM-DD.
+function firstPurchaseNYearsAgo(n) {
+  const [y, m, d] = TODAY_ET.split('-').map(Number);
+  let ay = y - n, am = m, ad = d;
+  // Clamp Feb 29 → Feb 28 in non-leap years (mirrors getAnniversaryYear logic)
+  if (am === 2 && ad === 29 && !( (ay % 4 === 0 && ay % 100 !== 0) || ay % 400 === 0 )) ad = 28;
+  return `${ay}-${String(am).padStart(2, '0')}-${String(ad).padStart(2, '0')}`;
+}
 
 function yearsAgo(n) {
   const d = new Date(TODAY);
@@ -42,14 +63,15 @@ function yearsAgo(n) {
 
 function makeProfile(overrides = {}) {
   return {
-    _id:           overrides._id          || 'profile-1',
-    memberId:      overrides.memberId     || 'mem-1',
-    email:         overrides.email        || 'jane@example.com',
-    memberName:    overrides.memberName   || 'Jane Doe',
-    contactId:     overrides.contactId   || 'contact-1',
-    birthdayMonth: overrides.birthdayMonth ?? TODAY_MONTH,
-    birthdayDay:   overrides.birthdayDay  ?? TODAY_DAY,
-    joinDate:      overrides.joinDate     || yearsAgo(2),
+    _id:               overrides._id              || 'profile-1',
+    memberId:          overrides.memberId         || 'mem-1',
+    email:             overrides.email            || 'jane@example.com',
+    memberName:        overrides.memberName       || 'Jane Doe',
+    contactId:         overrides.contactId        || 'contact-1',
+    birthdayMonth:     overrides.birthdayMonth    ?? TODAY_MONTH,
+    birthdayDay:       overrides.birthdayDay      ?? TODAY_DAY,
+    joinDate:          overrides.joinDate         || yearsAgo(2),
+    firstPurchaseDate: overrides.firstPurchaseDate ?? null,
     ...overrides,
   };
 }
@@ -73,14 +95,15 @@ describe('checkAndSendBirthdayRewards — matching', () => {
     expect(result.sent).toBe(1);
   });
 
-  it('skips member whose birthday is a different day', async () => {
-    __seed('MemberProfiles', [makeProfile({ birthdayDay: (TODAY_DAY % 28) + 1 === TODAY_DAY ? 1 : (TODAY_DAY % 28) + 1 })]);
+  it('skips member whose birthday is more than 3 days away (outside 7-day window)', async () => {
+    // FAR_MONTH/FAR_DAY is 6 months from today — guaranteed outside ±3-day window
+    __seed('MemberProfiles', [makeProfile({ birthdayMonth: FAR_MONTH, birthdayDay: FAR_DAY })]);
     const result = await checkAndSendBirthdayRewards();
     expect(result.sent).toBe(0);
   });
 
-  it('skips member whose birthday month does not match', async () => {
-    __seed('MemberProfiles', [makeProfile({ birthdayMonth: (TODAY_MONTH % 12) + 1 })]);
+  it('skips member with no birthdayMonth set', async () => {
+    __seed('MemberProfiles', [makeProfile({ birthdayMonth: null, birthdayDay: null })]);
     const result = await checkAndSendBirthdayRewards();
     expect(result.sent).toBe(0);
   });
@@ -330,6 +353,95 @@ describe('checkAndSendAnniversaryRewards — deduplication', () => {
     await checkAndSendAnniversaryRewards();
     const records = __getInserted('BirthdayRewards');
     expect(records[0].rewardType).toBe('anniversary_3yr');
+    expect(records[0].year).toBe(TODAY.getFullYear());
+  });
+});
+
+// ── checkAndSendPurchaseAnniversaryRewards ────────────────────────────
+
+describe('checkAndSendPurchaseAnniversaryRewards — matching', () => {
+  it('sends 1yr purchase anniversary reward', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(1);
+  });
+
+  it('sends 2yr purchase anniversary reward', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(2) })]);
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(1);
+  });
+
+  it('skips member with no firstPurchaseDate', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: null })]);
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(0);
+  });
+
+  it('skips member at 3yr purchase anniversary (not a milestone)', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(3) })]);
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(0);
+  });
+
+  it('returns 0 sent when MemberProfiles query throws', async () => {
+    __setQueryError('MemberProfiles', new Error('CMS unavailable'));
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result).toEqual({ sent: 0, skipped: 0, failed: 0 });
+    expect(couponMocks.createTierUpgradeCoupon).not.toHaveBeenCalled();
+  });
+});
+
+describe('checkAndSendPurchaseAnniversaryRewards — discount tiers', () => {
+  it('1yr purchase anniversary uses 10% discount', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    await checkAndSendPurchaseAnniversaryRewards();
+    const record = __getInserted('BirthdayRewards').find(r => r.rewardType === 'purchase_anniversary_1yr');
+    expect(record.discountPercent).toBe(10);
+  });
+
+  it('2yr purchase anniversary uses 15% discount', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(2) })]);
+    await checkAndSendPurchaseAnniversaryRewards();
+    const record = __getInserted('BirthdayRewards').find(r => r.rewardType === 'purchase_anniversary_2yr');
+    expect(record.discountPercent).toBe(15);
+  });
+});
+
+describe('checkAndSendPurchaseAnniversaryRewards — email templates', () => {
+  it('1yr uses purchase_anniversary_1yr email template', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    await checkAndSendPurchaseAnniversaryRewards();
+    const log = __getEmailLog();
+    expect(log.find(e => e.templateId === 'purchase_anniversary_1yr')).toBeDefined();
+  });
+
+  it('2yr uses purchase_anniversary_2yr email template', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(2) })]);
+    await checkAndSendPurchaseAnniversaryRewards();
+    const log = __getEmailLog();
+    expect(log.find(e => e.templateId === 'purchase_anniversary_2yr')).toBeDefined();
+  });
+});
+
+describe('checkAndSendPurchaseAnniversaryRewards — deduplication', () => {
+  it('skips 1yr reward if already sent this year', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    __seed('BirthdayRewards', [{
+      _id: 'ded-1',
+      memberId: 'mem-1',
+      rewardType: 'purchase_anniversary_1yr',
+      year: TODAY.getFullYear(),
+    }]);
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(0);
+  });
+
+  it('inserts dedup record with correct rewardType and year', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(2) })]);
+    await checkAndSendPurchaseAnniversaryRewards();
+    const records = __getInserted('BirthdayRewards');
+    expect(records[0].rewardType).toBe('purchase_anniversary_2yr');
     expect(records[0].year).toBe(TODAY.getFullYear());
   });
 });
