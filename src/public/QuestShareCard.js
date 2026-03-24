@@ -70,7 +70,7 @@ export function buildShareCardDataUrl({ badgeLabel, questName, brand = BRAND }) 
  * @param {string} p.questName
  * @param {string} [p.brand]
  * @param {object} [p.navigator] - Injectable for testing
- * @param {object} [p.clipboard] - Injectable for testing
+ * @param {object} [p.clipboard] - Injectable clipboard (e.g. navigator.clipboard) for testing
  * @returns {Promise<'shared'|'copied'|'unavailable'>}
  */
 export async function shareQuestCompletion({ questName, brand = BRAND, navigator: nav, clipboard: clip } = {}) {
@@ -83,14 +83,16 @@ export async function shareQuestCompletion({ questName, brand = BRAND, navigator
     try {
       await navObj.share({ title: `${brand} — Quest Complete`, text });
       return 'shared';
-    } catch (_) { /* user cancelled or not supported — fall through */ }
+    } catch (_) { /* AbortError (user cancelled) or NotAllowedError — fall through to clipboard */ }
   }
 
   if (clipObj?.writeText) {
     try {
       await clipObj.writeText(text);
       return 'copied';
-    } catch (_) {}
+    } catch (err) {
+      console.warn('[QuestShareCard] clipboard write failed:', err?.message ?? err);
+    }
   }
 
   return 'unavailable';
@@ -108,7 +110,7 @@ function get$w(opts) {
  * Show the quest share card overlay on quest completion.
  *
  * @param {object} [opts]
- * @param {string}   opts.questName   - Quest title
+ * @param {string}   [opts.questName]  - Quest title (default: '')
  * @param {string}   [opts.badgeLabel] - Badge emoji or label (default: "🏆")
  * @param {Function} [opts.$w]        - Injectable $w for testing
  * @param {object}   [opts.navigator] - Injectable navigator for testing
@@ -123,19 +125,29 @@ export async function showQuestShareCard(opts = {}) {
   try {
     card = $wFn('#questShareCard');
     if (!card) return;
-  } catch (_) { return; }
+  } catch (err) {
+    console.warn('[QuestShareCard] failed to get #questShareCard:', err?.message ?? err);
+    return;
+  }
 
   // Populate card image
   try {
     const imgEl = $wFn('#questShareCardImage');
     if (imgEl) imgEl.src = buildShareCardDataUrl({ badgeLabel, questName });
-  } catch (_) {}
+  } catch (err) {
+    console.warn('[QuestShareCard] image render failed:', err?.message ?? err);
+  }
 
   // Wire close button
   try {
     const closeBtn = $wFn('#questShareCardClose');
-    if (closeBtn) closeBtn.onClick(() => { try { card.hide(); } catch (_) {} });
-  } catch (_) {}
+    if (closeBtn) closeBtn.onClick(() => {
+      try { card.hide(); }
+      catch (err) { console.warn('[QuestShareCard] card.hide failed:', err?.message ?? err); }
+    });
+  } catch (err) {
+    console.warn('[QuestShareCard] close button wiring failed:', err?.message ?? err);
+  }
 
   // Wire share button
   try {
@@ -143,15 +155,22 @@ export async function showQuestShareCard(opts = {}) {
     if (shareBtn) {
       shareBtn.onClick(async () => {
         try {
-          await shareQuestCompletion({
+          const outcome = await shareQuestCompletion({
             questName,
             navigator: opts.navigator,
             clipboard: opts.clipboard,
           });
-        } catch (_) {}
+          if (outcome === 'unavailable') {
+            console.warn('[QuestShareCard] share unavailable — neither Web Share API nor clipboard accessible');
+          }
+        } catch (err) {
+          console.warn('[QuestShareCard] shareQuestCompletion threw:', err?.message ?? err);
+        }
       });
     }
-  } catch (_) {}
+  } catch (err) {
+    console.warn('[QuestShareCard] share button wiring failed:', err?.message ?? err);
+  }
 
   try { card.show(); } catch (err) {
     console.warn('[QuestShareCard] show failed:', err?.message ?? err);

@@ -29,6 +29,7 @@ import { createBirthdayCoupon, createTierUpgradeCoupon } from 'backend/couponsSe
 import { logError } from 'backend/utils/errorHandler';
 import { isBirthdayWindow, getAnniversaryYear, getTodayET } from 'backend/utils/dateUtils';
 
+// tier maps to createTierUpgradeCoupon newTier arg; null means use createBirthdayCoupon (15%)
 const PURCHASE_ANNIVERSARY_MILESTONES = {
   1: { rewardType: 'purchase_anniversary_1yr', discountPercent: 10, emailTemplate: 'purchase_anniversary_1yr', tier: 'Silver' },
   2: { rewardType: 'purchase_anniversary_2yr', discountPercent: 15, emailTemplate: 'purchase_anniversary_2yr', tier: null },
@@ -105,8 +106,8 @@ async function processRewardForMember(profile, config) {
       ...extraDedupFields,
     });
   } catch (e) {
-    // Email was sent but dedup failed — member may receive duplicate next run.
-    logError(`${callerTag}.dedupInsert`, e);
+    // Email was sent but dedup failed — member may receive duplicate reward on next cron run.
+    logError(`${callerTag}.dedupInsert`, e, { memberId: profile.memberId, rewardType, year });
   }
 
   return 'sent';

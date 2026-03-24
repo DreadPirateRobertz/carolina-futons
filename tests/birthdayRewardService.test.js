@@ -447,3 +447,20 @@ describe('checkAndSendPurchaseAnniversaryRewards — deduplication', () => {
     expect(records[0].year).toBe(TODAY_ET_YEAR);
   });
 });
+
+describe('checkAndSendPurchaseAnniversaryRewards — email failure', () => {
+  it('does not insert dedup record when email fails', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    __failNextEmail();
+    await checkAndSendPurchaseAnniversaryRewards();
+    expect(__getInserted('BirthdayRewards').length).toBe(0);
+  });
+
+  it('increments failed (not sent) when email fails', async () => {
+    __seed('MemberProfiles', [makeProfile({ firstPurchaseDate: firstPurchaseNYearsAgo(1) })]);
+    __failNextEmail();
+    const result = await checkAndSendPurchaseAnniversaryRewards();
+    expect(result.sent).toBe(0);
+    expect(result.failed).toBe(1);
+  });
+});

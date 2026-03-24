@@ -90,6 +90,12 @@ describe('buildShareCardDataUrl', () => {
     expect(svg).toContain('&lt;script&gt;');
   });
 
+  it('escapes HTML entities in badgeLabel', () => {
+    const svg = decodeDataUrl(buildShareCardDataUrl({ badgeLabel: '<img src=x onerror=alert(1)>', questName: 'Q' }));
+    expect(svg).not.toContain('<img');
+    expect(svg).toContain('&lt;img');
+  });
+
   it('accepts custom brand', () => {
     const svg = decodeDataUrl(buildShareCardDataUrl({ badgeLabel: '', questName: 'Q', brand: 'Acme' }));
     expect(svg).toContain('Acme');
