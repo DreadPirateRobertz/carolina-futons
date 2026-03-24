@@ -7,12 +7,12 @@
  *
  * Supported events:
  *   gamification_add_to_cart      — +5 pts
- *   gamification_submit_review    — +50 pts (+25 bonus if has_photo)
+ *   gamification_submit_review    — +100 pts (+50 bonus if has_photo)
  *   gamification_referral_shared   — +100 pts (streak-multiplied)
- *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (200 pts, streak-multiplied)
+ *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (500 pts, streak-multiplied)
  *   gamification_order_complete    — +Math.floor(orderTotal) pts (streak-multiplied)
  *   gamification_ar_used          — +POINT_VALUES.AR_USED (10 pts)
- *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (2 pts), capped at 5/day
+ *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (25 pts), capped at 1/month
  *   gamification_spin_completed   — +0 pts (tracked for bonus-spin grant only)
  *   (unknown)                     — no-op, returns current total
  *
@@ -34,7 +34,7 @@ const MEMBER_BADGES_COLLECTION = 'MemberBadges';
 const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
 const WISHLIST_ADD_LOG_COLLECTION = 'WishlistAddLog';
-const WISHLIST_DAILY_CAP = 5;
+const WISHLIST_MONTHLY_CAP = 1;
 const CHALLENGES_COLLECTION = 'Challenges';
 
 // ── getActiveChallenges rate limit (in-memory, per server instance) ───────────
@@ -123,9 +123,9 @@ export const receiveGamificationEvent = webMethod(
       const yesterdayET = getYesterdayOf(todayET);
       const streakState = updateStreakState(record || {}, todayET, yesterdayET);
 
-      // Phase 4: wishlist daily cap — use same event-derived date as streak logic
+      // Phase 4: wishlist monthly cap — use same event-derived date as streak logic
       const capResult = eventName === 'gamification_wishlist_add'
-        ? await checkWishlistDailyCap(memberId, todayET)
+        ? await checkWishlistMonthlyCap(memberId, todayET)
         : null;
       const canEarnWishlist = capResult?.canEarn ?? false;
       const effectiveBase = eventName !== 'gamification_wishlist_add' || canEarnWishlist
@@ -524,30 +524,34 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
   }
 }
 
-// ── Phase 4: Wishlist daily cap helpers ───────────────────────────────────────
+// ── Phase 4: Wishlist monthly cap helpers ─────────────────────────────────────
 
 /**
- * Check whether a member can earn points for a wishlist add today.
- * Returns { canEarn: true } when count < WISHLIST_DAILY_CAP (5); { canEarn: false } when at cap.
+ * Check whether a member can earn points for a wishlist add this month.
+ * Returns { canEarn: true } when count < WISHLIST_MONTHLY_CAP (1); { canEarn: false } when at cap.
  * Fails open on DB error — members earn points rather than being silently blocked.
  *
  * @param {string} memberId
  * @param {string} todayET  - ET date string e.g. "2026-03-22"
  * @returns {Promise<{ canEarn: boolean, count: number }>}
  */
-export async function checkWishlistDailyCap(memberId, todayET) {
+export async function checkWishlistMonthlyCap(memberId, todayET) {
   try {
+    const monthStart = todayET.slice(0, 7) + '-01'; // "2026-03-01"
+    const [year, mon] = todayET.slice(0, 7).split('-').map(Number);
+    const nextMonth = mon === 12 ? `${year + 1}-01-01` : `${year}-${String(mon + 1).padStart(2, '0')}-01`;
     const results = await wixData.query(WISHLIST_ADD_LOG_COLLECTION)
       .eq('memberId', memberId)
-      .eq('date', todayET)
+      .ge('date', monthStart)
+      .lt('date', nextMonth)
       .find({ suppressAuth: true });
     const count = results.items.length;
     // Note: this cap is best-effort under concurrent load — Wix Data has no atomic
     // increment, so two rapid simultaneous wishlist adds could both pass the check.
-    return { canEarn: count < WISHLIST_DAILY_CAP, count };
+    return { canEarn: count < WISHLIST_MONTHLY_CAP, count };
   } catch (err) {
     // Fail open — member earns points if the cap check itself is broken
-    logError(`checkWishlistDailyCap — query failed for member ${memberId} on ${todayET}`, err, { silent: true });
+    logError(`checkWishlistMonthlyCap — query failed for member ${memberId} on ${todayET}`, err, { silent: true });
     return { canEarn: true, count: 0 };
   }
 }

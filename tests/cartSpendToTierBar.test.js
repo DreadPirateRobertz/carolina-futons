@@ -66,19 +66,19 @@ const MAX_TIER_ACCOUNT = {
 
 describe('calcTierProgressWithCart', () => {
   it('applies endowed floor when raw progress is below 20', () => {
-    // cartSubtotal=50: cartPoints=50, rawProgress=min(100, 0+50*100/500)=10 → endowed=20
+    // cartSubtotal=50: cartPoints=100, rawProgress=min(100, 0+100*100/500)=20 → endowed=20
     const { endowedProgress } = calcTierProgressWithCart(LOW_ACCOUNT, 50);
     expect(endowedProgress).toBe(20);
   });
 
   it('does not apply floor when raw progress is already >= 20', () => {
-    // cartSubtotal=100: cartPoints=100, rawProgress=min(100, 30+100*70/350)=50 → endowed=50
+    // cartSubtotal=100: cartPoints=200, rawProgress=min(100, 30+200*70/350)=70 → endowed=70
     const { endowedProgress } = calcTierProgressWithCart(MEMBER_ACCOUNT, 100);
-    expect(endowedProgress).toBe(50);
+    expect(endowedProgress).toBe(70);
   });
 
   it('caps endowed progress at 100 when cart reaches next tier', () => {
-    // cartSubtotal=400: cartPoints=400 >= pointsToNext=350 → 100%
+    // cartSubtotal=400: cartPoints=800 >= pointsToNext=350 → 100%
     const { endowedProgress } = calcTierProgressWithCart(MEMBER_ACCOUNT, 400);
     expect(endowedProgress).toBe(100);
   });
@@ -89,13 +89,13 @@ describe('calcTierProgressWithCart', () => {
   });
 
   it('computes remainingAfterCart as points still needed after this order', () => {
-    // pointsToNext=350, cartPoints=100 → remaining=250
+    // pointsToNext=350, cartPoints=200 → remaining=150
     const { remainingAfterCart } = calcTierProgressWithCart(MEMBER_ACCOUNT, 100);
-    expect(remainingAfterCart).toBe(250);
+    expect(remainingAfterCart).toBe(150);
   });
 
   it('clamps remainingAfterCart to 0 when cart exceeds threshold', () => {
-    // cartSubtotal=500 > pointsToNext=350 → remaining=0
+    // cartSubtotal=500: cartPoints=1000 > pointsToNext=350 → remaining=0
     const { remainingAfterCart } = calcTierProgressWithCart(MEMBER_ACCOUNT, 500);
     expect(remainingAfterCart).toBe(0);
   });
@@ -161,13 +161,13 @@ describe('initSpendToTierBar — member, cart does not reach next tier', () => {
 
   it('sets tierProgressBar value to endowed progress', async () => {
     await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
-    expect($w('#tierProgressBar').value).toBe(50);
+    expect($w('#tierProgressBar').value).toBe(70);
   });
 
   it('shows tierProgressText with spend-to-next message', async () => {
     await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
     expect($w('#tierProgressText').show).toHaveBeenCalled();
-    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+    expect($w('#tierProgressText').text).toBe('Add $150 more for Mountain Guide!');
   });
 
   it('shows tierName with current tier', async () => {
@@ -248,13 +248,13 @@ describe('updateSpendToTierBar', () => {
   it('updates bar value when loyaltyData is present', () => {
     const $w = make$w();
     updateSpendToTierBar($w, { cartSubtotal: 100, loyaltyData: MEMBER_ACCOUNT });
-    expect($w('#tierProgressBar').value).toBe(50);
+    expect($w('#tierProgressBar').value).toBe(70);
   });
 
   it('updates progress text when loyaltyData is present', () => {
     const $w = make$w();
     updateSpendToTierBar($w, { cartSubtotal: 100, loyaltyData: MEMBER_ACCOUNT });
-    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+    expect($w('#tierProgressText').text).toBe('Add $150 more for Mountain Guide!');
   });
 
   it('shows earn message when updated cart reaches tier', () => {
@@ -274,24 +274,24 @@ describe('updateSpendToTierBar — live cart change after init', () => {
     const $w = make$w();
     const getLoyaltyAccount = vi.fn().mockResolvedValue(MEMBER_ACCOUNT);
 
-    // Page load: subtotal=100 → endowed=50, remaining=$250
+    // Page load: subtotal=100 → cartPoints=200, endowed=70, remaining=$150
     await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
-    expect($w('#tierProgressBar').value).toBe(50);
-    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+    expect($w('#tierProgressBar').value).toBe(70);
+    expect($w('#tierProgressText').text).toBe('Add $150 more for Mountain Guide!');
 
-    // Cart changed (item added): subtotal=300 → endowed=90, remaining=$50
+    // Cart changed (item added): subtotal=300 → cartPoints=600 >= 350 → 100%, tier-earn
     updateSpendToTierBar($w, { cartSubtotal: 300, loyaltyData: MEMBER_ACCOUNT });
-    expect($w('#tierProgressBar').value).toBe(90);
-    expect($w('#tierProgressText').text).toBe('Add $50 more for Mountain Guide!');
+    expect($w('#tierProgressBar').value).toBe(100);
+    expect($w('#tierProgressText').text).toBe('This order earns you Mountain Guide status!');
   });
 
   it('shows tier-earn message when cart change pushes subtotal over threshold', async () => {
     const $w = make$w();
     const getLoyaltyAccount = vi.fn().mockResolvedValue(MEMBER_ACCOUNT);
 
-    // Page load: subtotal=100 (short of threshold)
+    // Page load: subtotal=100 → cartPoints=200, short of threshold
     await initSpendToTierBar($w, { cartSubtotal: 100, getLoyaltyAccount });
-    expect($w('#tierProgressText').text).toBe('Add $250 more for Mountain Guide!');
+    expect($w('#tierProgressText').text).toBe('Add $150 more for Mountain Guide!');
 
     // Cart changed: subtotal=350 (exactly meets pointsToNext=350) → 100%, earn message
     updateSpendToTierBar($w, { cartSubtotal: 350, loyaltyData: MEMBER_ACCOUNT });

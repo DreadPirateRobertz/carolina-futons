@@ -34,17 +34,17 @@ describe('loyaltyBonusPoints — CF-pa20', () => {
   describe('getEarningConfig', () => {
     it('returns earning config with points per dollar', async () => {
       const config = await getEarningConfig();
-      expect(config.pointsPerDollar).toBe(1);
+      expect(config.pointsPerDollar).toBe(2);
     });
 
     it('returns bonus point amounts for all activity types', async () => {
       const config = await getEarningConfig();
       expect(config.bonusPoints).toEqual({
-        review: 50,
-        photoReview: 100,
-        referralComplete: 200,
-        accountCreation: 25,
-        birthday: 100,
+        review: 100,
+        photoReview: 150,
+        referralComplete: 500,
+        accountCreation: 50,
+        birthday: 200,
       });
     });
 
@@ -63,11 +63,11 @@ describe('loyaltyBonusPoints — CF-pa20', () => {
 
   describe('BONUS_POINTS constant', () => {
     it('exports point values for each activity', () => {
-      expect(BONUS_POINTS.REVIEW).toBe(50);
-      expect(BONUS_POINTS.PHOTO_REVIEW).toBe(100);
-      expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(200);
-      expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(25);
-      expect(BONUS_POINTS.BIRTHDAY).toBe(100);
+      expect(BONUS_POINTS.REVIEW).toBe(100);
+      expect(BONUS_POINTS.PHOTO_REVIEW).toBe(150);
+      expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(500);
+      expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(50);
+      expect(BONUS_POINTS.BIRTHDAY).toBe(200);
     });
   });
 
@@ -77,36 +77,36 @@ describe('loyaltyBonusPoints — CF-pa20', () => {
     it('awards points for a review submission', async () => {
       const result = await awardBonusPoints('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'review');
       expect(result.success).toBe(true);
-      expect(result.pointsAwarded).toBe(50);
+      expect(result.pointsAwarded).toBe(100);
       expect(result.reason).toBe('review');
       expect(accounts.earnPoints).toHaveBeenCalledWith(
         'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-        expect.objectContaining({ points: 50 })
+        expect.objectContaining({ points: 100 })
       );
     });
 
     it('awards points for a photo review', async () => {
       const result = await awardBonusPoints('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'photoReview');
       expect(result.success).toBe(true);
-      expect(result.pointsAwarded).toBe(100);
+      expect(result.pointsAwarded).toBe(150);
     });
 
     it('awards points for a completed referral', async () => {
       const result = await awardBonusPoints('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'referralComplete');
       expect(result.success).toBe(true);
-      expect(result.pointsAwarded).toBe(200);
+      expect(result.pointsAwarded).toBe(500);
     });
 
     it('awards points for account creation', async () => {
       const result = await awardBonusPoints('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'accountCreation');
       expect(result.success).toBe(true);
-      expect(result.pointsAwarded).toBe(25);
+      expect(result.pointsAwarded).toBe(50);
     });
 
     it('awards birthday bonus points', async () => {
       const result = await awardBonusPoints('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'birthday');
       expect(result.success).toBe(true);
-      expect(result.pointsAwarded).toBe(100);
+      expect(result.pointsAwarded).toBe(200);
     });
 
     it('rejects unknown activity type', async () => {

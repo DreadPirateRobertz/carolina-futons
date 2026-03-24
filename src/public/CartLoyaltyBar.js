@@ -18,8 +18,8 @@
  * CF-jbu
  */
 
-// 1 point awarded per $1 of order value (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
-const PURCHASE_PER_DOLLAR = 1;
+// 2 points awarded per $1 of order value (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
+const PURCHASE_PER_DOLLAR = 2;
 
 /**
  * Initialize the cart loyalty bar on page load.

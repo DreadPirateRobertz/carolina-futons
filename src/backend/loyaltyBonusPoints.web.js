@@ -16,11 +16,11 @@ import crypto from 'crypto';
 
 /** Point values for each bonus activity. */
 export const BONUS_POINTS = {
-  REVIEW: 50,
-  PHOTO_REVIEW: 100,
-  REFERRAL_COMPLETE: 200,
-  ACCOUNT_CREATION: 25,
-  BIRTHDAY: 100,
+  REVIEW: 100,
+  PHOTO_REVIEW: 150,
+  REFERRAL_COMPLETE: 500,
+  ACCOUNT_CREATION: 50,
+  BIRTHDAY: 200,
 };
 
 const ACTIVITY_MAP = {
@@ -52,7 +52,7 @@ const APP_ID = 'cf-loyalty-bonus';
 export const getEarningConfig = webMethod(
   Permissions.Anyone,
   async () => ({
-    pointsPerDollar: 1,
+    pointsPerDollar: 2,
     bonusPoints: {
       review: BONUS_POINTS.REVIEW,
       photoReview: BONUS_POINTS.PHOTO_REVIEW,

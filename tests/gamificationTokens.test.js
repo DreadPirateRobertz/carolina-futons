@@ -60,24 +60,24 @@ describe('TIER_THRESHOLDS', () => {
 // ── POINT_VALUES ──────────────────────────────────────────────────────────────
 
 describe('POINT_VALUES', () => {
-  it('PURCHASE_PER_DOLLAR is 1', () => {
-    expect(POINT_VALUES.PURCHASE_PER_DOLLAR).toBe(1);
+  it('PURCHASE_PER_DOLLAR is 2', () => {
+    expect(POINT_VALUES.PURCHASE_PER_DOLLAR).toBe(2);
   });
 
-  it('REVIEW is 50', () => {
-    expect(POINT_VALUES.REVIEW).toBe(50);
+  it('REVIEW is 100', () => {
+    expect(POINT_VALUES.REVIEW).toBe(100);
   });
 
-  it('PHOTO_REVIEW_BONUS is 25', () => {
-    expect(POINT_VALUES.PHOTO_REVIEW_BONUS).toBe(25);
+  it('PHOTO_REVIEW_BONUS is 50', () => {
+    expect(POINT_VALUES.PHOTO_REVIEW_BONUS).toBe(50);
   });
 
   it('REVIEW_ACCURACY_BONUS is 10', () => {
     expect(POINT_VALUES.REVIEW_ACCURACY_BONUS).toBe(10);
   });
 
-  it('REFERRAL_ACCEPTED is 200', () => {
-    expect(POINT_VALUES.REFERRAL_ACCEPTED).toBe(200);
+  it('REFERRAL_ACCEPTED is 500', () => {
+    expect(POINT_VALUES.REFERRAL_ACCEPTED).toBe(500);
   });
 
   it('AR_TRY_ON is 25', () => {
@@ -92,8 +92,8 @@ describe('POINT_VALUES', () => {
     expect(POINT_VALUES.AR_USED).toBe(10);
   });
 
-  it('WISHLIST_ADD is 2', () => {
-    expect(POINT_VALUES.WISHLIST_ADD).toBe(2);
+  it('WISHLIST_ADD is 25', () => {
+    expect(POINT_VALUES.WISHLIST_ADD).toBe(25);
   });
 
   it('all point values are positive integers', () => {

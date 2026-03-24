@@ -20,8 +20,8 @@
  * CF-1qo6
  */
 
-// 1 point awarded per $1 of cart value (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
-const PURCHASE_PER_DOLLAR = 1;
+// 2 points awarded per $1 of cart value (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
+const PURCHASE_PER_DOLLAR = 2;
 
 // Endowed progress floor (Kivetz 2006) — never show less than this %
 const ENDOWED_FLOOR = 20;

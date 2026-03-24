@@ -95,9 +95,9 @@ describe('receiveGamificationEvent — streak multiplier on earn events', () => 
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 7, lastActivityDate: '2026-03-21', streakMultiplier: 3,
     }]);
-    // streak 7→8, stays 3×; Math.round(50 * 3) = 150
+    // streak 7→8, stays 3×; Math.round(100 * 3) = 300
     const result = await receiveGamificationEvent('gamification_submit_review', { has_photo: false }, 'mem-1');
-    expect(result.newTotal).toBe(150);
+    expect(result.newTotal).toBe(300);
     expect(result.streakMultiplier).toBe(3);
   });
 
@@ -106,9 +106,9 @@ describe('receiveGamificationEvent — streak multiplier on earn events', () => 
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 4, lastActivityDate: '2026-03-21', streakMultiplier: 2,
     }]);
-    // streak 4→5, stays 2×; Math.round(200 * 2) = 400
+    // streak 4→5, stays 2×; Math.round(500 * 2) = 1000
     const result = await receiveGamificationEvent('gamification_referral_accepted', {}, 'mem-1');
-    expect(result.newTotal).toBe(400);
+    expect(result.newTotal).toBe(1000);
     expect(result.streakMultiplier).toBe(2);
   });
 

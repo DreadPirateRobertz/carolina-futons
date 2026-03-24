@@ -10,7 +10,7 @@
  *  - event is non-blocking: success:true returned even when event call rejects
  *  - event not fired when referral is skipped (no referral found)
  *  - event not fired when refereeMemberId is falsy
- *  - resolvePoints: gamification_referral_accepted returns POINT_VALUES.REFERRAL_ACCEPTED (200)
+ *  - resolvePoints: gamification_referral_accepted returns POINT_VALUES.REFERRAL_ACCEPTED (500)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -19,12 +19,12 @@ import { __reset, __seed } from './__mocks__/wix-data.js';
 // ── resolvePoints unit test (via receiveGamificationEvent backend) ─────────────
 
 describe('resolvePoints — gamification_referral_accepted', () => {
-  it('awards POINT_VALUES.REFERRAL_ACCEPTED (200) pts for gamification_referral_accepted', async () => {
+  it('awards POINT_VALUES.REFERRAL_ACCEPTED (500) pts for gamification_referral_accepted', async () => {
     // Import the real backend to verify the switch case
     const { default: wixData } = await import('./__mocks__/wix-data.js');
     // We test resolvePoints indirectly through gamificationTokens
     const { POINT_VALUES } = await vi.importActual('../src/public/gamificationTokens.js');
-    expect(POINT_VALUES.REFERRAL_ACCEPTED).toBe(200);
+    expect(POINT_VALUES.REFERRAL_ACCEPTED).toBe(500);
   });
 });
 

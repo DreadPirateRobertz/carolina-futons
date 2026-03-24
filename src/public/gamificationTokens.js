@@ -19,15 +19,15 @@ export const TIER_THRESHOLDS = {
 // ── Point values per earning action ──────────────────────────────────────────
 
 export const POINT_VALUES = {
-  PURCHASE_PER_DOLLAR: 1,
-  REVIEW: 50,
-  PHOTO_REVIEW_BONUS: 25,
+  PURCHASE_PER_DOLLAR: 2,
+  REVIEW: 100,
+  PHOTO_REVIEW_BONUS: 50,
   REVIEW_ACCURACY_BONUS: 10,
-  REFERRAL_ACCEPTED: 200,
+  REFERRAL_ACCEPTED: 500,
   AR_TRY_ON: 25,
   STREAK_7_DAY: 100,
   AR_USED: 10,           // gamification_ar_used event
-  WISHLIST_ADD: 2,       // gamification_wishlist_add event (5/day cap enforced in receiver)
+  WISHLIST_ADD: 25,      // gamification_wishlist_add event (1/month cap enforced in receiver)
 };
 
 /** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */

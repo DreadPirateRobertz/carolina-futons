@@ -878,7 +878,7 @@ describe('loyaltyService — edge cases', () => {
 describe('loyaltyBonusPoints — edge cases', () => {
   it('getEarningConfig returns point values and tier multipliers', async () => {
     const r = await getEarningConfig();
-    expect(r.pointsPerDollar).toBe(1);
+    expect(r.pointsPerDollar).toBe(2);
     expect(r.bonusPoints.review).toBe(BONUS_POINTS.REVIEW);
     expect(r.bonusPoints.photoReview).toBe(BONUS_POINTS.PHOTO_REVIEW);
     expect(r.bonusPoints.referralComplete).toBe(BONUS_POINTS.REFERRAL_COMPLETE);
@@ -950,10 +950,10 @@ describe('loyaltyBonusPoints — edge cases', () => {
   });
 
   it('BONUS_POINTS constants are correct', () => {
-    expect(BONUS_POINTS.REVIEW).toBe(50);
-    expect(BONUS_POINTS.PHOTO_REVIEW).toBe(100);
-    expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(200);
-    expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(25);
-    expect(BONUS_POINTS.BIRTHDAY).toBe(100);
+    expect(BONUS_POINTS.REVIEW).toBe(100);
+    expect(BONUS_POINTS.PHOTO_REVIEW).toBe(150);
+    expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(500);
+    expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(50);
+    expect(BONUS_POINTS.BIRTHDAY).toBe(200);
   });
 });
