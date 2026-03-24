@@ -7,8 +7,9 @@
  * Element IDs (set in Wix editor):
  *   #gamificationTourOverlay  — container shown/hidden
  *   #gamificationTourClose    — button that dismisses the overlay
+ *   #gamificationTourCta      — "Start First Challenge" button (deep link)
  *
- * CF-z2vj
+ * CF-z2vj  CF-08fa
  *
  * @example
  *   // In Home.js sections array (dynamic import to stay within import budget):
@@ -60,6 +61,24 @@ async function fetchMember(opts) {
   }
 }
 
+/**
+ * Navigate to the challenges page using injectable fn or wix-location-frontend.
+ * Best-effort: silently swallows errors so a navigation failure never crashes
+ * the overlay or leaves it in a broken state.
+ * @param {Object} opts
+ * @returns {Promise<void>}
+ */
+async function navigateToChallenges(opts) {
+  if (opts.navigate) {
+    try { await opts.navigate('/challenges'); } catch (_) {}
+    return;
+  }
+  try {
+    const { to } = await import('wix-location-frontend');
+    to('/challenges');
+  } catch (_) {}
+}
+
 // ── Public API ────────────────────────────────────────────────────────
 
 /**
@@ -76,6 +95,7 @@ async function fetchMember(opts) {
  * @param {Function} [opts.getMember]   - Injectable member fetch for testing
  * @param {Object}   [opts.storage]     - Injectable localStorage for testing
  *                                        (pass null to disable storage check)
+ * @param {Function} [opts.navigate]    - Injectable navigate(path) for testing
  * @returns {Promise<void>}
  */
 export async function initGamificationTourOverlay(opts = {}) {
@@ -107,6 +127,15 @@ export async function initGamificationTourOverlay(opts = {}) {
     try {
       const closeBtn = $wFn('#gamificationTourClose');
       if (closeBtn) closeBtn.onClick(() => { try { overlay.hide(); } catch (_) {} });
+    } catch (_) {}
+
+    // Wire CTA: "Start First Challenge" — navigates to /challenges and closes overlay
+    try {
+      const ctaBtn = $wFn('#gamificationTourCta');
+      if (ctaBtn) ctaBtn.onClick(() => {
+        try { overlay.hide(); } catch (_) {}
+        navigateToChallenges(opts);
+      });
     } catch (_) {}
 
     overlay.show();

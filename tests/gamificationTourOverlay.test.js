@@ -12,8 +12,10 @@
  *  - Wires close button onClick to hide overlay
  *  - No-ops gracefully when close button element is absent
  *  - No-ops when storage.getItem throws
+ *  - CTA button triggers navigate('/challenges') and hides overlay
+ *  - CTA absent — overlay still shows, navigate not called
  *
- * CF-z2vj
+ * CF-z2vj  CF-08fa
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { initGamificationTourOverlay } from '../src/public/GamificationTourOverlay.js';
@@ -45,10 +47,17 @@ function makeCloseBtn(overlay) {
   };
 }
 
-function make$w(overlay, closeBtn) {
+function makeCtaBtn(overlay) {
+  return {
+    onClick: vi.fn((fn) => { overlay._ctaHandler = fn; }),
+  };
+}
+
+function make$w(overlay, closeBtn, ctaBtn) {
   return vi.fn((sel) => {
     if (sel === '#gamificationTourOverlay') return overlay || null;
     if (sel === '#gamificationTourClose') return closeBtn || null;
+    if (sel === '#gamificationTourCta') return ctaBtn || null;
     return null;
   });
 }
@@ -56,12 +65,13 @@ function make$w(overlay, closeBtn) {
 // ── Tests ───────────────────────────────────────────────────────────────────
 
 describe('initGamificationTourOverlay', () => {
-  let overlay, closeBtn, $w, storage;
+  let overlay, closeBtn, ctaBtn, $w, storage;
 
   beforeEach(() => {
     overlay  = makeOverlay();
     closeBtn = makeCloseBtn(overlay);
-    $w       = make$w(overlay, closeBtn);
+    ctaBtn   = makeCtaBtn(overlay);
+    $w       = make$w(overlay, closeBtn, ctaBtn);
     storage  = makeStorage(); // empty = first visit
   });
 
@@ -118,7 +128,7 @@ describe('initGamificationTourOverlay', () => {
   });
 
   it('still shows overlay when close button element is absent', async () => {
-    const $wNoClose = make$w(overlay, null);
+    const $wNoClose = make$w(overlay, null, ctaBtn);
     await initGamificationTourOverlay({ $w: $wNoClose, getMember: async () => MEMBER, storage });
     expect(overlay.show).toHaveBeenCalledOnce();
   });
@@ -135,5 +145,39 @@ describe('initGamificationTourOverlay', () => {
   it('proceeds when storage is null (unavailable environment)', async () => {
     await initGamificationTourOverlay({ $w, getMember: async () => MEMBER, storage: null });
     expect(overlay.show).toHaveBeenCalledOnce();
+  });
+
+  // ── CTA deep link ───────────────────────────────────────────────────────────
+
+  it('wires CTA button onClick', async () => {
+    await initGamificationTourOverlay({ $w, getMember: async () => MEMBER, storage });
+    expect(ctaBtn.onClick).toHaveBeenCalledOnce();
+  });
+
+  it('CTA click calls navigate with /challenges', async () => {
+    const navigate = vi.fn();
+    await initGamificationTourOverlay({ $w, getMember: async () => MEMBER, storage, navigate });
+    overlay._ctaHandler();
+    expect(navigate).toHaveBeenCalledWith('/challenges');
+  });
+
+  it('CTA click hides the overlay', async () => {
+    const navigate = vi.fn();
+    await initGamificationTourOverlay({ $w, getMember: async () => MEMBER, storage, navigate });
+    overlay._ctaHandler();
+    expect(overlay.hide).toHaveBeenCalledOnce();
+  });
+
+  it('still shows overlay when CTA button element is absent', async () => {
+    const $wNoCta = make$w(overlay, closeBtn, null);
+    await initGamificationTourOverlay({ $w: $wNoCta, getMember: async () => MEMBER, storage });
+    expect(overlay.show).toHaveBeenCalledOnce();
+  });
+
+  it('navigate not called when CTA is absent', async () => {
+    const navigate = vi.fn();
+    const $wNoCta = make$w(overlay, closeBtn, null);
+    await initGamificationTourOverlay({ $w: $wNoCta, getMember: async () => MEMBER, storage, navigate });
+    expect(navigate).not.toHaveBeenCalled();
   });
 });
