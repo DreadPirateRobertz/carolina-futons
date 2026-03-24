@@ -234,6 +234,7 @@ async function findMemberRecord(memberId) {
  * Query BonusSpinGrants for an active grant matching the event.
  * Returns the number of bonus spins to award (0 if none).
  * @param {string} eventName
+ * @param {Object} [payload] - Event payload; payload.orderTotal checked against grant.minOrderTotal
  * @returns {Promise<number>}
  */
 async function maybeGrantBonusSpin(eventName, payload) {
