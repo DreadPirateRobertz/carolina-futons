@@ -16,12 +16,35 @@ import wixData from 'wix-data';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const LEADERBOARD_CAP = 10;
 
+// ── In-memory rate limit (per server instance) ────────────────────────────────
+// 10 calls/hr per member. Resets on server restart — acceptable for Wix serverless.
+const _rateLimitMap = new Map(); // memberId → { count, windowStart }
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Exported for testing only.
+export function _resetRateLimit() {
+  _rateLimitMap.clear();
+}
+
+function checkRateLimit(memberId, nowMs) {
+  const now = nowMs ?? Date.now();
+  const entry = _rateLimitMap.get(memberId);
+  if (!entry || now - entry.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    _rateLimitMap.set(memberId, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count += 1;
+  return true;
+}
+
 /**
  * Returns the ZIP micro-leaderboard for the calling member's 3-digit prefix.
  * Caller identity is resolved server-side via currentMember.getMember() —
  * no memberId parameter accepted (prevents cross-member ZIP probing).
  *
- * @returns {Promise<{ leaderboard: Array, myRank: number|null, zipPrefix: string|null }>}
+ * @returns {Promise<{ leaderboard: Array, myRank: number|null, zipPrefix: string|null } | { status: 429, error: string }>}
  */
 export const getZipLeaderboard = webMethod(
   Permissions.SiteMember,
@@ -30,6 +53,10 @@ export const getZipLeaderboard = webMethod(
       const member = await currentMember.getMember();
       const memberId = member?._id ?? null;
       if (!memberId) return { leaderboard: [], myRank: null, zipPrefix: null };
+
+      if (!checkRateLimit(memberId)) {
+        return { status: 429, error: 'Rate limit exceeded — try again later' };
+      }
 
       // Fetch caller's MemberPoints to get their zipCode
       const meResult = await wixData

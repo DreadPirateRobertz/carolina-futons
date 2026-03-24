@@ -7,12 +7,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __setQueryError } from './__mocks__/wix-data.js';
+import { __reset, __seed, __setQueryError, __getLastFindOptions } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
-import { getZipLeaderboard } from '../src/backend/zipLeaderboard.web.js';
+import { getZipLeaderboard, _resetRateLimit } from '../src/backend/zipLeaderboard.web.js';
 
 beforeEach(() => {
   __reset();
+  _resetRateLimit();
   __setMember({ _id: 'mem-1' });
 });
 
@@ -219,9 +220,65 @@ describe('getZipLeaderboard — cap at 10', () => {
 
 describe('getZipLeaderboard — error handling', () => {
   it('returns empty result gracefully on DB error', async () => {
-    __setQueryError(new Error('DB down'));
+    __setQueryError('MemberPoints', new Error('DB down'));
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
     expect(result.myRank).toBeNull();
+  });
+});
+
+// ── suppressAuth assertions ───────────────────────────────────────────────────
+
+describe('getZipLeaderboard — suppressAuth', () => {
+  it('passes suppressAuth: true on the self-lookup query', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 300, zipCode: '28201', displayName: 'Alice', leaderboardOptIn: true },
+    ]);
+    await getZipLeaderboard();
+    const opts = __getLastFindOptions('MemberPoints');
+    expect(opts).toEqual({ suppressAuth: true });
+  });
+});
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+
+describe('getZipLeaderboard — rate limiting', () => {
+  it('returns 429 after 10 calls within the rate limit window', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 300, zipCode: '28201', displayName: 'Alice', leaderboardOptIn: true },
+    ]);
+    // Exhaust the 10-call limit
+    for (let i = 0; i < 10; i++) {
+      await getZipLeaderboard();
+    }
+    const result = await getZipLeaderboard(); // 11th call
+    expect(result.status).toBe(429);
+  });
+
+  it('allows calls again after rate limit reset', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 300, zipCode: '28201', displayName: 'Alice', leaderboardOptIn: true },
+    ]);
+    for (let i = 0; i < 10; i++) await getZipLeaderboard();
+    _resetRateLimit();
+    const result = await getZipLeaderboard();
+    expect(result.status).toBeUndefined(); // not rate-limited
+    expect(result.leaderboard).toBeDefined();
+  });
+
+  it('rate limits per member independently', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 300, zipCode: '28201', displayName: 'Alice', leaderboardOptIn: true },
+      { _id: 'mp-2', memberId: 'mem-2', totalPoints: 200, zipCode: '28201', displayName: 'Bob', leaderboardOptIn: true },
+    ]);
+    // Exhaust mem-1's limit
+    for (let i = 0; i < 10; i++) await getZipLeaderboard(); // mem-1
+    const mem1Result = await getZipLeaderboard(); // 11th for mem-1
+    expect(mem1Result.status).toBe(429);
+
+    // mem-2 should still be allowed
+    __setMember({ _id: 'mem-2' });
+    const mem2Result = await getZipLeaderboard();
+    expect(mem2Result.status).toBeUndefined();
   });
 });
