@@ -26,8 +26,9 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
-import { POINT_VALUES } from '../src/public/gamificationTokens.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistDailyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak } from '../src/backend/gamificationEventReceiver.web.js';
+import { POINT_VALUES, STREAK_RECOVERY_COST } from '../src/public/gamificationTokens.js';
+import { getTodayET, getYesterdayOf } from '../src/backend/utils/dateUtils.js';
 
 beforeEach(() => {
   __reset();
@@ -501,7 +502,7 @@ describe('streak multiplier — integration', () => {
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 10, streakStartDate: '2026-03-01',
-      lastActivityDate: '2026-03-20', // 2 days ago — missed yesterday
+      lastActivityDate: '2026-03-19', // 3 days ago — not eligible for grace
       streakMultiplier: 2,
     }]);
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
@@ -1423,11 +1424,12 @@ describe('streak clock — payload.ts used when present', () => {
       _id: 'mp-clock-2', memberId: 'mem-clock2', totalPoints: 300, tier: 'Trail Blazer',
       currentStreakDays: 5, streakStartDate: '2026-03-16',
       lastActivityDate: '2026-03-20', streakMultiplier: 1.5,
+      graceTokenUsedDate: '2026-03-15', // same month — grace exhausted, ensures genuine reset
     }]);
     const eventTs = Math.floor(new Date('2026-03-22T16:00:00Z').getTime() / 1000); // noon ET March 22
     const result = await receiveGamificationEvent('gamification_add_to_cart', { ts: eventTs }, 'mem-clock2');
     expect(result.success).toBe(true);
-    expect(result.currentStreakDays).toBe(1); // reset — genuine gap
+    expect(result.currentStreakDays).toBe(1); // reset — genuine gap, grace exhausted
   });
 
   it('falls back to processing time when payload.ts is absent', async () => {
@@ -1453,5 +1455,305 @@ describe('streak clock — payload.ts used when present', () => {
     const result = await receiveGamificationEvent('gamification_add_to_cart', { ts: 0 }, 'mem-clock4');
     expect(result.success).toBe(true);
     expect(result.currentStreakDays).toBe(3); // processing time used, yesterday active → increment
+  });
+});
+
+// ── updateStreakState — grace token (Phase 2 v2) ──────────────────────────────
+
+describe('updateStreakState — grace token', () => {
+  const TODAY = '2026-03-22';
+  const YESTERDAY = '2026-03-21';
+  const TWO_DAYS_AGO = '2026-03-20';
+  const THREE_DAYS_AGO = '2026-03-19';
+
+  describe('grace applies (exactly 1 missed day + token available)', () => {
+    it('preserves streak days when lastActivity is exactly 2 days ago and no grace used', () => {
+      const record = {
+        currentStreakDays: 5,
+        streakStartDate: '2026-03-17',
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(5);
+      expect(result.graceApplied).toBe(true);
+    });
+
+    it('preserves streak multiplier when grace applies', () => {
+      const record = {
+        currentStreakDays: 7,
+        streakStartDate: '2026-03-15',
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 2,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.streakMultiplier).toBe(2);
+    });
+
+    it('sets lastActivityDate to todayET when grace applies', () => {
+      const record = {
+        currentStreakDays: 3,
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.lastActivityDate).toBe(TODAY);
+    });
+
+    it('sets graceTokenUsedDate to todayET when grace applies', () => {
+      const record = {
+        currentStreakDays: 4,
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.graceTokenUsedDate).toBe(TODAY);
+    });
+
+    it('applies grace when graceTokenUsedDate is from a prior month', () => {
+      const record = {
+        currentStreakDays: 6,
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: '2026-02-14', // February — different month
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.graceApplied).toBe(true);
+      expect(result.currentStreakDays).toBe(6);
+    });
+
+    it('applies grace on DST spring-forward boundary (Mar 8→10, Mar 9 skipped)', () => {
+      // Spring forward 2026: Mar 8 → clocks skip to Mar 9 2am → Mar 10 is safe
+      const result = updateStreakState(
+        { currentStreakDays: 3, lastActivityDate: '2026-03-08', streakMultiplier: 1.5, graceTokenUsedDate: null },
+        '2026-03-10',
+        '2026-03-09'
+      );
+      expect(result.graceApplied).toBe(true);
+      expect(result.currentStreakDays).toBe(3);
+    });
+  });
+
+  describe('grace does not apply', () => {
+    it('resets streak when grace token already used this month', () => {
+      const record = {
+        currentStreakDays: 8,
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 2,
+        graceTokenUsedDate: '2026-03-05', // same month (March)
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(1);
+      expect(result.graceApplied).toBeFalsy();
+    });
+
+    it('resets streak when missed 3 days (not eligible for grace)', () => {
+      const record = {
+        currentStreakDays: 5,
+        lastActivityDate: THREE_DAYS_AGO,
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.currentStreakDays).toBe(1);
+      expect(result.graceApplied).toBeFalsy();
+    });
+
+    it('preserves graceTokenUsedDate on reset (does not consume unused token)', () => {
+      const record = {
+        currentStreakDays: 5,
+        lastActivityDate: THREE_DAYS_AGO, // 3 days — no grace
+        streakMultiplier: 1.5,
+        graceTokenUsedDate: null,
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.graceTokenUsedDate).toBeNull();
+    });
+
+    it('grants grace when token was used last month (month-rollover edge case)', () => {
+      // Grace used on '2026-02-28' (February); today is March → new month, token available.
+      const record = {
+        currentStreakDays: 8,
+        streakStartDate: '2026-03-14',
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 2,
+        graceTokenUsedDate: '2026-02-28', // prior month — should NOT block grace
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.graceApplied).toBe(true);
+      expect(result.currentStreakDays).toBe(8);
+    });
+  });
+
+  describe('grace integration with receiveGamificationEvent', () => {
+    it('persists graceTokenUsedDate to MemberPoints when grace fires', async () => {
+      // Use real date functions so this test stays valid regardless of when it runs.
+      const realToday = getTodayET();
+      const realYesterday = getYesterdayOf(realToday);
+      // twoDaysAgoReal = day before yesterday
+      const [y, m, d] = realYesterday.split('-').map(Number);
+      const prev = new Date(Date.UTC(y, m - 1, d - 1));
+      const twoDaysAgoReal = [
+        prev.getUTCFullYear(),
+        String(prev.getUTCMonth() + 1).padStart(2, '0'),
+        String(prev.getUTCDate()).padStart(2, '0'),
+      ].join('-');
+
+      const updated = [];
+      __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+      __seed('MemberPoints', [{
+        _id: 'mp-g', memberId: 'mem-g',
+        totalPoints: 100, tier: 'Trail Blazer',
+        currentStreakDays: 5, streakMultiplier: 1.5,
+        lastActivityDate: twoDaysAgoReal,
+        graceTokenUsedDate: null,
+      }]);
+      await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-g');
+      expect(updated.length).toBe(1);
+      expect(updated[0].graceTokenUsedDate).toBe(realToday);
+    });
+  });
+});
+
+// ── recoverStreak (Phase 2 v2) ────────────────────────────────────────────────
+
+describe('recoverStreak', () => {
+  it('returns { success: false } when memberId is missing', async () => {
+    const result = await recoverStreak(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns { success: false } when member has no MemberPoints record', async () => {
+    const result = await recoverStreak('mem-no-record');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/no record|not found/i);
+  });
+
+  it('returns { success: false } when member has insufficient points', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: STREAK_RECOVERY_COST - 1,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: null,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/insufficient|not enough/i);
+  });
+
+  it('returns { success: false } when recovery used within 30 days', async () => {
+    // Use a date 17 days before real today — always within the 30-day cooldown.
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const recent = new Date(Date.UTC(ty, tm - 1, td - 17));
+    const recentDate = [
+      recent.getUTCFullYear(),
+      String(recent.getUTCMonth() + 1).padStart(2, '0'),
+      String(recent.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: recentDate,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/cooldown|30 day/i);
+  });
+
+  it('deducts STREAK_RECOVERY_COST points and sets currentStreakDays = 1 on success', async () => {
+    const updated = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      tier: 'Mountain Guide',
+      currentStreakDays: 7,
+      streakStartDate: '2026-03-01',
+      lastStreakRecoveryDate: null,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(500 - STREAK_RECOVERY_COST);
+    expect(result.currentStreakDays).toBe(1);
+    expect(updated[0].currentStreakDays).toBe(1);
+    expect(updated[0].totalPoints).toBe(500 - STREAK_RECOVERY_COST);
+    // streakStartDate must be reset to avoid stale derived metrics
+    expect(updated[0].streakStartDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('sets lastStreakRecoveryDate to todayET on success', async () => {
+    const updated = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: null,
+    }]);
+    await recoverStreak('mem-1');
+    expect(updated[0].lastStreakRecoveryDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('allows recovery when lastStreakRecoveryDate is exactly 30 days ago (fence-post)', async () => {
+    // daysDiff < 30 is blocked; daysDiff === 30 must be allowed.
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const d30 = new Date(Date.UTC(ty, tm - 1, td - 30));
+    const date30 = [
+      d30.getUTCFullYear(),
+      String(d30.getUTCMonth() + 1).padStart(2, '0'),
+      String(d30.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: date30,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('allows recovery when lastStreakRecoveryDate is exactly 31 days ago', async () => {
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const d31 = new Date(Date.UTC(ty, tm - 1, td - 31));
+    const date31 = [
+      d31.getUTCFullYear(),
+      String(d31.getUTCMonth() + 1).padStart(2, '0'),
+      String(d31.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: date31,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('allows recovery when lastStreakRecoveryDate is null (never used)', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: null,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('returns DB error gracefully', async () => {
+    __setQueryError(new Error('DB down'));
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(false);
   });
 });

@@ -30,6 +30,9 @@ export const POINT_VALUES = {
   WISHLIST_ADD: 2,       // gamification_wishlist_add event (5/day cap enforced in receiver)
 };
 
+/** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */
+export const STREAK_RECOVERY_COST = 50;
+
 // ── Streak multiplier tiers ───────────────────────────────────────────────────
 
 export const STREAK_MULTIPLIER_TIERS = [

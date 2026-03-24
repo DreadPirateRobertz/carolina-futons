@@ -19,7 +19,7 @@
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
-import { POINT_VALUES, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
+import { POINT_VALUES, STREAK_RECOVERY_COST, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, getYesterdayOf, tsToETDate } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
@@ -136,6 +136,7 @@ export const receiveGamificationEvent = webMethod(
         streakStartDate: streakState.streakStartDate,
         lastActivityDate: streakState.lastActivityDate,
         streakMultiplier: streakState.streakMultiplier,
+        graceTokenUsedDate: streakState.graceTokenUsedDate ?? null,
       };
 
       if (record) {
@@ -255,19 +256,36 @@ async function maybeGrantBonusSpin(eventName) {
 // ── Streak helper (exported for testing) ──────────────────────────────────────
 
 /**
+ * Subtract one calendar day from a "YYYY-MM-DD" ET date string.
+/**
+ * Returns "YYYY-MM" from a "YYYY-MM-DD" string (month key for grace token eligibility).
+ * @param {string} dateET
+ * @returns {string}
+ */
+function _monthOf(dateET) {
+  return dateET.slice(0, 7);
+}
+
+/**
  * Compute new streak state based on the member's last activity date.
  * Pure function — no DB calls. All three branches set milestoneBonus explicitly.
+ *
+ * Phase 2 v2: Branch 3 now checks grace token before resetting.
+ * Grace token: one per calendar month (tracked via graceTokenUsedDate on MemberPoints).
+ * Applies when exactly 1 day was missed and token is available this month.
  *
  * @param {Object} record - Current MemberPoints record (streak fields may be null for new members)
  * @param {string} todayET - Today's ET date string e.g. "2026-03-22"
  * @param {string} yesterdayET - Yesterday's ET date string e.g. "2026-03-21"
- * @returns {{ currentStreakDays, streakStartDate, lastActivityDate, streakMultiplier, milestoneBonus }}
+ * @returns {{ currentStreakDays, streakStartDate, lastActivityDate, streakMultiplier,
+ *             milestoneBonus, graceTokenUsedDate, graceApplied? }}
  */
 export function updateStreakState(record, todayET, yesterdayET) {
   const lastActivity = record.lastActivityDate || null;
   const existingDays = record.currentStreakDays || 0;
   const existingStart = record.streakStartDate || todayET;
   const existingMultiplier = record.streakMultiplier || 1;
+  const graceUsed = record.graceTokenUsedDate || null;
 
   // Branch 1: already active today — no change
   if (lastActivity === todayET) {
@@ -277,6 +295,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
       lastActivityDate: todayET,
       streakMultiplier: existingMultiplier,
       milestoneBonus: 0,
+      graceTokenUsedDate: graceUsed,
     };
   }
 
@@ -291,16 +310,33 @@ export function updateStreakState(record, todayET, yesterdayET) {
       lastActivityDate: todayET,
       streakMultiplier,
       milestoneBonus,
+      graceTokenUsedDate: graceUsed,
     };
   }
 
-  // Branch 3: missed ≥1 day or no prior activity — reset streak
+  // Branch 3a: exactly 1 missed day + grace token available this month → apply grace
+  const twoDaysAgoET = getYesterdayOf(yesterdayET);
+  const graceAvailable = !graceUsed || _monthOf(graceUsed) !== _monthOf(todayET);
+  if (lastActivity === twoDaysAgoET && graceAvailable) {
+    return {
+      currentStreakDays: existingDays,
+      streakStartDate: existingStart,
+      lastActivityDate: todayET,
+      streakMultiplier: existingMultiplier,
+      milestoneBonus: 0,
+      graceTokenUsedDate: todayET, // mark token used for this month
+      graceApplied: true,
+    };
+  }
+
+  // Branch 3b: missed 2+ days, or grace already used — reset streak
   return {
     currentStreakDays: 1,
     streakStartDate: todayET,
     lastActivityDate: todayET,
     streakMultiplier: 1,
     milestoneBonus: 0,
+    graceTokenUsedDate: graceUsed, // preserve existing (not consumed)
   };
 }
 
@@ -624,6 +660,75 @@ export const recordChallengeProgress = webMethod(
     } catch (err) {
       logError(`recordChallengeProgress — failed for member ${memberId} challenge ${challengeId}`, err);
       return { success: false, error: 'internal_error' };
+    }
+  }
+);
+
+// ── recoverStreak (Phase 2 v2) ────────────────────────────────────────────────
+
+const STREAK_RECOVERY_COOLDOWN_DAYS = 30;
+
+/**
+ * Spend STREAK_RECOVERY_COST points to restore a broken streak to 1 day.
+ * Allowed once per 30 days (tracked via MemberPoints.lastStreakRecoveryDate).
+ *
+ * TODO (blocked on CF-ledger): insert MemberPointsLedger entry
+ *   reason: 'streak_recovery', delta: -STREAK_RECOVERY_COST
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ success: boolean, newTotal?: number, currentStreakDays?: number, error?: string }>}
+ */
+export const recoverStreak = webMethod(
+  Permissions.Member,
+  async (memberId) => {
+    if (!memberId) {
+      return { success: false, error: 'memberId is required' };
+    }
+    try {
+      const todayET = getTodayET();
+      const record = await findMemberRecord(memberId);
+      if (!record) {
+        return { success: false, error: 'no record found for member' };
+      }
+
+      if (record.totalPoints < STREAK_RECOVERY_COST) {
+        return { success: false, error: 'insufficient points for streak recovery' };
+      }
+
+      // Cooldown: once per 30 days
+      const lastRecovery = record.lastStreakRecoveryDate || null;
+      if (lastRecovery) {
+        const [ly, lm, ld] = lastRecovery.split('-').map(Number);
+        const [ty, tm, td] = todayET.split('-').map(Number);
+        const daysDiff = Math.floor(
+          (Date.UTC(ty, tm - 1, td) - Date.UTC(ly, lm - 1, ld)) / 86400000
+        );
+        if (daysDiff < STREAK_RECOVERY_COOLDOWN_DAYS) {
+          return { success: false, error: `streak recovery on 30 day cooldown (${daysDiff} days elapsed)` };
+        }
+      }
+      const newTotal = record.totalPoints - STREAK_RECOVERY_COST;
+      const updatedRecord = {
+        ...record,
+        totalPoints: newTotal,
+        currentStreakDays: 1,
+        streakStartDate: todayET,    // reset so derived streak length stays accurate
+        lastStreakRecoveryDate: todayET,
+      };
+      // NOTE: When CF-ledger lands this will become two sequential wixData writes
+      // with no rollback. If the ledger insert fails after the points deduction,
+      // the member is debited with no audit trail. Track in CF-ledger story.
+      await wixData.update(MEMBER_POINTS_COLLECTION, updatedRecord);
+
+      // TODO: insert MemberPointsLedger entry (blocked on CF-ledger)
+      // await wixData.insert('MemberPointsLedger', {
+      //   memberId, delta: -STREAK_RECOVERY_COST, reason: 'streak_recovery', createdAt: new Date()
+      // });
+
+      return { success: true, newTotal, currentStreakDays: 1 };
+    } catch (err) {
+      logError(`recoverStreak — failed for member ${memberId}`, err);
+      return { success: false, error: 'Failed to recover streak' };
     }
   }
 );
