@@ -8,7 +8,7 @@
  *  - earnPoints called with deterministic idempotencyKey
  *  - pointsAwarded:500 included in return value on first purchase
  *  - rewardPaid=true is persisted on the referral record after reward
- *  - second purchase (isFirstPurchase=false) does not call earnPoints
+ *  - non-first purchase (isFirstPurchase=false) does not call earnPoints
  *  - no isFirstPurchase argument defaults to false — no earnPoints call
  *  - rewardPaid=true on referral record → earnPoints not called (no-op guard)
  *  - missing referral → no earnPoints call, returns {skipped:true}
@@ -19,7 +19,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __reset, __seed, __getUpdated } from './__mocks__/wix-data.js';
-import { __reset as __resetLoyalty, accounts } from './__mocks__/wix-loyalty.v2.js';
+import { __reset as __resetLoyalty, accounts, __seedLoyaltyAccount } from './__mocks__/wix-loyalty.v2.js';
 import { BONUS_POINTS } from '../src/backend/loyaltyBonusPoints.web.js';
 
 // ── Module-level mocks ────────────────────────────────────────────────────────
@@ -32,9 +32,10 @@ import { _processReferralOnOrderCreated } from '../src/backend/referralService.w
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const REFERRER_ID = 'mem-referrer';
-const REFEREE_ID  = 'mem-referee';
-const ORDER_NUM   = 'ORD-001';
+const REFERRER_ID         = 'mem-referrer';
+const REFERRER_ACCOUNT_ID = 'loyalty-acct-referrer';
+const REFEREE_ID          = 'mem-referee';
+const ORDER_NUM           = 'ORD-001';
 
 function seedReferral(overrides = {}) {
   __seed('Referrals', [{
@@ -46,6 +47,10 @@ function seedReferral(overrides = {}) {
     rewardPaid:       false,
     ...overrides,
   }]);
+  // Seed the referrer's loyalty account (distinct from member ID).
+  // Override per-test with accounts.getAccountBySecondaryId.mockRejectedValueOnce()
+  // to simulate a missing account.
+  __seedLoyaltyAccount(REFERRER_ID, { _id: REFERRER_ACCOUNT_ID });
 }
 
 beforeEach(() => {
@@ -61,7 +66,7 @@ describe('first purchase reward', () => {
     await _processReferralOnOrderCreated(REFEREE_ID, ORDER_NUM, true);
     expect(accounts.earnPoints).toHaveBeenCalledOnce();
     expect(accounts.earnPoints).toHaveBeenCalledWith(
-      REFERRER_ID,
+      REFERRER_ACCOUNT_ID,
       expect.objectContaining({ points: BONUS_POINTS.REFERRAL_COMPLETE })
     );
   });
@@ -93,6 +98,28 @@ describe('first purchase reward', () => {
     const updates = __getUpdated('Referrals');
     const finalUpdate = updates[updates.length - 1];
     expect(finalUpdate.rewardPaid).toBe(true);
+  });
+});
+
+// ── No loyalty account for referrer ─────────────────────────────────────────
+
+describe('referrer has no loyalty account', () => {
+  it('does not call earnPoints and returns success:true when account lookup fails', async () => {
+    seedReferral();
+    accounts.getAccountBySecondaryId.mockRejectedValueOnce(new Error('Account not found'));
+    const result = await _processReferralOnOrderCreated(REFEREE_ID, ORDER_NUM, true);
+    expect(accounts.earnPoints).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.pointsAwarded).toBeUndefined();
+  });
+
+  it('does not set rewardPaid=true when account lookup fails', async () => {
+    seedReferral();
+    accounts.getAccountBySecondaryId.mockRejectedValueOnce(new Error('Account not found'));
+    await _processReferralOnOrderCreated(REFEREE_ID, ORDER_NUM, true);
+    const updates = __getUpdated('Referrals');
+    const finalUpdate = updates[updates.length - 1];
+    expect(finalUpdate.rewardPaid).not.toBe(true);
   });
 });
 

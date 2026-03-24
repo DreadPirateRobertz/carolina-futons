@@ -37,6 +37,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { accounts } from 'wix-loyalty.v2';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import crypto from 'crypto';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 import { BONUS_POINTS } from 'backend/loyaltyBonusPoints.web';
@@ -367,17 +368,24 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
     let pointsAwarded = 0;
     if (isFirstPurchase && !referral.rewardPaid) {
       try {
-        await accounts.earnPoints(referral.referrerMemberId, {
-          points:          BONUS_POINTS.REFERRAL_COMPLETE,
-          description:     'Bonus: referral purchase completed',
-          appId:           'cf-loyalty-bonus',
-          idempotencyKey:  `referral_${referral._id}_firstpurchase`,
+        const { account: loyaltyAccount } = await accounts.getAccountBySecondaryId({
+          memberId: referral.referrerMemberId,
+        });
+        await accounts.earnPoints(loyaltyAccount._id, {
+          points:         BONUS_POINTS.REFERRAL_COMPLETE,
+          description:    'Bonus: referral purchase completed',
+          appId:          'cf-loyalty-bonus',
+          idempotencyKey: `referral_${referral._id}_firstpurchase`,
         });
         referral.rewardPaid = true;
         pointsAwarded = BONUS_POINTS.REFERRAL_COMPLETE;
       } catch (err) {
-        console.warn('[referralService] earnPoints for referral failed:', err?.message ?? err);
-        // Non-fatal — credits were issued; points will not be retried
+        logError(
+          `[referralService] earnPoints for referral [referral=${referral._id}, referrer=${referral.referrerMemberId}] failed`,
+          err,
+        );
+        // Non-fatal — credits were issued. rewardPaid stays false so a retry is safe;
+        // idempotency key (referral_<id>_firstpurchase) prevents double-award.
       }
     }
 
@@ -393,12 +401,9 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
       console.warn('[referralService] gamification_referral_accepted event failed:', err?.message),
     );
 
-    return {
-      success: true,
-      referrerCredit: REFERRER_CREDIT_AMOUNT,
-      refereeCredit:  REFEREE_CREDIT_AMOUNT,
-      ...(pointsAwarded > 0 && { pointsAwarded }),
-    };
+    const outcome = { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
+    if (pointsAwarded > 0) outcome.pointsAwarded = pointsAwarded;
+    return outcome;
   } catch (err) {
     console.error('[referralService] _processReferralOnOrderCreated failed:', err);
     return { skipped: true };
