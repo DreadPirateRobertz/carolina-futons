@@ -71,11 +71,6 @@ vi.mock('public/cartService', () => ({
   removeCartItem: vi.fn(() => Promise.resolve()),
   onCartChanged: vi.fn(),
   getShippingProgress: vi.fn(() => ({ remaining: 50, progressPct: 60, qualifies: false })),
-  getTierProgress: vi.fn(() => ({
-    tier: { label: (r) => `Spend $${r} more for 10% off!` },
-    remaining: 100,
-    progressPct: 40,
-  })),
   FREE_SHIPPING_THRESHOLD: 199,
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 10,
@@ -129,6 +124,21 @@ vi.mock('public/CouponCodeInput.js', () => ({
 
 vi.mock('public/pageSeo.js', () => ({
   initPageSeo: vi.fn(),
+}));
+
+vi.mock('public/CartLoyaltyBar.js', () => ({
+  initCartLoyaltyBar: vi.fn(() => Promise.resolve()),
+  updateCartLoyaltyBar: vi.fn(),
+}));
+
+vi.mock('public/CartSpendToTierBar.js', () => ({
+  initSpendToTierBar: vi.fn(() => Promise.resolve()),
+  updateSpendToTierBar: vi.fn(),
+  calcTierProgressWithCart: vi.fn(),
+}));
+
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn(() => Promise.resolve(null)),
 }));
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -313,42 +323,22 @@ describe('Cart Page — empty cart element hookup', () => {
   });
 });
 
-// ── Tier Progress Bar Tests ─────────────────────────────────────────
+// ── Spend-to-Tier Bar Tests ────────────────────────────────────────
+// Deep behavior is in cartSpendToTierBar.test.js — these verify wiring.
 
-describe('Cart Page — #tierProgressBar / #tierProgressText hookup', () => {
+describe('Cart Page — #tierProgressBar / #tierProgressText hookup (CF-1qo6)', () => {
   beforeEach(() => {
     elements.clear();
     vi.clearAllMocks();
   });
 
-  it('sets tier progress bar value from getTierProgress', async () => {
+  it('calls initSpendToTierBar with cart subtotal on page load', async () => {
     await loadPage();
-
-    const bar = getEl('#tierProgressBar');
-    expect(bar.value).toBe(40);
-  });
-
-  it('sets tier text from tier label function', async () => {
-    await loadPage();
-
-    const text = getEl('#tierProgressText');
-    expect(text.text).toBe('Spend $100.00 more for 10% off!');
-  });
-
-  it('styles tier progress bar with brand colors', async () => {
-    await loadPage();
-
-    const bar = getEl('#tierProgressBar');
-    expect(bar.style.backgroundColor).toBe('#ddd');
-    expect(bar.style.color).toBe('#5B8FA8');
-  });
-
-  it('sets ARIA attributes on tier progress bar', async () => {
-    await loadPage();
-
-    const bar = getEl('#tierProgressBar');
-    expect(bar.accessibility.ariaLabel).toContain('Discount tier progress');
-    expect(bar.accessibility.ariaValueNow).toBe(40);
+    const { initSpendToTierBar } = await import('public/CartSpendToTierBar.js');
+    expect(initSpendToTierBar).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ cartSubtotal: 549.99 })
+    );
   });
 });
 
