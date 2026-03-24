@@ -1,8 +1,8 @@
 /**
  * @file pendingNotifications.js
  * @description Queue utility for PendingNotifications collection.
- * Provides enqueue, markSent, markFailed, and getPendingRetries operations
- * used by notificationService and the processNotificationQueueCron.
+ * Provides enqueue, markSent, markFailed, getPendingRetries, and getStalePending
+ * operations used by notificationService and the processNotificationQueueCron.
  *
  * Retry backoff schedule (exponential):
  *   retries=0 (first failure)  → nextRetryAt = now + 30s
@@ -78,6 +78,28 @@ export async function getPendingRetries(limit = 50) {
     .lt('retries', MAX_RETRIES)
     .le('nextRetryAt', now)
     .ascending('nextRetryAt')
+    .limit(limit)
+    .find({ suppressAuth: true });
+  return result.items;
+}
+
+/** Stale threshold: pending rows older than this were stranded by a process death. */
+export const STALE_PENDING_MS = 2 * 60_000; // 2 minutes
+
+/**
+ * Query stale status='pending' rows — enqueued but never marked sent or failed.
+ * Caused by process death between enqueueNotification and markSent/markFailed.
+ * Returns rows where status='pending' and updatedAt <= now - STALE_PENDING_MS.
+ * @param {number} [limit=50]
+ * @returns {Promise<Array>}
+ */
+export async function getStalePending(limit = 50) {
+  const staleThreshold = new Date(Date.now() - STALE_PENDING_MS);
+  const result = await wixData
+    .query(PENDING_NOTIFICATIONS_COLLECTION)
+    .eq('status', 'pending')
+    .le('updatedAt', staleThreshold)
+    .ascending('updatedAt')
     .limit(limit)
     .find({ suppressAuth: true });
   return result.items;

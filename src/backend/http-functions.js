@@ -1884,8 +1884,11 @@ export async function get_cleanupRateLimitCron(request) {
 
 // ── Notification Retry Cron ───────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/processNotificationQueueCron
-// Runs every 5min. Retries failed PendingNotifications rows up to MAX_RETRIES (3)
-// with exponential backoff (30s, 60s, 120s). Authenticated via X-Cron-Secret header.
+// Runs every 5min. Two query branches:
+//   1. status='failed', retries < MAX_RETRIES, nextRetryAt <= now  (normal retry)
+//   2. status='pending', updatedAt <= now - 2min                   (stale/stranded rows)
+// Stale rows arise when the process dies between enqueueNotification and markSent/markFailed.
+// Authenticated via X-Cron-Secret header (ALERT_CRON_KEY in Secrets Manager).
 // CF-hbz
 export async function get_processNotificationQueueCron(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
@@ -1900,8 +1903,14 @@ export async function get_processNotificationQueueCron(request) {
       });
     }
 
-    const { getPendingRetries, markSent, markFailed } = await import('backend/utils/pendingNotifications');
-    const rows = await getPendingRetries(50);
+    const { getPendingRetries, getStalePending, markSent, markFailed } = await import('backend/utils/pendingNotifications');
+    const [retryRows, staleRows] = await Promise.all([getPendingRetries(50), getStalePending(50)]);
+    // Merge both branches; dedup by _id in case of any overlap
+    const seen = new Set();
+    const rows = [];
+    for (const row of [...retryRows, ...staleRows]) {
+      if (!seen.has(row._id)) { seen.add(row._id); rows.push(row); }
+    }
 
     let retried = 0;
     let delivered = 0;
