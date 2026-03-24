@@ -77,7 +77,7 @@ describe('initPostPurchaseReveal — non-member (getLoyaltyAccount throws)', () 
   it('shows join CTA with estimated points', async () => {
     await initPostPurchaseReveal($w, { orderTotal: 300, getLoyaltyAccount, getLeaderboard });
     expect($w('#revealJoinCta').show).toHaveBeenCalled();
-    expect($w('#revealJoinCta').text).toBe('Join rewards to earn 300 pts — sign up free');
+    expect($w('#revealJoinCta').text).toBe('Join rewards to earn 600 pts — sign up free');
   });
 
   it('hides all member-only elements', async () => {
@@ -91,7 +91,7 @@ describe('initPostPurchaseReveal — non-member (getLoyaltyAccount throws)', () 
 
   it('rounds fractional order total in join CTA', async () => {
     await initPostPurchaseReveal($w, { orderTotal: 149.99, getLoyaltyAccount, getLeaderboard });
-    expect($w('#revealJoinCta').text).toBe('Join rewards to earn 150 pts — sign up free');
+    expect($w('#revealJoinCta').text).toBe('Join rewards to earn 300 pts — sign up free');
   });
 });
 
@@ -114,10 +114,10 @@ describe('initPostPurchaseReveal — member, no leaderboard rank', () => {
     expect($w('#revealJoinCta').hide).toHaveBeenCalled();
   });
 
-  it('shows points text with order preview (1 pt per $1)', async () => {
+  it('shows points text with order preview (2 pts per $1)', async () => {
     await initPostPurchaseReveal($w, { orderTotal: 200, getLoyaltyAccount, getLeaderboard });
     expect($w('#revealPointsText').show).toHaveBeenCalled();
-    expect($w('#revealPointsText').text).toBe("You're earning 200 pts on this order!");
+    expect($w('#revealPointsText').text).toBe("You're earning 400 pts on this order!");
   });
 
   it('sets tier bar to loyalty account progress', async () => {

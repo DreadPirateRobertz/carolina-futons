@@ -71,7 +71,7 @@ describe('checkBirthdayReward', () => {
     // CMS profile has birthday Mar 22 — today IS the birthday
     const result = await checkBirthdayReward('acc-1', 'mem-1');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(100);
+    expect(result.pointsAwarded).toBe(200);
     expect(accounts.earnPoints).toHaveBeenCalledTimes(1);
   });
 
@@ -80,7 +80,7 @@ describe('checkBirthdayReward', () => {
     setProfileBirthday(3, 25);
     const result = await checkBirthdayReward('acc-1', 'mem-1');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(100);
+    expect(result.pointsAwarded).toBe(200);
   });
 
   it('skips when today is outside the birthday window (4+ days away)', async () => {

@@ -230,7 +230,7 @@ describe('loyaltyBonusPoints deep coverage', () => {
       config1.tierMultipliers.Gold = 100;
 
       const config2 = await getEarningConfig();
-      expect(config2.bonusPoints.review).toBe(50);
+      expect(config2.bonusPoints.review).toBe(100);
       // Note: tierMultipliers is spread, but bonusPoints references BONUS_POINTS directly
     });
 

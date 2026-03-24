@@ -3,7 +3,7 @@
  * @description Post-purchase gamification reveal card on the Thank You Page.
  *
  * Shows signed-in members:
- *   - Points they're earning on this order (1 pt per $1)
+ *   - Points they're earning on this order (2 pts per $1)
  *   - Current tier + progress bar
  *   - ZIP leaderboard rank (if opted in)
  *   - Social share CTA
@@ -24,8 +24,8 @@
  * CF-wndq
  */
 
-// 1 point per $1 (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
-const PURCHASE_PER_DOLLAR = 1;
+// 2 points per $1 (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
+const PURCHASE_PER_DOLLAR = 2;
 
 function previewPoints(orderTotal) {
   return Math.round(orderTotal * PURCHASE_PER_DOLLAR);

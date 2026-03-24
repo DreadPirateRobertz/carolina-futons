@@ -13,7 +13,7 @@
  *  - HTTP returns 500 when wixData insert fails (DB unavailable)
  *  - HTTP returns 500 when wixData update fails
  *  - order_complete event: orderTotal from payload becomes totalPoints in DB
- *  - Submit review: +50 pts base, +25 bonus with has_photo
+ *  - Submit review: +100 pts base, +50 bonus with has_photo
  *
  * CF-bcho
  */
@@ -123,11 +123,11 @@ describe('gamificationApi — points persist to MemberPoints (integration)', () 
     expect(body.newTotal).toBe(record.totalPoints);
   });
 
-  it('submit_review: awards 50 pts base, 75 pts with has_photo', async () => {
+  it('submit_review: awards 100 pts base, 150 pts with has_photo', async () => {
     const resBase = await post_gamificationEvent(
       makeRequest({ eventName: 'gamification_submit_review', memberId: MEMBER._id })
     );
-    expect(parseBody(resBase).newTotal).toBe(50);
+    expect(parseBody(resBase).newTotal).toBe(100);
 
     // Reset and re-run with has_photo to verify bonus
     __reset();
@@ -142,7 +142,7 @@ describe('gamificationApi — points persist to MemberPoints (integration)', () 
         payload: { has_photo: true },
       })
     );
-    expect(parseBody(resPhoto).newTotal).toBe(75); // 50 base + 25 photo bonus
+    expect(parseBody(resPhoto).newTotal).toBe(150); // 100 base + 50 photo bonus
   });
 
   it('returns HTTP 500 when wixData insert fails — not a silent 200', async () => {

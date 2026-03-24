@@ -80,15 +80,15 @@ describe('initCartLoyaltyBar — non-member (getLoyaltyAccount throws)', () => {
     expect($w('#loyaltyBarCta').hide).toHaveBeenCalled();
   });
 
-  it('shows join CTA with estimated points from subtotal (1 pt per $1)', async () => {
+  it('shows join CTA with estimated points from subtotal (2 pts per $1)', async () => {
     await initCartLoyaltyBar($w, { subtotal: 500, getLoyaltyAccount });
     expect($w('#loyaltyBarJoinCta').show).toHaveBeenCalled();
-    expect($w('#loyaltyBarJoinCta').text).toBe('Join rewards to earn 500 pts on this order');
+    expect($w('#loyaltyBarJoinCta').text).toBe('Join rewards to earn 1000 pts on this order');
   });
 
   it('rounds fractional subtotal in join CTA', async () => {
     await initCartLoyaltyBar($w, { subtotal: 149.99, getLoyaltyAccount });
-    expect($w('#loyaltyBarJoinCta').text).toBe('Join rewards to earn 150 pts on this order');
+    expect($w('#loyaltyBarJoinCta').text).toBe('Join rewards to earn 300 pts on this order');
   });
 });
 
@@ -120,24 +120,25 @@ describe('initCartLoyaltyBar — member with next tier', () => {
   it('shows tier name and preview points in text element', async () => {
     await initCartLoyaltyBar($w, { subtotal: 200, getLoyaltyAccount });
     expect($w('#loyaltyBarText').show).toHaveBeenCalled();
-    expect($w('#loyaltyBarText').text).toBe('Trail Blazer · Earn 200 pts on this order');
+    expect($w('#loyaltyBarText').text).toBe('Trail Blazer · Earn 400 pts on this order');
   });
 
   it('shows upsell CTA with dollars-to-next-tier when current order falls short', async () => {
-    // 150 pts + 200 pts = 350 — still 150 short of 500
-    await initCartLoyaltyBar($w, { subtotal: 200, getLoyaltyAccount });
+    // pointsToNext=350, subtotal=100 → preview 200 pts, still 150 short
+    await initCartLoyaltyBar($w, { subtotal: 100, getLoyaltyAccount });
     expect($w('#loyaltyBarCta').show).toHaveBeenCalled();
     expect($w('#loyaltyBarCta').text).toBe('Add $150 to reach Mountain Guide');
   });
 
   it('shows "this order gets you there" CTA when preview points cover pointsToNext', async () => {
-    // pointsToNext = 350, subtotal = 400 → preview 400 >= 350
+    // pointsToNext = 350, subtotal = 400 → preview 800 >= 350
     await initCartLoyaltyBar($w, { subtotal: 400, getLoyaltyAccount });
     expect($w('#loyaltyBarCta').text).toBe('This order gets you to Mountain Guide!');
   });
 
   it('shows CTA when preview points exactly match pointsToNext', async () => {
-    await initCartLoyaltyBar($w, { subtotal: 350, getLoyaltyAccount });
+    // pointsToNext=350, subtotal=175 → preview 350 = 350
+    await initCartLoyaltyBar($w, { subtotal: 175, getLoyaltyAccount });
     expect($w('#loyaltyBarCta').text).toBe('This order gets you to Mountain Guide!');
   });
 });
@@ -159,7 +160,7 @@ describe('initCartLoyaltyBar — member at max tier (no nextTier)', () => {
 
   it('shows text with tier name and preview points', async () => {
     await initCartLoyaltyBar($w, { subtotal: 300, getLoyaltyAccount });
-    expect($w('#loyaltyBarText').text).toBe('Summit Legend · Earn 300 pts on this order');
+    expect($w('#loyaltyBarText').text).toBe('Summit Legend · Earn 600 pts on this order');
   });
 
   it('hides the upsell CTA at max tier', async () => {
@@ -184,13 +185,13 @@ describe('updateCartLoyaltyBar — re-renders with new subtotal', () => {
 
   it('recalculates preview points from new subtotal', () => {
     updateCartLoyaltyBar($w, { subtotal: 250, loyaltyData: MEMBER_ACCOUNT });
-    expect($w('#loyaltyBarText').text).toBe('Trail Blazer · Earn 250 pts on this order');
+    expect($w('#loyaltyBarText').text).toBe('Trail Blazer · Earn 500 pts on this order');
   });
 
   it('recalculates upsell CTA with new subtotal', () => {
-    // pointsToNext=350, subtotal=100 → preview=100, still need 250 more
+    // pointsToNext=350, subtotal=100 → preview=200, still need 150 more
     updateCartLoyaltyBar($w, { subtotal: 100, loyaltyData: MEMBER_ACCOUNT });
-    expect($w('#loyaltyBarCta').text).toBe('Add $250 to reach Mountain Guide');
+    expect($w('#loyaltyBarCta').text).toBe('Add $150 to reach Mountain Guide');
   });
 
   it('no-ops when loyaltyData is null', () => {

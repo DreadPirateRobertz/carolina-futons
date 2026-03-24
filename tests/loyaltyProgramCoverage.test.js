@@ -598,12 +598,12 @@ describe('loyaltyTiers — getCustomerTierHistory', () => {
 describe('loyaltyBonusPoints — getEarningConfig', () => {
   it('returns correct point values', async () => {
     const config = await getEarningConfig();
-    expect(config.pointsPerDollar).toBe(1);
-    expect(config.bonusPoints.review).toBe(50);
-    expect(config.bonusPoints.photoReview).toBe(100);
-    expect(config.bonusPoints.referralComplete).toBe(200);
-    expect(config.bonusPoints.accountCreation).toBe(25);
-    expect(config.bonusPoints.birthday).toBe(100);
+    expect(config.pointsPerDollar).toBe(2);
+    expect(config.bonusPoints.review).toBe(100);
+    expect(config.bonusPoints.photoReview).toBe(150);
+    expect(config.bonusPoints.referralComplete).toBe(500);
+    expect(config.bonusPoints.accountCreation).toBe(50);
+    expect(config.bonusPoints.birthday).toBe(200);
   });
 
   it('returns tier multipliers', async () => {
@@ -659,7 +659,7 @@ describe('loyaltyBonusPoints — awardBonusPoints', () => {
     expect(result.pointsAwarded).toBe(BONUS_POINTS.REVIEW);
     expect(result.reason).toBe('review');
     expect(accounts.earnPoints).toHaveBeenCalledWith('abc123def456', expect.objectContaining({
-      points: 50,
+      points: 100,
       description: 'Bonus: product review submitted',
       appId: 'cf-loyalty-bonus',
     }));
@@ -668,25 +668,25 @@ describe('loyaltyBonusPoints — awardBonusPoints', () => {
   it('awards photo review points', async () => {
     const result = await awardBonusPoints('abc123def456', 'photoReview');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(100);
+    expect(result.pointsAwarded).toBe(150);
   });
 
   it('awards referral complete points', async () => {
     const result = await awardBonusPoints('abc123def456', 'referralComplete');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(200);
+    expect(result.pointsAwarded).toBe(500);
   });
 
   it('awards account creation points', async () => {
     const result = await awardBonusPoints('abc123def456', 'accountCreation');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(25);
+    expect(result.pointsAwarded).toBe(50);
   });
 
   it('awards birthday points', async () => {
     const result = await awardBonusPoints('abc123def456', 'birthday');
     expect(result.success).toBe(true);
-    expect(result.pointsAwarded).toBe(100);
+    expect(result.pointsAwarded).toBe(200);
   });
 
   it('allows custom point override', async () => {
@@ -730,10 +730,10 @@ describe('loyaltyBonusPoints — awardBonusPoints', () => {
   });
 
   it('exported BONUS_POINTS constants are correct', () => {
-    expect(BONUS_POINTS.REVIEW).toBe(50);
-    expect(BONUS_POINTS.PHOTO_REVIEW).toBe(100);
-    expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(200);
-    expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(25);
-    expect(BONUS_POINTS.BIRTHDAY).toBe(100);
+    expect(BONUS_POINTS.REVIEW).toBe(100);
+    expect(BONUS_POINTS.PHOTO_REVIEW).toBe(150);
+    expect(BONUS_POINTS.REFERRAL_COMPLETE).toBe(500);
+    expect(BONUS_POINTS.ACCOUNT_CREATION).toBe(50);
+    expect(BONUS_POINTS.BIRTHDAY).toBe(200);
   });
 });
