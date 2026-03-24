@@ -22,6 +22,7 @@ import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
 import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
+export { post_getLeaderboard } from 'backend/leaderboard-http';
 import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { getSecret } from 'wix-secrets-backend';
 
