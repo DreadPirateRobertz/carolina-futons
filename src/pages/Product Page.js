@@ -24,6 +24,7 @@ import { makeClickable } from 'public/a11yHelpers.js';
 import { setCardImage } from 'public/productCardHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
+import { getProductVideos } from 'backend/productVideos.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
@@ -184,6 +185,9 @@ async function initProductPage() {
       // CF-m55f: Direct YouTube embed from product.videoUrl CMS field
       // Requires: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent) in Studio
       { name: 'productYouTubeVideo', init: () => initProductYouTubeVideo($w, state), critical: false },
+      // CF-7byz: CMS-driven videos from ProductVideos collection, matched by slug
+      // Requires: #productVideoContainer (Box) + #productVideoCatalogEmbed (HtmlComponent) in Studio
+      { name: 'catalogVideos', init: () => initCatalogVideos($w, state), critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
       // Assembly guide link (fetches by SKU, shows PDF/video)
       { name: 'assemblyGuide', init: async () => {
@@ -547,6 +551,56 @@ function initProductYouTubeVideo($wFn, pageState) {
     try { $wFn('#productVideoSection').expand(); } catch (e) {}
   } catch (e) {
     try { $wFn('#productVideoSection').collapse(); } catch (e2) {}
+  }
+}
+
+// ── Catalog Videos (CF-7byz) ──────────────────────────────────────────────────
+// CMS-driven videos from ProductVideos collection matched by product slug.
+// Editor elements: #productVideoContainer (Box) + #productVideoCatalogEmbed (HtmlComponent)
+// + optional #productVideoCatalogTitle (Text).
+
+/**
+ * Fetches and renders the first matching video from the ProductVideos CMS collection.
+ * Collapses #productVideoContainer when the collection has no entry for this slug.
+ * @param {Function} $wFn - Wix $w selector
+ * @param {Object} pageState - Product page state (needs pageState.product.slug)
+ */
+export async function initCatalogVideos($wFn, pageState) {
+  const slug = pageState?.product?.slug;
+  if (!slug) {
+    try { $wFn('#productVideoContainer').collapse(); } catch (e) {}
+    return;
+  }
+
+  try {
+    const result = await getProductVideos(slug);
+    if (!result.success || !result.data || result.data.length === 0) {
+      try { $wFn('#productVideoContainer').collapse(); } catch (e) {}
+      return;
+    }
+
+    const primary = result.data[0];
+    const iframeHtml = primary.youtubeUrl ? buildYouTubeEmbed(primary.youtubeUrl) : null;
+    if (!iframeHtml && !primary.mp4Url) {
+      try { $wFn('#productVideoContainer').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $wFn('#productVideoCatalogTitle').text = primary.title || 'Product Video'; } catch (e) {}
+
+    if (iframeHtml) {
+      try { $wFn('#productVideoCatalogEmbed').src = iframeHtml; } catch (e) {}
+    } else {
+      try { $wFn('#productVideoCatalogEmbed').src = primary.mp4Url; } catch (e) {}
+    }
+
+    try {
+      $wFn('#productVideoContainer').accessibility.role = 'region';
+      $wFn('#productVideoContainer').accessibility.ariaLabel = `${primary.title || 'Product'} video`;
+    } catch (e) {}
+    try { $wFn('#productVideoContainer').expand(); } catch (e) {}
+  } catch (e) {
+    try { $wFn('#productVideoContainer').collapse(); } catch (e2) {}
   }
 }
 
