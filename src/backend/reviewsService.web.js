@@ -26,6 +26,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 
 const COLLECTION = 'Reviews';
 const MAX_PHOTOS = 3;
@@ -210,6 +211,14 @@ export const submitReview = webMethod(
       };
 
       const saved = await wixData.insert(COLLECTION, record);
+
+      // Fire gamification event — non-blocking; a failure must never break the submit
+      receiveGamificationEvent(
+        'gamification_submit_review',
+        { has_photo: photos.length > 0 },
+        memberId,
+      ).catch(err => console.warn('[reviewsService] gamification event failed:', err));
+
       return { success: true, reviewId: saved._id };
     } catch (err) {
       console.error('[reviewsService] Submit error:', err);
