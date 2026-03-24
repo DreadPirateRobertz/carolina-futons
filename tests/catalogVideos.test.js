@@ -207,6 +207,19 @@ describe('initCatalogVideos — collapses when no video matches', () => {
     expect(getEl('#productVideoContainer').collapse).toHaveBeenCalled();
   });
 
+  it('collapses container when pageState is undefined', async () => {
+    await initCatalogVideos(globalThis.$w, undefined);
+    expect(getEl('#productVideoContainer').collapse).toHaveBeenCalled();
+    expect(getEl('#productVideoContainer').expand).not.toHaveBeenCalled();
+  });
+
+  it('collapses container when getProductVideos returns success:false (invalid slug)', async () => {
+    // Slug '!!!' sanitizes to '' in cleanSlug → backend returns { success: false }
+    await initCatalogVideos(globalThis.$w, { product: { slug: '!!!' } });
+    expect(getEl('#productVideoContainer').collapse).toHaveBeenCalled();
+    expect(getEl('#productVideoContainer').expand).not.toHaveBeenCalled();
+  });
+
   it('collapses when matched video has neither youtubeUrl nor mp4Url', async () => {
     __seed(COLLECTION, [{
       ...VIDEO_YOUTUBE,
@@ -220,12 +233,12 @@ describe('initCatalogVideos — collapses when no video matches', () => {
 });
 
 describe('initCatalogVideos — allSettled isolation', () => {
-  it('resolves without throwing on DB error', async () => {
+  it('collapses container on DB error (backend catches the throw, returns success:false)', async () => {
+    // getProductVideos catches wix-data errors internally and returns { success: false }
     __setQueryError(COLLECTION, new Error('DB failure'));
-    await expect(
-      initCatalogVideos(globalThis.$w, { product: { slug: 'eureka-futon-frame' } })
-    ).resolves.not.toThrow();
+    await initCatalogVideos(globalThis.$w, { product: { slug: 'eureka-futon-frame' } });
     expect(getEl('#productVideoContainer').collapse).toHaveBeenCalled();
+    expect(getEl('#productVideoContainer').expand).not.toHaveBeenCalled();
   });
 
   it('uses the first entry by sortOrder when multiple videos match', async () => {

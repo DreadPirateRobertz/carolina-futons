@@ -186,7 +186,7 @@ async function initProductPage() {
       // Requires: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent) in Studio
       { name: 'productYouTubeVideo', init: () => initProductYouTubeVideo($w, state), critical: false },
       // CF-7byz: CMS-driven videos from ProductVideos collection, matched by slug
-      // Requires: #productVideoContainer (Box) + #productVideoCatalogEmbed (HtmlComponent) in Studio
+      // Requires: #productVideoContainer (Box) + #productVideoCatalogEmbed (HtmlComponent) + #productVideoCatalogTitle (Text) in Studio
       { name: 'catalogVideos', init: () => initCatalogVideos($w, state), critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
       // Assembly guide link (fetches by SKU, shows PDF/video)
@@ -597,6 +597,7 @@ export async function initCatalogVideos($wFn, pageState) {
     try { $wFn('#productVideoContainer').expand(); } catch (e) {}
   } catch (e) {
     try { $wFn('#productVideoContainer').collapse(); } catch (e2) {}
+    throw e; // propagate so prioritizeSections onError can log via errorMonitoring
   }
 }
 
