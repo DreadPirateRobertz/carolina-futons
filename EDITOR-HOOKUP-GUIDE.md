@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Phase 2 Streak Multipliers + CF-64k: streakCountChip, streakMultiplierBadge, streakToastBox + Spin Wheel Phase 1: spinWheelSection + 4 CMS collections)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Phase 8 COMPLETE — All 6 LivingSkyState illustration modules wired via onMessage: comfortIllustrations, onboardingIllustrations, emptyStateIllustrations, aboutIllustrations, CartIllustrations, footerMountainDivider. PRs #771–#778 merged. catch-path guards on all onMessage handlers.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -801,7 +801,7 @@ For each section below:
 **↳ Inside `footerSocialRepeater`:**
 `socialIcon` (Text)
 
-### Living Sky (Phase 7)
+### Living Sky (Phase 7 + Phase 8 COMPLETE ✅)
 *Source: `masterPage.js` — dynamic import of `living-sky-wix.js`, 60s tick loop; `src/public/living-sky-component.html` embedded in HtmlComponent*
 | Element ID | Wix Element | Notes |
 |---|---|---|
@@ -810,7 +810,20 @@ For each section below:
 **Integration notes:**
 - `masterPage.js` calls `updateSkyToState($w, state)` every 60s, which posts raw state object (no `type` wrapper) to `#livingSkyFrame`
 - Consumers subscribe: `$w('#livingSkyFrame').onMessage(e => ...)` — state shape: `{ ridgeColors: {r1–r7, tree}, skyColors: ['#hex',...], starOpacity: 0–1, weather }`
-- Phase 8: `#footerMountainDivider` and `#contactShowroomSvg` will subscribe to this same stream for dynamic sky/ambient shift
+
+**Phase 8 COMPLETE (2026-03-23) — All 6 illustration modules wired to LivingSkyState via onMessage:**
+| Module | File | PR | Status |
+|---|---|---|---|
+| `footerMountainDivider` | `FooterSection.js` | #752 | ✅ merged |
+| `comfortIllustrations` | `comfortIllustrations.js` | #773 | ✅ merged |
+| `onboardingIllustrations` | `onboardingIllustrations.js` | #774 | ✅ merged |
+| `emptyStateIllustrations` | `emptyStateIllustrations.js` | #775 | ✅ merged |
+| `aboutIllustrations` | `aboutIllustrations.js` | #777 | ✅ merged |
+| `CartIllustrations` | `CartIllustrations.js` | #776 | ✅ merged |
+
+**catch-path hardening (PR #776 / cf-dnz):** All onMessage handlers have inner try/catch — errors logged to `console.error('[module] onMessage handler failed:')` and suppressed (never propagate). Validated by catch-path tests (#778).
+
+**State shape:** `{ ridgeColors: {r1–r7, tree}, skyColors: ['#hex',...], starOpacity: 0–1, weather: string }`
 
 ---
 

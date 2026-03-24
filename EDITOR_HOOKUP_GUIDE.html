@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.2 · Updated 2026-03-23 — Phase 7 Living Sky (CF-ad3): livingSkyFrame + Streak Display (CF-64k + Phase 2) + Spin Wheel Phase 1</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.3 · Updated 2026-03-23 — Phase 8 COMPLETE ✅ All 6 LivingSkyState modules wired (#771–#778) · Phase 7 Living Sky · Phase 2 Streaks · Spin Wheel Phase 1</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1108,7 +1108,7 @@ Same elements but popup slides up from bottom:
   <li><strong>#livingSkyFrame</strong>: HtmlComponent. Source: <code>public/living-sky-component.html</code> (upload to Wix Media → set as HtmlComponent URL). Receives <code>LivingSkyState</code> messages via <code>postMessage()</code>. Code updates sky gradient stops, sun glow position, ridge layer colors, and ambient light opacity every 60 seconds to track time-of-day. Place in the masterPage header area or as the hero background on the Home page. <span class="impl-warn">Gracefully absent — missing element is silently caught; removing this element will not break any page.</span></li>
   <li><strong>Time-of-day engine</strong>: <code>useLivingSky(totalMinutes)</code> returns a <code>LivingSkyState</code> with <code>skyColors</code> (array of hex strings), <code>ridgeColors</code> (r1–r7, tree), and <code>starOpacity</code> (0–1; &gt;0 = night). Midnight = deep navy; dawn = warm rose/orange; noon = bright blue; dusk = amber/violet; night = deep navy with moon.</li>
   <li><strong>Reduced motion</strong>: Single render only — no 60s update loop. SMIL animations inside the SVG are unaffected (browser respects <code>prefers-reduced-motion</code> natively).</li>
-  <li><strong>Phase 8 extension</strong>: <code>initMountainDividerWithSkyWiring()</code> in <code>FooterSection.js</code> also subscribes to LivingSkyState to update the footer mountain divider ridgeColors in sync with the sky.</li>
+  <li><strong>Phase 8 COMPLETE ✅ (2026-03-23)</strong>: All 6 illustration modules now subscribe to LivingSkyState via <code>onMessage</code>: <code>footerMountainDivider</code> (FooterSection.js, #752), <code>comfortIllustrations</code> (#773), <code>onboardingIllustrations</code> (#774), <code>emptyStateIllustrations</code> (#775), <code>aboutIllustrations</code> (#777), <code>CartIllustrations</code> (#776). All handlers have inner try/catch with <code>console.error('[module] onMessage handler failed:')</code> — catch-path validated by tests in PR #778.</li>
 </ul>`, elements: [
         ["livingSkyFrame","HtmlComponent","Animated Living Sky SVG host"]
       ]}
