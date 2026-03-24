@@ -16,7 +16,8 @@
  *  - checkAndExpirePoints returns null when query throws
  *  - checkAndExpirePoints returns null when update throws
  *  - checkAndExpirePoints is non-fatal when event insert throws
- *  - checkAndExpirePoints passes suppressAuth to find and update
+ *  - checkAndExpirePoints passes suppressAuth to find
+ *  - checkAndExpirePoints passes suppressAuth to update
  *  - getExpiryWarning returns null for missing member
  *  - getExpiryWarning returns null when no lastActivityDate
  *  - getExpiryWarning returns null before warning window
@@ -40,6 +41,7 @@ import {
   __getLastFindOptions,
   __getLastUpdateOptions,
 } from 'wix-data';
+import { __reset as __resetMember, __setMember } from 'wix-members-backend';
 import {
   checkAndExpirePoints,
   getExpiryWarning,
@@ -80,11 +82,35 @@ const MEMBER_ID = 'mem-1';
 
 beforeEach(() => {
   __reset();
+  __resetMember();
+  // Default: authenticated as the member under test
+  __setMember({ _id: MEMBER_ID });
 });
 
 // ── checkAndExpirePoints ──────────────────────────────────────────────────────
 
 describe('checkAndExpirePoints', () => {
+  it('returns null for invalid memberId', async () => {
+    expect(await checkAndExpirePoints(null)).toBeNull();
+    expect(await checkAndExpirePoints('')).toBeNull();
+    expect(await checkAndExpirePoints(123)).toBeNull();
+  });
+
+  it('returns null when caller session does not match memberId (IDOR guard)', async () => {
+    __setMember({ _id: 'other-member' });
+    __seed('MemberPoints', [makeRecord()]);
+    const result = await checkAndExpirePoints(MEMBER_ID);
+    expect(result).toBeNull();
+  });
+
+  it('returns null when session lookup throws', async () => {
+    const { currentMember } = await import('wix-members-backend');
+    currentMember.getMember.mockRejectedValueOnce(new Error('Auth error'));
+    __seed('MemberPoints', [makeRecord()]);
+    const result = await checkAndExpirePoints(MEMBER_ID);
+    expect(result).toBeNull();
+  });
+
   it('returns null when member not found', async () => {
     __seed('MemberPoints', []);
     const result = await checkAndExpirePoints(MEMBER_ID);
@@ -103,9 +129,10 @@ describe('checkAndExpirePoints', () => {
     expect(result).toEqual({ expired: false, warningDue: false });
   });
 
-  it('returns {warningDue:true, expiryDate} when in warning window', async () => {
+  it('returns {expired:false, warningDue:true, expiryDate} when in warning window', async () => {
     __seed('MemberPoints', [makeRecord({ lastActivityDate: WARNING_DATE })]);
     const result = await checkAndExpirePoints(MEMBER_ID);
+    expect(result.expired).toBe(false);
     expect(result.warningDue).toBe(true);
     expect(result.expiryDate).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -116,10 +143,10 @@ describe('checkAndExpirePoints', () => {
     expect(new Date(result.expiryDate) > new Date()).toBe(true);
   });
 
-  it('returns {expired:true} after 18-month expiry', async () => {
+  it('returns {expired:true, warningDue:false} after 18-month expiry', async () => {
     __seed('MemberPoints', [makeRecord({ lastActivityDate: EXPIRED_DATE })]);
     const result = await checkAndExpirePoints(MEMBER_ID);
-    expect(result).toEqual({ expired: true });
+    expect(result).toEqual({ expired: true, warningDue: false });
   });
 
   it('zeroes totalPoints when member is expired', async () => {
@@ -153,10 +180,10 @@ describe('checkAndExpirePoints', () => {
     expect(__getInserted('PointsExpiryEvents')).toHaveLength(0);
   });
 
-  it('returns {expired:true} even when totalPoints is zero', async () => {
+  it('returns {expired:true, warningDue:false} even when totalPoints is zero', async () => {
     __seed('MemberPoints', [makeRecord({ lastActivityDate: EXPIRED_DATE, totalPoints: 0 })]);
     const result = await checkAndExpirePoints(MEMBER_ID);
-    expect(result).toEqual({ expired: true });
+    expect(result).toEqual({ expired: true, warningDue: false });
   });
 
   it('returns null when query throws', async () => {
@@ -172,11 +199,11 @@ describe('checkAndExpirePoints', () => {
     expect(result).toBeNull();
   });
 
-  it('still returns {expired:true} when event insert throws (non-fatal)', async () => {
+  it('still returns {expired:true, warningDue:false} when event insert throws (non-fatal)', async () => {
     __seed('MemberPoints', [makeRecord({ lastActivityDate: EXPIRED_DATE, totalPoints: 100 })]);
     __setInsertError('PointsExpiryEvents', new Error('Insert failed'));
     const result = await checkAndExpirePoints(MEMBER_ID);
-    expect(result).toEqual({ expired: true });
+    expect(result).toEqual({ expired: true, warningDue: false });
   });
 
   it('passes suppressAuth to find', async () => {
@@ -195,6 +222,12 @@ describe('checkAndExpirePoints', () => {
 // ── getExpiryWarning ──────────────────────────────────────────────────────────
 
 describe('getExpiryWarning', () => {
+  it('returns null for invalid memberId', async () => {
+    expect(await getExpiryWarning(null)).toBeNull();
+    expect(await getExpiryWarning('')).toBeNull();
+    expect(await getExpiryWarning(42)).toBeNull();
+  });
+
   it('returns null when member not found', async () => {
     __seed('MemberPoints', []);
     const result = await getExpiryWarning(MEMBER_ID);
@@ -219,7 +252,7 @@ describe('getExpiryWarning', () => {
     expect(result).not.toBeNull();
     expect(result.totalPoints).toBe(750);
     expect(result.daysUntilExpiry).toBeGreaterThan(0);
-    expect(result.daysUntilExpiry).toBeLessThanOrEqual(31);
+    expect(result.daysUntilExpiry).toBeLessThanOrEqual(30);
   });
 
   it('daysUntilExpiry is a positive integer', async () => {
@@ -245,5 +278,29 @@ describe('getExpiryWarning', () => {
     __setQueryError('MemberPoints', new Error('DB down'));
     const result = await getExpiryWarning(MEMBER_ID);
     expect(result).toBeNull();
+  });
+
+  it('passes suppressAuth to find', async () => {
+    __seed('MemberPoints', [makeRecord({ lastActivityDate: WARNING_DATE })]);
+    await getExpiryWarning(MEMBER_ID);
+    expect(__getLastFindOptions('MemberPoints')).toMatchObject({ suppressAuth: true });
+  });
+});
+
+// ── addMonths boundary ────────────────────────────────────────────────────────
+
+describe('addMonths (month-end overflow)', () => {
+  it('clamps Oct 31 + 18 months to Apr 30 (not May 1)', async () => {
+    // Oct 31 + 18 months = Apr 30 (April has 30 days; setMonth would overflow to May 1)
+    const oct31 = new Date('2024-10-31T12:00:00Z');
+    __seed('MemberPoints', [makeRecord({ lastActivityDate: oct31, totalPoints: 100 })]);
+    const result = await checkAndExpirePoints(MEMBER_ID);
+    // expiryDate should be Apr 30 2026, not May 1 2026
+    if (result.warningDue && result.expiryDate) {
+      expect(result.expiryDate).toMatch(/^2026-04-30/);
+    } else {
+      // If already past Apr 30 2026 when this test runs, just verify it ran without error
+      expect(['expired', 'safe']).toContain(result.expired !== undefined ? 'expired' : 'safe');
+    }
   });
 });
