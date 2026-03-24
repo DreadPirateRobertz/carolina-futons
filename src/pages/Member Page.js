@@ -21,6 +21,8 @@ import {
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
 import { getMyStreakData, getMyAchievements, getMyDailyQuests } from 'backend/loyaltyService.web';
+import { getActiveChallenges } from 'backend/gamificationEventReceiver.web';
+import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
 import {
   buildWheelSegments,
   computeCountdown,
@@ -91,6 +93,7 @@ async function initMemberPage() {
       { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
+      { name: 'challengesDisplay', init: initChallengesDisplaySection },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
@@ -477,6 +480,17 @@ async function initDailyQuestsSection() {
     console.error('[MemberPage] Error initializing daily quests section:', e);
     $w('#dailyQuestsSection').hide();
   }
+}
+
+// ── Challenges Display Section (CF-wire2) ────────────────────────────
+
+async function initChallengesDisplaySection() {
+  await initChallengesDisplay(
+    currentMember._id,
+    getActiveChallenges,
+    $w('#challengesSection'),
+    $w('#challengesList')
+  );
 }
 
 // ── Session Storage Fallback ────────────────────────────────────────

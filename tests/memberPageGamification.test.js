@@ -60,6 +60,10 @@ globalThis.$w = Object.assign(
 
 // ── Hoisted mock refs ─────────────────────────────────────────────────────────
 
+const gamificationReceiverMocks = vi.hoisted(() => ({
+  getActiveChallenges: vi.fn().mockResolvedValue({ challenges: [] }),
+}));
+
 const membersMocks = vi.hoisted(() => ({
   getMember: vi.fn(),
 }));
@@ -131,6 +135,10 @@ vi.mock('backend/wishlistShare.web.js', () => ({
   resolveShareToken: vi.fn().mockResolvedValue({ valid: false, reason: 'not_found' }),
 }));
 
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  getActiveChallenges: gamificationReceiverMocks.getActiveChallenges,
+  receiveGamificationEvent: vi.fn().mockResolvedValue({ success: true, newTotal: 0, tierChanged: false, newTier: 'Trail Blazer', pointsEarned: 0, badgeUnlocked: null }),
+}));
 vi.mock('backend/errorMonitoring.web', () => ({ logError: vi.fn() }));
 vi.mock('backend/notificationService.web', () => ({ toggleProductAlerts: vi.fn() }));
 
@@ -239,6 +247,7 @@ beforeEach(() => {
     date: '2026-03-23',
   });
 
+  gamificationReceiverMocks.getActiveChallenges.mockResolvedValue({ challenges: [] });
   spinMocks.getSpinEligibility.mockResolvedValue({ eligible: false, reason: 'ALREADY_SPUN', nextETMidnightMs: Date.now() + 3600000 });
   streakDisplayMocks.shouldShowStreakChip.mockImplementation((d) => typeof d === 'number' && d >= 1);
   streakDisplayMocks.buildStreakChipText.mockImplementation((d) => `🔥 ${d}-day streak`);
@@ -408,5 +417,67 @@ describe('Member Page — daily quests section on load', () => {
     loyaltyMocks.getMyDailyQuests.mockResolvedValue({ status: 429, error: 'Rate limit exceeded' });
     await loadPage();
     expect(getEl('#dailyQuestsSection').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Challenges display section (CF-wire2) ─────────────────────────────────────
+
+describe('Member Page — challenges display section on load', () => {
+  it('shows #challengesSection and populates #challengesList when challenges exist', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockResolvedValue({
+      challenges: [
+        { challengeId: 'ch-1', title: 'Order 3 Times', description: '', progressValue: 1, targetCount: 3, rewardPoints: 50, expiresAt: '2026-04-01T00:00:00Z', completedAt: null },
+        { challengeId: 'ch-2', title: 'Write a Review', description: '', progressValue: 0, targetCount: 1, rewardPoints: 25, expiresAt: '2026-04-01T00:00:00Z', completedAt: null },
+      ],
+    });
+
+    await loadPage();
+
+    expect(getEl('#challengesSection').show).toHaveBeenCalled();
+    expect(getEl('#challengesList').data).toHaveLength(2);
+    expect(getEl('#challengesList').data[0]._id).toBe('ch-1');
+    expect(getEl('#challengesList').data[1]._id).toBe('ch-2');
+  });
+
+  it('hides #challengesSection when no challenges returned', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockResolvedValue({ challenges: [] });
+
+    await loadPage();
+
+    expect(getEl('#challengesSection').hide).toHaveBeenCalled();
+    expect(getEl('#challengesSection').show).not.toHaveBeenCalled();
+  });
+
+  it('hides #challengesSection on getActiveChallenges error', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockRejectedValue(new Error('service unavailable'));
+
+    await loadPage();
+
+    expect(getEl('#challengesSection').hide).toHaveBeenCalled();
+  });
+
+  it('does not throw when getActiveChallenges fails', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockRejectedValue(new Error('service unavailable'));
+    await expect(loadPage()).resolves.not.toThrow();
+  });
+
+  it('calls getActiveChallenges with the current member ID', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockResolvedValue({ challenges: [] });
+
+    await loadPage();
+
+    expect(gamificationReceiverMocks.getActiveChallenges).toHaveBeenCalledWith('mem-1');
+  });
+
+  it('wires onItemReady on #challengesList repeater when challenges present', async () => {
+    gamificationReceiverMocks.getActiveChallenges.mockResolvedValue({
+      challenges: [
+        { challengeId: 'ch-1', title: 'Test', description: '', progressValue: 0, targetCount: 1, rewardPoints: 10, expiresAt: null, completedAt: null },
+      ],
+    });
+
+    await loadPage();
+
+    expect(getEl('#challengesList').onItemReady).toHaveBeenCalled();
   });
 });
