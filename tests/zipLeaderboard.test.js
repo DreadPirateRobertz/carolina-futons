@@ -109,28 +109,59 @@ describe('getZipLeaderboard — ranking', () => {
     }
   });
 
-  it('includes zipPrefix in each entry', async () => {
+  it('hoists zipPrefix to response level (not per-entry)', async () => {
     const result = await getZipLeaderboard('mem-1');
+    expect(result.zipPrefix).toBe('282');
+    // zipPrefix should NOT be duplicated on every entry
     for (const entry of result.leaderboard) {
-      expect(entry.zipPrefix).toBe('282');
+      expect(entry.zipPrefix).toBeUndefined();
     }
+  });
+
+  it('falls back displayName to empty string when field is missing', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-a', memberId: 'mem-a', totalPoints: 200, zipCode: '28201' }, // no displayName
+    ]);
+    const result = await getZipLeaderboard('mem-a');
+    expect(result.leaderboard[0].displayName).toBe('');
+  });
+
+  it('falls back totalPoints to 0 when field is null/undefined', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-a', memberId: 'mem-a', totalPoints: undefined, zipCode: '28201', displayName: 'Alice' },
+    ]);
+    const result = await getZipLeaderboard('mem-a');
+    expect(result.leaderboard[0].totalPoints).toBe(0);
   });
 });
 
 // ── Cap at 10 ─────────────────────────────────────────────────────────────────
 
 describe('getZipLeaderboard — cap at 10', () => {
-  it('returns at most 10 entries even if more members share prefix', async () => {
+  it('returns exactly 10 entries when more than 10 members share prefix', async () => {
     const members = Array.from({ length: 15 }, (_, i) => ({
       _id: `mp-${i}`, memberId: `mem-${i}`,
-      totalPoints: (15 - i) * 100, zipCode: `28${String(i).padStart(3, '0')}`,
+      totalPoints: (15 - i) * 100,
+      zipCode: `282${String(i).padStart(2, '0')}`, // all share '282' prefix
       displayName: `Member ${i}`,
     }));
-    // Give them all the same 3-digit prefix '282'
-    for (const m of members) m.zipCode = `282${String(m.totalPoints).padStart(2, '0')}`;
     __seed('MemberPoints', members);
     const result = await getZipLeaderboard('mem-0');
-    expect(result.leaderboard.length).toBeLessThanOrEqual(10);
+    expect(result.leaderboard).toHaveLength(10);
+  });
+
+  it('returns myRank: null when requesting member falls outside top 10', async () => {
+    const members = Array.from({ length: 11 }, (_, i) => ({
+      _id: `mp-${i}`, memberId: `mem-${i}`,
+      totalPoints: (11 - i) * 100, // mem-0=1100pts (rank 1) … mem-10=100pts (rank 11)
+      zipCode: `282${String(i).padStart(2, '0')}`,
+      displayName: `Member ${i}`,
+    }));
+    __seed('MemberPoints', members);
+    // mem-10 has 100 pts, ranks 11th — outside top 10
+    const result = await getZipLeaderboard('mem-10');
+    expect(result.leaderboard).toHaveLength(10);
+    expect(result.myRank).toBeNull();
   });
 });
 

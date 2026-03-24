@@ -220,6 +220,17 @@ describe('formatCountdown', () => {
     const result = formatCountdown(farFuture);
     expect(result).toMatch(/^Expires /);
   });
+
+  it('returns "" for a malformed ISO string (NaN guard)', () => {
+    expect(formatCountdown('not-a-date', NOW)).toBe('');
+    expect(formatCountdown('2026-99-99', NOW)).toBe('');
+  });
+
+  it('returns "Expires <date>" at exactly 24h remaining (boundary)', () => {
+    const expires = new Date(NOW + 24 * 3600 * 1000).toISOString(); // exactly 24h
+    const result = formatCountdown(expires, NOW);
+    expect(result).toMatch(/^Expires /);
+  });
 });
 
 // ── renderChallengeCard — countdown integration ───────────────────────────────

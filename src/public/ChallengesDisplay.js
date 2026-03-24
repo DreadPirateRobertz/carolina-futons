@@ -31,13 +31,14 @@ export function formatCountdown(isoString, nowMs) {
   if (!isoString) return '';
   const now = nowMs !== undefined ? nowMs : Date.now();
   const expiresMs = new Date(isoString).getTime();
+  if (isNaN(expiresMs)) return '';
   const msLeft = expiresMs - now;
   if (msLeft <= 0) return '';
   const hoursLeft = msLeft / (1000 * 60 * 60);
   if (hoursLeft < 1) return '< 1h left';
   if (hoursLeft < 24) {
     const h = Math.floor(hoursLeft);
-    const m = Math.floor((msLeft - h * 3600000) / 60000);
+    const m = Math.floor((msLeft % 3600000) / 60000);
     return `${h}h ${m}m left`;
   }
   return `Expires ${formatExpiresAt(isoString)}`;

@@ -39,19 +39,20 @@ export const getZipLeaderboard = webMethod(
 
       const zipPrefix = me.zipCode.slice(0, 3);
 
-      // Fetch all members sharing the same 3-digit prefix
+      // Fetch top-LEADERBOARD_CAP members in this ZIP prefix, sorted server-side.
+      // Server-side sort+limit avoids Wix's default 50-item page cap truncating
+      // the sort input and producing a wrong leaderboard for large ZIP clusters.
       const prefixResult = await wixData
         .query(MEMBER_POINTS_COLLECTION)
         .startsWith('zipCode', zipPrefix)
+        .descending('totalPoints')
+        .limit(LEADERBOARD_CAP)
         .find({ suppressAuth: true });
 
-      // Sort by totalPoints desc, cap at LEADERBOARD_CAP
-      const sorted = prefixResult.items
-        .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
-        .slice(0, LEADERBOARD_CAP);
-
+      // Determine whether the requesting member appears in the top-10.
+      // If they ranked outside the cap, myRank stays null.
       let myRank = null;
-      const leaderboard = sorted.map((member, idx) => {
+      const leaderboard = prefixResult.items.map((member, idx) => {
         const rank = idx + 1;
         const isMe = member.memberId === memberId;
         if (isMe) myRank = rank;
@@ -60,12 +61,12 @@ export const getZipLeaderboard = webMethod(
           memberId: member.memberId,
           displayName: member.displayName || '',
           totalPoints: member.totalPoints || 0,
-          zipPrefix,
           isMe,
         };
       });
 
-      return { leaderboard, myRank };
+      // zipPrefix is common to all entries — hoist to response level.
+      return { leaderboard, myRank, zipPrefix };
     } catch (err) {
       logError(`getZipLeaderboard — failed for member ${memberId}`, err);
       return { leaderboard: [], myRank: null };
