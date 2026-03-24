@@ -609,8 +609,9 @@ describe('streak multiplier — integration', () => {
   });
 
   it('concurrent badge award — only one row inserted when both requests hit the DB', async () => {
-    // Simulate two concurrent requests: both call receiveGamificationEvent before either badge insert resolves.
-    // With the unique _id approach, the second insert throws — only one badge row ends up in the collection.
+    // The mock runs sequentially (JS is single-threaded in tests), so this is not true simultaneous insertion.
+    // What this test verifies is the idempotent path: the DB-level unique _id constraint rejects the second
+    // insert, leaving exactly one badge row. The real race condition is closed at the DB level, not here.
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-2', totalPoints: 0, tier: 'Trail Blazer',
       currentStreakDays: 6, streakStartDate: '2026-03-16',

@@ -163,10 +163,9 @@ export const receiveGamificationEvent = webMethod(
             badgeId: 'week_wanderer',
           });
         } catch (err) {
-          // Duplicate key → badge already awarded; any other error is best-effort.
-          if (!String(err?.message ?? err).includes('duplicate')) {
-            logError(`gamificationEventReceiver — badge award failed for ${memberId}`, err, { silent: true });
-          }
+          const msg = String(err?.message ?? err).toLowerCase();
+          const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
+          logError(`gamificationEventReceiver — badge award failed for ${memberId}`, err, { silent: isDuplicate });
         }
       }
 
