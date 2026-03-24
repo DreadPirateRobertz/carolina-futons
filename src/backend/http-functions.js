@@ -1690,8 +1690,8 @@ export async function post_gamificationEvent(request) {
       return unauthorized({ body: JSON.stringify({ error: 'memberId does not match authenticated member' }), headers: JSON_HEADERS });
     }
 
-    const { checkRateLimit } = await import('backend/utils/rateLimit');
-    const rateLimitResult = await checkRateLimit('GamificationRateLimit', memberId, { max: 20, windowMs: 60_000 });
+    const { checkGamificationRateLimit } = await import('backend/utils/gamificationRateLimit');
+    const rateLimitResult = await checkGamificationRateLimit(memberId, eventName);
     if (!rateLimitResult.allowed) {
       return response({ status: 429, body: JSON.stringify({ error: 'Rate limit exceeded — try again in a moment' }), headers: JSON_HEADERS });
     }

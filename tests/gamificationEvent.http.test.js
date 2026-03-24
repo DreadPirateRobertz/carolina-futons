@@ -44,7 +44,8 @@ beforeEach(() => {
   __resetData();
   __resetMembers();
   vi.clearAllMocks();
-  __seed('GamificationRateLimit', []);
+  __seed('GamificationDailyCap', []);
+  __seed('GamificationActionRateLimit', []);
   receiveGamificationEvent.mockResolvedValue({
     success: true,
     newTotal: 150,
@@ -107,13 +108,16 @@ describe('post_gamificationEvent — validation', () => {
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
 
+import { GAMIFICATION_DAILY_CAP } from '../src/backend/utils/gamificationRateLimit.js';
+
 describe('post_gamificationEvent — rate limiting', () => {
   beforeEach(() => {
     __setMember(VALID_MEMBER);
   });
 
-  it('returns 429 when rate limit is exceeded (20 requests in window)', async () => {
-    __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 20)]);
+  it('returns 429 when global daily cap is exceeded', async () => {
+    // product_viewed has no per-action limit → only daily cap applies
+    __seed('GamificationDailyCap', [makeRateLimitRecord('member-abc', GAMIFICATION_DAILY_CAP.max)]);
     const res = await post_gamificationEvent(
       makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
     );
@@ -121,16 +125,17 @@ describe('post_gamificationEvent — rate limiting', () => {
     expect(JSON.parse(res.body).error).toMatch(/rate limit/i);
   });
 
-  it('allows request when count is below the limit', async () => {
-    __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 19)]);
+  it('allows request when daily cap count is below the limit', async () => {
+    __seed('GamificationDailyCap', [makeRateLimitRecord('member-abc', GAMIFICATION_DAILY_CAP.max - 1)]);
     const res = await post_gamificationEvent(
       makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
     );
     expect(res.status).toBe(200);
   });
 
-  it('allows request when rate limit window has expired', async () => {
-    __seed('GamificationRateLimit', [makeRateLimitRecord('member-abc', 20, Date.now() - 70_000)]);
+  it('allows request when daily cap window has expired', async () => {
+    const EXPIRED = Date.now() - (GAMIFICATION_DAILY_CAP.windowMs + 1000);
+    __seed('GamificationDailyCap', [makeRateLimitRecord('member-abc', GAMIFICATION_DAILY_CAP.max, EXPIRED)]);
     const res = await post_gamificationEvent(
       makeRequest({ eventName: 'product_viewed', memberId: 'member-abc', payload: {} })
     );
