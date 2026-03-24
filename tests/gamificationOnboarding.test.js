@@ -21,7 +21,7 @@
  *  - initOnboarding: recovers gracefully on element error
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   ONBOARDING_STEPS,
   hasSeenOnboarding,
@@ -128,6 +128,8 @@ describe('initOnboarding — first visit', () => {
     globalThis.$w = $w;
   });
 
+  afterEach(() => { delete globalThis.$w; });
+
   it('shows the overlay on first visit', async () => {
     await initOnboarding('mem-1', { storage });
     expect(elems.overlay.show).toHaveBeenCalledOnce();
@@ -176,6 +178,8 @@ describe('Next button', () => {
     await initOnboarding('mem-1', { storage });
   });
 
+  afterEach(() => { delete globalThis.$w; });
+
   it('advances to step 2 and renders its text', async () => {
     await elems.handlers.next();
     expect(elems.stepText.text).toBe(ONBOARDING_STEPS[1].text);
@@ -223,6 +227,8 @@ describe('Prev button', () => {
     await initOnboarding('mem-1', { storage });
   });
 
+  afterEach(() => { delete globalThis.$w; });
+
   it('goes back to step 1 after advancing to step 2', async () => {
     await elems.handlers.next();
     elems.handlers.prev();
@@ -250,6 +256,8 @@ describe('Close button', () => {
     await initOnboarding('mem-1', { storage });
   });
 
+  afterEach(() => { delete globalThis.$w; });
+
   it('hides overlay then marks seen when close is clicked', async () => {
     await elems.handlers.close();
     expect(elems.overlay.hide).toHaveBeenCalledOnce();
@@ -276,7 +284,7 @@ describe('initOnboarding — graceful error recovery', () => {
     await expect(initOnboarding('mem-1', { storage })).resolves.toBeUndefined();
   });
 
-  it('does not set seen flag when overlay.show throws (overlay never appeared)', async () => {
+  it('does not set seen flag and does not wire buttons when overlay.show throws', async () => {
     const elems = makeElements();
     elems.overlay.show = vi.fn().mockRejectedValue(new Error('element unavailable'));
     const $w = make$w(elems);
@@ -284,7 +292,11 @@ describe('initOnboarding — graceful error recovery', () => {
     const storage = makeStorage();
 
     await initOnboarding('mem-1', { storage });
+    // Flag not consumed (user never saw overlay)
     expect(storage.setItem).not.toHaveBeenCalled();
+    // Button handlers never registered (show threw before onClick wiring)
+    expect(elems.nextBtn.onClick).not.toHaveBeenCalled();
+    expect(elems.closeBtn.onClick).not.toHaveBeenCalled();
   });
 
   it('does not mark seen when Close hide() throws', async () => {

@@ -67,6 +67,7 @@ function renderStep($w, stepIndex) {
  * @returns {Promise<void>}
  */
 export async function initOnboarding(memberId, opts = {}) {
+  // TODO(cf-ekzr): wire memberId to analytics event on overlay close/complete
   const storage = opts.storage || wixLocal;
 
   if (hasSeenOnboarding(storage)) return;
