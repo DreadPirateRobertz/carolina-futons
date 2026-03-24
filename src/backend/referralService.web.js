@@ -35,9 +35,12 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { accounts } from 'wix-loyalty.v2';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import crypto from 'crypto';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { BONUS_POINTS } from 'backend/loyaltyBonusPoints.web';
 
 const REFERRALS_COLLECTION = 'Referrals';
 const CREDITS_COLLECTION = 'ReferralCredits';
@@ -294,16 +297,19 @@ export const completeReferral = webMethod(
   }
 );
 
-// ── _processReferralOnOrderCreated (cf-bu2) ──────────────────────────
+// ── _processReferralOnOrderCreated (cf-bu2, cf-exxy) ──────────────────────────
 //
 // Backend-callable (not a webMethod). Called from wixEcom_onOrderCreated
 // when a member places an order. Looks up any signed_up referral for the
 // member and issues both referrer + referee credits.
 //
-// Returns { success: true, referrerCredit, refereeCredit } or { skipped: true }.
+// cf-exxy: when isFirstPurchase===true, also awards BONUS_POINTS.REFERRAL_COMPLETE
+// loyalty points to the referrer (guarded by rewardPaid flag on the referral record).
+//
+// Returns { success: true, referrerCredit, refereeCredit, pointsAwarded? } or { skipped: true }.
 // Never throws — caller should treat skipped as "no referral to process."
 
-export async function _processReferralOnOrderCreated(refereeMemberId, orderNumber) {
+export async function _processReferralOnOrderCreated(refereeMemberId, orderNumber, isFirstPurchase = false) {
   if (!refereeMemberId || !orderNumber) return { skipped: true };
 
   try {
@@ -358,6 +364,31 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
       });
     }
 
+    // cf-exxy: award loyalty points to referrer on referred member's first purchase
+    let pointsAwarded = 0;
+    if (isFirstPurchase && !referral.rewardPaid) {
+      try {
+        const { account: loyaltyAccount } = await accounts.getAccountBySecondaryId({
+          memberId: referral.referrerMemberId,
+        });
+        await accounts.earnPoints(loyaltyAccount._id, {
+          points:         BONUS_POINTS.REFERRAL_COMPLETE,
+          description:    'Bonus: referral purchase completed',
+          appId:          'cf-loyalty-bonus',
+          idempotencyKey: `referral_${referral._id}_firstpurchase`,
+        });
+        referral.rewardPaid = true;
+        pointsAwarded = BONUS_POINTS.REFERRAL_COMPLETE;
+      } catch (err) {
+        logError(
+          `[referralService] earnPoints for referral [referral=${referral._id}, referrer=${referral.referrerMemberId}] failed`,
+          err,
+        );
+        // Non-fatal — credits were issued. rewardPaid stays false so a retry is safe;
+        // idempotency key (referral_<id>_firstpurchase) prevents double-award.
+      }
+    }
+
     referral.status = 'credited';
     await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
 
@@ -370,7 +401,9 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
       console.warn('[referralService] gamification_referral_accepted event failed:', err?.message),
     );
 
-    return { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
+    const outcome = { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
+    if (pointsAwarded > 0) outcome.pointsAwarded = pointsAwarded;
+    return outcome;
   } catch (err) {
     console.error('[referralService] _processReferralOnOrderCreated failed:', err);
     return { skipped: true };
