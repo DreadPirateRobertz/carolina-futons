@@ -195,6 +195,18 @@ vi.mock('public/SpinWheel.js', () => ({
   renderSpinResult: vi.fn(() => ({})),
 }));
 
+const zipLeaderboardDisplayMocks = vi.hoisted(() => ({
+  initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('public/ZipLeaderboardDisplay.js', () => ({
+  initZipLeaderboardSection: zipLeaderboardDisplayMocks.initZipLeaderboardSection,
+}));
+
+vi.mock('backend/zipLeaderboard.web.js', () => ({
+  getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }),
+}));
+
 vi.mock('public/StreakDisplay.js', () => ({
   buildStreakChipText: streakDisplayMocks.buildStreakChipText,
   buildMultiplierBadgeText: streakDisplayMocks.buildMultiplierBadgeText,
@@ -479,5 +491,31 @@ describe('Member Page — challenges display section on load', () => {
     await loadPage();
 
     expect(getEl('#challengesList').onItemReady).toHaveBeenCalled();
+  });
+});
+
+// ── ZIP Leaderboard section (cf-shr) ──────────────────────────────────────────
+
+describe('Member Page — ZIP leaderboard section on load', () => {
+  it('calls initZipLeaderboardSection on page load', async () => {
+    await loadPage();
+    expect(zipLeaderboardDisplayMocks.initZipLeaderboardSection).toHaveBeenCalledOnce();
+  });
+
+  it('passes #zipLeaderboardSection element to initZipLeaderboardSection', async () => {
+    await loadPage();
+    const [els] = zipLeaderboardDisplayMocks.initZipLeaderboardSection.mock.calls[0];
+    expect(els.$section).toBeDefined();
+  });
+
+  it('passes getZipLeaderboard as the fetch function', async () => {
+    await loadPage();
+    const [, fetchFn] = zipLeaderboardDisplayMocks.initZipLeaderboardSection.mock.calls[0];
+    expect(typeof fetchFn).toBe('function');
+  });
+
+  it('does not throw when initZipLeaderboardSection rejects', async () => {
+    zipLeaderboardDisplayMocks.initZipLeaderboardSection.mockRejectedValueOnce(new Error('network'));
+    await expect(loadPage()).resolves.not.toThrow();
   });
 });

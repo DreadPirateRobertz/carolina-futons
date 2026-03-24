@@ -363,3 +363,6 @@ describe('loyalty section — tier integration', () => {
     expect(getEl('#loyaltySection').collapse).toHaveBeenCalled();
   });
 });
+
+vi.mock('public/ZipLeaderboardDisplay.js', () => ({ initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('backend/zipLeaderboard.web.js', () => ({ getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }) }));

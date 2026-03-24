@@ -23,6 +23,8 @@ import { addShareToken } from 'backend/wishlistShare.web.js';
 import { getMyStreakData, getMyAchievements, getMyDailyQuests } from 'backend/loyaltyService.web';
 import { getActiveChallenges } from 'backend/gamificationEventReceiver.web';
 import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
+import { initZipLeaderboardSection } from 'public/ZipLeaderboardDisplay.js';
+import { getZipLeaderboard } from 'backend/zipLeaderboard.web.js';
 import {
   buildWheelSegments,
   computeCountdown,
@@ -94,6 +96,7 @@ async function initMemberPage() {
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
       { name: 'challengesDisplay', init: initChallengesDisplaySection },
+      { name: 'zipLeaderboard', init: initZipLeaderboardSectionWrapper },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
@@ -491,6 +494,18 @@ async function initChallengesDisplaySection() {
     $w('#challengesSection'),
     $w('#challengesList')
   );
+}
+
+// ── ZIP Leaderboard Section (cf-shr) ─────────────────────────────────
+
+async function initZipLeaderboardSectionWrapper() {
+  await initZipLeaderboardSection({
+    $section:       $w('#zipLeaderboardSection'),
+    $repeater:      $w('#zipLeaderboardRepeater'),
+    $myRankText:    $w('#zipMyRankText'),
+    $zipPrefixText: $w('#zipPrefixText'),
+    $emptyMessage:  $w('#zipLeaderboardEmpty'),
+  }, getZipLeaderboard);
 }
 
 // ── Session Storage Fallback ────────────────────────────────────────
