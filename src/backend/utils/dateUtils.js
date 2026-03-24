@@ -108,3 +108,61 @@ export function computeStreakDanger(lastActivityDate, todayET) {
   const fourHoursMs = 4 * 3600 * 1000;
   return msUntilMidnight < fourHoursMs;
 }
+
+// ── Calendar reward helpers (CF-p6v2) ────────────────────────────────────────
+
+function _isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/**
+ * Returns true when todayET falls within a 7-day window centred on the
+ * member's birthday (3 days before, the birthday itself, 3 days after).
+ * Handles Dec/Jan year boundaries and Feb 29 birthdays in non-leap years
+ * (treated as Feb 28).
+ *
+ * @param {string|null} birthdayMMDD - "MM-DD" e.g. "03-22"
+ * @param {string|null} todayET - "YYYY-MM-DD"
+ * @returns {boolean}
+ */
+export function isBirthdayWindow(birthdayMMDD, todayET) {
+  if (!birthdayMMDD || !todayET) return false;
+  const [bm, bd] = birthdayMMDD.split('-').map(Number);
+  const [ty, tm, td] = todayET.split('-').map(Number);
+  const todayUTC = Date.UTC(ty, tm - 1, td);
+
+  // Check birthday resolved to prev year, current year, and next year to
+  // correctly handle the Dec 31 ↔ Jan 1 year boundary.
+  for (const year of [ty - 1, ty, ty + 1]) {
+    let bDay = bd;
+    if (bm === 2 && bd === 29 && !_isLeapYear(year)) bDay = 28;
+    const birthdayUTC = Date.UTC(year, bm - 1, bDay);
+    const diffDays = Math.round((todayUTC - birthdayUTC) / 86_400_000);
+    if (diffDays >= -3 && diffDays <= 3) return true;
+  }
+  return false;
+}
+
+/**
+ * Returns the anniversary ordinal (1 or 2) when todayET is the exact
+ * calendar-day anniversary of firstPurchaseDateStr by that many years.
+ * Returns null for all other cases (no anniversary, or year 3+).
+ * Feb 29 first purchases are treated as Feb 28 in non-leap anniversary years.
+ *
+ * @param {string|null} firstPurchaseDateStr - "YYYY-MM-DD"
+ * @param {string|null} todayET - "YYYY-MM-DD"
+ * @returns {1|2|null}
+ */
+export function getAnniversaryYear(firstPurchaseDateStr, todayET) {
+  if (!firstPurchaseDateStr || !todayET) return null;
+  const [py, pm, pd] = firstPurchaseDateStr.split('-').map(Number);
+  const [ty, tm, td] = todayET.split('-').map(Number);
+
+  const yearDiff = ty - py;
+  if (yearDiff !== 1 && yearDiff !== 2) return null;
+
+  let ad = pd;
+  if (pm === 2 && pd === 29 && !_isLeapYear(ty)) ad = 28;
+
+  return (tm === pm && td === ad) ? yearDiff : null;
+}
