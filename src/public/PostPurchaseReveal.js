@@ -111,7 +111,8 @@ function showMemberState($w, loyaltyData, orderTotal, rankData) {
   } catch (e) {}
 
   // Leaderboard rank
-  if (myRank !== null && zipPrefix) {
+  const hasRank = myRank !== null && zipPrefix;
+  if (hasRank) {
     try {
       $w('#revealRankText').text = `You're #${myRank} in the ${zipPrefix}XX area`;
       $w('#revealRankText').show();
@@ -127,4 +128,18 @@ function showMemberState($w, loyaltyData, orderTotal, rankData) {
       $w('#revealShareBtn').show();
     } catch (e) {}
   }
+
+  // Share button onClick — navigator.share with clipboard fallback
+  const shareText = hasRank
+    ? `I'm #${myRank} in the ${zipPrefix}XX area on Carolina Futons! 🏔️ carolinafutons.com`
+    : `Just earned ${pts} pts at Carolina Futons! 🏔️ carolinafutons.com`;
+  try {
+    $w('#revealShareBtn').onClick(() => {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        navigator.share({ text: shareText, url: 'https://carolinafutons.com' }).catch(() => {});
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(shareText).catch(() => {});
+      }
+    });
+  } catch (e) {}
 }

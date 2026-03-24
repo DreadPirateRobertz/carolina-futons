@@ -141,6 +141,11 @@ describe('initPostPurchaseReveal — member, no leaderboard rank', () => {
     expect($w('#revealShareBtn').show).toHaveBeenCalled();
     expect($w('#revealShareBtn').text).toBe('Share your milestone');
   });
+
+  it('wires onClick handler on share button', async () => {
+    await initPostPurchaseReveal($w, { orderTotal: 200, getLoyaltyAccount, getLeaderboard });
+    expect($w('#revealShareBtn').onClick).toHaveBeenCalled();
+  });
 });
 
 // ── Member state — with leaderboard rank ──────────────────────────────────────
@@ -161,6 +166,11 @@ describe('initPostPurchaseReveal — member with leaderboard rank', () => {
   it('shows share button with rank-specific text', async () => {
     await initPostPurchaseReveal($w, { orderTotal: 200, getLoyaltyAccount, getLeaderboard });
     expect($w('#revealShareBtn').text).toBe("Share your #8 ranking");
+  });
+
+  it('wires onClick handler on share button', async () => {
+    await initPostPurchaseReveal($w, { orderTotal: 200, getLoyaltyAccount, getLeaderboard });
+    expect($w('#revealShareBtn').onClick).toHaveBeenCalled();
   });
 });
 
