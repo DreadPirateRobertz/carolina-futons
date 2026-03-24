@@ -9,7 +9,7 @@
  * Not a webMethod — no session context available in event handlers.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   __reset,
   __seed,
@@ -18,6 +18,10 @@ import {
   __setQueryError,
 } from './__mocks__/wix-data.js';
 import { _processReferralOnOrderCreated } from '../src/backend/referralService.web.js';
+
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  receiveGamificationEvent: vi.fn().mockResolvedValue({ success: true }),
+}));
 
 const NOW = new Date('2026-03-24T12:00:00Z').getTime();
 

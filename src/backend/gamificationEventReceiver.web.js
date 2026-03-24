@@ -8,8 +8,9 @@
  * Supported events:
  *   gamification_add_to_cart      — +5 pts
  *   gamification_submit_review    — +50 pts (+25 bonus if has_photo)
- *   gamification_referral_shared  — +100 pts
- *   gamification_order_complete   — +Math.floor(orderTotal) pts (0 if missing)
+ *   gamification_referral_shared   — +100 pts
+ *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (200 pts)
+ *   gamification_order_complete    — +Math.floor(orderTotal) pts (0 if missing)
  *   gamification_ar_used          — +POINT_VALUES.AR_USED (10 pts)
  *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (2 pts), capped at 5/day
  *   gamification_spin_completed   — +0 pts (tracked for bonus-spin grant only)
@@ -277,6 +278,8 @@ function resolvePoints(eventName, payload) {
       return POINT_VALUES.REVIEW + (payload?.has_photo ? POINT_VALUES.PHOTO_REVIEW_BONUS : 0);
     case 'gamification_referral_shared':
       return REFERRAL_SHARED_POINTS;
+    case 'gamification_referral_accepted':
+      return POINT_VALUES.REFERRAL_ACCEPTED;
     case 'gamification_order_complete':
       return Math.floor(payload?.orderTotal || 0);
     case 'gamification_spin_completed':

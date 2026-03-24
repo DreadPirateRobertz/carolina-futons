@@ -37,6 +37,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import crypto from 'crypto';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 
 const REFERRALS_COLLECTION = 'Referrals';
 const CREDITS_COLLECTION = 'ReferralCredits';
@@ -359,6 +360,15 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
 
     referral.status = 'credited';
     await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
+
+    // Fire gamification earn event for the referrer — non-blocking, never throws
+    receiveGamificationEvent(
+      'gamification_referral_accepted',
+      { referral_count: 1 },
+      referral.referrerMemberId,
+    ).catch((err) =>
+      console.warn('[referralService] gamification_referral_accepted event failed:', err?.message),
+    );
 
     return { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
   } catch (err) {
