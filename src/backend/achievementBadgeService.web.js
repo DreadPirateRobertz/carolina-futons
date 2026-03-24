@@ -64,20 +64,31 @@ export const awardBadge = webMethod(
       return { error: `Unknown badgeId: ${String(badgeId).slice(0, 50)}`, status: 400 };
     }
 
-    const existing = await wixData
-      .query(COLLECTION)
-      .eq('memberId', memberId)
-      .eq('badgeId', badgeId)
-      .find({ suppressAuth: true });
+    let existing;
+    try {
+      existing = await wixData
+        .query(COLLECTION)
+        .eq('memberId', memberId)
+        .eq('badgeId', badgeId)
+        .find({ suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.awardBadge.query [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
 
     if (existing.items.length > 0) return { alreadyAwarded: true };
 
-    await wixData.insert(COLLECTION, {
-      memberId,
-      badgeId,
-      awardedAt: new Date(),
-      notified: false,
-    }, { suppressAuth: true });
+    try {
+      await wixData.insert(COLLECTION, {
+        memberId,
+        badgeId,
+        awardedAt: new Date(),
+        notified: false,
+      }, { suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.awardBadge.insert [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
 
     return { awarded: true, badge: BADGE_BY_ID[badgeId] };
   }
@@ -128,16 +139,27 @@ export const markBadgeNotified = webMethod(
     }
     if (!session || session._id !== memberId) return null;
 
-    const result = await wixData
-      .query(COLLECTION)
-      .eq('memberId', memberId)
-      .eq('badgeId', badgeId)
-      .find({ suppressAuth: true });
+    let result;
+    try {
+      result = await wixData
+        .query(COLLECTION)
+        .eq('memberId', memberId)
+        .eq('badgeId', badgeId)
+        .find({ suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.markBadgeNotified.query [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
 
     if (result.items.length === 0) return { notFound: true };
 
     const record = { ...result.items[0], notified: true };
-    await wixData.update(COLLECTION, record, { suppressAuth: true });
+    try {
+      await wixData.update(COLLECTION, record, { suppressAuth: true });
+    } catch (e) {
+      logError(`achievementBadgeService.markBadgeNotified.update [member=${memberId}, badge=${badgeId}]`, e);
+      return null;
+    }
 
     return { updated: true };
   }
