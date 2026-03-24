@@ -38,7 +38,12 @@ const BADGE_BY_ID = Object.fromEntries(
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function requireOwnMember(memberId) {
-  const member = await currentMember.getMember();
+  let member;
+  try {
+    member = await currentMember.getMember();
+  } catch (_) {
+    return { error: 'auth_required' };
+  }
   if (!member || !member._id) return { error: 'auth_required' };
   if (member._id !== memberId) return { error: 'forbidden' };
   return { memberId: member._id };
@@ -93,8 +98,12 @@ export const awardBadge = webMethod(
 
 // ── getMemberBadges ───────────────────────────────────────────────────────────
 
+const GET_BADGES_LIMIT = 100;
+
 /**
- * Return all badges awarded to a member (public — any caller may read).
+ * Return all badges awarded to a member.
+ * Public (Permissions.Anyone) — badge lists are intentionally visible to any
+ * caller (e.g. leaderboard, profile pages). Capped at GET_BADGES_LIMIT (100).
  *
  * @param {string} memberId
  * @returns {Promise<{ badges: Array<{ badgeId, label, awardedAt }> }>}
@@ -105,6 +114,7 @@ export const getMemberBadges = webMethod(
     try {
       const result = await wixData.query(COLLECTION)
         .eq('memberId', memberId)
+        .limit(GET_BADGES_LIMIT)
         .find({ suppressAuth: true });
 
       const badges = result.items.map((record) => ({

@@ -164,6 +164,13 @@ describe('awardBadge — validation', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
   });
+
+  it('returns auth_required when getMember() throws (network error)', async () => {
+    memberMocks.getMember.mockRejectedValue(new Error('network unavailable'));
+    const result = await awardBadge('mem-1', 'first_purchase');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('auth_required');
+  });
 });
 
 // ── getMemberBadges ───────────────────────────────────────────────────────────
@@ -258,6 +265,13 @@ describe('markBadgeNotified', () => {
     const result = await markBadgeNotified('mem-1', 'review_5');
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+  });
+
+  it('returns auth_required when getMember() throws (network error)', async () => {
+    memberMocks.getMember.mockRejectedValue(new Error('auth service down'));
+    const result = await markBadgeNotified('mem-1', 'streak_7');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('auth_required');
   });
 
   it('preserves other record fields when updating', async () => {
