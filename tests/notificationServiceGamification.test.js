@@ -4,13 +4,14 @@
  * Covers sendStreakMilestoneNotification, sendQuestCompleteNotification,
  * and getMyNotifications webMethod.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { __reset as resetData, __seed, __getInserted, __setQueryError, __setInsertError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   sendStreakMilestoneNotification,
   sendQuestCompleteNotification,
   sendChallengeReminder,
+  sendStreakDangerNotification,
   getMyNotifications,
   _resetGetMyNotificationsRateLimit,
 } from '../src/backend/notificationService.web.js';
@@ -218,5 +219,175 @@ describe('sendChallengeReminder', () => {
     await sendChallengeReminder('mem-4', 'Weekly challenge available!');
     const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
     expect(inserted).toHaveLength(1);
+  });
+});
+
+// ── CF-fh5: sendChallengeReminder — cadence enforcement ──────────────────────
+
+describe('sendChallengeReminder — cadence enforcement', () => {
+  beforeEach(() => {
+    resetData();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    resetData();
+  });
+
+  it('skips sending when daily reminder was sent < 20h ago', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-1', memberId: 'mem-1',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    // Last reminder sent 10 hours ago
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-1', memberId: 'mem-1', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-22T04:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-1', 'Daily challenge!');
+    // Only the seeded record — no new insert
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(1);
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)[0]._id).toBe('n-1');
+  });
+
+  it('sends when daily reminder was sent >= 20h ago', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-2', memberId: 'mem-2',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    // Last reminder sent 21 hours ago
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-2', memberId: 'mem-2', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-21T17:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-2', 'Daily challenge!');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
+  });
+
+  it('sends at the exact 20h boundary (not < 20h, so gate passes)', async () => {
+    // System time: 2026-03-22T14:00:00Z; last sent exactly 20h before = 2026-03-21T18:00:00Z
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-6', memberId: 'mem-6',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-6', memberId: 'mem-6', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-21T18:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-6', 'Daily challenge!');
+    // elapsed == 20h == minGapMs → condition (< minGapMs) is false → sends
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
+  });
+
+  it('skips sending when weekly reminder was sent < 6 days ago', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-3', memberId: 'mem-3',
+      notificationsEnabled: true, challengeReminders: 'weekly',
+    }]);
+    // Last reminder sent 3 days ago
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-3', memberId: 'mem-3', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-19T14:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-3', 'Weekly challenge!');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(1);
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)[0]._id).toBe('n-3');
+  });
+
+  it('sends when weekly reminder was sent >= 6 days ago', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-4', memberId: 'mem-4',
+      notificationsEnabled: true, challengeReminders: 'weekly',
+    }]);
+    // Last reminder sent 7 days ago
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'n-4', memberId: 'mem-4', type: 'challenge_reminder',
+      createdAt: new Date('2026-03-15T14:00:00Z'), read: false,
+    }]);
+    await sendChallengeReminder('mem-4', 'Weekly challenge!');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(2);
+  });
+
+  it('fails open — sends when cadence query throws', async () => {
+    __seed('MemberGamificationPreferences', [{
+      _id: 'pref-5', memberId: 'mem-5',
+      notificationsEnabled: true, challengeReminders: 'daily',
+    }]);
+    __setQueryError(NOTIFICATIONS_COLLECTION, new Error('DB down'));
+    await sendChallengeReminder('mem-5', 'Daily challenge!');
+    // Fail-open: reminder is sent despite cadence check DB error
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    const reminderInserted = inserted.some(r => r.type === 'challenge_reminder' && r.memberId === 'mem-5');
+    expect(reminderInserted).toBe(true);
+  });
+});
+
+// ── CF-fh5: sendStreakDangerNotification ─────────────────────────────────────
+
+describe('sendStreakDangerNotification', () => {
+  beforeEach(() => {
+    resetData();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('inserts a streak_danger notification when danger is true', async () => {
+    // today = 2026-03-22, last active = 2026-03-21 (not today), < 4h till midnight ET
+    // ET midnight on 2026-03-22 = 2026-03-23T04:00:00Z (EDT UTC-4)
+    // Set system time to 3h 30min before midnight: 2026-03-23T00:30:00Z
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z'));
+    await sendStreakDangerNotification('mem-1', '2026-03-21');
+    const inserted = __getInserted(NOTIFICATIONS_COLLECTION);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].type).toBe('streak_danger');
+    expect(inserted[0].memberId).toBe('mem-1');
+    expect(inserted[0].deepLink).toBe('/loyalty?tab=streak');
+    expect(inserted[0].dangerDate).toBe('2026-03-22'); // ET date at 2026-03-23T00:30Z = March 22 EDT
+  });
+
+  it('does not insert when member was active today', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z')); // < 4h till midnight
+    await sendStreakDangerNotification('mem-1', '2026-03-22'); // active today
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
+  });
+
+  it('does not insert when > 4h until midnight', async () => {
+    // Midday ET = 2026-03-22T16:00:00Z (noon ET)
+    vi.setSystemTime(new Date('2026-03-22T16:00:00Z'));
+    await sendStreakDangerNotification('mem-1', '2026-03-21');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
+  });
+
+  it('is idempotent — skips duplicate for same member + dangerDate', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z'));
+    __seed(NOTIFICATIONS_COLLECTION, [{
+      _id: 'nd-1', memberId: 'mem-1', type: 'streak_danger',
+      dangerDate: '2026-03-22', read: false, createdAt: new Date(),
+    }]);
+    await sendStreakDangerNotification('mem-1', '2026-03-21');
+    // Still only the seeded record
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(1);
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)[0]._id).toBe('nd-1');
+  });
+
+  it('does not insert when memberId is null', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z'));
+    await sendStreakDangerNotification(null, '2026-03-21');
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
+  });
+
+  it('does not insert when lastActivityDate is null (no streak to protect)', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z')); // < 4h till midnight ET
+    await sendStreakDangerNotification('mem-1', null);
+    expect(__getInserted(NOTIFICATIONS_COLLECTION)).toHaveLength(0);
+  });
+
+  it('does not throw when Notifications insert fails', async () => {
+    vi.setSystemTime(new Date('2026-03-23T00:30:00Z'));
+    __setInsertError(NOTIFICATIONS_COLLECTION, new Error('DB error'));
+    await expect(sendStreakDangerNotification('mem-1', '2026-03-21')).resolves.not.toThrow();
   });
 });

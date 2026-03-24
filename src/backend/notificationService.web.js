@@ -30,6 +30,7 @@ import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
+import { getTodayET, computeStreakDanger } from 'backend/utils/dateUtils';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10% minimum drop to trigger alert
@@ -413,13 +414,15 @@ export function _resetGetMyNotificationsRateLimit() {
 
 /**
  * Write a gamification push notification to the Notifications CMS collection.
- * Idempotent for streak milestones (deduplicates on memberId + milestone).
- * Quest complete notifications are not deduplicated (quests reset daily).
+ * Idempotent for streak_milestone (deduplicates on memberId + milestone) and
+ * streak_danger (deduplicates on memberId + dangerDate).
+ * Quest complete and challenge_reminder notifications are not deduplicated.
  *
  * @param {string} memberId
- * @param {'streak_milestone'|'daily_quest'} type
+ * @param {'streak_milestone'|'daily_quest'|'challenge_reminder'|'streak_danger'} type
  * @param {string} message
- * @param {Object} [extra] - extra fields to store (e.g. { milestone: 7 })
+ * @param {Object} [extra] - extra fields (e.g. { milestone, dangerDate, deepLink })
+ * @returns {Promise<void>} Best-effort: logs on insert failure rather than throwing.
  */
 async function writeNotification(memberId, type, message, extra = {}) {
   if (!memberId) return;
@@ -431,6 +434,15 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .eq('memberId', memberId)
         .eq('type', 'streak_milestone')
         .eq('milestone', extra.milestone)
+        .limit(1)
+        .find({ suppressAuth: true });
+      if (existing.items.length > 0) return;
+    } else if (type === 'streak_danger' && extra.dangerDate) {
+      const existing = await wixData
+        .query(NOTIFICATIONS_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('type', 'streak_danger')
+        .eq('dangerDate', extra.dangerDate)
         .limit(1)
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
@@ -477,10 +489,37 @@ export async function sendQuestCompleteNotification(memberId, questTitle, points
 }
 
 /**
+ * Send a streak danger push notification.
+ * Fires when the member has not been active today and fewer than 4 hours remain
+ * until the ET calendar-day cutoff. Idempotent per ET date: skips if a
+ * streak_danger record already exists for this member on today's ET date.
+ *
+ * @param {string} memberId
+ * @param {string|null|undefined} lastActivityDate - "YYYY-MM-DD" ET from MemberPoints
+ * @returns {Promise<void>}
+ */
+export async function sendStreakDangerNotification(memberId, lastActivityDate) {
+  if (!memberId) return;
+  let todayET;
+  try {
+    todayET = getTodayET();
+    if (!computeStreakDanger(lastActivityDate, todayET)) return;
+  } catch (err) {
+    logError('[notificationService] sendStreakDangerNotification date computation failed', err);
+    return;
+  }
+  const message = '⚠️ Your streak is at risk! Complete a qualifying action before midnight ET to keep it alive.';
+  await writeNotification(memberId, 'streak_danger', message, {
+    dangerDate: todayET,
+    deepLink: '/loyalty?tab=streak',
+  });
+}
+
+/**
  * Send a challenge reminder notification, gated by member gamification preferences.
  * Skipped when notificationsEnabled is false or challengeReminders is 'never'.
- * Note: 'daily' vs 'weekly' cadence is not enforced here — callers are responsible
- * for invoking at the appropriate frequency.
+ * Enforces cadence: daily reminders require >= 20h since last; weekly require >= 6 days.
+ * On cadence-check failure, fails open (sends the reminder) to avoid silent drops.
  *
  * @param {string} memberId
  * @param {string} message
@@ -490,6 +529,30 @@ export async function sendChallengeReminder(memberId, message) {
   if (!memberId) return;
   const prefs = await getGamePrefsForMember(memberId);
   if (!prefs.notificationsEnabled || prefs.challengeReminders === 'never') return;
+
+  const minGapMs = prefs.challengeReminders === 'weekly'
+    ? 6 * 24 * 3600 * 1000   // 6 days
+    : 20 * 3600 * 1000;       // 20 hours (daily, with slack)
+
+  try {
+    const lastRes = await wixData
+      .query(NOTIFICATIONS_COLLECTION)
+      .eq('memberId', memberId)
+      .eq('type', 'challenge_reminder')
+      .descending('createdAt')
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (lastRes.items.length > 0 && lastRes.items[0].createdAt) {
+      const lastSentMs = new Date(lastRes.items[0].createdAt).getTime();
+      if (Date.now() - lastSentMs < minGapMs) return;
+      // Note: if createdAt is missing on an old record, lastSentMs=NaN → comparison
+      // evaluates false → fail open (sends reminder). This is the desired behavior.
+    }
+  } catch (err) {
+    logError('[notificationService] sendChallengeReminder cadence check failed', err);
+    // fail open — send the reminder rather than silently drop it
+  }
+
   try {
     await writeNotification(memberId, 'challenge_reminder', message);
   } catch (err) {
