@@ -38,11 +38,16 @@ import { initPageSeo } from 'public/pageSeo.js';
 import { initCartRecentlyViewed, updateCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
 import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
 import { initCartShippingEstimate, updateCartShippingEstimate } from 'public/CartShippingEstimate.js';
+import { initCartLoyaltyBar, updateCartLoyaltyBar } from 'public/CartLoyaltyBar.js';
+import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 
 $w.onReady(async function () {
   initPageSeo('cart');
   await initCartPage();
 });
+
+// Cached loyalty data — fetched once at page load, reused on cart updates
+let _cartLoyaltyData = null;
 
 async function initCartPage() {
   try {
@@ -90,6 +95,14 @@ async function initCartPage() {
 
     await initFreightUpsellBanner($w, cart, { addToCart, trackEvent });
     await initCartShippingEstimate($w, cart);
+    initCartLoyaltyBar($w, {
+      subtotal: cart.totals?.subtotal || 0,
+      getLoyaltyAccount: async () => {
+        const data = await getMyLoyaltyAccount();
+        _cartLoyaltyData = data;
+        return data;
+      },
+    }).catch(() => {});
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
@@ -144,6 +157,7 @@ function showEmptyCart() {
     try { $w('#shippingProgressText').hide(); } catch (e) {}
     try { $w('#tierProgressBar').hide(); } catch (e) {}
     try { $w('#tierProgressText').hide(); } catch (e) {}
+    try { $w('#loyaltyBarSection').collapse(); } catch (e) {}
     try { $w('#cartDeliverySection').collapse(); } catch (e) {}
     try { $w('#freightUpsellBanner').collapse(); } catch (e) {}
   } catch (e) {}
@@ -535,6 +549,7 @@ function initCartListeners() {
         updateShippingProgress(cart);
         updateTierProgress(cart);
         updateCartFinancing(cart);
+        updateCartLoyaltyBar($w, { subtotal: cart?.totals?.subtotal || 0, loyaltyData: _cartLoyaltyData });
         updateCartDeliveryEstimate($w, cart);
         updateFreightUpsellBanner($w, cart);
         updateCartShippingEstimate($w, cart);
