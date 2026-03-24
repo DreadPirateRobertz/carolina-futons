@@ -4,6 +4,7 @@ import {
   renderChallengesRail,
   showCompletionToast,
   updateChallengeProgress,
+  formatCountdown,
 } from '../src/public/ChallengesDisplay.js';
 
 // ── Mock Wix $w element helpers ───────────────────────────────────────────────
@@ -167,5 +168,108 @@ describe('updateChallengeProgress (frontend)', () => {
   it('marks justCompleted when progressValue equals targetCount', () => {
     const result = updateChallengeProgress('ch-1', 3, 3, true);
     expect(result.justCompleted).toBe(true);
+  });
+});
+
+// ── formatCountdown (cf-lx5: countdown UI within 24h) ────────────────────────
+
+describe('formatCountdown', () => {
+  const NOW = new Date('2026-03-23T12:00:00Z').getTime();
+
+  it('returns empty string for null expiresAt', () => {
+    expect(formatCountdown(null, NOW)).toBe('');
+  });
+
+  it('returns empty string for undefined expiresAt', () => {
+    expect(formatCountdown(undefined, NOW)).toBe('');
+  });
+
+  it('returns "Expires <date>" when more than 24h remain', () => {
+    const expires = new Date('2026-03-25T12:00:00Z').toISOString(); // 48h away
+    const result = formatCountdown(expires, NOW);
+    expect(result).toMatch(/^Expires /);
+    expect(result).not.toMatch(/left$/);
+  });
+
+  it('returns countdown "Xh Ym left" when less than 24h remain', () => {
+    const expires = new Date('2026-03-24T06:00:00Z').toISOString(); // 18h away
+    const result = formatCountdown(expires, NOW);
+    expect(result).toMatch(/18h 0m left/);
+  });
+
+  it('returns "Xh Ym left" with correct minutes', () => {
+    const expires = new Date('2026-03-23T15:30:00Z').toISOString(); // 3h 30m away
+    const result = formatCountdown(expires, NOW);
+    expect(result).toBe('3h 30m left');
+  });
+
+  it('returns "< 1h left" when less than 1 hour remains', () => {
+    const expires = new Date('2026-03-23T12:45:00Z').toISOString(); // 45m away
+    const result = formatCountdown(expires, NOW);
+    expect(result).toBe('< 1h left');
+  });
+
+  it('returns "" for already-expired expiresAt', () => {
+    const expires = new Date('2026-03-23T10:00:00Z').toISOString(); // 2h ago
+    const result = formatCountdown(expires, NOW);
+    expect(result).toBe('');
+  });
+
+  it('uses Date.now() when nowMs is not provided', () => {
+    const farFuture = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    const result = formatCountdown(farFuture);
+    expect(result).toMatch(/^Expires /);
+  });
+
+  it('returns "" for a malformed ISO string (NaN guard)', () => {
+    expect(formatCountdown('not-a-date', NOW)).toBe('');
+    expect(formatCountdown('2026-99-99', NOW)).toBe('');
+  });
+
+  it('returns "Expires <date>" at exactly 24h remaining (boundary)', () => {
+    const expires = new Date(NOW + 24 * 3600 * 1000).toISOString(); // exactly 24h
+    const result = formatCountdown(expires, NOW);
+    expect(result).toMatch(/^Expires /);
+  });
+});
+
+// ── renderChallengeCard — countdown integration ───────────────────────────────
+
+describe('renderChallengeCard — countdown integration', () => {
+  function makeCard() {
+    const make = () => {
+      let v = '';
+      return { set text(x) { v = x; }, get text() { return v; }, show: vi.fn(), hide: vi.fn() };
+    };
+    const pb = (() => { let v = 0; return { set value(x) { v = x; }, get value() { return v; } }; })();
+    return {
+      $title: make(), $description: make(), $progressBar: pb,
+      $progressLabel: make(), $rewardLabel: make(), $expiresLabel: make(),
+      $completedBadge: { show: vi.fn(), hide: vi.fn() },
+    };
+  }
+
+  it('shows "Xh Ym left" when expiresAt is within 24h (uses nowMs override)', () => {
+    const now = new Date('2026-03-23T12:00:00Z').getTime();
+    const expires = new Date('2026-03-24T03:30:00Z').toISOString(); // 15h 30m away
+    const card = makeCard();
+    renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
+    expect(card.$expiresLabel.text).toBe('15h 30m left');
+  });
+
+  it('shows "Expires <date>" when expiresAt is more than 24h away', () => {
+    const now = new Date('2026-03-23T12:00:00Z').getTime();
+    const expires = new Date('2026-03-26T00:00:00Z').toISOString(); // 60h away
+    const card = makeCard();
+    renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
+    expect(card.$expiresLabel.text).toMatch(/^Expires /);
+  });
+
+  it('shows empty string when challenge has already expired', () => {
+    const now = new Date('2026-03-23T12:00:00Z').getTime();
+    const expires = new Date('2026-03-23T10:00:00Z').toISOString(); // 2h ago
+    const card = makeCard();
+    renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
+    expect(card.$expiresLabel.text).toBe('');
   });
 });

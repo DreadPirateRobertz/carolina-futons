@@ -17,11 +17,42 @@ function formatExpiresAt(isoString) {
 }
 
 /**
+ * Returns a human-readable expiry label for a challenge.
+ * - If expired: ''
+ * - If < 1 hour remaining: '< 1h left'
+ * - If < 24 hours remaining: 'Xh Ym left'
+ * - If >= 24 hours remaining: 'Expires Apr 1'
+ *
+ * @param {string|null|undefined} isoString  ISO UTC expiry date
+ * @param {number} [nowMs]  Current time in ms (defaults to Date.now())
+ * @returns {string}
+ */
+export function formatCountdown(isoString, nowMs) {
+  if (!isoString) return '';
+  const now = nowMs !== undefined ? nowMs : Date.now();
+  const expiresMs = new Date(isoString).getTime();
+  if (isNaN(expiresMs)) return '';
+  const msLeft = expiresMs - now;
+  if (msLeft <= 0) return '';
+  const hoursLeft = msLeft / (1000 * 60 * 60);
+  if (hoursLeft < 1) return '< 1h left';
+  if (hoursLeft < 24) {
+    const h = Math.floor(hoursLeft);
+    const m = Math.floor((msLeft % 3600000) / 60000);
+    return `${h}h ${m}m left`;
+  }
+  return `Expires ${formatExpiresAt(isoString)}`;
+}
+
+/**
  * Populates a single repeater item card with challenge data.
+ * Uses countdown format (e.g. "3h 30m left") when < 24h remain; otherwise "Expires Apr 1".
+ *
  * @param {{ $title, $description, $progressBar, $progressLabel, $rewardLabel, $expiresLabel, $completedBadge }} elements
  * @param {{ title, description, progressValue, targetCount, rewardPoints, expiresAt, completedAt }} challenge
+ * @param {number} [nowMs]  Current time override for testability (defaults to Date.now())
  */
-export function renderChallengeCard(elements, challenge) {
+export function renderChallengeCard(elements, challenge, nowMs) {
   const { $title, $description, $progressBar, $progressLabel, $rewardLabel, $expiresLabel, $completedBadge } = elements;
   const { title, description, progressValue, targetCount, rewardPoints, expiresAt, completedAt } = challenge;
 
@@ -30,7 +61,7 @@ export function renderChallengeCard(elements, challenge) {
   $progressBar.value = targetCount > 0 ? (progressValue / targetCount) * 100 : 0;
   $progressLabel.text = `${progressValue} / ${targetCount}`;
   $rewardLabel.text = `+${rewardPoints} pts`;
-  $expiresLabel.text = expiresAt ? `Expires ${formatExpiresAt(expiresAt)}` : '';
+  $expiresLabel.text = formatCountdown(expiresAt, nowMs);
 
   if (completedAt) {
     $completedBadge.show();
