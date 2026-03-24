@@ -12,7 +12,6 @@ import {
   removeCartItem,
   onCartChanged,
   getShippingProgress,
-  getTierProgress,
   FREE_SHIPPING_THRESHOLD,
   isFreeShippingEnabled,
   MIN_QUANTITY,
@@ -39,6 +38,7 @@ import { initCartRecentlyViewed, updateCartRecentlyViewed } from 'public/CartRec
 import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
 import { initCartShippingEstimate, updateCartShippingEstimate } from 'public/CartShippingEstimate.js';
 import { initCartLoyaltyBar, updateCartLoyaltyBar } from 'public/CartLoyaltyBar.js';
+import { initSpendToTierBar, updateSpendToTierBar } from 'public/CartSpendToTierBar.js';
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 
 $w.onReady(async function () {
@@ -85,7 +85,6 @@ async function initCartPage() {
 
     // Pass fetched cart to avoid redundant API calls
     updateShippingProgressFromCart(cart);
-    updateTierProgressFromCart(cart);
     updateCartFinancingFromCart(cart);
     await initCartDeliveryEstimate($w, cart);
 
@@ -95,14 +94,14 @@ async function initCartPage() {
 
     await initFreightUpsellBanner($w, cart, { addToCart, trackEvent });
     await initCartShippingEstimate($w, cart);
-    initCartLoyaltyBar($w, {
-      subtotal: cart.totals?.subtotal || 0,
-      getLoyaltyAccount: async () => {
-        const data = await getMyLoyaltyAccount();
-        _cartLoyaltyData = data;
-        return data;
-      },
-    }).catch(() => {});
+    const _fetchLoyalty = async () => {
+      const data = await getMyLoyaltyAccount();
+      _cartLoyaltyData = data;
+      return data;
+    };
+    const cartSubtotal = cart.totals?.subtotal || 0;
+    initCartLoyaltyBar($w, { subtotal: cartSubtotal, getLoyaltyAccount: _fetchLoyalty }).catch(() => {});
+    initSpendToTierBar($w, { cartSubtotal, getLoyaltyAccount: _fetchLoyalty }).catch(() => {});
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
@@ -213,47 +212,6 @@ function updateShippingProgressFromCart(currentCart) {
 
     // ARIA label for progress bar
     try { progressBar.accessibility.ariaLabel = `Free shipping progress: ${progressPct}%`; } catch (e) {}
-    try { progressBar.accessibility.ariaValueNow = progressPct; } catch (e) {}
-    try { progressBar.accessibility.ariaValueMin = 0; } catch (e) {}
-    try { progressBar.accessibility.ariaValueMax = 100; } catch (e) {}
-  } catch (e) {}
-}
-
-// ── Tiered Discount Progress Bar ────────────────────────────────────
-// "Spend $X more for Y% off!" with coral progress bar
-
-async function updateTierProgress(cart) {
-  try {
-    const currentCart = cart || await getCurrentCart();
-    if (!currentCart) return;
-    updateTierProgressFromCart(currentCart);
-  } catch (e) {}
-}
-
-function updateTierProgressFromCart(currentCart) {
-  try {
-    const subtotal = currentCart.totals?.subtotal || 0;
-    const { tier, remaining, progressPct } = getTierProgress(subtotal);
-    const barStyles = getProgressBarStyles('tier');
-
-    const progressBar = $w('#tierProgressBar');
-    const progressText = $w('#tierProgressText');
-
-    if (progressBar) {
-      progressBar.value = progressPct;
-      try { progressBar.style.backgroundColor = barStyles.trackColor; } catch (e) {}
-      try { progressBar.style.color = barStyles.fillColor; } catch (e) {}
-    }
-
-    if (progressText) {
-      progressText.text = tier.label(remaining.toFixed(2));
-      try { progressText.style.color = barStyles.textColor; } catch (e) {}
-      try { progressText.accessibility.ariaLive = 'polite'; } catch (e) {}
-      try { progressText.accessibility.role = 'status'; } catch (e) {}
-    }
-
-    // ARIA label for tier progress bar
-    try { progressBar.accessibility.ariaLabel = `Discount tier progress: ${progressPct}%`; } catch (e) {}
     try { progressBar.accessibility.ariaValueNow = progressPct; } catch (e) {}
     try { progressBar.accessibility.ariaValueMin = 0; } catch (e) {}
     try { progressBar.accessibility.ariaValueMax = 100; } catch (e) {}
@@ -547,7 +505,7 @@ function initCartListeners() {
         // Single getCurrentCart() call shared by all listeners
         const cart = await getCurrentCart();
         updateShippingProgress(cart);
-        updateTierProgress(cart);
+        updateSpendToTierBar($w, { cartSubtotal: cart?.totals?.subtotal || 0, loyaltyData: _cartLoyaltyData });
         updateCartFinancing(cart);
         updateCartLoyaltyBar($w, { subtotal: cart?.totals?.subtotal || 0, loyaltyData: _cartLoyaltyData });
         updateCartDeliveryEstimate($w, cart);

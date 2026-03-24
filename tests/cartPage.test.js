@@ -72,11 +72,6 @@ vi.mock('public/cartService', () => ({
   removeCartItem: vi.fn(),
   onCartChanged: vi.fn(),
   getShippingProgress: vi.fn(() => ({ remaining: 50, progressPct: 60, qualifies: false })),
-  getTierProgress: vi.fn(() => ({
-    tier: { label: (r) => `Spend $${r} more for 10% off!` },
-    remaining: 100,
-    progressPct: 40,
-  })),
   FREE_SHIPPING_THRESHOLD: 199,
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 99,
@@ -137,6 +132,21 @@ vi.mock('public/pageSeo.js', () => ({
 
 vi.mock('wix-location-frontend', () => ({
   to: vi.fn(),
+}));
+
+vi.mock('public/CartLoyaltyBar.js', () => ({
+  initCartLoyaltyBar: vi.fn(() => Promise.resolve()),
+  updateCartLoyaltyBar: vi.fn(),
+}));
+
+vi.mock('public/CartSpendToTierBar.js', () => ({
+  initSpendToTierBar: vi.fn(() => Promise.resolve()),
+  updateSpendToTierBar: vi.fn(),
+  calcTierProgressWithCart: vi.fn(),
+}));
+
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn(() => Promise.resolve(null)),
 }));
 
 // ── Test Data ───────────────────────────────────────────────────────
@@ -258,20 +268,13 @@ describe('shipping progress', () => {
 // ── Tier Progress ───────────────────────────────────────────────────
 
 describe('tier progress', () => {
-  it('updates tier progress bar from cart', async () => {
+  it('calls initSpendToTierBar with cart subtotal on page load', async () => {
     await loadPage();
-    const { getTierProgress } = await import('public/cartService');
-    expect(getTierProgress).toHaveBeenCalledWith(549.97);
-  });
-
-  it('sets tier progress bar value', async () => {
-    await loadPage();
-    expect(getEl('#tierProgressBar').value).toBe(40);
-  });
-
-  it('renders tier label text', async () => {
-    await loadPage();
-    expect(getEl('#tierProgressText').text).toContain('100.00');
+    const { initSpendToTierBar } = await import('public/CartSpendToTierBar.js');
+    expect(initSpendToTierBar).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ cartSubtotal: 549.97 })
+    );
   });
 });
 
@@ -616,10 +619,6 @@ describe('shipping progress (deep)', () => {
       removeCartItem: vi.fn(),
       onCartChanged: vi.fn(),
       getShippingProgress: vi.fn(),
-      getTierProgress: vi.fn(() => ({
-        tier: { label: (r) => `Spend $${r} more` },
-        remaining: 100, progressPct: 40,
-      })),
       FREE_SHIPPING_THRESHOLD: 100000,
       isFreeShippingEnabled: vi.fn(() => false),
       MIN_QUANTITY: 1,
@@ -638,31 +637,25 @@ describe('shipping progress (deep)', () => {
   });
 });
 
-// ── Tier Progress (Deep) ───────────────────────────────────────────
+// ── Tier Progress (Deep) ──────────────────────────────────────────
+// CartSpendToTierBar behavior is tested in cartSpendToTierBar.test.js.
+// These tests verify Cart Page.js wires the module correctly.
 
 describe('tier progress (deep)', () => {
-  it('sets ARIA attributes on tier progress bar', async () => {
+  it('calls updateSpendToTierBar with cached loyalty data on cart change', async () => {
     await loadPage();
-    const bar = getEl('#tierProgressBar');
-    expect(bar.accessibility.ariaLabel).toContain('Discount tier progress');
-    expect(bar.accessibility.ariaValueNow).toBe(40);
-    expect(bar.accessibility.ariaValueMin).toBe(0);
-    expect(bar.accessibility.ariaValueMax).toBe(100);
-  });
+    const { onCartChanged, getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(mockCart);
 
-  it('applies tier bar styling', async () => {
-    await loadPage();
-    const bar = getEl('#tierProgressBar');
-    expect(bar.style.backgroundColor).toBe('#E8E0D5');
-    expect(bar.style.color).toBe('#4A7C59');
-  });
+    const changeCb = onCartChanged.mock.calls.at(-1)[0];
+    vi.useFakeTimers();
+    changeCb();
+    vi.runAllTimers();
+    await Promise.resolve();
+    vi.useRealTimers();
 
-  it('sets ARIA status on tier text', async () => {
-    await loadPage();
-    const text = getEl('#tierProgressText');
-    expect(text.accessibility.ariaLive).toBe('polite');
-    expect(text.accessibility.role).toBe('status');
-    expect(text.style.color).toBe('#1E3A5F');
+    const { updateSpendToTierBar } = await import('public/CartSpendToTierBar.js');
+    expect(updateSpendToTierBar).toHaveBeenCalled();
   });
 });
 
