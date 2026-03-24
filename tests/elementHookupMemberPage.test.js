@@ -273,6 +273,8 @@ vi.mock('backend/wishlistShare.web.js', () => ({
   })),
   resolveShareToken: vi.fn(() => Promise.resolve({ valid: false, reason: 'not_found' })),
 }));
+vi.mock('public/ZipLeaderboardDisplay.js', () => ({ initZipLeaderboardSection: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('backend/zipLeaderboard.web.js', () => ({ getZipLeaderboard: vi.fn().mockResolvedValue({ leaderboard: [], myRank: null, zipPrefix: null }) }));
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
