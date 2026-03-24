@@ -25,6 +25,7 @@ import { getTodayET, getYesterdayOf, tsToETDate } from 'backend/utils/dateUtils'
 import wixData from 'wix-data';
 import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
+import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
@@ -214,6 +215,22 @@ export const receiveGamificationEvent = webMethod(
           const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
           logError(`gamificationEventReceiver — badge award failed for ${memberId}`, err, { silent: isDuplicate });
         }
+      }
+
+      // CF-3wl: AnalyticsEvents pipeline — best-effort, never throws
+      const prevStreakDays = record ? (record.currentStreakDays || 0) : 0;
+      try {
+        if (tierChanged) {
+          await insertAnalyticsEvent({ memberId, eventType: 'tier_upgrade', source: 'gamification', payload: { newTier, previousTier: oldTier } });
+        }
+        if (streakState.milestoneBonus > 0) {
+          await insertAnalyticsEvent({ memberId, eventType: 'badge_earned', source: 'gamification', payload: { badgeId: 'week_wanderer' } });
+        }
+        if (streakState.currentStreakDays === prevStreakDays + 1) {
+          await insertAnalyticsEvent({ memberId, eventType: 'streak_extended', source: 'gamification', payload: { currentStreakDays: streakState.currentStreakDays } });
+        }
+      } catch (err) {
+        logError(`gamificationEventReceiver — analytics insert failed for ${memberId}`, err);
       }
 
       return {
@@ -707,6 +724,18 @@ export const recordChallengeProgress = webMethod(
         } catch (err) {
           logError(`recordChallengeProgress — PointsLedger write failed for member ${memberId} challenge ${challengeId}`, err);
         }
+      }
+
+      // CF-3wl: AnalyticsEvents pipeline — best-effort, never throws
+      try {
+        if (!existing) {
+          await insertAnalyticsEvent({ memberId, eventType: 'challenge_started', source: 'gamification', payload: { challengeId } });
+        }
+        if (completed) {
+          await insertAnalyticsEvent({ memberId, eventType: 'challenge_completed', source: 'gamification', payload: { challengeId, pointsAwarded } });
+        }
+      } catch (err) {
+        logError(`recordChallengeProgress — analytics insert failed for member ${memberId}`, err);
       }
 
       return { success: true, newProgress, completed, pointsAwarded };
