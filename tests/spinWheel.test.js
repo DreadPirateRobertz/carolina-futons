@@ -17,6 +17,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
+  __setInsertError,
   __getInserted,
   __getUpdated,
 } from './__mocks__/wix-data.js';
@@ -358,5 +359,78 @@ describe('spinWheel — rate limiting', () => {
     const result = await getSpinEligibility('mem-rate');
     expect(result.eligible).toBe(false);
     expect(result.reason).toBe('RATE_LIMITED');
+  });
+});
+
+// ── MemberPointsLedger — spin wheel points prize ──────────────────────────────
+
+describe('MemberPointsLedger — spinWheel inserts ledger entry for POINTS prize', () => {
+  it('inserts a ledger entry when member wins points', async () => {
+    __seed('SpinPrizes', [{
+      _id: 'sp-1', active: true, weight: 10,
+      prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points',
+    }]);
+    __seed('SpinHistory', []);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-spin-1',
+      totalPoints: 100, tier: 'Bronze', bonusSpinsAvailable: 0,
+    }]);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const result = await spinWheel('mem-spin-1');
+    expect(result.success).toBe(true);
+    expect(result.prize.type).toBe('POINTS');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(1);
+    const e = entries[0];
+    expect(e.memberId).toBe('mem-spin-1');
+    expect(e.operationType).toBe('earn');
+    expect(e.delta).toBe(50);
+    expect(e.previousBalance).toBe(100);
+    expect(e.newBalance).toBe(150);
+    expect(e.reason).toBe('spin_wheel_prize');
+    expect(e.timestamp).toBeInstanceOf(Date);
+  });
+
+  it('does not insert a ledger entry for non-POINTS prizes', async () => {
+    __seed('SpinPrizes', [{
+      _id: 'sp-1', active: true, weight: 10,
+      prizeType: 'DISCOUNT', prizeValue: '10%', label: '10% Off',
+    }]);
+    __seed('SpinHistory', []);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-spin-2',
+      totalPoints: 100, tier: 'Bronze', bonusSpinsAvailable: 0,
+    }]);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    await spinWheel('mem-spin-2');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(0);
+  });
+});
+
+// ── MemberPointsLedger — catch-path resilience ────────────────────────────────
+
+describe('MemberPointsLedger — catch-path: ledger failure does not break spinWheel', () => {
+  it('returns {success:true} with prize even when MemberPointsLedger insert throws', async () => {
+    __seed('SpinPrizes', [{
+      _id: 'sp-1', active: true, weight: 10,
+      prizeType: 'POINTS', pointsAwarded: 50, label: '50 Points',
+    }]);
+    __seed('SpinHistory', []);
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-spin-catch',
+      totalPoints: 100, tier: 'Bronze', bonusSpinsAvailable: 0,
+    }]);
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    __setInsertError('MemberPointsLedger', new Error('ledger unavailable'));
+
+    const result = await spinWheel('mem-spin-catch');
+
+    expect(result.success).toBe(true);
+    expect(result.prize.type).toBe('POINTS');
   });
 });

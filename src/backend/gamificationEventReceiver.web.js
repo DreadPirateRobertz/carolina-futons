@@ -24,6 +24,7 @@ import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, getYesterdayOf, tsToETDate } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
 import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
+import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const MEMBER_BADGES_COLLECTION = 'MemberBadges';
@@ -146,6 +147,42 @@ export const receiveGamificationEvent = webMethod(
         await wixData.update(MEMBER_POINTS_COLLECTION, { ...record, ...updatedRecord });
       } else {
         await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord });
+      }
+
+      // Audit ledger — write separate entries for earn and milestone bonus
+      const baseTraceId = `${memberId}_${eventName}_${payload?.ts ?? Date.now()}`;
+      if (adjustedPoints !== 0) {
+        try {
+          await insertLedgerEntry({
+            memberId,
+            traceId: baseTraceId,
+            operationType: 'earn',
+            delta: adjustedPoints,
+            reason: eventName,
+            previousBalance: oldTotal,
+            newBalance: oldTotal + adjustedPoints,
+            sourceData: { eventName, streakMultiplier: streakState.streakMultiplier },
+          });
+        } catch (err) {
+          logError(`gamificationEventReceiver — ledger insert failed for ${memberId}`, err);
+        }
+      }
+      if (streakState.milestoneBonus > 0) {
+        const afterEarn = oldTotal + adjustedPoints;
+        try {
+          await insertLedgerEntry({
+            memberId,
+            traceId: `${baseTraceId}_milestone`,
+            operationType: 'bonus',
+            delta: streakState.milestoneBonus,
+            reason: 'streak_milestone_bonus',
+            previousBalance: afterEarn,
+            newBalance: afterEarn + streakState.milestoneBonus,
+            sourceData: { eventName, milestoneBonus: streakState.milestoneBonus },
+          });
+        } catch (err) {
+          logError(`gamificationEventReceiver — milestone ledger insert failed for ${memberId}`, err);
+        }
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
@@ -729,10 +766,19 @@ export const recoverStreak = webMethod(
       // the member is debited with no audit trail. Track in CF-ledger story.
       await wixData.update(MEMBER_POINTS_COLLECTION, updatedRecord);
 
-      // TODO: insert MemberPointsLedger entry (blocked on CF-ledger)
-      // await wixData.insert('MemberPointsLedger', {
-      //   memberId, delta: -STREAK_RECOVERY_COST, reason: 'streak_recovery', createdAt: new Date()
-      // });
+      try {
+        await insertLedgerEntry({
+          memberId,
+          traceId: `${memberId}_streak_recovery_${Date.now()}`,
+          operationType: 'burn',
+          delta: -STREAK_RECOVERY_COST,
+          reason: 'streak_recovery',
+          previousBalance: record.totalPoints,
+          newBalance: newTotal,
+        });
+      } catch (err) {
+        logError(`recoverStreak — ledger insert failed for ${memberId}`, err);
+      }
 
       return { success: true, newTotal, currentStreakDays: 1 };
     } catch (err) {

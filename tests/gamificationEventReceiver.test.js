@@ -1853,3 +1853,138 @@ describe('recoverStreak', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── MemberPointsLedger — earn path ────────────────────────────────────────────
+
+describe('MemberPointsLedger — receiveGamificationEvent inserts ledger entry', () => {
+  it('inserts a ledger entry with correct fields after awarding points', async () => {
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ledger-1');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(1);
+    const e = entries[0];
+    expect(e.memberId).toBe('mem-ledger-1');
+    expect(e.operationType).toBe('earn');
+    expect(e.delta).toBe(5); // ADD_TO_CART_POINTS = 5
+    expect(e.previousBalance).toBe(0);
+    expect(e.newBalance).toBe(5);
+    expect(e.reason).toBe('gamification_add_to_cart');
+    expect(e.timestamp).toBeInstanceOf(Date);
+    expect(typeof e.traceId).toBe('string');
+  });
+
+  it('records previousBalance correctly for an existing member', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-ledger-2',
+      totalPoints: 100, tier: 'Bronze',
+    }]);
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-ledger-2');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(1);
+    expect(entries[0].previousBalance).toBe(100);
+    expect(entries[0].newBalance).toBe(105); // 100 + ADD_TO_CART_POINTS (5)
+    expect(entries[0].delta).toBe(5);
+  });
+
+  it('includes sourceData with eventName', async () => {
+    await receiveGamificationEvent('gamification_add_to_cart', { product_id: 'p99' }, 'mem-ledger-3');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries[0].sourceData).toBeTruthy();
+    const sd = JSON.parse(entries[0].sourceData);
+    expect(sd.eventName).toBe('gamification_add_to_cart');
+  });
+
+  it('does not insert a ledger entry when delta is 0 (zero-point event)', async () => {
+    // Unknown event = no points awarded; no ledger entry should be written
+    await receiveGamificationEvent('gamification_unknown_event', {}, 'mem-ledger-4');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(0);
+  });
+});
+
+// ── MemberPointsLedger — recoverStreak burn ───────────────────────────────────
+
+describe('MemberPointsLedger — recoverStreak inserts burn ledger entry', () => {
+  it('inserts a burn ledger entry after successful streak recovery', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-r1', memberId: 'mem-recover-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: null,
+    }]);
+
+    await recoverStreak('mem-recover-1');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(1);
+    const e = entries[0];
+    expect(e.memberId).toBe('mem-recover-1');
+    expect(e.operationType).toBe('burn');
+    expect(e.delta).toBe(-STREAK_RECOVERY_COST);
+    expect(e.previousBalance).toBe(500);
+    expect(e.newBalance).toBe(500 - STREAK_RECOVERY_COST);
+    expect(e.reason).toBe('streak_recovery');
+    expect(e.timestamp).toBeInstanceOf(Date);
+  });
+
+  it('does not insert a ledger entry when recovery fails (insufficient points)', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-r2', memberId: 'mem-recover-2',
+      totalPoints: 1,
+      currentStreakDays: 0,
+    }]);
+
+    await recoverStreak('mem-recover-2');
+
+    const entries = __getInserted('MemberPointsLedger');
+    expect(entries).toHaveLength(0);
+  });
+});
+
+// ── MemberPointsLedger — catch-path resilience ────────────────────────────────
+
+describe('MemberPointsLedger — catch-path: ledger failure does not break earn', () => {
+  it('returns {success:true, newTotal} even when MemberPointsLedger insert throws', async () => {
+    __setInsertError('MemberPointsLedger', new Error('ledger unavailable'));
+
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-catch-1');
+
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(5);
+  });
+
+  it('returns {success:true, newTotal} even when milestone ledger insert throws', async () => {
+    // Trigger a milestone: seed a member at exactly 499 pts so the add-to-cart
+    // pushes past 500 and the streak milestone fires
+    __seed('MemberPoints', [{
+      _id: 'mp-mc2', memberId: 'mem-catch-2',
+      totalPoints: 499, tier: 'Bronze',
+      currentStreakDays: 7, streakStartDate: getTodayET(), lastActivityDate: getTodayET(),
+    }]);
+    __setInsertError('MemberPointsLedger', new Error('ledger unavailable'));
+
+    const result = await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-catch-2');
+
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBeGreaterThan(499);
+  });
+});
+
+describe('MemberPointsLedger — catch-path: ledger failure does not break recoverStreak', () => {
+  it('returns {success:true, newTotal} even when burn ledger insert throws', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-rc1', memberId: 'mem-catch-3',
+      totalPoints: 500, currentStreakDays: 0, lastStreakRecoveryDate: null,
+    }]);
+    __setInsertError('MemberPointsLedger', new Error('ledger unavailable'));
+
+    const result = await recoverStreak('mem-catch-3');
+
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(500 - STREAK_RECOVERY_COST);
+  });
+});
