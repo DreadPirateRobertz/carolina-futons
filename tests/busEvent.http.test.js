@@ -2,18 +2,17 @@
  * @file busEvent.http.test.js
  * @description TDD tests for POST /_functions/busEvent — cross-rig event bus inbound endpoint.
  * Handles mobile→web events: streak_extended, challenge_started, redemption_initiated.
- * CF-44r
+ * CF-44r / CF-va8 (auth hardening: x-bus-secret → Wix session Bearer token)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset as resetData, __seed, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
-import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
+import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
 import { post_busEvent } from '../src/backend/http-functions.js';
 
-const BUS_SECRET = 'test-bus-secret-xyz';
+const VALID_MEMBER = { _id: 'mem-1', loginEmail: 'member@example.com' };
 
-function makeRequest(body = {}, headers = {}) {
+function makeRequest(body = {}) {
   return {
-    headers: { 'x-bus-secret': BUS_SECRET, ...headers },
     body: { json: async () => body },
   };
 }
@@ -33,33 +32,53 @@ function validBody(overrides = {}) {
 
 beforeEach(() => {
   resetData();
-  resetSecrets();
-  __setSecrets({ BUS_SECRET });
+  resetMembers();
+  __seed('EventTraceLog', []);
 });
 
 // ── Authentication ─────────────────────────────────────────────────────────────
 
 describe('post_busEvent — authentication', () => {
-  it('returns 403 when x-bus-secret header is missing', async () => {
-    const result = await post_busEvent({
-      headers: {},
-      body: { json: async () => validBody() },
-    });
-    expect(result.status).toBe(403);
+  it('returns 401 when no member session is present', async () => {
+    // resetMembers() leaves no authenticated member
+    const result = await post_busEvent(makeRequest(validBody()));
+    expect(result.status).toBe(401);
+    expect(JSON.parse(result.body).error).toMatch(/unauthorized/i);
   });
 
-  it('returns 403 when x-bus-secret is wrong', async () => {
-    const result = await post_busEvent({
-      headers: { 'x-bus-secret': 'wrong-secret' },
-      body: { json: async () => validBody() },
-    });
-    expect(result.status).toBe(403);
+  it('returns 401 when getMember() throws (e.g. expired token)', async () => {
+    const { currentMember } = await import('wix-members-backend');
+    currentMember.getMember.mockRejectedValueOnce(new Error('token expired'));
+    const result = await post_busEvent(makeRequest(validBody()));
+    expect(result.status).toBe(401);
+  });
+
+  it('allows request when member session is valid', async () => {
+    __setMember(VALID_MEMBER);
+    const result = await post_busEvent(makeRequest(validBody()));
+    expect(result.status).toBe(200);
+  });
+});
+
+// ── Identity resolution ────────────────────────────────────────────────────────
+
+describe('post_busEvent — server-side identity', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('uses session memberId in EventTraceLog, ignoring payload.userId', async () => {
+    // payload claims a different userId — server must ignore it
+    const result = await post_busEvent(makeRequest(validBody({ userId: 'attacker-id' })));
+    expect(result.status).toBe(200);
+    const logs = __getInserted('EventTraceLog');
+    expect(logs[0].userId).toBe('mem-1'); // resolved from session, not payload
   });
 });
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
 describe('post_busEvent — validation', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 400 when eventId is missing', async () => {
     const result = await post_busEvent(makeRequest(validBody({ eventId: undefined })));
     expect(result.status).toBe(400);
@@ -84,15 +103,14 @@ describe('post_busEvent — validation', () => {
     expect(JSON.parse(result.body).error).toMatch(/event/i);
   });
 
-  it('returns 400 when userId is missing', async () => {
+  it('succeeds when userId is absent from payload (advisory field — server uses session)', async () => {
+    __setMember(VALID_MEMBER);
     const result = await post_busEvent(makeRequest(validBody({ userId: undefined })));
-    expect(result.status).toBe(400);
-    expect(JSON.parse(result.body).error).toMatch(/userId/i);
+    expect(result.status).toBe(200);
   });
 
   it('returns 400 on invalid JSON body', async () => {
     const result = await post_busEvent({
-      headers: { 'x-bus-secret': BUS_SECRET },
       body: { json: async () => { throw new Error('parse error'); } },
     });
     expect(result.status).toBe(400);
@@ -102,6 +120,8 @@ describe('post_busEvent — validation', () => {
 // ── Inbound events ─────────────────────────────────────────────────────────────
 
 describe('post_busEvent — streak_extended', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 200 and logs to EventTraceLog', async () => {
     const result = await post_busEvent(makeRequest(validBody({ event: 'streak_extended' })));
     expect(result.status).toBe(200);
@@ -114,10 +134,13 @@ describe('post_busEvent — streak_extended', () => {
     expect(log.traceId).toBe('trace_abc123');
     expect(log.event).toBe('streak_extended');
     expect(log.status).toBe('received');
+    expect(log.userId).toBe('mem-1');
   });
 });
 
 describe('post_busEvent — challenge_started', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 200 and logs to EventTraceLog', async () => {
     const body = validBody({ event: 'challenge_started', challengeId: 'ch-1' });
     const result = await post_busEvent(makeRequest(body));
@@ -127,10 +150,13 @@ describe('post_busEvent — challenge_started', () => {
     const logs = __getInserted('EventTraceLog');
     expect(logs[0].event).toBe('challenge_started');
     expect(logs[0].status).toBe('received');
+    expect(logs[0].userId).toBe('mem-1');
   });
 });
 
 describe('post_busEvent — redemption_initiated', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 200 and logs to EventTraceLog', async () => {
     const body = validBody({ event: 'redemption_initiated', rewardId: 'rwd-1' });
     const result = await post_busEvent(makeRequest(body));
@@ -140,10 +166,13 @@ describe('post_busEvent — redemption_initiated', () => {
     const logs = __getInserted('EventTraceLog');
     expect(logs[0].event).toBe('redemption_initiated');
     expect(logs[0].status).toBe('received');
+    expect(logs[0].userId).toBe('mem-1');
   });
 });
 
 describe('post_busEvent — EventTraceLog deduplication', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('does not insert a duplicate log for the same eventId', async () => {
     const body = validBody({ eventId: 'dupe-evt-1', event: 'streak_extended' });
     __seed('EventTraceLog', [{
@@ -165,14 +194,17 @@ describe('post_busEvent — EventTraceLog deduplication', () => {
 // ── EventTraceLog includes userId and source (review fix) ─────────────────────
 
 describe('post_busEvent — EventTraceLog captures userId and source', () => {
-  it('stores userId and source from body in the trace log', async () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('stores session-resolved userId and source from body in the trace log', async () => {
+    // userId in log is always the session-resolved memberId, not the payload value
     const body = validBody({ userId: 'mem-trace-1', source: 'mobile' });
     const result = await post_busEvent(makeRequest(body));
     expect(result.status).toBe(200);
 
     const logs = __getInserted('EventTraceLog');
     expect(logs).toHaveLength(1);
-    expect(logs[0].userId).toBe('mem-trace-1');
+    expect(logs[0].userId).toBe(VALID_MEMBER._id); // session-resolved, not payload
     expect(logs[0].source).toBe('mobile');
   });
 });
@@ -180,21 +212,23 @@ describe('post_busEvent — EventTraceLog captures userId and source', () => {
 // ── Rate limiting (review fix) ────────────────────────────────────────────────
 
 describe('post_busEvent — rate limiting', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
   it('returns 429 after exceeding 30 requests per minute from the same userId', async () => {
-    // Seed the rate limit collection as if the window is already maxed out
+    // Rate limit key is session-resolved memberId, not payload userId
     __seed('BusEventRateLimit', [{
       _id: 'rl-1',
-      key: 'mem-rl-1',
+      key: VALID_MEMBER._id,
       count: 30,
       windowStart: new Date(Date.now() - 1000), // within the window
     }]);
 
-    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-1' })));
+    const result = await post_busEvent(makeRequest(validBody()));
     expect(result.status).toBe(429);
   });
 
   it('allows requests when under the rate limit', async () => {
-    const result = await post_busEvent(makeRequest(validBody({ userId: 'mem-rl-2' })));
+    const result = await post_busEvent(makeRequest(validBody()));
     expect(result.status).toBe(200);
   });
 });

@@ -38,9 +38,9 @@ describe('validateIncomingEvent', () => {
     expect(err).toMatch(/event/i);
   });
 
-  it('returns error when userId is missing', () => {
+  it('accepts event when userId is absent (advisory field, not required)', () => {
     const err = validateIncomingEvent({ ...valid, userId: undefined });
-    expect(err).toMatch(/userId/i);
+    expect(err).toBeNull();
   });
 
   it('accepts all three known inbound events', () => {
