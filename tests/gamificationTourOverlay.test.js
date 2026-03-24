@@ -102,11 +102,11 @@ describe('initGamificationTourOverlay', () => {
     expect(overlay.show).not.toHaveBeenCalled();
   });
 
-  it('does not show when overlay element is absent from the page', async () => {
+  it('does not set localStorage key when overlay element is absent from the page', async () => {
     const $wNoOverlay = make$w(null, closeBtn);
     await initGamificationTourOverlay({ $w: $wNoOverlay, getMember: async () => MEMBER, storage });
-    // no throw — just silent no-op
-    expect(storage.setItem).toHaveBeenCalled(); // key was still set
+    // overlay absent → key must NOT be consumed so the tour can show later
+    expect(storage.setItem).not.toHaveBeenCalled();
   });
 
   it('wires close button onClick to hide the overlay', async () => {

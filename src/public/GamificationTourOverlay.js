@@ -93,14 +93,15 @@ export async function initGamificationTourOverlay(opts = {}) {
   const member = await fetchMember(opts);
   if (!member?._id) return;
 
-  // Mark shown before rendering to guard against duplicate calls
-  if (storage) {
-    try { storage.setItem(TOUR_KEY, '1'); } catch (_) { /* non-fatal */ }
-  }
-
   try {
     const overlay = $wFn('#gamificationTourOverlay');
     if (!overlay) return;
+
+    // Mark shown only after confirming the overlay exists — if the editor
+    // element is absent we must not consume the one-time flag permanently.
+    if (storage) {
+      try { storage.setItem(TOUR_KEY, '1'); } catch (_) { /* non-fatal */ }
+    }
 
     // Wire dismiss button — best-effort; overlay still shows if button absent
     try {
