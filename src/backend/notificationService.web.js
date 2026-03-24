@@ -29,6 +29,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10% minimum drop to trigger alert
@@ -390,7 +391,7 @@ export const getNotificationHistory = webMethod(
 
       return { items: result.items, success: true };
     } catch (err) {
-      console.error('[notificationService] Error getting notification history:', err);
+      logError('[notificationService] Error getting notification history', err);
       return { items: [], success: false };
     }
   }
@@ -444,7 +445,7 @@ async function writeNotification(memberId, type, message, extra = {}) {
       ...extra,
     }, { suppressAuth: true });
   } catch (err) {
-    console.error('[notificationService] writeNotification failed:', err);
+    logError('[notificationService] writeNotification failed', err);
   }
 }
 
