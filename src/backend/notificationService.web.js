@@ -499,7 +499,7 @@ export async function sendQuestCompleteNotification(memberId, questTitle, points
  * @returns {Promise<void>}
  */
 export async function sendStreakDangerNotification(memberId, lastActivityDate) {
-  if (!memberId || !validateId(memberId)) return;
+  if (!memberId) return;
   let todayET;
   try {
     todayET = getTodayET();

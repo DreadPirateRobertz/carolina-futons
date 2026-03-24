@@ -232,6 +232,7 @@ describe('sendChallengeReminder — cadence enforcement', () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+    resetData();
   });
 
   it('skips sending when daily reminder was sent < 20h ago', async () => {
