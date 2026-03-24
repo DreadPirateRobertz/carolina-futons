@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __getUpdated } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getUpdated, __setQueryError, __setUpdateError } from './__mocks__/wix-data.js';
 import {
   shouldSendChallengeReminder,
   getChallengesNeedingReminder,
@@ -193,5 +193,29 @@ describe('markReminderSent', () => {
     // No seed — record not found
     const result = await markReminderSent('nonexistent-id', NOW);
     expect(result).toBeNull();
+  });
+
+  it('throws when wixData.update fails (distinguishable from not-found null)', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    __setUpdateError('MemberChallengeProgress', new Error('DB write failed'));
+    await expect(markReminderSent('mcp-1', NOW)).rejects.toThrow('DB write failed');
+  });
+});
+
+// ── getChallengesNeedingReminder — error handling ─────────────────────────────
+
+describe('getChallengesNeedingReminder — error handling', () => {
+  it('returns empty array on DB query error', async () => {
+    __setQueryError('MemberChallengeProgress', new Error('DB down'));
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array when collection is empty', async () => {
+    // __reset() clears all seeds — empty collection
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result).toEqual([]);
   });
 });
