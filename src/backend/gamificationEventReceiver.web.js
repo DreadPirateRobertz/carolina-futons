@@ -586,14 +586,24 @@ export const getActiveChallenges = webMethod(
         .eq('active', true)
         .find({ suppressAuth: true });
 
-      // CF+ exclusive gate: filter cfPlusOnly challenges for non-CF+ members
-      const premiumResult = await wixData
-        .query('PremiumMemberships')
-        .eq('memberId', memberId)
-        .eq('status', 'active')
-        .limit(1)
-        .find({ suppressAuth: true });
-      const isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
+      // CF+ exclusive gate: use authenticated caller identity ONLY — never the client-supplied
+      // memberId parameter, which is untrusted. Fail closed: any error → isCFPlus=false.
+      let isCFPlus = false;
+      try {
+        const { currentMember: cm } = await import('wix-members-backend');
+        const caller = await cm.getMember();
+        if (caller?._id) {
+          const premiumResult = await wixData
+            .query('PremiumMemberships')
+            .eq('memberId', caller._id)
+            .eq('status', 'active')
+            .limit(1)
+            .find({ suppressAuth: true });
+          isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
+        }
+      } catch (err) {
+        logError(`getActiveChallenges — CF+ check failed, denying CF+ access`, err);
+      }
 
       // Filter expired + CF+ gate, sort by expiresAt ASC, cap at 5
       const active = challengeResults.items

@@ -139,6 +139,30 @@ describe('getChallengeLeaderboard — auth and validation', () => {
     const result = await getChallengeLeaderboard('ch-1');
     expect(result.leaderboard).toEqual([]);
   });
+
+  it('limit=0 falls back to default of 10', async () => {
+    const entries = Array.from({ length: 12 }, (_, i) => ({
+      _id: `cp-${i}`,
+      challengeId: 'ch-1',
+      memberId: `mem-${i}`,
+      completedAt: new Date(2026, 2, i + 1), // March 1-12 2026
+    }));
+    __seed(CHALLENGE_PROGRESS, entries);
+    const result = await getChallengeLeaderboard('ch-1', 0);
+    expect(result.leaderboard).toHaveLength(10);
+  });
+
+  it('limit above cap (>20) is capped at 20', async () => {
+    const entries = Array.from({ length: 25 }, (_, i) => ({
+      _id: `cp-${i}`,
+      challengeId: 'ch-1',
+      memberId: `mem-${i}`,
+      completedAt: new Date(2026, 2, i + 1),
+    }));
+    __seed(CHALLENGE_PROGRESS, entries);
+    const result = await getChallengeLeaderboard('ch-1', 25);
+    expect(result.leaderboard).toHaveLength(20);
+  });
 });
 
 // ── CF+ exclusive gate — getChallengeCatalog ──────────────────────────────────
@@ -190,6 +214,35 @@ describe('getChallengeCatalog — CF+ exclusive gate', () => {
     const result = await getChallengeCatalog();
     expect(result.challenges).toHaveLength(0);
   });
+
+  it('does not treat cancelled PremiumMembership as CF+', async () => {
+    __seed(PREMIUM, [
+      { _id: 'pm-1', memberId: 'mem-1', status: 'cancelled' },
+    ]);
+    __seed(CHALLENGE_DEFS, [
+      { _id: 'def-1', title: 'Open', active: true, goal: 1, unit: 'order', pointReward: 50, expiresAt: null },
+      { _id: 'def-2', title: 'CF+ Only', active: true, goal: 1, unit: 'order', pointReward: 200, expiresAt: null, cfPlusOnly: true },
+    ]);
+    _resetChallengeCatalogRateLimit();
+    _resetChallengeCatalogCache();
+    const result = await getChallengeCatalog();
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].id).toBe('def-1');
+  });
+
+  it('does not grant CF+ access when PremiumMemberships query throws', async () => {
+    __seed(CHALLENGE_DEFS, [
+      { _id: 'def-1', title: 'Open', active: true, goal: 1, unit: 'order', pointReward: 50, expiresAt: null },
+      { _id: 'def-2', title: 'CF+ Only', active: true, goal: 1, unit: 'order', pointReward: 200, expiresAt: null, cfPlusOnly: true },
+    ]);
+    __setQueryError(PREMIUM, new Error('DB failure'));
+    _resetChallengeCatalogRateLimit();
+    _resetChallengeCatalogCache();
+    const result = await getChallengeCatalog();
+    // Query error → isCFPlus=false → only open challenge visible
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].id).toBe('def-1');
+  });
 });
 
 // ── CF+ exclusive gate — getActiveChallenges ─────────────────────────────────
@@ -234,5 +287,17 @@ describe('getActiveChallenges — CF+ exclusive gate', () => {
     ]);
     const result = await getActiveChallenges('mem-1');
     expect(result.challenges).toHaveLength(0);
+  });
+
+  it('does not grant CF+ access when PremiumMemberships query throws', async () => {
+    __seed(CHALLENGES, [
+      { _id: 'ch-1', challengeId: 'ch-1', title: 'Open', active: true, expiresAt: FUTURE },
+      { _id: 'ch-2', challengeId: 'ch-2', title: 'CF+ Only', active: true, expiresAt: FUTURE, cfPlusOnly: true },
+    ]);
+    __setQueryError(PREMIUM, new Error('DB failure'));
+    const result = await getActiveChallenges('mem-1');
+    // Query error → isCFPlus=false → only open challenge visible
+    expect(result.challenges).toHaveLength(1);
+    expect(result.challenges[0].title).toBe('Open');
   });
 });

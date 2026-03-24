@@ -332,8 +332,26 @@ export const getChallengeCatalog = webMethod(
       return { status: 429, error: 'Rate limit exceeded' };
     }
 
+    // CF+ exclusive gate: memberId here is from getMember() above (trusted, authenticated source).
+    // Check BEFORE cache to prevent lapsed subscribers from seeing exclusive content
+    // from a stale CF+ cache entry.
+    let isCFPlus = false;
+    try {
+      const premiumResult = await wixData
+        .query('PremiumMemberships')
+        .eq('memberId', memberId)
+        .eq('status', 'active')
+        .limit(1)
+        .find({ suppressAuth: true });
+      isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
+    } catch (err) {
+      logError('[loyaltyService] getChallengeCatalog CF+ check failed', err);
+    }
+
+    const cacheKey = `${memberId}:${isCFPlus ? 'cfplus' : 'base'}`;
+
     // Cache: return early if fresh
-    const cached = _catalogCache.get(memberId);
+    const cached = _catalogCache.get(cacheKey);
     if (cached && now < cached.expiresAt) {
       return cached.data;
     }
@@ -349,19 +367,11 @@ export const getChallengeCatalog = webMethod(
 
       const defs = defsResult.items.filter(d => !d.expiresAt || new Date(d.expiresAt) > nowDate);
 
-      // CF+ exclusive gate: check once, filter cfPlusOnly definitions for non-CF+ members
-      const premiumResult = await wixData
-        .query('PremiumMemberships')
-        .eq('memberId', memberId)
-        .eq('status', 'active')
-        .limit(1)
-        .find({ suppressAuth: true });
-      const isCFPlus = Array.isArray(premiumResult?.items) && premiumResult.items.length > 0;
       const visibleDefs = defs.filter(d => !d.cfPlusOnly || isCFPlus);
 
       if (visibleDefs.length === 0) {
         const result = { challenges: [] };
-        _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
+        _catalogCache.set(cacheKey, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
         return result;
       }
 
@@ -393,7 +403,7 @@ export const getChallengeCatalog = webMethod(
       });
 
       const result = { challenges };
-      _catalogCache.set(memberId, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
+      _catalogCache.set(cacheKey, { data: result, expiresAt: now + CATALOG_CACHE_TTL_MS });
       return result;
     } catch (err) {
       logError('[loyaltyService] getChallengeCatalog failed', err);
