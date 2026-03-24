@@ -1819,6 +1819,70 @@ export async function post_challengeProgress(request) {
   }
 }
 
+// ── Rate Limit TTL Cleanup Cron ───────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/cleanupRateLimitCron
+// Schedule daily via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// Prunes stale records (windowStart older than 24h) from both gamification
+// rate-limit collections to prevent unbounded table growth.
+export async function get_cleanupRateLimitCron(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const TTL_MS = 24 * 3600_000;
+    const cutoff = new Date(Date.now() - TTL_MS);
+    const BATCH = 100;
+
+    async function pruneCollection(collection) {
+      let totalRemoved = 0;
+      // Up to 5 passes × 100 = 500 records per cron run (avoids timeout on large backlogs)
+      for (let pass = 0; pass < 5; pass++) {
+        const stale = await wixData
+          .query(collection)
+          .lt('windowStart', cutoff)
+          .limit(BATCH)
+          .find({ suppressAuth: true });
+        if (stale.items.length === 0) break;
+        for (const item of stale.items) {
+          await wixData.remove(collection, item._id);
+        }
+        totalRemoved += stale.items.length;
+        if (stale.items.length < BATCH) break;
+      }
+      return totalRemoved;
+    }
+
+    const [actionPruned, dailyPruned] = await Promise.all([
+      pruneCollection('GamificationActionRateLimit'),
+      pruneCollection('GamificationDailyCap'),
+    ]);
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        pruned: { actionLimit: actionPruned, dailyCap: dailyPruned },
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (cleanupRateLimitCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
 // ── Leaderboard Endpoint ──────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/leaderboard
 // Returns top N members ranked by loyalty points for the mobile Leaderboard screen.
