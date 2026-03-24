@@ -66,7 +66,8 @@ const REFERRAL_SHARED_POINTS = 100; // distinct from REFERRAL_ACCEPTED (200 pts 
  * @param {string} eventName  - e.g. 'gamification_add_to_cart'
  * @param {Object} payload    - Event-specific data (product_id, has_photo, etc.)
  * @param {string} memberId   - Wix member ID
- * @returns {Promise<{success: boolean, newTotal?: number, tierChanged?: boolean, newTier?: string, error?: string}>}
+ * @returns {Promise<{success: boolean, newTotal?: number, tierChanged?: boolean, newTier?: string,
+ *   pointsEarned?: number, badgeUnlocked?: string|null, error?: string}>}
  */
 export const receiveGamificationEvent = webMethod(
   Permissions.Member,
@@ -92,6 +93,8 @@ export const receiveGamificationEvent = webMethod(
           newTotal: totalPoints,
           tierChanged: false,
           newTier: getTierForPoints(totalPoints),
+          pointsEarned: 0,
+          badgeUnlocked: null,
         };
       } catch (err) {
         logError(`gamificationEventReceiver — query failed for member ${memberId}`, err);

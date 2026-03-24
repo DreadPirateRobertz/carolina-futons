@@ -51,6 +51,13 @@ describe('receiveGamificationEvent — input validation', () => {
     const result = await receiveGamificationEvent('gamification_add_to_cart', {}, '');
     expect(result.success).toBe(false);
   });
+
+  it('unknown event returns pointsEarned: 0 and badgeUnlocked: null', async () => {
+    const result = await receiveGamificationEvent('gamification_unknown_event', {}, 'mem-1');
+    expect(result.success).toBe(true);
+    expect(result.pointsEarned).toBe(0);
+    expect(result.badgeUnlocked).toBeNull();
+  });
 });
 
 // ── add_to_cart (+5 pts) ──────────────────────────────────────────────────────

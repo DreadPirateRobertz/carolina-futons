@@ -895,6 +895,12 @@ export const getMyBurnRate = webMethod(
     }
     if (!member?._id) return { status: 401, error: 'Unauthenticated' };
 
+    const { allowed } = await checkRateLimit('BurnRateLimit', member._id, {
+      max: 30,
+      windowMs: 60_000,
+    });
+    if (!allowed) return { status: 429, error: 'Rate limit exceeded' };
+
     const defaults = {
       avgMonthlyPoints: 0,
       currentBalance: 0,

@@ -860,4 +860,12 @@ describe('getMyBurnRate', () => {
     const result = await getMyBurnRate();
     expect(result.currentBalance).toBe(0);
   });
+
+  it('returns 429 after 30 calls per minute', async () => {
+    __setMember({ _id: 'mem-rl' });
+    __setAccount({ _id: 'acc-1', points: { balance: 0 } });
+    for (let i = 0; i < 30; i++) await getMyBurnRate();
+    const result = await getMyBurnRate();
+    expect(result).toEqual({ status: 429, error: 'Rate limit exceeded' });
+  });
 });
