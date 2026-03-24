@@ -711,8 +711,12 @@ export const recoverStreak = webMethod(
         ...record,
         totalPoints: newTotal,
         currentStreakDays: 1,
+        streakStartDate: todayET,    // reset so derived streak length stays accurate
         lastStreakRecoveryDate: todayET,
       };
+      // NOTE: When CF-ledger lands this will become two sequential wixData writes
+      // with no rollback. If the ledger insert fails after the points deduction,
+      // the member is debited with no audit trail. Track in CF-ledger story.
       await wixData.update(MEMBER_POINTS_COLLECTION, updatedRecord);
 
       // TODO: insert MemberPointsLedger entry (blocked on CF-ledger)

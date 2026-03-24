@@ -1551,6 +1551,20 @@ describe('updateStreakState — grace token', () => {
       const result = updateStreakState(record, TODAY, YESTERDAY);
       expect(result.graceTokenUsedDate).toBeNull();
     });
+
+    it('grants grace when token was used last month (month-rollover edge case)', () => {
+      // Grace used on '2026-02-28' (February); today is March → new month, token available.
+      const record = {
+        currentStreakDays: 8,
+        streakStartDate: '2026-03-14',
+        lastActivityDate: TWO_DAYS_AGO,
+        streakMultiplier: 2,
+        graceTokenUsedDate: '2026-02-28', // prior month — should NOT block grace
+      };
+      const result = updateStreakState(record, TODAY, YESTERDAY);
+      expect(result.graceApplied).toBe(true);
+      expect(result.currentStreakDays).toBe(8);
+    });
   });
 
   describe('grace integration with receiveGamificationEvent', () => {
@@ -1611,11 +1625,20 @@ describe('recoverStreak', () => {
   });
 
   it('returns { success: false } when recovery used within 30 days', async () => {
+    // Use a date 17 days before real today — always within the 30-day cooldown.
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const recent = new Date(Date.UTC(ty, tm - 1, td - 17));
+    const recentDate = [
+      recent.getUTCFullYear(),
+      String(recent.getUTCMonth() + 1).padStart(2, '0'),
+      String(recent.getUTCDate()).padStart(2, '0'),
+    ].join('-');
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1',
       totalPoints: 500,
       currentStreakDays: 0,
-      lastStreakRecoveryDate: '2026-03-05', // 17 days ago — within 30
+      lastStreakRecoveryDate: recentDate,
     }]);
     const result = await recoverStreak('mem-1');
     expect(result.success).toBe(false);
@@ -1629,7 +1652,8 @@ describe('recoverStreak', () => {
       _id: 'mp-1', memberId: 'mem-1',
       totalPoints: 500,
       tier: 'Mountain Guide',
-      currentStreakDays: 0,
+      currentStreakDays: 7,
+      streakStartDate: '2026-03-01',
       lastStreakRecoveryDate: null,
     }]);
     const result = await recoverStreak('mem-1');
@@ -1638,6 +1662,8 @@ describe('recoverStreak', () => {
     expect(result.currentStreakDays).toBe(1);
     expect(updated[0].currentStreakDays).toBe(1);
     expect(updated[0].totalPoints).toBe(500 - STREAK_RECOVERY_COST);
+    // streakStartDate must be reset to avoid stale derived metrics
+    expect(updated[0].streakStartDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it('sets lastStreakRecoveryDate to todayET on success', async () => {
@@ -1653,12 +1679,40 @@ describe('recoverStreak', () => {
     expect(updated[0].lastStreakRecoveryDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('allows recovery when lastStreakRecoveryDate is exactly 31 days ago', async () => {
+  it('allows recovery when lastStreakRecoveryDate is exactly 30 days ago (fence-post)', async () => {
+    // daysDiff < 30 is blocked; daysDiff === 30 must be allowed.
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const d30 = new Date(Date.UTC(ty, tm - 1, td - 30));
+    const date30 = [
+      d30.getUTCFullYear(),
+      String(d30.getUTCMonth() + 1).padStart(2, '0'),
+      String(d30.getUTCDate()).padStart(2, '0'),
+    ].join('-');
     __seed('MemberPoints', [{
       _id: 'mp-1', memberId: 'mem-1',
       totalPoints: 500,
       currentStreakDays: 0,
-      lastStreakRecoveryDate: '2026-02-19', // 31 days before 2026-03-22
+      lastStreakRecoveryDate: date30,
+    }]);
+    const result = await recoverStreak('mem-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('allows recovery when lastStreakRecoveryDate is exactly 31 days ago', async () => {
+    const realToday = getTodayET();
+    const [ty, tm, td] = realToday.split('-').map(Number);
+    const d31 = new Date(Date.UTC(ty, tm - 1, td - 31));
+    const date31 = [
+      d31.getUTCFullYear(),
+      String(d31.getUTCMonth() + 1).padStart(2, '0'),
+      String(d31.getUTCDate()).padStart(2, '0'),
+    ].join('-');
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: date31,
     }]);
     const result = await recoverStreak('mem-1');
     expect(result.success).toBe(true);
