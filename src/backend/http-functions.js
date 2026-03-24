@@ -1882,6 +1882,72 @@ export async function get_cleanupRateLimitCron(request) {
   }
 }
 
+// ── Notification Retry Cron ───────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/processNotificationQueueCron
+// Runs every 5min. Retries failed PendingNotifications rows up to MAX_RETRIES (3)
+// with exponential backoff (30s, 60s, 120s). Authenticated via X-Cron-Secret header.
+// CF-hbz
+export async function get_processNotificationQueueCron(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const { getPendingRetries, markSent, markFailed } = await import('backend/utils/pendingNotifications');
+    const rows = await getPendingRetries(50);
+
+    let retried = 0;
+    let delivered = 0;
+    let failed = 0;
+
+    for (const row of rows) {
+      try {
+        const { memberId, type, message, extra = {} } = row.payload || {};
+        await wixData.insert('Notifications', {
+          memberId,
+          type,
+          message,
+          read: false,
+          createdAt: new Date(),
+          ...extra,
+        }, { suppressAuth: true });
+        await markSent(row._id);
+        retried++;
+        delivered++;
+      } catch (err) {
+        console.error('HTTP function error (notificationQueueCron — retry failed):', err);
+        await markFailed(row._id, row.retries);
+        retried++;
+        failed++;
+      }
+    }
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        processed: retried,
+        delivered,
+        failed,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (processNotificationQueueCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
 // ── Leaderboard Endpoint ──────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/leaderboard
 // Two paths:

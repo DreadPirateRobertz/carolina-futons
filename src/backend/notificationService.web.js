@@ -414,6 +414,8 @@ export function _resetGetMyNotificationsRateLimit() {
 
 /**
  * Write a gamification push notification to the Notifications CMS collection.
+ * Queues the attempt in PendingNotifications before sending so the cron can
+ * retry on transient failure.
  * Idempotent for streak_milestone (deduplicates on memberId + milestone) and
  * streak_danger (deduplicates on memberId + dangerDate).
  * Quest complete and challenge_reminder notifications are not deduplicated.
@@ -427,8 +429,9 @@ export function _resetGetMyNotificationsRateLimit() {
 async function writeNotification(memberId, type, message, extra = {}) {
   if (!memberId) return;
 
-  try {
-    if (type === 'streak_milestone' && extra.milestone != null) {
+  // Dedup check for streak milestones before queuing
+  if (type === 'streak_milestone' && extra.milestone != null) {
+    try {
       const existing = await wixData
         .query(NOTIFICATIONS_COLLECTION)
         .eq('memberId', memberId)
@@ -437,7 +440,13 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .limit(1)
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
-    } else if (type === 'streak_danger' && extra.dangerDate) {
+    } catch (err) {
+      console.error('[notificationService] writeNotification dedup check failed:', err);
+    }
+  }
+
+  if (type === 'streak_danger' && extra.dangerDate) {
+    try {
       const existing = await wixData
         .query(NOTIFICATIONS_COLLECTION)
         .eq('memberId', memberId)
@@ -446,8 +455,23 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .limit(1)
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
+    } catch (err) {
+      console.error('[notificationService] writeNotification dedup check failed:', err);
     }
+  }
 
+  // Enqueue before attempting — cron retries on failure
+  const { enqueueNotification, markSent, markFailed } = await import('backend/utils/pendingNotifications');
+  let queuedId;
+  try {
+    const queued = await enqueueNotification({ userId: memberId, type, payload: { memberId, type, message, extra } });
+    queuedId = queued._id;
+  } catch (err) {
+    console.error('[notificationService] writeNotification enqueue failed:', err);
+    // If we cannot queue, fall through to best-effort direct insert
+  }
+
+  try {
     await wixData.insert(NOTIFICATIONS_COLLECTION, {
       memberId,
       type,
@@ -456,8 +480,10 @@ async function writeNotification(memberId, type, message, extra = {}) {
       createdAt: new Date(),
       ...extra,
     }, { suppressAuth: true });
+    if (queuedId) await markSent(queuedId);
   } catch (err) {
     logError('[notificationService] writeNotification failed', err);
+    if (queuedId) await markFailed(queuedId, 0);
   }
 }
 
