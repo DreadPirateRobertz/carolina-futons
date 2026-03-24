@@ -21,6 +21,7 @@ import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 // ── Challenge catalog constants ───────────────────────────────────────────────
 const CHALLENGE_DEFS_COLLECTION = 'ChallengeDefinitions';
@@ -257,7 +258,29 @@ export const getLeaderboard = webMethod(
       }
 
       const res = await query.limit(safeLimit).find({ suppressAuth: true });
-      const entries = res.items.map((item, idx) => ({
+
+      // Filter to members who have opted in to the leaderboard (privacy-default: false).
+      // Single batch query to avoid N+1 round-trips.
+      const memberIds = res.items.map(item => item.memberId).filter(Boolean);
+      let optedInSet = new Set();
+      if (memberIds.length > 0) {
+        try {
+          const prefsRes = await wixData
+            .query('MemberGamificationPreferences')
+            .hasSome('memberId', memberIds)
+            .limit(memberIds.length)
+            .find({ suppressAuth: true });
+          for (const pref of prefsRes.items) {
+            if (pref.leaderboardOptIn === true) optedInSet.add(pref.memberId);
+          }
+        } catch (err) {
+          logError('[loyaltyService] getLeaderboard prefs batch query failed', err);
+          /* optedInSet stays empty — all members filtered out, better than silently using stale data */
+        }
+      }
+      const optedInItems = res.items.filter(item => optedInSet.has(item.memberId));
+
+      const entries = optedInItems.map((item, idx) => ({
         rank: idx + 1,
         memberId: item.memberId,
         nickname: item.nickname ?? '',

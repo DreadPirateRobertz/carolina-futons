@@ -16,6 +16,7 @@ import { getTierForPoints } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET } from 'backend/utils/dateUtils';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
+import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -183,6 +184,10 @@ export const getSpinEligibility = webMethod(
   async (memberId) => {
     if (!memberId) return { eligible: false, reason: 'NO_MEMBER' };
     try {
+      const prefs = await getGamePrefsForMember(memberId);
+      if (prefs.spinWheelVisible === false) {
+        return { eligible: false, reason: 'PREF_DISABLED' };
+      }
       if (!(await withinRateLimit(memberId))) {
         return { eligible: false, reason: 'RATE_LIMITED', spinType: null, nextETMidnightMs: nextETMidnightMs() };
       }

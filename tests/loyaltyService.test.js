@@ -359,6 +359,11 @@ describe('getLeaderboard', () => {
       { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
       { memberId: 'mem-c', nickname: 'Carol', points: 250, tier: 'Bronze', lastActivityDate: new Date() },
     ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'p-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'p-b', memberId: 'mem-b', leaderboardOptIn: true },
+      { _id: 'p-c', memberId: 'mem-c', leaderboardOptIn: true },
+    ]);
     const result = await getLeaderboard();
     expect(result.entries.map(e => e.memberId)).toEqual(['mem-a', 'mem-c', 'mem-b']);
   });
@@ -369,6 +374,11 @@ describe('getLeaderboard', () => {
       { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
       { memberId: 'mem-b', nickname: 'Bob', points: 300, tier: 'Bronze', lastActivityDate: new Date() },
       { memberId: 'mem-c', nickname: 'Carol', points: 100, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'p-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'p-b', memberId: 'mem-b', leaderboardOptIn: true },
+      { _id: 'p-c', memberId: 'mem-c', leaderboardOptIn: true },
     ]);
     const result = await getLeaderboard();
     expect(result.entries[0].rank).toBe(1);
@@ -382,6 +392,10 @@ describe('getLeaderboard', () => {
       { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
       { memberId: 'mem-b', nickname: 'Bob', points: 300, tier: 'Bronze', lastActivityDate: new Date() },
     ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'p-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'p-b', memberId: 'mem-b', leaderboardOptIn: true },
+    ]);
     const result = await getLeaderboard();
     expect(result.entries.find(e => e.memberId === 'mem-a').isCurrentUser).toBe(false);
     expect(result.entries.find(e => e.memberId === 'mem-b').isCurrentUser).toBe(true);
@@ -394,6 +408,9 @@ describe('getLeaderboard', () => {
       points: 1000 - i * 10, tier: 'Bronze', lastActivityDate: new Date(),
     }));
     __seed('LoyaltyAccounts', items);
+    __seed('MemberGamificationPreferences', items.map((item, i) => ({
+      _id: `p-${i}`, memberId: item.memberId, leaderboardOptIn: true,
+    })));
     const result = await getLeaderboard({ limit: 100 });
     expect(result.entries.length).toBeLessThanOrEqual(50);
   });
@@ -409,6 +426,10 @@ describe('getLeaderboard', () => {
     __seed('LoyaltyAccounts', [
       { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
       { memberId: 'mem-b', nickname: 'Bob', points: 700, tier: 'Gold', lastActivityDate: beforeWeek },
+    ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'p-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'p-b', memberId: 'mem-b', leaderboardOptIn: true },
     ]);
     const result = await getLeaderboard({ period: 'weekly' });
     expect(result.entries).toHaveLength(1);
@@ -616,5 +637,76 @@ describe('recordChallengeCompleteEvent', () => {
     const ledger = __getInserted('PointsLedger');
     expect(ledger).toHaveLength(1);
     expect(ledger[0].description).toBe('unknown-ch completed');
+  });
+});
+
+// ── CF-thb: getLeaderboard — leaderboardOptIn preference gate ────────────────
+
+describe('getLeaderboard — leaderboardOptIn gate', () => {
+  beforeEach(() => {
+    resetData();
+    resetMembers();
+  });
+
+  it('excludes members where leaderboardOptIn is false', async () => {
+    __setMember({ _id: 'mem-viewer' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-b', nickname: 'Bob',   points: 300, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'pref-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'pref-b', memberId: 'mem-b', leaderboardOptIn: false },
+    ]);
+    const result = await getLeaderboard();
+    const ids = result.entries.map(e => e.memberId);
+    expect(ids).toContain('mem-a');
+    expect(ids).not.toContain('mem-b');
+  });
+
+  it('excludes members with no preferences record (default leaderboardOptIn: false)', async () => {
+    __setMember({ _id: 'mem-viewer' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-opt-in',  nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-no-pref', nickname: 'Bob',   points: 300, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    // Only mem-opt-in has a preferences record with leaderboardOptIn: true
+    __seed('MemberGamificationPreferences', [
+      { _id: 'pref-1', memberId: 'mem-opt-in', leaderboardOptIn: true },
+    ]);
+    const result = await getLeaderboard();
+    const ids = result.entries.map(e => e.memberId);
+    expect(ids).toContain('mem-opt-in');
+    expect(ids).not.toContain('mem-no-pref');
+  });
+
+  it('returns empty entries when no members have opted in', async () => {
+    __setMember({ _id: 'mem-viewer' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+    ]);
+    // No MemberGamificationPreferences → default is opt-out
+    const result = await getLeaderboard();
+    expect(result.entries).toHaveLength(0);
+  });
+
+  it('includes all opted-in members and assigns sequential ranks', async () => {
+    __setMember({ _id: 'mem-viewer' });
+    __seed('LoyaltyAccounts', [
+      { memberId: 'mem-a', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
+      { memberId: 'mem-b', nickname: 'Bob',   points: 300, tier: 'Bronze', lastActivityDate: new Date() },
+      { memberId: 'mem-c', nickname: 'Carol', points: 100, tier: 'Bronze', lastActivityDate: new Date() },
+    ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'pref-a', memberId: 'mem-a', leaderboardOptIn: true },
+      { _id: 'pref-b', memberId: 'mem-b', leaderboardOptIn: true },
+      // mem-c has no prefs → excluded
+    ]);
+    const result = await getLeaderboard();
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries[0].memberId).toBe('mem-a');
+    expect(result.entries[0].rank).toBe(1);
+    expect(result.entries[1].memberId).toBe('mem-b');
+    expect(result.entries[1].rank).toBe(2);
   });
 });

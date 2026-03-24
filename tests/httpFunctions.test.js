@@ -1721,6 +1721,9 @@ describe('get_leaderboard', () => {
     __seed('LoyaltyAccounts', [
       { memberId: 'mem-1', nickname: 'Alice', points: 500, tier: 'Silver', lastActivityDate: new Date() },
     ]);
+    __seed('MemberGamificationPreferences', [
+      { _id: 'p-1', memberId: 'mem-1', leaderboardOptIn: true },
+    ]);
     const result = await get_leaderboard(makeLeaderboardRequest());
     expect(result.status).toBe(200);
     const body = JSON.parse(result.body);
