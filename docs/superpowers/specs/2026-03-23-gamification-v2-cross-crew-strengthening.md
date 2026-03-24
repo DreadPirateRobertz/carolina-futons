@@ -222,7 +222,7 @@ Create the following beads immediately after Stilgar approves this spec:
 - `CF-p6v2` — Phase 6 v2: social share card + birthday week + anniversary (miquella)
 - `CF-p7v2` — Phase 7 v2: weatherLabel + animationHint + CF+ golden hour (radahn)
 - `CF-p8-reply` — Phase 8: postMessage reply channel in illustrations (radahn)
-- `CF-p8-bus` — Phase 8: cross-rig event bus Wix webMethod + webhook receiver (rennala) **Blocked on `CF-hard-clockfix` + `CF-hard-idempotency`**
+- `CF-p8-bus` — see rennala sequenced list item 4 (not a separate creation action — owned and sequenced by rennala in Track D)
 
 **Backend hardening — Track D (rennala, sequenced — do NOT run in parallel):**
 1. `CF-hard-clockfix` — P0: streak clock fix (`currentStreakDays`, webhook `ts`, `gamificationEventReceiver.web.js`) — **first, unblocks CF-p2v2 + CF-p4v2**
@@ -237,7 +237,7 @@ Create the following beads immediately after Stilgar approves this spec:
 - `cm-p8-bus` — Phase 8 mobile event emitter: streak_extended, challenge_started, redemption_initiated with `eventId` UUID v4 (dallas)
 - `cm-spin` — Spin wheel port **spike** (dallas): **1-day time-box.** Deliverable: written recommendation to melania covering native vs WebView tradeoffs + whether Phase 1 Lottie asset is usable in React Native. New bead created only on melania approval.
 
-**Total: 15 new beads + 1 renamed (`CF-hard-clockfix` split from hardening). Rennala beads are sequenced, not parallel. All others dispatchable same day.**
+**Total: 16 unique beads across 4 tracks. Rennala's 6 are sequenced (not parallel). All Track B + Track C beads dispatchable same day pending spec approval.**
 
 ---
 
