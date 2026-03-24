@@ -1,7 +1,7 @@
 /**
  * @file loyaltyCalendarRewards.test.js
  * @description TDD tests for CF-p6v2 calendar-based rewards:
- *   checkBirthdayReward  — 7-day birthday window, once per year
+ *   checkBirthdayReward  — 7-day birthday window, once per year (birthday fetched from CMS)
  *   checkAnniversaryReward — 1-year and 2-year purchase anniversaries
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -21,6 +21,29 @@ vi.mock('backend/utils/errorHandler', () => ({
   logError: vi.fn(),
 }));
 
+// ── wix-data mock (MemberProfiles CMS) ────────────────────────────────────────
+
+const mockFind = vi.fn();
+const mockLimit = vi.fn().mockReturnValue({ find: mockFind });
+const mockEq    = vi.fn().mockReturnValue({ limit: mockLimit });
+const mockQuery = vi.fn().mockReturnValue({ eq: mockEq });
+
+vi.mock('wix-data', () => ({
+  default: { query: mockQuery },
+}));
+
+/** Helper: configure the MemberProfiles mock to return a profile with the given birthday. */
+function setProfileBirthday(month, day) {
+  mockFind.mockResolvedValue({
+    items: [{ birthdayMonth: month, birthdayDay: day }],
+  });
+}
+
+/** Helper: configure the MemberProfiles mock to return no profile. */
+function setNoProfile() {
+  mockFind.mockResolvedValue({ items: [] });
+}
+
 // Set fake timers before import so getTodayET() sees our frozen clock
 vi.useFakeTimers();
 vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
@@ -33,6 +56,8 @@ const { checkBirthdayReward, checkAnniversaryReward } = await import(
 
 beforeEach(() => {
   __reset();
+  // Default: profile has birthday Mar 22 (today)
+  setProfileBirthday(3, 22);
 });
 
 afterEach(() => {
@@ -43,8 +68,8 @@ afterEach(() => {
 
 describe('checkBirthdayReward', () => {
   it('awards points when today is within the birthday window', async () => {
-    // birthday Mar 22 — today IS the birthday
-    const result = await checkBirthdayReward('acc-1', '03-22', 'mem-1');
+    // CMS profile has birthday Mar 22 — today IS the birthday
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
     expect(result.success).toBe(true);
     expect(result.pointsAwarded).toBe(100);
     expect(accounts.earnPoints).toHaveBeenCalledTimes(1);
@@ -52,14 +77,16 @@ describe('checkBirthdayReward', () => {
 
   it('awards points when today is 3 days before birthday', async () => {
     // birthday Mar 25 — today is Mar 22 (3 days before)
-    const result = await checkBirthdayReward('acc-1', '03-25', 'mem-1');
+    setProfileBirthday(3, 25);
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
     expect(result.success).toBe(true);
     expect(result.pointsAwarded).toBe(100);
   });
 
   it('skips when today is outside the birthday window (4+ days away)', async () => {
     // birthday Apr 1 — today is Mar 22 (10 days before)
-    const result = await checkBirthdayReward('acc-1', '04-01', 'mem-1');
+    setProfileBirthday(4, 1);
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
     expect(result.success).toBe(false);
     expect(result.reason).toBe('outside_window');
     expect(accounts.earnPoints).not.toHaveBeenCalled();
@@ -67,38 +94,68 @@ describe('checkBirthdayReward', () => {
 
   it('is idempotent — does not double-award in the same year', async () => {
     // Award once
-    await checkBirthdayReward('acc-1', '03-22', 'mem-1');
+    await checkBirthdayReward('acc-1', 'mem-1');
     // Award again same day
-    await checkBirthdayReward('acc-1', '03-22', 'mem-1');
+    await checkBirthdayReward('acc-1', 'mem-1');
     // Wix idempotencyKey deduplication: earnPoints called twice with same key
     // Both calls happen but Wix dedupes on the key — our contract is success both times
     expect(accounts.earnPoints).toHaveBeenCalledTimes(2);
-    const firstKey = accounts.earnPoints.mock.calls[0][1].idempotencyKey;
+    const firstKey  = accounts.earnPoints.mock.calls[0][1].idempotencyKey;
     const secondKey = accounts.earnPoints.mock.calls[1][1].idempotencyKey;
     expect(firstKey).toBe(secondKey); // same deterministic key = Wix dedupes
   });
 
   it('uses year-scoped idempotency key (mem-1_birthday_2026)', async () => {
-    await checkBirthdayReward('acc-1', '03-22', 'mem-1');
+    await checkBirthdayReward('acc-1', 'mem-1');
     const key = accounts.earnPoints.mock.calls[0][1].idempotencyKey;
     expect(key).toBe('mem-1_birthday_2026');
   });
 
   it('returns early when accountId is missing', async () => {
-    const result = await checkBirthdayReward(null, '03-22', 'mem-1');
+    const result = await checkBirthdayReward(null, 'mem-1');
     expect(result.success).toBe(false);
     expect(accounts.earnPoints).not.toHaveBeenCalled();
   });
 
-  it('returns early when birthdayMMDD is missing', async () => {
-    const result = await checkBirthdayReward('acc-1', null, 'mem-1');
+  it('returns early when memberId is missing', async () => {
+    const result = await checkBirthdayReward('acc-1', null);
     expect(result.success).toBe(false);
     expect(accounts.earnPoints).not.toHaveBeenCalled();
+  });
+
+  it('returns no_birthday_on_file when profile has no birthday fields', async () => {
+    mockFind.mockResolvedValue({ items: [{ memberId: 'mem-1' }] }); // no birthdayMonth/Day
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_birthday_on_file');
+    expect(accounts.earnPoints).not.toHaveBeenCalled();
+  });
+
+  it('returns no_birthday_on_file when profile is not found in CMS', async () => {
+    setNoProfile();
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_birthday_on_file');
+    expect(accounts.earnPoints).not.toHaveBeenCalled();
+  });
+
+  it('returns profile_fetch_failed when wixData.query throws', async () => {
+    mockFind.mockRejectedValueOnce(new Error('DB error'));
+    const result = await checkBirthdayReward('acc-1', 'mem-1');
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('profile_fetch_failed');
+    expect(accounts.earnPoints).not.toHaveBeenCalled();
+  });
+
+  it('queries MemberProfiles with the correct memberId', async () => {
+    await checkBirthdayReward('acc-1', 'mem-42');
+    expect(mockQuery).toHaveBeenCalledWith('MemberProfiles');
+    expect(mockEq).toHaveBeenCalledWith('memberId', 'mem-42');
   });
 
   it('does not throw when earnPoints rejects', async () => {
     accounts.earnPoints.mockRejectedValueOnce(new Error('Wix error'));
-    await expect(checkBirthdayReward('acc-1', '03-22', 'mem-1')).resolves.not.toThrow();
+    await expect(checkBirthdayReward('acc-1', 'mem-1')).resolves.not.toThrow();
   });
 });
 

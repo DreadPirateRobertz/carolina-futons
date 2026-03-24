@@ -8,6 +8,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
+import wixData from 'wix-data';
 import { validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, isBirthdayWindow, getAnniversaryYear } from 'backend/utils/dateUtils';
@@ -123,36 +124,58 @@ export const ANNIVERSARY_POINTS = { 1: 150, 2: 250 };
 
 /**
  * Award the 7-day birthday window reward (100 pts).
+ * Fetches the member's birthday from MemberProfiles CMS — callers must not
+ * pass birthday data directly to prevent injection of arbitrary dates.
  * Idempotent: uses memberId + year as the idempotency key so Wix deduplicates
  * even if called multiple times within the same calendar year.
  *
  * @param {string} accountId - Wix loyalty account ID
- * @param {string|null} birthdayMMDD - "MM-DD"
- * @param {string} memberId - Used to build the idempotency key
+ * @param {string} memberId - Member ID; used to fetch birthday + build idempotency key
  * @returns {Promise<{success: boolean, pointsAwarded?: number, reason?: string}>}
  */
-export async function checkBirthdayReward(accountId, birthdayMMDD, memberId) {
-  if (!accountId || !birthdayMMDD) return { success: false, reason: 'missing_params' };
+export const checkBirthdayReward = webMethod(
+  Permissions.Admin,
+  async (accountId, memberId) => {
+    if (!accountId || !memberId) return { success: false, reason: 'missing_params' };
 
-  const todayET = getTodayET();
-  if (!isBirthdayWindow(birthdayMMDD, todayET)) {
-    return { success: false, reason: 'outside_window' };
-  }
+    // Fetch birthday from CMS — prevents callers from passing arbitrary dates
+    let birthdayMMDD = null;
+    try {
+      const result = await wixData.query('MemberProfiles')
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
+      const profile = result.items[0];
+      if (profile?.birthdayMonth != null && profile?.birthdayDay != null) {
+        birthdayMMDD = `${String(profile.birthdayMonth).padStart(2, '0')}-${String(profile.birthdayDay).padStart(2, '0')}`;
+      }
+    } catch (err) {
+      logError(`[loyaltyBonusPoints] checkBirthdayReward: profile fetch failed — member: ${memberId}`, err);
+      return { success: false, reason: 'profile_fetch_failed' };
+    }
 
-  const year = todayET.slice(0, 4);
-  try {
-    await accounts.earnPoints(accountId, {
-      points: BONUS_POINTS.BIRTHDAY,
-      description: 'Bonus: birthday week reward',
-      appId: APP_ID,
-      idempotencyKey: `${memberId}_birthday_${year}`,
-    });
-    return { success: true, pointsAwarded: BONUS_POINTS.BIRTHDAY };
-  } catch (err) {
-    logError(`[loyaltyBonusPoints] checkBirthdayReward failed — account: ${accountId}`, err);
-    return { success: false, message: 'Failed to award birthday points' };
+    if (!birthdayMMDD) return { success: false, reason: 'no_birthday_on_file' };
+
+    const todayET = getTodayET();
+    if (!isBirthdayWindow(birthdayMMDD, todayET)) {
+      return { success: false, reason: 'outside_window' };
+    }
+
+    const year = todayET.slice(0, 4);
+    try {
+      await accounts.earnPoints(accountId, {
+        points: BONUS_POINTS.BIRTHDAY,
+        description: 'Bonus: birthday week reward',
+        appId: APP_ID,
+        idempotencyKey: `${memberId}_birthday_${year}`,
+      });
+      return { success: true, pointsAwarded: BONUS_POINTS.BIRTHDAY };
+    } catch (err) {
+      logError(`[loyaltyBonusPoints] checkBirthdayReward failed — account: ${accountId}`, err);
+      return { success: false, message: 'Failed to award birthday points' };
+    }
   }
-}
+);
 
 /**
  * Award the 1-year or 2-year purchase anniversary reward.
@@ -164,7 +187,9 @@ export async function checkBirthdayReward(accountId, birthdayMMDD, memberId) {
  * @param {string} memberId - Used to build the idempotency key
  * @returns {Promise<{success: boolean, anniversaryYear?: number, pointsAwarded?: number, reason?: string}>}
  */
-export async function checkAnniversaryReward(accountId, firstPurchaseDateStr, memberId) {
+export const checkAnniversaryReward = webMethod(
+  Permissions.Admin,
+  async (accountId, firstPurchaseDateStr, memberId) => {
   if (!accountId) return { success: false, reason: 'missing_params' };
 
   const todayET = getTodayET();
@@ -185,4 +210,4 @@ export async function checkAnniversaryReward(accountId, firstPurchaseDateStr, me
     logError(`[loyaltyBonusPoints] checkAnniversaryReward failed — account: ${accountId}`, err);
     return { success: false, message: 'Failed to award anniversary points' };
   }
-}
+});

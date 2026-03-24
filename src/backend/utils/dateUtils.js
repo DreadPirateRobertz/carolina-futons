@@ -18,14 +18,14 @@ export function getTodayET() {
 }
 
 /**
- * Returns yesterday's date as "YYYY-MM-DD" in Eastern Time.
- * Uses calendar-day subtraction via Date.UTC to avoid DST off-by-one errors.
- * DO NOT use Date.now() - 86400000 — spring-forward day is 23h, fall-back is 25h.
+ * Returns the date one calendar day before the given ET date string.
+ * Uses Date.UTC arithmetic to avoid DST off-by-one errors.
+ * DO NOT use ms subtraction — spring-forward day is 23h, fall-back is 25h.
+ * @param {string} etDate - "YYYY-MM-DD"
  * @returns {string}
  */
-export function getYesterdayET() {
-  const today = getTodayET(); // e.g. "2026-03-22"
-  const [y, m, d] = today.split('-').map(Number);
+export function getYesterdayOf(etDate) {
+  const [y, m, d] = etDate.split('-').map(Number);
   // Date.UTC with d-1=0 correctly resolves to last day of previous month.
   const yesterday = new Date(Date.UTC(y, m - 1, d - 1));
   return [
@@ -33,6 +33,27 @@ export function getYesterdayET() {
     String(yesterday.getUTCMonth() + 1).padStart(2, '0'),
     String(yesterday.getUTCDate()).padStart(2, '0'),
   ].join('-');
+}
+
+/**
+ * Returns yesterday's date as "YYYY-MM-DD" in Eastern Time.
+ * @returns {string}
+ */
+export function getYesterdayET() {
+  return getYesterdayOf(getTodayET());
+}
+
+/**
+ * Converts a Unix timestamp in seconds to "YYYY-MM-DD" in Eastern Time.
+ * Use this instead of getTodayET() when you have an event origin timestamp
+ * (e.g. webhook payload.ts) to avoid streak breaks from delivery lag.
+ * @param {number} tsSeconds - Unix timestamp in seconds
+ * @returns {string}
+ */
+export function tsToETDate(tsSeconds) {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/New_York',
+  }).format(new Date(tsSeconds * 1000));
 }
 
 /**
