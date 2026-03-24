@@ -264,4 +264,12 @@ describe('renderChallengeCard — countdown integration', () => {
     renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
     expect(card.$expiresLabel.text).toMatch(/^Expires /);
   });
+
+  it('shows empty string when challenge has already expired', () => {
+    const now = new Date('2026-03-23T12:00:00Z').getTime();
+    const expires = new Date('2026-03-23T10:00:00Z').toISOString(); // 2h ago
+    const card = makeCard();
+    renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
+    expect(card.$expiresLabel.text).toBe('');
+  });
 });

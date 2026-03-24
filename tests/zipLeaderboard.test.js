@@ -24,6 +24,7 @@ describe('getZipLeaderboard — input validation', () => {
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
     expect(result.myRank).toBeNull();
+    expect(result.zipPrefix).toBeNull();
   });
 
   it('returns empty result when member has no MemberPoints record', async () => {
@@ -31,6 +32,7 @@ describe('getZipLeaderboard — input validation', () => {
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
     expect(result.myRank).toBeNull();
+    expect(result.zipPrefix).toBeNull();
   });
 
   it('returns empty result when member has no zipCode', async () => {
@@ -38,6 +40,7 @@ describe('getZipLeaderboard — input validation', () => {
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
     expect(result.myRank).toBeNull();
+    expect(result.zipPrefix).toBeNull();
   });
 
   it('returns empty result when zipCode is too short', async () => {
@@ -45,6 +48,7 @@ describe('getZipLeaderboard — input validation', () => {
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
     expect(result.myRank).toBeNull();
+    expect(result.zipPrefix).toBeNull();
   });
 });
 
@@ -78,6 +82,18 @@ describe('getZipLeaderboard — leaderboardOptIn gate', () => {
     ]);
     const result = await getZipLeaderboard();
     expect(result.leaderboard).toEqual([]);
+  });
+
+  it('returns leaderboard with myRank: null when caller is not opted in', async () => {
+    // Caller (mem-1) not opted in — still gets leaderboard view, but myRank is null
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', totalPoints: 300, zipCode: '28201', leaderboardOptIn: false },
+      { _id: 'mp-2', memberId: 'mem-2', totalPoints: 500, zipCode: '28215', displayName: 'Bob', leaderboardOptIn: true },
+    ]);
+    const result = await getZipLeaderboard();
+    expect(result.myRank).toBeNull();
+    expect(result.leaderboard.map(e => e.memberId)).toContain('mem-2');
+    expect(result.leaderboard.map(e => e.memberId)).not.toContain('mem-1');
   });
 });
 

@@ -55,8 +55,9 @@ export const getZipLeaderboard = webMethod(
         .limit(LEADERBOARD_CAP)
         .find({ suppressAuth: true });
 
-      // Determine whether the caller appears in the top-10.
-      // myRank stays null if they ranked outside the cap or haven't opted in.
+      // Determine whether the caller appears in the top-LEADERBOARD_CAP.
+      // myRank stays null if they ranked outside the cap or haven't opted in
+      // (non-opted-in caller's record is fetched in query 1 but absent from query 2).
       let myRank = null;
       const leaderboard = prefixResult.items.map((item, idx) => {
         const rank = idx + 1;
@@ -66,7 +67,7 @@ export const getZipLeaderboard = webMethod(
           rank,
           memberId: item.memberId,
           displayName: item.displayName || '',
-          totalPoints: item.totalPoints || 0,
+          totalPoints: item.totalPoints ?? 0,
           isMe,
         };
       });
