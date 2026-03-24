@@ -1882,6 +1882,81 @@ export async function get_cleanupRateLimitCron(request) {
   }
 }
 
+// ── Notification Retry Cron ───────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/processNotificationQueueCron
+// Runs every 5min. Two query branches:
+//   1. status='failed', retries < MAX_RETRIES, nextRetryAt <= now  (normal retry)
+//   2. status='pending', updatedAt <= now - 2min                   (stale/stranded rows)
+// Stale rows arise when the process dies between enqueueNotification and markSent/markFailed.
+// Authenticated via X-Cron-Secret header (ALERT_CRON_KEY in Secrets Manager).
+// CF-hbz
+export async function get_processNotificationQueueCron(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const { getPendingRetries, getStalePending, markSent, markFailed } = await import('backend/utils/pendingNotifications');
+    const [retryRows, staleRows] = await Promise.all([getPendingRetries(50), getStalePending(50)]);
+    // Merge both branches; dedup by _id in case of any overlap
+    const seen = new Set();
+    const rows = [];
+    for (const row of [...retryRows, ...staleRows]) {
+      if (!seen.has(row._id)) { seen.add(row._id); rows.push(row); }
+    }
+
+    let retried = 0;
+    let delivered = 0;
+    let failed = 0;
+
+    for (const row of rows) {
+      try {
+        const { memberId, type, message, extra = {} } = row.payload || {};
+        await wixData.insert('Notifications', {
+          memberId,
+          type,
+          message,
+          read: false,
+          createdAt: new Date(),
+          ...extra,
+        }, { suppressAuth: true });
+        await markSent(row._id);
+        retried++;
+        delivered++;
+      } catch (err) {
+        console.error('HTTP function error (notificationQueueCron — retry failed):', err);
+        await markFailed(row._id, row.retries);
+        retried++;
+        failed++;
+      }
+    }
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        processed: retried,
+        delivered,
+        failed,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (processNotificationQueueCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
 // ── Leaderboard Endpoint ──────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/leaderboard
 // Two paths:
