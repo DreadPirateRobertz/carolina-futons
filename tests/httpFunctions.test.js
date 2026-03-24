@@ -29,6 +29,7 @@ import {
   _resetLeaderboardRateLimit,
   get_cleanupRateLimitCron,
   get_badges,
+  _resetBadgesRateLimit,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -2038,6 +2039,7 @@ describe('get_badges', () => {
 
   beforeEach(() => {
     resetData();
+    _resetBadgesRateLimit();
     __seed('MemberBadges', []);
     __seed('Badges', []);
     __seed('BadgesPublicRateLimit', []);

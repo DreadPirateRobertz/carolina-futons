@@ -2012,6 +2012,11 @@ export async function get_leaderboard(request) {
 // Public (SiteVisitor) — used by mobile Phase 8 social layer and web member page.
 // Returns earned badges for a member with metadata joined from the Badges catalog.
 // Rate limit: 30 req/min per requested memberId (prevents enumeration).
+
+// Exported for testing only — badges rate limit is CMS-backed (no in-memory state to clear).
+// Call in beforeEach alongside resetData() to match the convention of all rate-limited endpoints.
+export function _resetBadgesRateLimit() { /* no-op: CMS state cleared by resetData() */ }
+
 export async function get_badges(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=30' };
   const json = (obj) => JSON.stringify(obj);
@@ -2038,11 +2043,12 @@ export async function get_badges(request) {
       });
     }
 
-    // Fetch member's earned badges
+    // Fetch member's earned badges (limit 100 — Wix default is 50, explicit cap prevents silent truncation)
     const memberBadgesResult = await wixData
       .query('MemberBadges')
       .eq('memberId', memberId)
       .descending('_createdDate')
+      .limit(100)
       .find({ suppressAuth: true });
 
     if (memberBadgesResult.items.length === 0) {
