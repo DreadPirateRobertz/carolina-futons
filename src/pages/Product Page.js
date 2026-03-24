@@ -588,11 +588,7 @@ export async function initCatalogVideos($wFn, pageState) {
 
     try { $wFn('#productVideoCatalogTitle').text = primary.title || 'Product Video'; } catch (e) {}
 
-    if (iframeHtml) {
-      try { $wFn('#productVideoCatalogEmbed').src = iframeHtml; } catch (e) {}
-    } else {
-      try { $wFn('#productVideoCatalogEmbed').src = primary.mp4Url; } catch (e) {}
-    }
+    try { $wFn('#productVideoCatalogEmbed').src = iframeHtml || primary.mp4Url; } catch (e) {}
 
     try {
       $wFn('#productVideoContainer').accessibility.role = 'region';
