@@ -206,7 +206,7 @@ export const getLoyaltyTiers = webMethod(
 export const getMyStreakData = webMethod(
   Permissions.SiteMember,
   async () => {
-    const defaults = { currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null };
+    const defaults = { currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null, totalPoints: 0, lastStreakRecoveryDate: null };
     try {
       const member = await currentMember.getMember();
       if (!member?._id) return defaults;
@@ -221,6 +221,8 @@ export const getMyStreakData = webMethod(
         streakMultiplier: record.streakMultiplier ?? 1,
         streakStartDate: record.streakStartDate ?? null,
         lastActivityDate: record.lastActivityDate ?? null,
+        totalPoints: record.totalPoints ?? 0,
+        lastStreakRecoveryDate: record.lastStreakRecoveryDate ?? null,
       };
     } catch {
       return defaults;
