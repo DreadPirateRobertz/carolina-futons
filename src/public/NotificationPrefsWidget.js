@@ -17,8 +17,10 @@
  * CF-rpsx
  */
 
-import { getNotificationPrefs as _defaultGetPrefs } from 'backend/gamificationEventReceiver.web';
-import { updateNotificationPrefs as _defaultUpdatePrefs } from 'backend/gamificationEventReceiver.web';
+import {
+  getNotificationPrefs as _defaultGetPrefs,
+  updateNotificationPrefs as _defaultUpdatePrefs,
+} from 'backend/gamificationEventReceiver.web';
 
 const TOGGLE_MAP = [
   { id: '#notifStreakToggle', key: 'streakReminders' },

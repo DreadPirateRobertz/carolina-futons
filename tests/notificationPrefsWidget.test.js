@@ -177,13 +177,14 @@ describe('initNotificationPrefsWidget — save', () => {
     expect($w('#notifSaveStatus').show).toHaveBeenCalled();
   });
 
-  it('shows error message when save returns error shape', async () => {
+  it('shows error message and status element when save returns error shape', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.updateNotificationPrefs.mockResolvedValue({ error: 'forbidden' });
     await initNotificationPrefsWidget(MEMBER_ID, opts);
     const handler = $w('#notifSaveBtn').onClick.mock.calls[0][0];
     await handler();
     expect($w('#notifSaveStatus').text).toBe('Failed to save. Please try again.');
+    expect($w('#notifSaveStatus').show).toHaveBeenCalled();
   });
 });
 
@@ -264,11 +265,16 @@ describe('initNotificationPrefsWidget — error handling', () => {
     );
   });
 
-  it('shows #notifError when getNotificationPrefs returns error shape', async () => {
+  it('shows #notifError and disables all controls on error-shape response', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockResolvedValue({ error: 'auth_required' });
     await initNotificationPrefsWidget(MEMBER_ID, opts);
     expect($w('#notifError').show).toHaveBeenCalled();
     expect($w('#notifStreakToggle').disable).toHaveBeenCalled();
+    expect($w('#notifQuestToggle').disable).toHaveBeenCalled();
+    expect($w('#notifTierToggle').disable).toHaveBeenCalled();
+    expect($w('#notifPromoToggle').disable).toHaveBeenCalled();
+    expect($w('#notifDigestToggle').disable).toHaveBeenCalled();
+    expect($w('#notifSaveBtn').disable).toHaveBeenCalled();
   });
 });

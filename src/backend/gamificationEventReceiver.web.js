@@ -1288,18 +1288,22 @@ export const updateNotificationPrefs = webMethod(
       logError('updateNotificationPrefs — called without memberId');
       return { error: 'missing_member_id' };
     }
+    if (!prefs || typeof prefs !== 'object') {
+      return { error: 'invalid_prefs' };
+    }
 
     try {
+      const updates = {};
+      for (const key of PREF_KEYS) {
+        if (key in prefs) updates[key] = !!prefs[key];
+      }
+      if (Object.keys(updates).length === 0) return { success: true };
+
       const result = await wixData
         .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
         .eq('memberId', memberId)
         .limit(1)
         .find({ suppressAuth: true });
-
-      const updates = {};
-      for (const key of PREF_KEYS) {
-        if (key in prefs) updates[key] = !!prefs[key];
-      }
 
       if (result.items.length > 0) {
         const record = result.items[0];
