@@ -1445,3 +1445,60 @@ export const getShareableProgress = webMethod(
     return { tierName: tierInfo.tierName, totalPoints, streak, topBadges, shareText, shareUrl };
   }
 );
+
+// ── Milestone definitions (CF-lhrg) ─────────────────────────────────────────
+
+const MILESTONES = [
+  { milestoneId: 'first-purchase',   title: 'First Purchase',   description: 'Complete your first order',       targetValue: 1,  reward: '100 bonus points',                        field: 'orderCount' },
+  { milestoneId: 'loyal-customer',   title: 'Loyal Customer',   description: 'Complete 5 orders',               targetValue: 5,  reward: '500 bonus points + free shipping coupon', field: 'orderCount' },
+  { milestoneId: 'top-reviewer',     title: 'Top Reviewer',     description: 'Write 10 reviews',                targetValue: 10, reward: '1000 bonus points + badge',               field: 'reviewCount' },
+  { milestoneId: 'social-butterfly', title: 'Social Butterfly', description: 'Share 5 wishlists',               targetValue: 5,  reward: '250 bonus points',                        field: 'wishlistShareCount' },
+  { milestoneId: 'streak-master',    title: 'Streak Master',    description: 'Maintain a 30-day login streak',  targetValue: 30, reward: '2000 bonus points + exclusive badge',     field: 'longestStreak' },
+];
+
+/**
+ * Get milestone progress for a member.
+ * Returns [{milestoneId, title, description, currentValue, targetValue, reward, isUnlocked}].
+ *
+ * CF-lhrg
+ *
+ * @param {string} memberId
+ * @returns {Promise<Array<{ milestoneId: string, title: string, description: string, currentValue: number, targetValue: number, reward: string, isUnlocked: boolean }>>}
+ */
+export const getMilestones = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    const [memberResult, reviewResult, wishlistResult] = await Promise.all([
+      findMemberRecord(memberId),
+      wixData.query('AnalyticsEvents')
+        .eq('memberId', memberId)
+        .eq('eventType', 'review')
+        .find({ suppressAuth: true }),
+      wixData.query('AnalyticsEvents')
+        .eq('memberId', memberId)
+        .eq('eventType', 'wishlist_share')
+        .find({ suppressAuth: true }),
+    ]);
+
+    const record = memberResult;
+    const counts = {
+      orderCount: record?.orderCount ?? 0,
+      reviewCount: reviewResult.totalCount,
+      wishlistShareCount: wishlistResult.totalCount,
+      longestStreak: record?.longestStreak ?? 0,
+    };
+
+    return MILESTONES.map((m) => {
+      const currentValue = Math.min(counts[m.field] ?? 0, m.targetValue);
+      return {
+        milestoneId: m.milestoneId,
+        title: m.title,
+        description: m.description,
+        currentValue,
+        targetValue: m.targetValue,
+        reward: m.reward,
+        isUnlocked: currentValue >= m.targetValue,
+      };
+    });
+  }
+);
