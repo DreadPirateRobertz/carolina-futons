@@ -900,3 +900,32 @@ export const getStreakData = webMethod(
     };
   }
 );
+
+/**
+ * Get top-N leaderboard entries sorted by totalPoints DESC.
+ * Returns [{ nickname, totalPoints, rank, avatarUrl, memberId }].
+ *
+ * CF-ttcd
+ *
+ * @param {number} [limit=10] - Max entries to return
+ * @returns {Promise<Array<{ nickname: string, totalPoints: number, rank: number, avatarUrl: string|null, memberId: string }>>}
+ */
+export const getLeaderboard = webMethod(
+  Permissions.Anyone,
+  async (limit = 10) => {
+    const result = await wixData
+      .query(MEMBER_POINTS_COLLECTION)
+      .eq('leaderboardOptIn', true)
+      .descending('totalPoints')
+      .limit(limit)
+      .find({ suppressAuth: true });
+
+    return result.items.map((item, i) => ({
+      rank: i + 1,
+      nickname: item.displayName ?? 'Anonymous',
+      totalPoints: item.totalPoints ?? 0,
+      avatarUrl: item.avatarUrl ?? null,
+      memberId: item.memberId ?? null,
+    }));
+  }
+);

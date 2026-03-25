@@ -1,91 +1,100 @@
 /**
  * @module LeaderboardWidget
- * @description Member dashboard leaderboard showing top-10 members by points,
- * with opt-in toggle and current-member row highlight.
+ * @description Displays top-10 members by points on member dashboard.
  *
  * Elements:
- *   #leaderboardRepeater    — Repeater displaying top-10 entries
- *   #leaderboardOptInToggle — Checkbox/toggle controlling leaderboard visibility
- *   #leaderboardOptOutMsg   — Message shown when member opts out
+ *   #leaderboardTitle    — Text: "Community Leaderboard"
+ *   #leaderboardRepeater — Repeater displaying top-10 entries
+ *   #leaderboardYourRank — Text: "Your rank: #N" (or hidden if not ranked)
+ *   #leaderboardEmpty    — Shown on error or empty data
  *
  * Repeater item elements:
- *   #rankText    — Rank label: Gold/Silver/Bronze for 1–3, #N for 4–10
- *   #nickText    — Member nickname
- *   #pointsText  — Points total
+ *   #leaderRank   — Rank label: "Gold"/"Silver"/"Bronze" for 1-3, "#N" for 4+
+ *   #leaderName   — Member nickname
+ *   #leaderPoints — Points formatted with commas + " pts"
+ *   #leaderAvatar — Image element (src = avatarUrl)
  *
- * CF-9svi
+ * CF-ttcd
  */
 
-import { getLeaderboard as _defaultGetLeaderboard, setLeaderboardOptIn as _defaultSetLeaderboardOptIn, getLeaderboardOptIn as _defaultGetLeaderboardOptIn } from 'backend/leaderboardService.web';
+import { getLeaderboard as _defaultGetLeaderboard } from 'backend/gamificationEventReceiver.web';
 
 const RANK_LABELS = { 1: 'Gold', 2: 'Silver', 3: 'Bronze' };
+const RANK_CLASSES = { 1: 'rank-gold', 2: 'rank-silver', 3: 'rank-bronze' };
 
 function rankLabel(rank) {
   return RANK_LABELS[rank] ?? `#${rank}`;
 }
 
-function applyOptInState($w, optedIn) {
-  if (optedIn) {
-    try { $w('#leaderboardRepeater').show(); } catch (e) {}
-    try { $w('#leaderboardOptOutMsg').hide(); } catch (e) {}
-  } else {
-    try { $w('#leaderboardRepeater').hide(); } catch (e) {}
-    try { $w('#leaderboardOptOutMsg').show(); } catch (e) {}
-  }
+function formatPoints(n) {
+  return `${Number(n).toLocaleString('en-US')} pts`;
 }
 
 /**
  * Initialise the leaderboard widget.
  *
- * @param {string}   memberId  Current member ID (for row highlight and opt-in calls)
+ * @param {string}   memberId  Current member ID (for "Your rank" display)
  * @param {Object}   [opts]    Injectable overrides (for testing)
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getLeaderboard]
- * @param {Function} [opts.setLeaderboardOptIn]
- * @param {Function} [opts.getLeaderboardOptIn]
+ * @param {string}   [opts.currentMemberId] — alias for memberId in tests
  */
 export async function initLeaderboardWidget(memberId, opts = {}) {
   const $w = opts.$w ?? globalThis.$w;
-  const getLeaderboard = opts.getLeaderboard ?? (() => _defaultGetLeaderboard());
-  const setLeaderboardOptIn = opts.setLeaderboardOptIn ?? ((id, val) => _defaultSetLeaderboardOptIn(id, val));
-  const getLeaderboardOptIn = opts.getLeaderboardOptIn ?? ((id) => _defaultGetLeaderboardOptIn(id));
+  const getLeaderboard = opts.getLeaderboard ?? ((limit) => _defaultGetLeaderboard(limit));
+  const currentMemberId = opts.currentMemberId ?? memberId;
 
-  // Fetch leaderboard and opt-in state in parallel
-  const [leaderboardResult, optInResult] = await Promise.allSettled([
-    getLeaderboard(),
-    getLeaderboardOptIn(memberId),
-  ]);
+  try { $w('#leaderboardTitle').text = 'Community Leaderboard'; } catch {}
 
-  if (leaderboardResult.status === 'fulfilled') {
-    const entries = leaderboardResult.value;
-
-    try {
-      $w('#leaderboardRepeater').data = entries;
-    } catch (e) {}
-
-    try {
-      $w('#leaderboardRepeater').onItemReady(($item, $w2, item) => {
-        try { $w2('#rankText').text = rankLabel(item.rank); } catch (e) {}
-        try { $w2('#nickText').text = item.nickname; } catch (e) {}
-        try { $w2('#pointsText').text = String(item.points); } catch (e) {}
-        if (item.memberId === memberId) {
-          try { $item.addClass('current-member'); } catch (e) {}
-        }
-      });
-    } catch (e) {}
-  } else {
-    try { $w('#leaderboardRepeater').hide(); } catch (e) {}
+  let entries;
+  try {
+    entries = await getLeaderboard(10);
+  } catch {
+    entries = null;
   }
 
-  const optedIn = optInResult.status === 'fulfilled' ? optInResult.value : true;
-  applyOptInState($w, optedIn);
+  if (!entries || entries.length === 0) {
+    try { $w('#leaderboardEmpty').show(); } catch {}
+    try { $w('#leaderboardRepeater').hide(); } catch {}
+    try { $w('#leaderboardYourRank').hide(); } catch {}
+    return;
+  }
 
-  // Wire opt-in toggle
+  try { $w('#leaderboardEmpty').hide(); } catch {}
+  try { $w('#leaderboardRepeater').show(); } catch {}
+
   try {
-    $w('#leaderboardOptInToggle').onChange(async (event) => {
-      const newValue = event.target.checked;
-      try { await setLeaderboardOptIn(memberId, newValue); } catch (e) {}
-      applyOptInState($w, newValue);
+    $w('#leaderboardRepeater').data = entries;
+  } catch {}
+
+  try {
+    $w('#leaderboardRepeater').onItemReady(($item, itemData) => {
+      try { $item('#leaderRank').text = rankLabel(itemData.rank); } catch {}
+      try { $item('#leaderName').text = itemData.nickname; } catch {}
+      try { $item('#leaderPoints').text = formatPoints(itemData.totalPoints); } catch {}
+      try { if (itemData.avatarUrl) { $item('#leaderAvatar').src = itemData.avatarUrl; } } catch {}
+
+      // Top 3 styling
+      const rankClass = RANK_CLASSES[itemData.rank];
+      if (rankClass) {
+        try { $item('#leaderRank').addClass(rankClass); } catch {}
+      }
+
+      // Highlight current member
+      if (itemData.memberId === currentMemberId) {
+        try { $item.addClass('current-member'); } catch {}
+      }
     });
-  } catch (e) {}
+  } catch {}
+
+  // Your rank
+  const myEntry = entries.find(e => e.memberId === currentMemberId);
+  if (myEntry) {
+    try {
+      $w('#leaderboardYourRank').text = `Your rank: #${myEntry.rank}`;
+      $w('#leaderboardYourRank').show();
+    } catch {}
+  } else {
+    try { $w('#leaderboardYourRank').hide(); } catch {}
+  }
 }

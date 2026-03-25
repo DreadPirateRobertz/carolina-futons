@@ -1,294 +1,276 @@
 /**
- * leaderboardWidget.test.js
- * CF-9svi — LeaderboardWidget: top-10 display with opt-in toggle
+ * @file leaderboardWidget.test.js
+ * @description Tests for CF-ttcd: LeaderboardWidget — top 10 members by points on dashboard.
+ *
+ * Covers:
+ *  - renders top 10 entries with rank labels, names, points, avatars
+ *  - gold/silver/bronze styling for top 3
+ *  - highlights current user with "current-member" class
+ *  - shows "Your rank: #N" for current user
+ *  - hides "Your rank" when user not in top 10
+ *  - error shows #leaderboardEmpty and hides repeater
+ *  - does not throw on reject
+ *  - respects limit parameter
+ *
+ * CF-ttcd
  */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { initLeaderboardWidget } from '../src/public/LeaderboardWidget.js';
 
-// ── $w mock helpers ──────────────────────────────────────────────────────────
+// ── $w mock helpers ───────────────────────────────────────────────────────────
 
 function makeEl() {
   return {
     text: '',
-    _class: '',
+    src: '',
     _visible: true,
-    show: vi.fn(function () { this._visible = true; }),
-    hide: vi.fn(function () { this._visible = false; }),
-    onChange: vi.fn(),
-    checked: true,
-    addClass: vi.fn(function (cls) { this._class = cls; }),
-    removeClass: vi.fn(),
-  };
-}
-
-function makeRepeaterItem() {
-  return {
-    '#rankText':   makeEl(),
-    '#nickText':   makeEl(),
-    '#pointsText': makeEl(),
-    _class: '',
-    addClass: vi.fn(function (cls) { this._class = cls; }),
-    removeClass: vi.fn(),
+    _classes: [],
+    show:     vi.fn(function () { this._visible = true; }),
+    hide:     vi.fn(function () { this._visible = false; }),
+    addClass: vi.fn(function (cls) { this._classes.push(cls); }),
   };
 }
 
 function make$w() {
-  const repeaterItems = [];
-
   const repeater = {
     ...makeEl(),
     data: null,
-    _forEachCb: null,
-    onItemReady: vi.fn(function (cb) { this._forEachCb = cb; }),
+    _onItemReady: null,
+    onItemReady: vi.fn(function (cb) { this._onItemReady = cb; }),
   };
 
   const els = {
-    '#leaderboardRepeater':  repeater,
-    '#leaderboardOptInToggle': makeEl(),
-    '#leaderboardOptOutMsg': makeEl(),
+    '#leaderboardTitle':    makeEl(),
+    '#leaderboardRepeater': repeater,
+    '#leaderboardYourRank': makeEl(),
+    '#leaderboardEmpty':    makeEl(),
   };
 
-  const $w = (id) => {
-    if (els[id]) return els[id];
-    return makeEl();
-  };
-
-  // Allow tests to retrieve captured item callbacks
+  const $w = (id) => els[id] ?? makeEl();
+  $w._els = els;
   $w._repeater = repeater;
-  $w._items = repeaterItems;
   return $w;
 }
 
-// ── Leaderboard data helpers ──────────────────────────────────────────────────
+function fireItemReady($w, itemData) {
+  const $item = (sel) => {
+    if (!$item._els[sel]) $item._els[sel] = makeEl();
+    return $item._els[sel];
+  };
+  $item._els = {};
+  $item._classes = [];
+  $item.addClass = vi.fn((cls) => { $item._classes.push(cls); });
 
-function makeEntry(rank, nickname, points, memberId = null) {
-  return { rank, nickname, points, memberId: memberId ?? `mem-${rank}` };
+  $w._repeater._onItemReady?.($item, itemData);
+  return $item;
 }
 
-function makeTop10(currentMemberId = null) {
-  return Array.from({ length: 10 }, (_, i) => {
-    const rank = i + 1;
-    const id = rank === 5 && currentMemberId ? currentMemberId : `mem-${rank}`;
-    return makeEntry(rank, `Player${rank}`, (11 - rank) * 100, id);
-  });
-}
+// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const MEMBER_ID = 'mem-current';
 
-function makeOpts($w, entries, optedIn = true) {
+function makeEntry(rank, overrides = {}) {
   return {
-    $w,
-    getLeaderboard: vi.fn().mockResolvedValue(entries),
-    setLeaderboardOptIn: vi.fn().mockResolvedValue(undefined),
-    getLeaderboardOptIn: vi.fn().mockResolvedValue(optedIn),
+    rank,
+    nickname: `Player ${rank}`,
+    totalPoints: (11 - rank) * 1000,
+    avatarUrl: `https://example.com/avatar${rank}.png`,
+    memberId: `mem-${rank}`,
+    ...overrides,
   };
 }
 
-// ── Repeater rendering ────────────────────────────────────────────────────────
+function makeTop10(currentMemberRank = null) {
+  return Array.from({ length: 10 }, (_, i) => {
+    const rank = i + 1;
+    const overrides = rank === currentMemberRank ? { memberId: MEMBER_ID } : {};
+    return makeEntry(rank, overrides);
+  });
+}
 
-describe('initLeaderboardWidget — repeater data', () => {
-  let $w;
-  beforeEach(() => { $w = make$w(); });
+function makeOpts($w, entries, extra = {}) {
+  return {
+    $w,
+    getLeaderboard: vi.fn().mockResolvedValue(entries),
+    ...extra,
+  };
+}
 
-  it('sets repeater data to top-10 entries', async () => {
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('title', () => {
+  it('sets #leaderboardTitle to "Community Leaderboard"', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    expect($w._els['#leaderboardTitle'].text).toBe('Community Leaderboard');
+  });
+});
+
+describe('renders top 10', () => {
+  it('sets repeater data to entries array', async () => {
+    const $w = make$w();
     const entries = makeTop10();
-    const opts = makeOpts($w, entries);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    expect($w('#leaderboardRepeater').data).toEqual(entries);
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, entries));
+    expect($w._repeater.data).toBe(entries);
   });
 
-  it('calls getLeaderboard with no arguments', async () => {
+  it('shows repeater when entries exist', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    expect($w._repeater.show).toHaveBeenCalled();
+  });
+
+  it('hides #leaderboardEmpty when entries exist', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    expect($w._els['#leaderboardEmpty'].hide).toHaveBeenCalled();
+  });
+
+  it('sets #leaderRank text for rank 1', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(1));
+    expect($item._els['#leaderRank'].text).toBe('Gold');
+  });
+
+  it('sets #leaderName text', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(5, { nickname: 'TestUser' }));
+    expect($item._els['#leaderName'].text).toBe('TestUser');
+  });
+
+  it('sets #leaderPoints with comma formatting and "pts" suffix', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(1, { totalPoints: 10000 }));
+    expect($item._els['#leaderPoints'].text).toBe('10,000 pts');
+  });
+
+  it('sets #leaderAvatar src', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(1, { avatarUrl: 'https://example.com/av.png' }));
+    expect($item._els['#leaderAvatar'].src).toBe('https://example.com/av.png');
+  });
+
+  it('calls getLeaderboard with limit 10', async () => {
+    const $w = make$w();
     const opts = makeOpts($w, makeTop10());
     await initLeaderboardWidget(MEMBER_ID, opts);
-    expect(opts.getLeaderboard).toHaveBeenCalledWith();
+    expect(opts.getLeaderboard).toHaveBeenCalledWith(10);
   });
 });
 
-// ── Rank labels ───────────────────────────────────────────────────────────────
-
-describe('initLeaderboardWidget — rank labels', () => {
-  let $w;
-  let onItemReadyCb;
-
-  beforeEach(() => {
-    $w = make$w();
-    $w('#leaderboardRepeater').onItemReady.mockImplementation(function (cb) {
-      onItemReadyCb = cb;
-    });
+describe('top 3 styling', () => {
+  it('adds "rank-gold" class for rank 1', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(1));
+    expect($item._els['#leaderRank'].addClass).toHaveBeenCalledWith('rank-gold');
   });
 
-  function fireItemReady(rank, memberId = `mem-${rank}`) {
-    const item = makeEntry(rank, `Player${rank}`, (11 - rank) * 100, memberId);
-    const $item = makeRepeaterItem();
-    const itemSelector = (id) => $item[id] ?? makeEl();
-    onItemReadyCb($item, itemSelector, item);
-    return { $item, itemSelector };
-  }
-
-  it('rank 1 shows Gold label', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(1);
-    expect(itemSelector('#rankText').text).toBe('Gold');
+  it('adds "rank-silver" class for rank 2', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(2));
+    expect($item._els['#leaderRank'].addClass).toHaveBeenCalledWith('rank-silver');
   });
 
-  it('rank 2 shows Silver label', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(2);
-    expect(itemSelector('#rankText').text).toBe('Silver');
+  it('adds "rank-bronze" class for rank 3', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(3));
+    expect($item._els['#leaderRank'].addClass).toHaveBeenCalledWith('rank-bronze');
   });
 
-  it('rank 3 shows Bronze label', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(3);
-    expect(itemSelector('#rankText').text).toBe('Bronze');
+  it('rank labels: Gold, Silver, Bronze for 1-3', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    expect(fireItemReady($w, makeEntry(1))._els['#leaderRank'].text).toBe('Gold');
+    expect(fireItemReady($w, makeEntry(2))._els['#leaderRank'].text).toBe('Silver');
+    expect(fireItemReady($w, makeEntry(3))._els['#leaderRank'].text).toBe('Bronze');
   });
 
-  it('rank 4 shows numeric label "#4"', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(4);
-    expect(itemSelector('#rankText').text).toBe('#4');
+  it('rank label "#N" for rank 4+', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(7));
+    expect($item._els['#leaderRank'].text).toBe('#7');
   });
 
-  it('rank 10 shows numeric label "#10"', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(10);
-    expect(itemSelector('#rankText').text).toBe('#10');
-  });
-
-  it('sets nickname text', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(3);
-    expect(itemSelector('#nickText').text).toBe('Player3');
-  });
-
-  it('sets points text', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(3);
-    expect(itemSelector('#pointsText').text).toBe('800');
+  it('does not add rank class for rank 4+', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(5));
+    expect($item._els['#leaderRank'].addClass).not.toHaveBeenCalled();
   });
 });
 
-// ── Current member highlight ──────────────────────────────────────────────────
-
-describe('initLeaderboardWidget — current member highlight', () => {
-  let $w;
-  let onItemReadyCb;
-
-  beforeEach(() => {
-    $w = make$w();
-    $w('#leaderboardRepeater').onItemReady.mockImplementation(function (cb) {
-      onItemReadyCb = cb;
-    });
-  });
-
-  function fireItemReady(rank, memberId) {
-    const item = makeEntry(rank, `Player${rank}`, (11 - rank) * 100, memberId);
-    const $item = makeRepeaterItem();
-    const itemSelector = (id) => $item[id] ?? makeEl();
-    onItemReadyCb($item, itemSelector, item);
-    return { $item, itemSelector };
-  }
-
-  it('adds current-member class to row when memberId matches', async () => {
-    const entries = makeTop10(MEMBER_ID);  // rank 5 is current member
-    const opts = makeOpts($w, entries);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { $item } = fireItemReady(5, MEMBER_ID);
+describe('highlights current user', () => {
+  it('adds "current-member" class when item memberId matches', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10(3)));
+    const $item = fireItemReady($w, makeEntry(3, { memberId: MEMBER_ID }));
     expect($item.addClass).toHaveBeenCalledWith('current-member');
   });
 
-  it('does not add current-member class to other rows', async () => {
-    const entries = makeTop10(MEMBER_ID);
-    const opts = makeOpts($w, entries);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const { $item } = fireItemReady(1, 'mem-1');
+  it('does not add "current-member" class for other members', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    const $item = fireItemReady($w, makeEntry(5));
     expect($item.addClass).not.toHaveBeenCalledWith('current-member');
   });
-});
 
-// ── Opt-in toggle ─────────────────────────────────────────────────────────────
-
-describe('initLeaderboardWidget — opt-in toggle', () => {
-  let $w;
-  beforeEach(() => { $w = make$w(); });
-
-  it('wires onChange on #leaderboardOptInToggle', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    expect($w('#leaderboardOptInToggle').onChange).toHaveBeenCalled();
+  it('shows "Your rank: #N" when current member is in top 10', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10(5)));
+    expect($w._els['#leaderboardYourRank'].text).toBe('Your rank: #5');
+    expect($w._els['#leaderboardYourRank'].show).toHaveBeenCalled();
   });
 
-  it('shows repeater when member is opted in', async () => {
-    const opts = makeOpts($w, makeTop10(), true);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    expect($w('#leaderboardRepeater').show).toHaveBeenCalled();
-    expect($w('#leaderboardOptOutMsg').hide).toHaveBeenCalled();
-  });
-
-  it('hides repeater and shows opt-out message when member is opted out', async () => {
-    const opts = makeOpts($w, makeTop10(), false);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    expect($w('#leaderboardRepeater').hide).toHaveBeenCalled();
-    expect($w('#leaderboardOptOutMsg').show).toHaveBeenCalled();
-  });
-
-  it('toggle onChange calls setLeaderboardOptIn with memberId and new value', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const handler = $w('#leaderboardOptInToggle').onChange.mock.calls[0][0];
-    await handler({ target: { checked: false } });
-    expect(opts.setLeaderboardOptIn).toHaveBeenCalledWith(MEMBER_ID, false);
-  });
-
-  it('toggle onChange shows opt-out message when unchecked', async () => {
-    const opts = makeOpts($w, makeTop10());
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const handler = $w('#leaderboardOptInToggle').onChange.mock.calls[0][0];
-    await handler({ target: { checked: false } });
-    expect($w('#leaderboardRepeater').hide).toHaveBeenCalled();
-    expect($w('#leaderboardOptOutMsg').show).toHaveBeenCalled();
-  });
-
-  it('toggle onChange hides opt-out message when checked', async () => {
-    const opts = makeOpts($w, makeTop10(), false);
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    const handler = $w('#leaderboardOptInToggle').onChange.mock.calls[0][0];
-    await handler({ target: { checked: true } });
-    expect($w('#leaderboardRepeater').show).toHaveBeenCalled();
-    expect($w('#leaderboardOptOutMsg').hide).toHaveBeenCalled();
+  it('hides #leaderboardYourRank when current member is not in top 10', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, makeTop10()));
+    expect($w._els['#leaderboardYourRank'].hide).toHaveBeenCalled();
   });
 });
 
-// ── Error handling ────────────────────────────────────────────────────────────
+describe('error handling', () => {
+  it('shows #leaderboardEmpty when getLeaderboard returns null', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, null));
+    expect($w._els['#leaderboardEmpty'].show).toHaveBeenCalled();
+  });
 
-describe('initLeaderboardWidget — error handling', () => {
-  let $w;
-  beforeEach(() => { $w = make$w(); });
+  it('shows #leaderboardEmpty when getLeaderboard returns empty', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, []));
+    expect($w._els['#leaderboardEmpty'].show).toHaveBeenCalled();
+  });
+
+  it('hides repeater on empty data', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, []));
+    expect($w._repeater.hide).toHaveBeenCalled();
+  });
+
+  it('hides #leaderboardYourRank on empty data', async () => {
+    const $w = make$w();
+    await initLeaderboardWidget(MEMBER_ID, makeOpts($w, []));
+    expect($w._els['#leaderboardYourRank'].hide).toHaveBeenCalled();
+  });
+
+  it('shows #leaderboardEmpty when getLeaderboard rejects', async () => {
+    const $w = make$w();
+    const opts = { $w, getLeaderboard: vi.fn().mockRejectedValue(new Error('API down')) };
+    await initLeaderboardWidget(MEMBER_ID, opts);
+    expect($w._els['#leaderboardEmpty'].show).toHaveBeenCalled();
+  });
 
   it('does not throw when getLeaderboard rejects', async () => {
-    const opts = makeOpts($w, []);
-    opts.getLeaderboard.mockRejectedValue(new Error('Service down'));
-    await expect(initLeaderboardWidget(MEMBER_ID, opts)).resolves.not.toThrow();
-  });
-
-  it('hides repeater on getLeaderboard error', async () => {
-    const opts = makeOpts($w, []);
-    opts.getLeaderboard.mockRejectedValue(new Error('Service down'));
-    await initLeaderboardWidget(MEMBER_ID, opts);
-    expect($w('#leaderboardRepeater').hide).toHaveBeenCalled();
-  });
-
-  it('does not throw when getLeaderboardOptIn rejects', async () => {
-    const opts = makeOpts($w, makeTop10());
-    opts.getLeaderboardOptIn.mockRejectedValue(new Error('Service down'));
+    const $w = make$w();
+    const opts = { $w, getLeaderboard: vi.fn().mockRejectedValue(new Error('API down')) };
     await expect(initLeaderboardWidget(MEMBER_ID, opts)).resolves.not.toThrow();
   });
 });
