@@ -105,7 +105,8 @@ export const getProductStructuredData = webMethod(
         _createdDate: r._createdDate || '',
       }));
 
-      // Compute aggregate from all approved reviews (separate count query)
+      // Compute aggregate from all approved reviews (separate count query).
+      // Capped at 1000 — sufficient for furniture products; wixData has no cursor API.
       const countResult = await wixData.query(REVIEWS)
         .eq('productId', cleanId)
         .eq('status', 'approved')

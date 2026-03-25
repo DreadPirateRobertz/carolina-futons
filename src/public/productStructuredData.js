@@ -84,7 +84,8 @@ export async function initProductStructuredData(productId, opts = {}) {
   if (!data || !data.product) return;
 
   const schema = buildJsonLd(data);
-  const script = `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+  const safeJson = JSON.stringify(schema).replace(/<\//g, '<\\/');
+  const script = `<script type="application/ld+json">${safeJson}</script>`;
 
   try {
     $w('#productJsonLd').html = script;

@@ -333,6 +333,29 @@ describe('initProductStructuredData — edge cases', () => {
     expect($w('#productJsonLd')._html).toBe('');
   });
 
+  it('escapes </script> sequences to prevent XSS in JSON-LD', async () => {
+    const product = makeProduct({ name: 'Futon</script><script>alert(1)</script>' });
+    const opts = makeOpts($w, product, []);
+    await initProductStructuredData('prod-1', opts);
+    const html = $w('#productJsonLd')._html;
+    expect(html).not.toContain('</script><script>');
+    expect(html.match(/<\/script>/g)).toHaveLength(1); // only the closing tag
+  });
+
+  it('uses discountedPrice when available', async () => {
+    const product = makeProduct({ price: 499.99, discountedPrice: 399.99 });
+    const data = makeStructuredData(product, []);
+    // Backend maps discountedPrice ?? price, so simulate that
+    data.product.price = 399.99;
+    const opts = {
+      $w,
+      getProductStructuredData: vi.fn().mockResolvedValue(data),
+    };
+    await initProductStructuredData('prod-1', opts);
+    const json = extractJsonLd($w);
+    expect(json.offers.price).toBe('399.99');
+  });
+
   it('logs error when $w element throws', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const throwing$w = () => { throw new Error('Element not found'); };
