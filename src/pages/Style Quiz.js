@@ -341,6 +341,22 @@ async function submitQuiz() {
       // S4: Persist result and surface share URL for members
       const profile = buildStyleProfile(state.answers);
       saveAndShowShareUrl(state.answers, profile.title);
+
+      // CF-009p: Registration gate for non-logged-in visitors
+      import('public/StyleQuizRegistrationGate.js').then(({ initStyleQuizRegistrationGate }) => {
+        initStyleQuizRegistrationGate({
+          onRegistered: async (memberId) => {
+            // Save quiz result for the newly registered member
+            saveAndShowShareUrl(state.answers, profile.title);
+            // Award 100 bonus points
+            try {
+              const { receiveGamificationEvent } = await import('backend/gamificationEventReceiver.web');
+              await receiveGamificationEvent('gamification_quiz_signup_bonus', {}, memberId);
+            } catch (_) {}
+            trackEvent('quiz_registration_complete', { source: 'style-quiz' });
+          },
+        });
+      }).catch(() => {});
     }
   } catch (err) {
     console.error('Quiz recommendation error:', err);
