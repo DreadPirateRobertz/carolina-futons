@@ -56,12 +56,13 @@ export const awardBadge = webMethod(
       session = await currentMember.getMember();
     } catch (e) {
       logError(`achievementBadgeService.awardBadge.auth [member=${memberId}]`, e);
-      return null;
+      return { success: false, error: 'auth_required' };
     }
-    if (!session || session._id !== memberId) return null;
+    if (!session || !session._id) return { success: false, error: 'auth_required' };
+    if (session._id !== memberId) return { success: false, error: 'forbidden' };
 
     if (!BADGE_BY_ID[badgeId]) {
-      return { error: `Unknown badgeId: ${String(badgeId).slice(0, 50)}`, status: 400 };
+      return { success: false, error: `Unknown badgeId: ${String(badgeId).slice(0, 50)}`, status: 400 };
     }
 
     let existing;
@@ -73,7 +74,7 @@ export const awardBadge = webMethod(
         .find({ suppressAuth: true });
     } catch (e) {
       logError(`achievementBadgeService.awardBadge.query [member=${memberId}, badge=${badgeId}]`, e);
-      return null;
+      return { success: false, error: 'Unable to award badge' };
     }
 
     if (existing.items.length > 0) return { alreadyAwarded: true };
@@ -87,7 +88,7 @@ export const awardBadge = webMethod(
       }, { suppressAuth: true });
     } catch (e) {
       logError(`achievementBadgeService.awardBadge.insert [member=${memberId}, badge=${badgeId}]`, e);
-      return null;
+      return { success: false, error: 'Unable to award badge' };
     }
 
     return { awarded: true, badge: BADGE_BY_ID[badgeId] };
@@ -101,7 +102,7 @@ export const awardBadge = webMethod(
 export const getMemberBadges = webMethod(
   Permissions.Anyone,
   async (memberId) => {
-    if (!memberId) return [];
+    if (!memberId || typeof memberId !== 'string') return { badges: [] };
 
     try {
       const result = await wixData
@@ -110,15 +111,16 @@ export const getMemberBadges = webMethod(
         .ascending('awardedAt')
         .find({ suppressAuth: true });
 
-      return result.items.map(item => ({
+      const badges = result.items.map(item => ({
         badgeId:   item.badgeId,
         label:     BADGE_BY_ID[item.badgeId]?.label ?? item.badgeId,
         awardedAt: item.awardedAt,
         notified:  item.notified ?? false,
       }));
+      return { badges };
     } catch (e) {
       logError(`achievementBadgeService.getMemberBadges [member=${memberId}]`, e);
-      return [];
+      return { success: false, error: 'Unable to retrieve badges' };
     }
   }
 );
@@ -135,9 +137,10 @@ export const markBadgeNotified = webMethod(
       session = await currentMember.getMember();
     } catch (e) {
       logError(`achievementBadgeService.markBadgeNotified.auth [member=${memberId}]`, e);
-      return null;
+      return { success: false, error: 'auth_required' };
     }
-    if (!session || session._id !== memberId) return null;
+    if (!session || !session._id) return { success: false, error: 'auth_required' };
+    if (session._id !== memberId) return { success: false, error: 'forbidden' };
 
     let result;
     try {
@@ -148,7 +151,7 @@ export const markBadgeNotified = webMethod(
         .find({ suppressAuth: true });
     } catch (e) {
       logError(`achievementBadgeService.markBadgeNotified.query [member=${memberId}, badge=${badgeId}]`, e);
-      return null;
+      return { success: false, error: 'Unable to update badge' };
     }
 
     if (result.items.length === 0) return { notFound: true };
@@ -158,7 +161,7 @@ export const markBadgeNotified = webMethod(
       await wixData.update(COLLECTION, record, { suppressAuth: true });
     } catch (e) {
       logError(`achievementBadgeService.markBadgeNotified.update [member=${memberId}, badge=${badgeId}]`, e);
-      return null;
+      return { success: false, error: 'Unable to update badge' };
     }
 
     return { updated: true };
