@@ -23,6 +23,8 @@ import { getDailyQuests as _defaultGetDailyQuests } from 'backend/gamificationEv
 
 const TIMER_INTERVAL_MS = 60_000;
 
+let _timerInterval;
+
 /**
  * Format time remaining until next midnight UTC as "Nh Mm".
  * @returns {string}
@@ -38,6 +40,12 @@ function formatTimeToMidnight() {
   return `${hours}h ${minutes}m`;
 }
 
+function showErrorState($w) {
+  try { $w('#questsError').show(); } catch {}
+  try { $w('#questsRepeater').hide(); } catch {}
+  try { $w('#questsTimer').hide(); } catch {}
+}
+
 /**
  * Initialise the daily quests widget.
  *
@@ -48,23 +56,19 @@ function formatTimeToMidnight() {
  */
 export async function initDailyQuestsWidget(memberId, opts = {}) {
   const $w = opts.$w ?? globalThis.$w;
-  const getDailyQuests = opts.getDailyQuests ?? ((id) => _defaultGetDailyQuests(id));
+  const getDailyQuests = opts.getDailyQuests ?? _defaultGetDailyQuests;
 
   let quests;
   try {
     quests = await getDailyQuests(memberId);
   } catch {
-    try { $w('#questsError').show(); } catch {}
-    try { $w('#questsRepeater').hide(); } catch {}
-    try { $w('#questsTimer').hide(); } catch {}
+    showErrorState($w);
     return;
   }
 
   // Handle error-shape response (e.g. { error: 'auth_required' })
   if (quests && quests.error) {
-    try { $w('#questsError').show(); } catch {}
-    try { $w('#questsRepeater').hide(); } catch {}
-    try { $w('#questsTimer').hide(); } catch {}
+    showErrorState($w);
     return;
   }
 
@@ -84,22 +88,23 @@ export async function initDailyQuestsWidget(memberId, opts = {}) {
   try { $w('#questsRepeater').data = questList; } catch {}
 
   try {
-    $w('#questsRepeater').onItemReady(($item, $w2, item) => {
-      try { $w2('#questName').text = item.title ?? item.questId; } catch {}
-      try { $w2('#questDesc').text = item.description ?? ''; } catch {}
-      try { $w2('#questProgress').text = `${item.currentProgress} / ${item.targetProgress}`; } catch {}
-      try { $w2('#questReward').text = `${item.pointsReward} pts`; } catch {}
-      if (item.isComplete) {
-        try { $w2('#questCheckmark').show(); } catch {}
+    $w('#questsRepeater').onItemReady(($item, itemData) => {
+      try { $item('#questName').text = itemData.title ?? itemData.questId; } catch {}
+      try { $item('#questDesc').text = itemData.description ?? ''; } catch {}
+      try { $item('#questProgress').text = `${itemData.currentProgress} / ${itemData.targetProgress}`; } catch {}
+      try { $item('#questReward').text = `${itemData.pointsReward} pts`; } catch {}
+      if (itemData.isComplete) {
+        try { $item('#questCheckmark').show(); } catch {}
       } else {
-        try { $w2('#questCheckmark').hide(); } catch {}
+        try { $item('#questCheckmark').hide(); } catch {}
       }
     });
   } catch {}
 
-  // Countdown timer to midnight UTC
+  // Countdown timer to midnight UTC — clear previous interval on re-init
+  if (_timerInterval) clearInterval(_timerInterval);
   try { $w('#questsTimer').text = formatTimeToMidnight(); } catch {}
-  setInterval(() => {
+  _timerInterval = setInterval(() => {
     try { $w('#questsTimer').text = formatTimeToMidnight(); } catch {}
   }, TIMER_INTERVAL_MS);
 }
