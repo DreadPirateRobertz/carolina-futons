@@ -64,10 +64,10 @@ describe('initReferralWidget — rendering', () => {
     expect($w('#referralCount').text).toBe('3 friends referred');
   });
 
-  it('sets #referralCount text to "1 friends referred" for singular', async () => {
+  it('sets #referralCount text to "1 friend referred" for singular', async () => {
     const opts = makeOpts($w, makeStatus(1));
     await initReferralWidget(MEMBER_ID, opts);
-    expect($w('#referralCount').text).toBe('1 friends referred');
+    expect($w('#referralCount').text).toBe('1 friend referred');
   });
 
   it('sets #referralCount to "0 friends referred" when none', async () => {
@@ -155,5 +155,28 @@ describe('initReferralWidget — error handling', () => {
     opts.getReferralStatus.mockRejectedValue(new Error('Service down'));
     await initReferralWidget(MEMBER_ID, opts);
     expect($w('#copyLinkBtn').hide).toHaveBeenCalled();
+  });
+
+  it('shows error state on non-throwing error response { error: "auth_required" }', async () => {
+    const opts = makeOpts($w, { error: 'auth_required' });
+    await initReferralWidget(MEMBER_ID, opts);
+    expect($w('#referralErrorMsg').show).toHaveBeenCalled();
+    expect($w('#referralLink').hide).toHaveBeenCalled();
+    expect($w('#referralCount').hide).toHaveBeenCalled();
+    expect($w('#referralBonusStatus').hide).toHaveBeenCalled();
+    expect($w('#copyLinkBtn').hide).toHaveBeenCalled();
+  });
+
+  it('shows error state on { error: "forbidden" } response', async () => {
+    const opts = makeOpts($w, { error: 'forbidden' });
+    await initReferralWidget(MEMBER_ID, opts);
+    expect($w('#referralErrorMsg').show).toHaveBeenCalled();
+    expect($w('#referralLink').hide).toHaveBeenCalled();
+  });
+
+  it('does not destructure referralUrl from error response', async () => {
+    const opts = makeOpts($w, { error: 'auth_required' });
+    await initReferralWidget(MEMBER_ID, opts);
+    expect($w('#referralLink').text).toBe('');
   });
 });

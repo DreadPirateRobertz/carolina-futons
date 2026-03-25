@@ -44,10 +44,21 @@ export async function initReferralWidget(memberId, opts = {}) {
     return;
   }
 
+  // Handle error-shape response (backend returns { error } without throwing)
+  if (status.error) {
+    try { $w('#referralErrorMsg').show(); } catch (_) {}
+    try { $w('#referralLink').hide(); } catch (_) {}
+    try { $w('#referralCount').hide(); } catch (_) {}
+    try { $w('#referralBonusStatus').hide(); } catch (_) {}
+    try { $w('#copyLinkBtn').hide(); } catch (_) {}
+    return;
+  }
+
   const { referralUrl, completedReferrals } = status;
 
   try { $w('#referralLink').text = referralUrl; } catch (_) {}
-  try { $w('#referralCount').text = `${completedReferrals} friends referred`; } catch (_) {}
+  const countText = completedReferrals === 1 ? '1 friend referred' : `${completedReferrals} friends referred`;
+  try { $w('#referralCount').text = countText; } catch (_) {}
 
   const bonusText = completedReferrals > 0
     ? `${completedReferrals} x ${POINTS_PER_REFERRAL} pts earned`
