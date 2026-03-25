@@ -1,13 +1,14 @@
 /**
  * @module gamificationNotifs.web
- * @description Member notification preferences webMethods.
+ * @description Member notification preferences + challenge notification pipeline.
  * Split from gamificationEventReceiver.web.js for maintainability (CF-jz4r).
  *
  * Exported webMethods:
  *   getNotificationPrefs() — returns prefs for authenticated caller
  *   updateNotificationPrefs(prefs) — updates prefs for authenticated caller
+ *   notifyChallengePublished(challenge) — send email + SMS to opted-in members (CF-qhdo)
  *
- * CF-rpsx, CF-jz4r
+ * CF-rpsx, CF-jz4r, CF-qhdo
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -139,6 +140,106 @@ export const updateNotificationPrefs = webMethod(
     } catch (err) {
       logError(`updateNotificationPrefs — failed for member ${memberId}`, err);
       return { error: 'service_unavailable' };
+    }
+  }
+);
+
+// ── CF-qhdo: Challenge notification pipeline ──────────────────────────────────
+
+const SITE_URL = 'https://www.carolinafutons.com';
+
+/**
+ * Notify opted-in members about a new weekly challenge via email + SMS.
+ * Called when a new challenge is published (admin action or automation).
+ *
+ * - Email: uses triggered email template `challenge_new_weekly`
+ * - SMS: sends to members with SMS enabled in SMSPreferences
+ * - Only notifies members with `questAlerts: true` in MemberNotificationPrefs
+ *
+ * CF-qhdo
+ *
+ * @param {Object} challenge
+ * @param {string} challenge.title - Challenge title
+ * @param {string} [challenge.description] - Challenge description
+ * @param {number} challenge.rewardPoints - Points reward for completion
+ * @param {string} [challenge.rewardBadgeLabel] - Badge label (if any)
+ * @param {string} [challenge.expiresAt] - ISO date string
+ * @returns {Promise<{ success: boolean, emailsSent: number, smsSent: number }>}
+ */
+export const notifyChallengePublished = webMethod(
+  Permissions.Admin,
+  async (challenge) => {
+    if (!challenge?.title) {
+      logError('notifyChallengePublished — missing challenge title');
+      return { success: false, emailsSent: 0, smsSent: 0 };
+    }
+
+    try {
+      // 1. Find all members with questAlerts enabled
+      const prefsResult = await wixData
+        .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
+        .eq('questAlerts', true)
+        .limit(1000)
+        .find({ suppressAuth: true });
+
+      if (prefsResult.items.length === 0) {
+        return { success: true, emailsSent: 0, smsSent: 0 };
+      }
+
+      const memberIds = prefsResult.items
+        .map(p => p.memberId)
+        .filter(Boolean);
+
+      const rewardText = challenge.rewardBadgeLabel
+        ? `${challenge.rewardPoints} pts + ${challenge.rewardBadgeLabel} badge`
+        : `${challenge.rewardPoints} pts`;
+
+      const challengeUrl = `${SITE_URL}/account/my-account#challenges`;
+
+      // 2. Send emails via triggeredEmails.emailMember (best-effort per member)
+      let emailsSent = 0;
+      const { triggeredEmails } = await import('wix-crm-backend');
+
+      for (const memberId of memberIds) {
+        try {
+          await triggeredEmails.emailMember(
+            'challenge_new_weekly',
+            memberId,
+            {
+              variables: {
+                challengeTitle: challenge.title,
+                challengeDescription: challenge.description || '',
+                rewardText,
+                challengeUrl,
+                expiresAt: challenge.expiresAt || '',
+              },
+            }
+          );
+          emailsSent++;
+        } catch (err) {
+          logError(`notifyChallengePublished — email failed for ${memberId}`, err);
+        }
+      }
+
+      // 3. Send SMS to opted-in members via smsService (best-effort)
+      let smsSent = 0;
+      const { sendChallengeAlertSMS } = await import('backend/smsService.web');
+
+      const smsBody = `Carolina Futons Challenge: "${challenge.title}" — complete it to earn ${rewardText}! Details: ${challengeUrl}`;
+
+      for (const memberId of memberIds) {
+        try {
+          const result = await sendChallengeAlertSMS({ memberId, message: smsBody });
+          if (result.success) smsSent++;
+        } catch (err) {
+          logError(`notifyChallengePublished — SMS failed for ${memberId}`, err);
+        }
+      }
+
+      return { success: true, emailsSent, smsSent };
+    } catch (err) {
+      logError('notifyChallengePublished — pipeline failed', err);
+      return { success: false, emailsSent: 0, smsSent: 0 };
     }
   }
 );

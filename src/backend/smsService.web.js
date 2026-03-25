@@ -539,3 +539,49 @@ export const getSMSPreferences = webMethod(
     }
   }
 );
+
+// ── CF-qhdo: Challenge alert SMS ──────────────────────────────────────────────
+
+/**
+ * Send a challenge alert SMS to a member.
+ * Checks SMS preferences (smsEnabled + valid phone). No preference key gate
+ * beyond smsEnabled — challenge alerts are a new category.
+ *
+ * CF-qhdo
+ *
+ * @param {Object} params
+ * @param {string} params.memberId
+ * @param {string} params.message - SMS body text
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendChallengeAlertSMS = webMethod(
+  Permissions.Admin,
+  async ({ memberId, message } = {}) => {
+    try {
+      if (!memberId || !message) return { success: false, reason: 'invalid_input' };
+
+      const check = await checkPreferences(memberId, 'smsEnabled');
+      if (!check.allowed) return { success: false, reason: check.reason };
+
+      if (await isWithinCooldown(memberId, 'challenge_alert')) {
+        return { success: false, reason: 'cooldown' };
+      }
+
+      const result = await sendViaTwilio(check.phone, message);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId,
+        phone: check.phone,
+        messageType: 'challenge_alert',
+        messageBody: message,
+        twilioSid: result.sid || '',
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendChallengeAlertSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
