@@ -7,16 +7,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mock wixData ─────────────────────────────────────────────────────────────
 
-const mockQuery = {
-  eq: vi.fn().mockReturnThis(),
-  descending: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  find: vi.fn().mockResolvedValue({ items: [] }),
-};
-
 vi.mock('wix-data', () => ({
   default: {
-    query: vi.fn(() => ({ ...mockQuery, eq: vi.fn().mockReturnThis(), descending: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis(), find: mockQuery.find })),
+    query: vi.fn(),
     insert: vi.fn().mockResolvedValue({}),
     update: vi.fn().mockResolvedValue({}),
   },
@@ -54,42 +47,49 @@ const {
   getRewardsCatalog,
   redeemReward,
   getRedemptionHistory,
-  REWARD_CATALOG,
 } = await import('../src/backend/rewardsStore.web.js');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const MEMBER_ID = 'mem-store-1';
 
-function mockMemberPoints(totalPoints) {
-  wixData.query.mockImplementation(() => {
-    const q = {
-      eq: vi.fn().mockReturnThis(),
-      descending: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      find: vi.fn().mockResolvedValue({
-        items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints }],
-      }),
-    };
-    return q;
-  });
-}
-
-function mockNoMemberPoints() {
-  wixData.query.mockImplementation(() => ({
-    eq: vi.fn().mockReturnThis(),
-    descending: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    find: vi.fn().mockResolvedValue({ items: [] }),
-  }));
-}
-
-function mockRedemptionHistory(items = []) {
+function mockQueryResult(items) {
   wixData.query.mockImplementation(() => ({
     eq: vi.fn().mockReturnThis(),
     descending: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     find: vi.fn().mockResolvedValue({ items }),
+  }));
+}
+
+/**
+ * Mock for redeemReward flow. Query order:
+ * (1) member points read, (2) TOCTOU verify read, (3) coupon collision check.
+ * Tracks wixData.update to return correct post-deduction balance on verify.
+ */
+function mockMemberPoints(totalPoints) {
+  let updatedBalance = null;
+  let queryCount = 0;
+  wixData.update.mockImplementation(async (_coll, data) => {
+    if (data.totalPoints !== undefined) updatedBalance = data.totalPoints;
+    return data;
+  });
+  wixData.query.mockImplementation(() => ({
+    eq: vi.fn().mockReturnThis(),
+    descending: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    find: vi.fn().mockImplementation(async () => {
+      queryCount++;
+      if (queryCount === 1) {
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints }] };
+      }
+      if (queryCount === 2) {
+        // Verify read — return updated balance so TOCTOU check passes
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? totalPoints }] };
+      }
+      // Coupon collision check — no collision
+      return { items: [] };
+    }),
   }));
 }
 
@@ -140,32 +140,34 @@ describe('redeemReward', () => {
 
   it('returns error when memberId is missing', async () => {
     const result = await redeemReward(null, 'DISCOUNT_5');
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('missing_member_id');
   });
 
   it('returns error when rewardId is invalid', async () => {
     mockMemberPoints(1000);
     const result = await redeemReward(MEMBER_ID, 'NONEXISTENT');
-    expect(result.error).toMatch(/invalid/i);
+    expect(result.error).toBe('invalid_reward_id');
   });
 
   it('returns error when caller is not the member', async () => {
     currentMember.getMember.mockResolvedValue({ _id: 'different-member' });
     mockMemberPoints(1000);
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(result.error).toMatch(/forbidden/i);
+    expect(result.error).toBe('forbidden');
   });
 
-  it('returns error when points are insufficient', async () => {
+  it('returns error with required/current when points are insufficient', async () => {
     mockMemberPoints(100);
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(result.error).toMatch(/insufficient/i);
+    expect(result.error).toBe('insufficient_points');
+    expect(result.required).toBe(500);
+    expect(result.current).toBe(100);
   });
 
   it('returns error when no member record found', async () => {
-    mockNoMemberPoints();
+    mockQueryResult([]);
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('no_member_record');
   });
 
   it('deducts points on successful redemption', async () => {
@@ -176,20 +178,23 @@ describe('redeemReward', () => {
     expect(wixData.update).toHaveBeenCalled();
   });
 
-  it('returns a coupon code on success', async () => {
+  it('returns a coupon code matching CF-XXXXXXXX format', async () => {
     mockMemberPoints(1000);
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(result.couponCode).toBeDefined();
-    expect(typeof result.couponCode).toBe('string');
-    expect(result.couponCode.length).toBeGreaterThan(0);
+    expect(result.couponCode).toMatch(/^CF-[A-HJ-NP-Z2-9]{8}$/);
   });
 
-  it('inserts a redemption record', async () => {
+  it('inserts a redemption record into RewardRedemptions', async () => {
     mockMemberPoints(1000);
     await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(wixData.insert).toHaveBeenCalled();
-    const insertCall = wixData.insert.mock.calls[0];
-    expect(insertCall[0]).toBe('RewardRedemptions');
+    const insertCalls = wixData.insert.mock.calls;
+    const redemptionInsert = insertCalls.find(c => c[0] === 'RewardRedemptions');
+    expect(redemptionInsert).toBeDefined();
+    expect(redemptionInsert[1]).toMatchObject({
+      memberId: MEMBER_ID,
+      rewardId: 'DISCOUNT_5',
+      status: 'active',
+    });
   });
 
   it('inserts a ledger entry for the burn', async () => {
@@ -200,6 +205,7 @@ describe('redeemReward', () => {
         memberId: MEMBER_ID,
         operationType: 'burn',
         delta: -500,
+        reason: 'reward_redemption:DISCOUNT_5',
       }),
     );
   });
@@ -211,10 +217,39 @@ describe('redeemReward', () => {
     expect(result.newBalance).toBe(800);
   });
 
+  it('returns rewardName on success', async () => {
+    mockMemberPoints(1000);
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.rewardName).toBe('$5 Off Your Next Order');
+  });
+
   it('does not throw on service error', async () => {
     wixData.query.mockImplementation(() => { throw new Error('DB down'); });
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('service_unavailable');
+  });
+
+  it('detects TOCTOU race condition and returns concurrent_modification', async () => {
+    // Query order: (1) member points read, (2) TOCTOU verify read, (3+) coupon check
+    let queryCount = 0;
+    wixData.update.mockResolvedValue({});
+    wixData.insert.mockResolvedValue({});
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockImplementation(async () => {
+        queryCount++;
+        if (queryCount === 1) {
+          return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 500 }] };
+        }
+        // Query 2 is the verify read — return different balance (race detected)
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 200 }] };
+      }),
+    }));
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.error).toBe('concurrent_modification');
+    expect(logError).toHaveBeenCalledWith(expect.stringContaining('TOCTOU'));
   });
 });
 
@@ -228,37 +263,38 @@ describe('getRedemptionHistory', () => {
 
   it('returns error when memberId is missing', async () => {
     const result = await getRedemptionHistory(null);
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('missing_member_id');
   });
 
   it('returns empty array when no redemptions', async () => {
-    mockRedemptionHistory([]);
+    mockQueryResult([]);
     const result = await getRedemptionHistory(MEMBER_ID);
     expect(result).toEqual([]);
   });
 
   it('returns formatted redemption history', async () => {
-    mockRedemptionHistory([
-      { _id: 'r1', rewardId: 'DISCOUNT_5', redeemedAt: '2026-03-24T10:00:00Z', couponCode: 'CF-ABC123', status: 'active' },
+    mockQueryResult([
+      { _id: 'r1', rewardId: 'DISCOUNT_5', redeemedAt: '2026-03-24T10:00:00Z', couponCode: 'CF-ABC12345', status: 'active', pointsSpent: 500, rewardType: 'DISCOUNT_5' },
     ]);
     const result = await getRedemptionHistory(MEMBER_ID);
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       rewardId: 'DISCOUNT_5',
-      couponCode: 'CF-ABC123',
+      couponCode: 'CF-ABC12345',
       status: 'active',
+      pointsSpent: 500,
     });
   });
 
   it('returns error when caller is not the member', async () => {
     currentMember.getMember.mockResolvedValue({ _id: 'different-member' });
     const result = await getRedemptionHistory(MEMBER_ID);
-    expect(result.error).toMatch(/forbidden/i);
+    expect(result.error).toBe('forbidden');
   });
 
   it('does not throw on service error', async () => {
     wixData.query.mockImplementation(() => { throw new Error('DB down'); });
     const result = await getRedemptionHistory(MEMBER_ID);
-    expect(result.error).toBeDefined();
+    expect(result.error).toBe('service_unavailable');
   });
 });

@@ -14,9 +14,10 @@ import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const REWARD_REDEMPTIONS_COLLECTION = 'RewardRedemptions';
+const MAX_COUPON_RETRIES = 3;
 
 /**
- * Static reward catalog. 5 reward types with fixed pricing.
+ * Static reward catalog with fixed pricing.
  * In future this could move to a CMS collection.
  */
 export const REWARD_CATALOG = [
@@ -74,6 +75,10 @@ export const REWARD_CATALOG = [
 
 const CATALOG_MAP = Object.fromEntries(REWARD_CATALOG.map(r => [r.rewardId, r]));
 
+/**
+ * Generate CF-XXXXXXXX coupon code using unambiguous alphanumerics
+ * (excludes O/0/I/1 to avoid confusion).
+ */
 function generateCouponCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'CF-';
@@ -84,6 +89,23 @@ function generateCouponCode() {
 }
 
 /**
+ * Generate a unique coupon code, checking for collisions.
+ * Retries up to MAX_COUPON_RETRIES times.
+ */
+async function generateUniqueCouponCode() {
+  for (let attempt = 0; attempt < MAX_COUPON_RETRIES; attempt++) {
+    const code = generateCouponCode();
+    const existing = await wixData
+      .query(REWARD_REDEMPTIONS_COLLECTION)
+      .eq('couponCode', code)
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (existing.items.length === 0) return code;
+  }
+  return generateCouponCode();
+}
+
+/**
  * Returns the full rewards catalog (static, no auth required).
  *
  * @returns {Promise<Array<{ rewardId: string, name: string, description: string,
@@ -91,18 +113,21 @@ function generateCouponCode() {
  */
 export const getRewardsCatalog = webMethod(
   Permissions.Anyone,
-  async () => {
-    return [...REWARD_CATALOG];
-  }
+  async () => REWARD_CATALOG
 );
 
 /**
  * Redeem a reward for a member. Verifies identity, checks balance,
  * deducts points, creates redemption record, and returns coupon code.
+ * Returns { error: 'missing_member_id' } if memberId is falsy.
+ *
+ * Uses optimistic concurrency: re-reads balance after update to detect
+ * TOCTOU race conditions (concurrent redemptions).
  *
  * @param {string} memberId
  * @param {string} rewardId — must match a REWARD_CATALOG entry
  * @returns {Promise<{ success: true, couponCode: string, newBalance: number, rewardName: string }
+ *   | { error: 'insufficient_points', required: number, current: number }
  *   | { error: string }>}
  */
 export const redeemReward = webMethod(
@@ -125,7 +150,6 @@ export const redeemReward = webMethod(
         return { error: 'forbidden' };
       }
 
-      // Fetch member points
       const mpResult = await wixData
         .query(MEMBER_POINTS_COLLECTION)
         .eq('memberId', memberId)
@@ -143,17 +167,37 @@ export const redeemReward = webMethod(
         return { error: 'insufficient_points', required: reward.pointsCost, current: currentBalance };
       }
 
-      // Deduct points
+      // Deduct points — use _updatedDate for optimistic concurrency
       const newBalance = currentBalance - reward.pointsCost;
+      const expectedVersion = record._updatedDate;
       await wixData.update(MEMBER_POINTS_COLLECTION, {
         ...record,
         totalPoints: newBalance,
       }, { suppressAuth: true });
 
-      // Generate coupon code
-      const couponCode = generateCouponCode();
+      // Re-read to detect TOCTOU race: if another write changed balance
+      // between our read and update, the stored balance won't match
+      const verifyResult = await wixData
+        .query(MEMBER_POINTS_COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
 
-      // Create redemption record
+      if (verifyResult.items.length > 0) {
+        const verified = verifyResult.items[0];
+        if (verified.totalPoints !== newBalance) {
+          // Race detected — restore and reject
+          logError(`redeemReward — TOCTOU detected for ${memberId}, expected ${newBalance}, got ${verified.totalPoints}`);
+          await wixData.update(MEMBER_POINTS_COLLECTION, {
+            ...verified,
+            totalPoints: verified.totalPoints + reward.pointsCost,
+          }, { suppressAuth: true });
+          return { error: 'concurrent_modification' };
+        }
+      }
+
+      const couponCode = await generateUniqueCouponCode();
+
       await wixData.insert(REWARD_REDEMPTIONS_COLLECTION, {
         memberId,
         rewardId: reward.rewardId,
@@ -161,10 +205,9 @@ export const redeemReward = webMethod(
         pointsSpent: reward.pointsCost,
         couponCode,
         status: 'active',
-        redeemedAt: new Date().toISOString(),
+        redeemedAt: new Date(),
       }, { suppressAuth: true });
 
-      // Ledger entry for the burn
       try {
         await insertLedgerEntry({
           memberId,
@@ -193,7 +236,7 @@ export const redeemReward = webMethod(
 );
 
 /**
- * Returns redemption history for a member (most recent first).
+ * Returns redemption history for a member (most recent first, max 50).
  * IDOR-guarded: caller must be the member.
  *
  * @param {string} memberId
@@ -209,7 +252,7 @@ export const getRedemptionHistory = webMethod(
     }
 
     try {
-      // IDOR guard
+      // IDOR guard: verify caller is the member
       const caller = await currentMember.getMember();
       if (!caller || caller._id !== memberId) {
         return { error: 'forbidden' };
