@@ -349,6 +349,58 @@ export async function findMemberRecord(memberId) {
 }
 
 /**
+ * Seed a new member with welcome points (endowed progress effect).
+ * Only creates a record if one doesn't exist yet. Idempotent.
+ *
+ * CF-9swp
+ *
+ * @param {string} memberId
+ * @param {number} [welcomePoints=50]
+ * @returns {Promise<{ seeded: boolean, points: number }>}
+ */
+export async function seedWelcomePoints(memberId, welcomePoints = 50) {
+  if (!memberId) return { seeded: false, points: 0 };
+
+  try {
+    const existing = await findMemberRecord(memberId);
+    if (existing) return { seeded: false, points: existing.totalPoints ?? 0 };
+
+    await wixData.insert(MEMBER_POINTS_COLLECTION, {
+      memberId,
+      totalPoints: welcomePoints,
+      currentStreakDays: 0,
+      streakStartDate: null,
+      lastActivityDate: null,
+      streakMultiplier: 1,
+      milestoneBonus: 0,
+      graceTokenUsedDate: null,
+      graceApplied: false,
+      tier: getTierForPoints(welcomePoints),
+      bonusSpinsAvailable: 0,
+    }, { suppressAuth: true });
+
+    try {
+      await insertLedgerEntry({
+        memberId,
+        traceId: `${memberId}_welcome_${Date.now()}`,
+        operationType: 'earn',
+        delta: welcomePoints,
+        reason: 'welcome_bonus',
+        previousBalance: 0,
+        newBalance: welcomePoints,
+      });
+    } catch (err) {
+      logError(`seedWelcomePoints — ledger insert failed for ${memberId}`, err);
+    }
+
+    return { seeded: true, points: welcomePoints };
+  } catch (err) {
+    logError(`seedWelcomePoints — failed for ${memberId}`, err);
+    return { seeded: false, points: 0 };
+  }
+}
+
+/**
  * Query BonusSpinGrants for an active grant matching the event.
  * Returns the number of bonus spins to award (0 if none).
  * @param {string} eventName

@@ -26,6 +26,7 @@ export {
   getActivityFeed,
   findMemberRecord,
   computeTierInfo,
+  seedWelcomePoints,
   _resetActiveChallengesRateLimit,
   _resetRecordChallengeProgressRateLimit,
   MEMBER_POINTS_COLLECTION,
