@@ -5455,7 +5455,7 @@ function render() {
   }));
   const unnamed = data.filter(d => d.currentNick === '(none — needs ID)');
   const named   = data.filter(d => d.currentNick !== '(none — needs ID)');
-  console.log(`PAGE: ${pageId} | Total: ${data.length} | Unnamed: ${unnamed.length} | Named: ${named.length}`);
+  console.log('PAGE: ' + pageId + ' | Total: ' + data.length + ' | Unnamed: ' + unnamed.length + ' | Named: ' + named.length);
   console.log('=== UNNAMED (click each in editor → Properties panel → Element ID):');
   console.table(unnamed);
   console.log('=== ALREADY NAMED:');
