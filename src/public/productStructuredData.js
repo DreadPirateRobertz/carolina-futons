@@ -77,7 +77,8 @@ export async function initProductStructuredData(productId, opts = {}) {
   let data;
   try {
     data = await getData(productId);
-  } catch (_) {
+  } catch (err) {
+    console.error('[productStructuredData] Failed to fetch structured data', err);
     return;
   }
   if (!data || !data.product) return;
@@ -87,5 +88,7 @@ export async function initProductStructuredData(productId, opts = {}) {
 
   try {
     $w('#productJsonLd').html = script;
-  } catch (_) {}
+  } catch (err) {
+    console.error('[productStructuredData] Failed to inject JSON-LD into #productJsonLd', err);
+  }
 }

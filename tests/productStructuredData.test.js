@@ -302,6 +302,7 @@ describe('initProductStructuredData — edge cases', () => {
   });
 
   it('does not throw when getProductStructuredData rejects', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const opts = {
       $w,
       getProductStructuredData: vi.fn().mockRejectedValue(new Error('DB down')),
@@ -309,13 +310,43 @@ describe('initProductStructuredData — edge cases', () => {
     await expect(initProductStructuredData('prod-1', opts)).resolves.not.toThrow();
   });
 
+  it('logs error when getProductStructuredData rejects', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const opts = {
+      $w,
+      getProductStructuredData: vi.fn().mockRejectedValue(new Error('DB down')),
+    };
+    await initProductStructuredData('prod-1', opts);
+    expect(spy).toHaveBeenCalledWith(
+      '[productStructuredData] Failed to fetch structured data',
+      expect.any(Error),
+    );
+  });
+
   it('does not inject when getProductStructuredData rejects', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     const opts = {
       $w,
       getProductStructuredData: vi.fn().mockRejectedValue(new Error('DB down')),
     };
     await initProductStructuredData('prod-1', opts);
     expect($w('#productJsonLd')._html).toBe('');
+  });
+
+  it('logs error when $w element throws', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const throwing$w = () => { throw new Error('Element not found'); };
+    const opts = {
+      $w: throwing$w,
+      getProductStructuredData: vi.fn().mockResolvedValue(
+        makeStructuredData(makeProduct(), []),
+      ),
+    };
+    await initProductStructuredData('prod-1', opts);
+    expect(spy).toHaveBeenCalledWith(
+      '[productStructuredData] Failed to inject JSON-LD into #productJsonLd',
+      expect.any(Error),
+    );
   });
 });
 
