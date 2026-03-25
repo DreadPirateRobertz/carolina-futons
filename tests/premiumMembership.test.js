@@ -28,6 +28,7 @@ const {
   activateMembership,
   cancelMembership,
   applyMemberDiscount,
+  getPremiumUpsellData,
 } = await import('../src/backend/premiumMembership.web.js');
 
 beforeEach(() => {
@@ -446,5 +447,74 @@ describe('applyMemberDiscount', () => {
     __setMember(null);
     const result = await applyMemberDiscount(500);
     expect(result.success).toBe(false);
+  });
+});
+
+// ── CF-ortb: getPremiumUpsellData ──────────────────────────────────────────
+
+describe('getPremiumUpsellData', () => {
+  it('returns eligible: true for Mountain Guide tier', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u1', memberId: 'member-1', tier: 'Mountain Guide', totalPoints: 600 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.eligible).toBe(true);
+    expect(result.tier).toBe('Mountain Guide');
+  });
+
+  it('returns eligible: true for Summit Master tier', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u2', memberId: 'member-1', tier: 'Summit Master', totalPoints: 2500 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.eligible).toBe(true);
+  });
+
+  it('returns eligible: true for Blue Ridge Legend tier', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u3', memberId: 'member-1', tier: 'Blue Ridge Legend', totalPoints: 6000 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.eligible).toBe(true);
+  });
+
+  it('returns eligible: false for Trail Blazer tier', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u4', memberId: 'member-1', tier: 'Trail Blazer', totalPoints: 100 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.eligible).toBe(false);
+    expect(result.tier).toBe('Trail Blazer');
+  });
+
+  it('returns eligible: false when already a CF+ member', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u5', memberId: 'member-1', tier: 'Summit Master', totalPoints: 2500 }]);
+    __seed('PremiumMemberships', [{
+      _id: 'pm-u1', memberId: 'member-1', status: 'active',
+      planType: 'monthly', startDate: new Date(), endDate: new Date(Date.now() + 30 * 86400000),
+    }]);
+    const result = await getPremiumUpsellData();
+    expect(result.eligible).toBe(false);
+    expect(result.alreadyMember).toBe(true);
+  });
+
+  it('returns plans array with correct structure', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u6', memberId: 'member-1', tier: 'Mountain Guide', totalPoints: 600 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.plans).toHaveLength(2);
+    expect(result.plans[0]).toHaveProperty('id');
+    expect(result.plans[0]).toHaveProperty('price');
+    expect(result.plans[0]).toHaveProperty('type');
+  });
+
+  it('returns benefits array', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-u7', memberId: 'member-1', tier: 'Mountain Guide', totalPoints: 600 }]);
+    const result = await getPremiumUpsellData();
+    expect(result.benefits.length).toBeGreaterThan(0);
+    expect(result.benefits[0]).toContain('Free shipping');
+  });
+
+  it('returns null for unauthenticated user', async () => {
+    __setMember(null);
+    const result = await getPremiumUpsellData();
+    expect(result).toBeNull();
+  });
+
+  it('defaults to Trail Blazer when no MemberPoints record', async () => {
+    const result = await getPremiumUpsellData();
+    expect(result.tier).toBe('Trail Blazer');
+    expect(result.eligible).toBe(false);
   });
 });
