@@ -41,6 +41,7 @@ export {
   getDailyQuests,
   getShareableProgress,
   getMilestones,
+  getWeeklyChallenge,
 } from 'backend/gamificationWidgets.web';
 
 // Notifications: member notification preferences
