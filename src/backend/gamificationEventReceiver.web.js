@@ -49,4 +49,5 @@ export {
 export {
   getNotificationPrefs,
   updateNotificationPrefs,
+  checkStreakMilestoneNotifications,
 } from 'backend/gamificationNotifs.web';
