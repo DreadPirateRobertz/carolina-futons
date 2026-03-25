@@ -63,6 +63,7 @@ export async function initNotificationPrefsWidget(memberId, opts = {}) {
   }
 
   if (prefs && prefs.error) {
+    console.error('[NotificationPrefsWidget] backend returned error:', prefs.error);
     showErrorState($w);
     return;
   }
