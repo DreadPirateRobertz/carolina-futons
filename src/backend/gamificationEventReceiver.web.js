@@ -906,37 +906,48 @@ export const getStreakData = webMethod(
 /**
  * Returns active daily quests for a member, merged with their progress.
  * Wraps getActiveChallenges and reshapes for DailyQuestsWidget consumption.
+ * Returns { error } on failure so the frontend can show error UI.
+ * Returns [] on success (empty or populated). Never rejects.
  *
  * CF-8t8z
  *
  * @param {string} memberId
  * @returns {Promise<Array<{ questId: string, title: string, description: string|null,
  *   currentProgress: number, targetProgress: number, pointsReward: number,
- *   isComplete: boolean, expiresAt: string }>>}
+ *   isComplete: boolean, expiresAt: string|null }> | { error: string }>}
  */
 export const getDailyQuests = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
-    if (!memberId) return [];
+    if (!memberId) {
+      logError('getDailyQuests — called without memberId');
+      return { error: 'missing_member_id' };
+    }
 
     try {
       const result = await getActiveChallenges(memberId);
-      if (result.error || result.status === 429) return [];
+      if (result.error || result.status === 429) {
+        logError(`getDailyQuests — upstream error for member ${memberId}`, {
+          error: result.error,
+          status: result.status,
+        });
+        return { error: result.error || 'rate_limited' };
+      }
       const challenges = result.challenges || [];
 
       return challenges.map(c => ({
         questId: c.challengeId,
         title: c.title,
-        description: c.description || null,
+        description: c.description ?? null,
         currentProgress: c.progressValue ?? 0,
         targetProgress: c.targetCount ?? 1,
         pointsReward: c.rewardPoints ?? 0,
         isComplete: c.completedAt != null,
-        expiresAt: c.expiresAt,
+        expiresAt: c.expiresAt ?? null,
       }));
     } catch (err) {
       logError(`getDailyQuests — failed for member ${memberId}`, err);
-      return [];
+      return { error: 'service_unavailable' };
     }
   }
 );

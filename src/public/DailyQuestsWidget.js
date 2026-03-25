@@ -61,18 +61,19 @@ export async function initDailyQuestsWidget(memberId, opts = {}) {
   let quests;
   try {
     quests = await getDailyQuests(memberId);
-  } catch {
+  } catch (err) {
+    console.error('[DailyQuestsWidget] failed to load quests', err);
     showErrorState($w);
     return;
   }
 
-  // Handle error-shape response (e.g. { error: 'auth_required' })
+  // Handle error-shape response from backend (e.g. { error: 'service_unavailable' })
   if (quests && quests.error) {
     showErrorState($w);
     return;
   }
 
-  // Normalise: accept raw array or { quests: [...] }
+  // getDailyQuests returns a flat array; non-arrays are treated as empty
   const questList = Array.isArray(quests) ? quests : [];
 
   try { $w('#questsError').hide(); } catch {}
