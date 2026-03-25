@@ -10,6 +10,7 @@
  *   getDailyQuests(memberId) — daily quest progress for quest widget
  *   getShareableProgress() — social sharing data (auth via currentMember)
  *   getMilestones(memberId) — milestone progress for rewards widget
+ *   getWeeklyChallenge() — community weekly challenge with aggregated progress
  *
  * CF-jz4r
  */
@@ -336,5 +337,81 @@ export const getMilestones = webMethod(
         isUnlocked: currentValue >= m.targetValue,
       };
     });
+  }
+);
+
+// ── getWeeklyChallenge (CF-8lj8) ─────────────────────────────────────────────
+
+/**
+ * Returns the current community weekly challenge with aggregated progress
+ * across all participating members. Returns null if no active weekly challenge,
+ * or { error: 'service_unavailable' } on failure.
+ *
+ * CF-8lj8
+ *
+ * @returns {Promise<{
+ *   challengeId: string, title: string, description: string|null,
+ *   targetCount: number, currentTotal: number, contributorCount: number,
+ *   rewardPoints: number, expiresAt: string, isComplete: boolean
+ * } | { error: string } | null>}
+ */
+export const getWeeklyChallenge = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const nowDate = new Date();
+
+      // Find the active weekly challenge (most recently created, non-expired)
+      const challengeResult = await wixData
+        .query('Challenges')
+        .eq('active', true)
+        .eq('scope', 'weekly')
+        .gt('expiresAt', nowDate.toISOString())
+        .descending('_createdDate')
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (challengeResult.items.length === 0) return null;
+
+      const challenge = challengeResult.items[0];
+      const cId = challenge.challengeId || challenge._id;
+
+      // Aggregate all member progress — use limit(1000) to avoid
+      // Wix Data's default 50-item page size truncating community totals
+      const progressResult = await wixData
+        .query(CHALLENGE_PROGRESS_COLLECTION)
+        .eq('challengeId', cId)
+        .limit(1000)
+        .find({ suppressAuth: true });
+
+      let currentTotal = 0;
+      let contributorCount = 0;
+      for (const item of progressResult.items) {
+        const val = item.progressValue ?? 0;
+        if (val > 0) {
+          currentTotal += val;
+          contributorCount++;
+        }
+      }
+
+      const expiresAt = challenge.expiresAt instanceof Date
+        ? challenge.expiresAt.toISOString()
+        : challenge.expiresAt;
+
+      return {
+        challengeId: cId,
+        title: challenge.title,
+        description: challenge.description || null,
+        targetCount: challenge.targetCount,
+        currentTotal,
+        contributorCount,
+        rewardPoints: challenge.rewardPoints ?? 0,
+        expiresAt,
+        isComplete: currentTotal >= challenge.targetCount,
+      };
+    } catch (err) {
+      logError('getWeeklyChallenge — failed', err);
+      return { error: 'service_unavailable' };
+    }
   }
 );
