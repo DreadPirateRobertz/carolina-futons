@@ -912,7 +912,7 @@ export const getStreakData = webMethod(
  */
 export const getLeaderboard = webMethod(
   Permissions.Anyone,
-  async (limit = 10) => {
+  async (limit = 10, memberId = null) => {
     const result = await wixData
       .query(MEMBER_POINTS_COLLECTION)
       .eq('leaderboardOptIn', true)
@@ -920,13 +920,42 @@ export const getLeaderboard = webMethod(
       .limit(limit)
       .find({ suppressAuth: true });
 
-    return result.items.map((item, i) => ({
+    const entries = result.items.map((item, i) => ({
       rank: i + 1,
       nickname: item.displayName ?? 'Anonymous',
       totalPoints: item.totalPoints ?? 0,
       avatarUrl: item.avatarUrl ?? null,
       memberId: item.memberId ?? null,
     }));
+
+    // CF-bs92: calculate current user rank if not in top N
+    let currentUserRank = null;
+    let pointsToTopTen = 0;
+
+    if (memberId) {
+      const inTop = entries.find(e => e.memberId === memberId);
+      if (inTop) {
+        currentUserRank = inTop.rank;
+      } else {
+        // Count how many opted-in members have more points than this user
+        const userRecord = await findMemberRecord(memberId);
+        const userPoints = userRecord?.totalPoints ?? 0;
+        const countResult = await wixData
+          .query(MEMBER_POINTS_COLLECTION)
+          .eq('leaderboardOptIn', true)
+          .gt('totalPoints', userPoints)
+          .count({ suppressAuth: true });
+        currentUserRank = countResult + 1;
+
+        // Points gap to last entry in top N
+        const lastEntry = entries[entries.length - 1];
+        if (lastEntry) {
+          pointsToTopTen = Math.max(0, lastEntry.totalPoints - userPoints + 1);
+        }
+      }
+    }
+
+    return { entries, currentUserRank, pointsToTopTen };
   }
 );
 

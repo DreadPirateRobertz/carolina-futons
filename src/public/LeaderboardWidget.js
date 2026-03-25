@@ -5,7 +5,7 @@
  * Elements:
  *   #leaderboardTitle    — Text: "Community Leaderboard"
  *   #leaderboardRepeater — Repeater displaying top-10 entries
- *   #leaderboardYourRank — Text: "Your rank: #N" (or hidden if not ranked)
+ *   #leaderboardYourRank — Text: "Your rank: #N" or "You are #N — X pts to reach top 10"
  *   #leaderboardEmpty    — Shown on error or empty data
  *
  * Repeater item elements:
@@ -14,7 +14,7 @@
  *   #leaderPoints — Points formatted with commas + " pts"
  *   #leaderAvatar — Image element (src = avatarUrl)
  *
- * CF-ttcd
+ * CF-ttcd, CF-bs92
  */
 
 import { getLeaderboard as _defaultGetLeaderboard } from 'backend/gamificationEventReceiver.web';
@@ -41,17 +41,19 @@ function formatPoints(n) {
  */
 export async function initLeaderboardWidget(memberId, opts = {}) {
   const $w = opts.$w ?? globalThis.$w;
-  const getLeaderboard = opts.getLeaderboard ?? ((limit) => _defaultGetLeaderboard(limit));
+  const getLeaderboard = opts.getLeaderboard ?? ((limit, mid) => _defaultGetLeaderboard(limit, mid));
   const currentMemberId = opts.currentMemberId ?? memberId;
 
   try { $w('#leaderboardTitle').text = 'Community Leaderboard'; } catch {}
 
-  let entries;
+  let result;
   try {
-    entries = await getLeaderboard(10);
+    result = await getLeaderboard(10, currentMemberId);
   } catch {
-    entries = null;
+    result = null;
   }
+
+  const entries = result?.entries ?? null;
 
   if (!entries || entries.length === 0) {
     try { $w('#leaderboardEmpty').show(); } catch {}
@@ -87,11 +89,19 @@ export async function initLeaderboardWidget(memberId, opts = {}) {
     });
   } catch {}
 
-  // Your rank
-  const myEntry = entries.find(e => e.memberId === currentMemberId);
-  if (myEntry) {
+  // CF-bs92: Always show rank — in top 10 or outside
+  const currentUserRank = result?.currentUserRank;
+  const pointsToTopTen = result?.pointsToTopTen ?? 0;
+  const inTop = entries.some(e => e.memberId === currentMemberId);
+
+  if (inTop) {
     try {
-      $w('#leaderboardYourRank').text = `Your rank: #${myEntry.rank}`;
+      $w('#leaderboardYourRank').text = `Your rank: #${currentUserRank}`;
+      $w('#leaderboardYourRank').show();
+    } catch {}
+  } else if (currentUserRank) {
+    try {
+      $w('#leaderboardYourRank').text = `You are #${currentUserRank} \u2014 ${pointsToTopTen} pts to reach top 10`;
       $w('#leaderboardYourRank').show();
     } catch {}
   } else {
