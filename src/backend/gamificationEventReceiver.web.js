@@ -974,3 +974,50 @@ export const getMemberTier = webMethod(
     return computeTierInfo(record ? record.totalPoints : 0);
   }
 );
+
+// ── Activity type → icon mapping (CF-gx44) ──────────────────────────────────
+
+const ACTIVITY_ICONS = {
+  purchase:       'cart',
+  review:         'star',
+  referral:       'gift',
+  streak:         'fire',
+  quest_complete: 'trophy',
+  spin:           'wheel',
+  badge_earned:   'shield',
+  tier_up:        'arrow-up',
+};
+
+/**
+ * Get recent activity feed for a member from AnalyticsEvents.
+ * Returns [{ activityId, type, description, pointsEarned, timestamp, iconType }].
+ *
+ * CF-gx44
+ *
+ * @param {string} memberId
+ * @param {number} [limit=10]
+ * @returns {Promise<Array<{ activityId: string, type: string, description: string, pointsEarned: number, timestamp: string, iconType: string }>>}
+ */
+export const getActivityFeed = webMethod(
+  Permissions.Anyone,
+  async (memberId, limit = 10) => {
+    const result = await wixData
+      .query('AnalyticsEvents')
+      .eq('memberId', memberId)
+      .descending('timestamp')
+      .limit(limit)
+      .find({ suppressAuth: true });
+
+    return result.items.map((item) => {
+      const payload = typeof item.payload === 'string' ? JSON.parse(item.payload) : (item.payload ?? {});
+      return {
+        activityId: item._id,
+        type: item.eventType ?? 'unknown',
+        description: payload.description ?? `${item.eventType ?? 'Activity'}`,
+        pointsEarned: payload.pointsEarned ?? 0,
+        timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : null,
+        iconType: ACTIVITY_ICONS[item.eventType] ?? 'cart',
+      };
+    });
+  }
+);
