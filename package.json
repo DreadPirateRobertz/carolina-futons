@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.1",
     "@wix/cli": "^1.1.171",
     "@wix/eslint-plugin-cli": "^1.0.0",
     "eslint": "^8.25.0",
