@@ -929,3 +929,48 @@ export const getLeaderboard = webMethod(
     }));
   }
 );
+
+// ── Tier definitions for RewardsTierWidget (CF-f5j9) ─────────────────────────
+
+const REWARDS_TIERS = [
+  { name: 'Bronze',   min: 0,    benefits: ['1x points'] },
+  { name: 'Silver',   min: 500,  benefits: ['1.5x points', 'Free shipping on orders over $500'] },
+  { name: 'Gold',     min: 1500, benefits: ['2x points', 'Free shipping all orders', 'Early access to sales'] },
+  { name: 'Platinum', min: 4000, benefits: ['3x points', 'Free shipping', 'Early access', 'Birthday double points', 'Exclusive products'] },
+];
+
+function computeTierInfo(totalPoints) {
+  const pts = Math.max(0, totalPoints ?? 0);
+  let tierIdx = 0;
+  for (let i = REWARDS_TIERS.length - 1; i >= 0; i--) {
+    if (pts >= REWARDS_TIERS[i].min) { tierIdx = i; break; }
+  }
+  const tier = REWARDS_TIERS[tierIdx];
+  const nextTier = REWARDS_TIERS[tierIdx + 1] ?? null;
+  return {
+    currentTier: tier.name.toLowerCase(),
+    tierName: tier.name,
+    pointsInTier: pts - tier.min,
+    pointsToNextTier: nextTier ? nextTier.min - pts : 0,
+    nextTierName: nextTier ? nextTier.name : null,
+    benefits: tier.benefits,
+    nextTierBenefits: nextTier ? nextTier.benefits : null,
+  };
+}
+
+/**
+ * Get tier info for a member based on totalPoints.
+ * Returns tier name, progress, benefits, and next tier preview.
+ *
+ * CF-f5j9
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ currentTier, tierName, pointsInTier, pointsToNextTier, nextTierName, benefits, nextTierBenefits }>}
+ */
+export const getMemberTier = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    const record = await findMemberRecord(memberId);
+    return computeTierInfo(record ? record.totalPoints : 0);
+  }
+);
