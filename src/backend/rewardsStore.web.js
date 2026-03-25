@@ -16,10 +16,7 @@ const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 const REWARD_REDEMPTIONS_COLLECTION = 'RewardRedemptions';
 const MAX_COUPON_RETRIES = 3;
 
-/**
- * Static reward catalog with fixed pricing.
- * In future this could move to a CMS collection.
- */
+/** Static reward catalog with fixed pricing. */
 export const REWARD_CATALOG = [
   {
     rewardId: 'DISCOUNT_5',
@@ -90,7 +87,9 @@ function generateCouponCode() {
 
 /**
  * Generate a unique coupon code, checking for collisions.
- * Retries up to MAX_COUPON_RETRIES times.
+ * Retries up to MAX_COUPON_RETRIES times. If all retries collide,
+ * logs a warning and falls back to an unchecked code (statistically
+ * near-impossible given the 31^8 keyspace).
  */
 async function generateUniqueCouponCode() {
   for (let attempt = 0; attempt < MAX_COUPON_RETRIES; attempt++) {
@@ -102,6 +101,7 @@ async function generateUniqueCouponCode() {
       .find({ suppressAuth: true });
     if (existing.items.length === 0) return code;
   }
+  logError('generateUniqueCouponCode — exhausted all retries, falling back to unchecked code');
   return generateCouponCode();
 }
 
@@ -121,8 +121,9 @@ export const getRewardsCatalog = webMethod(
  * deducts points, creates redemption record, and returns coupon code.
  * Returns { error: 'missing_member_id' } if memberId is falsy.
  *
- * Uses optimistic concurrency: re-reads balance after update to detect
- * TOCTOU race conditions (concurrent redemptions).
+ * Uses post-write verification: re-reads balance after update to detect
+ * concurrent modifications. If the stored balance diverges, the deduction
+ * is rolled back and the request is rejected.
  *
  * @param {string} memberId
  * @param {string} rewardId — must match a REWARD_CATALOG entry
@@ -167,9 +168,7 @@ export const redeemReward = webMethod(
         return { error: 'insufficient_points', required: reward.pointsCost, current: currentBalance };
       }
 
-      // Deduct points — use _updatedDate for optimistic concurrency
       const newBalance = currentBalance - reward.pointsCost;
-      const expectedVersion = record._updatedDate;
       await wixData.update(MEMBER_POINTS_COLLECTION, {
         ...record,
         totalPoints: newBalance,
@@ -188,10 +187,14 @@ export const redeemReward = webMethod(
         if (verified.totalPoints !== newBalance) {
           // Race detected — restore and reject
           logError(`redeemReward — TOCTOU detected for ${memberId}, expected ${newBalance}, got ${verified.totalPoints}`);
-          await wixData.update(MEMBER_POINTS_COLLECTION, {
-            ...verified,
-            totalPoints: verified.totalPoints + reward.pointsCost,
-          }, { suppressAuth: true });
+          try {
+            await wixData.update(MEMBER_POINTS_COLLECTION, {
+              ...verified,
+              totalPoints: verified.totalPoints + reward.pointsCost,
+            }, { suppressAuth: true });
+          } catch (restoreErr) {
+            logError(`redeemReward — CRITICAL: TOCTOU restore failed for ${memberId}, points lost: ${reward.pointsCost}`, restoreErr);
+          }
           return { error: 'concurrent_modification' };
         }
       }

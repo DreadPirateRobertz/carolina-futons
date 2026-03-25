@@ -278,6 +278,75 @@ describe('redeemReward', () => {
       expect.any(Error),
     );
   });
+
+  it('returns forbidden when getMember resolves to null', async () => {
+    currentMember.getMember.mockResolvedValue(null);
+    mockMemberPoints(1000);
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.error).toBe('forbidden');
+  });
+
+  it('logs CRITICAL when rollback fails after redemption insert failure', async () => {
+    // Set up queries: (1) balance read, (2) TOCTOU verify, (3) coupon check
+    let queryCount = 0;
+    let updatedBalance = null;
+    let updateCount = 0;
+    wixData.update.mockImplementation(async (_coll, data) => {
+      updateCount++;
+      if (data.totalPoints !== undefined) updatedBalance = data.totalPoints;
+      // First update = deduct (succeeds), second = rollback (fails)
+      if (updateCount === 2) throw new Error('Rollback also failed');
+      return data;
+    });
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockImplementation(async () => {
+        queryCount++;
+        if (queryCount === 1) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 1000 }] };
+        if (queryCount === 2) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? 500 }] };
+        return { items: [] };
+      }),
+    }));
+    wixData.insert.mockRejectedValue(new Error('Insert failed'));
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.error).toBe('redemption_failed');
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('CRITICAL: rollback failed'),
+      expect.any(Error),
+    );
+  });
+
+  it('logs CRITICAL when TOCTOU restore fails', async () => {
+    let queryCount = 0;
+    let updateCount = 0;
+    wixData.update.mockImplementation(async () => {
+      updateCount++;
+      if (updateCount === 2) throw new Error('Restore failed');
+      return {};
+    });
+    wixData.insert.mockResolvedValue({});
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockImplementation(async () => {
+        queryCount++;
+        if (queryCount === 1) {
+          return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 500 }] };
+        }
+        // Verify read returns different balance — triggers TOCTOU
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 200 }] };
+      }),
+    }));
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.error).toBe('concurrent_modification');
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('CRITICAL: TOCTOU restore failed'),
+      expect.any(Error),
+    );
+  });
 });
 
 // ── getRedemptionHistory ─────────────────────────────────────────────────────
@@ -323,5 +392,21 @@ describe('getRedemptionHistory', () => {
     wixData.query.mockImplementation(() => { throw new Error('DB down'); });
     const result = await getRedemptionHistory(MEMBER_ID);
     expect(result.error).toBe('service_unavailable');
+  });
+
+  it('returns forbidden when getMember resolves to null', async () => {
+    currentMember.getMember.mockResolvedValue(null);
+    const result = await getRedemptionHistory(MEMBER_ID);
+    expect(result.error).toBe('forbidden');
+  });
+
+  it('applies defaults for missing status, pointsSpent, and rewardType', async () => {
+    mockQueryResult([
+      { _id: 'r1', rewardId: 'DISCOUNT_5', redeemedAt: '2026-03-24', couponCode: 'CF-X' },
+    ]);
+    const result = await getRedemptionHistory(MEMBER_ID);
+    expect(result[0].status).toBe('active');
+    expect(result[0].pointsSpent).toBe(0);
+    expect(result[0].rewardType).toBe('DISCOUNT_5');
   });
 });
