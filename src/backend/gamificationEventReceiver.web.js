@@ -1165,3 +1165,47 @@ export const checkMilestoneProximity = webMethod(
     return nudges;
   }
 );
+
+/**
+ * Get recent public achievements (badge_earned, tier_upgraded) for social proof toasts.
+ * Returns last N achievements across all members.
+ *
+ * CF-cj4l
+ *
+ * @param {number} [limit=5]
+ * @returns {Promise<Array<{ memberNickname: string, achievementType: string, achievementName: string, timestamp: string }>>}
+ */
+export const getRecentAchievements = webMethod(
+  Permissions.Anyone,
+  async (limit = 5) => {
+    const result = await wixData
+      .query('AnalyticsEvents')
+      .hasSome('eventType', ['badge_earned', 'tier_upgraded'])
+      .descending('timestamp')
+      .limit(limit)
+      .find({ suppressAuth: true });
+
+    // Look up display names for each member
+    const memberIds = [...new Set(result.items.map(i => i.memberId).filter(Boolean))];
+    const memberRecords = {};
+    if (memberIds.length > 0) {
+      const membersResult = await wixData
+        .query(MEMBER_POINTS_COLLECTION)
+        .hasSome('memberId', memberIds)
+        .find({ suppressAuth: true });
+      for (const m of membersResult.items) {
+        memberRecords[m.memberId] = m.displayName ?? 'A member';
+      }
+    }
+
+    return result.items.map((item) => {
+      const payload = typeof item.payload === 'string' ? JSON.parse(item.payload) : (item.payload ?? {});
+      return {
+        memberNickname: memberRecords[item.memberId] ?? 'A member',
+        achievementType: item.eventType,
+        achievementName: payload.badgeLabel ?? payload.newTier ?? item.eventType,
+        timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : null,
+      };
+    });
+  }
+);

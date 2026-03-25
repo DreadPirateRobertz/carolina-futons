@@ -27,7 +27,7 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistMonthlyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistMonthlyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak, getRecentAchievements } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES, STREAK_RECOVERY_COST } from '../src/public/gamificationTokens.js';
 import { getTodayET, getYesterdayOf } from '../src/backend/utils/dateUtils.js';
 import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
@@ -2232,5 +2232,131 @@ describe('AnalyticsEvents — challenge_completed written when challenge finishe
 
     const rows = __getInserted(ANALYTICS_EVENTS_COLLECTION);
     expect(rows.find(r => r.eventType === 'challenge_completed')).toBeUndefined();
+  });
+});
+
+// ── CF-cj4l: getRecentAchievements ──────────────────────────────────────────
+
+describe('getRecentAchievements', () => {
+  it('returns badge achievement with member display name', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra1', memberId: 'mem-ra1', eventType: 'badge_earned',
+      payload: JSON.stringify({ badgeLabel: 'First Purchase' }),
+      timestamp: new Date('2026-03-25T00:00:00Z').getTime(),
+    }]);
+    __seed('MemberPoints', [{
+      _id: 'mp-ra1', memberId: 'mem-ra1', displayName: 'Alex', totalPoints: 100, tier: 'Trail Blazer',
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results).toHaveLength(1);
+    expect(results[0].memberNickname).toBe('Alex');
+    expect(results[0].achievementType).toBe('badge_earned');
+    expect(results[0].achievementName).toBe('First Purchase');
+    expect(results[0].timestamp).toBe('2026-03-25T00:00:00.000Z');
+  });
+
+  it('returns tier_upgraded achievement with newTier as name', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra2', memberId: 'mem-ra2', eventType: 'tier_upgraded',
+      payload: JSON.stringify({ newTier: 'Mountain Guide' }),
+      timestamp: new Date('2026-03-25T01:00:00Z').getTime(),
+    }]);
+    __seed('MemberPoints', [{
+      _id: 'mp-ra2', memberId: 'mem-ra2', displayName: 'Jordan', totalPoints: 500, tier: 'Mountain Guide',
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results).toHaveLength(1);
+    expect(results[0].memberNickname).toBe('Jordan');
+    expect(results[0].achievementName).toBe('Mountain Guide');
+  });
+
+  it('falls back to "A member" when member has no displayName', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra3', memberId: 'mem-ra3', eventType: 'badge_earned',
+      payload: JSON.stringify({ badgeLabel: 'Reviewer' }),
+      timestamp: new Date('2026-03-25T00:00:00Z').getTime(),
+    }]);
+    __seed('MemberPoints', [{
+      _id: 'mp-ra3', memberId: 'mem-ra3', totalPoints: 50, tier: 'Trail Blazer',
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results[0].memberNickname).toBe('A member');
+  });
+
+  it('falls back to "A member" when memberId not in MemberPoints', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra4', memberId: 'mem-unknown', eventType: 'badge_earned',
+      payload: JSON.stringify({ badgeLabel: 'Explorer' }),
+      timestamp: new Date('2026-03-25T00:00:00Z').getTime(),
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results[0].memberNickname).toBe('A member');
+  });
+
+  it('returns empty array when no achievements exist', async () => {
+    const results = await getRecentAchievements(5);
+    expect(results).toEqual([]);
+  });
+
+  it('respects the limit parameter', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [
+      { _id: 'ae-ra5a', memberId: 'mem-ra5', eventType: 'badge_earned', payload: '{"badgeLabel":"A"}', timestamp: 3 },
+      { _id: 'ae-ra5b', memberId: 'mem-ra5', eventType: 'badge_earned', payload: '{"badgeLabel":"B"}', timestamp: 2 },
+      { _id: 'ae-ra5c', memberId: 'mem-ra5', eventType: 'badge_earned', payload: '{"badgeLabel":"C"}', timestamp: 1 },
+    ]);
+
+    const results = await getRecentAchievements(2);
+    expect(results).toHaveLength(2);
+  });
+
+  it('handles object payload (not stringified)', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra6', memberId: 'mem-ra6', eventType: 'badge_earned',
+      payload: { badgeLabel: 'Photo Pro' },
+      timestamp: new Date('2026-03-25T00:00:00Z').getTime(),
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results[0].achievementName).toBe('Photo Pro');
+  });
+
+  it('falls back to eventType when payload has no badgeLabel or newTier', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra7', memberId: 'mem-ra7', eventType: 'badge_earned',
+      payload: '{}',
+      timestamp: new Date('2026-03-25T00:00:00Z').getTime(),
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results[0].achievementName).toBe('badge_earned');
+  });
+
+  it('returns null timestamp when event has no timestamp', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [{
+      _id: 'ae-ra8', memberId: 'mem-ra8', eventType: 'badge_earned',
+      payload: '{"badgeLabel":"Test"}',
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results[0].timestamp).toBeNull();
+  });
+
+  it('deduplicates member lookups for multiple achievements by same member', async () => {
+    __seed(ANALYTICS_EVENTS_COLLECTION, [
+      { _id: 'ae-ra9a', memberId: 'mem-ra9', eventType: 'badge_earned', payload: '{"badgeLabel":"A"}', timestamp: 2 },
+      { _id: 'ae-ra9b', memberId: 'mem-ra9', eventType: 'tier_upgraded', payload: '{"newTier":"B"}', timestamp: 1 },
+    ]);
+    __seed('MemberPoints', [{
+      _id: 'mp-ra9', memberId: 'mem-ra9', displayName: 'Tay', totalPoints: 200, tier: 'Trail Blazer',
+    }]);
+
+    const results = await getRecentAchievements(5);
+    expect(results).toHaveLength(2);
+    expect(results[0].memberNickname).toBe('Tay');
+    expect(results[1].memberNickname).toBe('Tay');
   });
 });
