@@ -8,6 +8,7 @@
 
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { futonFrame } from './fixtures/products.js';
+import { __seed as __seedData, __reset as __resetData } from 'wix-data';
 
 // ── $w mock ───────────────────────────────────────────────────────────────────
 
@@ -80,8 +81,8 @@ vi.mock('public/productPageUtils.js', () => ({
   CALL_FOR_PRICE_TEXT: 'Call for Price',
 }));
 vi.mock('wix-location-frontend', () => ({
-  default: { path: [], query: { zipPrefix: '282' } },
-  path: [],
+  default: { path: ['product-page', 'eureka-futon-frame'], query: { zipPrefix: '282' } },
+  path: ['product-page', 'eureka-futon-frame'],
   query: { zipPrefix: '282' },
 }));
 vi.mock('public/performanceHelpers.js', () => ({
@@ -151,6 +152,8 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  __resetData();
+  __seedData('Stores/Products', [{ ...futonFrame, collections: ['futon-frames'] }]);
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
