@@ -45,6 +45,65 @@ export async function initRewardsStoreWidget(memberId, opts = {}) {
   }
   updateBalance(currentBalance);
 
+  // ── Refresh button states after balance changes ─────────────────────────────
+
+  function refreshButtonStates() {
+    try {
+      _$w('#storeRepeater').forEachItem(($item, itemData) => {
+        const btn = $item('#rewardRedeemBtn');
+        try {
+          if (currentBalance < itemData.pointsCost) {
+            btn.label = 'Not enough points';
+            btn.disable();
+          } else {
+            btn.label = 'Redeem';
+            btn.enable();
+          }
+        } catch (_) {}
+      });
+    } catch (_) {}
+  }
+
+  // ── Modal handlers (registered ONCE, not per-click) ─────────────────────────
+
+  let pendingRedeem = null; // { itemData, btn }
+
+  try {
+    _$w('#modalConfirmBtn').onClick(async () => {
+      if (!pendingRedeem) return;
+      const { itemData, btn } = pendingRedeem;
+      pendingRedeem = null;
+
+      try { _$w('#storeRedeemModal').hide(); } catch (_) {}
+      try { btn.label = 'Redeeming...'; btn.disable(); } catch (_) {}
+
+      try {
+        const result = await _redeemReward(memberId, itemData.rewardId);
+        if (result?.success) {
+          try { _$w('#storeStatus').text = `Redeemed! Your coupon code: ${result.couponCode}`; } catch (_) {}
+          try { _$w('#storeStatus').show(); } catch (_) {}
+          updateBalance(result.newBalance);
+          refreshButtonStates();
+        } else {
+          try { _$w('#storeStatus').text = result?.error || 'Redemption failed.'; } catch (_) {}
+          try { _$w('#storeStatus').show(); } catch (_) {}
+        }
+      } catch (err) {
+        try { _$w('#storeStatus').text = 'Redemption failed. Please try again.'; } catch (_) {}
+        try { _$w('#storeStatus').show(); } catch (_) {}
+      }
+
+      try { btn.label = 'Redeem'; btn.enable(); } catch (_) {}
+    });
+  } catch (e) {}
+
+  try {
+    _$w('#modalCancelBtn').onClick(() => {
+      pendingRedeem = null;
+      try { _$w('#storeRedeemModal').hide(); } catch (_) {}
+    });
+  } catch (e) {}
+
   // ── Render catalog ──────────────────────────────────────────────────────────
 
   _$w('#storeRepeater').onItemReady(($item, itemData) => {
@@ -70,43 +129,13 @@ export async function initRewardsStoreWidget(memberId, opts = {}) {
       }
     } catch (e) {}
 
-    // Redeem click → modal confirm → call backend
+    // Redeem click → set pending context → show modal
     try {
       btn.onClick(async () => {
-        // Show confirmation modal
+        pendingRedeem = { itemData, btn };
         try {
           _$w('#storeRedeemModal').text = `Redeem "${itemData.name}" for ${itemData.pointsCost} pts?`;
           _$w('#storeRedeemModal').show();
-        } catch (e) {}
-
-        try {
-          _$w('#modalConfirmBtn').onClick(async () => {
-            try { _$w('#storeRedeemModal').hide(); } catch (_) {}
-            try { btn.label = 'Redeeming...'; btn.disable(); } catch (_) {}
-
-            try {
-              const result = await _redeemReward(memberId, itemData.rewardId);
-              if (result?.success) {
-                try { _$w('#storeStatus').text = `Redeemed! Your coupon code: ${result.couponCode}`; } catch (_) {}
-                try { _$w('#storeStatus').show(); } catch (_) {}
-                updateBalance(result.newBalance);
-              } else {
-                try { _$w('#storeStatus').text = result?.error || 'Redemption failed.'; } catch (_) {}
-                try { _$w('#storeStatus').show(); } catch (_) {}
-              }
-            } catch (err) {
-              try { _$w('#storeStatus').text = 'Redemption failed. Please try again.'; } catch (_) {}
-              try { _$w('#storeStatus').show(); } catch (_) {}
-            }
-
-            try { btn.label = 'Redeem'; btn.enable(); } catch (_) {}
-          });
-        } catch (e) {}
-
-        try {
-          _$w('#modalCancelBtn').onClick(() => {
-            try { _$w('#storeRedeemModal').hide(); } catch (_) {}
-          });
         } catch (e) {}
       });
     } catch (e) {}

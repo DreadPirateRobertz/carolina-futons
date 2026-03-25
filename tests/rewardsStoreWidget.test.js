@@ -19,6 +19,7 @@ function createMockElement() {
     disable: vi.fn(),
     onClick: vi.fn(),
     onItemReady: vi.fn(),
+    forEachItem: vi.fn(),
   };
 }
 
@@ -43,6 +44,20 @@ const HISTORY = [
   { rewardId: 'discount-5', redeemedAt: '2026-03-20T10:00:00Z', couponCode: 'CF-ABC123', status: 'active' },
   { rewardId: 'free-shipping', redeemedAt: '2026-03-15T08:00:00Z', couponCode: 'CF-DEF456', status: 'used' },
 ];
+
+// ── Helper: trigger item ready + get item scope ───────────────────────────────
+
+function callOnItemReady(itemData) {
+  const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
+  const itemElements = new Map();
+  const $item = (sel) => {
+    if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
+    return itemElements.get(sel);
+  };
+  $item._elements = itemElements;
+  onItemReadyCb($item, itemData);
+  return $item;
+}
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -91,63 +106,55 @@ describe('RewardsStoreWidget (CF-n932)', () => {
     expect(getEl('#storeRepeater').onItemReady).toHaveBeenCalled();
   });
 
-  describe('onItemReady callback', () => {
-    let onItemReadyCb;
+  it('registers modal handlers exactly once during init', async () => {
+    await init();
+    expect(getEl('#modalConfirmBtn').onClick).toHaveBeenCalledTimes(1);
+    expect(getEl('#modalCancelBtn').onClick).toHaveBeenCalledTimes(1);
+  });
 
+  describe('onItemReady callback', () => {
     beforeEach(async () => {
       await init();
-      onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
     });
 
-    function callWithItem(itemData) {
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      $item._elements = itemElements;
-      onItemReadyCb($item, itemData);
-      return $item;
-    }
-
     it('sets reward name, description, and cost', () => {
-      const $item = callWithItem(CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       expect($item('#rewardName').text).toBe('$5 Off');
       expect($item('#rewardDesc').text).toBe('$5 off your next order');
       expect($item('#rewardCost').text).toBe('500 pts');
     });
 
     it('sets reward image when available', () => {
-      const $item = callWithItem(CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       expect($item('#rewardImage').src).toBe('img1.jpg');
     });
 
     it('shows "Unlimited" for null stock', () => {
-      const $item = callWithItem(CATALOG[0]); // stock: null
+      const $item = callOnItemReady(CATALOG[0]); // stock: null
       expect($item('#rewardStock').text).toBe('Unlimited');
     });
 
     it('shows stock count for limited items', () => {
-      const $item = callWithItem(CATALOG[1]); // stock: 10
+      const $item = callOnItemReady(CATALOG[1]); // stock: 10
       expect($item('#rewardStock').text).toBe('10 left');
     });
 
     it('enables redeem button when balance is sufficient', () => {
-      const $item = callWithItem(CATALOG[0]); // 500 pts, balance is 1000
+      const $item = callOnItemReady(CATALOG[0]); // 500 pts, balance is 1000
       const btn = $item('#rewardRedeemBtn');
       expect(btn.label).toBe('Redeem');
       expect(btn.enable).toHaveBeenCalled();
     });
 
     it('disables redeem button when balance is insufficient', () => {
-      const $item = callWithItem(CATALOG[1]); // 1200 pts, balance is 1000
+      const $item = callOnItemReady(CATALOG[1]); // 1200 pts, balance is 1000
       const btn = $item('#rewardRedeemBtn');
       expect(btn.label).toBe('Not enough points');
       expect(btn.disable).toHaveBeenCalled();
     });
 
     it('registers onClick on redeem button', () => {
-      const $item = callWithItem(CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       expect($item('#rewardRedeemBtn').onClick).toHaveBeenCalled();
     });
   });
@@ -155,45 +162,24 @@ describe('RewardsStoreWidget (CF-n932)', () => {
   describe('redeem flow', () => {
     it('shows confirmation modal on redeem click', async () => {
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
-      const redeemHandler = $item('#rewardRedeemBtn').onClick.mock.calls[0][0];
-      await redeemHandler();
+      const $item = callOnItemReady(CATALOG[0]);
+      await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeRedeemModal').text).toContain('$5 Off');
       expect(getEl('#storeRedeemModal').show).toHaveBeenCalled();
     });
 
     it('calls redeemReward on modal confirm', async () => {
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
-      const redeemHandler = $item('#rewardRedeemBtn').onClick.mock.calls[0][0];
-      await redeemHandler();
-      // Trigger modal confirm
-      const confirmHandler = getEl('#modalConfirmBtn').onClick.mock.calls[0][0];
-      await confirmHandler();
+      const $item = callOnItemReady(CATALOG[0]);
+      await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
+      // Modal confirm handler registered once during init
+      await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
       expect(redeemReward).toHaveBeenCalledWith('member-1', 'discount-5');
     });
 
     it('shows coupon code on successful redeem', async () => {
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
       await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeStatus').text).toContain('CF-NEW789');
@@ -201,13 +187,7 @@ describe('RewardsStoreWidget (CF-n932)', () => {
 
     it('updates balance after successful redeem', async () => {
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
       await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeBalance').text).toBe('Your balance: 500 pts');
@@ -215,29 +195,17 @@ describe('RewardsStoreWidget (CF-n932)', () => {
 
     it('hides modal on cancel', async () => {
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
-      const cancelHandler = getEl('#modalCancelBtn').onClick.mock.calls[0][0];
-      cancelHandler();
+      // Cancel handler registered once during init
+      getEl('#modalCancelBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeRedeemModal').hide).toHaveBeenCalled();
     });
 
     it('shows error on failed redeem', async () => {
       redeemReward.mockResolvedValue({ success: false, error: 'Insufficient points' });
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
       await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeStatus').text).toBe('Insufficient points');
@@ -246,16 +214,36 @@ describe('RewardsStoreWidget (CF-n932)', () => {
     it('shows error on redeem exception', async () => {
       redeemReward.mockRejectedValue(new Error('Network error'));
       await init();
-      const onItemReadyCb = getEl('#storeRepeater').onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, CATALOG[0]);
+      const $item = callOnItemReady(CATALOG[0]);
       await $item('#rewardRedeemBtn').onClick.mock.calls[0][0]();
       await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
       expect(getEl('#storeStatus').text).toContain('Redemption failed');
+    });
+
+    it('does not double-spend: redeem → cancel → redeem → confirm calls backend once', async () => {
+      await init();
+      const $item = callOnItemReady(CATALOG[0]);
+      const clickRedeem = $item('#rewardRedeemBtn').onClick.mock.calls[0][0];
+      const clickConfirm = getEl('#modalConfirmBtn').onClick.mock.calls[0][0];
+      const clickCancel = getEl('#modalCancelBtn').onClick.mock.calls[0][0];
+
+      // First: click redeem, then cancel
+      await clickRedeem();
+      clickCancel();
+
+      // Second: click redeem again, then confirm
+      await clickRedeem();
+      await clickConfirm();
+
+      // Backend should only be called once (the second attempt)
+      expect(redeemReward).toHaveBeenCalledTimes(1);
+    });
+
+    it('confirm without pending redeem is a no-op', async () => {
+      await init();
+      // Click confirm without clicking any redeem button first
+      await getEl('#modalConfirmBtn').onClick.mock.calls[0][0]();
+      expect(redeemReward).not.toHaveBeenCalled();
     });
   });
 
