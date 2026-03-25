@@ -11,6 +11,7 @@ import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers'
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
+import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 
@@ -64,8 +65,8 @@ async function initProductPage() {
       try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) { console.warn('[ProductPage] Cached image display failed:', e.message); }
     }
 
-    await $w('#productDataset').onReady();
-    state.product = $w('#productDataset').getCurrentItem();
+    const { items: _productItems } = await wixData.query('Stores/Products').eq('slug', slug).find();
+    state.product = _productItems[0] || null;
     if (!state.product) {
       try { $w('#productName').text = 'Product Not Found'; } catch (e) {}
       try { $w('#productPrice').text = ''; } catch (e) {}

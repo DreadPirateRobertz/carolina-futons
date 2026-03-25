@@ -134,7 +134,7 @@ function makeProduct(price) {
     name: 'Test Product',
     price,
     formattedPrice: `$${price}.00`,
-    slug: 'test-product',
+    slug: 'eureka-futon-frame',
     mainMedia: 'img.jpg',
     description: 'Test',
     collections: [],
@@ -145,9 +145,10 @@ function makeProduct(price) {
 async function loadWithProduct(product) {
   elements.clear();
   vi.resetModules();
-  const productDataset = getEl('#productDataset');
-  productDataset.getCurrentItem = vi.fn(() => product);
-  productDataset.onReady = vi.fn(() => Promise.resolve());
+  // Seed wixData with the product (slug must match location path[1])
+  const { __seed, __reset } = await import('wix-data');
+  __reset();
+  __seed('Stores/Products', [product]);
   await import('../src/pages/Product Page.js');
   if (onReadyHandler) await onReadyHandler();
 }
