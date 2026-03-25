@@ -1021,3 +1021,50 @@ export const getActivityFeed = webMethod(
     });
   }
 );
+
+/**
+ * Get aggregate gamification stats for a member.
+ * Returns { totalPoints, currentTier, currentStreak, badgesEarned, questsCompleted, rank }.
+ *
+ * CF-ytrl
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ totalPoints: number, currentTier: string, currentStreak: number, badgesEarned: number, questsCompleted: number, rank: number }>}
+ */
+export const getGamificationStats = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    const [memberResult, badgesResult, questsResult, rankResult] = await Promise.all([
+      findMemberRecord(memberId),
+      wixData.query(MEMBER_BADGES_COLLECTION)
+        .eq('memberId', memberId)
+        .find({ suppressAuth: true }),
+      wixData.query(CHALLENGE_PROGRESS_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('completed', true)
+        .find({ suppressAuth: true }),
+      wixData.query(MEMBER_POINTS_COLLECTION)
+        .gt('totalPoints', 0)
+        .descending('totalPoints')
+        .find({ suppressAuth: true }),
+    ]);
+
+    const record = memberResult;
+    const totalPoints = record?.totalPoints ?? 0;
+    const tierInfo = computeTierInfo(totalPoints);
+
+    // Calculate rank from sorted list
+    const rankItems = rankResult.items;
+    const rankIdx = rankItems.findIndex(item => item.memberId === memberId);
+    const rank = rankIdx >= 0 ? rankIdx + 1 : rankItems.length + 1;
+
+    return {
+      totalPoints,
+      currentTier: tierInfo.tierName,
+      currentStreak: record?.currentStreakDays ?? 0,
+      badgesEarned: badgesResult.totalCount,
+      questsCompleted: questsResult.totalCount,
+      rank,
+    };
+  }
+);
