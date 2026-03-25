@@ -386,6 +386,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
   const existingStart = record.streakStartDate || todayET;
   const existingMultiplier = record.streakMultiplier || 1;
   const graceUsed = record.graceTokenUsedDate || null;
+  const existingLongest = record.longestStreakDays || 0;
 
   // Branch 1: already active today — no change
   if (lastActivity === todayET) {
@@ -396,6 +397,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
       streakMultiplier: existingMultiplier,
       milestoneBonus: 0,
       graceTokenUsedDate: graceUsed,
+      longestStreakDays: Math.max(existingDays, existingLongest),
     };
   }
 
@@ -411,6 +413,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
       streakMultiplier,
       milestoneBonus,
       graceTokenUsedDate: graceUsed,
+      longestStreakDays: Math.max(currentStreakDays, existingLongest),
     };
   }
 
@@ -426,10 +429,12 @@ export function updateStreakState(record, todayET, yesterdayET) {
       milestoneBonus: 0,
       graceTokenUsedDate: todayET, // mark token used for this month
       graceApplied: true,
+      longestStreakDays: Math.max(existingDays, existingLongest),
     };
   }
 
   // Branch 3b: missed 2+ days, or grace already used — reset streak
+  // CF-qsxp: preserve longestStreakDays across streak breaks
   return {
     currentStreakDays: 1,
     streakStartDate: todayET,
@@ -437,6 +442,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
     streakMultiplier: 1,
     milestoneBonus: 0,
     graceTokenUsedDate: graceUsed, // preserve existing (not consumed)
+    longestStreakDays: Math.max(existingDays, existingLongest),
   };
 }
 
