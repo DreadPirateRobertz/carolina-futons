@@ -283,6 +283,14 @@ export const receiveGamificationEvent = webMethod(
         logError(`gamificationEventReceiver — analytics insert failed for ${memberId}`, err);
       }
 
+      // CF-1faf: Cross-rig bus — badge + streak events (best-effort)
+      if (badgeUnlocked) {
+        try { await dispatchBusEvent({ event: 'badge_earned', userId: memberId, badgeId: badgeUnlocked }); } catch (_) {}
+      }
+      if (streakState.currentStreakDays > prevStreakDays) {
+        try { await dispatchBusEvent({ event: 'streak_extended', userId: memberId, currentStreakDays: streakState.currentStreakDays }); } catch (_) {}
+      }
+
       return {
         success: true,
         newTotal,

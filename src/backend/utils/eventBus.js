@@ -20,6 +20,8 @@ export const OUTBOUND_EVENTS = new Set([
   'points_earned',
   'tier_upgraded',
   'challenge_completed',
+  'badge_earned',
+  'streak_extended',
 ]);
 
 /**
