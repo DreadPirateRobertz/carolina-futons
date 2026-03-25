@@ -5,18 +5,24 @@
  */
 
 /**
- * @param {string} memberId
  * @param {{ getShareableProgress?: Function, $w?: Function }} [opts]
  */
-export async function initShareProgressWidget(memberId, opts = {}) {
+export async function initShareProgressWidget(opts = {}) {
   const _getShareableProgress = opts.getShareableProgress;
   const _$w = opts.$w || $w;
   const _navigator = opts.navigator || (typeof navigator !== 'undefined' ? navigator : null);
 
   let progress;
   try {
-    progress = await _getShareableProgress(memberId);
+    progress = await _getShareableProgress();
   } catch (e) {
+    try { _$w('#shareStatus').text = 'Unable to load progress. Please try again later.'; } catch (_) {}
+    try { _$w('#shareStatus').show(); } catch (_) {}
+    try { _$w('#shareCard').collapse(); } catch (_) {}
+    return;
+  }
+
+  if (progress && progress.error) {
     try { _$w('#shareStatus').text = 'Unable to load progress. Please try again later.'; } catch (_) {}
     try { _$w('#shareStatus').show(); } catch (_) {}
     try { _$w('#shareCard').collapse(); } catch (_) {}

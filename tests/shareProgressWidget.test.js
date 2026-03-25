@@ -46,8 +46,8 @@ describe('ShareProgressWidget (CF-fxby)', () => {
     mockNavigator = { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }, share: null };
   });
 
-  async function init(memberId = 'member-1', overrides = {}) {
-    await initShareProgressWidget(memberId, {
+  async function init(overrides = {}) {
+    await initShareProgressWidget({
       getShareableProgress,
       $w: mock$w,
       navigator: mockNavigator,
@@ -55,9 +55,17 @@ describe('ShareProgressWidget (CF-fxby)', () => {
     });
   }
 
-  it('calls getShareableProgress with memberId', async () => {
-    await init('member-99');
-    expect(getShareableProgress).toHaveBeenCalledWith('member-99');
+  it('calls getShareableProgress with no arguments (server resolves identity)', async () => {
+    await init();
+    expect(getShareableProgress).toHaveBeenCalledWith();
+  });
+
+  it('shows error and collapses card on auth_required error shape', async () => {
+    getShareableProgress.mockResolvedValue({ error: 'auth_required' });
+    await init();
+    expect(getEl('#shareStatus').text).toContain('Unable to load progress');
+    expect(getEl('#shareStatus').show).toHaveBeenCalled();
+    expect(getEl('#shareCard').collapse).toHaveBeenCalled();
   });
 
   describe('share card rendering', () => {

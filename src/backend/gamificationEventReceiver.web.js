@@ -1403,14 +1403,26 @@ export const getDailyQuests = webMethod(
 // ── Shareable progress (CF-fxby) ──────────────────────────────────────────────
 
 /**
- * Get a member's shareable progress summary for social sharing.
- * @param {string} memberId
- * @returns {Promise<{ tierName: string, totalPoints: number, streak: number, topBadges: string[], shareText: string, shareUrl: string }>}
+ * Get the authenticated caller's shareable progress summary for social sharing.
+ * Uses currentMember to resolve identity server-side — never trusts client-supplied memberId.
+ *
+ * @returns {Promise<{ tierName: string, totalPoints: number, streak: number, topBadges: string[], shareText: string, shareUrl: string } | { error: string }>}
+ *
+ * CF-fxby
  */
 export const getShareableProgress = webMethod(
-  Permissions.Anyone,
-  async (memberId) => {
-    if (!memberId) throw new Error('memberId is required');
+  Permissions.SiteMember,
+  async () => {
+    let memberId;
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      const caller = await currentMember.getMember();
+      memberId = caller?._id;
+    } catch (_) { /* auth unavailable */ }
+
+    if (!memberId) {
+      return { error: 'auth_required' };
+    }
 
     const record = await findMemberRecord(memberId);
     const totalPoints = record?.totalPoints ?? 0;
@@ -1426,8 +1438,9 @@ export const getShareableProgress = webMethod(
       .find({ suppressAuth: true });
     const topBadges = badgeResult.items.map(b => b.badgeName ?? b.badgeId ?? 'Badge');
 
-    const shareText = `I'm a ${tierInfo.tierName} member at Carolina Futons with ${totalPoints.toLocaleString()} points${streak > 0 ? ` and a ${streak}-day streak` : ''}! 🏆`;
-    const shareUrl = 'https://www.carolinafutons.com/referral';
+    const pointsStr = String(totalPoints).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const shareText = `I'm a ${tierInfo.tierName} member at Carolina Futons with ${pointsStr} points${streak > 0 ? ` and a ${streak}-day streak` : ''}! 🏆`;
+    const shareUrl = `https://www.carolinafutons.com/referral?ref=${encodeURIComponent(memberId)}`;
 
     return { tierName: tierInfo.tierName, totalPoints, streak, topBadges, shareText, shareUrl };
   }
