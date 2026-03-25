@@ -45,6 +45,8 @@ function formatTimeRemaining(expiresAt) {
  * @param {Function} [opts.getWeeklyChallenge]
  */
 export async function initChallengeOfTheWeekWidget(opts = {}) {
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+
   const $w = opts.$w ?? globalThis.$w;
   const getWeeklyChallenge = opts.getWeeklyChallenge ?? _defaultGetWeeklyChallenge;
 

@@ -78,6 +78,7 @@ function mockQueries(challengeItems, progressItems) {
   let queryCount = 0;
   wixData.query.mockImplementation(() => ({
     eq: vi.fn().mockReturnThis(),
+    gt: vi.fn().mockReturnThis(),
     descending: vi.fn().mockReturnThis(),
     ascending: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
@@ -102,10 +103,10 @@ describe('getWeeklyChallenge', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null when only expired weekly challenges exist', async () => {
-    mockQueries([
-      { _id: 'ch1', challengeId: 'ch1', title: 'Old', scope: 'weekly', active: true, targetCount: 100, expiresAt: PAST, _createdDate: PAST },
-    ], []);
+  it('returns null when only expired weekly challenges exist (server-filtered)', async () => {
+    // Server-side .gt('expiresAt') filters out expired challenges,
+    // so the query returns empty items
+    mockQueries([], []);
     const result = await getWeeklyChallenge();
     expect(result).toBeNull();
   });
@@ -179,13 +180,12 @@ describe('getWeeklyChallenge', () => {
     );
   });
 
-  it('picks the most recently created challenge when multiple active', async () => {
-    const older = new Date(Date.now() - 86_400_000).toISOString();
-    const newer = new Date().toISOString();
+  it('picks the most recently created challenge (server sorts descending)', async () => {
+    // Server returns newest first via .descending('_createdDate').limit(1),
+    // so mock returns only the newest as item[0]
     mockQueries(
       [
-        { _id: 'old', challengeId: 'old', title: 'Old Challenge', scope: 'weekly', active: true, targetCount: 100, expiresAt: FUTURE, _createdDate: older },
-        { _id: 'new', challengeId: 'new', title: 'New Challenge', scope: 'weekly', active: true, targetCount: 200, expiresAt: FUTURE, _createdDate: newer },
+        { _id: 'new', challengeId: 'new', title: 'New Challenge', scope: 'weekly', active: true, targetCount: 200, expiresAt: FUTURE, _createdDate: new Date().toISOString() },
       ],
       []
     );
