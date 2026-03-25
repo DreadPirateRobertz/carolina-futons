@@ -20,14 +20,17 @@ function makeEl() {
   };
 }
 
-function makeRepeaterItem() {
-  return {
+function makeScopedSelector() {
+  const els = {
     '#historyPoints': makeEl(),
     '#historyReason': makeEl(),
     '#historyDate':   makeEl(),
-    _class: '',
-    addClass: vi.fn(function (cls) { this._class = cls; }),
   };
+  const $item = (id) => els[id] ?? makeEl();
+  $item._els = els;
+  $item._class = '';
+  $item.addClass = vi.fn(function (cls) { this._class = cls; });
+  return $item;
 }
 
 function make$w() {
@@ -121,53 +124,59 @@ describe('initPointsHistoryWidget — repeater item rendering', () => {
     });
   });
 
-  function fireItemReady(tx) {
-    const $item = makeRepeaterItem();
-    const itemSelector = (id) => $item[id] ?? makeEl();
-    onItemReadyCb($item, itemSelector, tx);
-    return { $item, itemSelector };
+  function fireItemReady(itemData) {
+    const $item = makeScopedSelector();
+    onItemReadyCb($item, itemData);
+    return $item;
   }
 
   it('shows "+N pts" for positive points', async () => {
     const opts = makeOpts($w, [makeTx(100, 'Purchase', '2026-03-20', 'earn')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
-    expect(itemSelector('#historyPoints').text).toBe('+100 pts');
+    const $item = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
+    expect($item('#historyPoints').text).toBe('+100 pts');
   });
 
   it('shows "-N pts" for negative points', async () => {
     const opts = makeOpts($w, [makeTx(-50, 'Redemption', '2026-03-19', 'spend')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(makeTx(-50, 'Redemption', '2026-03-19', 'spend'));
-    expect(itemSelector('#historyPoints').text).toBe('-50 pts');
+    const $item = fireItemReady(makeTx(-50, 'Redemption', '2026-03-19', 'spend'));
+    expect($item('#historyPoints').text).toBe('-50 pts');
   });
 
   it('adds points-earned class for positive points', async () => {
     const opts = makeOpts($w, [makeTx(100, 'Purchase', '2026-03-20', 'earn')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { $item } = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
+    const $item = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
     expect($item.addClass).toHaveBeenCalledWith('points-earned');
   });
 
   it('adds points-spent class for negative points', async () => {
     const opts = makeOpts($w, [makeTx(-50, 'Redemption', '2026-03-19', 'spend')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { $item } = fireItemReady(makeTx(-50, 'Redemption', '2026-03-19', 'spend'));
+    const $item = fireItemReady(makeTx(-50, 'Redemption', '2026-03-19', 'spend'));
     expect($item.addClass).toHaveBeenCalledWith('points-spent');
   });
 
   it('sets historyReason text', async () => {
     const opts = makeOpts($w, [makeTx(100, 'Product Review', '2026-03-20', 'earn')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(makeTx(100, 'Product Review', '2026-03-20', 'earn'));
-    expect(itemSelector('#historyReason').text).toBe('Product Review');
+    const $item = fireItemReady(makeTx(100, 'Product Review', '2026-03-20', 'earn'));
+    expect($item('#historyReason').text).toBe('Product Review');
   });
 
   it('formats historyDate as MM/DD/YYYY', async () => {
     const opts = makeOpts($w, [makeTx(100, 'Purchase', '2026-03-20', 'earn')]);
     await initPointsHistoryWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
-    expect(itemSelector('#historyDate').text).toBe('03/20/2026');
+    const $item = fireItemReady(makeTx(100, 'Purchase', '2026-03-20', 'earn'));
+    expect($item('#historyDate').text).toBe('03/20/2026');
+  });
+
+  it('formats ISO datetime string correctly', async () => {
+    const opts = makeOpts($w, [makeTx(100, 'Purchase', '2026-03-20T14:30:00.000Z', 'earn')]);
+    await initPointsHistoryWidget(MEMBER_ID, opts);
+    const $item = fireItemReady(makeTx(100, 'Purchase', '2026-03-20T14:30:00.000Z', 'earn'));
+    expect($item('#historyDate').text).toBe('03/20/2026');
   });
 });
 

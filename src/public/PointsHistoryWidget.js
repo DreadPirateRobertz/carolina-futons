@@ -17,9 +17,12 @@
 import { getRecentPointsHistory as _defaultGetHistory } from 'backend/pointsHistoryService.web';
 
 function formatDate(dateStr) {
-  // dateStr is "YYYY-MM-DD" — reformat to "MM/DD/YYYY"
-  const [year, month, day] = String(dateStr).split('-');
-  return `${month}/${day}/${year}`;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const yyyy = d.getUTCFullYear();
+  return `${mm}/${dd}/${yyyy}`;
 }
 
 function formatPoints(points) {
@@ -56,18 +59,19 @@ export async function initPointsHistoryWidget(memberId, opts = {}) {
 
   try { $w('#noHistoryMsg').hide(); } catch (_) {}
   try { $w('#historyRepeater').show(); } catch (_) {}
-  try { $w('#historyRepeater').data = transactions; } catch (_) {}
 
   try {
-    $w('#historyRepeater').onItemReady(($item, $w2, item) => {
-      try { $w2('#historyPoints').text = formatPoints(item.points); } catch (_) {}
-      try { $w2('#historyReason').text = item.reason; } catch (_) {}
-      try { $w2('#historyDate').text = formatDate(item.date); } catch (_) {}
-      if (item.points >= 0) {
+    $w('#historyRepeater').onItemReady(($item, itemData) => {
+      try { $item('#historyPoints').text = formatPoints(itemData.points); } catch (_) {}
+      try { $item('#historyReason').text = itemData.reason; } catch (_) {}
+      try { $item('#historyDate').text = formatDate(itemData.date); } catch (_) {}
+      if (itemData.points >= 0) {
         try { $item.addClass('points-earned'); } catch (_) {}
       } else {
         try { $item.addClass('points-spent'); } catch (_) {}
       }
     });
   } catch (_) {}
+
+  try { $w('#historyRepeater').data = transactions; } catch (_) {}
 }
