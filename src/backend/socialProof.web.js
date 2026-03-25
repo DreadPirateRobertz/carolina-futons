@@ -412,3 +412,58 @@ function anonymizeCity(city) {
   // Return city name, title-cased
   return city.trim().replace(/\b\w/g, c => c.toUpperCase());
 }
+
+// ── ZIP-based social proof (CF-rhqm) ─────────────────────────────────
+
+/**
+ * Count recent furniture buyers near a ZIP code (by 3-digit prefix).
+ * Returns { count, city } for display as "X people near [City] bought this week."
+ * Queries Stores/Orders for completed orders with matching ZIP prefix.
+ *
+ * Privacy-safe: only returns aggregate count and city name, no PII.
+ *
+ * CF-rhqm
+ *
+ * @param {string} zipPrefix — 3-digit ZIP prefix (e.g. '287' for Hendersonville, NC area)
+ * @param {number} [days=7] — lookback window in days
+ * @returns {Promise<{ count: number, city: string } | null>}
+ */
+export const getLocalBuyerCount = webMethod(
+  Permissions.Anyone,
+  async (zipPrefix, days = 7) => {
+    if (!zipPrefix || typeof zipPrefix !== 'string') return null;
+
+    const cleaned = zipPrefix.replace(/\D/g, '').slice(0, 3);
+    if (cleaned.length < 3) return null;
+
+    try {
+      const cutoff = new Date(Date.now() - days * 86_400_000);
+
+      const orderResult = await wixData
+        .query('Stores/Orders')
+        .ge('_createdDate', cutoff)
+        .startsWith('shippingInfo.shipmentDetails.address.postalCode', cleaned)
+        .limit(1000)
+        .find({ suppressAuth: true });
+
+      // Deduplicate by buyer email for accurate people count
+      const uniqueBuyers = new Set();
+      let sampleCity = '';
+      for (const order of orderResult.items) {
+        const email = order.buyerInfo?.email;
+        if (email) uniqueBuyers.add(email.toLowerCase());
+        if (!sampleCity) {
+          sampleCity = order.shippingInfo?.shipmentDetails?.address?.city || '';
+        }
+      }
+
+      return {
+        count: uniqueBuyers.size,
+        city: anonymizeCity(sampleCity),
+      };
+    } catch (err) {
+      logError('getLocalBuyerCount — failed', err);
+      return null;
+    }
+  }
+);
