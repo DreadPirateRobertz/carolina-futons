@@ -32,6 +32,7 @@ import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from '
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
 import { buildYouTubeEmbed } from 'public/videoHelpers.js';
 import { initPDPSocialProofBadge } from 'public/PDPSocialProofBadge.js';
+import { initProductStructuredData } from 'public/productStructuredData.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -127,6 +128,7 @@ async function initProductPage() {
         m.initThumbnailScroll($w, state);
       }, critical: false },
       { name: 'productSchema', init: () => injectProductSchema($w, state), critical: false },
+      { name: 'productStructuredData', init: () => initProductStructuredData(state.product?._id, { $w }), critical: false },
       { name: 'pinterestMeta', init: () => injectPinterestMeta(state), critical: false },
       { name: 'flashSaleBadge', init: () => initFlashSaleUrgency(), critical: false },
       { name: 'socialShare', init: () => initSocialShare($w, state), critical: false },
