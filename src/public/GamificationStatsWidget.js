@@ -17,12 +17,10 @@
 
 import { getGamificationStats as _defaultGetGamificationStats } from 'backend/gamificationEventReceiver.web';
 
-const TIER_CLASSES = {
-  'Bronze':   'tier-bronze',
-  'Silver':   'tier-silver',
-  'Gold':     'tier-gold',
-  'Platinum': 'tier-platinum',
-};
+// Tier class derived from name: "Trail Blazer" → "tier-trail-blazer"
+function tierClass(tierName) {
+  return `tier-${tierName.toLowerCase().replace(/\s+/g, '-')}`;
+}
 
 /**
  * Initialise the gamification stats widget.
@@ -63,8 +61,7 @@ export async function initGamificationStatsWidget(memberId, opts = {}) {
     // Tier badge
     try {
       $w('#statsTier').text = stats.currentTier;
-      const tierClass = TIER_CLASSES[stats.currentTier];
-      if (tierClass) $w('#statsTier').addClass(tierClass);
+      $w('#statsTier').addClass(tierClass(stats.currentTier));
     } catch {}
 
     // Streak

@@ -15,7 +15,7 @@
  * CF-gx44
  */
 import { describe, it, expect, vi } from 'vitest';
-import { initActivityFeedWidget, formatRelativeTime } from '../src/public/ActivityFeedWidget.js';
+import { initActivityFeedWidget, formatRelativeTime, humanizeEventType } from '../src/public/ActivityFeedWidget.js';
 
 // ── $w mock helpers ───────────────────────────────────────────────────────────
 
@@ -230,5 +230,46 @@ describe('error handling', () => {
     const $w = make$w();
     const opts = { $w, getActivityFeed: vi.fn().mockRejectedValue(new Error('fail')), now: NOW };
     await expect(initActivityFeedWidget(MEMBER_ID, opts)).resolves.not.toThrow();
+  });
+});
+
+describe('humanizeEventType (CF-r6r1)', () => {
+  it('maps gamification_add_to_cart to human string', () => {
+    expect(humanizeEventType('gamification_add_to_cart')).toBe('Added item to cart');
+  });
+
+  it('maps gamification_submit_review to human string', () => {
+    expect(humanizeEventType('gamification_submit_review')).toBe('Submitted a product review');
+  });
+
+  it('maps gamification_order_complete to human string', () => {
+    expect(humanizeEventType('gamification_order_complete')).toBe('Completed a purchase');
+  });
+
+  it('maps streak_extended to human string', () => {
+    expect(humanizeEventType('streak_extended')).toBe('Extended streak');
+  });
+
+  it('maps badge_earned to human string', () => {
+    expect(humanizeEventType('badge_earned')).toBe('Earned a badge');
+  });
+
+  it('strips gamification_ prefix and cleans underscores for unknown events', () => {
+    expect(humanizeEventType('gamification_unknown_event')).toBe('unknown event');
+  });
+
+  it('cleans underscores for non-gamification unknown events', () => {
+    expect(humanizeEventType('some_other_event')).toBe('some other event');
+  });
+
+  it('passes through already-human descriptions unchanged', () => {
+    expect(humanizeEventType('Earned 50 pts for product review')).toBe('Earned 50 pts for product review');
+  });
+
+  it('renders humanized description in repeater item', async () => {
+    const $w = make$w();
+    await initActivityFeedWidget(MEMBER_ID, makeOpts($w, [makeActivity()]));
+    const $item = fireItemReady($w, makeActivity({ description: 'gamification_add_to_cart' }));
+    expect($item._els['#activityDesc'].text).toBe('Added item to cart');
   });
 });

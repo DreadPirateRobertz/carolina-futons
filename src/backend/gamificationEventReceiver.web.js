@@ -20,7 +20,7 @@
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
-import { POINT_VALUES, STREAK_RECOVERY_COST, getTierForPoints, getStreakMultiplier } from 'public/gamificationTokens.js';
+import { POINT_VALUES, STREAK_RECOVERY_COST, getTierForPoints, getStreakMultiplier, TIER_NAMES } from 'public/gamificationTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, getYesterdayOf, tsToETDate } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
@@ -930,31 +930,32 @@ export const getLeaderboard = webMethod(
   }
 );
 
-// ── Tier definitions for RewardsTierWidget (CF-f5j9) ─────────────────────────
+// ── Tier benefits (keyed by canonical tier name from gamificationTokens.js) ──
+// CF-f5j9, CF-r6r1: uses TIER_NAMES from gamificationTokens.js as single source of truth
 
-const REWARDS_TIERS = [
-  { name: 'Bronze',   min: 0,    benefits: ['1x points'] },
-  { name: 'Silver',   min: 500,  benefits: ['1.5x points', 'Free shipping on orders over $500'] },
-  { name: 'Gold',     min: 1500, benefits: ['2x points', 'Free shipping all orders', 'Early access to sales'] },
-  { name: 'Platinum', min: 4000, benefits: ['3x points', 'Free shipping', 'Early access', 'Birthday double points', 'Exclusive products'] },
-];
+const TIER_BENEFITS = {
+  'Trail Blazer':      ['1x points'],
+  'Mountain Guide':    ['1.5x points', 'Free shipping on orders over $500'],
+  'Summit Master':     ['2x points', 'Free shipping all orders', 'Early access to sales'],
+  'Blue Ridge Legend': ['3x points', 'Free shipping', 'Early access', 'Birthday double points', 'Exclusive products'],
+};
 
 function computeTierInfo(totalPoints) {
   const pts = Math.max(0, totalPoints ?? 0);
   let tierIdx = 0;
-  for (let i = REWARDS_TIERS.length - 1; i >= 0; i--) {
-    if (pts >= REWARDS_TIERS[i].min) { tierIdx = i; break; }
+  for (let i = TIER_NAMES.length - 1; i >= 0; i--) {
+    if (pts >= TIER_NAMES[i].threshold) { tierIdx = i; break; }
   }
-  const tier = REWARDS_TIERS[tierIdx];
-  const nextTier = REWARDS_TIERS[tierIdx + 1] ?? null;
+  const tier = TIER_NAMES[tierIdx];
+  const nextTier = TIER_NAMES[tierIdx + 1] ?? null;
   return {
-    currentTier: tier.name.toLowerCase(),
+    currentTier: tier.name.toLowerCase().replace(/\s+/g, '-'),
     tierName: tier.name,
-    pointsInTier: pts - tier.min,
-    pointsToNextTier: nextTier ? nextTier.min - pts : 0,
+    pointsInTier: pts - tier.threshold,
+    pointsToNextTier: nextTier ? nextTier.threshold - pts : 0,
     nextTierName: nextTier ? nextTier.name : null,
-    benefits: tier.benefits,
-    nextTierBenefits: nextTier ? nextTier.benefits : null,
+    benefits: TIER_BENEFITS[tier.name] ?? [],
+    nextTierBenefits: nextTier ? (TIER_BENEFITS[nextTier.name] ?? []) : null,
   };
 }
 

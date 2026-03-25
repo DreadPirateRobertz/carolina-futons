@@ -29,6 +29,28 @@ const ICON_MAP = {
   'arrow-up': '\u2B06\uFE0F',
 };
 
+// CF-r6r1: human-readable display names for raw event types
+const EVENT_DISPLAY_NAMES = {
+  gamification_add_to_cart:      'Added item to cart',
+  gamification_submit_review:    'Submitted a product review',
+  gamification_referral_shared:  'Shared a referral',
+  gamification_referral_accepted: 'Referral accepted',
+  gamification_order_complete:   'Completed a purchase',
+  gamification_ar_used:          'Used AR try-on',
+  gamification_wishlist_add:     'Added to wishlist',
+  gamification_spin_completed:   'Completed a spin',
+  streak_extended:               'Extended streak',
+  streak_milestone:              'Hit a streak milestone',
+  badge_earned:                  'Earned a badge',
+  tier_upgraded:                 'Upgraded tier',
+  quest_complete:                'Completed a quest',
+  challenge_completed:           'Completed a challenge',
+};
+
+export function humanizeEventType(rawType) {
+  return EVENT_DISPLAY_NAMES[rawType] ?? rawType.replace(/^gamification_/, '').replace(/_/g, ' ');
+}
+
 /**
  * Format a timestamp as relative time.
  * @param {string|Date} ts
@@ -92,7 +114,7 @@ export async function initActivityFeedWidget(memberId, opts = {}) {
   try {
     $w('#activityRepeater').onItemReady(($item, itemData) => {
       try { $item('#activityIcon').text = ICON_MAP[itemData.iconType] ?? ICON_MAP.cart; } catch {}
-      try { $item('#activityDesc').text = itemData.description; } catch {}
+      try { $item('#activityDesc').text = humanizeEventType(itemData.description); } catch {}
       try {
         $item('#activityPoints').text = itemData.pointsEarned > 0
           ? `+${itemData.pointsEarned} pts`

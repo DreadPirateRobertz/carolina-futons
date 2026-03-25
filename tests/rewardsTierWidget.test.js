@@ -1,17 +1,11 @@
 /**
  * @file rewardsTierWidget.test.js
- * @description Tests for CF-f5j9: RewardsTierWidget — tier display with progress.
+ * @description Tests for CF-f5j9, CF-r6r1: RewardsTierWidget — tier display with progress.
  *
- * Covers:
- *  - correct tier at each boundary (499=Bronze, 500=Silver, 1499=Silver, 1500=Gold, 3999=Gold, 4000=Platinum)
- *  - progress bar math
- *  - benefits list
- *  - next tier preview
- *  - Platinum shows no next tier
- *  - error state
- *  - no throw on reject
+ * Uses canonical tier names/thresholds from gamificationTokens.js:
+ *   Trail Blazer (0), Mountain Guide (500), Summit Master (2000), Blue Ridge Legend (5000)
  *
- * CF-f5j9
+ * CF-f5j9, CF-r6r1
  */
 import { describe, it, expect, vi } from 'vitest';
 import { initRewardsTierWidget } from '../src/public/RewardsTierWidget.js';
@@ -65,11 +59,11 @@ const MEMBER_ID = 'mem-test';
 
 function makeTierData(overrides = {}) {
   return {
-    currentTier: 'bronze',
-    tierName: 'Bronze',
+    currentTier: 'trail-blazer',
+    tierName: 'Trail Blazer',
     pointsInTier: 200,
     pointsToNextTier: 300,
-    nextTierName: 'Silver',
+    nextTierName: 'Mountain Guide',
     benefits: ['1x points'],
     nextTierBenefits: ['1.5x points', 'Free shipping on orders over $500'],
     ...overrides,
@@ -85,66 +79,65 @@ function makeOpts($w, tierData) {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('tier boundaries', () => {
-  it('499 points = Bronze', async () => {
+describe('tier boundaries (canonical: Trail Blazer/Mountain Guide/Summit Master/Blue Ridge Legend)', () => {
+  it('499 points = Trail Blazer', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'bronze', tierName: 'Bronze', pointsInTier: 499, pointsToNextTier: 1, nextTierName: 'Silver',
+      currentTier: 'trail-blazer', tierName: 'Trail Blazer', pointsInTier: 499, pointsToNextTier: 1, nextTierName: 'Mountain Guide',
     })));
-    expect($w._els['#tierName'].text).toBe('Bronze');
-    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-bronze');
+    expect($w._els['#tierName'].text).toBe('Trail Blazer');
+    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-trail-blazer');
   });
 
-  it('500 points = Silver', async () => {
+  it('500 points = Mountain Guide', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'silver', tierName: 'Silver', pointsInTier: 0, pointsToNextTier: 1000, nextTierName: 'Gold',
+      currentTier: 'mountain-guide', tierName: 'Mountain Guide', pointsInTier: 0, pointsToNextTier: 1500, nextTierName: 'Summit Master',
     })));
-    expect($w._els['#tierName'].text).toBe('Silver');
-    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-silver');
+    expect($w._els['#tierName'].text).toBe('Mountain Guide');
+    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-mountain-guide');
   });
 
-  it('1499 points = Silver', async () => {
+  it('1999 points = Mountain Guide', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'silver', tierName: 'Silver', pointsInTier: 999, pointsToNextTier: 1, nextTierName: 'Gold',
+      currentTier: 'mountain-guide', tierName: 'Mountain Guide', pointsInTier: 1499, pointsToNextTier: 1, nextTierName: 'Summit Master',
     })));
-    expect($w._els['#tierName'].text).toBe('Silver');
+    expect($w._els['#tierName'].text).toBe('Mountain Guide');
   });
 
-  it('1500 points = Gold', async () => {
+  it('2000 points = Summit Master', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'gold', tierName: 'Gold', pointsInTier: 0, pointsToNextTier: 2500, nextTierName: 'Platinum',
+      currentTier: 'summit-master', tierName: 'Summit Master', pointsInTier: 0, pointsToNextTier: 3000, nextTierName: 'Blue Ridge Legend',
     })));
-    expect($w._els['#tierName'].text).toBe('Gold');
-    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-gold');
+    expect($w._els['#tierName'].text).toBe('Summit Master');
+    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-summit-master');
   });
 
-  it('3999 points = Gold', async () => {
+  it('4999 points = Summit Master', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'gold', tierName: 'Gold', pointsInTier: 2499, pointsToNextTier: 1, nextTierName: 'Platinum',
+      currentTier: 'summit-master', tierName: 'Summit Master', pointsInTier: 2999, pointsToNextTier: 1, nextTierName: 'Blue Ridge Legend',
     })));
-    expect($w._els['#tierName'].text).toBe('Gold');
+    expect($w._els['#tierName'].text).toBe('Summit Master');
   });
 
-  it('4000 points = Platinum', async () => {
+  it('5000 points = Blue Ridge Legend', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'platinum', tierName: 'Platinum', pointsInTier: 0, pointsToNextTier: 0,
+      currentTier: 'blue-ridge-legend', tierName: 'Blue Ridge Legend', pointsInTier: 0, pointsToNextTier: 0,
       nextTierName: null, nextTierBenefits: null,
       benefits: ['3x points', 'Free shipping', 'Early access', 'Birthday double points', 'Exclusive products'],
     })));
-    expect($w._els['#tierName'].text).toBe('Platinum');
-    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-platinum');
+    expect($w._els['#tierName'].text).toBe('Blue Ridge Legend');
+    expect($w._els['#tierBadge'].addClass).toHaveBeenCalledWith('tier-blue-ridge-legend');
   });
 });
 
 describe('progress bar', () => {
   it('calculates correct percentage', async () => {
     const $w = make$w();
-    // 200 points in tier, 300 to next = 200/500 = 40%
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
       pointsInTier: 200, pointsToNextTier: 300,
     })));
@@ -163,15 +156,15 @@ describe('progress bar', () => {
   it('shows points needed text', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      pointsToNextTier: 300, nextTierName: 'Silver',
+      pointsToNextTier: 300, nextTierName: 'Mountain Guide',
     })));
-    expect($w._els['#tierPointsNeeded'].text).toBe('300 more points to Silver');
+    expect($w._els['#tierPointsNeeded'].text).toBe('300 more points to Mountain Guide');
   });
 
-  it('hides progress bar at Platinum', async () => {
+  it('hides progress bar at max tier', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
-      currentTier: 'platinum', tierName: 'Platinum',
+      currentTier: 'blue-ridge-legend', tierName: 'Blue Ridge Legend',
       nextTierName: null, nextTierBenefits: null,
       pointsInTier: 1000, pointsToNextTier: 0,
     })));
@@ -198,7 +191,7 @@ describe('benefits list', () => {
     expect($item._els['#benefitText'].text).toBe('2x points');
   });
 
-  it('shows multiple benefits for Gold tier', async () => {
+  it('shows multiple benefits for Summit Master tier', async () => {
     const $w = make$w();
     const benefits = ['2x points', 'Free shipping all orders', 'Early access to sales'];
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({ benefits })));
@@ -216,7 +209,7 @@ describe('next tier preview', () => {
     expect($w._els['#tierNextBenefits'].show).toHaveBeenCalled();
   });
 
-  it('hides next tier benefits at Platinum', async () => {
+  it('hides next tier benefits at max tier', async () => {
     const $w = make$w();
     await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData({
       nextTierName: null, nextTierBenefits: null,

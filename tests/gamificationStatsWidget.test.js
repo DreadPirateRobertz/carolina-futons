@@ -54,7 +54,7 @@ const MEMBER_ID = 'mem-test';
 function makeStats(overrides = {}) {
   return {
     totalPoints: 2450,
-    currentTier: 'Gold',
+    currentTier: 'Summit Master',
     currentStreak: 7,
     badgesEarned: 12,
     questsCompleted: 45,
@@ -110,29 +110,29 @@ describe('stats rendering', () => {
   });
 });
 
-describe('tier badge color', () => {
-  it('adds tier-bronze class for Bronze', async () => {
+describe('tier badge color (canonical tier names)', () => {
+  it('adds tier-trail-blazer class for Trail Blazer', async () => {
     const $w = make$w();
-    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Bronze' })));
-    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-bronze');
+    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Trail Blazer' })));
+    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-trail-blazer');
   });
 
-  it('adds tier-silver class for Silver', async () => {
+  it('adds tier-mountain-guide class for Mountain Guide', async () => {
     const $w = make$w();
-    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Silver' })));
-    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-silver');
+    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Mountain Guide' })));
+    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-mountain-guide');
   });
 
-  it('adds tier-gold class for Gold', async () => {
+  it('adds tier-summit-master class for Summit Master', async () => {
     const $w = make$w();
-    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Gold' })));
-    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-gold');
+    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Summit Master' })));
+    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-summit-master');
   });
 
-  it('adds tier-platinum class for Platinum', async () => {
+  it('adds tier-blue-ridge-legend class for Blue Ridge Legend', async () => {
     const $w = make$w();
-    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Platinum' })));
-    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-platinum');
+    await initGamificationStatsWidget(MEMBER_ID, makeOpts($w, makeStats({ currentTier: 'Blue Ridge Legend' })));
+    expect($w._els['#statsTier'].addClass).toHaveBeenCalledWith('tier-blue-ridge-legend');
   });
 });
 
