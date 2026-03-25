@@ -179,4 +179,9 @@ describe('initReferralWidget — error handling', () => {
     await initReferralWidget(MEMBER_ID, opts);
     expect($w('#referralLink').text).toBe('');
   });
+
+  it('does not throw when backend returns {error} shape', async () => {
+    const opts = makeOpts($w, { error: 'service_unavailable' });
+    await expect(initReferralWidget(MEMBER_ID, opts)).resolves.not.toThrow();
+  });
 });
