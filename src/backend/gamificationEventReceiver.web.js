@@ -875,3 +875,28 @@ export const recoverStreak = webMethod(
     }
   }
 );
+
+/**
+ * Get streak data for a member (admin-callable, takes memberId).
+ * Returns { currentStreak, longestStreak, lastActivityDate }.
+ *
+ * CF-4xnp
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ currentStreak: number, longestStreak: number, lastActivityDate: string|null }>}
+ */
+export const getStreakData = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    const record = await findMemberRecord(memberId);
+    if (!record) {
+      return { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
+    }
+    const currentStreak = record.currentStreakDays ?? 0;
+    return {
+      currentStreak,
+      longestStreak: record.longestStreakDays ?? currentStreak,
+      lastActivityDate: record.lastActivityDate ?? null,
+    };
+  }
+);
