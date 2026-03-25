@@ -157,6 +157,7 @@ async function initProductPage() {
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
+      { name: 'subscribeAndSave', init: async () => { const m = await import('public/SubscribeAndSave.js'); await m.initSubscribeAndSave(state.product?._id, state.product?.name, { $w }); }, critical: false },
       {
         name: 'productQnA',
         critical: false,

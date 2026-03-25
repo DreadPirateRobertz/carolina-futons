@@ -37,6 +37,15 @@ const BASE_DISCOUNT = 10;
 const MULTI_DISCOUNT = 15;
 const MULTI_THRESHOLD = 3;
 
+// ── Eligible categories for auto-delivery (CF-wzv8) ─────────────────────────
+const SUBSCRIBABLE_CATEGORIES = new Set([
+  'mattress-protectors',
+  'cleaning-supplies',
+  'pillow-protectors',
+  'sheets',
+  'mattress-toppers',
+]);
+
 // ── Helpers ───────────────────────────────────────────────────────────
 
 /**
@@ -492,6 +501,49 @@ export const getSubscriberDiscount = webMethod(
     } catch (err) {
       console.error('Error getting subscriber discount:', err);
       return { success: false, message: 'Failed to get discount', discount: 0, activeCount: 0 };
+    }
+  }
+);
+
+/**
+ * Check if a product is eligible for Subscribe & Save.
+ * Matches product collections against SUBSCRIBABLE_CATEGORIES.
+ *
+ * CF-wzv8
+ *
+ * @function isProductSubscribable
+ * @param {string} productId
+ * @returns {Promise<{ subscribable: boolean, discount: number }>}
+ * @permission Anyone — public info for product pages
+ */
+export const isProductSubscribable = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    try {
+      const cleanId = validateId(productId);
+      if (!cleanId) return { subscribable: false, discount: 0 };
+
+      const result = await wixData.query('Stores/Products')
+        .eq('_id', cleanId)
+        .include('collections')
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (result.items.length === 0) return { subscribable: false, discount: 0 };
+
+      const product = result.items[0];
+      const collections = Array.isArray(product.collections)
+        ? product.collections.map(c => typeof c === 'string' ? c : c.slug || c.name || '')
+        : [];
+
+      const eligible = collections.some(slug =>
+        SUBSCRIBABLE_CATEGORIES.has(slug.toLowerCase())
+      );
+
+      return { subscribable: eligible, discount: eligible ? BASE_DISCOUNT : 0 };
+    } catch (err) {
+      console.error('Error checking subscription eligibility:', err);
+      return { subscribable: false, discount: 0 };
     }
   }
 );
