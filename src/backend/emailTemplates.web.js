@@ -63,7 +63,8 @@ const TEMPLATE_REGISTRY = {
     step: 1,
     subjectLine: 'You left something behind at Carolina Futons',
     previewText: 'Your cart is saved — come back and finish your order.',
-    variables: ['buyerName', 'cartTotal', 'itemSummary', 'checkoutId', 'email'],
+    variables: ['buyerName', 'cartTotal', 'itemSummary', 'checkoutId', 'email',
+      'pointsBalance', 'pointsDiscount', 'pointsToEarn', 'nextTierName', 'pointsToNextTier', 'hasLoyalty'],
     category: 'recovery',
   },
   cart_recovery_2: {
