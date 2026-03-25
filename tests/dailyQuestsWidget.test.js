@@ -249,13 +249,28 @@ describe('initDailyQuestsWidget — timer', () => {
 // ── Error handling ───────────────────────────────────────────────────────────
 
 describe('initDailyQuestsWidget — error handling', () => {
-  let $w;
-  beforeEach(() => { vi.clearAllMocks(); $w = make$w(); });
+  let $w, consoleSpy;
+  beforeEach(() => {
+    vi.clearAllMocks();
+    $w = make$w();
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  afterEach(() => { consoleSpy.mockRestore(); });
 
   it('does not throw when getDailyQuests rejects', async () => {
     const opts = makeOpts($w, []);
     opts.getDailyQuests.mockRejectedValue(new Error('Service down'));
     await expect(initDailyQuestsWidget(MEMBER_ID, opts)).resolves.not.toThrow();
+  });
+
+  it('logs error when getDailyQuests rejects', async () => {
+    const opts = makeOpts($w, []);
+    opts.getDailyQuests.mockRejectedValue(new Error('Service down'));
+    await initDailyQuestsWidget(MEMBER_ID, opts);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[DailyQuestsWidget] failed to load quests',
+      expect.any(Error),
+    );
   });
 
   it('shows #questsError on getDailyQuests rejection', async () => {
@@ -284,5 +299,25 @@ describe('initDailyQuestsWidget — error handling', () => {
     opts.getDailyQuests.mockResolvedValue({ error: 'auth_required' });
     await initDailyQuestsWidget(MEMBER_ID, opts);
     expect($w('#questsError').show).toHaveBeenCalled();
+  });
+
+  it('hides #questsRepeater and #questsTimer on error-shape response', async () => {
+    const opts = makeOpts($w, []);
+    opts.getDailyQuests.mockResolvedValue({ error: 'service_unavailable' });
+    await initDailyQuestsWidget(MEMBER_ID, opts);
+    expect($w('#questsRepeater').hide).toHaveBeenCalled();
+    expect($w('#questsTimer').hide).toHaveBeenCalled();
+  });
+
+  it('shows empty state for null description fallback', async () => {
+    $w = make$w();
+    $w('#questsRepeater').onItemReady.mockImplementation(function (cb) {
+      const $itemEls = makeRepeaterItemEls();
+      const $item = (id) => $itemEls[id] ?? makeEl();
+      cb($item, makeQuest({ description: null }));
+      expect($item('#questDesc').text).toBe('');
+    });
+    const opts = makeOpts($w, [makeQuest({ description: null })]);
+    await initDailyQuestsWidget(MEMBER_ID, opts);
   });
 });
