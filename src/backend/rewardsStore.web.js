@@ -198,15 +198,29 @@ export const redeemReward = webMethod(
 
       const couponCode = await generateUniqueCouponCode();
 
-      await wixData.insert(REWARD_REDEMPTIONS_COLLECTION, {
-        memberId,
-        rewardId: reward.rewardId,
-        rewardType: reward.type,
-        pointsSpent: reward.pointsCost,
-        couponCode,
-        status: 'active',
-        redeemedAt: new Date(),
-      }, { suppressAuth: true });
+      // Insert redemption record — rollback points if this fails
+      try {
+        await wixData.insert(REWARD_REDEMPTIONS_COLLECTION, {
+          memberId,
+          rewardId: reward.rewardId,
+          rewardType: reward.type,
+          pointsSpent: reward.pointsCost,
+          couponCode,
+          status: 'active',
+          redeemedAt: new Date(),
+        }, { suppressAuth: true });
+      } catch (insertErr) {
+        logError(`redeemReward — redemption insert failed, rolling back points for ${memberId}`, insertErr);
+        try {
+          await wixData.update(MEMBER_POINTS_COLLECTION, {
+            ...record,
+            totalPoints: currentBalance,
+          }, { suppressAuth: true });
+        } catch (rollbackErr) {
+          logError(`redeemReward — CRITICAL: rollback failed for ${memberId}, points lost: ${reward.pointsCost}`, rollbackErr);
+        }
+        return { error: 'redemption_failed' };
+      }
 
       try {
         await insertLedgerEntry({

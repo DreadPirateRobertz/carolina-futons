@@ -251,6 +251,33 @@ describe('redeemReward', () => {
     expect(result.error).toBe('concurrent_modification');
     expect(logError).toHaveBeenCalledWith(expect.stringContaining('TOCTOU'));
   });
+
+  it('rolls back points when redemption insert fails', async () => {
+    mockMemberPoints(1000);
+    // Override insert to reject (simulates redemption record insert failure)
+    wixData.insert.mockRejectedValue(new Error('Insert failed'));
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.error).toBe('redemption_failed');
+    // Verify rollback: update called twice (deduct + restore)
+    expect(wixData.update).toHaveBeenCalledTimes(2);
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('rolling back points'),
+      expect.any(Error),
+    );
+  });
+
+  it('returns success even when ledger insert fails', async () => {
+    mockMemberPoints(1000);
+    wixData.insert.mockResolvedValue({}); // redemption insert succeeds
+    insertLedgerEntry.mockRejectedValue(new Error('Ledger down'));
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
+    expect(result.success).toBe(true);
+    expect(result.couponCode).toMatch(/^CF-/);
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('ledger insert failed'),
+      expect.any(Error),
+    );
+  });
 });
 
 // ── getRedemptionHistory ─────────────────────────────────────────────────────
