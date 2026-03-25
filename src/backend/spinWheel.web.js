@@ -336,3 +336,58 @@ export const spinWheel = webMethod(
     }
   },
 );
+
+// ── Email capture for spin-to-win gate (CF-4tal) ────────────────────────────
+
+const SPIN_EMAIL_COLLECTION = 'SpinEmailCaptures';
+
+/**
+ * Capture an email address before allowing a spin.
+ * Upserts to CRM contacts and records in SpinEmailCaptures collection.
+ *
+ * @param {string} email - Visitor email address
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export const captureSpinEmail = webMethod(
+  Permissions.Anyone,
+  async (email) => {
+    try {
+      if (!email || typeof email !== 'string') {
+        return { success: false, error: 'EMAIL_REQUIRED' };
+      }
+      const trimmed = email.trim().toLowerCase();
+      if (!/^[^\s@<>]+@[^\s@<>.][^\s@<>]*\.[^\s@<>]+$/.test(trimmed)) {
+        return { success: false, error: 'INVALID_EMAIL' };
+      }
+
+      // Check if already captured (avoid duplicates)
+      const existing = await wixData.query(SPIN_EMAIL_COLLECTION)
+        .eq('email', trimmed)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (existing.items.length === 0) {
+        await wixData.insert(SPIN_EMAIL_COLLECTION, {
+          email: trimmed,
+          capturedAt: new Date(),
+          source: 'spin-to-win',
+        }, { suppressAuth: true });
+      }
+
+      // Upsert CRM contact
+      try {
+        const { contacts } = await import('wix-crm-backend');
+        await contacts.appendOrCreateContact({
+          emails: [{ email: trimmed }],
+        });
+      } catch (crmErr) {
+        logError('spinWheel.captureSpinEmail.crm', crmErr);
+      }
+
+      return { success: true };
+    } catch (err) {
+      logError('spinWheel.captureSpinEmail', err);
+      return { success: false, error: 'CAPTURE_FAILED' };
+    }
+  },
+);
