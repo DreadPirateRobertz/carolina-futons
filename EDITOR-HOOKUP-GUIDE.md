@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-23 (Phase 8 COMPLETE — All 6 LivingSkyState illustration modules wired via onMessage: comfortIllustrations, onboardingIllustrations, emptyStateIllustrations, aboutIllustrations, CartIllustrations, footerMountainDivider. PRs #771–#778 merged. catch-path guards on all onMessage handlers.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-24 (v2.4 — Wave 26-28 Gamification Widgets added. Phase 8 COMPLETE — All 6 LivingSkyState illustration modules wired via onMessage: comfortIllustrations, onboardingIllustrations, emptyStateIllustrations, aboutIllustrations, CartIllustrations, footerMountainDivider. PRs #771–#778 merged. catch-path guards on all onMessage handlers.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2323,6 +2323,187 @@ All major pages now have both backend and frontend code. The following are in de
 | `qnaThankYou` | Text | Hidden — shown on successful submit |
 
 **Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
+
+---
+
+## MEMBER DASHBOARD — GAMIFICATION WIDGETS (Waves 26-28) v2.4
+
+### Gamification Stats Overview (`GamificationStatsWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `statsPoints` | Text | Total points balance |
+| `statsTier` | Text | Current tier name |
+| `statsStreak` | Text | Current streak count |
+| `statsBadges` | Text | Total badges earned |
+| `statsQuests` | Text | Quests completed |
+| `statsRank` | Text | Leaderboard rank |
+| `statsError` | Text | Error message — hidden by default |
+| `statsRetry` | Button | Retry loading stats |
+
+### Points Balance (`PointsBalanceWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `pointsBalanceTile` | Box | Points balance container |
+| `pointsExpiryWarning` | Text | Expiry warning — hidden by default |
+| `pointsTierLabel` | Text | Tier label |
+
+### Streak Tracker (`StreakTrackerWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `streakCount` | Text | Current streak days |
+| `longestStreak` | Text | All-time longest streak |
+| `streakFlameIcon` | Image | Flame icon — hidden when streak = 0 |
+| `streakMultiplierLabel` | Text | Active multiplier label |
+| `noStreakMsg` | Text | No streak message — hidden when active |
+
+### Badge Display (`BadgeDisplayWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `badgeRepeater` | Repeater | Earned badges grid |
+| `noBadgesMsg` | Text | No badges — hidden when badges exist |
+| `badgeIcon` | Image | Badge icon (inside repeater) |
+| `badgeName` | Text | Badge name (inside repeater) |
+| `badgeDate` | Text | Date earned (inside repeater) |
+
+### Daily Challenges (`DailyChallengeWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `challengeRepeater` | Repeater | Active daily challenges |
+| `noChallengesMsg` | Text | No challenges — hidden when active |
+| `challengeTitle` | Text | Quest title (repeater child via $w2) |
+| `challengeProgress` | Text | Progress text (repeater child via $w2) |
+| `challengeCompleteIcon` | Image | Completion checkmark (repeater child via $w2) |
+
+### Leaderboard (`LeaderboardWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `leaderboardTitle` | Text | Leaderboard heading |
+| `leaderboardRepeater` | Repeater | Ranked member list |
+| `leaderboardYourRank` | Text | Current user rank summary |
+| `leaderboardEmpty` | Text | Empty state — hidden when data exists |
+| `leaderRank` | Text | Rank number (inside repeater) |
+| `leaderName` | Text | Member name (inside repeater) |
+| `leaderPoints` | Text | Member points (inside repeater) |
+| `leaderAvatar` | Image | Member avatar (inside repeater) |
+
+### Activity Feed (`ActivityFeedWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `activityTitle` | Text | Feed heading |
+| `activityRepeater` | Repeater | Activity entries |
+| `activityEmpty` | Text | Empty state — hidden when activities exist |
+| `activityDesc` | Text | Activity description (inside repeater) |
+| `activityPoints` | Text | Points earned/spent (inside repeater) |
+| `activityTime` | Text | Relative timestamp (inside repeater) |
+| `activityIcon` | Image | Activity type icon (inside repeater) |
+
+### Rewards Tier (`RewardsTierWidget.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `tierName` | Text | Current tier name |
+| `tierBadge` | Image | Tier badge icon |
+| `tierProgress` | ProgressBar | Progress to next tier |
+| `tierPointsNeeded` | Text | Points needed for next tier |
+| `tierNextBenefits` | Text | Next tier benefits summary |
+| `tierBenefitsRepeater` | Repeater | Current tier benefits |
+| `benefitText` | Text | Individual benefit (inside repeater) |
+| `tierError` | Text | Error state — hidden by default |
+
+### Gamification Onboarding (`GamificationOnboarding.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `gamificationOnboardingOverlay` | Box | Full-page overlay — hidden by default |
+| `onboardingStepText` | Text | Step description |
+| `onboardingStepIndicator` | Text | Step progress (e.g. "2 of 5") |
+| `onboardingNextBtn` | Button | Next step |
+| `onboardingPrevBtn` | Button | Previous step |
+| `onboardingCloseBtn` | Button | Close/dismiss onboarding |
+
+### Social Toast (`GamificationSocialToast.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `socialToast` | Box | Toast container — hidden by default |
+| `socialText` | Text | Toast message |
+| `socialDismiss` | Button | Dismiss toast |
+
+### Milestone Nudge Toast (`MilestoneNudgeToast.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `milestoneToast` | Box | Toast container — hidden by default |
+| `milestoneToastText` | Text | Milestone nudge message |
+| `milestoneToastClose` | Button | Dismiss toast |
+
+### Tier Upgrade Modal (`TierUpgradeModal.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `tierUpgradeModal` | Box | Modal container — hidden by default |
+| `tierUpgradeHeading` | Text | Congratulations heading |
+| `tierUpgradeBenefits` | Text | New tier benefits |
+| `tierUpgradeCloseBtn` | Button | Dismiss modal |
+
+### Notification Preferences (`NotificationPreferences.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `notifPageSection` | Box | Preferences section container |
+| `notifCFPlusToggle` | Toggle | CF+ notification toggle |
+| `notifSmsToggle` | Toggle | SMS notification toggle |
+| `notifSaveBtn` | Button | Save preferences |
+| `notifSaveSpinner` | Box | Loading spinner |
+| `notifSaveSuccess` | Text | Success — hidden by default |
+| `notifSaveError` | Text | Error — hidden by default |
+| `notifLoginPrompt` | Text | Login prompt for logged-out users |
+| `notifUnsubscribeAll` | Button | Unsubscribe from all |
+| `notifUnsubscribeConfirm` | Box | Unsubscribe confirmation dialog |
+| `notifUnsubscribeConfirmBtn` | Button | Confirm unsubscribe |
+| `notifUnsubscribeCancelBtn` | Button | Cancel unsubscribe |
+
+### Referral Dashboard (`referralUI.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `referralWidget` | Box | Referral section container |
+| `referralLink` | Text | Unique referral URL |
+| `copyBtn` | Button | Copy link to clipboard |
+| `shareButtons` | Box | Social share buttons |
+| `totalReferrals` | Text | Total referral count |
+| `pendingRewards` | Text | Pending rewards |
+| `earnedRewards` | Text | Earned rewards total |
+| `loadingState` | Box | Loading skeleton — hidden when loaded |
+| `errorState` | Box | Error state — hidden by default |
+| `dashboardError` | Text | Error message text |
+
+### Social Proof Badge & Toast (`PDPSocialProofBadge.js` + `socialProofToast.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `socialProofBadge` | Text | Social proof badge on PDP |
+| `socialProofToast` | Box | Toast container — hidden by default |
+| `socialProofMessage` | Text | Social proof toast message |
+| `socialProofIcon` | Image | Toast icon |
+| `socialProofClose` | Button | Dismiss toast |
+
+### Product Structured Data (`productStructuredData.js`)
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `productJsonLd` | HtmlComponent | JSON-LD structured data container |
+
+### Gamification Hub — Orchestrator (`GamificationHub.js`)
+
+No UI elements. Central coordinator that initializes and manages all gamification widgets listed above.
 
 ---
 

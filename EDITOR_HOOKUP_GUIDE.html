@@ -6,7 +6,7 @@
 <title>Carolina Futons - Editor Hookup Guide</title>
 <style>
 /* ══════════════════════════════════════════════════════════════
-   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.0
+   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.4
    Design tokens match sharedTokens.js + designTokens.js exactly
    ══════════════════════════════════════════════════════════════ */
 :root {
@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.3 · Updated 2026-03-23 — Phase 8 COMPLETE ✅ All 6 LivingSkyState modules wired (#771–#778) · Phase 7 Living Sky · Phase 2 Streaks · Spin Wheel Phase 1</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.4 · Updated 2026-03-24 — Wave 26-28 Gamification Widgets · Phase 8 COMPLETE ✅ All 6 LivingSkyState modules wired (#771–#778) · Phase 7 Living Sky · Phase 2 Streaks · Spin Wheel Phase 1</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -5268,6 +5268,285 @@ SHARING:
         ["aiProductAddBtn","Button","Add to Cart or Bundle"],
         ["aiWhyText","Text","AI rationale line"]
       ]}
+    ]
+  },
+  {
+    name: "Member Dashboard — Gamification Widgets (Waves 26-28)", file: "Multiple (see sections)", priority: "P1", est: "90 min",
+    sections: [
+      { name: "Gamification Stats Overview", impl: `<h4>📊 Implementation — Gamification Stats Widget</h4>
+<p><em>Source: <code>src/public/GamificationStatsWidget.js</code>. Aggregate stats panel showing key gamification metrics at a glance.</em></p>
+<ul>
+  <li><strong>#statsPoints</strong>: Text — total points balance.</li>
+  <li><strong>#statsTier</strong>: Text — current tier name.</li>
+  <li><strong>#statsStreak</strong>: Text — current streak count.</li>
+  <li><strong>#statsBadges</strong>: Text — total badges earned.</li>
+  <li><strong>#statsQuests</strong>: Text — quests completed count.</li>
+  <li><strong>#statsRank</strong>: Text — leaderboard rank.</li>
+  <li><strong>#statsError</strong>: Text — <span class="impl-warn">hidden by default</span>. Shown on data load failure.</li>
+  <li><strong>#statsRetry</strong>: Button — retry loading stats after error.</li>
+</ul>`, elements: [
+        ["statsPoints","Text","Total points balance"],
+        ["statsTier","Text","Current tier name"],
+        ["statsStreak","Text","Current streak count"],
+        ["statsBadges","Text","Total badges earned"],
+        ["statsQuests","Text","Quests completed"],
+        ["statsRank","Text","Leaderboard rank"],
+        ["statsError","Text","Error message — hidden by default"],
+        ["statsRetry","Button","Retry loading stats"]
+      ]},
+      { name: "Points Balance", impl: `<h4>💰 Implementation — Points Balance Widget</h4>
+<p><em>Source: <code>src/public/PointsBalanceWidget.js</code>. Compact points balance tile for dashboard header area.</em></p>
+<ul>
+  <li><strong>#pointsBalanceTile</strong>: Box — container tile for points info.</li>
+  <li><strong>#pointsExpiryWarning</strong>: Text — <span class="impl-warn">hidden when no points expiring soon</span>. Warning about upcoming expiry.</li>
+  <li><strong>#pointsTierLabel</strong>: Text — tier label alongside balance.</li>
+</ul>`, elements: [
+        ["pointsBalanceTile","Box","Points balance container"],
+        ["pointsExpiryWarning","Text","Expiry warning — hidden by default"],
+        ["pointsTierLabel","Text","Tier label"]
+      ]},
+      { name: "Streak Tracker", impl: `<h4>🔥 Implementation — Streak Tracker Widget</h4>
+<p><em>Source: <code>src/public/StreakTrackerWidget.js</code>. Full streak tracker panel with current + longest streak and multiplier info.</em></p>
+<ul>
+  <li><strong>#streakCount</strong>: Text — current streak day count.</li>
+  <li><strong>#longestStreak</strong>: Text — all-time longest streak.</li>
+  <li><strong>#streakFlameIcon</strong>: Image — animated flame icon (hidden when streak = 0).</li>
+  <li><strong>#streakMultiplierLabel</strong>: Text — active multiplier (e.g. "2x points").</li>
+  <li><strong>#noStreakMsg</strong>: Text — <span class="impl-warn">hidden when streak &gt; 0</span>. Shown when no active streak.</li>
+</ul>`, elements: [
+        ["streakCount","Text","Current streak days"],
+        ["longestStreak","Text","All-time longest streak"],
+        ["streakFlameIcon","Image","Flame icon — hidden when streak = 0"],
+        ["streakMultiplierLabel","Text","Active multiplier label"],
+        ["noStreakMsg","Text","No streak message — hidden when active"]
+      ]},
+      { name: "Badge Display", repeater: "badgeRepeater", impl: `<h4>🏅 Implementation — Badge Display Widget</h4>
+<p><em>Source: <code>src/public/BadgeDisplayWidget.js</code>. Repeater-based display of earned achievement badges.</em></p>
+<ul>
+  <li><strong>#badgeRepeater</strong>: Repeater — earned badges grid.</li>
+  <li><strong>#badgeIcon</strong>: Image — badge icon (inside repeater).</li>
+  <li><strong>#badgeName</strong>: Text — badge name (inside repeater).</li>
+  <li><strong>#badgeDate</strong>: Text — date earned (inside repeater).</li>
+  <li><strong>#noBadgesMsg</strong>: Text — <span class="impl-warn">hidden when badges exist</span>. Empty state message.</li>
+</ul>`, elements: [
+        ["badgeRepeater","Repeater","Earned badges grid"],
+        ["noBadgesMsg","Text","No badges message — hidden when badges exist"]
+      ], children: [
+        ["badgeIcon","Image","Badge icon"],
+        ["badgeName","Text","Badge name"],
+        ["badgeDate","Text","Date earned"]
+      ]},
+      { name: "Daily Challenges", repeater: "challengeRepeater", impl: `<h4>🎯 Implementation — Daily Challenge Widget</h4>
+<p><em>Source: <code>src/public/DailyChallengeWidget.js</code>. Repeater showing active daily quests with progress tracking.</em></p>
+<ul>
+  <li><strong>#challengeRepeater</strong>: Repeater — active daily challenges. Uses <code>onItemReady</code> with <code>$w2</code> scope.</li>
+  <li><strong>#challengeTitle</strong>: Text — quest title (inside repeater, via $w2).</li>
+  <li><strong>#challengeProgress</strong>: Text — "N / M completed" progress (inside repeater, via $w2).</li>
+  <li><strong>#challengeCompleteIcon</strong>: Image — checkmark shown when challenge complete (inside repeater, via $w2).</li>
+  <li><strong>#noChallengesMsg</strong>: Text — <span class="impl-warn">hidden when challenges exist</span>. Empty state.</li>
+</ul>`, elements: [
+        ["challengeRepeater","Repeater","Active daily challenges"],
+        ["noChallengesMsg","Text","No challenges message — hidden when active"]
+      ], children: [
+        ["challengeTitle","Text","Quest title"],
+        ["challengeProgress","Text","Progress text"],
+        ["challengeCompleteIcon","Image","Completion checkmark"]
+      ]},
+      { name: "Leaderboard", repeater: "leaderboardRepeater", impl: `<h4>🏆 Implementation — Leaderboard Widget</h4>
+<p><em>Source: <code>src/public/LeaderboardWidget.js</code>. Community leaderboard with top members and current user rank.</em></p>
+<ul>
+  <li><strong>#leaderboardTitle</strong>: Text — leaderboard heading.</li>
+  <li><strong>#leaderboardRepeater</strong>: Repeater — ranked member list.</li>
+  <li><strong>#leaderRank</strong>: Text — rank number (inside repeater).</li>
+  <li><strong>#leaderName</strong>: Text — member name (inside repeater).</li>
+  <li><strong>#leaderPoints</strong>: Text — member points (inside repeater).</li>
+  <li><strong>#leaderAvatar</strong>: Image — member avatar (inside repeater).</li>
+  <li><strong>#leaderboardYourRank</strong>: Text — current user's rank summary below repeater.</li>
+  <li><strong>#leaderboardEmpty</strong>: Text — <span class="impl-warn">hidden when data exists</span>. Empty state.</li>
+</ul>`, elements: [
+        ["leaderboardTitle","Text","Leaderboard heading"],
+        ["leaderboardRepeater","Repeater","Ranked member list"],
+        ["leaderboardYourRank","Text","Current user rank summary"],
+        ["leaderboardEmpty","Text","Empty state — hidden when data exists"]
+      ], children: [
+        ["leaderRank","Text","Rank number"],
+        ["leaderName","Text","Member name"],
+        ["leaderPoints","Text","Member points"],
+        ["leaderAvatar","Image","Member avatar"]
+      ]},
+      { name: "Activity Feed", repeater: "activityRepeater", impl: `<h4>📋 Implementation — Activity Feed Widget</h4>
+<p><em>Source: <code>src/public/ActivityFeedWidget.js</code>. Recent gamification activity timeline.</em></p>
+<ul>
+  <li><strong>#activityTitle</strong>: Text — feed section heading.</li>
+  <li><strong>#activityRepeater</strong>: Repeater — activity entries.</li>
+  <li><strong>#activityDesc</strong>: Text — activity description (inside repeater).</li>
+  <li><strong>#activityPoints</strong>: Text — points earned/spent (inside repeater).</li>
+  <li><strong>#activityTime</strong>: Text — relative time (inside repeater).</li>
+  <li><strong>#activityIcon</strong>: Image — activity type icon (inside repeater).</li>
+  <li><strong>#activityEmpty</strong>: Text — <span class="impl-warn">hidden when activities exist</span>. Empty state.</li>
+</ul>`, elements: [
+        ["activityTitle","Text","Feed heading"],
+        ["activityRepeater","Repeater","Activity entries"],
+        ["activityEmpty","Text","Empty state — hidden when activities exist"]
+      ], children: [
+        ["activityDesc","Text","Activity description"],
+        ["activityPoints","Text","Points earned/spent"],
+        ["activityTime","Text","Relative timestamp"],
+        ["activityIcon","Image","Activity type icon"]
+      ]},
+      { name: "Rewards Tier", repeater: "tierBenefitsRepeater", impl: `<h4>🎖️ Implementation — Rewards Tier Widget</h4>
+<p><em>Source: <code>src/public/RewardsTierWidget.js</code>. Current tier status with progress toward next tier and benefits list.</em></p>
+<ul>
+  <li><strong>#tierName</strong>: Text — current tier name.</li>
+  <li><strong>#tierBadge</strong>: Image — tier badge icon.</li>
+  <li><strong>#tierProgress</strong>: ProgressBar — progress toward next tier.</li>
+  <li><strong>#tierPointsNeeded</strong>: Text — points needed for next tier.</li>
+  <li><strong>#tierNextBenefits</strong>: Text — summary of next tier benefits.</li>
+  <li><strong>#tierBenefitsRepeater</strong>: Repeater — current tier benefits list.</li>
+  <li><strong>#benefitText</strong>: Text — individual benefit (inside repeater).</li>
+  <li><strong>#tierError</strong>: Text — <span class="impl-warn">hidden by default</span>. Error state.</li>
+</ul>`, elements: [
+        ["tierName","Text","Current tier name"],
+        ["tierBadge","Image","Tier badge icon"],
+        ["tierProgress","ProgressBar","Progress to next tier"],
+        ["tierPointsNeeded","Text","Points needed for next tier"],
+        ["tierNextBenefits","Text","Next tier benefits summary"],
+        ["tierBenefitsRepeater","Repeater","Current tier benefits"],
+        ["tierError","Text","Error state — hidden by default"]
+      ], children: [
+        ["benefitText","Text","Individual benefit text"]
+      ]},
+      { name: "Gamification Onboarding Overlay", impl: `<h4>🎓 Implementation — Gamification Onboarding</h4>
+<p><em>Source: <code>src/public/GamificationOnboarding.js</code>. First-time user onboarding walkthrough overlay.</em></p>
+<ul>
+  <li><strong>#gamificationOnboardingOverlay</strong>: Box — full-page overlay container. <span class="impl-warn">Hidden by default</span>.</li>
+  <li><strong>#onboardingStepText</strong>: Text — current step description.</li>
+  <li><strong>#onboardingStepIndicator</strong>: Text — step progress indicator (e.g. "2 of 5").</li>
+  <li><strong>#onboardingNextBtn</strong>: Button — advance to next step.</li>
+  <li><strong>#onboardingPrevBtn</strong>: Button — go to previous step.</li>
+  <li><strong>#onboardingCloseBtn</strong>: Button — dismiss onboarding.</li>
+</ul>`, elements: [
+        ["gamificationOnboardingOverlay","Box","Overlay container — hidden by default"],
+        ["onboardingStepText","Text","Step description"],
+        ["onboardingStepIndicator","Text","Step progress indicator"],
+        ["onboardingNextBtn","Button","Next step"],
+        ["onboardingPrevBtn","Button","Previous step"],
+        ["onboardingCloseBtn","Button","Close/dismiss onboarding"]
+      ]},
+      { name: "Social Toast", impl: `<h4>🎉 Implementation — Gamification Social Toast</h4>
+<p><em>Source: <code>src/public/GamificationSocialToast.js</code>. Transient toast notification for social gamification events.</em></p>
+<ul>
+  <li><strong>#socialToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>. Shown on social events.</li>
+  <li><strong>#socialText</strong>: Text — toast message.</li>
+  <li><strong>#socialDismiss</strong>: Button — dismiss toast.</li>
+</ul>`, elements: [
+        ["socialToast","Box","Toast container — hidden by default"],
+        ["socialText","Text","Toast message"],
+        ["socialDismiss","Button","Dismiss toast"]
+      ]},
+      { name: "Milestone Nudge Toast", impl: `<h4>🏁 Implementation — Milestone Nudge Toast</h4>
+<p><em>Source: <code>src/public/MilestoneNudgeToast.js</code>. Toast notification for approaching milestones.</em></p>
+<ul>
+  <li><strong>#milestoneToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>.</li>
+  <li><strong>#milestoneToastText</strong>: Text — milestone nudge message.</li>
+  <li><strong>#milestoneToastClose</strong>: Button — dismiss toast.</li>
+</ul>`, elements: [
+        ["milestoneToast","Box","Toast container — hidden by default"],
+        ["milestoneToastText","Text","Milestone nudge message"],
+        ["milestoneToastClose","Button","Dismiss toast"]
+      ]},
+      { name: "Tier Upgrade Modal", impl: `<h4>🎊 Implementation — Tier Upgrade Modal</h4>
+<p><em>Source: <code>src/public/TierUpgradeModal.js</code>. Celebratory modal shown on tier advancement.</em></p>
+<ul>
+  <li><strong>#tierUpgradeModal</strong>: Box — modal container. <span class="impl-warn">Hidden by default</span>.</li>
+  <li><strong>#tierUpgradeHeading</strong>: Text — congratulations heading.</li>
+  <li><strong>#tierUpgradeBenefits</strong>: Text — new tier benefits list.</li>
+  <li><strong>#tierUpgradeCloseBtn</strong>: Button — dismiss modal.</li>
+</ul>`, elements: [
+        ["tierUpgradeModal","Box","Modal container — hidden by default"],
+        ["tierUpgradeHeading","Text","Congratulations heading"],
+        ["tierUpgradeBenefits","Text","New tier benefits"],
+        ["tierUpgradeCloseBtn","Button","Dismiss modal"]
+      ]},
+      { name: "Notification Preferences", impl: `<h4>🔔 Implementation — Notification Preferences</h4>
+<p><em>Source: <code>src/public/NotificationPreferences.js</code>. Member notification opt-in/out settings.</em></p>
+<ul>
+  <li><strong>#notifPageSection</strong>: Box — preferences section container.</li>
+  <li><strong>#notifCFPlusToggle</strong>: Toggle — CF+ notification opt-in.</li>
+  <li><strong>#notifSmsToggle</strong>: Toggle — SMS notification opt-in.</li>
+  <li><strong>#notifSaveBtn</strong>: Button — save preferences.</li>
+  <li><strong>#notifSaveSpinner</strong>: Box — loading spinner during save.</li>
+  <li><strong>#notifSaveSuccess</strong>: Text — <span class="impl-warn">hidden by default</span>. Success confirmation.</li>
+  <li><strong>#notifSaveError</strong>: Text — <span class="impl-warn">hidden by default</span>. Error message.</li>
+  <li><strong>#notifLoginPrompt</strong>: Text — shown for logged-out users.</li>
+  <li><strong>#notifUnsubscribeAll</strong>: Button — unsubscribe from all.</li>
+  <li><strong>#notifUnsubscribeConfirm</strong>: Box — confirmation dialog container.</li>
+  <li><strong>#notifUnsubscribeConfirmBtn</strong>: Button — confirm unsubscribe.</li>
+  <li><strong>#notifUnsubscribeCancelBtn</strong>: Button — cancel unsubscribe.</li>
+</ul>`, elements: [
+        ["notifPageSection","Box","Preferences section container"],
+        ["notifCFPlusToggle","Toggle","CF+ notification toggle"],
+        ["notifSmsToggle","Toggle","SMS notification toggle"],
+        ["notifSaveBtn","Button","Save preferences"],
+        ["notifSaveSpinner","Box","Loading spinner"],
+        ["notifSaveSuccess","Text","Success message — hidden by default"],
+        ["notifSaveError","Text","Error message — hidden by default"],
+        ["notifLoginPrompt","Text","Login prompt for logged-out users"],
+        ["notifUnsubscribeAll","Button","Unsubscribe from all"],
+        ["notifUnsubscribeConfirm","Box","Unsubscribe confirmation dialog"],
+        ["notifUnsubscribeConfirmBtn","Button","Confirm unsubscribe"],
+        ["notifUnsubscribeCancelBtn","Button","Cancel unsubscribe"]
+      ]},
+      { name: "Referral Dashboard", impl: `<h4>🤝 Implementation — Referral Dashboard</h4>
+<p><em>Source: <code>src/public/referralUI.js</code>. Referral program interface with link sharing and stats.</em></p>
+<ul>
+  <li><strong>#referralWidget</strong>: Box — referral section container.</li>
+  <li><strong>#referralLink</strong>: Text — unique referral URL.</li>
+  <li><strong>#copyBtn</strong>: Button — copy referral link to clipboard.</li>
+  <li><strong>#shareButtons</strong>: Box — social share buttons container.</li>
+  <li><strong>#totalReferrals</strong>: Text — total referral count.</li>
+  <li><strong>#pendingRewards</strong>: Text — pending reward amount.</li>
+  <li><strong>#earnedRewards</strong>: Text — total earned rewards.</li>
+  <li><strong>#loadingState</strong>: Box — <span class="impl-warn">hidden when data loaded</span>. Loading skeleton.</li>
+  <li><strong>#errorState</strong>: Box — <span class="impl-warn">hidden by default</span>. Error state.</li>
+  <li><strong>#dashboardError</strong>: Text — error message text inside errorState.</li>
+</ul>`, elements: [
+        ["referralWidget","Box","Referral section container"],
+        ["referralLink","Text","Unique referral URL"],
+        ["copyBtn","Button","Copy link to clipboard"],
+        ["shareButtons","Box","Social share buttons"],
+        ["totalReferrals","Text","Total referral count"],
+        ["pendingRewards","Text","Pending rewards"],
+        ["earnedRewards","Text","Earned rewards total"],
+        ["loadingState","Box","Loading skeleton — hidden when loaded"],
+        ["errorState","Box","Error state — hidden by default"],
+        ["dashboardError","Text","Error message text"]
+      ]},
+      { name: "Social Proof (PDP)", impl: `<h4>👥 Implementation — Social Proof Badge & Toast</h4>
+<p><em>Sources: <code>src/public/PDPSocialProofBadge.js</code> + <code>src/public/socialProofToast.js</code>. Social proof elements on Product Detail Page.</em></p>
+<ul>
+  <li><strong>#socialProofBadge</strong>: Text — social proof badge on PDP (e.g. "12 people viewing").</li>
+  <li><strong>#socialProofToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>.</li>
+  <li><strong>#socialProofMessage</strong>: Text — toast message (e.g. "Someone in Asheville just purchased this").</li>
+  <li><strong>#socialProofIcon</strong>: Image — toast icon.</li>
+  <li><strong>#socialProofClose</strong>: Button — dismiss toast.</li>
+</ul>`, elements: [
+        ["socialProofBadge","Text","Social proof badge on PDP"],
+        ["socialProofToast","Box","Toast container — hidden by default"],
+        ["socialProofMessage","Text","Social proof toast message"],
+        ["socialProofIcon","Image","Toast icon"],
+        ["socialProofClose","Button","Dismiss toast"]
+      ]},
+      { name: "Product Structured Data", impl: `<h4>🔍 Implementation — Product Structured Data</h4>
+<p><em>Source: <code>src/public/productStructuredData.js</code>. JSON-LD structured data injection for Product pages.</em></p>
+<ul>
+  <li><strong>#productJsonLd</strong>: HtmlComponent — receives JSON-LD script via <code>innerHTML</code>.</li>
+</ul>`, elements: [
+        ["productJsonLd","HtmlComponent","JSON-LD structured data container"]
+      ]},
+      { name: "Gamification Hub (Orchestrator)", impl: `<h4>🎮 Implementation — Gamification Hub</h4>
+<p><em>Source: <code>src/public/GamificationHub.js</code>. Central orchestrator that coordinates all gamification widgets. Does NOT own any UI elements directly — it initializes and coordinates the other widget modules listed in this section.</em></p>
+<p>No elements to place. This module calls into StreakTrackerWidget, BadgeDisplayWidget, LeaderboardWidget, DailyChallengeWidget, ActivityFeedWidget, GamificationStatsWidget, etc.</p>`, elements: []}
     ]
   }
 ];
