@@ -17,6 +17,11 @@
  *   (unknown)                     — no-op, returns current total
  *
  * CF-eo88, CF-9l0
+ *
+ * Permission model (CF-cvez):
+ *   Anyone:      getLeaderboard (public opt-in data)
+ *   SiteMember:  getStreakData, getMemberTier, getActivityFeed, getGamificationStats
+ *   Member:      receiveGamificationEvent, getActiveChallenges, recordChallengeProgress, recoverStreak
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -886,7 +891,7 @@ export const recoverStreak = webMethod(
  * @returns {Promise<{ currentStreak: number, longestStreak: number, lastActivityDate: string|null }>}
  */
 export const getStreakData = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (memberId) => {
     const record = await findMemberRecord(memberId);
     if (!record) {
@@ -998,7 +1003,7 @@ function computeTierInfo(totalPoints) {
  * @returns {Promise<{ currentTier, tierName, pointsInTier, pointsToNextTier, nextTierName, benefits, nextTierBenefits }>}
  */
 export const getMemberTier = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (memberId) => {
     const record = await findMemberRecord(memberId);
     return computeTierInfo(record ? record.totalPoints : 0);
@@ -1029,7 +1034,7 @@ const ACTIVITY_ICONS = {
  * @returns {Promise<Array<{ activityId: string, type: string, description: string, pointsEarned: number, timestamp: string, iconType: string }>>}
  */
 export const getActivityFeed = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (memberId, limit = 10) => {
     const result = await wixData
       .query('AnalyticsEvents')
@@ -1062,7 +1067,7 @@ export const getActivityFeed = webMethod(
  * @returns {Promise<{ totalPoints: number, currentTier: string, currentStreak: number, badgesEarned: number, questsCompleted: number, rank: number }>}
  */
 export const getGamificationStats = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (memberId) => {
     const [memberResult, badgesResult, questsResult, rankResult] = await Promise.all([
       findMemberRecord(memberId),
