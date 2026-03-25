@@ -900,3 +900,43 @@ export const getStreakData = webMethod(
     };
   }
 );
+
+// ── getDailyQuests ────────────────────────────────────────────────────────────
+
+/**
+ * Returns active daily quests for a member, merged with their progress.
+ * Wraps getActiveChallenges and reshapes for DailyQuestsWidget consumption.
+ *
+ * CF-8t8z
+ *
+ * @param {string} memberId
+ * @returns {Promise<Array<{ questId: string, title: string, description: string|null,
+ *   currentProgress: number, targetProgress: number, pointsReward: number,
+ *   isComplete: boolean, expiresAt: string }>>}
+ */
+export const getDailyQuests = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    if (!memberId) return [];
+
+    try {
+      const result = await getActiveChallenges(memberId);
+      if (result.error || result.status === 429) return [];
+      const challenges = result.challenges || [];
+
+      return challenges.map(c => ({
+        questId: c.challengeId,
+        title: c.title,
+        description: c.description || null,
+        currentProgress: c.progressValue ?? 0,
+        targetProgress: c.targetCount ?? 1,
+        pointsReward: c.rewardPoints ?? 0,
+        isComplete: c.completedAt != null,
+        expiresAt: c.expiresAt,
+      }));
+    } catch (err) {
+      logError(`getDailyQuests — failed for member ${memberId}`, err);
+      return [];
+    }
+  }
+);
