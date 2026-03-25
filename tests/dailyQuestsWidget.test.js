@@ -77,7 +77,7 @@ function makeOpts($w, quests) {
 
 describe('initDailyQuestsWidget — rendering', () => {
   let $w;
-  beforeEach(() => { $w = make$w(); });
+  beforeEach(() => { vi.clearAllMocks(); $w = make$w(); });
 
   it('sets #questsTitle text to "Daily Quests"', async () => {
     const opts = makeOpts($w, [makeQuest()]);
@@ -115,7 +115,7 @@ describe('initDailyQuestsWidget — rendering', () => {
 
 describe('initDailyQuestsWidget — empty state', () => {
   let $w;
-  beforeEach(() => { $w = make$w(); });
+  beforeEach(() => { vi.clearAllMocks(); $w = make$w(); });
 
   it('hides #questsRepeater when no quests', async () => {
     const opts = makeOpts($w, []);
@@ -131,11 +131,14 @@ describe('initDailyQuestsWidget — empty state', () => {
 });
 
 // ── Repeater item rendering ──────────────────────────────────────────────────
+// Wix onItemReady callback signature: ($item, itemData) where $item is the
+// scoped selector function. Tests must match this 2-param shape.
 
 describe('initDailyQuestsWidget — repeater items', () => {
   let $w, onItemReadyCb;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     $w = make$w();
     $w('#questsRepeater').onItemReady.mockImplementation(function (cb) {
       onItemReadyCb = cb;
@@ -144,65 +147,65 @@ describe('initDailyQuestsWidget — repeater items', () => {
 
   function fireItemReady(quest) {
     const $itemEls = makeRepeaterItemEls();
-    const itemSelector = (id) => $itemEls[id] ?? makeEl();
-    onItemReadyCb(itemSelector, quest);
-    return { $itemEls, itemSelector };
+    const $item = (id) => $itemEls[id] ?? makeEl();
+    onItemReadyCb($item, quest);
+    return { $itemEls, $item };
   }
 
   it('sets #questName to quest title', async () => {
     const quest = makeQuest({ title: 'Share a Photo' });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questName').text).toBe('Share a Photo');
+    const { $item } = fireItemReady(quest);
+    expect($item('#questName').text).toBe('Share a Photo');
   });
 
   it('falls back to questId when title is absent', async () => {
     const quest = makeQuest({ title: undefined, questId: 'q-fallback' });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questName').text).toBe('q-fallback');
+    const { $item } = fireItemReady(quest);
+    expect($item('#questName').text).toBe('q-fallback');
   });
 
   it('sets #questDesc to quest description', async () => {
     const quest = makeQuest({ description: 'Review any product' });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questDesc').text).toBe('Review any product');
+    const { $item } = fireItemReady(quest);
+    expect($item('#questDesc').text).toBe('Review any product');
   });
 
   it('sets #questProgress to "N / M" format', async () => {
     const quest = makeQuest({ currentProgress: 2, targetProgress: 5 });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questProgress').text).toBe('2 / 5');
+    const { $item } = fireItemReady(quest);
+    expect($item('#questProgress').text).toBe('2 / 5');
   });
 
   it('sets #questReward to points reward text', async () => {
     const quest = makeQuest({ pointsReward: 100 });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questReward').text).toBe('100 pts');
+    const { $item } = fireItemReady(quest);
+    expect($item('#questReward').text).toBe('100 pts');
   });
 
   it('shows #questCheckmark when quest is complete', async () => {
     const quest = makeQuest({ isComplete: true, currentProgress: 1, targetProgress: 1 });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questCheckmark').show).toHaveBeenCalled();
+    const { $item } = fireItemReady(quest);
+    expect($item('#questCheckmark').show).toHaveBeenCalled();
   });
 
   it('hides #questCheckmark when quest is incomplete', async () => {
     const quest = makeQuest({ isComplete: false, currentProgress: 0, targetProgress: 1 });
     const opts = makeOpts($w, [quest]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    const { itemSelector } = fireItemReady(quest);
-    expect(itemSelector('#questCheckmark').hide).toHaveBeenCalled();
+    const { $item } = fireItemReady(quest);
+    expect($item('#questCheckmark').hide).toHaveBeenCalled();
   });
 });
 
@@ -212,6 +215,7 @@ describe('initDailyQuestsWidget — timer', () => {
   let $w;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     $w = make$w();
     vi.useFakeTimers();
   });
@@ -221,7 +225,6 @@ describe('initDailyQuestsWidget — timer', () => {
   });
 
   it('sets #questsTimer text on init', async () => {
-    // Set clock to 2026-03-24 20:00 UTC → 4h until midnight UTC
     vi.setSystemTime(new Date('2026-03-24T20:00:00.000Z'));
     const opts = makeOpts($w, [makeQuest()]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
@@ -232,8 +235,7 @@ describe('initDailyQuestsWidget — timer', () => {
     vi.setSystemTime(new Date('2026-03-24T22:30:00.000Z'));
     const opts = makeOpts($w, [makeQuest()]);
     await initDailyQuestsWidget(MEMBER_ID, opts);
-    vi.advanceTimersByTime(60_000); // 1 minute
-    // Timer should have updated
+    vi.advanceTimersByTime(60_000);
     expect($w('#questsTimer').text).toMatch(/\d+h \d+m/);
   });
 
@@ -248,7 +250,7 @@ describe('initDailyQuestsWidget — timer', () => {
 
 describe('initDailyQuestsWidget — error handling', () => {
   let $w;
-  beforeEach(() => { $w = make$w(); });
+  beforeEach(() => { vi.clearAllMocks(); $w = make$w(); });
 
   it('does not throw when getDailyQuests rejects', async () => {
     const opts = makeOpts($w, []);

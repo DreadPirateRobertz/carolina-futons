@@ -454,7 +454,7 @@ async function initStreakDisplay() {
         const [ly, lm, ld] = parts;
         const today = new Date();
         const daysDiff = Math.floor(
-          (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+          (Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
             - Date.UTC(ly, lm - 1, ld)) / 86400000
         );
         return daysDiff < 30;
