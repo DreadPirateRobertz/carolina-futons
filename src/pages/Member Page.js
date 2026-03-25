@@ -96,6 +96,10 @@ async function initMemberPage() {
       { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
+      { name: 'onboardingQuest', init: async () => {
+        const { initOnboardingQuestWidget } = await import('public/OnboardingQuestWidget.js');
+        await initOnboardingQuestWidget();
+      }},
       { name: 'zipLeaderboard', init: initZipLeaderboardSectionWrapper },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
