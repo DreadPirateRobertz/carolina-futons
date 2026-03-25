@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.4 · Updated 2026-03-24 — Wave 26-28 Gamification Widgets · Phase 8 COMPLETE ✅ All 6 LivingSkyState modules wired (#771–#778) · Phase 7 Living Sky · Phase 2 Streaks · Spin Wheel Phase 1</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.4 · Updated 2026-03-25 — Consolidated: all sections folded into parent pages (Showroom→PDP/Category, Financing→PDP, Bundle Shipping→Bundle Builder). Verified against src/ code. Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1520,6 +1520,143 @@ Right column:
         ["whiteGloveModal","Box","Modal overlay — managed by setupAccessibleDialog"],
         ["whiteGloveModalClose","Button","Close X — wired by setupAccessibleDialog"],
         ["whiteGloveModalContent","Text","In-home setup description"]
+      ]},
+      { name: "Lightbox Elements (Product Page)", impl: `<h4>🔍 Implementation — Gallery Zoom Lightbox (Product Page)</h4>
+<p><strong>Note: These elements live on the Product Page. Added via <code>initGalleryZoomLightbox()</code>. Click the main product image or any gallery thumbnail to open the full-size overlay.</strong></p>
+<ul>
+  <li><strong>#zoomLightboxOverlay</strong>: Box — full-screen modal overlay. <span class="impl-warn">Hidden by default (collapsed)</span>. ARIA dialog role, ariaModal, and focus trap wired via <code>setupAccessibleDialog()</code>. Escape key closes.</li>
+  <li><strong>#zoomLightboxImage</strong>: Image — full-size product image. Updates on prev/next navigation.</li>
+  <li><strong>#zoomLightboxClose</strong>: Button — close X button (top-right corner of overlay).</li>
+  <li><strong>#zoomLightboxPrev</strong>: Button — navigate to previous image. Hidden when only one image.</li>
+  <li><strong>#zoomLightboxNext</strong>: Button — navigate to next image. Hidden when only one image.</li>
+  <li><strong>#zoomLightboxCounter</strong>: Text — shows "2 / 5" style counter. Hidden when only one image.</li>
+</ul>
+<p><strong>Keyboard:</strong> ← → arrow keys navigate when overlay open. <strong>Swipe:</strong> mobile swipe left/right via HtmlComponent. <strong>Nav buttons:</strong> hide automatically for single-image products.</p>`, elements: [
+        ["zoomLightboxOverlay","Box","Full-screen modal overlay (hidden by default)"],
+        ["zoomLightboxImage","Image","Full-size product image (updates on nav)"],
+        ["zoomLightboxClose","Button","Close X button"],
+        ["zoomLightboxPrev","Button","Previous image (hidden for single-image)"],
+        ["zoomLightboxNext","Button","Next image (hidden for single-image)"],
+        ["zoomLightboxCounter","Text","\"2 / 5\" counter (hidden for single-image)"]
+      ]},
+      { name: "Viewer Elements (Product Page)", impl: `<h4>🔄 Implementation — 360° Spin Viewer (Product Page)</h4>
+<p><strong>Note: These elements live on the Product Page, not a separate page. Added via <code>initProduct360Viewer()</code>.</strong></p>
+<ul>
+  <li><strong>#viewer360Section</strong>: Box — container section for the viewer. Hidden by default; shown when 360 images available.</li>
+  <li><strong>#viewer360Container</strong>: Box — inner container for the iframe.</li>
+  <li><strong>#viewer360Embed</strong>: HtmlComponent — the interactive 360° viewer. Receives image URLs via postMessage.</li>
+  <li><strong>#view360Btn</strong>: Button — "View 360°" trigger button on product image gallery.</li>
+  <li><strong>#viewer360Title</strong>: Text — section heading (e.g. "360° View").</li>
+  <li><strong>#viewer360Hint</strong>: Text — "Drag to rotate" hint text.</li>
+</ul>`, elements: [
+        ["viewer360Section","Box","360° section container (hidden by default)"],
+        ["viewer360Container","Box","Inner iframe container"],
+        ["viewer360Embed","HtmlComponent","Interactive 360° viewer (postMessage API)"],
+        ["view360Btn","Button","View 360° trigger on gallery"],
+        ["viewer360Title","Text","Section heading"],
+        ["viewer360Hint","Text","Drag to rotate hint"]
+      ]},
+      { name: "Stock Status (Product Page)", impl: `<h4>📊 Implementation — Live Inventory + Low Stock (Product Page)</h4>
+<p><strong>Backend:</strong> <code>inventoryService.web.js</code> → <code>getStockStatus(productId)</code>. Returns <code>{ status: 'inStock'|'lowStock'|'outOfStock', qty: number, threshold: number }</code>.</p>
+<p><strong>These elements are added to the existing Product Page.</strong></p>
+<ul>
+  <li><strong>#stockStatusBadge</strong>: Box — "In Stock" (green) / "Low Stock" (coral) / "Out of Stock" (gray). Color-coded via CSS class toggle.</li>
+  <li><strong>#stockStatusText</strong>: Text — status label text.</li>
+  <li><strong>#lowStockWarning</strong>: Box — shown when qty ≤ low-stock threshold. Hidden otherwise.</li>
+  <li><strong>#lowStockCount</strong>: Text — "Only 3 left!" urgency copy.</li>
+  <li><strong>#outOfStockOverlay</strong>: Box — semi-transparent overlay that disables Add to Cart when qty = 0.</li>
+  <li><strong>#notifyMeSection</strong>: Box — restock notification form. Shown when out of stock.</li>
+  <li><strong>#notifyMeInput</strong>: Input — email for restock notification.</li>
+  <li><strong>#notifyMeBtn</strong>: Button — "Notify Me When Available".</li>
+  <li><strong>#notifyMeSuccess</strong>: Text — "You're on the list! We'll email you when it's back."</li>
+  <li><strong>#notifyMeError</strong>: Text — error message.</li>
+</ul>`, elements: [
+        ["stockStatusBadge","Box","Stock status badge (green/coral/gray)"],
+        ["stockStatusText","Text","Status label"],
+        ["lowStockWarning","Box","Low stock warning panel"],
+        ["lowStockCount","Text","Only X left copy"],
+        ["outOfStockOverlay","Box","Disables Add to Cart when OOS"],
+        ["notifyMeSection","Box","Restock notification form"],
+        ["notifyMeInput","Input","Email for restock notification"],
+        ["notifyMeBtn","Button","Notify Me When Available"],
+        ["notifyMeSuccess","Text","Confirmation message"],
+        ["notifyMeError","Text","Error message"]
+      ]},
+      { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
+<p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
+<div class="layer-diagram">LAYOUT:
+  #qnaSection (Box — shown when questions exist)
+    ├─ #qnaCount (Text — "N questions")
+    ├─ #qnaSearchInput (TextInput — optional keyword filter, debounced 300ms)
+    ├─ #qnaAccordion (Repeater — one item per question)
+    │    Per item: #qnaQuestion (Text/toggle) · #qnaAuthor · #qnaDate
+    │              #qnaAnswer (collapsible) · #qnaAnswerSection · #qnaAnsweredBy
+    │              #qnaPending (Badge — shown when unanswered)
+    │              #qnaHelpfulBtn (Button — optional) · #qnaHelpfulCount (Text)
+    │              #qnaFlagBtn (Button — optional)
+    └─ #qnaLoadMore (Button — hidden when all loaded)
+  #qnaEmpty (Box — shown when no questions)
+  #qnaSchemaScript (HtmlComponent — FAQ JSON-LD SEO, optional)
+  #qnaQuestionInput (TextInput — submit form)
+  #qnaSubmitBtn (Button — submit)
+  #qnaThankYou (Box — shown on successful submit)
+  #qnaFormError (Text — shown on error)</div>
+<ul>
+  <li><strong>#qnaSection</strong>: Main container. Hidden when no questions exist (shows #qnaEmpty instead).</li>
+  <li><strong>#qnaCount</strong>: Text set to "1 question" or "N questions". Optional — silently skipped if absent.</li>
+  <li><strong>#qnaSearchInput</strong>: Optional keyword filter. Debounces 300ms, re-queries backend on each keystroke. Silently skipped if absent.</li>
+  <li><strong>#qnaAccordion</strong>: Repeater. <span class="impl-warn">⚠️ <code>onItemReady</code> MUST be registered before setting <code>.data</code> (Wix requirement).</span> Each item toggles expand/collapse on click with full ARIA support (<code>ariaExpanded</code>, <code>ariaControls</code>).</li>
+  <li><strong>#qnaPending</strong>: Badge shown when a question is awaiting an answer. Hidden when <code>status === 'answered'</code>.</li>
+  <li><strong>#qnaAnswerSection</strong>: Container for the answer text + #qnaAnsweredBy credit. Hidden when unanswered.</li>
+  <li><strong>#qnaHelpfulBtn / #qnaHelpfulCount</strong>: Optional voting elements. Silently skipped if absent. Count updates after server confirms the vote.</li>
+  <li><strong>#qnaFlagBtn</strong>: Optional report button. Disabled after first click. Silently skipped if absent.</li>
+  <li><strong>#qnaLoadMore</strong>: Shown when more pages exist. Hidden after final page loads. Stays visible on network error (allows retry).</li>
+  <li><strong>#qnaSchemaScript</strong>: Optional HtmlComponent for FAQ JSON-LD schema injection. Silently skipped if absent.</li>
+  <li><strong>#qnaQuestionInput</strong>: Text input for submitting a new question. Cleared on success.</li>
+  <li><strong>#qnaSubmitBtn</strong>: Submit button. Disabled during in-flight request; re-enabled in <code>finally</code>.</li>
+  <li><strong>#qnaThankYou</strong>: Box shown after successful question submission.</li>
+  <li><strong>#qnaFormError</strong>: Error Text shown on submit failure. Hidden on each new attempt.</li>
+  <li><span class="impl-warn">⚠️ Retired: <code>#qa*</code> IDs (from old ProductQA.js) are no longer wired. Do NOT add them to the editor.</span></li>
+</ul>`, elements: [
+        ["qnaSection","Box","Q&A main container"],
+        ["qnaEmpty","Box","Empty state"],
+        ["qnaCount","Text","Question count"],
+        ["qnaSearchInput","TextInput","Keyword filter (optional)"],
+        ["qnaAccordion","Repeater","Q&A items"],
+        ["qnaLoadMore","Button","Load next page"],
+        ["qnaSchemaScript","HtmlComponent","FAQ JSON-LD (optional)"],
+        ["qnaQuestionInput","TextInput","Submit question form"],
+        ["qnaSubmitBtn","Button","Submit question"],
+        ["qnaThankYou","Box","Success message"],
+        ["qnaFormError","Text","Error message"]
+      ], children: [
+        ["qnaQuestion","Text","Question text (accordion toggle)"],
+        ["qnaAuthor","Text","Member name"],
+        ["qnaDate","Text","Submitted date"],
+        ["qnaAnswerSection","Box","Answer container"],
+        ["qnaAnswer","Text","Answer text (collapsible)"],
+        ["qnaAnsweredBy","Text","Answered by credit"],
+        ["qnaPending","Box/Badge","Awaiting answer badge"],
+        ["qnaHelpfulBtn","Button","Helpful vote (optional)"],
+        ["qnaHelpfulCount","Text","Helpful count (optional)"],
+        ["qnaFlagBtn","Button","Flag/report (optional)"]
+      ]},
+      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
+<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
+<ul>
+  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
+  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
+  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
+</ul>`, elements: [
+        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
+      ]},
+      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
+<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
+<ul>
+  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
+  <li>Collapses automatically in normal customer UX (no qr param).</li>
+</ul>`, elements: [
+        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
       ]}
     ]
   },
@@ -1761,6 +1898,15 @@ Right column:
         ["categorySchemaHtml","HtmlComponent","Category schema"],
         ["categoryBreadcrumbSchemaHtml","HtmlComponent","Breadcrumb schema"],
         ["categoryOgHtml","HtmlComponent","OG tags"]
+      ]},
+      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
+<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
+<ul>
+  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
+  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
+  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
+</ul>`, elements: [
+        ["showroomBadge","Text","See It In Store badge (repeater child)"]
       ]}
     ]
   },
@@ -2453,6 +2599,56 @@ Action buttons (right):
         ["membershipPromptTitle","Text","Context headline — set dynamically"],
         ["membershipPromptBenefits","Text","CF+ benefits bullet list — set at init"],
         ["membershipUpgradeBtn","Button","Upgrade CTA — links to /pricing-plans"]
+      ]},
+      { name: "Return Flow", impl: `<h4>📦 Implementation — Return Flow</h4>
+<ul>
+  <li><strong>#returnFlowSection</strong>: Container Box for the entire return initiation flow.</li>
+  <li><strong>#returnNoOrders</strong>: Text shown when member has no eligible orders. <span class="impl-warn">Initially collapsed — expanded only when no orders found.</span></li>
+  <li><strong>#returnOrderDropdown</strong>: Dropdown to select which order to return. Populates from member's order history.</li>
+  <li><strong>#returnReasonDropdown</strong>: Dropdown for return reason (defective, wrong item, etc.).</li>
+  <li><strong>#returnWindowInfo</strong>: Text set at runtime showing return eligibility window status (e.g., "5 days remaining").</li>
+  <li><strong>#returnDetailsInput</strong>: TextBox for additional details. Optional field.</li>
+  <li><strong>#returnError</strong> / <strong>#returnSuccess</strong>: Feedback messages. <span class="impl-warn">Both initially collapsed — one expands on submit result.</span></li>
+  <li><strong>#submitReturnBtn</strong> / <strong>#cancelReturnBtn</strong>: Action buttons for the flow.</li>
+  <li><strong>#returnsListSection</strong>: Container Box for return history list below the flow.</li>
+</ul>`, elements: [
+        ["returnFlowSection","Box","Return flow container"],
+        ["returnNoOrders","Text","No orders message"],
+        ["returnOrderDropdown","Dropdown","Select order"],
+        ["returnReasonDropdown","Dropdown","Return reason"],
+        ["returnWindowInfo","Text","Return window status"],
+        ["returnDetailsInput","TextBox","Additional details"],
+        ["returnError","Text","Error message"],
+        ["returnSuccess","Text","Success message"],
+        ["submitReturnBtn","Button","Submit return"],
+        ["cancelReturnBtn","Button","Cancel flow"],
+        ["returnsListSection","Box","Return history container"]
+      ]},
+      { name: "Returnable Items", impl: `<h4>📦 Implementation — Returnable Items</h4>
+<ul>
+  <li><strong>#returnItemsRepeater</strong>: Populated when an order is selected from <code>#returnOrderDropdown</code>. Shows items eligible for return.</li>
+  <li>Each card: <code>#returnItemImage</code> (product thumbnail), <code>#returnItemName</code>, <code>#returnItemQty</code>, <code>#returnItemPrice</code>.</li>
+  <li><strong>#returnItemCheckbox</strong>: CheckboxGroup for selecting which items to return.</li>
+  <li><strong>#returnItemBlockReason</strong>: Text explaining why an item cannot be returned (e.g., final sale). <span class="impl-warn">Conditionally shown — only visible when item is ineligible.</span></li>
+</ul>`, repeater: "returnItemsRepeater", elements: [
+        ["returnItemsRepeater","Repeater","Returnable items"]
+      ], children: [
+        ["returnItemName","Text","Item name"],["returnItemQty","Text","Quantity"],
+        ["returnItemPrice","Text","Price"],["returnItemImage","Image","Item image"],
+        ["returnItemCheckbox","CheckboxGroup","Select item"],
+        ["returnItemBlockReason","Text","Block reason"]
+      ]},
+      { name: "Return History", impl: `<h4>📦 Implementation — Return History</h4>
+<ul>
+  <li><strong>#returnsListRepeater</strong>: Lists previous return requests. Each card: <code>#returnRma</code> (RMA number), <code>#returnOrderNum</code>, <code>#returnDate</code>, <code>#returnReason</code>.</li>
+  <li><strong>#returnStatusBadge</strong>: Text with status label. <strong>Color-coded at runtime</strong> based on status (pending, approved, rejected, completed).</li>
+  <li><strong>#returnTimeline</strong>: Text showing return progress timeline (submitted → reviewed → refunded).</li>
+</ul>`, repeater: "returnsListRepeater", elements: [
+        ["returnsListRepeater","Repeater","Return requests"]
+      ], children: [
+        ["returnRma","Text","RMA number"],["returnOrderNum","Text","Order number"],
+        ["returnDate","Text","Request date"],["returnReason","Text","Reason"],
+        ["returnStatusBadge","Text","Status badge"],["returnTimeline","Text","Timeline"]
       ]}
     ]
   },
@@ -3222,183 +3418,6 @@ Action buttons (right):
       ]}
     ]
   },
-  {
-    name: "Returns Portal (on Member Page)", file: "ReturnsPortal.js", priority: "P2", est: "20 min",
-    sections: [
-      { name: "Return Flow", impl: `<h4>📦 Implementation — Return Flow</h4>
-<ul>
-  <li><strong>#returnFlowSection</strong>: Container Box for the entire return initiation flow.</li>
-  <li><strong>#returnNoOrders</strong>: Text shown when member has no eligible orders. <span class="impl-warn">Initially collapsed — expanded only when no orders found.</span></li>
-  <li><strong>#returnOrderDropdown</strong>: Dropdown to select which order to return. Populates from member's order history.</li>
-  <li><strong>#returnReasonDropdown</strong>: Dropdown for return reason (defective, wrong item, etc.).</li>
-  <li><strong>#returnWindowInfo</strong>: Text set at runtime showing return eligibility window status (e.g., "5 days remaining").</li>
-  <li><strong>#returnDetailsInput</strong>: TextBox for additional details. Optional field.</li>
-  <li><strong>#returnError</strong> / <strong>#returnSuccess</strong>: Feedback messages. <span class="impl-warn">Both initially collapsed — one expands on submit result.</span></li>
-  <li><strong>#submitReturnBtn</strong> / <strong>#cancelReturnBtn</strong>: Action buttons for the flow.</li>
-  <li><strong>#returnsListSection</strong>: Container Box for return history list below the flow.</li>
-</ul>`, elements: [
-        ["returnFlowSection","Box","Return flow container"],
-        ["returnNoOrders","Text","No orders message"],
-        ["returnOrderDropdown","Dropdown","Select order"],
-        ["returnReasonDropdown","Dropdown","Return reason"],
-        ["returnWindowInfo","Text","Return window status"],
-        ["returnDetailsInput","TextBox","Additional details"],
-        ["returnError","Text","Error message"],
-        ["returnSuccess","Text","Success message"],
-        ["submitReturnBtn","Button","Submit return"],
-        ["cancelReturnBtn","Button","Cancel flow"],
-        ["returnsListSection","Box","Return history container"]
-      ]},
-      { name: "Returnable Items", impl: `<h4>📦 Implementation — Returnable Items</h4>
-<ul>
-  <li><strong>#returnItemsRepeater</strong>: Populated when an order is selected from <code>#returnOrderDropdown</code>. Shows items eligible for return.</li>
-  <li>Each card: <code>#returnItemImage</code> (product thumbnail), <code>#returnItemName</code>, <code>#returnItemQty</code>, <code>#returnItemPrice</code>.</li>
-  <li><strong>#returnItemCheckbox</strong>: CheckboxGroup for selecting which items to return.</li>
-  <li><strong>#returnItemBlockReason</strong>: Text explaining why an item cannot be returned (e.g., final sale). <span class="impl-warn">Conditionally shown — only visible when item is ineligible.</span></li>
-</ul>`, repeater: "returnItemsRepeater", elements: [
-        ["returnItemsRepeater","Repeater","Returnable items"]
-      ], children: [
-        ["returnItemName","Text","Item name"],["returnItemQty","Text","Quantity"],
-        ["returnItemPrice","Text","Price"],["returnItemImage","Image","Item image"],
-        ["returnItemCheckbox","CheckboxGroup","Select item"],
-        ["returnItemBlockReason","Text","Block reason"]
-      ]},
-      { name: "Return History", impl: `<h4>📦 Implementation — Return History</h4>
-<ul>
-  <li><strong>#returnsListRepeater</strong>: Lists previous return requests. Each card: <code>#returnRma</code> (RMA number), <code>#returnOrderNum</code>, <code>#returnDate</code>, <code>#returnReason</code>.</li>
-  <li><strong>#returnStatusBadge</strong>: Text with status label. <strong>Color-coded at runtime</strong> based on status (pending, approved, rejected, completed).</li>
-  <li><strong>#returnTimeline</strong>: Text showing return progress timeline (submitted → reviewed → refunded).</li>
-</ul>`, repeater: "returnsListRepeater", elements: [
-        ["returnsListRepeater","Repeater","Return requests"]
-      ], children: [
-        ["returnRma","Text","RMA number"],["returnOrderNum","Text","Order number"],
-        ["returnDate","Text","Request date"],["returnReason","Text","Reason"],
-        ["returnStatusBadge","Text","Status badge"],["returnTimeline","Text","Timeline"]
-      ]}
-    ]
-  },
-  {
-    name: "Product Financing (on Product Page)", file: "ProductFinancing.js", priority: "P1", est: "15 min",
-    sections: [
-      { name: "Financing Widget", impl: `<h4>💳 Implementation — Financing Widget</h4>
-<div class="layer-diagram">
-  <div style="border:2px solid #5B8FA8;padding:8px;border-radius:6px;margin-bottom:4px;">
-    <strong>#financingOverlay</strong> (dark overlay)
-    <div style="border:2px solid #E8845C;padding:8px;border-radius:6px;margin-top:4px;">
-      <strong>#financingModal</strong> (dialog panel)
-      <br><small>#financingClose (X button) + plan repeaters</small>
-    </div>
-  </div>
-</div>
-<ul>
-  <li><strong>#financingTeaser</strong>: Text set at runtime — "As low as $X/mo" calculated from product price.</li>
-  <li><strong>#afterpayMessage</strong>: Text for Afterpay "Pay in 4" messaging.</li>
-  <li><strong>#financingLearnMore</strong>: Button opens the financing modal. Triggers <code>setupAccessibleDialog()</code> pattern — overlay + panel + focus trap + Escape-to-close.</li>
-  <li><strong>#financingModal</strong> + <strong>#financingOverlay</strong>: <span class="impl-warn">Both initially collapsed/hidden. Expanded together on "Learn more" click.</span></li>
-  <li><strong>#financingClose</strong>: Close Button inside modal. Collapses modal + overlay, restores focus to trigger.</li>
-</ul>`, elements: [
-        ["financingSection","Box","Financing container"],
-        ["financingTeaser","Text","As low as $X/mo"],
-        ["afterpayMessage","Text","Afterpay message"],
-        ["financingLearnMore","Button","Learn more link"],
-        ["financingModal","Box","Modal dialog"],
-        ["financingOverlay","Box","Modal overlay"],
-        ["financingClose","Button","Close modal"]
-      ]},
-      { name: "Financing Plans", impl: `<h4>💳 Implementation — Financing Plans</h4>
-<ul>
-  <li><strong>#financingRepeater</strong>: Inside the financing modal. Shows available payment plans (e.g., 6-month, 12-month, 24-month).</li>
-  <li>Each card: <code>#planLabel</code> (plan name), <code>#planMonthly</code> (monthly payment calculated from product price), <code>#planDescription</code>, and <code>#planInterest</code> (APR rate).</li>
-  <li>All text values set at runtime based on current product price.</li>
-</ul>`, repeater: "financingRepeater", elements: [
-        ["financingRepeater","Repeater","Financing plans"]
-      ], children: [
-        ["planLabel","Text","Plan label"],["planMonthly","Text","Monthly payment"],
-        ["planDescription","Text","Description"],["planInterest","Text","Interest/APR"]
-      ]},
-      { name: "Financing Details Modal", impl: `<h4>💳 Implementation — Financing Details</h4>
-<ul>
-  <li><strong>#financingDetailRepeater</strong>: Detailed breakdown view inside the modal. Shown when a plan is selected from the plans repeater above.</li>
-  <li>Each card: <code>#detailLabel</code>, <code>#detailMonthly</code> (monthly amount), <code>#detailApr</code> (annual percentage rate), <code>#detailInterest</code> (total interest cost).</li>
-  <li>Values calculated at runtime based on product price and selected plan terms.</li>
-</ul>`, repeater: "financingDetailRepeater", elements: [
-        ["financingDetailRepeater","Repeater","Detail view"]
-      ], children: [
-        ["detailLabel","Text","Label"],["detailMonthly","Text","Monthly"],
-        ["detailApr","Text","APR"],["detailInterest","Text","Interest"]
-      ]}
-    ]
-  },
-  // ─────────────────────────────────────────────────────────────────────
-  // PRODUCT PAGE — Q&A WIDGET (CF-q7nt / CF-qa8c)
-  // ProductQnA.js — consolidated from ProductQA.js (retired in CF-qa8c).
-  // Uses #qna* element IDs throughout. Old #qa* IDs are RETIRED — do NOT
-  // add them to the editor; they will not be wired by any code.
-  // ─────────────────────────────────────────────────────────────────────
-  {
-    name: "Customer Q&A Widget (Product Page)", file: "ProductQnA.js", priority: "P1", est: "20 min",
-    sections: [
-      { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
-<p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
-<div class="layer-diagram">LAYOUT:
-  #qnaSection (Box — shown when questions exist)
-    ├─ #qnaCount (Text — "N questions")
-    ├─ #qnaSearchInput (TextInput — optional keyword filter, debounced 300ms)
-    ├─ #qnaAccordion (Repeater — one item per question)
-    │    Per item: #qnaQuestion (Text/toggle) · #qnaAuthor · #qnaDate
-    │              #qnaAnswer (collapsible) · #qnaAnswerSection · #qnaAnsweredBy
-    │              #qnaPending (Badge — shown when unanswered)
-    │              #qnaHelpfulBtn (Button — optional) · #qnaHelpfulCount (Text)
-    │              #qnaFlagBtn (Button — optional)
-    └─ #qnaLoadMore (Button — hidden when all loaded)
-  #qnaEmpty (Box — shown when no questions)
-  #qnaSchemaScript (HtmlComponent — FAQ JSON-LD SEO, optional)
-  #qnaQuestionInput (TextInput — submit form)
-  #qnaSubmitBtn (Button — submit)
-  #qnaThankYou (Box — shown on successful submit)
-  #qnaFormError (Text — shown on error)</div>
-<ul>
-  <li><strong>#qnaSection</strong>: Main container. Hidden when no questions exist (shows #qnaEmpty instead).</li>
-  <li><strong>#qnaCount</strong>: Text set to "1 question" or "N questions". Optional — silently skipped if absent.</li>
-  <li><strong>#qnaSearchInput</strong>: Optional keyword filter. Debounces 300ms, re-queries backend on each keystroke. Silently skipped if absent.</li>
-  <li><strong>#qnaAccordion</strong>: Repeater. <span class="impl-warn">⚠️ <code>onItemReady</code> MUST be registered before setting <code>.data</code> (Wix requirement).</span> Each item toggles expand/collapse on click with full ARIA support (<code>ariaExpanded</code>, <code>ariaControls</code>).</li>
-  <li><strong>#qnaPending</strong>: Badge shown when a question is awaiting an answer. Hidden when <code>status === 'answered'</code>.</li>
-  <li><strong>#qnaAnswerSection</strong>: Container for the answer text + #qnaAnsweredBy credit. Hidden when unanswered.</li>
-  <li><strong>#qnaHelpfulBtn / #qnaHelpfulCount</strong>: Optional voting elements. Silently skipped if absent. Count updates after server confirms the vote.</li>
-  <li><strong>#qnaFlagBtn</strong>: Optional report button. Disabled after first click. Silently skipped if absent.</li>
-  <li><strong>#qnaLoadMore</strong>: Shown when more pages exist. Hidden after final page loads. Stays visible on network error (allows retry).</li>
-  <li><strong>#qnaSchemaScript</strong>: Optional HtmlComponent for FAQ JSON-LD schema injection. Silently skipped if absent.</li>
-  <li><strong>#qnaQuestionInput</strong>: Text input for submitting a new question. Cleared on success.</li>
-  <li><strong>#qnaSubmitBtn</strong>: Submit button. Disabled during in-flight request; re-enabled in <code>finally</code>.</li>
-  <li><strong>#qnaThankYou</strong>: Box shown after successful question submission.</li>
-  <li><strong>#qnaFormError</strong>: Error Text shown on submit failure. Hidden on each new attempt.</li>
-  <li><span class="impl-warn">⚠️ Retired: <code>#qa*</code> IDs (from old ProductQA.js) are no longer wired. Do NOT add them to the editor.</span></li>
-</ul>`, elements: [
-        ["qnaSection","Box","Q&A main container"],
-        ["qnaEmpty","Box","Empty state"],
-        ["qnaCount","Text","Question count"],
-        ["qnaSearchInput","TextInput","Keyword filter (optional)"],
-        ["qnaAccordion","Repeater","Q&A items"],
-        ["qnaLoadMore","Button","Load next page"],
-        ["qnaSchemaScript","HtmlComponent","FAQ JSON-LD (optional)"],
-        ["qnaQuestionInput","TextInput","Submit question form"],
-        ["qnaSubmitBtn","Button","Submit question"],
-        ["qnaThankYou","Box","Success message"],
-        ["qnaFormError","Text","Error message"]
-      ], children: [
-        ["qnaQuestion","Text","Question text (accordion toggle)"],
-        ["qnaAuthor","Text","Member name"],
-        ["qnaDate","Text","Submitted date"],
-        ["qnaAnswerSection","Box","Answer container"],
-        ["qnaAnswer","Text","Answer text (collapsible)"],
-        ["qnaAnsweredBy","Text","Answered by credit"],
-        ["qnaPending","Box/Badge","Awaiting answer badge"],
-        ["qnaHelpfulBtn","Button","Helpful vote (optional)"],
-        ["qnaHelpfulCount","Text","Helpful count (optional)"],
-        ["qnaFlagBtn","Button","Flag/report (optional)"]
-      ]}
-    ]
-  },
   // ═══════════════════════════════════════════════════════════════════════
   // DASHBOARD & ADMIN INTEGRATIONS (v1.0.0+)
   // These pages connect to backend web modules for analytics, content
@@ -3522,7 +3541,7 @@ Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
     ]
   },
   {
-    name: "Bundle Analytics (on Product Page)", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
+    name: "Bundle Analytics", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
     sections: [
       { name: "Bundle Performance", repeater: "bundlePerformanceRepeater", impl: `<h4>📦 Implementation — Bundle Analytics</h4>
 <p><strong>Backend</strong>: <code>bundleAnalytics.web.js</code> — tracks bundle impressions, clicks, add-to-cart, and purchases.</p>
@@ -3605,7 +3624,7 @@ FCP  (First Contentful Paint)   — target < 1.8s</div>
   // and cross-platform content distribution.
   // ═══════════════════════════════════════════════════════════════════════
   {
-    name: "Social Media Hub (on Home/Product Pages)", file: "SocialFeedEmbed.js + socialStoryHelpers.js", priority: "P2", est: "25 min",
+    name: "Social Media Hub", file: "SocialFeedEmbed.js + socialStoryHelpers.js", priority: "P2", est: "25 min",
     sections: [
       { name: "Social Feed Embeds", impl: `<h4>📱 Implementation — Social Feed Embeds</h4>
 <p><strong>Frontend</strong>: <code>SocialFeedEmbed.js</code> — embeds live social feeds on any page.</p>
@@ -3651,9 +3670,9 @@ SHARING:
 </ul>`, elements: [
         ["socialFeedSection","Section","Social feeds container"],
         ["socialSectionTitle","Text","Section heading"],
-        ["instagramFeed","HtmlComponent","Instagram grid embed"],
-        ["tiktokEmbed","HtmlComponent","TikTok video embed"],
-        ["pinterestBoard","HtmlComponent","Pinterest board embed"]
+        ["instagramFeedContainer","HtmlComponent","Instagram grid embed"],
+        ["tiktokFeedContainer","HtmlComponent","TikTok video embed"],
+        ["pinterestBoardContainer","HtmlComponent","Pinterest board embed"]
       ]},
       { name: "Social Catalog Sync Status", repeater: "catalogAuditResults", impl: `<h4>🔄 Implementation — Catalog Sync Admin</h4>
 <p><strong>Admin-only</strong>: Status panels for Facebook + Pinterest catalog sync health.</p>
@@ -4152,48 +4171,11 @@ SHARING:
       ]}
     ]
   },
-  {
-    name: "Showroom (Product Page)", file: "showroomService.web.js + Product Page.js", priority: "P2", est: "20 min",
-    sections: [
-      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
-<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
-<ul>
-  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
-  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
-  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
-</ul>`, elements: [
-        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
-      ]},
-      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
-<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
-<ul>
-  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
-  <li>Collapses automatically in normal customer UX (no qr param).</li>
-</ul>`, elements: [
-        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
-      ]}
-    ]
-  },
-  {
-    name: "Showroom (Category Page)", file: "showroomService.web.js + Category Page.js", priority: "P2", est: "10 min",
-    sections: [
-      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
-<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
-<ul>
-  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
-  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
-  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
-</ul>`, elements: [
-        ["showroomBadge","Text","See It In Store badge (repeater child)"]
-      ]}
-    ]
-  },
   // ═══════════════════════════════════════════════════════════════════════
-  // SPRINT 4 ADDITIONS (v1.0.0+, merged 2026-03-20-21)
-  // New backend modules requiring editor hookup or page creation.
+  // PAGES NEEDING CREATION
   // ═══════════════════════════════════════════════════════════════════════
   {
-    name: "Sprint 4 — Pages Needing Creation", file: "Multiple (see below)", priority: "P1", est: "60 min",
+    name: "Pages Needing Creation", file: "Multiple (see below)", priority: "P1", est: "60 min",
     sections: [
       { name: "Style Quiz S2 (CF-g5fa)", impl: `<h4>🎯 Implementation — Style Quiz S2</h4>
 <p><strong>PR #517</strong>: Full S2 frontend shipped. Backend: <code>styleQuiz.web.js</code>. Frontend: <code>src/public/styleQuiz.js</code>.</p>
@@ -4279,7 +4261,7 @@ SHARING:
     ]
   },
   {
-    name: "Showroom (Home Page)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
+    name: "Showroom Section (Home Page — not yet wired)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
     sections: [
       { name: "Showroom Section (S4)", impl: `<h4>🏪 Implementation — Home Page Showroom Section (S4)</h4>
 <p><strong>CF-6cxf S4</strong>: Dedicated showroom section on the Home page with hours, address, booking CTA, and map link.</p>
@@ -4377,6 +4359,47 @@ SHARING:
         ["resultProductName","Text","Product name"],
         ["resultProductPrice","Text","Product price"],
         ["resultViewBtn","Button","View product"]
+      ]},
+      { name: "AI Results Section (Style Quiz additions)", impl: `<h4>🤖 Implementation — AI Style Consultant (Style Quiz Page additions)</h4>
+<p><strong>Backend:</strong> <code>styleConsultant.web.js</code> — <code>getAIRecommendation(quizAnswers, zip)</code>. Feeds from existing quiz results. Calls <code>calculateBundleQuote</code> for shipping estimate in response.</p>
+<p><strong>These elements are added to the existing Style Quiz results area.</strong></p>
+<ul>
+  <li><strong>#aiConsultSection</strong>: Box — AI consultant panel, shown after quiz completes.</li>
+  <li><strong>#aiConsultTitle</strong>: Text — "Your Personalized Recommendation" heading.</li>
+  <li><strong>#aiConsultResponse</strong>: RichTextBox — AI-generated narrative (e.g. "Based on your modern aesthetic and 120 sq ft space, we recommend the Blue Ridge Futon Frame…"). Rendered from Wix rich text, not raw HTML.</li>
+  <li><strong>#aiConsultShippingEstimate</strong>: Text — "Ships to [zip] in 3–5 days for $X (UPS Ground)" — inline shipping estimate from <code>calculateBundleQuote</code>.</li>
+  <li><strong>#aiConsultLoadingState</strong>: Box — loading overlay shown while AI generates response.</li>
+  <li><strong>#aiConsultLoadingText</strong>: Text — "Crafting your recommendation…"</li>
+  <li><strong>#aiConsultErrorText</strong>: Text — fallback on AI failure.</li>
+  <li><strong>#aiConsultShareBtn</strong>: Button — generate shareable link (extends existing share feature).</li>
+  <li><strong>#aiConsultSaveBtn</strong>: Button — save consultation to account, or triggers email capture if logged out.</li>
+</ul>`, elements: [
+        ["aiConsultSection","Box","AI consultant panel"],
+        ["aiConsultTitle","Text","Personalized recommendation heading"],
+        ["aiConsultResponse","RichTextBox","AI-generated narrative"],
+        ["aiConsultShippingEstimate","Text","Inline shipping estimate"],
+        ["aiConsultLoadingState","Box","Loading overlay"],
+        ["aiConsultLoadingText","Text","Loading copy"],
+        ["aiConsultErrorText","Text","Fallback error message"],
+        ["aiConsultShareBtn","Button","Share recommendation link"],
+        ["aiConsultSaveBtn","Button","Save to account / email capture"]
+      ]},
+      { name: "AI Product Recommendations", repeater: "aiRecommendedRepeater", impl: `<h4>🛍️ Implementation — AI Product Recommendations Repeater</h4>
+<ul>
+  <li><strong>#aiRecommendedRepeater</strong>: Repeater — AI-selected products for the customer's setup. Typically 2–4 items (frame + mattress + accessories).</li>
+  <li><strong>#aiProductImage</strong>: Image — product thumbnail.</li>
+  <li><strong>#aiProductName</strong>: Text — product name.</li>
+  <li><strong>#aiProductPrice</strong>: Text — price.</li>
+  <li><strong>#aiProductAddBtn</strong>: Button — "Add to Cart" or "Add to Bundle".</li>
+  <li><strong>#aiWhyText</strong>: Text — one-line AI rationale ("Chosen for your small-space modern setup").</li>
+</ul>`, elements: [
+        ["aiRecommendedRepeater","Repeater","AI-selected product cards"]
+      ], children: [
+        ["aiProductImage","Image","Product thumbnail"],
+        ["aiProductName","Text","Product name"],
+        ["aiProductPrice","Text","Price"],
+        ["aiProductAddBtn","Button","Add to Cart or Bundle"],
+        ["aiWhyText","Text","AI rationale line"]
       ]}
     ]
   },
@@ -4907,138 +4930,7 @@ SHARING:
       ]}
     ]
   },
-  {
-    name: "Gallery Zoom Lightbox", file: "GalleryZoomLightbox.js (on Product Page)", priority: "P1", est: "15 min",
-    sections: [
-      { name: "Lightbox Elements (Product Page)", impl: `<h4>🔍 Implementation — Gallery Zoom Lightbox (Product Page)</h4>
-<p><strong>Note: These elements live on the Product Page. Added via <code>initGalleryZoomLightbox()</code>. Click the main product image or any gallery thumbnail to open the full-size overlay.</strong></p>
-<ul>
-  <li><strong>#zoomLightboxOverlay</strong>: Box — full-screen modal overlay. <span class="impl-warn">Hidden by default (collapsed)</span>. ARIA dialog role, ariaModal, and focus trap wired via <code>setupAccessibleDialog()</code>. Escape key closes.</li>
-  <li><strong>#zoomLightboxImage</strong>: Image — full-size product image. Updates on prev/next navigation.</li>
-  <li><strong>#zoomLightboxClose</strong>: Button — close X button (top-right corner of overlay).</li>
-  <li><strong>#zoomLightboxPrev</strong>: Button — navigate to previous image. Hidden when only one image.</li>
-  <li><strong>#zoomLightboxNext</strong>: Button — navigate to next image. Hidden when only one image.</li>
-  <li><strong>#zoomLightboxCounter</strong>: Text — shows "2 / 5" style counter. Hidden when only one image.</li>
-</ul>
-<p><strong>Keyboard:</strong> ← → arrow keys navigate when overlay open. <strong>Swipe:</strong> mobile swipe left/right via HtmlComponent. <strong>Nav buttons:</strong> hide automatically for single-image products.</p>`, elements: [
-        ["zoomLightboxOverlay","Box","Full-screen modal overlay (hidden by default)"],
-        ["zoomLightboxImage","Image","Full-size product image (updates on nav)"],
-        ["zoomLightboxClose","Button","Close X button"],
-        ["zoomLightboxPrev","Button","Previous image (hidden for single-image)"],
-        ["zoomLightboxNext","Button","Next image (hidden for single-image)"],
-        ["zoomLightboxCounter","Text","\"2 / 5\" counter (hidden for single-image)"]
-      ]}
-    ]
-  },
-  {
-    name: "360° Spin Viewer", file: "Product360Viewer.js (on Product Page)", priority: "P2", est: "15 min",
-    sections: [
-      { name: "Viewer Elements (Product Page)", impl: `<h4>🔄 Implementation — 360° Spin Viewer (Product Page)</h4>
-<p><strong>Note: These elements live on the Product Page, not a separate page. Added via <code>initProduct360Viewer()</code>.</strong></p>
-<ul>
-  <li><strong>#viewer360Section</strong>: Box — container section for the viewer. Hidden by default; shown when 360 images available.</li>
-  <li><strong>#viewer360Container</strong>: Box — inner container for the iframe.</li>
-  <li><strong>#viewer360Embed</strong>: HtmlComponent — the interactive 360° viewer. Receives image URLs via postMessage.</li>
-  <li><strong>#view360Btn</strong>: Button — "View 360°" trigger button on product image gallery.</li>
-  <li><strong>#viewer360Title</strong>: Text — section heading (e.g. "360° View").</li>
-  <li><strong>#viewer360Hint</strong>: Text — "Drag to rotate" hint text.</li>
-</ul>`, elements: [
-        ["viewer360Section","Box","360° section container (hidden by default)"],
-        ["viewer360Container","Box","Inner iframe container"],
-        ["viewer360Embed","HtmlComponent","Interactive 360° viewer (postMessage API)"],
-        ["view360Btn","Button","View 360° trigger on gallery"],
-        ["viewer360Title","Text","Section heading"],
-        ["viewer360Hint","Text","Drag to rotate hint"]
-      ]}
-    ]
-  },
 
-  // ═══════════════════════════════════════════════════════════════
-  // SPRINT 5 FEATURES (2026-03-22+)
-  // Spec: docs/superpowers/specs/2026-03-22-shipping-intelligence-layer-design.md
-  // ═══════════════════════════════════════════════════════════════
-
-  {
-    name: "Shipping Intelligence Widget", file: "shippingIntelligence.web.js (Product Page + Bundle)", priority: "P1", est: "45 min",
-    sections: [
-      { name: "Shipping Estimate — Product Page", impl: `<h4>🚚 Implementation — Shipping Intelligence Widget (Product Page)</h4>
-<p><strong>Backend:</strong> <code>shippingIntelligence.web.js</code> → <code>getShippingEstimate(productId, zip)</code></p>
-<p><strong>Routing:</strong> weight &lt; 150 lbs + no pallet flag → UPS parcel. Over 150 lbs OR <code>requiresPallet</code> → WWEX SpeedFreight 2.0 LTL.</p>
-<p><strong>Multi-box:</strong> <code>ProductShippingProfiles</code> CMS holds per-product dims + weight. Products with multiple boxes have <code>packagingNotes</code> ("Ships in 2 boxes") and combined weight is used for tier routing. Each box is a separate package object in the UPS/WWEX rate call.</p>
-<ul>
-  <li><strong>#shippingEstimateSection</strong>: Box — full shipping panel container on product page.</li>
-  <li><strong>#shippingZipInput</strong>: Input — 5-digit US zip entry. PR/GU/APO handled gracefully.</li>
-  <li><strong>#shippingCalculateBtn</strong>: Button — "Calculate Shipping". Triggers <code>getShippingEstimate</code>.</li>
-  <li><strong>#shippingOptionsSection</strong>: Box — shown after successful rate call.</li>
-  <li><strong>#shippingOptionsRepeater</strong>: Repeater — one row per available service tier (UPS Ground, UPS 2-Day, LTL Standard, LTL Guaranteed, etc.).</li>
-  <li><strong>#shippingLoadingText</strong>: Text — shown during API call ("Getting rates…").</li>
-  <li><strong>#shippingErrorText</strong>: Text — shown on failure with fallback copy.</li>
-  <li><strong>#shippingFreightNote</strong>: Text — "This item ships freight. A carrier will contact you to schedule delivery." Shown when <code>requiresFreight: true</code>.</li>
-  <li><strong>#shippingOriginText</strong>: Text — "Ships from Hendersonville, NC" attribution.</li>
-  <li><strong>#shippingHandlingNote</strong>: Text — "Handling fee included" note when <code>handlingFee_usd &gt; 0</code> for the product.</li>
-</ul>`, elements: [
-        ["shippingEstimateSection","Box","Shipping panel container"],
-        ["shippingZipInput","Input","Zip code entry"],
-        ["shippingCalculateBtn","Button","Calculate Shipping trigger"],
-        ["shippingOptionsSection","Box","Rate results container"],
-        ["shippingLoadingText","Text","Loading indicator"],
-        ["shippingErrorText","Text","Error / fallback message"],
-        ["shippingFreightNote","Text","Freight delivery notice"],
-        ["shippingOriginText","Text","Ships from Hendersonville NC"],
-        ["shippingHandlingNote","Text","Handling fee included note"]
-      ]},
-      { name: "Options", repeater: "shippingOptionsRepeater", impl: `<h4>📦 Implementation — Shipping Options Repeater</h4>
-<ul>
-  <li><strong>#shippingOptionsRepeater</strong>: Repeater — all available service tiers returned by the rate call. Sorted by cost ascending.</li>
-  <li><strong>#shippingOptionTitle</strong>: Text — service name (e.g. "UPS Ground", "LTL Freight (XPO)").</li>
-  <li><strong>#shippingOptionCost</strong>: Text — formatted cost (e.g. "$89.00").</li>
-  <li><strong>#shippingOptionDelivery</strong>: Text — estimated delivery (e.g. "3–5 business days", "Mar 26–28").</li>
-  <li><strong>#shippingCarrierLabel</strong>: Text — carrier name badge (UPS / XPO / Estes etc.).</li>
-  <li><strong>#shippingLiftgateIcon</strong>: Image/Icon — shown when <code>requiresLiftgate: true</code>.</li>
-</ul>`, elements: [
-        ["shippingOptionsRepeater","Repeater","Available shipping service tiers"]
-      ], children: [
-        ["shippingOptionTitle","Text","Service name"],
-        ["shippingOptionCost","Text","Formatted cost"],
-        ["shippingOptionDelivery","Text","Estimated delivery range"],
-        ["shippingCarrierLabel","Text","Carrier name badge"],
-        ["shippingLiftgateIcon","Image","Liftgate required indicator"]
-      ]},
-      { name: "Bundle Builder Shipping", impl: `<h4>🛒 Implementation — Bundle Builder Shipping Section</h4>
-<p>These elements live on the Bundle Builder page and feed from <code>calculateBundleQuote(items[], zip)</code>. Bundle quote handles mixed orders: UPS parcel for light items, automatic LTL upgrade when combined weight exceeds 150 lbs or any item requires pallet.</p>
-<ul>
-  <li><strong>#bundleShippingSection</strong>: Box — shipping panel within bundle builder.</li>
-  <li><strong>#bundleShippingZip</strong>: Input — zip for bundle quote.</li>
-  <li><strong>#bundleShippingBtn</strong>: Button — "Get Shipping Quote".</li>
-  <li><strong>#bundleShippingResult</strong>: Box — shown after quote resolves.</li>
-  <li><strong>#bundleShippingOptions</strong>: Repeater — same shape as product page options repeater.</li>
-  <li><strong>#bundleFreightNote</strong>: Text — shown when bundle triggers LTL: "This order ships freight. A carrier will contact you to schedule delivery."</li>
-  <li><strong>#bundleTotalWeight</strong>: Text — "Combined weight: X lbs" (transparency for customer).</li>
-  <li><strong>#bundleHandlingTotal</strong>: Text — "Handling: $X" — sum of all per-product <code>handlingFee_usd</code> values.</li>
-</ul>`, elements: [
-        ["bundleShippingSection","Box","Bundle shipping panel"],
-        ["bundleShippingZip","Input","Zip for bundle quote"],
-        ["bundleShippingBtn","Button","Get Shipping Quote"],
-        ["bundleShippingResult","Box","Quote results container"],
-        ["bundleFreightNote","Text","Freight order notice"],
-        ["bundleTotalWeight","Text","Combined weight display"],
-        ["bundleHandlingTotal","Text","Total handling fees"]
-      ]},
-      { name: "Bundle Options", repeater: "bundleShippingOptions", impl: `<h4>📦 Implementation — Bundle Shipping Options Repeater</h4>
-<ul>
-  <li><strong>#bundleShippingOptions</strong>: Repeater — shipping tiers for the full bundle.</li>
-  <li><strong>#bundleOptionTitle</strong>: Text — service name.</li>
-  <li><strong>#bundleOptionCost</strong>: Text — cost.</li>
-  <li><strong>#bundleOptionDelivery</strong>: Text — estimated delivery.</li>
-</ul>`, elements: [
-        ["bundleShippingOptions","Repeater","Bundle shipping service tiers"]
-      ], children: [
-        ["bundleOptionTitle","Text","Service name"],
-        ["bundleOptionCost","Text","Cost"],
-        ["bundleOptionDelivery","Text","Estimated delivery"]
-      ]}
-    ]
-  },
   {
     name: "Bundle Builder", file: "Bundle.js (/bundle page) ✅ PR #677 merged", priority: "P1", est: "60 min",
     sections: [
@@ -5095,68 +4987,39 @@ SHARING:
         ["bundleSummaryName","Text","Product name in summary"],
         ["bundleSummaryPrice","Text","Price in summary"],
         ["bundleSummaryRemoveBtn","Button","Remove from bundle"]
-      ]}
-    ]
-  },
-  {
-    name: "Live Inventory + Low Stock", file: "inventoryService.web.js (Product Page additions)", priority: "P1", est: "30 min",
-    sections: [
-      { name: "Stock Status (Product Page)", impl: `<h4>📊 Implementation — Live Inventory + Low Stock (Product Page)</h4>
-<p><strong>Backend:</strong> <code>inventoryService.web.js</code> → <code>getStockStatus(productId)</code>. Returns <code>{ status: 'inStock'|'lowStock'|'outOfStock', qty: number, threshold: number }</code>.</p>
-<p><strong>These elements are added to the existing Product Page.</strong></p>
+      ]},
+      { name: "Bundle Builder Shipping", impl: `<h4>🛒 Implementation — Bundle Builder Shipping Section</h4>
+<p>These elements live on the Bundle Builder page and feed from <code>calculateBundleQuote(items[], zip)</code>. Bundle quote handles mixed orders: UPS parcel for light items, automatic LTL upgrade when combined weight exceeds 150 lbs or any item requires pallet.</p>
 <ul>
-  <li><strong>#stockStatusBadge</strong>: Box — "In Stock" (green) / "Low Stock" (coral) / "Out of Stock" (gray). Color-coded via CSS class toggle.</li>
-  <li><strong>#stockStatusText</strong>: Text — status label text.</li>
-  <li><strong>#lowStockWarning</strong>: Box — shown when qty ≤ low-stock threshold. Hidden otherwise.</li>
-  <li><strong>#lowStockCount</strong>: Text — "Only 3 left!" urgency copy.</li>
-  <li><strong>#outOfStockOverlay</strong>: Box — semi-transparent overlay that disables Add to Cart when qty = 0.</li>
-  <li><strong>#notifyMeSection</strong>: Box — restock notification form. Shown when out of stock.</li>
-  <li><strong>#notifyMeInput</strong>: Input — email for restock notification.</li>
-  <li><strong>#notifyMeBtn</strong>: Button — "Notify Me When Available".</li>
-  <li><strong>#notifyMeSuccess</strong>: Text — "You're on the list! We'll email you when it's back."</li>
-  <li><strong>#notifyMeError</strong>: Text — error message.</li>
+  <li><strong>#bundleShippingSection</strong>: Box — shipping panel within bundle builder.</li>
+  <li><strong>#bundleShippingZip</strong>: Input — zip for bundle quote.</li>
+  <li><strong>#bundleShippingBtn</strong>: Button — "Get Shipping Quote".</li>
+  <li><strong>#bundleShippingResult</strong>: Box — shown after quote resolves.</li>
+  <li><strong>#bundleShippingOptions</strong>: Repeater — same shape as product page options repeater.</li>
+  <li><strong>#bundleFreightNote</strong>: Text — shown when bundle triggers LTL: "This order ships freight. A carrier will contact you to schedule delivery."</li>
+  <li><strong>#bundleTotalWeight</strong>: Text — "Combined weight: X lbs" (transparency for customer).</li>
+  <li><strong>#bundleHandlingTotal</strong>: Text — "Handling: $X" — sum of all per-product <code>handlingFee_usd</code> values.</li>
 </ul>`, elements: [
-        ["stockStatusBadge","Box","Stock status badge (green/coral/gray)"],
-        ["stockStatusText","Text","Status label"],
-        ["lowStockWarning","Box","Low stock warning panel"],
-        ["lowStockCount","Text","Only X left copy"],
-        ["outOfStockOverlay","Box","Disables Add to Cart when OOS"],
-        ["notifyMeSection","Box","Restock notification form"],
-        ["notifyMeInput","Input","Email for restock notification"],
-        ["notifyMeBtn","Button","Notify Me When Available"],
-        ["notifyMeSuccess","Text","Confirmation message"],
-        ["notifyMeError","Text","Error message"]
-      ]}
-    ]
-  },
-  {
-    name: "Product Q&A Widget", file: "ProductQnA.js (Product Page additions) ✅ PR #678 merged", priority: "P1", est: "30 min",
-    sections: [
-      { name: "Q&A Section (Product Page)", impl: `<h4>❓ Implementation — Product Q&A Widget (Product Page)</h4>
-<p><strong>Status: ✅ Merged (PR #678)</strong></p>
-<p><strong>Backend:</strong> <code>productQnA.web.js</code> — <code>getQnA(productId, page)</code>, <code>submitQuestion(productId, text)</code>.</p>
-<p><strong>Accordion pattern:</strong> Each question button's <code>ariaControls</code> is paired with the answer panel's <code>id</code> attribute. Focus is trapped within the widget for keyboard navigation. Empty catch blocks all log via <code>console.error('[ProductQnA]', e)</code>.</p>
+        ["bundleShippingSection","Box","Bundle shipping panel"],
+        ["bundleShippingZip","Input","Zip for bundle quote"],
+        ["bundleShippingBtn","Button","Get Shipping Quote"],
+        ["bundleShippingResult","Box","Quote results container"],
+        ["bundleFreightNote","Text","Freight order notice"],
+        ["bundleTotalWeight","Text","Combined weight display"],
+        ["bundleHandlingTotal","Text","Total handling fees"]
+      ]},
+      { name: "Bundle Shipping Options", repeater: "bundleShippingOptions", impl: `<h4>📦 Implementation — Bundle Shipping Options Repeater</h4>
 <ul>
-  <li><strong>#qnaSection</strong>: Box — full Q&A widget container (shown on Product Page).</li>
-  <li><strong>#qnaAccordion</strong>: Repeater — one accordion item per Q&A pair.</li>
-  <li><strong>#qnaEmpty</strong>: Box — "No questions yet. Be the first to ask!" (shown when 0 items).</li>
-  <li><strong>#qnaLoadMore</strong>: Button — "Load More Questions" (hidden when all pages loaded). Page calc uses <code>Number.isFinite()</code> guard.</li>
-  <li><strong>#qnaQuestion</strong>: Text — question text (inside repeater, acts as accordion toggle button with role=button, aria-expanded).</li>
-  <li><strong>#qnaAnswer</strong>: Box — answer panel (inside repeater). Has <code>id</code> attribute matching question's <code>ariaControls</code> value.</li>
-  <li><strong>#qnaQuestionInput</strong>: TextInput — new question text input.</li>
-  <li><strong>#qnaSubmitBtn</strong>: Button — "Submit Question".</li>
-  <li><strong>#qnaThankYou</strong>: Box — "Thanks! Your question has been submitted." confirmation (shown after submit, hides after 3s).</li>
+  <li><strong>#bundleShippingOptions</strong>: Repeater — shipping tiers for the full bundle.</li>
+  <li><strong>#bundleOptionTitle</strong>: Text — service name.</li>
+  <li><strong>#bundleOptionCost</strong>: Text — cost.</li>
+  <li><strong>#bundleOptionDelivery</strong>: Text — estimated delivery.</li>
 </ul>`, elements: [
-        ["qnaSection","Box","Q&A widget container"],
-        ["qnaAccordion","Repeater","Q&A accordion list"],
-        ["qnaEmpty","Box","Empty state"],
-        ["qnaLoadMore","Button","Load More Questions"],
-        ["qnaQuestionInput","TextInput","New question input"],
-        ["qnaSubmitBtn","Button","Submit Question"],
-        ["qnaThankYou","Box","Thank you confirmation"]
+        ["bundleShippingOptions","Repeater","Bundle shipping service tiers"]
       ], children: [
-        ["qnaQuestion","Text","Question toggle (role=button, aria-expanded)"],
-        ["qnaAnswer","Box","Answer panel (id matches ariaControls)"]
+        ["bundleOptionTitle","Text","Service name"],
+        ["bundleOptionCost","Text","Cost"],
+        ["bundleOptionDelivery","Text","Estimated delivery"]
       ]}
     ]
   },
@@ -5222,331 +5085,6 @@ SHARING:
         ["roomRoomTypeDropdown","Dropdown","Room type selector"],
         ["roomSubmitStatus","Text","Status/error message"]
       ]}
-    ]
-  },
-  {
-    name: "AI Style Consultant (S5)", file: "styleConsultant.web.js (Style Quiz enhancements)", priority: "P2", est: "45 min",
-    sections: [
-      { name: "AI Results Section (Style Quiz additions)", impl: `<h4>🤖 Implementation — AI Style Consultant (Style Quiz Page additions)</h4>
-<p><strong>Backend:</strong> <code>styleConsultant.web.js</code> — <code>getAIRecommendation(quizAnswers, zip)</code>. Feeds from existing quiz results. Calls <code>calculateBundleQuote</code> for shipping estimate in response.</p>
-<p><strong>These elements are added to the existing Style Quiz results area.</strong></p>
-<ul>
-  <li><strong>#aiConsultSection</strong>: Box — AI consultant panel, shown after quiz completes.</li>
-  <li><strong>#aiConsultTitle</strong>: Text — "Your Personalized Recommendation" heading.</li>
-  <li><strong>#aiConsultResponse</strong>: RichTextBox — AI-generated narrative (e.g. "Based on your modern aesthetic and 120 sq ft space, we recommend the Blue Ridge Futon Frame…"). Rendered from Wix rich text, not raw HTML.</li>
-  <li><strong>#aiConsultShippingEstimate</strong>: Text — "Ships to [zip] in 3–5 days for $X (UPS Ground)" — inline shipping estimate from <code>calculateBundleQuote</code>.</li>
-  <li><strong>#aiConsultLoadingState</strong>: Box — loading overlay shown while AI generates response.</li>
-  <li><strong>#aiConsultLoadingText</strong>: Text — "Crafting your recommendation…"</li>
-  <li><strong>#aiConsultErrorText</strong>: Text — fallback on AI failure.</li>
-  <li><strong>#aiConsultShareBtn</strong>: Button — generate shareable link (extends existing share feature).</li>
-  <li><strong>#aiConsultSaveBtn</strong>: Button — save consultation to account, or triggers email capture if logged out.</li>
-</ul>`, elements: [
-        ["aiConsultSection","Box","AI consultant panel"],
-        ["aiConsultTitle","Text","Personalized recommendation heading"],
-        ["aiConsultResponse","RichTextBox","AI-generated narrative"],
-        ["aiConsultShippingEstimate","Text","Inline shipping estimate"],
-        ["aiConsultLoadingState","Box","Loading overlay"],
-        ["aiConsultLoadingText","Text","Loading copy"],
-        ["aiConsultErrorText","Text","Fallback error message"],
-        ["aiConsultShareBtn","Button","Share recommendation link"],
-        ["aiConsultSaveBtn","Button","Save to account / email capture"]
-      ]},
-      { name: "AI Product Recommendations", repeater: "aiRecommendedRepeater", impl: `<h4>🛍️ Implementation — AI Product Recommendations Repeater</h4>
-<ul>
-  <li><strong>#aiRecommendedRepeater</strong>: Repeater — AI-selected products for the customer's setup. Typically 2–4 items (frame + mattress + accessories).</li>
-  <li><strong>#aiProductImage</strong>: Image — product thumbnail.</li>
-  <li><strong>#aiProductName</strong>: Text — product name.</li>
-  <li><strong>#aiProductPrice</strong>: Text — price.</li>
-  <li><strong>#aiProductAddBtn</strong>: Button — "Add to Cart" or "Add to Bundle".</li>
-  <li><strong>#aiWhyText</strong>: Text — one-line AI rationale ("Chosen for your small-space modern setup").</li>
-</ul>`, elements: [
-        ["aiRecommendedRepeater","Repeater","AI-selected product cards"]
-      ], children: [
-        ["aiProductImage","Image","Product thumbnail"],
-        ["aiProductName","Text","Product name"],
-        ["aiProductPrice","Text","Price"],
-        ["aiProductAddBtn","Button","Add to Cart or Bundle"],
-        ["aiWhyText","Text","AI rationale line"]
-      ]}
-    ]
-  },
-  {
-    name: "Member Dashboard — Gamification Widgets (Waves 26-28)", file: "Multiple (see sections)", priority: "P1", est: "90 min",
-    sections: [
-      { name: "Gamification Stats Overview", impl: `<h4>📊 Implementation — Gamification Stats Widget</h4>
-<p><em>Source: <code>src/public/GamificationStatsWidget.js</code>. Aggregate stats panel showing key gamification metrics at a glance.</em></p>
-<ul>
-  <li><strong>#statsPoints</strong>: Text — total points balance.</li>
-  <li><strong>#statsTier</strong>: Text — current tier name.</li>
-  <li><strong>#statsStreak</strong>: Text — current streak count.</li>
-  <li><strong>#statsBadges</strong>: Text — total badges earned.</li>
-  <li><strong>#statsQuests</strong>: Text — quests completed count.</li>
-  <li><strong>#statsRank</strong>: Text — leaderboard rank.</li>
-  <li><strong>#statsError</strong>: Text — <span class="impl-warn">hidden by default</span>. Shown on data load failure.</li>
-  <li><strong>#statsRetry</strong>: Button — retry loading stats after error.</li>
-</ul>`, elements: [
-        ["statsPoints","Text","Total points balance"],
-        ["statsTier","Text","Current tier name"],
-        ["statsStreak","Text","Current streak count"],
-        ["statsBadges","Text","Total badges earned"],
-        ["statsQuests","Text","Quests completed"],
-        ["statsRank","Text","Leaderboard rank"],
-        ["statsError","Text","Error message — hidden by default"],
-        ["statsRetry","Button","Retry loading stats"]
-      ]},
-      { name: "Points Balance", impl: `<h4>💰 Implementation — Points Balance Widget</h4>
-<p><em>Source: <code>src/public/PointsBalanceWidget.js</code>. Compact points balance tile for dashboard header area.</em></p>
-<ul>
-  <li><strong>#pointsBalanceTile</strong>: Box — container tile for points info.</li>
-  <li><strong>#pointsExpiryWarning</strong>: Text — <span class="impl-warn">hidden when no points expiring soon</span>. Warning about upcoming expiry.</li>
-  <li><strong>#pointsTierLabel</strong>: Text — tier label alongside balance.</li>
-</ul>`, elements: [
-        ["pointsBalanceTile","Box","Points balance container"],
-        ["pointsExpiryWarning","Text","Expiry warning — hidden by default"],
-        ["pointsTierLabel","Text","Tier label"]
-      ]},
-      { name: "Streak Tracker", impl: `<h4>🔥 Implementation — Streak Tracker Widget</h4>
-<p><em>Source: <code>src/public/StreakTrackerWidget.js</code>. Full streak tracker panel with current + longest streak and multiplier info.</em></p>
-<ul>
-  <li><strong>#streakCount</strong>: Text — current streak day count.</li>
-  <li><strong>#longestStreak</strong>: Text — all-time longest streak.</li>
-  <li><strong>#streakFlameIcon</strong>: Image — animated flame icon (hidden when streak = 0).</li>
-  <li><strong>#streakMultiplierLabel</strong>: Text — active multiplier (e.g. "2x points").</li>
-  <li><strong>#noStreakMsg</strong>: Text — <span class="impl-warn">hidden when streak &gt; 0</span>. Shown when no active streak.</li>
-</ul>`, elements: [
-        ["streakCount","Text","Current streak days"],
-        ["longestStreak","Text","All-time longest streak"],
-        ["streakFlameIcon","Image","Flame icon — hidden when streak = 0"],
-        ["streakMultiplierLabel","Text","Active multiplier label"],
-        ["noStreakMsg","Text","No streak message — hidden when active"]
-      ]},
-      { name: "Badge Display", repeater: "badgeRepeater", impl: `<h4>🏅 Implementation — Badge Display Widget</h4>
-<p><em>Source: <code>src/public/BadgeDisplayWidget.js</code>. Repeater-based display of earned achievement badges.</em></p>
-<ul>
-  <li><strong>#badgeRepeater</strong>: Repeater — earned badges grid.</li>
-  <li><strong>#badgeIcon</strong>: Image — badge icon (inside repeater).</li>
-  <li><strong>#badgeName</strong>: Text — badge name (inside repeater).</li>
-  <li><strong>#badgeDate</strong>: Text — date earned (inside repeater).</li>
-  <li><strong>#noBadgesMsg</strong>: Text — <span class="impl-warn">hidden when badges exist</span>. Empty state message.</li>
-</ul>`, elements: [
-        ["badgeRepeater","Repeater","Earned badges grid"],
-        ["noBadgesMsg","Text","No badges message — hidden when badges exist"]
-      ], children: [
-        ["badgeIcon","Image","Badge icon"],
-        ["badgeName","Text","Badge name"],
-        ["badgeDate","Text","Date earned"]
-      ]},
-      { name: "Daily Challenges", repeater: "challengeRepeater", impl: `<h4>🎯 Implementation — Daily Challenge Widget</h4>
-<p><em>Source: <code>src/public/DailyChallengeWidget.js</code>. Repeater showing active daily quests with progress tracking.</em></p>
-<ul>
-  <li><strong>#challengeRepeater</strong>: Repeater — active daily challenges. Uses <code>onItemReady</code> with <code>$w2</code> scope.</li>
-  <li><strong>#challengeTitle</strong>: Text — quest title (inside repeater, via $w2).</li>
-  <li><strong>#challengeProgress</strong>: Text — "N / M completed" progress (inside repeater, via $w2).</li>
-  <li><strong>#challengeCompleteIcon</strong>: Image — checkmark shown when challenge complete (inside repeater, via $w2).</li>
-  <li><strong>#noChallengesMsg</strong>: Text — <span class="impl-warn">hidden when challenges exist</span>. Empty state.</li>
-</ul>`, elements: [
-        ["challengeRepeater","Repeater","Active daily challenges"],
-        ["noChallengesMsg","Text","No challenges message — hidden when active"]
-      ], children: [
-        ["challengeTitle","Text","Quest title"],
-        ["challengeProgress","Text","Progress text"],
-        ["challengeCompleteIcon","Image","Completion checkmark"]
-      ]},
-      { name: "Leaderboard", repeater: "leaderboardRepeater", impl: `<h4>🏆 Implementation — Leaderboard Widget</h4>
-<p><em>Source: <code>src/public/LeaderboardWidget.js</code>. Community leaderboard with top members and current user rank.</em></p>
-<ul>
-  <li><strong>#leaderboardTitle</strong>: Text — leaderboard heading.</li>
-  <li><strong>#leaderboardRepeater</strong>: Repeater — ranked member list.</li>
-  <li><strong>#leaderRank</strong>: Text — rank number (inside repeater).</li>
-  <li><strong>#leaderName</strong>: Text — member name (inside repeater).</li>
-  <li><strong>#leaderPoints</strong>: Text — member points (inside repeater).</li>
-  <li><strong>#leaderAvatar</strong>: Image — member avatar (inside repeater).</li>
-  <li><strong>#leaderboardYourRank</strong>: Text — current user's rank summary below repeater.</li>
-  <li><strong>#leaderboardEmpty</strong>: Text — <span class="impl-warn">hidden when data exists</span>. Empty state.</li>
-</ul>`, elements: [
-        ["leaderboardTitle","Text","Leaderboard heading"],
-        ["leaderboardRepeater","Repeater","Ranked member list"],
-        ["leaderboardYourRank","Text","Current user rank summary"],
-        ["leaderboardEmpty","Text","Empty state — hidden when data exists"]
-      ], children: [
-        ["leaderRank","Text","Rank number"],
-        ["leaderName","Text","Member name"],
-        ["leaderPoints","Text","Member points"],
-        ["leaderAvatar","Image","Member avatar"]
-      ]},
-      { name: "Activity Feed", repeater: "activityRepeater", impl: `<h4>📋 Implementation — Activity Feed Widget</h4>
-<p><em>Source: <code>src/public/ActivityFeedWidget.js</code>. Recent gamification activity timeline.</em></p>
-<ul>
-  <li><strong>#activityTitle</strong>: Text — feed section heading.</li>
-  <li><strong>#activityRepeater</strong>: Repeater — activity entries.</li>
-  <li><strong>#activityDesc</strong>: Text — activity description (inside repeater).</li>
-  <li><strong>#activityPoints</strong>: Text — points earned/spent (inside repeater).</li>
-  <li><strong>#activityTime</strong>: Text — relative time (inside repeater).</li>
-  <li><strong>#activityIcon</strong>: Image — activity type icon (inside repeater).</li>
-  <li><strong>#activityEmpty</strong>: Text — <span class="impl-warn">hidden when activities exist</span>. Empty state.</li>
-</ul>`, elements: [
-        ["activityTitle","Text","Feed heading"],
-        ["activityRepeater","Repeater","Activity entries"],
-        ["activityEmpty","Text","Empty state — hidden when activities exist"]
-      ], children: [
-        ["activityDesc","Text","Activity description"],
-        ["activityPoints","Text","Points earned/spent"],
-        ["activityTime","Text","Relative timestamp"],
-        ["activityIcon","Image","Activity type icon"]
-      ]},
-      { name: "Rewards Tier", repeater: "tierBenefitsRepeater", impl: `<h4>🎖️ Implementation — Rewards Tier Widget</h4>
-<p><em>Source: <code>src/public/RewardsTierWidget.js</code>. Current tier status with progress toward next tier and benefits list.</em></p>
-<ul>
-  <li><strong>#tierName</strong>: Text — current tier name.</li>
-  <li><strong>#tierBadge</strong>: Image — tier badge icon.</li>
-  <li><strong>#tierProgress</strong>: ProgressBar — progress toward next tier.</li>
-  <li><strong>#tierPointsNeeded</strong>: Text — points needed for next tier.</li>
-  <li><strong>#tierNextBenefits</strong>: Text — summary of next tier benefits.</li>
-  <li><strong>#tierBenefitsRepeater</strong>: Repeater — current tier benefits list.</li>
-  <li><strong>#benefitText</strong>: Text — individual benefit (inside repeater).</li>
-  <li><strong>#tierError</strong>: Text — <span class="impl-warn">hidden by default</span>. Error state.</li>
-</ul>`, elements: [
-        ["tierName","Text","Current tier name"],
-        ["tierBadge","Image","Tier badge icon"],
-        ["tierProgress","ProgressBar","Progress to next tier"],
-        ["tierPointsNeeded","Text","Points needed for next tier"],
-        ["tierNextBenefits","Text","Next tier benefits summary"],
-        ["tierBenefitsRepeater","Repeater","Current tier benefits"],
-        ["tierError","Text","Error state — hidden by default"]
-      ], children: [
-        ["benefitText","Text","Individual benefit text"]
-      ]},
-      { name: "Gamification Onboarding Overlay", impl: `<h4>🎓 Implementation — Gamification Onboarding</h4>
-<p><em>Source: <code>src/public/GamificationOnboarding.js</code>. First-time user onboarding walkthrough overlay.</em></p>
-<ul>
-  <li><strong>#gamificationOnboardingOverlay</strong>: Box — full-page overlay container. <span class="impl-warn">Hidden by default</span>.</li>
-  <li><strong>#onboardingStepText</strong>: Text — current step description.</li>
-  <li><strong>#onboardingStepIndicator</strong>: Text — step progress indicator (e.g. "2 of 5").</li>
-  <li><strong>#onboardingNextBtn</strong>: Button — advance to next step.</li>
-  <li><strong>#onboardingPrevBtn</strong>: Button — go to previous step.</li>
-  <li><strong>#onboardingCloseBtn</strong>: Button — dismiss onboarding.</li>
-</ul>`, elements: [
-        ["gamificationOnboardingOverlay","Box","Overlay container — hidden by default"],
-        ["onboardingStepText","Text","Step description"],
-        ["onboardingStepIndicator","Text","Step progress indicator"],
-        ["onboardingNextBtn","Button","Next step"],
-        ["onboardingPrevBtn","Button","Previous step"],
-        ["onboardingCloseBtn","Button","Close/dismiss onboarding"]
-      ]},
-      { name: "Social Toast", impl: `<h4>🎉 Implementation — Gamification Social Toast</h4>
-<p><em>Source: <code>src/public/GamificationSocialToast.js</code>. Transient toast notification for social gamification events.</em></p>
-<ul>
-  <li><strong>#socialToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>. Shown on social events.</li>
-  <li><strong>#socialText</strong>: Text — toast message.</li>
-  <li><strong>#socialDismiss</strong>: Button — dismiss toast.</li>
-</ul>`, elements: [
-        ["socialToast","Box","Toast container — hidden by default"],
-        ["socialText","Text","Toast message"],
-        ["socialDismiss","Button","Dismiss toast"]
-      ]},
-      { name: "Milestone Nudge Toast", impl: `<h4>🏁 Implementation — Milestone Nudge Toast</h4>
-<p><em>Source: <code>src/public/MilestoneNudgeToast.js</code>. Toast notification for approaching milestones.</em></p>
-<ul>
-  <li><strong>#milestoneToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>.</li>
-  <li><strong>#milestoneToastText</strong>: Text — milestone nudge message.</li>
-  <li><strong>#milestoneToastClose</strong>: Button — dismiss toast.</li>
-</ul>`, elements: [
-        ["milestoneToast","Box","Toast container — hidden by default"],
-        ["milestoneToastText","Text","Milestone nudge message"],
-        ["milestoneToastClose","Button","Dismiss toast"]
-      ]},
-      { name: "Tier Upgrade Modal", impl: `<h4>🎊 Implementation — Tier Upgrade Modal</h4>
-<p><em>Source: <code>src/public/TierUpgradeModal.js</code>. Celebratory modal shown on tier advancement.</em></p>
-<ul>
-  <li><strong>#tierUpgradeModal</strong>: Box — modal container. <span class="impl-warn">Hidden by default</span>.</li>
-  <li><strong>#tierUpgradeHeading</strong>: Text — congratulations heading.</li>
-  <li><strong>#tierUpgradeBenefits</strong>: Text — new tier benefits list.</li>
-  <li><strong>#tierUpgradeCloseBtn</strong>: Button — dismiss modal.</li>
-</ul>`, elements: [
-        ["tierUpgradeModal","Box","Modal container — hidden by default"],
-        ["tierUpgradeHeading","Text","Congratulations heading"],
-        ["tierUpgradeBenefits","Text","New tier benefits"],
-        ["tierUpgradeCloseBtn","Button","Dismiss modal"]
-      ]},
-      { name: "Notification Preferences", impl: `<h4>🔔 Implementation — Notification Preferences</h4>
-<p><em>Source: <code>src/public/NotificationPreferences.js</code>. Member notification opt-in/out settings.</em></p>
-<ul>
-  <li><strong>#notifPageSection</strong>: Box — preferences section container.</li>
-  <li><strong>#notifCFPlusToggle</strong>: Toggle — CF+ notification opt-in.</li>
-  <li><strong>#notifSmsToggle</strong>: Toggle — SMS notification opt-in.</li>
-  <li><strong>#notifSaveBtn</strong>: Button — save preferences.</li>
-  <li><strong>#notifSaveSpinner</strong>: Box — loading spinner during save.</li>
-  <li><strong>#notifSaveSuccess</strong>: Text — <span class="impl-warn">hidden by default</span>. Success confirmation.</li>
-  <li><strong>#notifSaveError</strong>: Text — <span class="impl-warn">hidden by default</span>. Error message.</li>
-  <li><strong>#notifLoginPrompt</strong>: Text — shown for logged-out users.</li>
-  <li><strong>#notifUnsubscribeAll</strong>: Button — unsubscribe from all.</li>
-  <li><strong>#notifUnsubscribeConfirm</strong>: Box — confirmation dialog container.</li>
-  <li><strong>#notifUnsubscribeConfirmBtn</strong>: Button — confirm unsubscribe.</li>
-  <li><strong>#notifUnsubscribeCancelBtn</strong>: Button — cancel unsubscribe.</li>
-</ul>`, elements: [
-        ["notifPageSection","Box","Preferences section container"],
-        ["notifCFPlusToggle","Toggle","CF+ notification toggle"],
-        ["notifSmsToggle","Toggle","SMS notification toggle"],
-        ["notifSaveBtn","Button","Save preferences"],
-        ["notifSaveSpinner","Box","Loading spinner"],
-        ["notifSaveSuccess","Text","Success message — hidden by default"],
-        ["notifSaveError","Text","Error message — hidden by default"],
-        ["notifLoginPrompt","Text","Login prompt for logged-out users"],
-        ["notifUnsubscribeAll","Button","Unsubscribe from all"],
-        ["notifUnsubscribeConfirm","Box","Unsubscribe confirmation dialog"],
-        ["notifUnsubscribeConfirmBtn","Button","Confirm unsubscribe"],
-        ["notifUnsubscribeCancelBtn","Button","Cancel unsubscribe"]
-      ]},
-      { name: "Referral Dashboard", impl: `<h4>🤝 Implementation — Referral Dashboard</h4>
-<p><em>Source: <code>src/public/referralUI.js</code>. Referral program interface with link sharing and stats.</em></p>
-<ul>
-  <li><strong>#referralWidget</strong>: Box — referral section container.</li>
-  <li><strong>#referralLink</strong>: Text — unique referral URL.</li>
-  <li><strong>#copyBtn</strong>: Button — copy referral link to clipboard.</li>
-  <li><strong>#shareButtons</strong>: Box — social share buttons container.</li>
-  <li><strong>#totalReferrals</strong>: Text — total referral count.</li>
-  <li><strong>#pendingRewards</strong>: Text — pending reward amount.</li>
-  <li><strong>#earnedRewards</strong>: Text — total earned rewards.</li>
-  <li><strong>#loadingState</strong>: Box — <span class="impl-warn">hidden when data loaded</span>. Loading skeleton.</li>
-  <li><strong>#errorState</strong>: Box — <span class="impl-warn">hidden by default</span>. Error state.</li>
-  <li><strong>#dashboardError</strong>: Text — error message text inside errorState.</li>
-</ul>`, elements: [
-        ["referralWidget","Box","Referral section container"],
-        ["referralLink","Text","Unique referral URL"],
-        ["copyBtn","Button","Copy link to clipboard"],
-        ["shareButtons","Box","Social share buttons"],
-        ["totalReferrals","Text","Total referral count"],
-        ["pendingRewards","Text","Pending rewards"],
-        ["earnedRewards","Text","Earned rewards total"],
-        ["loadingState","Box","Loading skeleton — hidden when loaded"],
-        ["errorState","Box","Error state — hidden by default"],
-        ["dashboardError","Text","Error message text"]
-      ]},
-      { name: "Social Proof (PDP)", impl: `<h4>👥 Implementation — Social Proof Badge & Toast</h4>
-<p><em>Sources: <code>src/public/PDPSocialProofBadge.js</code> + <code>src/public/socialProofToast.js</code>. Social proof elements on Product Detail Page.</em></p>
-<ul>
-  <li><strong>#socialProofBadge</strong>: Text — social proof badge on PDP (e.g. "12 people viewing").</li>
-  <li><strong>#socialProofToast</strong>: Box — toast container. <span class="impl-warn">Hidden by default</span>.</li>
-  <li><strong>#socialProofMessage</strong>: Text — toast message (e.g. "Someone in Asheville just purchased this").</li>
-  <li><strong>#socialProofIcon</strong>: Image — toast icon.</li>
-  <li><strong>#socialProofClose</strong>: Button — dismiss toast.</li>
-</ul>`, elements: [
-        ["socialProofBadge","Text","Social proof badge on PDP"],
-        ["socialProofToast","Box","Toast container — hidden by default"],
-        ["socialProofMessage","Text","Social proof toast message"],
-        ["socialProofIcon","Image","Toast icon"],
-        ["socialProofClose","Button","Dismiss toast"]
-      ]},
-      { name: "Product Structured Data", impl: `<h4>🔍 Implementation — Product Structured Data</h4>
-<p><em>Source: <code>src/public/productStructuredData.js</code>. JSON-LD structured data injection for Product pages.</em></p>
-<ul>
-  <li><strong>#productJsonLd</strong>: HtmlComponent — receives JSON-LD script via <code>innerHTML</code>.</li>
-</ul>`, elements: [
-        ["productJsonLd","HtmlComponent","JSON-LD structured data container"]
-      ]},
-      { name: "Gamification Hub (Orchestrator)", impl: `<h4>🎮 Implementation — Gamification Hub</h4>
-<p><em>Source: <code>src/public/GamificationHub.js</code>. Central orchestrator that coordinates all gamification widgets. Does NOT own any UI elements directly — it initializes and coordinates the other widget modules listed in this section.</em></p>
-<p>No elements to place. This module calls into StreakTrackerWidget, BadgeDisplayWidget, LeaderboardWidget, DailyChallengeWidget, ActivityFeedWidget, GamificationStatsWidget, etc.</p>`, elements: []}
     ]
   }
 ];

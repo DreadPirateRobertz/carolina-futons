@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-24 (v2.4 — Wave 26-28 Gamification Widgets added. Phase 8 COMPLETE — All 6 LivingSkyState illustration modules wired via onMessage: comfortIllustrations, onboardingIllustrations, emptyStateIllustrations, aboutIllustrations, CartIllustrations, footerMountainDivider. PRs #771–#778 merged. catch-path guards on all onMessage handlers.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-25 (v2.4 — Consolidated: all orphaned sections folded into parent pages. Showroom→PDP/Category, Financing→PDP, Bundle Shipping→Bundle Builder, Returns→Member, AI Style Consultant→Style Quiz. Verified against src/ code. Phase 8 COMPLETE.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -896,8 +896,7 @@ For each section below:
 | `swatchViewAll` | Button | Opens full swatch gallery |
 | `swatchRequestLink` | Button | Request free swatch link |
 
-### Financing (NEW v0.9.0+)
-*Source: `src/public/ProductFinancing.js`*
+### Financing (v0.9.0+ — `ProductFinancing.js`)
 
 | Element ID | Wix Element | Notes |
 |---|---|---|
@@ -907,15 +906,35 @@ For each section below:
 | `financingLearnMore` | Button | Opens financing detail overlay |
 | `financingOverlay` | Box | Modal overlay background |
 | `financingModal` | Box | Modal content container |
+| `financingModalTitle` | Text | Modal title (ARIA dialog title) |
 | `financingClose` | Button | Close modal — X button |
 
-**⚠️ REPEATER — Financing Terms:**
+**⚠️ REPEATER — Financing Plans (`financingRepeater`):**
 
-| Element ID | Wix Element | Notes |
+| Child ID | Wix Element | Notes |
 |---|---|---|
-| `financingRepeater` | **Repeater** | Monthly payment options |
-| `financingTermPills` | **Repeater** | Term length pill selector |
-| `financingDetailRepeater` | **Repeater** | Detailed breakdown in modal |
+| `planLabel` | Text | Plan label (e.g. "Afterpay", "12 months") |
+| `planMonthly` | Text | Monthly payment amount |
+| `planDescription` | Text | Plan description |
+| `planInterest` | Text | Interest/APR display |
+
+**⚠️ REPEATER — Term Pills (`financingTermPills`):**
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `termMonths` | Text | Term length (e.g. "12mo") |
+| `termPayment` | Text | Monthly payment (e.g. "$45/mo") |
+| `termZeroBadge` | Box | "0% APR" badge — shown for zero-interest terms |
+| `termPill` | Box | Pill container — needs `ariaLabel` |
+
+**⚠️ REPEATER — Financing Detail (`financingDetailRepeater`) — inside modal:**
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `detailLabel` | Text | Detail label |
+| `detailMonthly` | Text | Monthly amount |
+| `detailApr` | Text | APR display |
+| `detailInterest` | Text | Interest amount |
 
 ### Reviews & Ratings (NEW v0.9.0+)
 *Source: `src/public/ProductReviews.js`*
@@ -1091,6 +1110,80 @@ Place the same 5 elements on the Product Page canvas:
 `membershipPromptModal` (Box, hidden), `membershipPromptClose` (Button), `membershipPromptTitle` (Text), `membershipPromptBenefits` (Text), `membershipUpgradeBtn` (Button)
 
 > See **Member Page → CF+ Upgrade Prompt Modal** for full nickname/type table.
+
+### Gallery Zoom Lightbox (v1.2.0+ — `GalleryZoomLightbox.js`)
+
+Added to product page via `initGalleryZoomLightbox`. Click the main product image or any gallery thumbnail to open full-size overlay with prev/next navigation, keyboard arrows, mobile swipe, and ARIA accessibility.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `zoomLightboxOverlay` | Box | Full-screen modal overlay — hidden by default |
+| `zoomLightboxImage` | Image | Full-size product image (updates on nav) |
+| `zoomLightboxClose` | Button | Close X button |
+| `zoomLightboxPrev` | Button | Previous image — hidden when single image |
+| `zoomLightboxNext` | Button | Next image — hidden when single image |
+| `zoomLightboxCounter` | Text | "2 / 5" — hidden when single image |
+
+**Behavior:** `zoomLightboxOverlay` starts collapsed (hidden). ARIA dialog role, focus trap, and Escape-to-close wired via `setupAccessibleDialog`. Keyboard ← → navigation when overlay open.
+
+### 360° Spin Viewer (`ProductSpinViewer.js`)
+
+Added to product page via `initProduct360Viewer`. Elements live on **Product Page**:
+
+`viewer360Section` (Box), `viewer360Container` (Box), `viewer360Embed` (HtmlComponent), `view360Btn` (Button), `viewer360Title` (Text), `viewer360Hint` (Text)
+
+### Shipping Intelligence Layer (Sprint 5 — `ShippingIntelligence.js`) ✅ MERGED PR #674
+
+*Source: `src/public/ShippingIntelligence.js` + `src/backend/shippingIntelligence.web.js`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `shippingEstimateBox` | Box | Container — **hidden by default**, shown after successful API call |
+| `deliveryEstimateText` | Text | Delivery window, e.g. "Wed Apr 2" or "3–5 business days" |
+| `deliveryZoneText` | Text | Option title, e.g. "🚚 Zone 1 Delivery (Free)" or "UPS Ground" |
+| `shippingRateBadge` | Text | Badge copy, e.g. "Free Delivery" — hidden when no badge |
+| `shippingEstimateSpinner` | Box | Loading indicator — shown during API call |
+| `shippingEstimateError` | Text | Error message — **hidden by default** |
+| `whiteGloveUpsellBanner` | Box | Upgrade CTA — **hidden by default**, shown for local delivery options |
+| `whiteGloveUpsellText` | Text | Upsell copy from `upsellMessage`, e.g. "Upgrade to White Glove (+$99)" |
+| `whiteGloveLearnMoreBtn` | Button | Opens white glove modal via accessible dialog |
+| `whiteGloveModal` | Box | Modal overlay — **hidden by default**, managed by `setupAccessibleDialog` |
+| `whiteGloveModalClose` | Button | Close X inside modal — wired by `setupAccessibleDialog` |
+| `whiteGloveModalContent` | Text | In-home setup description copy |
+
+**Behavior:** On product page load, calls `getShippingEstimate(productId, postalCode)` using stored ZIP (session storage or prompt if missing). Shows spinner → replaces with estimate + zone text. If local zone returned, shows white glove upsell banner. Modal is accessible (focus trap, ESC close, ARIA dialog role).
+
+### Live Inventory + Low Stock (Sprint 5 — `LiveInventory.js`)
+
+**Backend:** `inventoryService.web.js` (new)
+
+#### Product Page Elements (added alongside existing product page)
+`stockStatusBadge` (Box), `stockStatusText` (Text), `lowStockWarning` (Box), `lowStockCount` (Text), `outOfStockOverlay` (Box), `notifyMeSection` (Box), `notifyMeInput` (Input), `notifyMeBtn` (Button), `notifyMeSuccess` (Text), `notifyMeError` (Text)
+
+**Behavior:**
+- `stockStatusBadge` shows "In Stock" / "Low Stock" / "Out of Stock" — color-coded (green/coral/gray).
+- `lowStockWarning` + `lowStockCount` visible when qty ≤ threshold (e.g. "Only 3 left!").
+- `outOfStockOverlay` disables Add to Cart when qty = 0.
+- `notifyMeSection` shown when out of stock — captures email for restock notification.
+
+### Product Q&A Widget (Sprint 5 — `ProductQnA.js`) ✅ MERGED PR #678
+
+**Frontend:** `src/public/ProductQnA.js` — accordion Q&A, customer submit form, paginated load
+**Note:** Replaces legacy `ProductQA.js` (#qa* IDs). Use only #qna* IDs below. Consolidation bead CF-qa8c queued.
+
+| Nickname | Type | Notes |
+|----------|------|-------|
+| `qnaSection` | Box | Container — hidden until items load |
+| `qnaAccordion` | Repeater | ⚠️ `onItemReady` BEFORE `.data` |
+| `qnaEmpty` | Text | Shown when no approved Q&A |
+| `qnaLoadMore` | Button | Pagination — hidden when all loaded |
+| `qnaQuestion` | Text | Inside repeater — question text (accordion trigger) |
+| `qnaAnswer` | Text | Inside repeater — answer (collapsible panel, needs `id` matching `aria-controls`) |
+| `qnaQuestionInput` | TextInput | Ask-a-question input |
+| `qnaSubmitBtn` | Button | Submit question |
+| `qnaThankYou` | Text | Hidden — shown on successful submit |
+
+**Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
 
 ---
 
@@ -1492,6 +1585,46 @@ Place the same 5 elements on the Product Page canvas:
 `logoutBtn` (Button), `accountSettings` (Section), `addressBook` (Box), `addressRepeater` (Repeater), `addressEmptyState` (Box), `commPrefs` (Box), `prefNewsletter` (Toggle), `prefSaleAlerts` (Toggle), `prefBackInStock` (Toggle)
 **↳ Inside `addressRepeater`:** `addressText` (Text)
 
+### Returns Portal (`ReturnsPortal.js`)
+
+Add these elements to the **Member Page** in the editor:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `returnFlowSection` | Box | Return flow container, shown/hidden |
+| `returnNoOrders` | Text | "No orders" message |
+| `returnOrderDropdown` | Dropdown | Select order to return |
+| `returnReasonDropdown` | Dropdown | Return reason |
+| `returnWindowInfo` | Text | Return window status |
+| `returnDetailsInput` | TextBox | Additional details |
+| `returnError` | Text | Error message |
+| `returnSuccess` | Text | Success message |
+| `submitReturnBtn` | Button | Submit return request |
+| `cancelReturnBtn` | Button | Cancel return flow |
+| `returnsListSection` | Box | Return history container |
+
+**`returnItemsRepeater`** ⚠️ REPEATER — returnable items:
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `returnItemName` | Text | Item name |
+| `returnItemQty` | Text | Quantity |
+| `returnItemPrice` | Text | Price |
+| `returnItemImage` | Image | Item image |
+| `returnItemCheckbox` | CheckboxGroup | Select item to return |
+| `returnItemBlockReason` | Text | Why item can't be returned |
+
+**`returnsListRepeater`** ⚠️ REPEATER — return request history:
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `returnRma` | Text | RMA number |
+| `returnOrderNum` | Text | Order number |
+| `returnDate` | Text | Request date |
+| `returnReason` | Text | Reason |
+| `returnStatusBadge` | Text | Status badge |
+| `returnTimeline` | Text | Timeline (multiline) |
+
 ### CF+ Upgrade Prompt Modal (NEW v1.2.0+ — PR #666 / CF-llrd)
 *Source: `src/public/MembershipPrompt.js` — `initMembershipPrompt($w)` + `showMembershipPrompt($w, context, dialog)`*
 *Triggered when anonymous or non-CF+ user hits a gated feature (wishlist alerts, swatch request, price match). One-time per browser session.*
@@ -1674,82 +1807,6 @@ Anchors: `termsAcceptance`, `termsProducts`, `termsOrders`, `termsShipping`, `te
 
 ---
 
-## MODULES ON EXISTING PAGES (no new page needed)
-
-### Returns Portal — on Member Page (`src/public/ReturnsPortal.js`)
-
-Add these elements to the **Member Page** in the editor:
-
-| Element ID | Wix Element | Notes |
-|---|---|---|
-| `returnFlowSection` | Box | Return flow container, shown/hidden |
-| `returnNoOrders` | Text | "No orders" message |
-| `returnOrderDropdown` | Dropdown | Select order to return |
-| `returnReasonDropdown` | Dropdown | Return reason |
-| `returnWindowInfo` | Text | Return window status |
-| `returnDetailsInput` | TextBox | Additional details |
-| `returnError` | Text | Error message |
-| `returnSuccess` | Text | Success message |
-| `submitReturnBtn` | Button | Submit return request |
-| `cancelReturnBtn` | Button | Cancel return flow |
-| `returnsListSection` | Box | Return history container |
-
-**`returnItemsRepeater`** ⚠️ REPEATER — returnable items:
-
-| Child ID | Wix Element | Notes |
-|---|---|---|
-| `returnItemName` | Text | Item name |
-| `returnItemQty` | Text | Quantity |
-| `returnItemPrice` | Text | Price |
-| `returnItemImage` | Image | Item image |
-| `returnItemCheckbox` | CheckboxGroup | Select item to return |
-| `returnItemBlockReason` | Text | Why item can't be returned |
-
-**`returnsListRepeater`** ⚠️ REPEATER — return request history:
-
-| Child ID | Wix Element | Notes |
-|---|---|---|
-| `returnRma` | Text | RMA number |
-| `returnOrderNum` | Text | Order number |
-| `returnDate` | Text | Request date |
-| `returnReason` | Text | Reason |
-| `returnStatusBadge` | Text | Status badge |
-| `returnTimeline` | Text | Timeline (multiline) |
-
-### Product Financing Widget — on Product Page (`src/public/ProductFinancing.js`)
-
-Add these elements to the **Product Page** in the editor:
-
-| Element ID | Wix Element | Notes |
-|---|---|---|
-| `financingSection` | Box | Financing section container |
-| `financingTeaser` | Text | "As low as $X/mo" |
-| `afterpayMessage` | Text | Afterpay message |
-| `financingLearnMore` | Button | "Learn more" link |
-| `financingModal` | Box | Modal dialog |
-| `financingOverlay` | Box | Modal overlay bg |
-| `financingClose` | Button | Close modal |
-
-**`financingRepeater`** ⚠️ REPEATER — financing plans:
-
-| Child ID | Wix Element | Notes |
-|---|---|---|
-| `planLabel` | Text | Plan label |
-| `planMonthly` | Text | Monthly payment |
-| `planDescription` | Text | Plan description |
-| `planInterest` | Text | Interest/APR |
-
-**`financingDetailRepeater`** ⚠️ REPEATER — modal detail view:
-
-| Child ID | Wix Element | Notes |
-|---|---|---|
-| `detailLabel` | Text | Detail label |
-| `detailMonthly` | Text | Monthly amount |
-| `detailApr` | Text | APR display |
-| `detailInterest` | Text | Interest amount |
-
----
-
 ## COMPARE PAGE (`Compare Page.js`)
 
 **Route**: `/compare?ids=<id1>,<id2>,...` (up to 4 products)
@@ -1878,6 +1935,21 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 ### Results ⚠️ REPEATER
 `quizProductsRepeater` (Repeater), `resultsRepeater` (Repeater)
 **↳ Inside:** `resultProductImage` (Image), `resultProductName` (Text), `resultProductPrice` (Text), `resultViewBtn` (Button)
+
+### AI Style Consultant (Sprint 5 — `styleConsultant.web.js`)
+
+**Backend:** `styleConsultant.web.js` (new — extends existing Style Quiz backend)
+
+#### AI Results Section (added to existing Style Quiz results area)
+`aiConsultSection` (Box), `aiConsultTitle` (Text), `aiConsultResponse` (RichTextBox), `aiConsultShippingEstimate` (Text), `aiConsultLoadingState` (Box), `aiConsultLoadingText` (Text), `aiConsultErrorText` (Text), `aiRecommendedRepeater` (Repeater), `aiConsultShareBtn` (Button), `aiConsultSaveBtn` (Button)
+
+**↳ Inside `aiRecommendedRepeater`:** `aiProductImage` (Image), `aiProductName` (Text), `aiProductPrice` (Text), `aiProductAddBtn` (Button)
+
+**Behavior:**
+- After quiz completion, AI analyzes answers + budget + room size → generates personalized recommendation narrative.
+- `aiConsultShippingEstimate` shows: "Ships to [zip] in 3–5 days for $X (UPS Ground)" — fed from `calculateBundleQuote`.
+- `aiConsultShareBtn` generates shareable link (extends existing share feature).
+- `aiConsultSaveBtn` saves consultation to account (if logged in) or prompts email capture.
 
 ---
 
@@ -2092,29 +2164,6 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
-## GALLERY ZOOM LIGHTBOX (Product Page — `GalleryZoomLightbox.js`)
-
-Added to product page via `initGalleryZoomLightbox`. Elements live on **Product Page**. Click the main product image or any gallery thumbnail to open full-size overlay with prev/next navigation, keyboard arrows, mobile swipe, and ARIA accessibility.
-
-| Element ID | Wix Element | Notes |
-|---|---|---|
-| `zoomLightboxOverlay` | Box | Full-screen modal overlay — hidden by default |
-| `zoomLightboxImage` | Image | Full-size product image (updates on nav) |
-| `zoomLightboxClose` | Button | Close X button |
-| `zoomLightboxPrev` | Button | Previous image — hidden when single image |
-| `zoomLightboxNext` | Button | Next image — hidden when single image |
-| `zoomLightboxCounter` | Text | "2 / 5" — hidden when single image |
-
-**Behavior:** `zoomLightboxOverlay` starts collapsed (hidden). ARIA dialog role, focus trap, and Escape-to-close wired via `setupAccessibleDialog`. Keyboard ← → navigation when overlay open.
-
----
-
-## 360° SPIN VIEWER (Product Page — `Product360Viewer.js`)
-
-Added to product page via `initProduct360Viewer`. Elements live on **Product Page**:
-
-`viewer360Section` (Box), `viewer360Container` (Box), `viewer360Embed` (HtmlComponent), `view360Btn` (Button), `viewer360Title` (Text), `viewer360Hint` (Text)
-
 ## Sprint 4 Feature Additions (2026-03-20-21, v1.0.0+)
 
 ### Social Media Automation
@@ -2173,13 +2222,7 @@ All major pages now have both backend and frontend code. The following are in de
 
 ---
 
-## SPRINT 5 FEATURES — Element Reference (2026-03-22+)
-
-> Sprint 5 adds five new capabilities: Shipping Intelligence Layer, Bundle Builder, Live Inventory + Low Stock, Customer Room Gallery UGC, and AI Style Consultant. All backend specs in `docs/superpowers/specs/`.
-
----
-
-## SHIPPING INTELLIGENCE LAYER (Sprint 5 — Product Page + Bundle Builder)
+## SHIPPING INTELLIGENCE — CMS Reference
 
 **Spec:** `docs/superpowers/specs/2026-03-22-shipping-intelligence-layer-design.md`
 **Backend:** `shippingIntelligence.web.js`, `wwex-freight.web.js`
@@ -2203,32 +2246,7 @@ All major pages now have both backend and frontend code. The following are in de
 
 > **Tier routing:** total weight < 150 lbs AND no pallet flag → UPS parcel. Over 150 lbs OR `requiresPallet` → WWEX SpeedFreight 2.0 LTL.
 
-### Shipping Intelligence Layer (Product Page — `ShippingIntelligence.js`) ✅ MERGED PR #674
-
-*Source: `src/public/ShippingIntelligence.js` + `src/backend/shippingIntelligence.web.js`*
-
-| Element ID | Wix Element | Notes |
-|---|---|---|
-| `shippingEstimateBox` | Box | Container — **hidden by default**, shown after successful API call |
-| `deliveryEstimateText` | Text | Delivery window, e.g. "Wed Apr 2" or "3–5 business days" |
-| `deliveryZoneText` | Text | Option title, e.g. "🚚 Zone 1 Delivery (Free)" or "UPS Ground" |
-| `shippingRateBadge` | Text | Badge copy, e.g. "Free Delivery" — hidden when no badge |
-| `shippingEstimateSpinner` | Box | Loading indicator — shown during API call |
-| `shippingEstimateError` | Text | Error message — **hidden by default** |
-| `whiteGloveUpsellBanner` | Box | Upgrade CTA — **hidden by default**, shown for local delivery options |
-| `whiteGloveUpsellText` | Text | Upsell copy from `upsellMessage`, e.g. "Upgrade to White Glove (+$99)" |
-| `whiteGloveLearnMoreBtn` | Button | Opens white glove modal via accessible dialog |
-| `whiteGloveModal` | Box | Modal overlay — **hidden by default**, managed by `setupAccessibleDialog` |
-| `whiteGloveModalClose` | Button | Close X inside modal — wired by `setupAccessibleDialog` |
-| `whiteGloveModalContent` | Text | In-home setup description copy |
-
-**Behavior:** On product page load, calls `getShippingEstimate(productId, postalCode)` using stored ZIP (session storage or prompt if missing). Shows spinner → replaces with estimate + zone text. If local zone returned, shows white glove upsell banner. Modal is accessible (focus trap, ESC close, ARIA dialog role).
-
-### Bundle Builder Shipping (Bundle Builder Page)
-
-`bundleShippingSection` (Box), `bundleShippingZip` (Input), `bundleShippingBtn` (Button), `bundleShippingResult` (Box), `bundleShippingOptions` (Repeater), `bundleFreightNote` (Text)
-
-**↳ Inside `bundleShippingOptions`:** `bundleOptionTitle` (Text), `bundleOptionCost` (Text), `bundleOptionDelivery` (Text)
+> **Element IDs:** See **Product Page → Shipping Intelligence Layer** and **Bundle Builder → Bundle Builder Shipping** sections above.
 
 ---
 
@@ -2257,20 +2275,11 @@ All major pages now have both backend and frontend code. The following are in de
 
 **Accessibility note:** `bundleSelectBtn` uses `aria-pressed` (`'true'`/`'false'`) — Wix sets this via `accessibility.ariaPressed`. Screen readers announce selection state automatically.
 
----
+### Bundle Builder Shipping
 
-## LIVE INVENTORY + LOW STOCK (Sprint 5 — Product Page additions)
+`bundleShippingSection` (Box), `bundleShippingZip` (Input), `bundleShippingBtn` (Button), `bundleShippingResult` (Box), `bundleShippingOptions` (Repeater), `bundleFreightNote` (Text)
 
-**Backend:** `inventoryService.web.js` (new)
-
-### Product Page Elements (added alongside existing product page)
-`stockStatusBadge` (Box), `stockStatusText` (Text), `lowStockWarning` (Box), `lowStockCount` (Text), `outOfStockOverlay` (Box), `notifyMeSection` (Box), `notifyMeInput` (Input), `notifyMeBtn` (Button), `notifyMeSuccess` (Text), `notifyMeError` (Text)
-
-**Behavior:**
-- `stockStatusBadge` shows "In Stock" / "Low Stock" / "Out of Stock" — color-coded (green/coral/gray).
-- `lowStockWarning` + `lowStockCount` visible when qty ≤ threshold (e.g. "Only 3 left!").
-- `outOfStockOverlay` disables Add to Cart when qty = 0.
-- `notifyMeSection` shown when out of stock — captures email for restock notification.
+**↳ Inside `bundleShippingOptions`:** `bundleOptionTitle` (Text), `bundleOptionCost` (Text), `bundleOptionDelivery` (Text)
 
 ---
 
@@ -2285,225 +2294,6 @@ All major pages now have both backend and frontend code. The following are in de
 
 ### Submission Form
 `roomSubmitSection` (Box), `roomPhotoUpload` (UploadButton), `roomSubmitCaption` (Input), `roomSubmitProduct` (Dropdown), `roomSubmitStyle` (Dropdown), `roomSubmitEmail` (Input), `roomSubmitBtn` (Button), `roomSubmitSuccess` (Box), `roomSubmitError` (Text), `roomSubmitTerms` (Checkbox)
-
----
-
-## AI STYLE CONSULTANT (Sprint 5 — Style Quiz Enhancements `/style-quiz`)
-
-**Backend:** `styleConsultant.web.js` (new — extends existing Style Quiz backend)
-
-### AI Results Section (added to existing Style Quiz results area)
-`aiConsultSection` (Box), `aiConsultTitle` (Text), `aiConsultResponse` (RichTextBox), `aiConsultShippingEstimate` (Text), `aiConsultLoadingState` (Box), `aiConsultLoadingText` (Text), `aiConsultErrorText` (Text), `aiRecommendedRepeater` (Repeater), `aiConsultShareBtn` (Button), `aiConsultSaveBtn` (Button)
-
-**↳ Inside `aiRecommendedRepeater`:** `aiProductImage` (Image), `aiProductName` (Text), `aiProductPrice` (Text), `aiProductAddBtn` (Button)
-
-**Behavior:**
-- After quiz completion, AI analyzes answers + budget + room size → generates personalized recommendation narrative.
-- `aiConsultShippingEstimate` shows: "Ships to [zip] in 3–5 days for $X (UPS Ground)" — fed from `calculateBundleQuote`.
-- `aiConsultShareBtn` generates shareable link (extends existing share feature).
-- `aiConsultSaveBtn` saves consultation to account (if logged in) or prompts email capture.
-
----
-
-## PRODUCT Q&A WIDGET (Sprint 5 — Product Detail Page) ✅ MERGED PR #678 2026-03-22
-
-**Frontend:** `src/public/ProductQnA.js` — accordion Q&A, customer submit form, paginated load
-**Note:** Replaces legacy `ProductQA.js` (#qa* IDs). Use only #qna* IDs below. Consolidation bead CF-qa8c queued.
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `qnaSection` | Box | Container — hidden until items load |
-| `qnaAccordion` | Repeater | ⚠️ `onItemReady` BEFORE `.data` |
-| `qnaEmpty` | Text | Shown when no approved Q&A |
-| `qnaLoadMore` | Button | Pagination — hidden when all loaded |
-| `qnaQuestion` | Text | Inside repeater — question text (accordion trigger) |
-| `qnaAnswer` | Text | Inside repeater — answer (collapsible panel, needs `id` matching `aria-controls`) |
-| `qnaQuestionInput` | TextInput | Ask-a-question input |
-| `qnaSubmitBtn` | Button | Submit question |
-| `qnaThankYou` | Text | Hidden — shown on successful submit |
-
-**Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
-
----
-
-## MEMBER DASHBOARD — GAMIFICATION WIDGETS (Waves 26-28) v2.4
-
-### Gamification Stats Overview (`GamificationStatsWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `statsPoints` | Text | Total points balance |
-| `statsTier` | Text | Current tier name |
-| `statsStreak` | Text | Current streak count |
-| `statsBadges` | Text | Total badges earned |
-| `statsQuests` | Text | Quests completed |
-| `statsRank` | Text | Leaderboard rank |
-| `statsError` | Text | Error message — hidden by default |
-| `statsRetry` | Button | Retry loading stats |
-
-### Points Balance (`PointsBalanceWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `pointsBalanceTile` | Box | Points balance container |
-| `pointsExpiryWarning` | Text | Expiry warning — hidden by default |
-| `pointsTierLabel` | Text | Tier label |
-
-### Streak Tracker (`StreakTrackerWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `streakCount` | Text | Current streak days |
-| `longestStreak` | Text | All-time longest streak |
-| `streakFlameIcon` | Image | Flame icon — hidden when streak = 0 |
-| `streakMultiplierLabel` | Text | Active multiplier label |
-| `noStreakMsg` | Text | No streak message — hidden when active |
-
-### Badge Display (`BadgeDisplayWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `badgeRepeater` | Repeater | Earned badges grid |
-| `noBadgesMsg` | Text | No badges — hidden when badges exist |
-| `badgeIcon` | Image | Badge icon (inside repeater) |
-| `badgeName` | Text | Badge name (inside repeater) |
-| `badgeDate` | Text | Date earned (inside repeater) |
-
-### Daily Challenges (`DailyChallengeWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `challengeRepeater` | Repeater | Active daily challenges |
-| `noChallengesMsg` | Text | No challenges — hidden when active |
-| `challengeTitle` | Text | Quest title (repeater child via $w2) |
-| `challengeProgress` | Text | Progress text (repeater child via $w2) |
-| `challengeCompleteIcon` | Image | Completion checkmark (repeater child via $w2) |
-
-### Leaderboard (`LeaderboardWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `leaderboardTitle` | Text | Leaderboard heading |
-| `leaderboardRepeater` | Repeater | Ranked member list |
-| `leaderboardYourRank` | Text | Current user rank summary |
-| `leaderboardEmpty` | Text | Empty state — hidden when data exists |
-| `leaderRank` | Text | Rank number (inside repeater) |
-| `leaderName` | Text | Member name (inside repeater) |
-| `leaderPoints` | Text | Member points (inside repeater) |
-| `leaderAvatar` | Image | Member avatar (inside repeater) |
-
-### Activity Feed (`ActivityFeedWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `activityTitle` | Text | Feed heading |
-| `activityRepeater` | Repeater | Activity entries |
-| `activityEmpty` | Text | Empty state — hidden when activities exist |
-| `activityDesc` | Text | Activity description (inside repeater) |
-| `activityPoints` | Text | Points earned/spent (inside repeater) |
-| `activityTime` | Text | Relative timestamp (inside repeater) |
-| `activityIcon` | Image | Activity type icon (inside repeater) |
-
-### Rewards Tier (`RewardsTierWidget.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `tierName` | Text | Current tier name |
-| `tierBadge` | Image | Tier badge icon |
-| `tierProgress` | ProgressBar | Progress to next tier |
-| `tierPointsNeeded` | Text | Points needed for next tier |
-| `tierNextBenefits` | Text | Next tier benefits summary |
-| `tierBenefitsRepeater` | Repeater | Current tier benefits |
-| `benefitText` | Text | Individual benefit (inside repeater) |
-| `tierError` | Text | Error state — hidden by default |
-
-### Gamification Onboarding (`GamificationOnboarding.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `gamificationOnboardingOverlay` | Box | Full-page overlay — hidden by default |
-| `onboardingStepText` | Text | Step description |
-| `onboardingStepIndicator` | Text | Step progress (e.g. "2 of 5") |
-| `onboardingNextBtn` | Button | Next step |
-| `onboardingPrevBtn` | Button | Previous step |
-| `onboardingCloseBtn` | Button | Close/dismiss onboarding |
-
-### Social Toast (`GamificationSocialToast.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `socialToast` | Box | Toast container — hidden by default |
-| `socialText` | Text | Toast message |
-| `socialDismiss` | Button | Dismiss toast |
-
-### Milestone Nudge Toast (`MilestoneNudgeToast.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `milestoneToast` | Box | Toast container — hidden by default |
-| `milestoneToastText` | Text | Milestone nudge message |
-| `milestoneToastClose` | Button | Dismiss toast |
-
-### Tier Upgrade Modal (`TierUpgradeModal.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `tierUpgradeModal` | Box | Modal container — hidden by default |
-| `tierUpgradeHeading` | Text | Congratulations heading |
-| `tierUpgradeBenefits` | Text | New tier benefits |
-| `tierUpgradeCloseBtn` | Button | Dismiss modal |
-
-### Notification Preferences (`NotificationPreferences.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `notifPageSection` | Box | Preferences section container |
-| `notifCFPlusToggle` | Toggle | CF+ notification toggle |
-| `notifSmsToggle` | Toggle | SMS notification toggle |
-| `notifSaveBtn` | Button | Save preferences |
-| `notifSaveSpinner` | Box | Loading spinner |
-| `notifSaveSuccess` | Text | Success — hidden by default |
-| `notifSaveError` | Text | Error — hidden by default |
-| `notifLoginPrompt` | Text | Login prompt for logged-out users |
-| `notifUnsubscribeAll` | Button | Unsubscribe from all |
-| `notifUnsubscribeConfirm` | Box | Unsubscribe confirmation dialog |
-| `notifUnsubscribeConfirmBtn` | Button | Confirm unsubscribe |
-| `notifUnsubscribeCancelBtn` | Button | Cancel unsubscribe |
-
-### Referral Dashboard (`referralUI.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `referralWidget` | Box | Referral section container |
-| `referralLink` | Text | Unique referral URL |
-| `copyBtn` | Button | Copy link to clipboard |
-| `shareButtons` | Box | Social share buttons |
-| `totalReferrals` | Text | Total referral count |
-| `pendingRewards` | Text | Pending rewards |
-| `earnedRewards` | Text | Earned rewards total |
-| `loadingState` | Box | Loading skeleton — hidden when loaded |
-| `errorState` | Box | Error state — hidden by default |
-| `dashboardError` | Text | Error message text |
-
-### Social Proof Badge & Toast (`PDPSocialProofBadge.js` + `socialProofToast.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `socialProofBadge` | Text | Social proof badge on PDP |
-| `socialProofToast` | Box | Toast container — hidden by default |
-| `socialProofMessage` | Text | Social proof toast message |
-| `socialProofIcon` | Image | Toast icon |
-| `socialProofClose` | Button | Dismiss toast |
-
-### Product Structured Data (`productStructuredData.js`)
-
-| Nickname | Type | Notes |
-|----------|------|-------|
-| `productJsonLd` | HtmlComponent | JSON-LD structured data container |
-
-### Gamification Hub — Orchestrator (`GamificationHub.js`)
-
-No UI elements. Central coordinator that initializes and manages all gamification widgets listed above.
 
 ---
 
