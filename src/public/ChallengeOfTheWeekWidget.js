@@ -60,7 +60,10 @@ export async function initChallengeOfTheWeekWidget(opts = {}) {
     return;
   }
 
-  if (!challenge) {
+  if (!challenge || challenge.error) {
+    if (challenge?.error) {
+      try { $w('#weeklyError').show(); } catch {}
+    }
     try { $w('#weeklyContainer').collapse(); } catch {}
     return;
   }
@@ -74,7 +77,7 @@ export async function initChallengeOfTheWeekWidget(opts = {}) {
 
   // Progress
   const current = challenge.currentTotal ?? 0;
-  const target = challenge.targetCount ?? 1;
+  const target = challenge.targetCount || 1; // guard against 0 (division by zero)
   const pct = Math.min(Math.round((current / target) * 100), 100);
 
   try { $w('#weeklyProgress').text = `${current.toLocaleString()} / ${target.toLocaleString()}`; } catch {}

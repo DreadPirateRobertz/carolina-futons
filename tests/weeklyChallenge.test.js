@@ -170,14 +170,30 @@ describe('getWeeklyChallenge', () => {
     expect(result.contributorCount).toBe(0);
   });
 
-  it('returns null and logs on DB error', async () => {
+  it('returns error shape and logs on DB error', async () => {
     wixData.query.mockImplementation(() => { throw new Error('DB down'); });
     const result = await getWeeklyChallenge();
-    expect(result).toBeNull();
+    expect(result.error).toBe('service_unavailable');
     expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('getWeeklyChallenge'),
       expect.any(Error),
     );
+  });
+
+  it('falls back to _id when challengeId is missing', async () => {
+    mockQueries(
+      [{
+        _id: 'fallback-id', title: 'Fallback Test',
+        scope: 'weekly', active: true, targetCount: 50,
+        expiresAt: FUTURE, _createdDate: new Date().toISOString(),
+        // no challengeId field
+      }],
+      [{ memberId: 'mem-1', challengeId: 'fallback-id', progressValue: 7 }]
+    );
+
+    const result = await getWeeklyChallenge();
+    expect(result.challengeId).toBe('fallback-id');
+    expect(result.currentTotal).toBe(7);
   });
 
   it('picks the most recently created challenge (server sorts descending)', async () => {

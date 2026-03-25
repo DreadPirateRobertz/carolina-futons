@@ -181,4 +181,18 @@ describe('ChallengeOfTheWeekWidget (CF-8lj8)', () => {
     await init();
     expect(getEl('#weeklyTimer').text).toBe('< 1h left');
   });
+
+  it('shows error UI when backend returns error shape', async () => {
+    getWeeklyChallenge.mockResolvedValue({ error: 'service_unavailable' });
+    await init();
+    expect(getEl('#weeklyError').show).toHaveBeenCalled();
+    expect(getEl('#weeklyContainer').collapse).toHaveBeenCalled();
+  });
+
+  it('handles targetCount of 0 without NaN', async () => {
+    getWeeklyChallenge.mockResolvedValue({ ...CHALLENGE, targetCount: 0, currentTotal: 0 });
+    await init();
+    expect(getEl('#weeklyProgress').text).toBe('0 / 1');
+    expect(getEl('#weeklyProgressBar').style.width).toBe('0%');
+  });
 });
