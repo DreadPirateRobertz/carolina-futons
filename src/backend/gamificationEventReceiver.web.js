@@ -1399,3 +1399,36 @@ export const getDailyQuests = webMethod(
     }
   }
 );
+
+// ── Shareable progress (CF-fxby) ──────────────────────────────────────────────
+
+/**
+ * Get a member's shareable progress summary for social sharing.
+ * @param {string} memberId
+ * @returns {Promise<{ tierName: string, totalPoints: number, streak: number, topBadges: string[], shareText: string, shareUrl: string }>}
+ */
+export const getShareableProgress = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    if (!memberId) throw new Error('memberId is required');
+
+    const record = await findMemberRecord(memberId);
+    const totalPoints = record?.totalPoints ?? 0;
+    const streak = record?.currentStreakDays ?? 0;
+    const tierInfo = computeTierInfo(totalPoints);
+
+    // Top 3 badges
+    const badgeResult = await wixData
+      .query(MEMBER_BADGES_COLLECTION)
+      .eq('memberId', memberId)
+      .descending('earnedDate')
+      .limit(3)
+      .find({ suppressAuth: true });
+    const topBadges = badgeResult.items.map(b => b.badgeName ?? b.badgeId ?? 'Badge');
+
+    const shareText = `I'm a ${tierInfo.tierName} member at Carolina Futons with ${totalPoints.toLocaleString()} points${streak > 0 ? ` and a ${streak}-day streak` : ''}! 🏆`;
+    const shareUrl = 'https://www.carolinafutons.com/referral';
+
+    return { tierName: tierInfo.tierName, totalPoints, streak, topBadges, shareText, shareUrl };
+  }
+);
