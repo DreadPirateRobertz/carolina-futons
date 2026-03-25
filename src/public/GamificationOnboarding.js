@@ -13,6 +13,8 @@
  * CF-ekzr / CF-zgmv
  */
 
+import { local as wixLocal } from 'wix-storage-frontend';
+
 const STORAGE_KEY = 'gamification_onboarding_seen';
 
 export const ONBOARDING_STEPS = [
@@ -27,7 +29,7 @@ export const ONBOARDING_STEPS = [
  * @param {Storage} [storage]  localStorage-compatible object (injectable for tests)
  * @returns {boolean}
  */
-export function hasSeenOnboarding(storage = globalThis.localStorage) {
+export function hasSeenOnboarding(storage = wixLocal) {
   return storage.getItem(STORAGE_KEY) === 'true';
 }
 
@@ -42,7 +44,7 @@ export function hasSeenOnboarding(storage = globalThis.localStorage) {
  */
 export async function initOnboarding(memberId, opts = {}) {
   const $w      = opts.$w ?? globalThis.$w;
-  const storage = opts.storage ?? globalThis.localStorage;
+  const storage = opts.storage ?? wixLocal;
 
   if (hasSeenOnboarding(storage)) return;
 
@@ -59,14 +61,15 @@ export async function initOnboarding(memberId, opts = {}) {
     storage.setItem(STORAGE_KEY, 'true');
   }
 
+  // Render first step text before showing (avoid flash of empty overlay)
+  renderStep();
+
   // Show overlay — bail out entirely if this throws (user never saw it)
   try {
     await $w('#gamificationOnboardingOverlay').show();
   } catch (e) {
     return;
   }
-
-  renderStep();
 
   $w('#onboardingNextBtn').onClick(async () => {
     if (step === total - 1) {
