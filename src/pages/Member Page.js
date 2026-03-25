@@ -104,6 +104,10 @@ async function initMemberPage() {
       { name: 'addressBook', init: initAddressBook },
       { name: 'communicationPrefs', init: initCommunicationPrefs },
       { name: 'returns', init: () => initReturnsSection($w) },
+      { name: 'gamificationTour', init: async () => {
+        const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
+        await initGamificationTourOverlay();
+      }},
     ];
 
     const results = await Promise.allSettled(sections.map(s => s.init()));
