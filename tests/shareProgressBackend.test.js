@@ -36,7 +36,7 @@ describe('getShareableProgress (CF-fxby)', () => {
     __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 1500 }]);
     __seed('MemberBadges', []);
     const result = await getShareableProgress();
-    expect(result.tierName).toBe('Gold');
+    expect(result.tierName).toBe('Mountain Guide');
   });
 
   it('returns top 3 badges sorted by earnedDate descending', async () => {
@@ -73,7 +73,7 @@ describe('getShareableProgress (CF-fxby)', () => {
     __setMember({ _id: 'mem-unknown' });
     __seed('MemberBadges', []);
     const result = await getShareableProgress();
-    expect(result.tierName).toBe('Bronze');
+    expect(result.tierName).toBe('Trail Blazer');
     expect(result.totalPoints).toBe(0);
     expect(result.streak).toBe(0);
     expect(result.topBadges).toEqual([]);
