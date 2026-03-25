@@ -1036,6 +1036,10 @@ const ACTIVITY_ICONS = {
 export const getActivityFeed = webMethod(
   Permissions.SiteMember,
   async (memberId, limit = 10) => {
+    const { currentMember } = await import('wix-members-backend');
+    const caller = await currentMember.getMember();
+    if (!caller?._id || caller._id !== memberId) return [];
+
     const result = await wixData
       .query('AnalyticsEvents')
       .eq('memberId', memberId)
@@ -1069,6 +1073,10 @@ export const getActivityFeed = webMethod(
 export const getGamificationStats = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
+    const { currentMember } = await import('wix-members-backend');
+    const caller = await currentMember.getMember();
+    if (!caller?._id || caller._id !== memberId) return null;
+
     const [memberResult, badgesResult, questsResult, rankResult] = await Promise.all([
       findMemberRecord(memberId),
       wixData.query(MEMBER_BADGES_COLLECTION)
