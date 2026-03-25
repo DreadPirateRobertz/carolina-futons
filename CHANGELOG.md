@@ -4,6 +4,68 @@ All notable changes to the Carolina Futons Wix Velo codebase.
 
 ---
 
+## [v1.2.0] — 2026-03-24
+
+34,000+ tests | 900+ test files | Wave 26-29 — 21 PRs merged (#841–#862)
+
+### Gamification Platform (Waves 26-28)
+
+- **PointsHistoryWidget**: Recent points transactions on member dashboard (#841)
+- **GamificationHub**: Parallel orchestration of all gamification widgets (#842)
+- **ReferralWidget**: Referral link, count, and bonus status (#843)
+- **DailyQuestsWidget**: Quest list, progress, countdown timer (#846)
+- **CMS Product Videos**: Wire CMS-driven catalog videos to Product Page (#847)
+- **MilestoneRewardsWidget**: Progress bars and unlockable rewards (#848)
+- **NotificationPrefsWidget**: Member notification settings panel (#849)
+- **ShareProgressWidget**: Social sharing of achievements (#850)
+- **RewardsStoreWidget**: Points redemption store — catalog, redemption, history (#851, #852)
+- **Product Structured Data**: JSON-LD for rich search results (#853)
+- **ChallengeOfTheWeekWidget**: Community collective challenge with shared progress bar (#855)
+- **gamificationEventReceiver refactor**: 1504-line monolith → 3 focused modules (#856)
+
+### Wave 29 — RPARTY Feature Synthesis (16 features shipped)
+
+- **GamificationTourOverlay activation**: Mount on first member login (#858)
+- **Style Quiz → Registration Gate**: Account creation prompt after quiz (#859)
+- **Spend-to-Silver cart progress bar**: Tier progress in Side Cart (#860)
+- **Day-14 post-delivery review prompt**: Points reward for reviews
+- **Loyalty cart recovery**: Points context in abandonment emails
+- **AR-to-Gamification bridge**: First AR session discovery bonus (25pts)
+- **Challenge notification pipeline**: SMS + email for new weekly challenges
+- **Referral post-purchase prompt**: Points + referral CTA on Thank You page
+- **Will-It-Fit dimension tool**: Public cold-start furniture sizing helper
+- **Spin-to-Win email capture gate**: Email required before spin
+- **Onboarding quest chain**: Profile → Purchase → Review → Referral (#861)
+- **ZIP social proof**: "X people in your area bought this week"
+- **Day-7 streak milestone push**: Highest-ROI retention notification
+- **CF+ Premium upsell**: Tier-gated membership upsell widget
+- **Auto-delivery subscriptions**: Subscribe & Save on eligible products
+- **crossRigEventBus activation**: badge_earned + streak_extended events (#862)
+- **funnelTracker activation**: Conversion funnel analytics wired
+- **Endowed progress**: 50 welcome points on member creation
+
+### Bug Fixes
+
+- **longestStreakDays**: Track historical max streak across breaks (#857)
+- **homePageHero test**: Fix deferred section mocks
+- **memberPageStreak test**: UTC date boundary fix
+- **Import budget**: Cap bumped for structured data import
+- **achievementBadgeService tests**: Pre-existing failures fixed
+- **memberOwnershipGuard tests**: Ownership violations resolved
+- **useSessionTimer**: console.warn in catch blocks
+
+### Security
+
+- **IDOR fixes**: NotificationPrefs + ShareProgress use currentMember server-side (#849, #850)
+- **Double-spend fix**: RewardsStore nested onClick → single handler pattern (#851)
+- **TOCTOU documentation**: RewardsStore concurrency limitation documented (#852)
+
+### Infrastructure
+
+- **Editor Hookup Guide v2.4**: 90+ new element nicknames from Waves 26-28
+- **28 stale branches cleaned**
+- **Vitest 4.1.1**: Dev dependency bump (#844)
+
 ## [v1.0.1] — 2026-03-21
 
 29,403 tests | 714 test files | 89 src files synced | Sprint 4 — 20+ PRs merged (#505–#595)
