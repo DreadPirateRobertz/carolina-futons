@@ -31,8 +31,17 @@ import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js
 import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
 import { initFreightUpsellBanner, updateFreightUpsellBanner } from 'public/FreightUpsellBanner.js';
 import { initSideCartShippingEstimate, updateSideCartShippingEstimate } from 'public/CartShippingEstimate.js';
+import { initSpendToTierBar, updateSpendToTierBar } from 'public/CartSpendToTierBar.js';
 
 let _sideCartEscapeRegistered = false;
+let _sideCartLoyaltyData = null;
+let _sideCartLoyaltyFetched = false;
+
+const SIDE_CART_TIER_SELECTORS = {
+  bar: '#sideLoyaltyTierBar',
+  text: '#sideLoyaltyTierText',
+  name: '#sideLoyaltyTierName',
+};
 
 $w.onReady(function () {
   initSideCart();
@@ -337,6 +346,26 @@ async function refreshSideCart() {
 
     // Tiered discount incentive
     updateSideTierProgress(subtotal);
+
+    // Gamification loyalty tier progress (CF-11oe)
+    if (!_sideCartLoyaltyFetched) {
+      _sideCartLoyaltyFetched = true;
+      initSpendToTierBar($w, {
+        cartSubtotal: subtotal,
+        getLoyaltyAccount: async () => {
+          const { getMyLoyaltyAccount } = await import('backend/loyaltyService.web');
+          _sideCartLoyaltyData = await getMyLoyaltyAccount();
+          return _sideCartLoyaltyData;
+        },
+        selectors: SIDE_CART_TIER_SELECTORS,
+      }).catch(() => {});
+    } else {
+      updateSpendToTierBar($w, {
+        cartSubtotal: subtotal,
+        loyaltyData: _sideCartLoyaltyData,
+        selectors: SIDE_CART_TIER_SELECTORS,
+      });
+    }
 
     // Freight bundle upsell (show when cart has LTL item)
     await updateFreightUpsellBanner($w, currentCart);

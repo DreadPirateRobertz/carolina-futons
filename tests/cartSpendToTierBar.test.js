@@ -309,3 +309,45 @@ describe('updateSpendToTierBar — live cart change after init', () => {
     expect($w('#tierProgressText').show).not.toHaveBeenCalled();
   });
 });
+
+// ── Custom selectors (CF-11oe Side Cart support) ────────────────────────────
+
+describe('initSpendToTierBar — custom selectors', () => {
+  const CUSTOM_SELECTORS = { bar: '#sideLoyaltyTierBar', text: '#sideLoyaltyTierText', name: '#sideLoyaltyTierName' };
+
+  function makeCustom$w() {
+    const els = {
+      '#sideLoyaltyTierBar': makeEl(),
+      '#sideLoyaltyTierText': makeEl(),
+      '#sideLoyaltyTierName': makeEl(),
+    };
+    return vi.fn((id) => els[id] ?? makeEl());
+  }
+
+  it('renders bar to custom selectors', async () => {
+    const $w = makeCustom$w();
+    const getLoyaltyAccount = vi.fn().mockResolvedValue(MEMBER_ACCOUNT);
+    await initSpendToTierBar($w, { cartSubtotal: 50, getLoyaltyAccount, selectors: CUSTOM_SELECTORS });
+    expect($w('#sideLoyaltyTierBar').show).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierBar').value).toBeGreaterThan(0);
+    expect($w('#sideLoyaltyTierText').show).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierName').show).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierName').text).toBe('Trail Blazer');
+  });
+
+  it('hides custom selectors on guest', async () => {
+    const $w = makeCustom$w();
+    const getLoyaltyAccount = vi.fn().mockRejectedValue(new Error('Not a member'));
+    await initSpendToTierBar($w, { cartSubtotal: 50, getLoyaltyAccount, selectors: CUSTOM_SELECTORS });
+    expect($w('#sideLoyaltyTierBar').hide).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierText').hide).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierName').hide).toHaveBeenCalled();
+  });
+
+  it('updateSpendToTierBar uses custom selectors', () => {
+    const $w = makeCustom$w();
+    updateSpendToTierBar($w, { cartSubtotal: 200, loyaltyData: MEMBER_ACCOUNT, selectors: CUSTOM_SELECTORS });
+    expect($w('#sideLoyaltyTierBar').show).toHaveBeenCalled();
+    expect($w('#sideLoyaltyTierText').text).toContain('Mountain Guide');
+  });
+});
