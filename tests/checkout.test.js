@@ -125,6 +125,7 @@ vi.mock('backend/checkoutOptimization.web', () => ({
   getDeliveryEstimate: vi.fn(),
   calculateOrderSummary: vi.fn(),
   getExpressCheckoutSummary: vi.fn(),
+  trackCheckoutStep: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
 vi.mock('backend/protectionPlan.web', () => ({
