@@ -17,6 +17,7 @@ import {
   wixEcom_onOrderCanceled,
   _SEQUENCES,
   _MAX_RETRY_ATTEMPTS,
+  triggerReviewRewardPrompt,
 } from '../src/backend/emailAutomation.web.js';
 
 beforeEach(() => {
@@ -43,11 +44,12 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.cart_recovery.steps[2].delayHours).toBe(72);
   });
 
-  it('has post_purchase sequence with day 3/7/30 timing', () => {
-    expect(_SEQUENCES.post_purchase.steps).toHaveLength(3);
+  it('has post_purchase sequence with day 3/7/14/30 timing', () => {
+    expect(_SEQUENCES.post_purchase.steps).toHaveLength(4);
     expect(_SEQUENCES.post_purchase.steps[0].delayHours).toBe(72);   // Day 3: Assembly follow-up
     expect(_SEQUENCES.post_purchase.steps[1].delayHours).toBe(168);  // Day 7: Review solicitation
     expect(_SEQUENCES.post_purchase.steps[2].delayHours).toBe(720);  // Day 30: Care guide + upsell
+    expect(_SEQUENCES.post_purchase.steps[3].delayHours).toBe(336);  // Day 14: Review reward prompt (CF-qy79)
   });
 
   it('has post_purchase step descriptions matching day 3/7/30 redesign', () => {
@@ -218,7 +220,7 @@ describe('triggerWelcomeSequence', () => {
 // ── triggerPostPurchaseSequence ─────────────────────────────────────
 
 describe('triggerPostPurchaseSequence', () => {
-  it('queues 3 post-purchase emails', async () => {
+  it('queues 4 post-purchase emails (including Day-14 review reward)', async () => {
     const result = await triggerPostPurchaseSequence(
       'contact-1', 'buyer@test.com', 'Bob', 'ORD-001', 899, [
         { name: 'Eureka Frame', quantity: 1, price: 599 },
@@ -226,7 +228,7 @@ describe('triggerPostPurchaseSequence', () => {
       ]
     );
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(4);
   });
 
   it('includes order details in email variables', async () => {
@@ -1040,7 +1042,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(3);
+    expect(postPurchaseEmails).toHaveLength(4);
     expect(postPurchaseEmails[0].variables.orderNumber).toBe('ORD-100');
   });
 
@@ -1060,7 +1062,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(3);
+    expect(postPurchaseEmails).toHaveLength(4);
   });
 
   it('does nothing when buyer email is missing', async () => {
@@ -1295,5 +1297,101 @@ describe('getEmailEvents', () => {
     expect(ev).toHaveProperty('linkUrl');
     expect(ev).toHaveProperty('timestamp');
     expect(ev).not.toHaveProperty('extraField');
+  });
+});
+
+// ── CF-qy79: triggerReviewRewardPrompt ─────────────────────────────────────
+
+describe('triggerReviewRewardPrompt', () => {
+  it('queues a review reward prompt email', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    const result = await triggerReviewRewardPrompt(
+      'contact-rr1', 'buyer@test.com', 'Dana', 'ORD-001', 'Futon Frame, Mattress'
+    );
+    expect(result.success).toBe(true);
+    expect(insertedItems).toHaveLength(1);
+    expect(insertedItems[0].templateId).toBe('post_purchase_review_reward');
+    expect(insertedItems[0].sequenceType).toBe('post_purchase');
+    expect(insertedItems[0].sequenceStep).toBe(4);
+  });
+
+  it('includes points reward and product names in variables', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    await triggerReviewRewardPrompt(
+      'contact-rr2', 'buyer2@test.com', 'Jordan', 'ORD-002', 'Cover Set'
+    );
+
+    const vars = insertedItems[0].variables;
+    expect(vars.pointsReward).toBe('100');
+    expect(vars.photoBonusPoints).toBe('50');
+    expect(vars.productNames).toBe('Cover Set');
+    expect(vars.firstName).toBe('Jordan');
+    expect(vars.reviewUrl).toContain('ORD-002');
+    expect(vars.reviewUrl).toContain('#reviews');
+  });
+
+  it('schedules for 14 days (336 hours) from now', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    const before = Date.now();
+    await triggerReviewRewardPrompt(
+      'contact-rr3', 'buyer3@test.com', 'Alex', 'ORD-003', 'Futon'
+    );
+    const after = Date.now();
+
+    const scheduled = new Date(insertedItems[0].scheduledFor).getTime();
+    const fourteenDaysMs = 336 * 60 * 60 * 1000;
+    expect(scheduled).toBeGreaterThanOrEqual(before + fourteenDaysMs);
+    expect(scheduled).toBeLessThanOrEqual(after + fourteenDaysMs);
+  });
+
+  it('returns { success: false } when email is empty', async () => {
+    const result = await triggerReviewRewardPrompt('contact-rr4', '', 'Test', 'ORD-004', 'Product');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns { success: false } when email is invalid', async () => {
+    const result = await triggerReviewRewardPrompt('contact-rr5', 'not-an-email', 'Test', 'ORD-005', 'Product');
+    expect(result.success).toBe(false);
+  });
+
+  it('does not queue duplicate for same order', async () => {
+    // Seed an existing review prompt for this order
+    __seed('EmailQueue', [{
+      _id: 'eq-dup1', recipientEmail: 'buyer6@test.com', sequenceType: 'post_purchase',
+      sequenceStep: 4, checkoutId: 'ORD-006', status: 'pending',
+    }]);
+
+    const result = await triggerReviewRewardPrompt(
+      'contact-rr6', 'buyer6@test.com', 'Sam', 'ORD-006', 'Futon'
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it('does not queue when unsubscribed from post_purchase', async () => {
+    __seed('Unsubscribes', [{
+      _id: 'unsub-rr1', email: 'unsub@test.com', sequenceType: 'post_purchase',
+    }]);
+
+    const result = await triggerReviewRewardPrompt(
+      'contact-rr7', 'unsub@test.com', 'Pat', 'ORD-007', 'Futon'
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it('sanitizes input strings', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    const longName = 'A'.repeat(500);
+    await triggerReviewRewardPrompt(
+      'contact-rr8', 'buyer8@test.com', longName, 'ORD-008', 'Product'
+    );
+    expect(insertedItems[0].variables.firstName.length).toBeLessThanOrEqual(200);
   });
 });

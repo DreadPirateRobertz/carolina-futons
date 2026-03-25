@@ -71,6 +71,7 @@ const SEQUENCES = {
       { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Assembly follow-up — How\'s setup going?' },
       { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
       { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
+      { step: 4, templateId: 'post_purchase_review_reward', delayHours: 336, description: 'Day-14 review prompt — earn 100 pts (CF-qy79)' },
     ],
   },
   reengagement: {
@@ -191,6 +192,7 @@ export function wixEcom_onOrderDelivered(event) {
   const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
   const contactId = order.buyerInfo?.contactId || '';
   const orderNumber = order.number || '';
+  const lineItems = order.lineItems || [];
 
   if (!email) return;
 
@@ -202,6 +204,14 @@ export function wixEcom_onOrderDelivered(event) {
       orderNumber: String(orderNumber),
     }))
     .catch(err => console.error('Error sending delivery confirmation:', err));
+
+  // CF-qy79: Queue Day-14 review prompt with points reward
+  const productNames = lineItems
+    .map(i => i.name || i.productName || '')
+    .filter(Boolean)
+    .join(', ');
+  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames)
+    .catch(err => console.error('[CF-qy79] Error queuing review reward prompt on delivery:', err));
 }
 
 /**
@@ -453,6 +463,82 @@ export const triggerPostPurchaseSequence = webMethod(
     } catch (err) {
       console.error('Error queuing post-purchase sequence:', err);
       return { success: false, queued: 0 };
+    }
+  }
+);
+
+/**
+ * Queue a Day-14 review prompt email for a delivered order.
+ * Awards 100 pts for a review (+ 50 for photo) — points are awarded when
+ * the member submits via gamification_submit_review, not by this email.
+ * This just prompts them.
+ *
+ * CF-qy79
+ *
+ * @function triggerReviewRewardPrompt
+ * @param {string} contactId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {string} orderNumber
+ * @param {string} productNames - Comma-separated product names
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin
+ */
+export const triggerReviewRewardPrompt = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, orderNumber, productNames) => {
+    try {
+      if (!email) return { success: false };
+
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false };
+
+      const cleanName = sanitize(firstName, 200);
+      const cleanContactId = sanitize(contactId, 50);
+      const cleanOrderNumber = sanitize(orderNumber, 20);
+      const cleanProductNames = sanitize(productNames, 500);
+
+      if (await isUnsubscribed(cleanEmail, 'post_purchase')) {
+        return { success: false };
+      }
+
+      // Don't send duplicate review prompts for the same order
+      const existing = await wixData.query('EmailQueue')
+        .eq('recipientEmail', cleanEmail)
+        .eq('sequenceType', 'post_purchase')
+        .eq('sequenceStep', 4)
+        .eq('checkoutId', cleanOrderNumber)
+        .find();
+
+      if (existing.items.length > 0) return { success: false };
+
+      const SITE_URL = 'https://www.carolinafutons.com';
+      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      const scheduledFor = new Date(Date.now() + 336 * 60 * 60 * 1000); // 14 days
+
+      await queueEmail({
+        templateId: 'post_purchase_review_reward',
+        recipientEmail: cleanEmail,
+        recipientContactId: cleanContactId,
+        variables: {
+          firstName: cleanName,
+          orderNumber: cleanOrderNumber,
+          productNames: cleanProductNames,
+          reviewUrl,
+          pointsReward: '100',
+          photoBonusPoints: '50',
+          email: cleanEmail,
+          checkoutId: cleanOrderNumber,
+        },
+        sequenceType: 'post_purchase',
+        sequenceStep: 4,
+        scheduledFor,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[CF-qy79] Error queuing review reward prompt:', err);
+      return { success: false };
     }
   }
 );

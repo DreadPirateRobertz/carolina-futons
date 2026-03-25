@@ -942,7 +942,7 @@ describe('wixEcom_onOrderCreated — field extraction edge cases', () => {
 
     // The event handler extracts item.name || item.productName?.original
     const ppEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(ppEmails.length).toBe(3);
+    expect(ppEmails.length).toBe(4);
   });
 });
 

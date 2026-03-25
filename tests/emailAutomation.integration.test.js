@@ -413,7 +413,7 @@ describe('unsubscribe mid-sequence', () => {
     // Post-purchase should still work
     const pp = await triggerPostPurchaseSequence('contact-partial', 'partial@test.com', 'Partial', 'ORD-999', 500, []);
     expect(pp.success).toBe(true);
-    expect(pp.queued).toBe(3);
+    expect(pp.queued).toBe(4);
   });
 });
 
@@ -585,7 +585,7 @@ describe('post-purchase full flow', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const ppEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(ppEmails).toHaveLength(3);
+    expect(ppEmails).toHaveLength(4);
 
     // Verify order details flow through
     expect(ppEmails[0].variables.orderNumber).toBe('ORD-FLOW');
@@ -620,7 +620,7 @@ describe('multiple sequences for same contact', () => {
 
     // Post-purchase also queued (different sequence type)
     const pp = await triggerPostPurchaseSequence('contact-multi', 'multi@test.com', 'Multi', 'ORD-M1', 899, []);
-    expect(pp.queued).toBe(3);
+    expect(pp.queued).toBe(4);
   });
 
   it('unsubscribe from one sequence leaves other intact', async () => {
