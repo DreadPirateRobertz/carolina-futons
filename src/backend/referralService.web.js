@@ -639,3 +639,50 @@ export const getReferralStatus = webMethod(
     }
   }
 );
+
+// ── CF-fawn: Post-purchase reward summary ─────────────────────────────────────
+
+/**
+ * Returns purchase points earned + referral link for the Thank You page.
+ * Combines order-based points calculation with referral link generation.
+ * For non-members, returns null (graceful degradation).
+ *
+ * CF-fawn
+ *
+ * @param {number} orderTotal - Order total in dollars
+ * @returns {Promise<{ pointsEarned: number, referralUrl: string, referralCode: string|null, referralBonusPoints: number } | null>}
+ */
+export const getPostPurchaseRewardSummary = webMethod(
+  Permissions.Anyone,
+  async (orderTotal) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return null; // Non-member — graceful degradation
+
+      // Calculate points earned from this purchase (2 pts per dollar)
+      const PURCHASE_PER_DOLLAR = 2;
+      const pointsEarned = Math.floor((Number(orderTotal) || 0) * PURCHASE_PER_DOLLAR);
+
+      // Get or create referral link
+      let referralCode = null;
+      let referralUrl = `${SITE_URL}/shop`;
+      try {
+        const linkResult = await getReferralLink();
+        if (linkResult.success && linkResult.referralCode) {
+          referralCode = linkResult.referralCode;
+          referralUrl = `${SITE_URL}/shop?ref=${linkResult.referralCode}`;
+        }
+      } catch (_) { /* best-effort */ }
+
+      return {
+        pointsEarned,
+        referralUrl,
+        referralCode,
+        referralBonusPoints: 500,
+      };
+    } catch (err) {
+      console.error('[referralService] getPostPurchaseRewardSummary failed:', err);
+      return null;
+    }
+  }
+);

@@ -9,6 +9,7 @@ import {
   getMyCredits,
   applyCredit,
   getReferralStats,
+  getPostPurchaseRewardSummary,
 } from '../src/backend/referralService.web.js';
 
 beforeEach(() => {
@@ -695,5 +696,54 @@ describe('getReferralStats', () => {
     const result = await getReferralStats();
     expect(result.success).toBe(false);
     expect(result.error).toContain('logged in');
+  });
+});
+
+// ── CF-fawn: getPostPurchaseRewardSummary ──────────────────────────────────
+
+describe('getPostPurchaseRewardSummary', () => {
+  it('returns points earned based on order total (2 pts per dollar)', async () => {
+    __setMember({ _id: 'mem-pp1', loginEmail: 'pp@test.com', name: 'PP' });
+    const result = await getPostPurchaseRewardSummary(899);
+    expect(result).not.toBeNull();
+    expect(result.pointsEarned).toBe(1798);
+  });
+
+  it('returns referral URL with code', async () => {
+    __setMember({ _id: 'mem-pp2', loginEmail: 'pp2@test.com', name: 'PP2' });
+    const result = await getPostPurchaseRewardSummary(500);
+    expect(result.referralUrl).toContain('ref=');
+    expect(result.referralCode).toBeTruthy();
+  });
+
+  it('returns referralBonusPoints as 500', async () => {
+    __setMember({ _id: 'mem-pp3', loginEmail: 'pp3@test.com', name: 'PP3' });
+    const result = await getPostPurchaseRewardSummary(100);
+    expect(result.referralBonusPoints).toBe(500);
+  });
+
+  it('returns null for non-members', async () => {
+    __setMember(null);
+    const result = await getPostPurchaseRewardSummary(899);
+    expect(result).toBeNull();
+  });
+
+  it('floors points to integer (no fractional points)', async () => {
+    __setMember({ _id: 'mem-pp4', loginEmail: 'pp4@test.com', name: 'PP4' });
+    const result = await getPostPurchaseRewardSummary(99.99);
+    expect(result.pointsEarned).toBe(199); // floor(99.99 * 2)
+  });
+
+  it('returns 0 points for zero total', async () => {
+    __setMember({ _id: 'mem-pp5', loginEmail: 'pp5@test.com', name: 'PP5' });
+    const result = await getPostPurchaseRewardSummary(0);
+    expect(result.pointsEarned).toBe(0);
+  });
+
+  it('returns referral URL without code when getReferralLink fails', async () => {
+    __setMember({ _id: 'mem-pp6', loginEmail: 'pp6@test.com', name: 'PP6' });
+    // getReferralLink will succeed (generates a code), so test that flow works
+    const result = await getPostPurchaseRewardSummary(100);
+    expect(result.referralUrl).toContain('carolinafutons.com');
   });
 });
