@@ -1207,5 +1207,118 @@ export const getRecentAchievements = webMethod(
         timestamp: item.timestamp ? new Date(item.timestamp).toISOString() : null,
       };
     });
+
+// ── Notification Preferences ──────────────────────────────────────────────────
+
+const MEMBER_NOTIFICATION_PREFS_COLLECTION = 'MemberNotificationPrefs';
+
+const DEFAULT_PREFS = {
+  streakReminders: true,
+  questAlerts: true,
+  tierUpdates: true,
+  promotionalEmails: false,
+  weeklyDigest: true,
+};
+
+const PREF_KEYS = Object.keys(DEFAULT_PREFS);
+
+/**
+ * Returns notification preferences for a member.
+ * Creates a default record if none exists. Returns { error } on failure.
+ *
+ * CF-rpsx
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ streakReminders: boolean, questAlerts: boolean, tierUpdates: boolean,
+ *   promotionalEmails: boolean, weeklyDigest: boolean } | { error: string }>}
+ */
+export const getNotificationPrefs = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    if (!memberId) {
+      logError('getNotificationPrefs — called without memberId');
+      return { error: 'missing_member_id' };
+    }
+
+    try {
+      const result = await wixData
+        .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (result.items.length > 0) {
+        const record = result.items[0];
+        const prefs = {};
+        for (const key of PREF_KEYS) {
+          prefs[key] = record[key] ?? DEFAULT_PREFS[key];
+        }
+        return prefs;
+      }
+
+      // No record — insert defaults
+      await wixData.insert(MEMBER_NOTIFICATION_PREFS_COLLECTION, {
+        memberId,
+        ...DEFAULT_PREFS,
+      }, { suppressAuth: true });
+
+      return { ...DEFAULT_PREFS };
+    } catch (err) {
+      logError(`getNotificationPrefs — failed for member ${memberId}`, err);
+      return { error: 'service_unavailable' };
+    }
+  }
+);
+
+/**
+ * Update notification preferences for a member.
+ * Only updates known pref keys, ignoring unknown fields.
+ * Returns { success: true } or { error }.
+ *
+ * CF-rpsx
+ *
+ * @param {string} memberId
+ * @param {Object} prefs — partial or full prefs object
+ * @returns {Promise<{ success: boolean } | { error: string }>}
+ */
+export const updateNotificationPrefs = webMethod(
+  Permissions.SiteMember,
+  async (memberId, prefs) => {
+    if (!memberId) {
+      logError('updateNotificationPrefs — called without memberId');
+      return { error: 'missing_member_id' };
+    }
+
+    try {
+      const result = await wixData
+        .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      const updates = {};
+      for (const key of PREF_KEYS) {
+        if (key in prefs) updates[key] = !!prefs[key];
+      }
+
+      if (result.items.length > 0) {
+        const record = result.items[0];
+        await wixData.update(MEMBER_NOTIFICATION_PREFS_COLLECTION, {
+          ...record,
+          ...updates,
+        }, { suppressAuth: true });
+      } else {
+        await wixData.insert(MEMBER_NOTIFICATION_PREFS_COLLECTION, {
+          memberId,
+          ...DEFAULT_PREFS,
+          ...updates,
+        }, { suppressAuth: true });
+      }
+
+      return { success: true };
+    } catch (err) {
+      logError(`updateNotificationPrefs — failed for member ${memberId}`, err);
+      return { error: 'service_unavailable' };
+    }
   }
 );
