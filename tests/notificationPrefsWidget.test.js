@@ -79,49 +79,49 @@ describe('initNotificationPrefsWidget — loading prefs', () => {
 
   it('sets #notifTitle to "Notification Preferences"', async () => {
     const opts = makeOpts($w, makePrefs());
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifTitle').text).toBe('Notification Preferences');
   });
 
-  it('passes memberId to getNotificationPrefs', async () => {
+  it('calls getNotificationPrefs with no arguments (server resolves identity)', async () => {
     const opts = makeOpts($w, makePrefs());
-    await initNotificationPrefsWidget('specific-member', opts);
-    expect(opts.getNotificationPrefs).toHaveBeenCalledWith('specific-member');
+    await initNotificationPrefsWidget(opts);
+    expect(opts.getNotificationPrefs).toHaveBeenCalledWith();
   });
 
   it('sets streak toggle checked from prefs', async () => {
     const opts = makeOpts($w, makePrefs({ streakReminders: true }));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifStreakToggle').checked).toBe(true);
   });
 
   it('sets quest toggle checked from prefs', async () => {
     const opts = makeOpts($w, makePrefs({ questAlerts: false }));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifQuestToggle').checked).toBe(false);
   });
 
   it('sets tier toggle checked from prefs', async () => {
     const opts = makeOpts($w, makePrefs({ tierUpdates: true }));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifTierToggle').checked).toBe(true);
   });
 
   it('sets promo toggle checked from prefs', async () => {
     const opts = makeOpts($w, makePrefs({ promotionalEmails: true }));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifPromoToggle').checked).toBe(true);
   });
 
   it('sets digest toggle checked from prefs', async () => {
     const opts = makeOpts($w, makePrefs({ weeklyDigest: false }));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifDigestToggle').checked).toBe(false);
   });
 
   it('hides #notifError on successful load', async () => {
     const opts = makeOpts($w, makePrefs());
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifError').hide).toHaveBeenCalled();
   });
 });
@@ -134,14 +134,14 @@ describe('initNotificationPrefsWidget — save', () => {
 
   it('wires #notifSaveBtn onClick', async () => {
     const opts = makeOpts($w, makePrefs());
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifSaveBtn').onClick).toHaveBeenCalled();
   });
 
   it('calls updateNotificationPrefs with memberId and current toggle states on save', async () => {
     const prefs = makePrefs({ streakReminders: true, questAlerts: false });
     const opts = makeOpts($w, prefs);
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
 
     // Simulate user toggling quest alerts on
     $w('#notifQuestToggle').checked = true;
@@ -149,7 +149,7 @@ describe('initNotificationPrefsWidget — save', () => {
     const handler = $w('#notifSaveBtn').onClick.mock.calls[0][0];
     await handler();
 
-    expect(opts.updateNotificationPrefs).toHaveBeenCalledWith(MEMBER_ID, {
+    expect(opts.updateNotificationPrefs).toHaveBeenCalledWith({
       streakReminders: true,
       questAlerts: true,
       tierUpdates: false,
@@ -160,7 +160,7 @@ describe('initNotificationPrefsWidget — save', () => {
 
   it('shows success message after save', async () => {
     const opts = makeOpts($w, makePrefs());
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     const handler = $w('#notifSaveBtn').onClick.mock.calls[0][0];
     await handler();
     expect($w('#notifSaveStatus').text).toBe('Preferences saved!');
@@ -170,7 +170,7 @@ describe('initNotificationPrefsWidget — save', () => {
   it('shows error message when save fails', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.updateNotificationPrefs.mockRejectedValue(new Error('Save failed'));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     const handler = $w('#notifSaveBtn').onClick.mock.calls[0][0];
     await handler();
     expect($w('#notifSaveStatus').text).toBe('Failed to save. Please try again.');
@@ -180,7 +180,7 @@ describe('initNotificationPrefsWidget — save', () => {
   it('shows error message and status element when save returns error shape', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.updateNotificationPrefs.mockResolvedValue({ error: 'forbidden' });
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     const handler = $w('#notifSaveBtn').onClick.mock.calls[0][0];
     await handler();
     expect($w('#notifSaveStatus').text).toBe('Failed to save. Please try again.');
@@ -203,7 +203,7 @@ describe('initNotificationPrefsWidget — toggle independence', () => {
       weeklyDigest: true,
     });
     const opts = makeOpts($w, prefs);
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
 
     expect($w('#notifStreakToggle').checked).toBe(true);
     expect($w('#notifQuestToggle').checked).toBe(false);
@@ -227,20 +227,20 @@ describe('initNotificationPrefsWidget — error handling', () => {
   it('does not throw when getNotificationPrefs rejects', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockRejectedValue(new Error('Service down'));
-    await expect(initNotificationPrefsWidget(MEMBER_ID, opts)).resolves.not.toThrow();
+    await expect(initNotificationPrefsWidget(opts)).resolves.not.toThrow();
   });
 
   it('shows #notifError on getNotificationPrefs rejection', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockRejectedValue(new Error('Service down'));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifError').show).toHaveBeenCalled();
   });
 
   it('disables all toggles on error', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockRejectedValue(new Error('Service down'));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifStreakToggle').disable).toHaveBeenCalled();
     expect($w('#notifQuestToggle').disable).toHaveBeenCalled();
     expect($w('#notifTierToggle').disable).toHaveBeenCalled();
@@ -251,14 +251,14 @@ describe('initNotificationPrefsWidget — error handling', () => {
   it('disables save button on error', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockRejectedValue(new Error('Service down'));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifSaveBtn').disable).toHaveBeenCalled();
   });
 
   it('logs error when getNotificationPrefs rejects', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockRejectedValue(new Error('Service down'));
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect(consoleSpy).toHaveBeenCalledWith(
       '[NotificationPrefsWidget] failed to load preferences',
       expect.any(Error),
@@ -268,7 +268,7 @@ describe('initNotificationPrefsWidget — error handling', () => {
   it('shows #notifError and disables all controls on error-shape response', async () => {
     const opts = makeOpts($w, makePrefs());
     opts.getNotificationPrefs.mockResolvedValue({ error: 'auth_required' });
-    await initNotificationPrefsWidget(MEMBER_ID, opts);
+    await initNotificationPrefsWidget(opts);
     expect($w('#notifError').show).toHaveBeenCalled();
     expect($w('#notifStreakToggle').disable).toHaveBeenCalled();
     expect($w('#notifQuestToggle').disable).toHaveBeenCalled();

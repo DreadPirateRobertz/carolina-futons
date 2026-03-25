@@ -1234,10 +1234,17 @@ const PREF_KEYS = Object.keys(DEFAULT_PREFS);
  */
 export const getNotificationPrefs = webMethod(
   Permissions.SiteMember,
-  async (memberId) => {
+  async () => {
+    let memberId;
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      const caller = await currentMember.getMember();
+      memberId = caller?._id;
+    } catch (_) { /* auth unavailable */ }
+
     if (!memberId) {
-      logError('getNotificationPrefs — called without memberId');
-      return { error: 'missing_member_id' };
+      logError('getNotificationPrefs — could not resolve caller identity');
+      return { error: 'auth_required' };
     }
 
     try {
@@ -1283,10 +1290,17 @@ export const getNotificationPrefs = webMethod(
  */
 export const updateNotificationPrefs = webMethod(
   Permissions.SiteMember,
-  async (memberId, prefs) => {
+  async (prefs) => {
+    let memberId;
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      const caller = await currentMember.getMember();
+      memberId = caller?._id;
+    } catch (_) { /* auth unavailable */ }
+
     if (!memberId) {
-      logError('updateNotificationPrefs — called without memberId');
-      return { error: 'missing_member_id' };
+      logError('updateNotificationPrefs — could not resolve caller identity');
+      return { error: 'auth_required' };
     }
     if (!prefs || typeof prefs !== 'object') {
       return { error: 'invalid_prefs' };

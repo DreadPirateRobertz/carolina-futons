@@ -40,22 +40,22 @@ function showErrorState($w) {
 
 /**
  * Initialise the notification preferences widget.
+ * Backend resolves caller identity via currentMember — no memberId needed.
  *
- * @param {string}   memberId
  * @param {Object}   [opts]
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getNotificationPrefs]
  * @param {Function} [opts.updateNotificationPrefs]
  * @returns {Promise<void>}
  */
-export async function initNotificationPrefsWidget(memberId, opts = {}) {
+export async function initNotificationPrefsWidget(opts = {}) {
   const $w = opts.$w ?? globalThis.$w;
   const getNotificationPrefs = opts.getNotificationPrefs ?? _defaultGetPrefs;
   const updateNotificationPrefs = opts.updateNotificationPrefs ?? _defaultUpdatePrefs;
 
   let prefs;
   try {
-    prefs = await getNotificationPrefs(memberId);
+    prefs = await getNotificationPrefs();
   } catch (err) {
     console.error('[NotificationPrefsWidget] failed to load preferences', err);
     showErrorState($w);
@@ -85,7 +85,7 @@ export async function initNotificationPrefsWidget(memberId, opts = {}) {
       }
 
       try {
-        const result = await updateNotificationPrefs(memberId, updated);
+        const result = await updateNotificationPrefs(updated);
         if (result && result.error) {
           try { $w('#notifSaveStatus').text = 'Failed to save. Please try again.'; } catch {}
         } else {
