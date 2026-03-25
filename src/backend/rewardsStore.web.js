@@ -139,6 +139,10 @@ export const redeemReward = webMethod(
       return { error: 'missing_member_id' };
     }
 
+    if (typeof rewardId !== 'string' || !/^[A-Z0-9_]+$/.test(rewardId)) {
+      return { error: 'invalid_reward_id' };
+    }
+
     const reward = CATALOG_MAP[rewardId];
     if (!reward) {
       return { error: 'invalid_reward_id' };

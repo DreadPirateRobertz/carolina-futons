@@ -149,6 +149,16 @@ describe('redeemReward', () => {
     expect(result.error).toBe('invalid_reward_id');
   });
 
+  it('rejects rewardId with special characters', async () => {
+    const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5"; DROP TABLE');
+    expect(result.error).toBe('invalid_reward_id');
+  });
+
+  it('rejects non-string rewardId', async () => {
+    const result = await redeemReward(MEMBER_ID, { toString: () => 'DISCOUNT_5' });
+    expect(result.error).toBe('invalid_reward_id');
+  });
+
   it('returns error when caller is not the member', async () => {
     currentMember.getMember.mockResolvedValue({ _id: 'different-member' });
     mockMemberPoints(1000);
