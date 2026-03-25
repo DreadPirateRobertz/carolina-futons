@@ -13,6 +13,7 @@
  *   gamification_referral_accepted — +POINT_VALUES.REFERRAL_ACCEPTED (500 pts, streak-multiplied)
  *   gamification_order_complete    — +Math.floor(orderTotal) pts (streak-multiplied)
  *   gamification_ar_used          — +POINT_VALUES.AR_USED (10 pts)
+ *   gamification_ar_discovery     — +POINT_VALUES.AR_TRY_ON (25 pts), first AR session only
  *   gamification_wishlist_add     — +POINT_VALUES.WISHLIST_ADD (25 pts), capped at 1/month
  *   gamification_spin_completed   — +0 pts (tracked for bonus-spin grant only)
  *   (unknown)                     — no-op, returns current total
@@ -134,9 +135,30 @@ export const receiveGamificationEvent = webMethod(
         ? await checkWishlistMonthlyCap(memberId, todayET)
         : null;
       const canEarnWishlist = capResult?.canEarn ?? false;
-      const effectiveBase = eventName !== 'gamification_wishlist_add' || canEarnWishlist
+
+      // Phase 4b: AR discovery one-time cap (CF-0gly)
+      let canEarnARDiscovery = true;
+      if (eventName === 'gamification_ar_discovery') {
+        try {
+          const priorAR = await wixData
+            .query('AnalyticsEvents')
+            .eq('memberId', memberId)
+            .eq('eventType', 'ar_discovery')
+            .limit(1)
+            .find({ suppressAuth: true });
+          canEarnARDiscovery = priorAR.items.length === 0;
+        } catch (err) {
+          logError(`receiveGamificationEvent — AR discovery cap check failed for ${memberId}`, err, { silent: true });
+          canEarnARDiscovery = false; // fail closed
+        }
+      }
+
+      let effectiveBase = eventName !== 'gamification_wishlist_add' || canEarnWishlist
         ? basePoints
         : 0;
+      if (eventName === 'gamification_ar_discovery' && !canEarnARDiscovery) {
+        effectiveBase = 0;
+      }
 
       // Apply streak multiplier to effective base points.
       // Fixed-award events (birthday, anniversary) are exempt — their value must not scale.
@@ -303,6 +325,8 @@ function resolvePoints(eventName, payload) {
       return 0;
     case 'gamification_ar_used':
       return POINT_VALUES.AR_USED;
+    case 'gamification_ar_discovery':
+      return POINT_VALUES.AR_TRY_ON; // 25 pts — first AR session only (cap enforced in receiver)
     case 'gamification_wishlist_add':
       return POINT_VALUES.WISHLIST_ADD;
     default:
