@@ -96,6 +96,10 @@ async function initMemberPage() {
       { name: 'streakDisplay', init: initStreakDisplay },
       { name: 'achievementsSection', init: initAchievementsSection },
       { name: 'dailyQuestsSection', init: initDailyQuestsSection },
+      { name: 'onboardingQuest', init: async () => {
+        const { initOnboardingQuestWidget } = await import('public/OnboardingQuestWidget.js');
+        await initOnboardingQuestWidget();
+      }},
       { name: 'zipLeaderboard', init: initZipLeaderboardSectionWrapper },
       { name: 'spinSection', init: initSpinSection },
       { name: 'orderHistory', init: initOrderHistory },
@@ -104,6 +108,10 @@ async function initMemberPage() {
       { name: 'addressBook', init: initAddressBook },
       { name: 'communicationPrefs', init: initCommunicationPrefs },
       { name: 'returns', init: () => initReturnsSection($w) },
+      { name: 'gamificationTour', init: async () => {
+        const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
+        await initGamificationTourOverlay();
+      }},
     ];
 
     const results = await Promise.allSettled(sections.map(s => s.init()));
@@ -454,7 +462,7 @@ async function initStreakDisplay() {
         const [ly, lm, ld] = parts;
         const today = new Date();
         const daysDiff = Math.floor(
-          (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+          (Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
             - Date.UTC(ly, lm - 1, ld)) / 86400000
         );
         return daysDiff < 30;

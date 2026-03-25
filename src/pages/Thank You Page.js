@@ -6,6 +6,7 @@ import { subscribeToNewsletter } from 'backend/newsletterService.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
 import { trackPurchase } from 'backend/analyticsHelpers.web';
+import { trackCheckoutStep } from 'backend/checkoutOptimization.web';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -77,6 +78,14 @@ $w.onReady(async function () {
     lineItems: orderCtx?.lineItems || [],
     totals: { total: orderCtx?.total || 0 },
   });
+
+  // Track checkout funnel completion
+  try {
+    const sessionId = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cf_browse_session') : null;
+    if (sessionId) {
+      trackCheckoutStep({ sessionId, step: 'complete', cartTotal: orderCtx?.total || 0 }).catch(() => {});
+    }
+  } catch (e) {}
 
   // Increment purchaseCount in ProductAnalytics for each purchased item
   try {

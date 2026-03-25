@@ -122,6 +122,63 @@ vi.mock('wix-data', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+vi.mock('public/designTokens.js', () => ({
+  colors: { overlay: 'rgba(30, 58, 95, 0.6)', sunsetCoral: '#FF6B6B' },
+  borderRadius: { sm: '4px' },
+}));
+
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const criticalResults = [];
+    for (const s of sections) {
+      try {
+        await s.init();
+        criticalResults.push({ status: 'fulfilled', value: undefined });
+      } catch (err) {
+        criticalResults.push({ status: 'rejected', reason: err });
+      }
+    }
+    return { critical: criticalResults };
+  }),
+  lazyLoadImage: vi.fn((el, src, opts) => {
+    if (el) { el.src = src; if (opts?.alt) el.alt = opts.alt; }
+  }),
+}));
+
+vi.mock('public/StarRatingCard.js', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+
+vi.mock('public/WishlistCardButton.js', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue(new Set()),
+}));
+
+vi.mock('public/productCardHelpers.js', () => ({
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(($el, badgeType) => {
+    if (!$el) return;
+    if (!badgeType) { $el.hide(); return; }
+    $el.text = badgeType;
+    $el.show();
+  }),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+  setCardImage: vi.fn(),
+  getBadgeColor: vi.fn(() => '#FF0000'),
+}));
+
+vi.mock('public/productPageUtils.js', () => ({
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+}));
+
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+
 // Force MountainSkyline dynamic import to reject so initRidgelineHeader
 // falls back to static ridgeline (which sets alt text on #ridgelineHeader).
 vi.mock('public/MountainSkyline.js', () => {
@@ -130,10 +187,10 @@ vi.mock('public/MountainSkyline.js', () => {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-// Flush microtask queue so fire-and-forget deferred sections in
-// prioritizeSections() have time to settle (hq-r3ie moved featuredProducts
-// from critical to deferred).
-const flushDeferred = () => new Promise(r => setTimeout(r, 0));
+// flushDeferred is no longer needed since prioritizeSections is mocked to
+// await all sections (including deferred ones like loadFeaturedProducts).
+// Kept as a no-op for existing callers.
+const flushDeferred = () => Promise.resolve();
 
 // ── Import Page ─────────────────────────────────────────────────────
 

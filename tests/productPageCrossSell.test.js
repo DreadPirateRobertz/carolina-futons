@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+import { __seed as __seedData, __reset as __resetData } from 'wix-data';
 
 // ---------------------------------------------------------------------------
 // Mock $w (Wix Velo selector engine)
@@ -200,9 +201,10 @@ beforeAll(async () => {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Set up dataset to return a product and run onReady */
+/** Seed wixData with product and run onReady */
 async function runWithProduct(product = testProduct) {
-  getEl('#productDataset').getCurrentItem.mockReturnValue(product);
+  __resetData();
+  __seedData('Stores/Products', [product]);
   expect(onReadyHandler).toBeTruthy();
   await onReadyHandler();
   // Allow micro-tasks (deferred sections) to settle

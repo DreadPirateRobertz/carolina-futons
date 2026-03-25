@@ -169,6 +169,14 @@ export async function wixMembers_onMemberCreated(event) {
   } catch (err) {
     console.error('[events] Error triggering welcome sequence:', err);
   }
+
+  // CF-9swp: Seed welcome points (endowed progress) for new members
+  try {
+    const { seedWelcomePoints } = await import('backend/gamificationEventReceiver.web');
+    await seedWelcomePoints(contactId);
+  } catch (err) {
+    console.error('[events] Error seeding welcome points:', err);
+  }
 }
 
 /**

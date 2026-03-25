@@ -443,7 +443,11 @@ describe('Member Page — streak recovery CTA', () => {
   it('shows CTA when lastStreakRecoveryDate is exactly 30 days ago (boundary — cooldown just elapsed)', async () => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const dateStr = thirtyDaysAgo.toISOString().slice(0, 10);
+    // Use local date (not UTC) to match production code's getFullYear/getMonth/getDate
+    const y = thirtyDaysAgo.getFullYear();
+    const m = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0');
+    const d = String(thirtyDaysAgo.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
     streakMocks.getMyStreakData.mockResolvedValue({
       currentStreakDays: 0, streakMultiplier: 1,
       streakStartDate: null, lastActivityDate: null,

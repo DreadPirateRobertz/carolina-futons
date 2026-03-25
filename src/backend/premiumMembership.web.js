@@ -336,3 +336,67 @@ export const applyMemberDiscount = webMethod(
     }
   }
 );
+
+// ── CF-ortb: Premium upsell data ──────────────────────────────────────────────
+
+/**
+ * Minimum tier to show the CF+ upsell CTA.
+ * Trail Blazer (0 pts) = too new, Mountain Guide (500+ pts) = engaged enough.
+ */
+const UPSELL_MIN_TIER = 'Mountain Guide';
+const UPSELL_ELIGIBLE_TIERS = new Set(['Mountain Guide', 'Summit Master', 'Blue Ridge Legend']);
+
+/**
+ * Returns upsell eligibility, current membership status, and plan details
+ * for the premium upsell widget on the Member Page.
+ *
+ * Eligible if: member tier is Mountain Guide+ AND not already a CF+ subscriber.
+ * Returns null for non-members.
+ *
+ * CF-ortb
+ *
+ * @returns {Promise<{ eligible: boolean, alreadyMember: boolean, tier: string,
+ *   plans: Array, benefits: string[] } | null>}
+ */
+export const getPremiumUpsellData = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      const member = await getMember();
+      if (!member?._id) return null;
+
+      // Check current tier
+      const pointsResult = await wixData.query('MemberPoints')
+        .eq('memberId', member._id)
+        .limit(1)
+        .find();
+
+      const tier = pointsResult.items.length > 0
+        ? (pointsResult.items[0].tier || 'Trail Blazer')
+        : 'Trail Blazer';
+
+      // Check existing CF+ membership
+      const membership = await getActiveMembership(member._id);
+      const alreadyMember = !!membership;
+
+      // Eligible: tier is Mountain Guide+ AND not already subscribed
+      const eligible = UPSELL_ELIGIBLE_TIERS.has(tier) && !alreadyMember;
+
+      return {
+        eligible,
+        alreadyMember,
+        tier,
+        plans: PLANS.map(p => ({
+          id: p.id,
+          type: p.type,
+          price: p.price,
+          label: p.label,
+        })),
+        benefits: PLANS[0].benefits, // same benefits for all plans
+      };
+    } catch (err) {
+      console.error('[premiumMembership] getPremiumUpsellData error:', err);
+      return null;
+    }
+  }
+);

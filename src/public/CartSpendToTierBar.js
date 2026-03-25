@@ -17,7 +17,7 @@
  *   #tierProgressText  — spend-to-next or tier-earn message
  *   #tierName          — current tier label
  *
- * CF-1qo6
+ * CF-1qo6, CF-11oe (Side Cart support via configurable selectors)
  */
 
 // 2 points awarded per $1 of cart value (matches POINT_VALUES.PURCHASE_PER_DOLLAR)
@@ -48,6 +48,12 @@ export function calcTierProgressWithCart(loyaltyData, cartSubtotal) {
   return { endowedProgress, remainingAfterCart };
 }
 
+const DEFAULT_SELECTORS = {
+  bar: '#tierProgressBar',
+  text: '#tierProgressText',
+  name: '#tierName',
+};
+
 /**
  * Initialize the spend-to-tier bar on cart page load.
  * Fetches loyalty account once; hides all elements on guest/error.
@@ -56,25 +62,27 @@ export function calcTierProgressWithCart(loyaltyData, cartSubtotal) {
  * @param {Object}   opts
  * @param {number}   opts.cartSubtotal      Cart subtotal in dollars
  * @param {Function} opts.getLoyaltyAccount Backend call, throws for non-members
+ * @param {Object}   [opts.selectors]       Override element selectors for Side Cart etc.
  */
-export async function initSpendToTierBar($w, { cartSubtotal, getLoyaltyAccount }) {
+export async function initSpendToTierBar($w, { cartSubtotal, getLoyaltyAccount, selectors }) {
+  const sel = { ...DEFAULT_SELECTORS, ...selectors };
   try {
     let loyaltyData;
     try {
       loyaltyData = await getLoyaltyAccount();
     } catch (_) {
-      hideAll($w);
+      hideAll($w, sel);
       return;
     }
 
     if (!loyaltyData) {
-      hideAll($w);
+      hideAll($w, sel);
       return;
     }
 
-    renderBar($w, loyaltyData, cartSubtotal);
+    renderBar($w, loyaltyData, cartSubtotal, sel);
   } catch (err) {
-    hideAll($w);
+    hideAll($w, sel);
   }
 }
 
@@ -86,38 +94,40 @@ export async function initSpendToTierBar($w, { cartSubtotal, getLoyaltyAccount }
  * @param {Object}   opts
  * @param {number}   opts.cartSubtotal  Updated cart subtotal in dollars
  * @param {Object}   opts.loyaltyData   Previously fetched account (or null for guests)
+ * @param {Object}   [opts.selectors]   Override element selectors
  */
-export function updateSpendToTierBar($w, { cartSubtotal, loyaltyData }) {
+export function updateSpendToTierBar($w, { cartSubtotal, loyaltyData, selectors }) {
   if (!loyaltyData) return;
+  const sel = { ...DEFAULT_SELECTORS, ...selectors };
   try {
-    renderBar($w, loyaltyData, cartSubtotal);
+    renderBar($w, loyaltyData, cartSubtotal, sel);
   } catch (err) {}
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-function hideAll($w) {
-  try { $w('#tierProgressBar').hide(); } catch (e) {}
-  try { $w('#tierProgressText').hide(); } catch (e) {}
-  try { $w('#tierName').hide(); } catch (e) {}
+function hideAll($w, sel) {
+  try { $w(sel.bar).hide(); } catch (e) {}
+  try { $w(sel.text).hide(); } catch (e) {}
+  try { $w(sel.name).hide(); } catch (e) {}
 }
 
-function renderBar($w, loyaltyData, cartSubtotal) {
+function renderBar($w, loyaltyData, cartSubtotal, sel) {
   const { tier, nextTier } = loyaltyData;
   const { endowedProgress, remainingAfterCart } = calcTierProgressWithCart(loyaltyData, cartSubtotal);
 
-  try { $w('#tierProgressBar').value = endowedProgress; } catch (e) {}
-  try { $w('#tierProgressBar').show(); } catch (e) {}
+  try { $w(sel.bar).value = endowedProgress; } catch (e) {}
+  try { $w(sel.bar).show(); } catch (e) {}
 
-  try { $w('#tierName').text = tier; } catch (e) {}
-  try { $w('#tierName').show(); } catch (e) {}
+  try { $w(sel.name).text = tier; } catch (e) {}
+  try { $w(sel.name).show(); } catch (e) {}
 
   const progressText = !nextTier
-    ? `You're a ${tier} — top tier!`
+    ? `You're a ${tier} \u2014 top tier!`
     : remainingAfterCart <= 0
       ? `This order earns you ${nextTier} status!`
       : `Add $${remainingAfterCart} more for ${nextTier}!`;
 
-  try { $w('#tierProgressText').text = progressText; } catch (e) {}
-  try { $w('#tierProgressText').show(); } catch (e) {}
+  try { $w(sel.text).text = progressText; } catch (e) {}
+  try { $w(sel.text).show(); } catch (e) {}
 }

@@ -20,6 +20,7 @@ import {
   getDeliveryEstimate,
   calculateOrderSummary,
   getExpressCheckoutSummary,
+  trackCheckoutStep,
 } from 'backend/checkoutOptimization.web';
 import {
   getProtectionPlans,
@@ -223,6 +224,7 @@ async function initCheckoutSummary() {
     // Track checkout start in engagement funnel + GA4/Meta Pixel
     trackCheckoutStart(subtotal, itemCount);
     fireInitiateCheckout(lineItems, subtotal);
+    trackCheckoutStep({ sessionId: _sessionId, step: 'start', cartTotal: subtotal, itemCount }).catch(() => {});
 
     // Show free shipping badge if qualifying (hidden when free shipping disabled)
     if (!isFreeShippingEnabled()) {
@@ -324,6 +326,9 @@ async function initPaymentOptions(subtotal) {
         try { shippingMsg.accessibility.role = 'status'; } catch (e) {}
       }
     } catch (e) {}
+
+    // Track payment step reached
+    trackCheckoutStep({ sessionId: _sessionId, step: 'payment', cartTotal: subtotal }).catch(() => {});
   } catch (e) {
     console.error('[Checkout] Error loading payment options:', e);
   }
@@ -362,6 +367,7 @@ async function initShippingOptions(subtotal) {
       try {
         $item('#shippingOptionRadio').onClick(async () => {
           _selectedShippingMethod = option.id;
+          trackCheckoutStep({ sessionId: _sessionId, step: 'shipping', metadata: { method: option.id } }).catch(() => {});
           try {
             const estimate = await getDeliveryEstimate(option.id);
             if (estimate.success) {
@@ -482,6 +488,7 @@ async function initAddressValidation() {
 
         if (result.valid) {
           _addressValid = true;
+          trackCheckoutStep({ sessionId: _sessionId, step: 'address', cartTotal: _currentCart?.subtotal || 0 }).catch(() => {});
           // Persist the confirmed ZIP so it pre-populates on the next visit.
           if (address.zip) setStoredZip(address.zip).catch(e => console.warn('[Checkout] setStoredZip failed:', e?.message ?? e));
           try {

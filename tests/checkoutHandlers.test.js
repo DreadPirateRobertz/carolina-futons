@@ -114,6 +114,7 @@ vi.mock('backend/checkoutOptimization.web', () => ({
     data: { subtotal: 500, shipping: { amount: 0 }, tax: 35, total: 535, savings: 0, itemCount: 1 },
   })),
   getExpressCheckoutSummary: vi.fn(),
+  trackCheckoutStep: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
 vi.mock('backend/protectionPlan.web', () => ({

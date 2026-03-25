@@ -11,6 +11,7 @@ import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers'
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
+import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 
@@ -64,8 +65,8 @@ async function initProductPage() {
       try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) { console.warn('[ProductPage] Cached image display failed:', e.message); }
     }
 
-    await $w('#productDataset').onReady();
-    state.product = $w('#productDataset').getCurrentItem();
+    const { items: _productItems } = await wixData.query('Stores/Products').eq('slug', slug).find();
+    state.product = _productItems[0] || null;
     if (!state.product) {
       try { $w('#productName').text = 'Product Not Found'; } catch (e) {}
       try { $w('#productPrice').text = ''; } catch (e) {}
@@ -156,6 +157,7 @@ async function initProductPage() {
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
+      { name: 'subscribeAndSave', init: async () => { const m = await import('public/SubscribeAndSave.js'); await m.initSubscribeAndSave(state.product?._id, state.product?.name, { $w }); }, critical: false },
       {
         name: 'productQnA',
         critical: false,

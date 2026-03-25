@@ -18,6 +18,7 @@ import wixData from 'wix-data';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
+import { findMemberRecord, computeTierInfo } from 'backend/gamificationCore.web';
 
 /**
  * Event handler: Abandoned checkout created.
@@ -217,6 +218,9 @@ export const sendRecoveryEmail = webMethod(
         return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
       }
 
+      // CF-hamh: Enrich with loyalty context (points balance, tier progress)
+      const loyalty = await getLoyaltyContext(contactId, cart.cartTotal);
+
       await triggeredEmails.emailContact('cart_recovery_1', contactId, {
         variables: {
           buyerName: cart.buyerName || '',
@@ -225,6 +229,7 @@ export const sendRecoveryEmail = webMethod(
           discountAvailable: String(couponResult.success),
           checkoutId: cart.checkoutId,
           email: cartEmail,
+          ...loyalty,
         },
       });
 
@@ -246,6 +251,65 @@ export const sendRecoveryEmail = webMethod(
     }
   }
 );
+
+// ── Loyalty context (CF-hamh) ─────────────────────────────────────────
+
+/**
+ * Look up loyalty program context for a buyer by their CRM contactId.
+ * Returns points balance, tier info, and projected earnings for the cart.
+ * Returns empty context if the buyer is not a loyalty member.
+ *
+ * @param {string} contactId - Wix CRM contact ID
+ * @param {number} cartTotal - Cart total for projected earnings
+ * @returns {Promise<{ pointsBalance: string, pointsDiscount: string,
+ *   pointsToEarn: string, nextTierName: string, pointsToNextTier: string,
+ *   hasLoyalty: string }>}
+ */
+async function getLoyaltyContext(contactId, cartTotal) {
+  const empty = {
+    pointsBalance: '0',
+    pointsDiscount: '$0',
+    pointsToEarn: '0',
+    nextTierName: '',
+    pointsToNextTier: '0',
+    hasLoyalty: 'false',
+  };
+
+  try {
+    // Look up memberId from Members collection via contactId
+    const memberResult = await wixData
+      .query('Members/PrivateMembersData')
+      .eq('_id', contactId)
+      .limit(1)
+      .find({ suppressAuth: true });
+
+    if (memberResult.items.length === 0) return empty;
+
+    const memberId = memberResult.items[0]._id;
+    const record = await findMemberRecord(memberId);
+    if (!record) return empty;
+
+    const totalPoints = record.totalPoints ?? 0;
+    const tierInfo = computeTierInfo(totalPoints);
+
+    // $1 off per 100 points (loyalty discount rate)
+    const discountDollars = Math.floor(totalPoints / 100);
+    // Projected points from this order: 1 pt per $1
+    const pointsToEarn = Math.floor(Number(cartTotal) || 0);
+
+    return {
+      pointsBalance: String(totalPoints),
+      pointsDiscount: `$${discountDollars}`,
+      pointsToEarn: String(pointsToEarn),
+      nextTierName: tierInfo.nextTierName ?? '',
+      pointsToNextTier: String(tierInfo.pointsToNextTier),
+      hasLoyalty: 'true',
+    };
+  } catch (err) {
+    console.warn('[cartRecovery] getLoyaltyContext failed — sending without loyalty data:', err.message);
+    return empty;
+  }
+}
 
 // ── Internal helpers ──────────────────────────────────────────────────
 

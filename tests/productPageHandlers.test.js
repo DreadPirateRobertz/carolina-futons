@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { __seed as __seedData, __reset as __resetData } from 'wix-data';
 
 // ---------------------------------------------------------------------------
 // Mock $w (Wix Velo selector engine)
@@ -170,7 +171,8 @@ describe('Product Page — product not found', () => {
   beforeEach(() => {
     elements.clear();
     vi.clearAllMocks();
-    // Ensure dataset.getCurrentItem returns null (default from createMockElement)
+    __resetData();
+    // No wixData seed → query returns empty → product is null (not found)
   });
 
   async function runOnReady() {
@@ -217,10 +219,10 @@ describe('Product Page — product not found', () => {
     expect(cacheProduct).not.toHaveBeenCalled();
   });
 
-  it('waits for #productDataset.onReady() before checking item', async () => {
+  it('queries wixData by slug instead of using #productDataset', async () => {
     await runOnReady();
-    expect(getEl('#productDataset').onReady).toHaveBeenCalled();
-    expect(getEl('#productDataset').getCurrentItem).toHaveBeenCalled();
+    // Product Page now queries wixData directly — #productDataset is no longer accessed
+    expect(elements.has('#productDataset')).toBe(false);
   });
 
   it('sets full description text with catalog browsing suggestion', async () => {

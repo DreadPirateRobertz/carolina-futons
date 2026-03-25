@@ -8,13 +8,12 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 
 ## Current Status
 
-**v1.0.1** — Running on My Site (Wix Studio Furniture Store #3563 template).
+**v1.2.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 29,403 tests passing across 714 test files (Vitest)
-- 89 src files synced to production in latest release
-- Sprint 4: Room Planner S1–S8, Gift Cards S1–S2, Style Quiz S4+S6, Klarna HTTP, Video Content, Fabric Sample Request, UGC full-stack, Local SEO S2, Cart Recovery, Referral, Topic Clusters, Social/Email automation
-- Security hardening: 7 IDOR/XSS/SSRF fixes (CF-env4, CF-a68a, CF-7q7a, CF-dzyl, CF-rr8d, CF-5s2o, CF-rza0)
-- Hookup Assistant Wix Studio add-on: Phase 1 complete (S1/S2/S3/S5/S6/S10)
+- 34,000+ tests passing across 900+ test files (Vitest)
+- Gamification platform: 12 widgets (points, badges, streaks, quests, leaderboard, rewards store, milestones, notifications, social sharing, referrals, onboarding, stats)
+- Wave 29 features: Style Quiz registration gate, Will-It-Fit tool, Spin-to-Win email capture, cart tier progress, AR-gamification bridge, loyalty cart recovery, challenge notifications, post-purchase referral prompts, endowed progress, CF+ Premium upsell, auto-delivery subscriptions, crossRigEventBus
+- Security: IDOR fixes on all member-facing webMethods (currentMember server-side identity)
 - Pre-commit hooks (husky + lint-staged), coverage thresholds enforced
 - Production repo: [DreadPirateRobertz/carolina-futons-stage3-velo](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo)
 - Full changelog: [CHANGELOG.md](CHANGELOG.md)

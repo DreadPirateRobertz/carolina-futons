@@ -593,3 +593,96 @@ export const getReferralStats = webMethod(
     }
   }
 );
+
+const SITE_URL = 'https://www.carolinafutons.com';
+
+/**
+ * Returns the referral link and completed-referral count for the given member.
+ * Combines getReferralLink and getReferralStats into a single call for the
+ * member dashboard ReferralWidget.
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ referralUrl: string, completedReferrals: number } | { error: string }>}
+ */
+export const getReferralStatus = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member || !member._id) return { error: 'auth_required' };
+      if (member._id !== memberId) return { error: 'forbidden' };
+
+      // Fetch referral code (create if needed) and completed count in parallel
+      const [linkResult, statsResult] = await Promise.allSettled([
+        getReferralLink(),
+        getReferralStats(),
+      ]);
+
+      const referralCode =
+        linkResult.status === 'fulfilled' && linkResult.value.success
+          ? linkResult.value.referralCode
+          : null;
+
+      const completedReferrals =
+        statsResult.status === 'fulfilled' && statsResult.value.success
+          ? statsResult.value.stats.completedReferrals
+          : 0;
+
+      const referralUrl = referralCode
+        ? `${SITE_URL}/shop?ref=${referralCode}`
+        : `${SITE_URL}/shop`;
+
+      return { referralUrl, completedReferrals };
+    } catch (err) {
+      console.error('[referralService] getReferralStatus failed:', err);
+      return { error: 'Unable to load referral status' };
+    }
+  }
+);
+
+// ── CF-fawn: Post-purchase reward summary ─────────────────────────────────────
+
+/**
+ * Returns purchase points earned + referral link for the Thank You page.
+ * Combines order-based points calculation with referral link generation.
+ * For non-members, returns null (graceful degradation).
+ *
+ * CF-fawn
+ *
+ * @param {number} orderTotal - Order total in dollars
+ * @returns {Promise<{ pointsEarned: number, referralUrl: string, referralCode: string|null, referralBonusPoints: number } | null>}
+ */
+export const getPostPurchaseRewardSummary = webMethod(
+  Permissions.Anyone,
+  async (orderTotal) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return null; // Non-member — graceful degradation
+
+      // Calculate points earned from this purchase (2 pts per dollar)
+      const PURCHASE_PER_DOLLAR = 2;
+      const pointsEarned = Math.floor((Number(orderTotal) || 0) * PURCHASE_PER_DOLLAR);
+
+      // Get or create referral link
+      let referralCode = null;
+      let referralUrl = `${SITE_URL}/shop`;
+      try {
+        const linkResult = await getReferralLink();
+        if (linkResult.success && linkResult.referralCode) {
+          referralCode = linkResult.referralCode;
+          referralUrl = `${SITE_URL}/shop?ref=${linkResult.referralCode}`;
+        }
+      } catch (_) { /* best-effort */ }
+
+      return {
+        pointsEarned,
+        referralUrl,
+        referralCode,
+        referralBonusPoints: 500,
+      };
+    } catch (err) {
+      console.error('[referralService] getPostPurchaseRewardSummary failed:', err);
+      return null;
+    }
+  }
+);

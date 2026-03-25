@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { futonFrame, wallHuggerFrame, futonMattress, murphyBed, casegoodsItem } from './fixtures/products.js';
+import { __seed as __seedData, __reset as __resetData } from 'wix-data';
+import { __setPath as __setLocationPath } from 'wix-location-frontend';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 // Product Page uses global $w for all Wix Velo element access.
@@ -147,16 +149,21 @@ describe('Product Page', () => {
 
   beforeEach(() => {
     elements.clear();
+    __resetData();
+    __setLocationPath(['product-page', 'eureka-futon-frame']);
+    __seedData('Stores/Products', [{ ...futonFrame, collections: ['futon-frames'] }]);
   });
 
   // ── Initialization ──────────────────────────────────────────────
 
   describe('initialization', () => {
-    it('accesses the product dataset and reads current product', async () => {
+    it('queries wixData for current product by slug', async () => {
+      const { cacheProduct } = await import('public/productCache');
       await onReadyHandler();
-      const dataset = getEl('#productDataset');
-      expect(dataset.onReady).toHaveBeenCalled();
-      expect(dataset.getCurrentItem).toHaveBeenCalled();
+      // Product Page queries wixData by slug — verify product was loaded and cached
+      expect(cacheProduct).toHaveBeenCalledWith(
+        expect.objectContaining({ slug: 'eureka-futon-frame' })
+      );
     });
 
     it('sets up variant selector dropdowns', async () => {

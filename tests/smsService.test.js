@@ -11,6 +11,7 @@ import {
   sendBackInStockSMS,
   updateSMSPreferences,
   getSMSPreferences,
+  sendChallengeAlertSMS,
 } from '../src/backend/smsService.web.js';
 
 beforeEach(() => {
@@ -658,5 +659,79 @@ describe('getSMSPreferences', () => {
 
     const result = await getSMSPreferences();
     expect(result.success).toBe(false);
+  });
+});
+
+// ── CF-qhdo: sendChallengeAlertSMS ──────────────────────────────────────────
+
+describe('sendChallengeAlertSMS', () => {
+  it('sends SMS when member has smsEnabled and valid phone', async () => {
+    __seed('SMSPreferences', [{
+      _id: 'sms-ca1', memberId: 'mem-ca1', smsEnabled: true,
+      phone: '+18285551234', orderConfirmations: true,
+    }]);
+    __setHandler(async () => ({ ok: true, json: async () => ({ sid: 'SM123' }) }));
+
+    const result = await sendChallengeAlertSMS({
+      memberId: 'mem-ca1',
+      message: 'New challenge: Write a Review!',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('returns { success: false, reason: "sms_disabled" } when SMS not enabled', async () => {
+    __seed('SMSPreferences', [{
+      _id: 'sms-ca2', memberId: 'mem-ca2', smsEnabled: false,
+      phone: '+18285551234',
+    }]);
+
+    const result = await sendChallengeAlertSMS({
+      memberId: 'mem-ca2',
+      message: 'New challenge!',
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('sms_disabled');
+  });
+
+  it('returns { success: false, reason: "no_preferences" } when no prefs exist', async () => {
+    const result = await sendChallengeAlertSMS({
+      memberId: 'mem-ca3',
+      message: 'New challenge!',
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_preferences');
+  });
+
+  it('returns { success: false, reason: "invalid_input" } when memberId missing', async () => {
+    const result = await sendChallengeAlertSMS({ message: 'test' });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('invalid_input');
+  });
+
+  it('returns { success: false, reason: "invalid_input" } when message missing', async () => {
+    const result = await sendChallengeAlertSMS({ memberId: 'mem-ca4' });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('invalid_input');
+  });
+
+  it('logs SMS to SMSLog on success', async () => {
+    __seed('SMSPreferences', [{
+      _id: 'sms-ca5', memberId: 'mem-ca5', smsEnabled: true,
+      phone: '+18285559999',
+    }]);
+    __setHandler(async () => ({ ok: true, json: async () => ({ sid: 'SM456' }) }));
+
+    let logged = [];
+    __onInsert((collection, item) => {
+      if (collection === 'SMSLog') logged.push(item);
+    });
+
+    await sendChallengeAlertSMS({
+      memberId: 'mem-ca5',
+      message: 'Complete the challenge!',
+    });
+    expect(logged).toHaveLength(1);
+    expect(logged[0].messageType).toBe('challenge_alert');
+    expect(logged[0].memberId).toBe('mem-ca5');
   });
 });
