@@ -253,13 +253,35 @@ describe('redeemReward', () => {
   });
 
   it('rolls back points when redemption insert fails', async () => {
-    mockMemberPoints(1000);
-    // Override insert to reject (simulates redemption record insert failure)
+    // Rollback re-reads fresh record before restoring, so query order is:
+    // (1) balance read, (2) TOCTOU verify, (3) coupon check, (4) rollback fresh read
+    let queryCount = 0;
+    let updatedBalance = null;
+    wixData.update.mockImplementation(async (_coll, data) => {
+      if (data.totalPoints !== undefined) updatedBalance = data.totalPoints;
+      return data;
+    });
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockImplementation(async () => {
+        queryCount++;
+        if (queryCount === 1) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 1000 }] };
+        if (queryCount === 2) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? 500 }] };
+        if (queryCount === 3) return { items: [] }; // coupon check
+        // Query 4: rollback fresh read — returns current (deducted) balance
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? 500 }] };
+      }),
+    }));
     wixData.insert.mockRejectedValue(new Error('Insert failed'));
     const result = await redeemReward(MEMBER_ID, 'DISCOUNT_5');
     expect(result.error).toBe('redemption_failed');
-    // Verify rollback: update called twice (deduct + restore)
+    // Verify rollback: update called twice (deduct + add-back)
     expect(wixData.update).toHaveBeenCalledTimes(2);
+    // Second update should add back pointsCost to the fresh-read balance
+    const rollbackCall = wixData.update.mock.calls[1];
+    expect(rollbackCall[1].totalPoints).toBe(1000); // 500 + 500
     expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('rolling back points'),
       expect.any(Error),
@@ -287,7 +309,7 @@ describe('redeemReward', () => {
   });
 
   it('logs CRITICAL when rollback fails after redemption insert failure', async () => {
-    // Set up queries: (1) balance read, (2) TOCTOU verify, (3) coupon check
+    // Queries: (1) balance read, (2) TOCTOU verify, (3) coupon check, (4) rollback fresh read
     let queryCount = 0;
     let updatedBalance = null;
     let updateCount = 0;
@@ -306,7 +328,9 @@ describe('redeemReward', () => {
         queryCount++;
         if (queryCount === 1) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: 1000 }] };
         if (queryCount === 2) return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? 500 }] };
-        return { items: [] };
+        if (queryCount === 3) return { items: [] }; // coupon check
+        // Query 4: rollback fresh read — return record so rollback update is attempted
+        return { items: [{ _id: 'mp-1', memberId: MEMBER_ID, totalPoints: updatedBalance ?? 500 }] };
       }),
     }));
     wixData.insert.mockRejectedValue(new Error('Insert failed'));

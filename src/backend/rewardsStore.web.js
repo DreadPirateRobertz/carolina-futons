@@ -174,8 +174,9 @@ export const redeemReward = webMethod(
         totalPoints: newBalance,
       }, { suppressAuth: true });
 
-      // Re-read to detect TOCTOU race: if another write changed balance
-      // between our read and update, the stored balance won't match
+      // Best-effort race detection: re-read after update to catch concurrent
+      // modifications. Wix Data lacks conditional writes, so this narrows but
+      // does not eliminate the race window. Client-side debounce recommended.
       const verifyResult = await wixData
         .query(MEMBER_POINTS_COLLECTION)
         .eq('memberId', memberId)
@@ -215,10 +216,19 @@ export const redeemReward = webMethod(
       } catch (insertErr) {
         logError(`redeemReward — redemption insert failed, rolling back points for ${memberId}`, insertErr);
         try {
-          await wixData.update(MEMBER_POINTS_COLLECTION, {
-            ...record,
-            totalPoints: currentBalance,
-          }, { suppressAuth: true });
+          // Re-read fresh record to avoid clobbering concurrent writes
+          const freshRead = await wixData
+            .query(MEMBER_POINTS_COLLECTION)
+            .eq('memberId', memberId)
+            .limit(1)
+            .find({ suppressAuth: true });
+          if (freshRead.items.length > 0) {
+            const fresh = freshRead.items[0];
+            await wixData.update(MEMBER_POINTS_COLLECTION, {
+              ...fresh,
+              totalPoints: (fresh.totalPoints ?? 0) + reward.pointsCost,
+            }, { suppressAuth: true });
+          }
         } catch (rollbackErr) {
           logError(`redeemReward — CRITICAL: rollback failed for ${memberId}, points lost: ${reward.pointsCost}`, rollbackErr);
         }
