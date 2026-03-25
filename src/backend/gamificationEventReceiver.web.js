@@ -1103,3 +1103,65 @@ export const getGamificationStats = webMethod(
     };
   }
 );
+
+// ── Milestone proximity check (CF-cgpy) ──────────────────────────────────────
+
+const STREAK_MILESTONES = [7, 14, 30, 60, 100, 365];
+const PROXIMITY_THRESHOLD = 0.8; // 80%
+
+/**
+ * Check if member is close to any milestones (tier upgrade or streak milestone).
+ * Returns nudges for milestones at >= 80% progress.
+ *
+ * CF-cgpy
+ *
+ * @param {string} memberId
+ * @returns {Promise<Array<{ type: string, milestone: string, current: number, target: number, remaining: number }>>}
+ */
+export const checkMilestoneProximity = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    const record = await findMemberRecord(memberId);
+    const totalPoints = record?.totalPoints ?? 0;
+    const currentStreak = record?.currentStreakDays ?? 0;
+    const nudges = [];
+
+    // Tier proximity: find next tier threshold
+    for (let i = 0; i < TIER_NAMES.length; i++) {
+      if (totalPoints < TIER_NAMES[i].threshold) {
+        const target = TIER_NAMES[i].threshold;
+        const prevThreshold = i > 0 ? TIER_NAMES[i - 1].threshold : 0;
+        const range = target - prevThreshold;
+        const progress = totalPoints - prevThreshold;
+        if (range > 0 && progress / range >= PROXIMITY_THRESHOLD) {
+          nudges.push({
+            type: 'tier',
+            milestone: TIER_NAMES[i].name,
+            current: totalPoints,
+            target,
+            remaining: target - totalPoints,
+          });
+        }
+        break;
+      }
+    }
+
+    // Streak proximity: find next streak milestone
+    for (const milestone of STREAK_MILESTONES) {
+      if (currentStreak < milestone) {
+        if (milestone > 0 && currentStreak / milestone >= PROXIMITY_THRESHOLD) {
+          nudges.push({
+            type: 'streak',
+            milestone: `${milestone}-day streak`,
+            current: currentStreak,
+            target: milestone,
+            remaining: milestone - currentStreak,
+          });
+        }
+        break;
+      }
+    }
+
+    return nudges;
+  }
+);
