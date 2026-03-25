@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.3 · Updated 2026-03-23 — Phase 8 COMPLETE ✅ All 6 LivingSkyState modules wired (#771–#778) · Phase 7 Living Sky · Phase 2 Streaks · Spin Wheel Phase 1</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.4 · Updated 2026-03-25 — Consolidated: all sections folded into parent pages (Showroom→PDP/Category, Financing→PDP, Bundle Shipping→Bundle Builder). Verified against src/ code. Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1640,6 +1640,23 @@ Right column:
         ["qnaHelpfulBtn","Button","Helpful vote (optional)"],
         ["qnaHelpfulCount","Text","Helpful count (optional)"],
         ["qnaFlagBtn","Button","Flag/report (optional)"]
+      ]},
+      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
+<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
+<ul>
+  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
+  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
+  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
+</ul>`, elements: [
+        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
+      ]},
+      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
+<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
+<ul>
+  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
+  <li>Collapses automatically in normal customer UX (no qr param).</li>
+</ul>`, elements: [
+        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
       ]}
     ]
   },
@@ -1881,6 +1898,15 @@ Right column:
         ["categorySchemaHtml","HtmlComponent","Category schema"],
         ["categoryBreadcrumbSchemaHtml","HtmlComponent","Breadcrumb schema"],
         ["categoryOgHtml","HtmlComponent","OG tags"]
+      ]},
+      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
+<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
+<ul>
+  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
+  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
+  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
+</ul>`, elements: [
+        ["showroomBadge","Text","See It In Store badge (repeater child)"]
       ]}
     ]
   },
@@ -3392,58 +3418,6 @@ Action buttons (right):
       ]}
     ]
   },
-  {
-    name: "Product Financing (on Product Page)", file: "ProductFinancing.js", priority: "P1", est: "15 min",
-    sections: [
-      { name: "Financing Widget", impl: `<h4>💳 Implementation — Financing Widget</h4>
-<div class="layer-diagram">
-  <div style="border:2px solid #5B8FA8;padding:8px;border-radius:6px;margin-bottom:4px;">
-    <strong>#financingOverlay</strong> (dark overlay)
-    <div style="border:2px solid #E8845C;padding:8px;border-radius:6px;margin-top:4px;">
-      <strong>#financingModal</strong> (dialog panel)
-      <br><small>#financingClose (X button) + plan repeaters</small>
-    </div>
-  </div>
-</div>
-<ul>
-  <li><strong>#financingTeaser</strong>: Text set at runtime — "As low as $X/mo" calculated from product price.</li>
-  <li><strong>#afterpayMessage</strong>: Text for Afterpay "Pay in 4" messaging.</li>
-  <li><strong>#financingLearnMore</strong>: Button opens the financing modal. Triggers <code>setupAccessibleDialog()</code> pattern — overlay + panel + focus trap + Escape-to-close.</li>
-  <li><strong>#financingModal</strong> + <strong>#financingOverlay</strong>: <span class="impl-warn">Both initially collapsed/hidden. Expanded together on "Learn more" click.</span></li>
-  <li><strong>#financingClose</strong>: Close Button inside modal. Collapses modal + overlay, restores focus to trigger.</li>
-</ul>`, elements: [
-        ["financingSection","Box","Financing container"],
-        ["financingTeaser","Text","As low as $X/mo"],
-        ["afterpayMessage","Text","Afterpay message"],
-        ["financingLearnMore","Button","Learn more link"],
-        ["financingModal","Box","Modal dialog"],
-        ["financingOverlay","Box","Modal overlay"],
-        ["financingClose","Button","Close modal"]
-      ]},
-      { name: "Financing Plans", impl: `<h4>💳 Implementation — Financing Plans</h4>
-<ul>
-  <li><strong>#financingRepeater</strong>: Inside the financing modal. Shows available payment plans (e.g., 6-month, 12-month, 24-month).</li>
-  <li>Each card: <code>#planLabel</code> (plan name), <code>#planMonthly</code> (monthly payment calculated from product price), <code>#planDescription</code>, and <code>#planInterest</code> (APR rate).</li>
-  <li>All text values set at runtime based on current product price.</li>
-</ul>`, repeater: "financingRepeater", elements: [
-        ["financingRepeater","Repeater","Financing plans"]
-      ], children: [
-        ["planLabel","Text","Plan label"],["planMonthly","Text","Monthly payment"],
-        ["planDescription","Text","Description"],["planInterest","Text","Interest/APR"]
-      ]},
-      { name: "Financing Details Modal", impl: `<h4>💳 Implementation — Financing Details</h4>
-<ul>
-  <li><strong>#financingDetailRepeater</strong>: Detailed breakdown view inside the modal. Shown when a plan is selected from the plans repeater above.</li>
-  <li>Each card: <code>#detailLabel</code>, <code>#detailMonthly</code> (monthly amount), <code>#detailApr</code> (annual percentage rate), <code>#detailInterest</code> (total interest cost).</li>
-  <li>Values calculated at runtime based on product price and selected plan terms.</li>
-</ul>`, repeater: "financingDetailRepeater", elements: [
-        ["financingDetailRepeater","Repeater","Detail view"]
-      ], children: [
-        ["detailLabel","Text","Label"],["detailMonthly","Text","Monthly"],
-        ["detailApr","Text","APR"],["detailInterest","Text","Interest"]
-      ]}
-    ]
-  },
   // ═══════════════════════════════════════════════════════════════════════
   // DASHBOARD & ADMIN INTEGRATIONS (v1.0.0+)
   // These pages connect to backend web modules for analytics, content
@@ -3567,7 +3541,7 @@ Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
     ]
   },
   {
-    name: "Bundle Analytics (on Product Page)", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
+    name: "Bundle Analytics", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
     sections: [
       { name: "Bundle Performance", repeater: "bundlePerformanceRepeater", impl: `<h4>📦 Implementation — Bundle Analytics</h4>
 <p><strong>Backend</strong>: <code>bundleAnalytics.web.js</code> — tracks bundle impressions, clicks, add-to-cart, and purchases.</p>
@@ -3650,7 +3624,7 @@ FCP  (First Contentful Paint)   — target < 1.8s</div>
   // and cross-platform content distribution.
   // ═══════════════════════════════════════════════════════════════════════
   {
-    name: "Social Media Hub (on Home/Product Pages)", file: "SocialFeedEmbed.js + socialStoryHelpers.js", priority: "P2", est: "25 min",
+    name: "Social Media Hub", file: "SocialFeedEmbed.js + socialStoryHelpers.js", priority: "P2", est: "25 min",
     sections: [
       { name: "Social Feed Embeds", impl: `<h4>📱 Implementation — Social Feed Embeds</h4>
 <p><strong>Frontend</strong>: <code>SocialFeedEmbed.js</code> — embeds live social feeds on any page.</p>
@@ -3696,9 +3670,9 @@ SHARING:
 </ul>`, elements: [
         ["socialFeedSection","Section","Social feeds container"],
         ["socialSectionTitle","Text","Section heading"],
-        ["instagramFeed","HtmlComponent","Instagram grid embed"],
-        ["tiktokEmbed","HtmlComponent","TikTok video embed"],
-        ["pinterestBoard","HtmlComponent","Pinterest board embed"]
+        ["instagramFeedContainer","HtmlComponent","Instagram grid embed"],
+        ["tiktokFeedContainer","HtmlComponent","TikTok video embed"],
+        ["pinterestBoardContainer","HtmlComponent","Pinterest board embed"]
       ]},
       { name: "Social Catalog Sync Status", repeater: "catalogAuditResults", impl: `<h4>🔄 Implementation — Catalog Sync Admin</h4>
 <p><strong>Admin-only</strong>: Status panels for Facebook + Pinterest catalog sync health.</p>
@@ -4197,48 +4171,11 @@ SHARING:
       ]}
     ]
   },
-  {
-    name: "Showroom (Product Page)", file: "showroomService.web.js + Product Page.js", priority: "P2", est: "20 min",
-    sections: [
-      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
-<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
-<ul>
-  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
-  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
-  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
-</ul>`, elements: [
-        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
-      ]},
-      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
-<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
-<ul>
-  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
-  <li>Collapses automatically in normal customer UX (no qr param).</li>
-</ul>`, elements: [
-        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
-      ]}
-    ]
-  },
-  {
-    name: "Showroom (Category Page)", file: "showroomService.web.js + Category Page.js", priority: "P2", est: "10 min",
-    sections: [
-      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
-<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
-<ul>
-  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
-  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
-  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
-</ul>`, elements: [
-        ["showroomBadge","Text","See It In Store badge (repeater child)"]
-      ]}
-    ]
-  },
   // ═══════════════════════════════════════════════════════════════════════
-  // SPRINT 4 ADDITIONS (v1.0.0+, merged 2026-03-20-21)
-  // New backend modules requiring editor hookup or page creation.
+  // PAGES NEEDING CREATION
   // ═══════════════════════════════════════════════════════════════════════
   {
-    name: "Sprint 4 — Pages Needing Creation", file: "Multiple (see below)", priority: "P1", est: "60 min",
+    name: "Pages Needing Creation", file: "Multiple (see below)", priority: "P1", est: "60 min",
     sections: [
       { name: "Style Quiz S2 (CF-g5fa)", impl: `<h4>🎯 Implementation — Style Quiz S2</h4>
 <p><strong>PR #517</strong>: Full S2 frontend shipped. Backend: <code>styleQuiz.web.js</code>. Frontend: <code>src/public/styleQuiz.js</code>.</p>
@@ -4324,7 +4261,7 @@ SHARING:
     ]
   },
   {
-    name: "Showroom (Home Page)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
+    name: "Showroom Section (Home Page — not yet wired)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
     sections: [
       { name: "Showroom Section (S4)", impl: `<h4>🏪 Implementation — Home Page Showroom Section (S4)</h4>
 <p><strong>CF-6cxf S4</strong>: Dedicated showroom section on the Home page with hours, address, booking CTA, and map link.</p>
