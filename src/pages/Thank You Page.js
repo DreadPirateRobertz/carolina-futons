@@ -21,6 +21,7 @@ import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 import { getEnrollmentPrompt, enrollMember, calculatePointsForOrder } from 'backend/loyaltyMarketing.web';
+import { getSoftPromptConfig } from 'backend/guestCheckout.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -60,6 +61,7 @@ $w.onReady(async function () {
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
     { name: 'loyaltyEnrollment', init: () => initLoyaltyEnrollment(orderCtx) },
+    { name: 'guestAccountPrompt', init: () => initGuestAccountPrompt(orderCtx) }, // CF-2zr3
     { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
       orderTotal: orderCtx?.total || 0,
       getLoyaltyAccount: getMyLoyaltyAccount,
@@ -821,6 +823,51 @@ async function initLoyaltyEnrollment(orderCtx) {
   } catch (err) {
     console.error('[ThankYou] Loyalty enrollment error:', err);
     try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
+  }
+}
+
+// ── Guest Account Creation Prompt (CF-2zr3) ─────────────────────────
+// Post-purchase soft prompt for anonymous buyers: 'Save your order history
+// — create a free account'. Not shown to existing members.
+
+async function initGuestAccountPrompt(orderCtx) {
+  try {
+    // Only show to anonymous buyers (no memberId on the order)
+    const memberId = orderCtx?.memberId || orderCtx?.contactId || '';
+    if (memberId) {
+      try { $w('#guestAccountSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const config = await getSoftPromptConfig();
+
+    try { $w('#guestAccountTitle').text = config.title; } catch (e) {}
+    try { $w('#guestAccountDescription').text = config.description; } catch (e) {}
+    try { $w('#guestCreateAccountBtn').label = config.ctaLabel; } catch (e) {}
+    try { $w('#guestSkipAccountBtn').label = config.skipLabel; } catch (e) {}
+    try { $w('#guestAccountSection').expand(); } catch (e) {}
+
+    try {
+      $w('#guestCreateAccountBtn').onClick(() => {
+        import('wix-members-frontend').then(({ authentication }) => {
+          authentication.register({
+            email: orderCtx?.email || '',
+            // pre-fill name if available from order
+          }).catch(() => {});
+        });
+        fireCustomEvent('guest_create_account_click', { source: 'thank_you_page' });
+      });
+    } catch (e) {}
+
+    try {
+      $w('#guestSkipAccountBtn').onClick(() => {
+        try { $w('#guestAccountSection').collapse(); } catch (e) {}
+        fireCustomEvent('guest_skip_account', { source: 'thank_you_page' });
+      });
+    } catch (e) {}
+  } catch (err) {
+    console.error('[ThankYou] Guest account prompt error:', err?.message);
+    try { $w('#guestAccountSection').collapse(); } catch (e) {}
   }
 }
 

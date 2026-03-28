@@ -123,6 +123,7 @@ export const applyForTradeAccount = webMethod(
       const phone = sanitize(application.phone || '', 20);
       const taxId = sanitize(application.taxId || '', 20);
       const businessType = sanitize(application.businessType || '', 100);
+      // Schema already validated [0, 99999] above; clamp is defense-in-depth (never reached by invalid input).
       const estimatedAnnualUnits = Math.max(0, Math.min(99999, Math.round(Number(application.estimatedAnnualUnits) || 0)));
 
       if (!businessName) return { success: false, error: 'Business name is required' };
