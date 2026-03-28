@@ -243,6 +243,16 @@ export async function wixEcom_onOrderCreated(event) {
       console.error('[events] Error processing referral on order:', err);
     }
   }
+
+  // cf-yno3: swatch → purchase attribution
+  if (email) {
+    try {
+      const { checkSwatchAttribution } = await import('backend/swatchAttribution.web');
+      await checkSwatchAttribution(email, orderNumber, Number(total));
+    } catch (err) {
+      console.error('[events] Error checking swatch attribution:', err);
+    }
+  }
 }
 
 /**

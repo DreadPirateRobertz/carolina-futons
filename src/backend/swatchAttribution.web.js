@@ -11,6 +11,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const SWATCH_COLLECTION = 'SwatchRequests';
 const ATTRIBUTION_COLLECTION = 'SwatchAttributions';
@@ -82,7 +83,7 @@ export const checkSwatchAttribution = webMethod(
 
       return { success: true, attributed: true, swatchRequestId: swatchRequest._id, daysToPurchase };
     } catch (err) {
-      console.error('[swatchAttribution] checkSwatchAttribution error:', err);
+      logError('swatchAttribution:checkSwatchAttribution', err);
       return { success: false, attributed: false, swatchRequestId: null, daysToPurchase: null };
     }
   }
@@ -156,7 +157,7 @@ export const getSwatchAnalytics = webMethod(
         },
       };
     } catch (err) {
-      console.error('[swatchAttribution] getSwatchAnalytics error:', err);
+      logError('swatchAttribution:getSwatchAnalytics', err);
       return { success: false, analytics: null };
     }
   }
