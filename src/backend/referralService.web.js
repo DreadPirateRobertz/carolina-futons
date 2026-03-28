@@ -62,6 +62,65 @@ function generateCode() {
   return code;
 }
 
+// ── _getReferralLinkForMember (internal, for email automation) ───────
+
+/**
+ * Get or create a referral code for a given member ID.
+ * Internal function — called by email automation to generate referral
+ * links for post-purchase emails without requiring SiteMember context.
+ *
+ * @param {string} memberId - Wix member ID
+ * @returns {Promise<{referralCode: string, referralUrl: string} | null>}
+ */
+export async function _getReferralLinkForMember(memberId) {
+  try {
+    if (!memberId) return null;
+
+    const existing = await wixData.query(REFERRALS_COLLECTION)
+      .eq('referrerMemberId', memberId)
+      .eq('status', 'pending')
+      .descending('_createdDate')
+      .limit(1)
+      .find({ suppressAuth: true });
+
+    if (existing.items.length > 0) {
+      const code = existing.items[0].referralCode;
+      return {
+        referralCode: code,
+        referralUrl: `https://www.carolinafutons.com/?ref=${code}`,
+      };
+    }
+
+    // Generate new code
+    let code = generateCode();
+    let attempts = 0;
+    while (attempts < 5) {
+      const conflict = await wixData.query(REFERRALS_COLLECTION)
+        .eq('referralCode', code)
+        .find({ suppressAuth: true });
+      if (conflict.items.length === 0) break;
+      code = generateCode();
+      attempts++;
+    }
+
+    await wixData.insert(REFERRALS_COLLECTION, {
+      referrerMemberId: memberId,
+      referralCode: code,
+      status: 'pending',
+      referrerCredit: REFERRER_CREDIT_AMOUNT,
+      refereeCredit: REFEREE_CREDIT_AMOUNT,
+    }, { suppressAuth: true });
+
+    return {
+      referralCode: code,
+      referralUrl: `https://www.carolinafutons.com/?ref=${code}`,
+    };
+  } catch (err) {
+    console.error('[referralService] _getReferralLinkForMember error:', err);
+    return null;
+  }
+}
+
 // ── getReferralLink ─────────────────────────────────────────────────
 
 export const getReferralLink = webMethod(

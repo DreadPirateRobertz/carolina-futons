@@ -458,6 +458,22 @@ export const triggerPostPurchaseSequence = webMethod(
           variables.photoBonusPoints = '25';
         }
 
+        // Step 5 (Day 14 referral invite): generate personalized referral link (CF-6p0o)
+        if (step.step === 5 && cleanContactId) {
+          try {
+            const { _getReferralLinkForMember } = await import('backend/referralService.web');
+            const refData = await _getReferralLinkForMember(cleanContactId);
+            if (refData) {
+              variables.referralUrl = refData.referralUrl;
+              variables.referralCode = refData.referralCode;
+            }
+          } catch (refErr) {
+            console.error('[emailAutomation] Referral link generation failed (non-blocking):', refErr);
+            // Non-fatal: email still sends, referralUrl will be empty
+            // Template should handle missing referralUrl gracefully
+          }
+        }
+
         await queueEmail({
           templateId: step.templateId,
           recipientEmail: cleanEmail,

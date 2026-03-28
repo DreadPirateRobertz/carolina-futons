@@ -112,6 +112,21 @@ const TEMPLATE_MANIFEST = [
     description: 'Day 30 post-purchase: care guide and accessory upsell.',
   },
 
+  {
+    templateId: 'post_purchase_review_reward',
+    subject: "How's your new {productNames}? Earn points for a review",
+    variables: ['firstName', 'orderNumber', 'productNames', 'reviewUrl', 'pointsReward', 'photoBonusPoints', 'email'],
+    priority: 2,
+    description: 'Day 14 post-purchase: review prompt with loyalty points incentive (CF-qy79).',
+  },
+  {
+    templateId: 'post_purchase_referral',
+    subject: 'Love your new furniture, {firstName}? Share the love — earn $25',
+    variables: ['firstName', 'referralUrl', 'referralCode', 'email'],
+    priority: 2,
+    description: 'Day 14 post-purchase: referral invite — give $25, get $25 (CF-6p0o).',
+  },
+
   // P3 — Cart recovery (requires scheduled job)
   {
     templateId: 'cart_recovery_1',
