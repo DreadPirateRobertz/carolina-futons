@@ -54,7 +54,11 @@ export function HookupPanel() {
     // Run only when detection fires — not on every selectedPageName change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detectedPageName]);
+<<<<<<< HEAD
   const { applyId, clearId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
+=======
+  const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
+>>>>>>> origin/polecat/chrome/CF-267m
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
   const { elapsed, paused, pace, recordApply } = useSessionTimer();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();

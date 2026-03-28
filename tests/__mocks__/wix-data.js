@@ -33,7 +33,6 @@ export function __reset() {
 // Force the next insert on a collection to throw
 export function __setInsertError(collection, error) {
   _insertErrors[collection] = error;
-<<<<<<< HEAD
 }
 
 // Enforce uniqueness on a single field for a collection.
@@ -46,16 +45,6 @@ export function __setUniqueField(collection, field) {
 // Force the next update on a collection to throw
 export function __setUpdateError(collection, error) {
   _updateErrors[collection] = error;
-=======
-  _insertError = null;
-}
-
-// Force an error on any insert call
-export function __setInsertError(error) {
-  _insertError = error;
->>>>>>> origin/cf-wishlist-share-s1-s5
-=======
->>>>>>> origin/feat/CF-gkbx
 }
 
 // Force a query error for a specific collection
@@ -167,12 +156,8 @@ function createQueryBuilder(collection) {
     skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
-<<<<<<< HEAD
     async find(options) {
       _lastFindOptions[collection] = options;
-=======
-    async find(_options = {}) {
->>>>>>> origin/cf-wishlist-share-s1-s5
       if (_queryErrors[collection]) throw _queryErrors[collection];
       let items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
@@ -256,21 +241,11 @@ const wixData = {
   },
 
   async insert(collection, item) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> origin/feat/CF-gkbx
     if (_insertErrors[collection]) {
       const err = _insertErrors[collection];
       delete _insertErrors[collection];
       throw err;
     }
-<<<<<<< HEAD
-=======
-    if (_insertError) throw _insertError;
->>>>>>> origin/cf-wishlist-share-s1-s5
-=======
->>>>>>> origin/feat/CF-gkbx
     if (!_store[collection]) _store[collection] = [];
     // Always enforce _id uniqueness (Wix Data guarantees this at the DB layer)
     if (item._id !== undefined) {
