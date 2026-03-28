@@ -1,38 +1,4 @@
-/**
- * Tests for AppDownloadBanner.js — smart app download banner
- * CF-e2ib
- *
- * Covers:
- *  - detectPlatform: iOS detection (iPhone, iPad, iPod)
- *  - detectPlatform: Android detection
- *  - detectPlatform: desktop returns null
- *  - detectPlatform: SSR (no navigator) returns null
- *  - isBannerDismissed: false when no localStorage entry
- *  - isBannerDismissed: false when dismissed > 7 days ago
- *  - isBannerDismissed: true when dismissed within 7 days
- *  - isBannerDismissed: false when localStorage throws
- *  - recordDismissal: sets DISMISS_KEY to current timestamp
- *  - isNativeAppInstalled: true when localStorage flag set
- *  - isNativeAppInstalled: false when no flag, no API
- *  - isNativeAppInstalled: true when getInstalledRelatedApps returns apps
- *  - isNativeAppInstalled: false when getInstalledRelatedApps returns empty
- *  - isNativeAppInstalled: false when getInstalledRelatedApps throws
- *  - storeDeferredDeepLink: stores URL in localStorage
- *  - getIOSStoreUrl: contains IOS_APP_ID
- *  - getAndroidStoreUrl: contains ANDROID_PACKAGE
- *  - getAndroidStoreUrl: includes UTM referrer
- *  - buildIOSMetaTags: returns correct meta tag descriptor
- *  - initAppDownloadBanner: no-op on desktop
- *  - initAppDownloadBanner: no-op when dismissed
- *  - initAppDownloadBanner: no-op when app already installed
- *  - initAppDownloadBanner: iOS injects meta tag via setMetaTags override
- *  - initAppDownloadBanner: iOS stores deferred deep link
- *  - initAppDownloadBanner: Android shows banner and sets text
- *  - initAppDownloadBanner: Android banner btn calls navigateTo and records dismissal
- *  - initAppDownloadBanner: Android dismiss btn hides banner and records dismissal
- *  - initAppDownloadBanner: Android no-op when #appDownloadBanner missing
- */
-
+// Tests for AppDownloadBanner.js — CF-e2ib
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import {
@@ -79,6 +45,7 @@ const UA_IPAD = 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1
 const UA_IPOD = 'Mozilla/5.0 (iPod touch; CPU iPhone OS 17_0 like Mac OS X)';
 const UA_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120';
 const UA_DESKTOP = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120';
+const UA_WINDOWS_PHONE = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)';
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
@@ -117,6 +84,10 @@ describe('detectPlatform', () => {
     delete globalThis.navigator;
     expect(detectPlatform()).toBeNull();
     globalThis.navigator = origNav;
+  });
+
+  it('returns null for Windows Phone (legacy IE UA with iPhone token)', () => {
+    expect(detectPlatform(UA_WINDOWS_PHONE)).toBeNull();
   });
 });
 
@@ -209,6 +180,11 @@ describe('storeDeferredDeepLink', () => {
       'https://carolinafutons.com/product/luna-futon'
     );
   });
+
+  it('does not throw when localStorage.setItem throws', () => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('quota exceeded'); });
+    expect(() => storeDeferredDeepLink('https://carolinafutons.com/product/luna-futon')).not.toThrow();
+  });
 });
 
 // ── Store URLs ────────────────────────────────────────────────────────────────
@@ -224,6 +200,10 @@ describe('getAndroidStoreUrl', () => {
   it('contains ANDROID_PACKAGE', () => {
     expect(getAndroidStoreUrl()).toContain(ANDROID_PACKAGE);
     expect(getAndroidStoreUrl()).toContain('play.google.com');
+  });
+
+  it('uses web_banner as default UTM source', () => {
+    expect(getAndroidStoreUrl()).toContain('utm_source%3Dweb_banner');
   });
 
   it('includes encoded UTM referrer', () => {

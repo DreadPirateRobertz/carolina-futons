@@ -14,8 +14,8 @@
  *
  * CF-e2ib
  *
- * @requires wix-seo-frontend (dynamic import, iOS only)
- * @requires wix-location-frontend (dynamic import, Android only)
+ * Dynamic imports: wix-seo-frontend (iOS path), wix-location-frontend (Android path).
+ * Both are loaded lazily at runtime — not available in test environments.
  *
  * @setup
  * 1. Replace IOS_APP_ID and ANDROID_PACKAGE with real values from dallas.
@@ -170,6 +170,7 @@ export function buildIOSMetaTags(appArgument) {
  * @param {Function} [opts.setMetaTags] - Replacement for wix-seo-frontend head.setMetaTags
  * @param {Function} [opts.navigateTo] - Replacement for wix-location-frontend navigation
  * @param {string} [opts.userAgent] - UA string override (for testing)
+ * @returns {Promise<void>}
  */
 export async function initAppDownloadBanner($w, currentUrl, opts = {}) {
   try {
@@ -201,7 +202,7 @@ function _injectIOSBanner(currentUrl, setMetaTagsFn) {
   }
   import('wix-seo-frontend').then(({ head }) => {
     head.setMetaTags(tags);
-  }).catch(() => {});
+  }).catch(err => console.error('[AppDownloadBanner] iOS meta tag inject failed:', err?.message));
 }
 
 function _showAndroidBanner($w, navigateFn) {
@@ -223,7 +224,7 @@ function _showAndroidBanner($w, navigateFn) {
       if (navigateFn) {
         navigateFn(storeUrl);
       } else {
-        import('wix-location-frontend').then(({ to }) => to(storeUrl)).catch(() => {});
+        import('wix-location-frontend').then(({ to }) => to(storeUrl)).catch(err => console.error('[AppDownloadBanner] Android navigate failed:', err?.message));
       }
     });
   } catch {}

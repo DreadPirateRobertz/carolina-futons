@@ -64,7 +64,7 @@ $w.onReady(async function () {
   initHeaderShippingProgress();
   initNewsletterModal();
   initInstallBanner();
-  initAppDownloadBanner($w, wixLocationFrontend.url).catch(() => {});
+  initAppDownloadBanner($w, wixLocationFrontend.url).catch(err => console.error('[AppDownloadBanner]', err?.message));
   injectCanonicalUrl();
   initScrollDepthTracking();
   initConsentGate();
