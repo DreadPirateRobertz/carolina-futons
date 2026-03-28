@@ -54,6 +54,12 @@ jobs:
             exit 1
           fi
 
+      - name: Check for merge conflict markers (cf-i6xe)
+        run: |
+          # Fail if any JS/TS source file contains unresolved git conflict markers.
+          # Catches the class of CI breakage caused by committed merge conflicts (e.g. 82a55a7d).
+          node scripts/check-conflict-markers.mjs
+
       - name: Check mock coverage (ratchet)
         run: node scripts/check-mock-coverage.mjs
 

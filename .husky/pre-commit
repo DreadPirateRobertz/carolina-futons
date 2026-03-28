@@ -1,2 +1,48 @@
-#\!/usr/bin/env sh
+#!/usr/bin/env sh
+
+# ── Conflict-marker guard (cf-i6xe) ─────────────────────────────────────────
+# Fail fast if any staged JS/TS file contains unresolved git conflict markers.
+# This catches the class of CI breakage caused by committed merge conflicts.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|mjs|ts|jsx|tsx)$')
+
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs node scripts/check-conflict-markers.mjs
+  CONFLICT_EXIT=$?
+  if [ $CONFLICT_EXIT -ne 0 ]; then
+    echo ""
+    echo "Pre-commit blocked: resolve conflict markers before committing."
+    exit 1
+  fi
+fi
+
+# ── Vitest on changed src files ──────────────────────────────────────────────
+# Run vitest only on source files that have corresponding test files.
+
+SRC_CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^src/')
+
+if [ -n "$SRC_CHANGED" ]; then
+  # Derive test file paths: src/backend/foo.web.js -> tests/foo.test.js etc.
+  TEST_FILES=""
+  for f in $SRC_CHANGED; do
+    BASE=$(basename "$f" | sed 's/\.web\././; s/\.\(js\|ts\)$//')
+    MATCH=$(find tests -name "${BASE}.test.*" 2>/dev/null | head -1)
+    if [ -n "$MATCH" ]; then
+      TEST_FILES="$TEST_FILES $MATCH"
+    fi
+  done
+
+  if [ -n "$TEST_FILES" ]; then
+    echo "Running vitest on affected test files:$TEST_FILES"
+    npx vitest run $TEST_FILES
+    VITEST_EXIT=$?
+    if [ $VITEST_EXIT -ne 0 ]; then
+      echo ""
+      echo "Pre-commit blocked: fix failing tests before committing."
+      exit 1
+    fi
+  fi
+fi
+
+# ── lint-staged ──────────────────────────────────────────────────────────────
 npx --no lint-staged
