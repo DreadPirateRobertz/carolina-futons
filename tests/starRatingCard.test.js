@@ -18,6 +18,10 @@ import {
 
 const mockGetCategoryReviewSummaries = vi.fn();
 
+vi.mock('backend/stampedIoService.web', () => ({
+  getBatchStampedRatings: vi.fn().mockRejectedValue(new Error('Stamped.io unavailable')),
+}));
+
 vi.mock('backend/reviewsService.web', () => ({
   getCategoryReviewSummaries: (...args) => mockGetCategoryReviewSummaries(...args),
 }));
