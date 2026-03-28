@@ -92,6 +92,11 @@ vi.mock('public/pageSeo.js', () => ({
 
 vi.mock('public/productPageUtils.js', () => ({
   buildGridAlt: vi.fn((p) => `${p.name} product image`),
+  // CF-qgg0: renderSimplePrice (used in Style Quiz onItemReady) calls isCallForPrice.
+  // Without these exports the try/catch in renderSimplePrice silently swallows the
+  // TypeError and leaves $el.text empty.
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing',
 }));
 
 vi.mock('wix-location-frontend', () => ({ to: vi.fn() }));
