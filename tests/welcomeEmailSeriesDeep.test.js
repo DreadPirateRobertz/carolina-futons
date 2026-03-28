@@ -294,6 +294,12 @@ describe('unsubscribe mid-sequence — processEmailQueue cancels at send time', 
 // ═══════════════════════════════════════════════════════════════════
 
 describe('already-existing member — welcome series must not restart', () => {
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(FIXED_NOW);
+  });
+  afterAll(() => { vi.useRealTimers(); });
+
   beforeEach(() => {
     __reset();
     __resetSecrets();
@@ -315,7 +321,7 @@ describe('already-existing member — welcome series must not restart', () => {
     let insertCount = 0;
     __onInsert(() => { insertCount++; });
 
-    await wixMembers_onMemberCreated({
+    wixMembers_onMemberCreated({
       entity: {
         _id: 'member-existing',
         loginEmail: 'existing@test.com',
@@ -323,6 +329,7 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
+    await vi.runAllTimersAsync();
     expect(insertCount).toBe(0);
   });
 
@@ -340,7 +347,7 @@ describe('already-existing member — welcome series must not restart', () => {
     let insertCount = 0;
     __onInsert(() => { insertCount++; });
 
-    await wixMembers_onMemberCreated({
+    wixMembers_onMemberCreated({
       entity: {
         _id: 'member-repro',
         loginEmail: 'repro@test.com',
@@ -348,6 +355,7 @@ describe('already-existing member — welcome series must not restart', () => {
       },
     });
 
+    await vi.runAllTimersAsync();
     expect(insertCount).toBe(0);
   });
 
