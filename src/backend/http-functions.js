@@ -20,12 +20,15 @@ import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/fa
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
+<<<<<<< HEAD
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
 import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
 export { post_getLeaderboard } from 'backend/leaderboard-http';
 import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
+=======
+>>>>>>> origin/cf-rmu1-bundle-deals
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1588,6 +1591,7 @@ export async function post_addBundleToCart(request) {
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
+<<<<<<< HEAD
 
 // ── Product Q&A HTTP Endpoints ───────────────────────────────────────
 
@@ -2357,3 +2361,5 @@ export async function get_cmsGarbageCollect(request) {
     });
   }
 }
+=======
+>>>>>>> origin/cf-rmu1-bundle-deals
