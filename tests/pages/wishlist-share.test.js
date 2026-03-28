@@ -1,5 +1,6 @@
 /**
 <<<<<<< HEAD
+<<<<<<< HEAD
  * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-4qll S2, CF-muzy S5)
  * Tests: token parsing, invalid message builder, S2 card population, SEO helpers
  */
@@ -14,12 +15,22 @@ import {
 =======
  * Wishlist Share — pure helper unit tests (CF-y24r S1)
  * Tests: token parsing, invalid message builder
+=======
+ * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-muzy S5)
+ * Tests: token parsing, invalid message builder, SEO helpers
+>>>>>>> origin/cf-muzy-wishlist-share-s5
  */
 import { describe, it, expect } from 'vitest';
 import {
   parseShareToken,
   buildInvalidMessage,
+<<<<<<< HEAD
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+  buildWishlistTitle,
+  buildWishlistDescription,
+  buildWishlistOgTags,
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 } from '../../src/public/wishlistShareHelpers.js';
 
 // ── parseShareToken ────────────────────────────────────────────────────────────
@@ -91,6 +102,7 @@ describe('buildInvalidMessage', () => {
   });
 });
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 // ── S2: populateShareCard ─────────────────────────────────────────────────────
 
@@ -144,6 +156,8 @@ describe('populateShareCard', () => {
     expect(() => populateShareCard($item, { productName: 'X', productImage: 'y' })).not.toThrow();
   });
 });
+=======
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 
 // ── S5: buildWishlistTitle ─────────────────────────────────────────────────────
 
@@ -264,5 +278,8 @@ describe('buildWishlistOgTags', () => {
     expect(ogType?.content).toBe('website');
   });
 });
+<<<<<<< HEAD
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+>>>>>>> origin/cf-muzy-wishlist-share-s5

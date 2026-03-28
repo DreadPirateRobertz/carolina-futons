@@ -1,21 +1,30 @@
 // Wishlist Share.js — /wishlist-share
 <<<<<<< HEAD
+<<<<<<< HEAD
 // CF-y24r S1 + CF-4qll S2 + CF-o779 S3 + CF-muzy S5
 =======
 // CF-y24r: S1 Token resolution + wishlist fetch
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+// CF-y24r S1 + CF-o779 S3 + CF-muzy S5
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 // Stories: S1 token/fetch, S2 product cards, S3 add-to-cart,
 //          S4 member share generation, S5 SEO
 
 import wixLocation from 'wix-location-frontend';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { seo } from 'wix-seo';
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+import { seo } from 'wix-seo';
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 import { resolveShareToken } from 'backend/wishlistShare.web.js';
 import {
   parseShareToken,
   buildInvalidMessage,
+<<<<<<< HEAD
 <<<<<<< HEAD
   buildWishlistTitle,
   buildWishlistDescription,
@@ -23,6 +32,11 @@ import {
   populateShareCard,
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+  buildWishlistTitle,
+  buildWishlistDescription,
+  buildWishlistOgTags,
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 } from 'public/wishlistShareHelpers.js';
 import { isMobile } from 'public/mobileHelpers';
 
@@ -43,9 +57,13 @@ $w.onReady(async () => {
 
   if (!token) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     _applyNoindex();
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+    _applyNoindex();
+>>>>>>> origin/cf-muzy-wishlist-share-s5
     _showInvalidState('missing_token');
     return;
   }
@@ -56,28 +74,42 @@ $w.onReady(async () => {
   } catch (err) {
     console.error('[WishlistShare] Token resolution failed:', err);
 <<<<<<< HEAD
+<<<<<<< HEAD
     _applyNoindex();
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+    _applyNoindex();
+>>>>>>> origin/cf-muzy-wishlist-share-s5
     _showInvalidState('error');
     return;
   }
 
   if (!result.valid) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     _applyNoindex();
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+    _applyNoindex();
+>>>>>>> origin/cf-muzy-wishlist-share-s5
     _showInvalidState(result.reason);
     return;
   }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   // S5: Dynamic SEO for valid wishlist
   _applySeo(result);
 
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+  // S5: Dynamic SEO for valid wishlist
+  _applySeo(result);
+
+>>>>>>> origin/cf-muzy-wishlist-share-s5
   // S1: Success — render content (S2 wires product cards)
   _safe(() => { $w('#wishlistShareContentSection').style.opacity = '1'; });
   _safe(() => $w('#wishlistShareInvalidSection').hide());
@@ -133,6 +165,9 @@ $w.onReady(async () => {
 });
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 // ── S5: SEO ───────────────────────────────────────────────────────────────────
 
 function _applySeo(result) {
@@ -158,8 +193,11 @@ function _applyNoindex() {
   }
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+>>>>>>> origin/cf-muzy-wishlist-share-s5
 // ── State helpers ─────────────────────────────────────────────────────────────
 
 function _showInvalidState(reason) {
