@@ -1,5 +1,6 @@
 /**
  * @module bundleService
+<<<<<<< HEAD
  * @description Frame+Mattress+Cover bundle logic for Bundle Builder.
  * Queries the Bundles CMS collection, adds bundle items to cart as 3 plain
  * line items (no customTextFields — not supported by wix-ecom-backend),
@@ -8,12 +9,21 @@
  *
  * Security: all pricing and coupon codes derived from CMS — no client-supplied
  * prices or coupons accepted.
+=======
+ * @description Frame+Mattress+Cover bundle logic for Bundle Builder S1.
+ * Queries the Bundles CMS collection, adds bundle items to cart as 3 tagged
+ * line items, and validates bundle cohesion (detects split bundles in cart).
+ *
+ * Security: all pricing derived from CMS — no client-supplied prices accepted.
+ * Bundle items are tagged via customTextFields so frontend can group them visually.
+>>>>>>> origin/cf-vtle-bundle-builder
  *
  * @requires wix-web-module
  * @requires wix-data
  * @requires wix-ecom-backend
  *
  * @setup
+<<<<<<< HEAD
  * 1. Create CMS collection `Bundles` with fields:
  *      displayName       (Text)    - Bundle display name
  *      frameProductId    (Text)    - Wix product ID of the frame
@@ -41,18 +51,37 @@
  *    Set coupon type to "free shipping" or "fixed amount" as appropriate.
  *    Populate the couponCode field in each Bundles CMS record.
  *    Coupons are applied server-side after cart.addProducts — never client-supplied.
+=======
+ * Create CMS collection `Bundles` with fields:
+ *   displayName       (Text)    - Bundle display name
+ *   frameProductId    (Text)    - Wix product ID of the frame
+ *   mattressProductId (Text)    - Wix product ID of the mattress
+ *   coverProductId    (Text)    - Wix product ID of the cover
+ *   bundlePrice       (Number)  - Discounted bundle price
+ *   savings           (Number)  - Dollar savings vs. individual prices
+ *   isActive          (Boolean) - Whether bundle is available for purchase
+ *
+ * Index: create a compound index on [frameProductId, isActive] —
+ * required for getBundlesByFrame query performance.
+>>>>>>> origin/cf-vtle-bundle-builder
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
 import { validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
+<<<<<<< HEAD
 import { getBundleTag } from 'public/bundleHelpers';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 
 const COLLECTION = 'Bundles';
 const UBC_COLLECTION = 'UserBundleCart';
+=======
+import { getBundleTag, findBrokenBundles } from 'public/bundleHelpers';
+
+const COLLECTION = 'Bundles';
+>>>>>>> origin/cf-vtle-bundle-builder
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +99,10 @@ function formatBundle(item) {
     coverProductId: item.coverProductId || '',
     bundlePrice: Number(item.bundlePrice) || 0,
     savings: Math.max(0, Number(item.savings) || 0),
+<<<<<<< HEAD
     couponCode: item.couponCode || null,
+=======
+>>>>>>> origin/cf-vtle-bundle-builder
     isActive: Boolean(item.isActive),
     components: [
       { type: 'frame', productId: item.frameProductId || '' },
@@ -81,8 +113,12 @@ function formatBundle(item) {
 }
 
 /**
+<<<<<<< HEAD
  * Build 3 plain line items for cart.addProducts from a bundle CMS record.
  * No customTextFields — wix-ecom-backend does not support this field.
+=======
+ * Build 3 tagged line items for cart.addProducts from a bundle CMS record.
+>>>>>>> origin/cf-vtle-bundle-builder
  * Returns null if any component productId is missing (malformed CMS data).
  * @param {Object} bundle - Normalized bundle (from formatBundle)
  * @returns {Object[]|null} Array of 3 line items, or null if a component is missing
@@ -91,10 +127,18 @@ function buildLineItems(bundle) {
   const { frameProductId, mattressProductId, coverProductId } = bundle;
   if (!frameProductId || !mattressProductId || !coverProductId) return null;
 
+<<<<<<< HEAD
   return [
     { productId: frameProductId, quantity: 1 },
     { productId: mattressProductId, quantity: 1 },
     { productId: coverProductId, quantity: 1 },
+=======
+  const tagField = [{ title: 'bundleTag', value: getBundleTag(bundle._id) }];
+  return [
+    { productId: frameProductId, quantity: 1, customTextFields: tagField },
+    { productId: mattressProductId, quantity: 1, customTextFields: tagField },
+    { productId: coverProductId, quantity: 1, customTextFields: tagField },
+>>>>>>> origin/cf-vtle-bundle-builder
   ];
 }
 
@@ -134,6 +178,7 @@ export const getBundlesByFrame = webMethod(
 // ── addBundle ─────────────────────────────────────────────────────────────────
 
 /**
+<<<<<<< HEAD
  * Add a bundle's 3 components to the cart as plain line items, apply the
  * bundle coupon code from CMS (if any), and write a UserBundleCart record
  * for server-side cohesion tracking.
@@ -143,6 +188,12 @@ export const getBundlesByFrame = webMethod(
  *
  * @param {string} bundleId - CMS _id of the bundle record
  * @param {string} [sessionId] - Browser session identifier for cohesion tracking
+=======
+ * Add a bundle's 3 components to the cart as tagged line items.
+ * Pricing is authoritative from CMS — caller supplies only the bundleId.
+ *
+ * @param {string} bundleId - CMS _id of the bundle record
+>>>>>>> origin/cf-vtle-bundle-builder
  * @returns {Promise<{success: boolean, bundleTag?: string, productsAdded?: number,
  *   bundlePrice?: number, savings?: number, displayName?: string,
  *   error?: string, errorCode?: 'BUNDLE_NOT_FOUND'|'BUNDLE_INCOMPLETE'}>}
@@ -150,16 +201,23 @@ export const getBundlesByFrame = webMethod(
  */
 export const addBundle = webMethod(
   Permissions.Anyone,
+<<<<<<< HEAD
   async (bundleId, sessionId = null) => {
+=======
+  async (bundleId) => {
+>>>>>>> origin/cf-vtle-bundle-builder
     const cleanId = validateId(bundleId, 100);
     if (!cleanId) {
       return { success: false, error: 'Invalid bundleId.' };
     }
+<<<<<<< HEAD
     // Sanitize caller-supplied sessionId before CMS storage — reject invalid, truncate long
     const cleanSessionId = sessionId ? (validateId(sessionId, 128) || null) : null;
 
     const { allowed } = await checkRateLimit('BundleAddRateLimit', cleanSessionId || cleanId, { max: 10 });
     if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
+=======
+>>>>>>> origin/cf-vtle-bundle-builder
 
     try {
       const result = await wixData.query(COLLECTION)
@@ -181,6 +239,7 @@ export const addBundle = webMethod(
 
       await ecomCart.addProducts(lineItems);
 
+<<<<<<< HEAD
       // Apply bundle coupon from CMS — non-fatal if it fails
       if (bundle.couponCode) {
         try {
@@ -210,6 +269,11 @@ export const addBundle = webMethod(
       return {
         success: true,
         bundleTag,
+=======
+      return {
+        success: true,
+        bundleTag: getBundleTag(bundle._id),
+>>>>>>> origin/cf-vtle-bundle-builder
         productsAdded: lineItems.length,
         bundlePrice: bundle.bundlePrice,
         savings: bundle.savings,
@@ -225,6 +289,7 @@ export const addBundle = webMethod(
 // ── validateBundleCohesion ────────────────────────────────────────────────────
 
 /**
+<<<<<<< HEAD
  * Check whether all bundle groups tracked in UserBundleCart for the given
  * session still have all 3 component productIds present in the current cart.
  *
@@ -234,10 +299,22 @@ export const addBundle = webMethod(
  *
  * @param {string|null} sessionId - Session identifier to look up tracked bundles
  * @param {Object[]} [cartItems] - Current cart line items with at least { productId }
+=======
+ * Check whether all bundle groups in the cart have all 3 components present.
+ * Detects orphaned bundle items (e.g. user removed one piece of a bundle).
+ *
+ * Note: accepts caller-supplied cart data and is informational only — it does
+ * not cross-reference bundle IDs against CMS. Fabricated bundleTags will be
+ * flagged as broken if they lack 3 items, but will not trigger false "valid"
+ * responses. This is acceptable for S1 (display/warning use case).
+ *
+ * @param {Object[]} cartItems - Cart line items (with customTextFields)
+>>>>>>> origin/cf-vtle-bundle-builder
  * @returns {Promise<{valid: boolean, brokenBundles: Object[]}>}
  */
 export const validateBundleCohesion = webMethod(
   Permissions.Anyone,
+<<<<<<< HEAD
   async (sessionId, cartItems) => {
     // Sanitize caller-supplied sessionId before querying CMS
     const cleanSessionId = sessionId ? (validateId(sessionId, 128) || null) : null;
@@ -277,6 +354,19 @@ export const validateBundleCohesion = webMethod(
           });
         }
       }
+=======
+  async (cartItems) => {
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      return { valid: true, brokenBundles: [] };
+    }
+
+    try {
+      const broken = findBrokenBundles(cartItems);
+      const brokenBundles = broken.map(b => ({
+        ...b,
+        message: `Bundle is incomplete: ${b.componentCount} of ${b.expectedCount} items present. Removing part of a bundle may affect bundle pricing.`,
+      }));
+>>>>>>> origin/cf-vtle-bundle-builder
 
       return {
         valid: brokenBundles.length === 0,
@@ -284,8 +374,12 @@ export const validateBundleCohesion = webMethod(
       };
     } catch (err) {
       logError('bundleService.validateBundleCohesion', err);
+<<<<<<< HEAD
       // Do NOT return valid:true on CMS failure — cohesion is unknown, not confirmed valid
       return { valid: false, error: 'Unable to verify bundle cohesion.', brokenBundles: [] };
+=======
+      return { valid: true, brokenBundles: [] };
+>>>>>>> origin/cf-vtle-bundle-builder
     }
   }
 );
