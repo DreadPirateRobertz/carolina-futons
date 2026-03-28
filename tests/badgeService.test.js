@@ -21,6 +21,7 @@ vi.mock('public/sharedTokens.js', () => ({
     mountainBlueDark: '#3D6B80',
     espresso: '#1E3A5F',
     sunsetCoral: '#4A7D94',
+    success: '#4A7C59',
     white: '#FFFFFF',
   },
 }));
@@ -37,6 +38,13 @@ vi.mock('wix-data', () => ({
   default: { query: vi.fn(() => ({ ...mockQueryChain })) },
 }));
 
+vi.mock('backend/deliveryOptions.web', () => ({
+  _WHITE_GLOVE_CATEGORIES: [
+    'futon-frames', 'murphy-cabinet-beds', 'platform-beds',
+    'casegoods-accessories', 'wall-hugger-frames',
+  ],
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function makeEntry(productId, badgeType, { active = true, expiresAt = null } = {}) {
@@ -45,7 +53,7 @@ function makeEntry(productId, badgeType, { active = true, expiresAt = null } = {
 
 // ── Import SUT ───────────────────────────────────────────────────────
 
-const { getProductBadges, getBatchProductBadges } = await import('../src/backend/badgeService.web.js');
+const { getProductBadges, getBatchProductBadges, getWhiteGloveBadge } = await import('../src/backend/badgeService.web.js');
 
 // ════════════════════════════════════════════════════════════════════
 // getProductBadges
@@ -297,5 +305,69 @@ describe('getBatchProductBadges', () => {
     // mockQueryChain.limit is already in the chain; verify it was called
     await getBatchProductBadges(['prod-1']);
     expect(mockQueryChain.limit).toHaveBeenCalled();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════
+// getWhiteGloveBadge
+// ════════════════════════════════════════════════════════════════════
+
+describe('getWhiteGloveBadge', () => {
+  it('returns WHITE_GLOVE badge for an eligible category', () => {
+    const r = getWhiteGloveBadge('futon-frames');
+    expect(r.success).toBe(true);
+    expect(r.badge?.type).toBe('WHITE_GLOVE');
+    expect(r.badge?.label).toBe('White Glove Available');
+  });
+
+  it('badge includes linkUrl pointing to /getting-it-home', () => {
+    const r = getWhiteGloveBadge('platform-beds');
+    expect(r.badge?.linkUrl).toBe('/getting-it-home');
+  });
+
+  it('badge includes bgColor and textColor', () => {
+    const r = getWhiteGloveBadge('murphy-cabinet-beds');
+    expect(r.badge?.bgColor).toBe('#4A7C59');
+    expect(r.badge?.textColor).toBe('#FFFFFF');
+  });
+
+  it('returns null badge for a non-eligible category (mattresses)', () => {
+    const r = getWhiteGloveBadge('mattresses');
+    expect(r.success).toBe(true);
+    expect(r.badge).toBeNull();
+  });
+
+  it('returns null badge for an accessories-only category', () => {
+    const r = getWhiteGloveBadge('covers');
+    expect(r.success).toBe(true);
+    expect(r.badge).toBeNull();
+  });
+
+  it('returns null badge when category is empty string', () => {
+    const r = getWhiteGloveBadge('');
+    expect(r.success).toBe(true);
+    expect(r.badge).toBeNull();
+  });
+
+  it('returns null badge when category is undefined', () => {
+    const r = getWhiteGloveBadge(undefined);
+    expect(r.success).toBe(true);
+    expect(r.badge).toBeNull();
+  });
+
+  it('is case-insensitive for category matching', () => {
+    const r = getWhiteGloveBadge('Futon-Frames');
+    expect(r.badge?.type).toBe('WHITE_GLOVE');
+  });
+
+  it('returns badges for all eligible categories', () => {
+    const eligibleCategories = [
+      'futon-frames', 'murphy-cabinet-beds', 'platform-beds',
+      'casegoods-accessories', 'wall-hugger-frames',
+    ];
+    for (const cat of eligibleCategories) {
+      const r = getWhiteGloveBadge(cat);
+      expect(r.badge?.type, `expected WHITE_GLOVE for ${cat}`).toBe('WHITE_GLOVE');
+    }
   });
 });
