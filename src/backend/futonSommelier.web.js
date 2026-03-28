@@ -9,9 +9,9 @@
  *
  * Architecture:
  *   1. Client sends lifestyle answers as structured data
- *   2. Backend builds a prompt with catalog context + lifestyle factors
- *   3. AI generates recommendations with per-product reasoning
- *   4. Results cached per session to avoid redundant AI calls
+ *   2. Backend scores products using rule-based trait matching against descriptions
+ *   3. Returns top matches with per-product reasoning
+ *   4. Results cached per session to avoid redundant scoring
  *
  * This is NOT a chat — it's a single-turn recommendation engine.
  * The style quiz asks "what do you like?"; the Sommelier asks "how do you live?"
@@ -20,10 +20,7 @@
  * @requires wix-data
  *
  * @setup
- * 1. Add to Wix Secrets Manager:
- *      SOMMELIER_AI_KEY — API key for Claude/AI provider
- *
- * 2. Create CMS collection `SommelierSessions`:
+ * 1. Create CMS collection `SommelierSessions`:
  *      sessionKey (Text, indexed), memberId (Text), answers (Text/JSON),
  *      recommendations (Text/JSON), reasoning (Text),
  *      createdAt (DateTime), feedbackRating (Number)
@@ -448,9 +445,14 @@ function generateReasoning(answers, recommendations) {
     parts.push('sun-resistant materials');
   }
 
-  const intro = parts.length > 0
-    ? `${parts[0]}, considering ${parts.slice(1).join(', ')}, here are our top picks:`
-    : 'Based on your preferences, here are our top picks:';
+  let intro;
+  if (parts.length === 0) {
+    intro = 'Based on your preferences, here are our top picks:';
+  } else if (parts.length === 1) {
+    intro = `${parts[0]}, here are our top picks:`;
+  } else {
+    intro = `${parts[0]}, considering ${parts.slice(1).join(', ')}, here are our top picks:`;
+  }
 
   const topPick = recommendations[0];
   const detail = topPick
@@ -477,7 +479,13 @@ async function fetchCatalogProducts() {
 function safeParseArray(jsonStr) {
   if (!jsonStr) return [];
   if (Array.isArray(jsonStr)) return jsonStr;
-  try { return JSON.parse(jsonStr); } catch { return []; }
+  try {
+    const parsed = JSON.parse(jsonStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    logError('futonSommelier.safeParseArray', err);
+    return [];
+  }
 }
 
 // ── Exports for testing ─────────────────────────────────────────────
