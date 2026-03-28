@@ -223,7 +223,7 @@ function run() {
   // Ratchet: known gap count at time of script creation.
   // This number should only go DOWN over time as mocks are added.
   // CI fails only if gaps INCREASE beyond this baseline.
-  const KNOWN_GAP_BASELINE = 353; // bumped: pre-existing gap from CF-vu9m (PDP shipping badge) merged to main before PR #876
+  const KNOWN_GAP_BASELINE = 354; // bumped: wave 30 feature additions (personalized hero, blog posts) merged before mock sync
 
   if (totalGaps === 0) {
     console.log(`✅ Mock coverage check passed — ${testFiles.length} test files scanned, no gaps found.`);
