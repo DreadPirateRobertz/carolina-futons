@@ -213,4 +213,43 @@ describe('markSwatchShipped', () => {
     const result = await markSwatchShipped('sr-missing');
     expect(result.success).toBe(false);
   });
+
+  it('returns success: false when requestId is empty', async () => {
+    const result = await markSwatchShipped('');
+    expect(result.success).toBe(false);
+  });
+
+  it('sets shippedAt on the updated record', async () => {
+    __seed('SwatchRequests', [SWATCH_REQUEST]);
+    const updates = [];
+    __onUpdate((col, item) => { if (col === 'SwatchRequests') updates.push(item); });
+
+    const before = Date.now();
+    await markSwatchShipped('sr-1');
+
+    const update = updates.find(u => u._id === 'sr-1');
+    expect(new Date(update.shippedAt).getTime()).toBeGreaterThanOrEqual(before);
+  });
+});
+
+// ── Edge cases ────────────────────────────────────────────────────────
+
+describe('triggerSwatchFollowupSequence edge cases', () => {
+  it('returns success: false for invalid email', async () => {
+    const result = await triggerSwatchFollowupSequence('c-1', 'not-an-email', 'Sam', ['Mocha']);
+    expect(result.success).toBe(false);
+    expect(result.queued).toBe(0);
+  });
+
+  it('handles non-array fabricNames gracefully (falls back to empty)', async () => {
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerSwatchFollowupSequence('c-1', 'buyer@test.com', 'Sam', 'Mocha Linen');
+
+    const step1 = items.find(i => i.sequenceStep === 1);
+    // Non-array treated as empty — falls back to generic shop URL
+    expect(step1.variables.fabricShopUrl).toContain('carolinafutons.com');
+    expect(step1.variables.fabricNames).toEqual([]);
+  });
 });
