@@ -112,34 +112,6 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
-// Matches batchAltText.web.js + imageAltText.web.js keyword convention (3 terms only).
-// 'context' excluded — matches Wix CDN URL params. 'living/bedroom/setting' excluded — too broad.
-const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
-
-/**
- * Select the best image for a product card — lifestyle room shot preferred over
- * white-background product shots. Checks mediaItems title/alt/url for lifestyle
- * keywords; falls back to mainMedia when no match.
- *
- * Keywords aligned with batchAltText.web.js + imageAltText.web.js convention.
- * No index-based fallback — mediaItems[1] is not guaranteed to be a lifestyle
- * shot (could be a back view, dimension diagram, or detail photo).
- *
- * @param {Object} product - Wix product with mainMedia and optional mediaItems array
- * @returns {string} Image URL — keyword-matched lifestyle shot if found, else mainMedia
- */
-export function getLifestyleImage(product) {
-  const mediaItems = product?.mediaItems;
-  if (Array.isArray(mediaItems) && mediaItems.length > 0) {
-    const keywordMatch = mediaItems.find(item => {
-      const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
-      return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
-    });
-    if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
-  }
-  return product?.mainMedia || '';
-}
-
 /**
  * Render a single price element with call-for-price guard.
  * Use this for simple price displays (recently viewed, quick view, cross-sell)
@@ -234,6 +206,53 @@ export function setCardImage($el, product, category, dimensions) {
  * @param {Object} $el - Wix text element (#gridFinancingBadge), or falsy to no-op
  * @param {Array|null} badges - Badge array from getBatchPaymentBadges, or null/empty
  */
+// ── Assembly difficulty badge ─────────────────────────────────────────────────
+
+/**
+ * Map assembly difficulty tier to display label and background color.
+ * Easy=green, Medium=gold, Expert=coral.
+ *
+ * @type {Object.<string, {label: string, bg: string, fg: string}>}
+ */
+export const ASSEMBLY_BADGE_CONFIG = {
+  Easy:   { label: 'Easy Assembly',   bg: colors.success,    fg: colors.white },
+  Medium: { label: 'Some Assembly',   bg: colors.badgeGold,  fg: colors.white },
+  Expert: { label: 'Expert Assembly', bg: colors.badgeCoral, fg: colors.white },
+};
+
+/**
+ * Render the assembly difficulty badge on a product card.
+ * Shows a colored pill below the price: "Easy Assembly" | "Some Assembly" | "Expert Assembly"
+ * Hides the element when difficulty is absent or unrecognized.
+ *
+ * @param {Object} $el - Wix element (#gridAssemblyBadge)
+ * @param {string|null|undefined} difficulty - 'Easy' | 'Medium' | 'Expert' | null
+ * @param {number|null|undefined} [assemblyTimeMinutes] - Optional, used for accessible label only
+ * @returns {void}
+ */
+export function renderCardAssemblyBadge($el, difficulty, assemblyTimeMinutes) {
+  if (!$el) return;
+  const config = ASSEMBLY_BADGE_CONFIG[difficulty];
+  if (!config) {
+    try { $el.hide(); } catch (e) { /* element may not exist in this template */ }
+    return;
+  }
+  try {
+    $el.text = config.label;
+    $el.show();
+    try {
+      $el.style.backgroundColor = config.bg;
+      $el.style.color = config.fg;
+      $el.style.borderRadius = borderRadius.sm;
+      if (assemblyTimeMinutes) {
+        $el.setAttribute('aria-label', `${config.label} — approximately ${assemblyTimeMinutes} minutes`);
+      }
+    } catch (e) { /* style props optional on some element types */ }
+  } catch (e) {
+    console.warn('[ProductCard] #gridAssemblyBadge render failed:', e?.message);
+  }
+}
+
 export function renderCardFinancingBadge($el, badges) {
   if (!$el) return;
   const label = Array.isArray(badges) && badges.length > 0 ? badges[0]?.label : null;
