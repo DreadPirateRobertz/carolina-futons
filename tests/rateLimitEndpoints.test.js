@@ -7,7 +7,7 @@
  * Tests a representative sample from each category:
  *  - Form submissions (3/hour default): captureSpinEmail, applyForTradeAccount, signUpBackInStock
  *  - Chat (30/min): sendMessage
- *  - Tracking (60/min, silent drop): trackProductView, trackCheckoutStep
+ *  - Tracking (30-60/min, silent drop): trackProductView (60/min), trackCheckoutStep (60/min)
  *  - Brute-force protection: checkBalance (gift cards, 10/hour)
  *  - Refactored internal → centralized: submitContactForm
  */
