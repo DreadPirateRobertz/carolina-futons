@@ -10,6 +10,7 @@ import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationS
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
+import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
@@ -2391,6 +2392,47 @@ export async function get_sendMonthlyLoyaltyStatements(request) {
     });
   } catch (err) {
     console.error('HTTP function error (sendMonthlyLoyaltyStatements):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+// ── Weekly Blog Digest Cron ───────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/weeklyBlogDigestCron
+// Schedule every Friday at 9am MT via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// CF-e3yo
+export async function get_weeklyBlogDigestCron(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const result = await sendWeeklyBlogDigest();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        queued: result.queued,
+        skipped: result.skipped,
+        postCount: result.postCount,
+        error: result.error || null,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (weeklyBlogDigestCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
