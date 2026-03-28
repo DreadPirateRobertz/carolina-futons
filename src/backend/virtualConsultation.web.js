@@ -246,6 +246,16 @@ export const bookConsultation = webMethod(
       const videoCallUrl = consultationType === 'video' ? generateCallUrl() : '';
       const notes = sanitize(data.notes || '', 1000);
 
+      // Pre-consultation quiz answers (room type, budget, style preferences)
+      const quizAnswers = {};
+      if (data.quizAnswers && typeof data.quizAnswers === 'object') {
+        if (data.quizAnswers.roomType) quizAnswers.roomType = sanitize(String(data.quizAnswers.roomType), 100);
+        if (data.quizAnswers.budget) quizAnswers.budget = sanitize(String(data.quizAnswers.budget), 50);
+        if (data.quizAnswers.style) quizAnswers.style = sanitize(String(data.quizAnswers.style), 100);
+        if (data.quizAnswers.roomSize) quizAnswers.roomSize = sanitize(String(data.quizAnswers.roomSize), 50);
+        if (data.quizAnswers.primaryUse) quizAnswers.primaryUse = sanitize(String(data.quizAnswers.primaryUse), 100);
+      }
+
       const record = {
         memberId,
         designerId,
@@ -256,10 +266,36 @@ export const bookConsultation = webMethod(
         notes,
         videoCallUrl,
         photos: '[]',
+        quizAnswers: JSON.stringify(quizAnswers),
         createdAt: new Date(),
       };
 
       const inserted = await wixData.insert('ConsultationBookings', record);
+
+      // Trigger confirmation email (fire-and-forget)
+      try {
+        await wixData.insert('EmailQueue', {
+          templateId: 'consultation_confirmation',
+          recipientEmail: data.email || '',
+          recipientContactId: memberId,
+          variables: JSON.stringify({
+            designerName: designer.name,
+            date: data.date,
+            timeSlot,
+            consultationType,
+            videoCallUrl,
+            quizAnswers,
+          }),
+          sequenceType: 'consultation',
+          sequenceStep: 1,
+          scheduledFor: new Date(),
+          status: 'pending',
+          createdAt: new Date(),
+        });
+      } catch (emailErr) {
+        console.warn('[virtualConsultation] Confirmation email failed:', emailErr.message);
+      }
+
       return { success: true, bookingId: inserted._id, videoCallUrl };
     } catch (err) {
       if (err.message === 'Authentication required') {

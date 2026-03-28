@@ -49,7 +49,10 @@ const APPROVED_COMPETITORS = [
   { name: 'West Elm', domain: 'westelm.com' },
   { name: 'Pottery Barn', domain: 'potterybarn.com' },
   { name: 'CB2', domain: 'cb2.com' },
+  { name: 'Article', domain: 'article.com' },
 ];
+
+const PRICE_MATCH_WINDOW_DAYS = 14;
 
 const VALID_DECISIONS = ['approved', 'denied'];
 
@@ -162,6 +165,21 @@ export const submitPriceMatchRequest = webMethod(
 
       if (existing.totalCount > 0) {
         return { success: false, message: 'You already have a pending price match request for this product and competitor' };
+      }
+
+      // Validate purchase within 14-day window (CF-9j51)
+      if (data.orderId) {
+        const cleanOrderId = sanitize(data.orderId, 50);
+        const windowStart = new Date(Date.now() - PRICE_MATCH_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+        const orders = await wixData.query('Orders')
+          .eq('_id', cleanOrderId)
+          .eq('buyerInfo.contactId', member._id)
+          .ge('_createdDate', windowStart)
+          .find();
+
+        if (orders.items.length === 0) {
+          return { success: false, message: `Price match requests must be within ${PRICE_MATCH_WINDOW_DAYS} days of purchase` };
+        }
       }
 
       const notes = data.notes ? sanitize(String(data.notes), MAX_NOTES_LEN) : '';

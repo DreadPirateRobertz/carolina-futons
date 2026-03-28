@@ -4,6 +4,8 @@ import {
   getAssemblyGuide,
   getCareTips,
   listAssemblyGuides,
+  getAssemblyInfo,
+  getTaskRabbitLink,
 } from '../src/backend/assemblyGuides.web.js';
 
 // ── getAssemblyGuide ─────────────────────────────────────────────────
@@ -208,5 +210,86 @@ describe('getAssemblyGuide edge cases', () => {
     expect(guide.steps).toBe('');
     expect(guide.tips).toBe('');
     expect(guide.category).toBe('');
+  });
+});
+
+// ── getAssemblyInfo (CF-xmjr) ───────────────────────────────────────
+
+describe('getAssemblyInfo', () => {
+  it('returns difficulty and tools for futon frames', () => {
+    const result = getAssemblyInfo('futon-frames');
+    expect(result.success).toBe(true);
+    expect(result.info.difficulty).toBe('Medium');
+    expect(result.info.estimatedMinutes).toBe(45);
+    expect(result.info.stepCount).toBe(8);
+    expect(result.info.tools).toContain('Phillips screwdriver');
+    expect(result.info.difficultyLevel).toBe(2);
+  });
+
+  it('returns Expert for murphy cabinet beds', () => {
+    const result = getAssemblyInfo('murphy-cabinet-beds');
+    expect(result.info.difficulty).toBe('Expert');
+    expect(result.info.difficultyLevel).toBe(3);
+    expect(result.info.tools).toContain('Drill with bits');
+    expect(result.info.tools).toContain('Stud finder');
+  });
+
+  it('returns Easy for mattresses (no assembly)', () => {
+    const result = getAssemblyInfo('mattresses');
+    expect(result.info.difficulty).toBe('Easy');
+    expect(result.info.estimatedMinutes).toBe(5);
+    expect(result.info.tools).toHaveLength(0);
+  });
+
+  it('formats time label for short durations', () => {
+    const result = getAssemblyInfo('mattresses');
+    expect(result.info.estimatedTimeLabel).toBe('5 min');
+  });
+
+  it('formats time label for long durations', () => {
+    const result = getAssemblyInfo('murphy-cabinet-beds');
+    expect(result.info.estimatedTimeLabel).toBe('2 hr');
+  });
+
+  it('returns null for unknown category', () => {
+    const result = getAssemblyInfo('unknown-category');
+    expect(result.success).toBe(true);
+    expect(result.info).toBeNull();
+  });
+
+  it('covers all major product categories', () => {
+    const categories = ['futon-frames', 'murphy-cabinet-beds', 'platform-beds', 'mattresses',
+      'covers', 'casegoods-accessories', 'wall-hugger-frames', 'log-frames', 'outdoor-furniture'];
+    for (const cat of categories) {
+      const result = getAssemblyInfo(cat);
+      expect(result.info, `${cat} should have assembly info`).not.toBeNull();
+    }
+  });
+});
+
+// ── getTaskRabbitLink (CF-xmjr) ─────────────────────────────────────
+
+describe('getTaskRabbitLink', () => {
+  it('generates TaskRabbit URL with product name and zip', () => {
+    const result = getTaskRabbitLink('Eureka Futon Frame', '28792', 'futon-frames');
+    expect(result.success).toBe(true);
+    expect(result.url).toContain('taskrabbit.com');
+    expect(result.url).toContain('zip=28792');
+    expect(result.url).toContain('Eureka');
+  });
+
+  it('includes estimated cost based on category', () => {
+    const result = getTaskRabbitLink('Murphy Bed', '28792', 'murphy-cabinet-beds');
+    expect(result.estimatedCost).toContain('$');
+  });
+
+  it('returns failure for invalid zip', () => {
+    const result = getTaskRabbitLink('Frame', '123');
+    expect(result.success).toBe(false);
+  });
+
+  it('defaults to 45 min estimate for unknown category', () => {
+    const result = getTaskRabbitLink('Custom Piece', '28792');
+    expect(result.estimatedTime).toBe('45 min');
   });
 });

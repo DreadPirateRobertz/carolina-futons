@@ -263,6 +263,106 @@ export const generateMonthlyStatement = webMethod(
   }
 );
 
+// ── Points Calculator ────────────────────────────────────────────────
+
+/**
+ * Calculate points earned, resulting tier, and benefits for a given spend amount.
+ * Used by the /loyalty page "Points Calculator" widget.
+ *
+ * @param {number} spendAmount - Dollar amount to calculate
+ * @returns {{success: boolean, result: Object}}
+ * @permission Anyone
+ * CF-h3li
+ */
+export const calculatePointsFromSpend = webMethod(
+  Permissions.Anyone,
+  (spendAmount) => {
+    const spend = typeof spendAmount === 'number' ? Math.max(0, spendAmount) : 0;
+
+    // Base rate: 1 point per dollar (Bronze), 1.5x (Silver), 2x (Gold)
+    let tier = 'Bronze';
+    let multiplier = 1;
+    if (spend >= TIER_THRESHOLDS.Gold.minSpend) {
+      tier = 'Gold';
+      multiplier = 2;
+    } else if (spend >= TIER_THRESHOLDS.Silver.minSpend) {
+      tier = 'Silver';
+      multiplier = 1.5;
+    }
+
+    const basePoints = Math.round(spend);
+    const bonusPoints = Math.round(spend * (multiplier - 1));
+    const totalPoints = basePoints + bonusPoints;
+
+    const tierInfo = TIER_THRESHOLDS[tier];
+    const nextTier = tierInfo.next;
+    const spendToNextTier = nextTier ? Math.max(0, tierInfo.nextMin - spend) : null;
+
+    return {
+      success: true,
+      result: {
+        spend,
+        tier,
+        multiplier: `${multiplier}x`,
+        basePoints,
+        bonusPoints,
+        totalPoints,
+        benefits: TIER_BENEFITS[tier],
+        nextTier,
+        spendToNextTier,
+      },
+    };
+  }
+);
+
+// ── Loyalty FAQ ─────────────────────────────────────────────────────
+
+/**
+ * Get FAQ data for the /loyalty page.
+ *
+ * @returns {{success: boolean, faqs: Array}}
+ * @permission Anyone
+ * CF-h3li
+ */
+export const getLoyaltyFaq = webMethod(
+  Permissions.Anyone,
+  () => {
+    return {
+      success: true,
+      faqs: [
+        {
+          question: 'How do I earn points?',
+          answer: 'Earn 1 point per $1 spent at Bronze tier. Silver members earn 1.5x and Gold members earn 2x points on every purchase. You also earn points for writing reviews (50 pts), sharing referrals (100 pts), and completing daily quests.',
+        },
+        {
+          question: 'How do I move up tiers?',
+          answer: 'Tiers are based on total spending. Spend $500+ to reach Silver, $1,500+ for Gold. Your tier is evaluated after each purchase and never decreases.',
+        },
+        {
+          question: 'What can I redeem points for?',
+          answer: 'Points can be redeemed in our Rewards Store for discounts, free accessories, exclusive products, and free shipping upgrades. 100 points = $1 in store credit.',
+        },
+        {
+          question: 'Do my points expire?',
+          answer: 'Points remain active as long as you make at least one purchase per year. After 12 months of inactivity, points may expire.',
+        },
+        {
+          question: 'What is the birthday bonus?',
+          answer: 'All members receive bonus points on their birthday: Bronze gets 50 pts, Silver gets 100 pts, and Gold gets 200 pts. Make sure your birthday is in your profile!',
+        },
+        {
+          question: 'Can I earn points on sale items?',
+          answer: 'Yes! You earn points on every purchase, including sale items, bundles, and clearance. The only exception is gift card purchases.',
+        },
+        {
+          question: 'How does the referral program work?',
+          answer: 'Share your referral link with friends. When they make their first purchase, you earn 100 points and they get a discount. Gold members earn 150 referral points.',
+        },
+      ],
+    };
+  }
+);
+
 // Exports for testing
 export const _TIER_THRESHOLDS = TIER_THRESHOLDS;
 export const _TIER_BENEFITS = TIER_BENEFITS;

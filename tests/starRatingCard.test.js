@@ -26,6 +26,14 @@ vi.mock('backend/reviewsService.web', () => ({
   getCategoryReviewSummaries: (...args) => mockGetCategoryReviewSummaries(...args),
 }));
 
+// Mock stampedIoService so it doesn't intercept batchLoadRatings before
+// getCategoryReviewSummaries is reached. Without this, stampedFetch catches
+// secrets errors per-product and returns {average:0,total:0} for each ID,
+// which satisfies the "non-empty result" check and short-circuits the fallback.
+vi.mock('backend/stampedIoService.web', () => ({
+  getBatchStampedRatings: vi.fn().mockResolvedValue({}),
+}));
+
 // ── Mock helpers ────────────────────────────────────────────────────
 
 function createMockElement(overrides = {}) {

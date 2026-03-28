@@ -10,6 +10,8 @@ import {
   getEnrollmentPrompt,
   checkTierUpNotifications,
   generateMonthlyStatement,
+  calculatePointsFromSpend,
+  getLoyaltyFaq,
   _TIER_THRESHOLDS,
   _TIER_BENEFITS,
   _TIER_UP_THRESHOLD_PERCENT,
@@ -254,5 +256,87 @@ describe('loyalty marketing constants', () => {
     expect(_TIER_THRESHOLDS.Bronze.nextMin).toBe(500);
     expect(_TIER_THRESHOLDS.Silver.nextMin).toBe(1500);
     expect(_TIER_THRESHOLDS.Gold.next).toBeNull();
+  });
+});
+
+// ── Points Calculator (CF-h3li) ─────────────────────────────────────
+
+describe('calculatePointsFromSpend', () => {
+  it('returns Bronze tier for spend under $500', () => {
+    const result = calculatePointsFromSpend(300);
+    expect(result.success).toBe(true);
+    expect(result.result.tier).toBe('Bronze');
+    expect(result.result.multiplier).toBe('1x');
+    expect(result.result.basePoints).toBe(300);
+    expect(result.result.bonusPoints).toBe(0);
+    expect(result.result.totalPoints).toBe(300);
+  });
+
+  it('returns Silver tier with 1.5x multiplier for $500-$1499', () => {
+    const result = calculatePointsFromSpend(800);
+    expect(result.result.tier).toBe('Silver');
+    expect(result.result.multiplier).toBe('1.5x');
+    expect(result.result.basePoints).toBe(800);
+    expect(result.result.bonusPoints).toBe(400); // 800 * 0.5
+    expect(result.result.totalPoints).toBe(1200);
+  });
+
+  it('returns Gold tier with 2x multiplier for $1500+', () => {
+    const result = calculatePointsFromSpend(2000);
+    expect(result.result.tier).toBe('Gold');
+    expect(result.result.multiplier).toBe('2x');
+    expect(result.result.totalPoints).toBe(4000);
+  });
+
+  it('includes next tier spend info', () => {
+    const result = calculatePointsFromSpend(300);
+    expect(result.result.nextTier).toBe('Silver');
+    expect(result.result.spendToNextTier).toBe(200);
+  });
+
+  it('Gold has null next tier', () => {
+    const result = calculatePointsFromSpend(2000);
+    expect(result.result.nextTier).toBeNull();
+    expect(result.result.spendToNextTier).toBeNull();
+  });
+
+  it('handles zero spend', () => {
+    const result = calculatePointsFromSpend(0);
+    expect(result.result.totalPoints).toBe(0);
+    expect(result.result.tier).toBe('Bronze');
+  });
+
+  it('includes tier benefits', () => {
+    const result = calculatePointsFromSpend(800);
+    expect(result.result.benefits).toBeDefined();
+    expect(result.result.benefits.discount).toBe('5%');
+  });
+});
+
+// ── Loyalty FAQ (CF-h3li) ───────────────────────────────────────────
+
+describe('getLoyaltyFaq', () => {
+  it('returns array of FAQ items', () => {
+    const result = getLoyaltyFaq();
+    expect(result.success).toBe(true);
+    expect(result.faqs.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('each FAQ has question and answer', () => {
+    const result = getLoyaltyFaq();
+    for (const faq of result.faqs) {
+      expect(faq.question).toBeTruthy();
+      expect(faq.answer).toBeTruthy();
+      expect(faq.answer.length).toBeGreaterThan(20);
+    }
+  });
+
+  it('covers key topics', () => {
+    const result = getLoyaltyFaq();
+    const questions = result.faqs.map(f => f.question.toLowerCase());
+    expect(questions.some(q => q.includes('earn'))).toBe(true);
+    expect(questions.some(q => q.includes('tier'))).toBe(true);
+    expect(questions.some(q => q.includes('redeem'))).toBe(true);
+    expect(questions.some(q => q.includes('birthday'))).toBe(true);
   });
 });

@@ -125,7 +125,7 @@ describe('applyForTradeAccount — deep edge cases', () => {
   it('rejects null application', async () => {
     const result = await applyForTradeAccount(null);
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/required/i);
+    expect(result.error).toContain('Request data is required');
   });
 
   it('rejects undefined application', async () => {
@@ -171,22 +171,25 @@ describe('applyForTradeAccount — deep edge cases', () => {
     expect(inserted.contactEmail).toBe('test@biz.com');
   });
 
-  it('rejects estimatedAnnualUnits below 0 via schema validation', async () => {
+  it('rejects estimatedAnnualUnits below 0 (schema validation)', async () => {
+    // CF-5r7k: schema validates min:0, so negative values are rejected outright
     const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'a@b.com', estimatedAnnualUnits: -50 });
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/at least 0/i);
+    expect(result.error).toContain('at least 0');
   });
 
-  it('rejects estimatedAnnualUnits above 99999 via schema validation', async () => {
+  it('rejects estimatedAnnualUnits above 99999 (schema validation)', async () => {
+    // CF-5r7k: schema validates max:99999, so oversized values are rejected outright
     const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'b@c.com', estimatedAnnualUnits: 200000 });
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/at most 99999/i);
+    expect(result.error).toContain('at most 99999');
   });
 
-  it('rejects NaN estimatedAnnualUnits via schema validation', async () => {
+  it('rejects NaN estimatedAnnualUnits (schema type validation)', async () => {
+    // CF-5r7k: schema type:number rejects NaN
     const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'c@d.com', estimatedAnnualUnits: NaN });
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/must be a number/i);
+    expect(result.error).toContain('must be a number');
   });
 
   it('sets default tier to bronze and status to pending', async () => {

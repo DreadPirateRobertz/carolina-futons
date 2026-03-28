@@ -116,3 +116,130 @@ export const generateWeeklyDigest = webMethod(
     }
   }
 );
+
+const DIGEST_RECIPIENT = 'carolinafutons@gmail.com';
+
+/**
+ * Compile and send the weekly analytics digest email.
+ * Aggregates data from the event digest, conversion funnel, and A/B tests.
+ *
+ * Intended for Monday 8am MT scheduled job.
+ *
+ * @param {Object} [options]
+ * @param {string} [options.recipientEmail] - Override recipient (for testing)
+ * @param {number} [options.days=7]
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin
+ * CF-epnm
+ */
+export const sendWeeklyDigestEmail = webMethod(
+  Permissions.Admin,
+  async (options = {}) => {
+    try {
+      const days = options.days || 7;
+      const recipient = options.recipientEmail || DIGEST_RECIPIENT;
+
+      // Generate the digest
+      const digestResult = await generateWeeklyDigest({ days });
+      if (!digestResult.success) {
+        return { success: false, error: 'Failed to generate digest' };
+      }
+
+      const digest = digestResult.digest;
+
+      // Build email HTML
+      const html = buildDigestEmailHtml(digest);
+      const subject = `Weekly Analytics Digest — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+      // Queue the email
+      await wixData.insert('EmailQueue', {
+        templateId: 'analytics_digest',
+        recipientEmail: recipient,
+        recipientContactId: '',
+        variables: JSON.stringify({ subject, html }),
+        sequenceType: 'analytics_digest',
+        sequenceStep: 1,
+        scheduledFor: new Date(),
+        status: 'pending',
+        createdAt: new Date(),
+      });
+
+      logAuditEvent('AnalyticsDigest', 'email_sent', 'system', {
+        recipient, totalEvents: digest.totalEvents, period: days,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[analyticsDigest] sendWeeklyDigestEmail error:', err);
+      return { success: false, error: 'Failed to send digest email' };
+    }
+  }
+);
+
+/**
+ * Build HTML email body from digest data.
+ * @param {Object} digest
+ * @returns {string}
+ */
+function buildDigestEmailHtml(digest) {
+  const topEvents = (digest.topEvents || []).slice(0, 10);
+  const funnelMetrics = digest.funnelMetrics || {};
+  const dailyTrend = (digest.dailyTrend || []).slice(-7);
+
+  const topEventsRows = topEvents.map(e =>
+    `<tr><td style="padding:4px 8px;font-family:Arial,sans-serif;font-size:13px;">${e.event}</td>
+     <td style="padding:4px 8px;text-align:right;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${e.count}</td>
+     <td style="padding:4px 8px;font-family:Arial,sans-serif;font-size:12px;color:#666;">${e.category}</td></tr>`
+  ).join('');
+
+  const quizFunnel = funnelMetrics.quiz || {};
+  const spinFunnel = funnelMetrics.spin || {};
+
+  const trendRows = dailyTrend.map(d =>
+    `<tr><td style="padding:2px 6px;font-family:Arial,sans-serif;font-size:12px;">${d.date}</td>
+     <td style="padding:2px 6px;text-align:right;font-family:Arial,sans-serif;font-size:12px;">${d.count}</td></tr>`
+  ).join('');
+
+  return `
+    <div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;">
+      <h2 style="color:#1E3A5F;font-family:Georgia,serif;">Weekly Analytics Digest</h2>
+      <p style="color:#666;font-size:13px;">Period: ${digest.period?.days || 7} days | Generated: ${new Date().toLocaleDateString()}</p>
+
+      <div style="background:#F0F4F8;padding:16px;border-radius:4px;margin:16px 0;">
+        <h3 style="margin:0 0 8px;color:#1E3A5F;font-size:16px;">Summary</h3>
+        <p style="margin:4px 0;font-size:14px;"><strong>${digest.totalEvents}</strong> total events across <strong>${digest.uniqueEventTypes}</strong> event types</p>
+        <p style="margin:4px 0;font-size:14px;">Overall avg: <strong>${digest.overallAvg || 0}</strong> events/product</p>
+      </div>
+
+      ${quizFunnel.started ? `
+      <div style="margin:16px 0;">
+        <h3 style="color:#1E3A5F;font-size:15px;">Style Quiz Funnel</h3>
+        <p style="font-size:13px;">Started: ${quizFunnel.started} → Completed: ${quizFunnel.completed} → Leads: ${quizFunnel.leadsCapured || 0}</p>
+        <p style="font-size:13px;">Completion rate: <strong>${quizFunnel.completionRate}%</strong></p>
+      </div>` : ''}
+
+      ${spinFunnel.played ? `
+      <div style="margin:16px 0;">
+        <h3 style="color:#1E3A5F;font-size:15px;">Spin Wheel</h3>
+        <p style="font-size:13px;">Played: ${spinFunnel.played} → Won: ${spinFunnel.won} → Converted: ${spinFunnel.converted}</p>
+      </div>` : ''}
+
+      <h3 style="color:#1E3A5F;font-size:15px;">Top Events</h3>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+        <tr style="background:#E8D5B7;">
+          <th style="padding:6px 8px;text-align:left;font-size:12px;">Event</th>
+          <th style="padding:6px 8px;text-align:right;font-size:12px;">Count</th>
+          <th style="padding:6px 8px;text-align:left;font-size:12px;">Category</th>
+        </tr>
+        ${topEventsRows}
+      </table>
+
+      ${trendRows ? `
+      <h3 style="color:#1E3A5F;font-size:15px;margin-top:16px;">Daily Trend</h3>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+        ${trendRows}
+      </table>` : ''}
+
+      <p style="margin-top:24px;font-size:11px;color:#999;">This is an automated digest from Carolina Futons analytics. To unsubscribe, contact your admin.</p>
+    </div>`;
+}
