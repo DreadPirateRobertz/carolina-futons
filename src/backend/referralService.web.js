@@ -306,42 +306,8 @@ export const completeReferral = webMethod(
         return { success: false, error: 'Referral was already being processed' };
       }
 
-      // Issue credits with idempotency — check for existing credits before inserting
-      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-
-      // Credit for referrer (skip if already issued)
-      const existingReferrerCredit = await wixData.query(CREDITS_COLLECTION)
-        .eq('referralId', referral._id)
-        .eq('source', 'referrer_bonus')
-        .find();
-      if (existingReferrerCredit.items.length === 0) {
-        await wixData.insert(CREDITS_COLLECTION, {
-          memberId: referral.referrerMemberId,
-          amount: REFERRER_CREDIT_AMOUNT,
-          source: 'referrer_bonus',
-          referralId: referral._id,
-          status: 'available',
-          expiresAt,
-        });
-      }
-
-      // Credit for referee (skip if already issued)
-      if (member?._id) {
-        const existingRefereeCredit = await wixData.query(CREDITS_COLLECTION)
-          .eq('referralId', referral._id)
-          .eq('source', 'referee_bonus')
-          .find();
-        if (existingRefereeCredit.items.length === 0) {
-          await wixData.insert(CREDITS_COLLECTION, {
-            memberId: member._id,
-            amount: REFEREE_CREDIT_AMOUNT,
-            source: 'referee_bonus',
-            referralId: referral._id,
-            status: 'available',
-            expiresAt,
-          });
-        }
-      }
+      // Issue credits via shared helper (idempotent)
+      await _issueCreditsForReferral(referral._id, referral.referrerMemberId, member?._id ?? null);
 
       // Finalize status
       claimed.status = 'credited';
@@ -359,11 +325,67 @@ export const completeReferral = webMethod(
   }
 );
 
+// ── _issueCreditsForReferral (shared helper) ─────────────────────────
+//
+// Idempotently issues referrer + referee credits for a referral record.
+// Used by both completeReferral (frontend session context) and
+// _processReferralOnOrderCreated (event handler, no session).
+// suppressAuth: true is required for event-handler callers.
+
+async function _issueCreditsForReferral(referralId, referrerMemberId, refereeMemberId, opts = {}) {
+  const { suppressAuth = false } = opts;
+  const findOpts = suppressAuth ? { suppressAuth: true } : {};
+  const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+  // Idempotent referrer credit
+  const existingReferrer = await wixData
+    .query(CREDITS_COLLECTION)
+    .eq('referralId', referralId)
+    .eq('source', 'referrer_bonus')
+    .find(findOpts);
+  if (existingReferrer.items.length === 0) {
+    await wixData.insert(CREDITS_COLLECTION, {
+      memberId: referrerMemberId,
+      amount: REFERRER_CREDIT_AMOUNT,
+      source: 'referrer_bonus',
+      referralId,
+      status: 'available',
+      expiresAt,
+    });
+  }
+
+  // Idempotent referee credit
+  if (refereeMemberId) {
+    const existingReferee = await wixData
+      .query(CREDITS_COLLECTION)
+      .eq('referralId', referralId)
+      .eq('source', 'referee_bonus')
+      .find(findOpts);
+    if (existingReferee.items.length === 0) {
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: refereeMemberId,
+        amount: REFEREE_CREDIT_AMOUNT,
+        source: 'referee_bonus',
+        referralId,
+        status: 'available',
+        expiresAt,
+      });
+    }
+  }
+}
+
 // ── _processReferralOnOrderCreated (cf-bu2, cf-exxy) ──────────────────────────
 //
-// Backend-callable (not a webMethod). Called from wixEcom_onOrderCreated
-// when a member places an order. Looks up any signed_up referral for the
-// member and issues both referrer + referee credits.
+// Backend-callable (not a webMethod — event handlers have no member session).
+// Called from wixEcom_onOrderCreated when a member places an order.
+//
+// Queries for referrals in 'signed_up' OR 'processing' status. Including
+// 'processing' allows recovery from the orphan state where a prior execution
+// inserted credits but failed on the final status='credited' update.
+//
+// Race guard: after setting status='processing', reads back the record to
+// verify we own it (same as completeReferral). If another execution beat us,
+// we skip (credits are idempotent so the winner will complete them).
 //
 // cf-exxy: when isFirstPurchase===true, also awards BONUS_POINTS.REFERRAL_COMPLETE
 // loyalty points to the referrer (guarded by rewardPaid flag on the referral record).
@@ -378,53 +400,26 @@ export async function _processReferralOnOrderCreated(refereeMemberId, orderNumbe
     const result = await wixData
       .query(REFERRALS_COLLECTION)
       .eq('refereeMemberId', refereeMemberId)
-      .eq('status', 'signed_up')
+      .hasSome('status', ['signed_up', 'processing'])
       .find({ suppressAuth: true });
 
     if (result.items.length === 0) return { skipped: true };
 
     const referral = { ...result.items[0] };
 
+    // Skip if already fully credited (idempotent re-entry after recovery)
+    if (referral.status === 'credited') return { skipped: true };
+
     // Claim by marking processing — prevents double-credit if event fires twice
     referral.status = 'processing';
     referral.orderNumber = orderNumber;
     await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
 
-    // Idempotent referrer credit
-    const existingReferrerCredit = await wixData
-      .query(CREDITS_COLLECTION)
-      .eq('referralId', referral._id)
-      .eq('source', 'referrer_bonus')
-      .find({ suppressAuth: true });
-    if (existingReferrerCredit.items.length === 0) {
-      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-      await wixData.insert(CREDITS_COLLECTION, {
-        memberId: referral.referrerMemberId,
-        amount: REFERRER_CREDIT_AMOUNT,
-        source: 'referrer_bonus',
-        referralId: referral._id,
-        status: 'available',
-        expiresAt,
-      });
-    }
+    // Race guard: read back to confirm we own the processing slot
+    const claimed = await wixData.get(REFERRALS_COLLECTION, referral._id, { suppressAuth: true });
+    if (!claimed || claimed.status !== 'processing') return { skipped: true };
 
-    // Idempotent referee credit
-    const existingRefereeCredit = await wixData
-      .query(CREDITS_COLLECTION)
-      .eq('referralId', referral._id)
-      .eq('source', 'referee_bonus')
-      .find({ suppressAuth: true });
-    if (existingRefereeCredit.items.length === 0) {
-      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-      await wixData.insert(CREDITS_COLLECTION, {
-        memberId: refereeMemberId,
-        amount: REFEREE_CREDIT_AMOUNT,
-        source: 'referee_bonus',
-        referralId: referral._id,
-        status: 'available',
-        expiresAt,
-      });
-    }
+    await _issueCreditsForReferral(referral._id, referral.referrerMemberId, refereeMemberId, { suppressAuth: true });
 
     // cf-exxy: award loyalty points to referrer on referred member's first purchase
     let pointsAwarded = 0;
