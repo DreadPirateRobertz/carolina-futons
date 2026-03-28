@@ -21,7 +21,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
-import { withRateLimit } from './helpers/withRateLimit.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __reset as resetCrm, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
@@ -125,15 +124,13 @@ describe('submitQuestion — owner email notification', () => {
 
 describe('insertGuestQuestion', () => {
   it('inserts question without member authentication', async () => {
-    withRateLimit('QARateLimit', { key: 'jane@example.com' });
     let inserted = null;
-    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
+    __onInsert((_col, item) => { inserted = item; });
 
     const result = await insertGuestQuestion({
       productId: 'product-1',
       question: 'Does this futon fold flat for storage?',
       memberName: 'Jane',
-      email: 'jane@example.com',
     });
 
     expect(result.success).toBe(true);
@@ -144,27 +141,25 @@ describe('insertGuestQuestion', () => {
   });
 
   it('falls back to Customer when no name provided', async () => {
-    withRateLimit('QARateLimit', { key: 'guest@example.com' });
     let inserted = null;
-    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
+    __onInsert((_col, item) => { inserted = item; });
 
     await insertGuestQuestion({
       productId: 'product-1',
       question: 'What is the weight capacity of this futon?',
-      email: 'guest@example.com',
     });
 
     expect(inserted.memberName).toBe('Customer');
   });
 
   it('rejects question shorter than 10 characters', async () => {
-    const result = await insertGuestQuestion({ productId: 'product-1', question: 'Short?', email: 'guest@example.com' });
+    const result = await insertGuestQuestion({ productId: 'product-1', question: 'Short?' });
     expect(result.success).toBe(false);
     expect(result.error).toContain('10 characters');
   });
 
   it('rejects empty product ID', async () => {
-    const result = await insertGuestQuestion({ productId: '', question: 'Valid question about this product?', email: 'guest@example.com' });
+    const result = await insertGuestQuestion({ productId: '', question: 'Valid question about this product?' });
     expect(result.success).toBe(false);
   });
 
@@ -173,7 +168,6 @@ describe('insertGuestQuestion', () => {
       productId: 'product-1',
       question: 'What type of wood is used in the frame?',
       memberName: 'Bob',
-      email: 'bob@example.com',
     });
     await new Promise(r => setTimeout(r, 0));
 
@@ -232,12 +226,11 @@ describe('HTTP get_productQA', () => {
 
 describe('HTTP post_submitQuestion', () => {
   it('inserts question and returns 200 success', async () => {
-    withRateLimit('QARateLimit', { key: 'tom@example.com' });
     let inserted = null;
-    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
+    __onInsert((_col, item) => { inserted = item; });
 
     const req = makeRequest({
-      body: { productId: 'product-1', question: 'Can this futon be used as a permanent bed?', name: 'Tom', email: 'tom@example.com' },
+      body: { productId: 'product-1', question: 'Can this futon be used as a permanent bed?', name: 'Tom' },
     });
     const res = await post_submitQuestion(req);
 
