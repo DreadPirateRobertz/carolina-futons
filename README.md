@@ -10,7 +10,7 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 
 **v1.2.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 34,000+ tests passing across 900+ test files (Vitest)
+- 34,600+ tests passing across 910+ test files (Vitest)
 - Gamification platform: 12 widgets (points, badges, streaks, quests, leaderboard, rewards store, milestones, notifications, social sharing, referrals, onboarding, stats)
 - Wave 29 features: Style Quiz registration gate, Will-It-Fit tool, Spin-to-Win email capture, cart tier progress, AR-gamification bridge, loyalty cart recovery, challenge notifications, post-purchase referral prompts, endowed progress, CF+ Premium upsell, auto-delivery subscriptions, crossRigEventBus
 - Security: IDOR fixes on all member-facing webMethods (currentMember server-side identity)
@@ -23,15 +23,15 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 This is a **Wix Velo** codebase — all frontend and backend code runs on the Wix platform. The `$w` selector model replaces traditional DOM manipulation, and backend modules use the `webMethod` pattern for secure client-server calls.
 
 ```
-src/                        503 source files
-├── pages/           41     Page modules (Wix Velo $w lifecycle)
+src/                        480 source files
+├── pages/           50     Page modules (Wix Velo $w lifecycle)
 │   ├── Home.js, masterPage.js
 │   ├── Product Page.js, Category Page.js
 │   ├── Cart Page.js, Side Cart.js, Checkout.js
 │   ├── Thank You Page.js, Member Page.js
 │   └── ... (FAQ, Blog, Referral, UGC Gallery, etc.)
 │
-├── public/          258    Shared frontend helpers & components
+├── public/          240    Shared frontend helpers & components
 │   ├── sharedTokens.js      ← Brand design tokens (cross-platform)
 │   ├── designTokens.js      ← Web-specific tokens
 │   ├── mobileHelpers.js     ← Responsive utilities
@@ -41,7 +41,7 @@ src/                        503 source files
 │   ├── engagementTracker.js ← GA4 event tracking
 │   └── ...
 │
-├── backend/         204    Backend web modules (webMethod pattern)
+├── backend/         190    Backend web modules (webMethod pattern)
 │   ├── *Service.web.js     Business logic
 │   ├── utils/
 │   │   ├── sanitize.js     Input sanitization (XSS, injection)
@@ -52,7 +52,7 @@ src/                        503 source files
 ├── http-functions.js       HTTP endpoints (product feeds)
 └── shipping-rates-plugin.js  Wix SPI shipping calculator
 
-tests/               590+ test files, 25,200+ tests (Vitest)
+tests/               910+ test files, 34,600+ tests (Vitest)
 content/             Product catalog, CMS content, blog data
 scripts/             Build tools, ID remapping, secret provisioning
 docs/                Design docs, plans, guides
@@ -78,7 +78,7 @@ docs/
 ├── reports/                Audits (testing CI, token burn, product images)
 ├── archives/               Historical session reports
 ├── releases/               Release notes by version
-├── ARCHITECTURE.md         System overview (503 files, Wix Velo patterns)
+├── ARCHITECTURE.md         System overview (480 files, Wix Velo patterns)
 ├── API-REFERENCE.md        Backend module API documentation
 ├── *-BUILD-SPEC.md         Per-page element specifications
 ├── TEMPLATE-ELEMENT-AUDIT.md  Template vs code element comparison
