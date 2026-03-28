@@ -363,6 +363,108 @@ export const getLoyaltyFaq = webMethod(
   }
 );
 
+// ── Enrollment (CF-nru7) ────────────────────────────────────────────
+
+const WELCOME_POINTS = 50;
+const BIRTHDAY_BONUS_POINTS = 50;
+const POINTS_PER_DOLLAR = 1;
+
+/**
+ * Enroll a new member in the loyalty program.
+ *
+ * @param {Object} params
+ * @param {string} params.memberId
+ * @param {string} params.email
+ * @param {string} [params.firstName]
+ * @param {string} [params.birthday] - YYYY-MM-DD (optional, +50 bonus pts)
+ * @returns {Promise<{success: boolean, welcomePoints: number, account: Object|null}>}
+ * @permission SiteMember
+ */
+export const enrollMember = webMethod(
+  Permissions.SiteMember,
+  async (params = {}) => {
+    try {
+      const memberId = sanitize(params.memberId, 50);
+      const email = sanitize(params.email, 254).toLowerCase();
+      if (!memberId || !email) {
+        return { success: false, welcomePoints: 0, account: null, error: 'Member ID and email required' };
+      }
+
+      // Check if already enrolled
+      const existing = await wixData.query('LoyaltyAccounts')
+        .eq('memberId', memberId)
+        .find();
+
+      if (existing.items.length > 0) {
+        return { success: false, welcomePoints: 0, account: existing.items[0], error: 'Already enrolled' };
+      }
+
+      let totalWelcome = WELCOME_POINTS;
+      const birthday = params.birthday && /^\d{4}-\d{2}-\d{2}$/.test(params.birthday)
+        ? params.birthday : null;
+      if (birthday) totalWelcome += BIRTHDAY_BONUS_POINTS;
+
+      const account = await wixData.insert('LoyaltyAccounts', {
+        memberId,
+        email,
+        firstName: sanitize(params.firstName || '', 200),
+        birthday,
+        currentTier: 'Bronze',
+        totalPoints: totalWelcome,
+        totalSpend: 0,
+        enrolledAt: new Date(),
+      });
+
+      // Log welcome points
+      await wixData.insert('PointsHistory', {
+        memberId,
+        points: WELCOME_POINTS,
+        source: 'welcome',
+        description: 'Welcome bonus',
+        timestamp: new Date(),
+      });
+
+      if (birthday) {
+        await wixData.insert('PointsHistory', {
+          memberId,
+          points: BIRTHDAY_BONUS_POINTS,
+          source: 'birthday_enrollment',
+          description: 'Birthday bonus for sharing DOB',
+          timestamp: new Date(),
+        });
+      }
+
+      logAuditEvent('LoyaltyAccounts', 'enroll', memberId, { email, welcomePoints: totalWelcome });
+
+      return { success: true, welcomePoints: totalWelcome, account };
+    } catch (err) {
+      console.error('[loyaltyMarketing] enrollMember error:', err);
+      return { success: false, welcomePoints: 0, account: null, error: 'Enrollment failed' };
+    }
+  }
+);
+
+/**
+ * Calculate points a member would earn for an order total.
+ *
+ * @param {number} orderTotal
+ * @param {string} [currentTier='Bronze']
+ * @returns {{points: number, multiplier: string, tier: string}}
+ * @permission Anyone
+ */
+export const calculatePointsForOrder = webMethod(
+  Permissions.Anyone,
+  (orderTotal, currentTier) => {
+    const total = typeof orderTotal === 'number' ? Math.max(0, orderTotal) : 0;
+    const tier = currentTier || 'Bronze';
+    const multipliers = { Bronze: 1, Silver: 1.5, Gold: 2 };
+    const mult = multipliers[tier] || 1;
+
+    const points = Math.round(total * POINTS_PER_DOLLAR * mult);
+    return { points, multiplier: `${mult}x`, tier };
+  }
+);
+
 // Exports for testing
 export const _TIER_THRESHOLDS = TIER_THRESHOLDS;
 export const _TIER_BENEFITS = TIER_BENEFITS;

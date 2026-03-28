@@ -20,6 +20,7 @@ import { initPageSeo } from 'public/pageSeo.js';
 import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
+import { getEnrollmentPrompt, enrollMember, calculatePointsForOrder } from 'backend/loyaltyMarketing.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -57,6 +58,7 @@ $w.onReady(async function () {
     { name: 'testimonialPrompt', init: initTestimonialPrompt },
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
+    { name: 'loyaltyEnrollment', init: () => initLoyaltyEnrollment(orderCtx) },
     { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
       orderTotal: orderCtx?.total || 0,
       getLoyaltyAccount: getMyLoyaltyAccount,
@@ -708,6 +710,66 @@ function initReviewRequest(orderCtx) {
     section.expand();
   } catch (e) {
     // Review request section is non-critical
+  }
+}
+
+// ── Loyalty Enrollment Prompt (CF-nru7) ─────────────────────────────
+
+async function initLoyaltyEnrollment(orderCtx) {
+  try {
+    const email = orderCtx?.email || '';
+    if (!email) { try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {} return; }
+
+    const prompt = await getEnrollmentPrompt(email);
+    if (!prompt.shouldPrompt) {
+      try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    // Calculate points for this order
+    const orderTotal = orderCtx?.total || 0;
+    const pointsResult = calculatePointsForOrder(orderTotal, 'Bronze');
+    const earnedPoints = pointsResult.points + 50; // order points + welcome bonus
+
+    try { $w('#loyaltyEnrollTitle').text = 'Join Carolina Futons Rewards'; } catch (e) {}
+    try { $w('#loyaltyEnrollPoints').text = `You just earned ${earnedPoints} points!`; } catch (e) {}
+    try { $w('#loyaltyEnrollDescription').text = 'Earn points on every purchase. Unlock discounts, free shipping, and exclusive perks.'; } catch (e) {}
+    try { $w('#loyaltyEnrollSection').expand(); } catch (e) {}
+
+    try {
+      $w('#loyaltyJoinButton').onClick(async () => {
+        try { $w('#loyaltyJoinButton').disable(); } catch (e) {}
+
+        const memberId = orderCtx?.memberId || orderCtx?.contactId || '';
+        const firstName = orderCtx?.firstName || '';
+        const birthday = $w('#loyaltyBirthdayInput')?.value || '';
+
+        const result = await enrollMember({ memberId, email, firstName, birthday });
+
+        if (result.success) {
+          try { $w('#loyaltyEnrollTitle').text = `Welcome! ${result.welcomePoints} points added!`; } catch (e) {}
+          try { $w('#loyaltyJoinButton').collapse(); } catch (e) {}
+          try { $w('#loyaltySkipButton').collapse(); } catch (e) {}
+          try { $w('#loyaltyBirthdayInput').collapse(); } catch (e) {}
+          trackEvent('loyalty_enroll', { source: 'thank_you', points: result.welcomePoints });
+          fireCustomEvent('loyalty_enrolled', { source: 'thank_you_page' });
+          announce(`Enrolled in rewards! ${result.welcomePoints} points added to your account.`);
+        } else {
+          try { $w('#loyaltyEnrollTitle').text = result.error || 'Enrollment failed. Try again later.'; } catch (e) {}
+          try { $w('#loyaltyJoinButton').enable(); } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
+    try {
+      $w('#loyaltySkipButton').onClick(() => {
+        try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
+        trackEvent('loyalty_skip', { source: 'thank_you' });
+      });
+    } catch (e) {}
+  } catch (err) {
+    console.error('[ThankYou] Loyalty enrollment error:', err);
+    try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
   }
 }
 
