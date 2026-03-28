@@ -116,10 +116,11 @@ export const checkBalance = webMethod(
       const { allowed } = await checkRateLimit('GiftCardBalanceRateLimit', cleanCode, { max: 10 });
       if (!allowed) return { found: false };
 
-      logAuditEvent('GiftCards', 'balance_check', cleanCode);
       const result = await wixData.query('GiftCards')
         .eq('code', cleanCode)
         .find();
+
+      logAuditEvent('GiftCards', 'balance_check', cleanCode, { found: result.items.length > 0 });
 
       if (result.items.length === 0) {
         return { found: false };

@@ -37,9 +37,14 @@ export async function logAuditEvent(collection, action, key, metadata) {
     const cleanKey = sanitize(String(key || ''), 254).toLowerCase();
     const cleanCollection = sanitize(String(collection || ''), 100);
     const cleanAction = sanitize(String(action || ''), 50);
-    const metaStr = metadata
-      ? sanitize(typeof metadata === 'string' ? metadata : JSON.stringify(metadata), 2000)
-      : '';
+    let metaStr = '';
+    if (metadata) {
+      try {
+        metaStr = sanitize(typeof metadata === 'string' ? metadata : JSON.stringify(metadata), 2000);
+      } catch {
+        metaStr = '[unserializable]';
+      }
+    }
 
     await wixData.insert(AUDIT_COLLECTION, {
       collection: cleanCollection,
