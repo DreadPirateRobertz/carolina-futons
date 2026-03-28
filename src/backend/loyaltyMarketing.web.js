@@ -265,6 +265,122 @@ export const generateMonthlyStatement = webMethod(
   }
 );
 
+// ── Monthly Statement Batch Send (CF-zo4k) ───────────────────────────
+
+const LOYALTY_STATEMENTS_SENT_COLLECTION = 'LoyaltyStatementsSent';
+
+/**
+ * Send monthly points statement email to all members with balance > 0 or recent activity.
+ * Idempotent — uses LoyaltyStatementsSent dedup keyed on memberId + YYYY-MM.
+ *
+ * @returns {Promise<{success: boolean, sent: number, errors: number}>}
+ * @permission Admin
+ */
+export const sendMonthlyLoyaltyStatements = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const monthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const now = new Date();
+
+      // Get all accounts with balance > 0
+      const accounts = await wixData.query('LoyaltyAccounts')
+        .gt('totalPoints', 0)
+        .limit(1000)
+        .find();
+
+      let sent = 0;
+      let errors = 0;
+
+      for (const account of accounts.items) {
+        const memberId = account.memberId;
+        if (!memberId || !account.email) continue;
+
+        // Dedup — skip if already sent this month
+        const dedupId = `${memberId}_${monthKey}`;
+        let alreadySent = false;
+        try {
+          const existing = await wixData.get(LOYALTY_STATEMENTS_SENT_COLLECTION, dedupId);
+          if (existing) alreadySent = true;
+        } catch (_) { /* not found = not sent yet */ }
+
+        if (alreadySent) continue;
+
+        // Check for recent activity (last 30 days)
+        const activity = await wixData.query('PointsHistory')
+          .eq('memberId', memberId)
+          .ge('timestamp', since)
+          .limit(1000)
+          .find();
+
+        let monthlyEarned = 0;
+        let monthlyRedeemed = 0;
+        for (const entry of activity.items) {
+          const pts = entry.points || 0;
+          if (pts > 0) monthlyEarned += pts;
+          else monthlyRedeemed += Math.abs(pts);
+        }
+
+        // Skip members with no balance and no activity
+        if ((account.totalPoints || 0) <= 0 && monthlyEarned === 0) continue;
+
+        const tier = account.currentTier || 'Bronze';
+        const tierInfo = TIER_THRESHOLDS[tier] || {};
+
+        try {
+          await wixData.insert('EmailQueue', {
+            templateId: 'loyalty_statement_monthly',
+            recipientEmail: account.email,
+            recipientContactId: memberId,
+            variables: {
+              firstName: account.firstName || '',
+              currentTier: tier,
+              totalPoints: account.totalPoints || 0,
+              monthlyEarned,
+              monthlyRedeemed,
+              netChange: monthlyEarned - monthlyRedeemed,
+              nextTier: tierInfo.next || null,
+              spendToNextTier: tierInfo.nextMin
+                ? Math.max(0, tierInfo.nextMin - (account.totalSpend || 0))
+                : null,
+              monthKey,
+            },
+            sequenceType: 'loyalty_statement',
+            sequenceStep: 1,
+            status: 'pending',
+            scheduledFor: now,
+            sentAt: null,
+            attempt: 0,
+            lastError: '',
+            abVariant: null,
+            createdAt: now,
+          });
+
+          // Record dedup
+          await wixData.insert(LOYALTY_STATEMENTS_SENT_COLLECTION, {
+            _id: dedupId,
+            memberId,
+            monthKey,
+            sentAt: now,
+          });
+
+          sent++;
+        } catch (err) {
+          logError(`sendMonthlyLoyaltyStatements:${memberId}`, err);
+          errors++;
+        }
+      }
+
+      logAuditEvent('LoyaltyMarketing', 'monthly_statement_batch', 'system', { sent, errors, monthKey });
+      return { success: true, sent, errors };
+    } catch (err) {
+      logError('sendMonthlyLoyaltyStatements', err);
+      return { success: false, sent: 0, errors: 0 };
+    }
+  }
+);
+
 // ── Points Calculator ────────────────────────────────────────────────
 
 /**
