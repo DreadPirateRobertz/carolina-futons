@@ -10,7 +10,13 @@ let _reviews = [];
 let _selectedIds = new Set();
 let _currentFilter = 'pending';
 let _currentPage = 0;
+let _total = 0;
 const PAGE_SIZE = 20;
+
+async function redirectHome() {
+  const loc = await import('wix-location-frontend');
+  loc.to('/');
+}
 
 $w.onReady(async function () {
   // ── Admin access guard ────────────────────────────────────────
@@ -18,25 +24,24 @@ $w.onReady(async function () {
     const { currentMember } = await import('wix-members-frontend');
     const member = await currentMember.getMember();
     if (!member?._id) {
-      const loc = await import('wix-location-frontend');
-      loc.to('/');
+      await redirectHome();
       return;
     }
     const roles = await currentMember.getRoles();
     const isAdmin = roles.some(r => r.title === 'Admin' || r._id === 'admin');
     if (!isAdmin) {
-      const loc = await import('wix-location-frontend');
-      loc.to('/');
+      await redirectHome();
       return;
     }
   } catch (_) {
-    const loc = await import('wix-location-frontend');
-    loc.to('/');
+    await redirectHome();
     return;
   }
 
   initFilterButtons();
   initBulkActions();
+  initPaginationButtons();
+  initRepeater();
   await Promise.all([loadStats(), loadQueue()]);
   trackEvent('page_view', { page: 'admin_review_moderation' });
 });
@@ -91,9 +96,7 @@ async function loadQueue() {
   showLoading(false);
 }
 
-function renderQueue() {
-  $w('#repeaterReviews').data = _reviews.map(r => ({ _id: r.reviewId, ...r }));
-
+function initRepeater() {
   $w('#repeaterReviews').onItemReady(($item, itemData) => {
     $item('#txtReviewAuthor').text = itemData.author;
     $item('#txtReviewProduct').text = itemData.productName || itemData.productId;
@@ -122,10 +125,14 @@ function renderQueue() {
     $item('#btnApprove').onClick(() => moderateOne(itemData.reviewId, 'approve', $item));
     $item('#btnReject').onClick(() => moderateOne(itemData.reviewId, 'reject', $item));
 
-    // Hide approve/reject based on current status
+    // Disable button for current status
     if (itemData.status === 'approved') $item('#btnApprove').disable();
     if (itemData.status === 'rejected') $item('#btnReject').disable();
   });
+}
+
+function renderQueue() {
+  $w('#repeaterReviews').data = _reviews.map(r => ({ _id: r.reviewId, ...r }));
 }
 
 async function moderateOne(reviewId, action, $item) {
@@ -135,10 +142,10 @@ async function moderateOne(reviewId, action, $item) {
   const result = await moderateReview(reviewId, action);
 
   if (result.success) {
-    announce(`Review ${action}d`);
+    announce($w, `Review ${action}d`);
     await Promise.all([loadStats(), loadQueue()]);
   } else {
-    announce(`Failed to ${action} review: ${result.error || 'unknown error'}`);
+    announce($w, `Failed to ${action} review: ${result.error || 'unknown error'}`);
     $item('#btnApprove').enable();
     $item('#btnReject').enable();
   }
@@ -176,10 +183,10 @@ async function runBulkAction(action) {
   const result = await bulkModerate(ids, action);
 
   if (result.success) {
-    announce(`${result.processed} review(s) ${action}d. ${result.failed} failed.`);
+    announce($w, `${result.processed} review(s) ${action}d. ${result.failed} failed.`);
     await Promise.all([loadStats(), loadQueue()]);
   } else {
-    announce(`Bulk ${action} failed: ${result.error || 'unknown error'}`);
+    announce($w, `Bulk ${action} failed: ${result.error || 'unknown error'}`);
   }
 }
 
@@ -189,10 +196,10 @@ async function runAutoApprove() {
   $w('#btnAutoApprove').enable();
 
   if (result.success) {
-    announce(`Auto-approved ${result.approved} of ${result.scanned} pending reviews.`);
+    announce($w, `Auto-approved ${result.approved} of ${result.scanned} pending reviews.`);
     await Promise.all([loadStats(), loadQueue()]);
   } else {
-    announce('Auto-approve failed. Please try again.');
+    announce($w, 'Auto-approve failed. Please try again.');
   }
 }
 
@@ -202,10 +209,10 @@ async function runAutoRejectSpam() {
   $w('#btnAutoRejectSpam').enable();
 
   if (result.success) {
-    announce(`Auto-rejected ${result.rejected} spam reviews (scanned ${result.scanned}).`);
+    announce($w, `Auto-rejected ${result.rejected} spam reviews (scanned ${result.scanned}).`);
     await Promise.all([loadStats(), loadQueue()]);
   } else {
-    announce('Auto-reject spam failed. Please try again.');
+    announce($w, 'Auto-reject spam failed. Please try again.');
   }
 }
 
@@ -237,18 +244,29 @@ function updateBulkBar() {
 
 // ── Pagination ─────────────────────────────────────────────────
 
-function updatePagination(total) {
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  $w('#txtPageInfo').text = `Page ${_currentPage + 1} of ${Math.max(1, totalPages)} (${total} total)`;
-  $w('#btnPrevPage').isDisabled = _currentPage === 0;
-  $w('#btnNextPage').isDisabled = (_currentPage + 1) * PAGE_SIZE >= total;
-
+function initPaginationButtons() {
   $w('#btnPrevPage').onClick(() => {
     if (_currentPage > 0) { _currentPage--; loadQueue(); }
   });
   $w('#btnNextPage').onClick(() => {
-    if ((_currentPage + 1) * PAGE_SIZE < total) { _currentPage++; loadQueue(); }
+    if ((_currentPage + 1) * PAGE_SIZE < _total) { _currentPage++; loadQueue(); }
   });
+}
+
+function updatePagination(total) {
+  _total = total;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  $w('#txtPageInfo').text = `Page ${_currentPage + 1} of ${Math.max(1, totalPages)} (${total} total)`;
+  if (_currentPage === 0) {
+    $w('#btnPrevPage').disable();
+  } else {
+    $w('#btnPrevPage').enable();
+  }
+  if ((_currentPage + 1) * PAGE_SIZE >= total) {
+    $w('#btnNextPage').disable();
+  } else {
+    $w('#btnNextPage').enable();
+  }
 }
 
 // ── Loading state ──────────────────────────────────────────────
