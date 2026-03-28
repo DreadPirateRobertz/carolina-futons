@@ -19,6 +19,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted, __getUpdated, __onInsert } from './__mocks__/wix-data.js';
+import { __reset as __resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 
 vi.mock('backend/utils/auditLog', () => ({
   logAuditEvent: vi.fn(),
@@ -36,6 +37,7 @@ import { logAuditEvent } from '../src/backend/utils/auditLog.js';
 
 beforeEach(() => {
   __reset();
+  __resetSecrets();
   vi.clearAllMocks();
 });
 
@@ -247,5 +249,98 @@ describe('moderateReview: audit event logging', () => {
     const result = await moderateReview('nonexistent-id', 'approve');
     expect(result.success).toBe(false);
     expect(logAuditEvent).not.toHaveBeenCalled();
+  });
+});
+
+// ── moderateReview: status transitions ───────────────────────────────
+
+describe('moderateReview: status transitions', () => {
+  it('blocks approving an already-approved review', async () => {
+    __seed('Reviews', [{
+      _id: 'rev-b1', status: 'approved', productId: 'prod-1', body: 'Great.', rating: 5,
+    }]);
+
+    const result = await moderateReview('rev-b1', 'approve');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/cannot approve/i);
+    expect(logAuditEvent).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid action string', async () => {
+    __seed('Reviews', [{
+      _id: 'rev-b2', status: 'pending', productId: 'prod-1', body: 'Ok.', rating: 3,
+    }]);
+
+    const result = await moderateReview('rev-b2', 'archive');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/approve.*reject/i);
+  });
+});
+
+// ── post_stampedWebhook ──────────────────────────────────────────────
+
+describe('post_stampedWebhook', () => {
+  const WEBHOOK_SECRET = 'stamped-test-secret';
+  const VALID_PAYLOAD = {
+    productId: 'prod-123',
+    author: 'Tester',
+    email: 'test@example.com',
+    rating: 5,
+    title: 'Great futon',
+    body: 'Very comfortable.',
+  };
+
+  function makeRequest({ secret, body, headers = {} }) {
+    return {
+      headers: { 'x-stamped-secret': secret, ...headers },
+      body: {
+        text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
+      },
+    };
+  }
+
+  let post_stampedWebhook;
+  beforeEach(async () => {
+    ({ post_stampedWebhook } = await import('../src/backend/http-functions.js'));
+  });
+
+  it('returns 403 when STAMPED_WEBHOOK_SECRET is not configured', async () => {
+    // No secret set — getSecret will throw
+    const req = makeRequest({ secret: 'any', body: VALID_PAYLOAD });
+    const res = await post_stampedWebhook(req);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 403 when request secret does not match', async () => {
+    __setSecrets({ STAMPED_WEBHOOK_SECRET: WEBHOOK_SECRET });
+    const req = makeRequest({ secret: 'wrong-secret', body: VALID_PAYLOAD });
+    const res = await post_stampedWebhook(req);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 400 when body is invalid JSON', async () => {
+    __setSecrets({ STAMPED_WEBHOOK_SECRET: WEBHOOK_SECRET });
+    const req = makeRequest({ secret: WEBHOOK_SECRET, body: '{invalid json' });
+    const res = await post_stampedWebhook(req);
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/invalid json/i);
+  });
+
+  it('returns 400 when productId is missing', async () => {
+    __setSecrets({ STAMPED_WEBHOOK_SECRET: WEBHOOK_SECRET });
+    const req = makeRequest({ secret: WEBHOOK_SECRET, body: { rating: 5, body: 'Nice.' } });
+    const res = await post_stampedWebhook(req);
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toMatch(/productId/i);
+  });
+
+  it('returns 200 and reviewId on successful ingestion', async () => {
+    __setSecrets({ STAMPED_WEBHOOK_SECRET: WEBHOOK_SECRET });
+    const req = makeRequest({ secret: WEBHOOK_SECRET, body: VALID_PAYLOAD });
+    const res = await post_stampedWebhook(req);
+    expect(res.status).toBe(200);
+    const parsed = JSON.parse(res.body);
+    expect(parsed.success).toBe(true);
+    expect(parsed.reviewId).toBeTruthy();
   });
 });

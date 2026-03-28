@@ -33,7 +33,8 @@ $w.onReady(async function () {
       await redirectHome();
       return;
     }
-  } catch (_) {
+  } catch (err) {
+    console.error('[Admin Review Moderation] auth check failed:', err);
     await redirectHome();
     return;
   }

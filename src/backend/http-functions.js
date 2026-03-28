@@ -995,7 +995,7 @@ export async function post_stampedWebhook(request) {
     try {
       const { getSecret } = await import('wix-secrets-backend');
       webhookSecret = await getSecret('STAMPED_WEBHOOK_SECRET');
-    } catch (_) { /* Secret not configured — reject */ }
+    } catch (err) { console.error('[http-functions] stampedWebhook: failed to fetch STAMPED_WEBHOOK_SECRET:', err); }
 
     const requestSecret = request.headers['x-stamped-secret'] || request.headers['x-stamped-webhook-secret'];
     if (!webhookSecret || !requestSecret || !timingSafeEqual(requestSecret, webhookSecret)) {
@@ -1029,8 +1029,15 @@ export async function post_stampedWebhook(request) {
     const { ingestStampedReview } = await import('backend/reviewModeration.web');
     const result = await ingestStampedReview(reviewData);
 
+    if (!result.success) {
+      return serverError({
+        body: JSON.stringify({ error: result.error || 'Review ingestion failed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return ok({
-      body: JSON.stringify({ success: result.success, reviewId: result.reviewId, status: result.status, event }),
+      body: JSON.stringify({ success: true, reviewId: result.reviewId, status: result.status, event }),
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
