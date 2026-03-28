@@ -334,7 +334,7 @@ describe('reviewPriceMatchRequest', () => {
 describe('getCompetitorSources', () => {
   it('returns list of approved competitors', async () => {
     const r = await mod.getCompetitorSources();
-    expect(r.competitors.length).toBe(10);
+    expect(r.competitors.length).toBe(11);
     expect(r.competitors[0]).toHaveProperty('name');
     expect(r.competitors[0]).toHaveProperty('domain');
   });
