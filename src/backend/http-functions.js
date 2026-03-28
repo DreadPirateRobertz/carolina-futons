@@ -2357,3 +2357,43 @@ export async function get_cmsGarbageCollect(request) {
     });
   }
 }
+
+
+// ── Monthly Loyalty Statement Batch Send (CF-zo4k) ───────────────────
+// URL: GET https://www.carolinafutons.com/_functions/sendMonthlyLoyaltyStatements
+// Schedule 1st of each month via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_sendMonthlyLoyaltyStatements(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const { sendMonthlyLoyaltyStatements } = await import('backend/loyaltyMarketing.web');
+    const result = await sendMonthlyLoyaltyStatements();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        sent: result.sent,
+        errors: result.errors,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (sendMonthlyLoyaltyStatements):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
