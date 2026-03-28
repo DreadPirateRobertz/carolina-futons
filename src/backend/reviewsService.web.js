@@ -224,6 +224,7 @@ export const submitReview = webMethod(
       const emailQueueId = data.emailQueueId ? sanitize(data.emailQueueId, 50) : '';
       if (emailQueueId) {
         recordEmailEvent({ emailQueueId, eventType: 'conversion' })
+          .then(res => { if (!res?.success) console.warn('[reviewsService] email conversion not recorded for queue', emailQueueId); })
           .catch(err => console.warn('[reviewsService] email conversion record failed:', err));
       }
 

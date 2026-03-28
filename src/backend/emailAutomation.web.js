@@ -437,6 +437,7 @@ export const triggerPostPurchaseSequence = webMethod(
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
       // CF-fzsd: deep-link to product review form using slug from first purchased item
       const primarySlug = sanitize((lineItems || []).find(i => i.slug)?.slug || '', 200);
+      if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
       const reviewUrl = primarySlug
         ? `${SITE_URL}/product-page/${primarySlug}#reviews`
         : `${SITE_URL}/member-page#reviews`;
@@ -1558,14 +1559,15 @@ export const getCampaignAnalytics = webMethod(
         .find();
       const events = eventsResult.items || [];
 
-      // Build event lookup: emailQueueId → { opens, clicks }
+      // Build event lookup: emailQueueId → { opens, clicks, conversions }
       const eventsByEmail = {};
       for (const evt of events) {
         if (!eventsByEmail[evt.emailQueueId]) {
-          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0 };
+          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0, conversions: 0 };
         }
         if (evt.eventType === 'open') eventsByEmail[evt.emailQueueId].opens++;
-        if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'conversion') eventsByEmail[evt.emailQueueId].conversions++;
       }
 
       // 3. Build per-campaign stats
@@ -1573,7 +1575,7 @@ export const getCampaignAnalytics = webMethod(
       for (const email of emails) {
         const seq = email.sequenceType || 'unknown';
         if (!campaigns[seq]) {
-          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0 };
+          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0, conversions: 0 };
         }
         campaigns[seq][email.status] = (campaigns[seq][email.status] || 0) + 1;
 
@@ -1581,6 +1583,7 @@ export const getCampaignAnalytics = webMethod(
         if (emailEvents) {
           campaigns[seq].opens += emailEvents.opens;
           campaigns[seq].clicks += emailEvents.clicks;
+          campaigns[seq].conversions += emailEvents.conversions;
         }
       }
 
@@ -1589,6 +1592,7 @@ export const getCampaignAnalytics = webMethod(
         const c = campaigns[seq];
         c.openRate = c.sent > 0 ? c.opens / c.sent : 0;
         c.clickRate = c.sent > 0 ? c.clicks / c.sent : 0;
+        c.conversionRate = c.sent > 0 ? c.conversions / c.sent : 0;
       }
 
       // 4. Sequence completion rates
