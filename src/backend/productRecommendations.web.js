@@ -675,6 +675,46 @@ export const getCustomersAlsoBought = webMethod(
   }
 );
 
+/**
+ * Batch-fetch current prices for a list of product slugs.
+ * Used by recently viewed sections to detect stale cached prices.
+ * Returns a map of slug → { price, formattedPrice, formattedDiscountedPrice }.
+ *
+ * @param {string[]} slugs - Product slugs to check (max 20)
+ * @returns {Promise<{success: boolean, prices: Object}>}
+ */
+export const getBatchCurrentPrices = webMethod(
+  Permissions.Anyone,
+  async (slugs) => {
+    try {
+      if (!Array.isArray(slugs) || slugs.length === 0) {
+        return { success: true, prices: {} };
+      }
+      const safeSlugs = slugs.slice(0, 20).filter(s => typeof s === 'string' && validateSlug(s));
+      if (safeSlugs.length === 0) return { success: true, prices: {} };
+
+      const result = await wixData.query('Stores/Products')
+        .hasSome('slug', safeSlugs)
+        .fields('slug', 'price', 'formattedPrice', 'formattedDiscountedPrice')
+        .limit(20)
+        .find();
+
+      const prices = {};
+      for (const item of result.items) {
+        prices[item.slug] = {
+          price: item.price,
+          formattedPrice: item.formattedPrice,
+          formattedDiscountedPrice: item.formattedDiscountedPrice || null,
+        };
+      }
+      return { success: true, prices };
+    } catch (err) {
+      console.error('[productRecommendations] getBatchCurrentPrices error:', err?.message);
+      return { success: false, prices: {} };
+    }
+  }
+);
+
 function formatProduct(item) {
   return {
     _id: item._id,

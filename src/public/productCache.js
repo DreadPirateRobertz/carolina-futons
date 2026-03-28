@@ -36,6 +36,7 @@ export function cacheProduct(product) {
       slug: product.slug,
       price: product.price,
       formattedPrice: product.formattedPrice,
+      formattedDiscountedPrice: product.formattedDiscountedPrice || null,
       mainMedia: product.mainMedia,
       description: product.description,
       collections: product.collections,

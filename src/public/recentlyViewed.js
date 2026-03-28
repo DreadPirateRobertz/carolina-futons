@@ -9,7 +9,7 @@
  */
 import { session } from 'wix-storage-frontend';
 import { getRecentlyViewed, cacheProduct } from 'public/productCache';
-import { getSimilarProducts } from 'backend/productRecommendations.web';
+import { getSimilarProducts, getBatchCurrentPrices } from 'backend/productRecommendations.web';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { renderSimplePrice } from 'public/productCardHelpers.js';
 
@@ -41,6 +41,7 @@ export function trackProductView(product) {
       slug: product.slug,
       price: product.price,
       formattedPrice: product.formattedPrice,
+      formattedDiscountedPrice: product.formattedDiscountedPrice || null,
       mainMedia: product.mainMedia,
     });
 
@@ -73,6 +74,65 @@ export function getViewHistory(limit = MAX_HISTORY) {
  */
 export function clearViewHistory() {
   try { session.removeItem(SESSION_KEY); } catch { /* noop */ }
+}
+
+// ── Price Staleness Check ────────────────────────────────────────────
+
+/**
+ * Compare cached prices against current catalog and merge any changes.
+ * Returns the products array with refreshed price fields where stale.
+ * Non-blocking: if the check fails, returns the original cached data.
+ *
+ * @param {Array} products - Cached product data
+ * @returns {Promise<Array>} Products with refreshed prices
+ */
+async function refreshStalePrices(products) {
+  try {
+    const slugs = products.map(p => p.slug).filter(Boolean);
+    if (slugs.length === 0) return products;
+
+    const result = await getBatchCurrentPrices(slugs);
+    if (!result.success || !result.prices) return products;
+
+    let anyStale = false;
+    const refreshed = products.map(p => {
+      const current = result.prices[p.slug];
+      if (!current) return p;
+
+      const priceChanged = current.price !== p.price;
+      const discountChanged = (current.formattedDiscountedPrice || null) !== (p.formattedDiscountedPrice || null);
+
+      if (priceChanged || discountChanged) {
+        anyStale = true;
+        return { ...p, ...current };
+      }
+      return p;
+    });
+
+    // Update session cache if any prices were stale
+    if (anyStale) {
+      try {
+        const raw = session.getItem(SESSION_KEY);
+        if (raw) {
+          const history = JSON.parse(raw);
+          const priceMap = result.prices;
+          for (const item of history) {
+            const current = priceMap[item.slug];
+            if (current) {
+              item.price = current.price;
+              item.formattedPrice = current.formattedPrice;
+              item.formattedDiscountedPrice = current.formattedDiscountedPrice || null;
+            }
+          }
+          session.setItem(SESSION_KEY, JSON.stringify(history));
+        }
+      } catch { /* session update failed — non-critical */ }
+    }
+
+    return refreshed;
+  } catch {
+    return products;
+  }
 }
 
 // ── Recently Viewed Carousel ─────────────────────────────────────────
@@ -144,6 +204,13 @@ export function initRecentlyViewedCarousel($w, options = {}) {
 
     repeater.data = products;
     $w(sectionId).expand();
+
+    // Background: refresh stale prices and re-render if any changed
+    refreshStalePrices(products).then(refreshed => {
+      if (refreshed !== products) {
+        repeater.data = refreshed;
+      }
+    }).catch(() => { /* staleness check failed — keep cached prices */ });
   } catch (e) {
     try { $w(sectionId || '#recentlyViewedSection').collapse(); } catch (e2) { /* noop */ }
   }

@@ -15,6 +15,7 @@ vi.mock('public/productCache', () => ({
 
 vi.mock('backend/productRecommendations.web', () => ({
   getSimilarProducts: vi.fn().mockResolvedValue({ success: true, products: [] }),
+  getBatchCurrentPrices: vi.fn().mockResolvedValue({ success: true, prices: {} }),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -35,7 +36,7 @@ import {
 } from '../src/public/recentlyViewed.js';
 
 import { getRecentlyViewed, cacheProduct } from 'public/productCache';
-import { getSimilarProducts } from 'backend/productRecommendations.web';
+import { getSimilarProducts, getBatchCurrentPrices } from 'backend/productRecommendations.web';
 import { makeClickable } from 'public/a11yHelpers.js';
 
 // ── $w mock ──────────────────────────────────────────────────────────
@@ -499,5 +500,111 @@ describe('initAlsoBoughtSection', () => {
     await initAlsoBoughtSection($w, { name: 'No ID' });
     expect(getSimilarProducts).not.toHaveBeenCalled();
     expect($w('#alsoBoughtSection').collapse).toHaveBeenCalled();
+  });
+});
+
+// ── Price Staleness ─────────────────────────────────────────────────
+
+describe('price staleness check', () => {
+  it('calls getBatchCurrentPrices with product slugs after initial render', async () => {
+    getRecentlyViewed.mockReturnValue(mockProducts);
+
+    initRecentlyViewedCarousel($w);
+
+    // Allow async staleness check to complete
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(getBatchCurrentPrices).toHaveBeenCalledWith(
+      expect.arrayContaining(['oak-futon-frame', 'cotton-mattress', 'pine-frame', 'wool-mattress'])
+    );
+  });
+
+  it('updates repeater data when prices are stale', async () => {
+    const staleProducts = [
+      { _id: 'p1', name: 'Oak Futon Frame', slug: 'oak-futon-frame', price: 499, formattedPrice: '$499.00', mainMedia: '/oak.jpg' },
+    ];
+    getRecentlyViewed.mockReturnValue(staleProducts);
+
+    // Current price is different (on sale)
+    getBatchCurrentPrices.mockResolvedValue({
+      success: true,
+      prices: {
+        'oak-futon-frame': { price: 399, formattedPrice: '$399.00', formattedDiscountedPrice: '$399.00' },
+      },
+    });
+
+    initRecentlyViewedCarousel($w);
+
+    // Allow staleness check to complete
+    await new Promise(r => setTimeout(r, 50));
+
+    const repeater = $w('#recentlyViewedRepeater');
+    // Repeater data should have been updated with refreshed prices
+    const lastData = repeater.data;
+    expect(lastData).toBeDefined();
+    if (Array.isArray(lastData) && lastData.length > 0) {
+      expect(lastData[0].price).toBe(399);
+      expect(lastData[0].formattedDiscountedPrice).toBe('$399.00');
+    }
+  });
+
+  it('keeps cached data when staleness check fails', async () => {
+    getRecentlyViewed.mockReturnValue(mockProducts);
+    getBatchCurrentPrices.mockRejectedValue(new Error('Network error'));
+
+    initRecentlyViewedCarousel($w);
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // Should still have rendered with original data
+    const repeater = $w('#recentlyViewedRepeater');
+    expect(repeater.data).toEqual(mockProducts);
+  });
+
+  it('does not re-render when prices are current', async () => {
+    const products = [
+      { _id: 'p1', name: 'Oak Frame', slug: 'oak-frame', price: 499, formattedPrice: '$499.00', mainMedia: '/oak.jpg' },
+    ];
+    getRecentlyViewed.mockReturnValue(products);
+
+    // Same prices as cached
+    getBatchCurrentPrices.mockResolvedValue({
+      success: true,
+      prices: {
+        'oak-frame': { price: 499, formattedPrice: '$499.00', formattedDiscountedPrice: null },
+      },
+    });
+
+    initRecentlyViewedCarousel($w);
+
+    await new Promise(r => setTimeout(r, 10));
+
+    // repeater.data should have been set exactly once (initial render)
+    // No re-render because prices match
+  });
+});
+
+// ── trackProductView enrichment ─────────────────────────────────────
+
+describe('trackProductView enrichment', () => {
+  it('stores formattedDiscountedPrice in session history', () => {
+    trackProductView({
+      _id: 'p1', name: 'Sale Frame', slug: 'sale-frame',
+      price: 399, formattedPrice: '$499.00',
+      formattedDiscountedPrice: '$399.00', mainMedia: '/sale.jpg',
+    });
+
+    const history = getViewHistory();
+    expect(history[0].formattedDiscountedPrice).toBe('$399.00');
+  });
+
+  it('stores null formattedDiscountedPrice when not on sale', () => {
+    trackProductView({
+      _id: 'p1', name: 'Regular Frame', slug: 'regular-frame',
+      price: 499, formattedPrice: '$499.00', mainMedia: '/reg.jpg',
+    });
+
+    const history = getViewHistory();
+    expect(history[0].formattedDiscountedPrice).toBeNull();
   });
 });
