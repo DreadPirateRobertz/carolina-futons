@@ -50,6 +50,24 @@ const INTAKE_ENUMS = {
   timeline: ['within-week', 'within-month', 'browsing'],
   painPoint: ['price', 'space', 'comfort', 'style', 'assembly'],
 };
+const REQUIRED_INTAKE_FIELDS = Object.keys(INTAKE_ENUMS).filter(k => k !== 'painPoint');
+
+/**
+ * Validate consultationId and verify booking ownership.
+ * Returns { cleanId, memberId } on success, or { error } on failure.
+ */
+async function resolveOwnedBooking(consultationId) {
+  const memberId = await requireMember();
+  const cleanId = validateId(consultationId);
+  if (!cleanId) {
+    return { error: 'Consultation ID is required.' };
+  }
+  const booking = await wixData.get('ConsultationBookings', cleanId);
+  if (!booking || booking.memberId !== memberId) {
+    return { error: 'Consultation not found.' };
+  }
+  return { cleanId, memberId };
+}
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -524,21 +542,18 @@ export const submitConsultationIntake = webMethod(
   Permissions.SiteMember,
   async (consultationId, data) => {
     try {
-      const memberId = await requireMember();
-
-      const cleanId = validateId(consultationId);
-      if (!cleanId) {
-        return { success: false, error: 'Consultation ID is required.' };
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
       }
+      const { cleanId, memberId } = resolved;
 
-      const booking = await wixData.get('ConsultationBookings', cleanId);
-      if (!booking || booking.memberId !== memberId) {
-        return { success: false, error: 'Consultation not found.' };
+      if (!data || typeof data !== 'object') {
+        return { success: false, error: 'Intake data is required.' };
       }
 
       // Validate required enum fields
-      const REQUIRED_ENUMS = ['roomType', 'roomSize', 'primaryUse', 'stylePreference', 'budget', 'timeline'];
-      for (const field of REQUIRED_ENUMS) {
+      for (const field of REQUIRED_INTAKE_FIELDS) {
         const value = data?.[field];
         if (!value || !INTAKE_ENUMS[field].includes(value)) {
           return { success: false, error: `Invalid or missing ${field}.` };
@@ -549,30 +564,29 @@ export const submitConsultationIntake = webMethod(
       if (data.description && data.description.length > 200) {
         return { success: false, error: 'description must be 200 characters or fewer.' };
       }
-      const description = sanitize(data.description || '', 200);
 
       // Validate optional painPoint
-      let painPoint = null;
-      if (data.painPoint != null && data.painPoint !== '') {
-        if (!INTAKE_ENUMS.painPoint.includes(data.painPoint)) {
-          return { success: false, error: `Invalid painPoint.` };
-        }
-        painPoint = data.painPoint;
+      if (data.painPoint && !INTAKE_ENUMS.painPoint.includes(data.painPoint)) {
+        return { success: false, error: 'Invalid painPoint.' };
       }
 
       const record = {
         consultationId: cleanId,
         memberId,
-        roomType: data.roomType,
-        roomSize: data.roomSize,
-        primaryUse: data.primaryUse,
-        stylePreference: data.stylePreference,
-        budget: data.budget,
-        timeline: data.timeline,
-        description,
-        painPoint,
+        ...Object.fromEntries(REQUIRED_INTAKE_FIELDS.map(f => [f, data[f]])),
+        description: sanitize(data.description || '', 200),
+        painPoint: data.painPoint || null,
         createdAt: new Date(),
       };
+
+      const existing = await wixData.query('ConsultationIntake')
+        .eq('consultationId', cleanId)
+        .find();
+
+      if (existing.items.length > 0) {
+        const saved = await wixData.update('ConsultationIntake', { ...existing.items[0], ...record });
+        return { success: true, intakeId: saved._id };
+      }
 
       const inserted = await wixData.insert('ConsultationIntake', record);
       return { success: true, intakeId: inserted._id };
@@ -596,24 +610,19 @@ export const getConsultationIntake = webMethod(
   Permissions.SiteMember,
   async (consultationId) => {
     try {
-      const memberId = await requireMember();
-
-      const cleanId = validateId(consultationId);
-      if (!cleanId) {
-        return { success: false, error: 'Consultation ID is required.' };
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
       }
 
-      const booking = await wixData.get('ConsultationBookings', cleanId);
-      if (!booking || booking.memberId !== memberId) {
-        return { success: false, error: 'Consultation not found.' };
-      }
+      const { cleanId, memberId } = resolved;
 
       const result = await wixData.query('ConsultationIntake')
         .eq('consultationId', cleanId)
+        .eq('memberId', memberId)
         .find();
 
-      const intake = result.items.length > 0 ? result.items[0] : null;
-      return { success: true, intake };
+      return { success: true, intake: result.items[0] ?? null };
     } catch (err) {
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData, __getInserted } from './__mocks__/wix-data.js';
+import { __seed, __reset as resetData, __getInserted, __getUpdated } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   getDesigners,
@@ -681,6 +681,29 @@ describe('submitConsultationIntake', () => {
     });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/description/i);
+    expect(__getInserted('ConsultationIntake')).toHaveLength(0);
+  });
+
+  it('rejects null data', async () => {
+    const result = await submitConsultationIntake('booking-1', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/intake data/i);
+  });
+
+  it('updates existing intake on re-submit (upsert)', async () => {
+    __seed('ConsultationIntake', [
+      { _id: 'intake-existing', consultationId: 'booking-1', memberId: 'member-1',
+        roomType: 'bedroom', roomSize: 'small', primaryUse: 'occasional-guest',
+        stylePreference: 'rustic', budget: 'under-500', timeline: 'browsing',
+        description: 'Old description', painPoint: null, createdAt: new Date() },
+    ]);
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, roomType: 'office' });
+    expect(result.success).toBe(true);
+    expect(result.intakeId).toBeTruthy();
+    // Should update existing record, not insert a new one
+    const updated = __getUpdated('ConsultationIntake');
+    expect(updated).toHaveLength(1);
+    expect(updated[0].roomType).toBe('office');
   });
 
   it('rejects invalid painPoint enum value', async () => {
