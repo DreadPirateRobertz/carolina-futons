@@ -488,8 +488,139 @@ function safeParseArray(jsonStr) {
   }
 }
 
+// ── SommelierResults — Cross-Platform Quiz Sync (CF-a220) ──────────
+
+const RESULTS_COLLECTION = 'SommelierResults';
+
+/**
+ * Record or update a style quiz result for a member.
+ * Upserts into SommelierResults CMS collection. Called by mobile app
+ * after style quiz completion to sync results to web.
+ *
+ * @param {string} memberId - Wix member ID (must match session member)
+ * @param {Object} result
+ * @param {string} result.topCategory - Primary style category (e.g. 'modern', 'rustic')
+ * @param {string[]} result.flavors - Style flavor tags (e.g. ['minimalist', 'warm'])
+ * @param {Array<{productId: string, productName: string, score: number}>} result.recommendations
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const recordSommelierResult = webMethod(
+  Permissions.SiteMember,
+  async (memberId, { topCategory, flavors, recommendations } = {}) => {
+    try {
+      if (!memberId) return { success: false, error: 'memberId is required' };
+
+      // Ownership check — prevent IDOR
+      const { currentMember } = await import('wix-members-backend');
+      const caller = await currentMember.getMember();
+      if (!caller?._id || caller._id !== memberId) {
+        return { success: false, error: 'Unauthorized — memberId does not match session' };
+      }
+
+      // Validate payload
+      const cleanCategory = sanitize(topCategory, 100);
+      if (!cleanCategory) return { success: false, error: 'topCategory is required' };
+
+      const cleanFlavors = (Array.isArray(flavors) ? flavors : [])
+        .slice(0, 10)
+        .map(f => sanitize(f, 50))
+        .filter(Boolean);
+
+      const cleanRecs = (Array.isArray(recommendations) ? recommendations : [])
+        .slice(0, MAX_RECOMMENDATIONS)
+        .map(r => ({
+          productId: sanitize(r.productId, 50),
+          productName: sanitize(r.productName, 200),
+          score: typeof r.score === 'number' ? Math.round(r.score * 100) / 100 : 0,
+        }))
+        .filter(r => r.productId);
+
+      // Upsert — update if exists, insert if new
+      const existing = await wixData.query(RESULTS_COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      const data = {
+        memberId,
+        topCategory: cleanCategory,
+        flavors: JSON.stringify(cleanFlavors),
+        recommendations: JSON.stringify(cleanRecs),
+        updatedAt: new Date(),
+      };
+
+      if (existing.items.length > 0) {
+        await wixData.update(RESULTS_COLLECTION, {
+          ...existing.items[0],
+          ...data,
+        }, { suppressAuth: true });
+      } else {
+        await wixData.insert(RESULTS_COLLECTION, {
+          ...data,
+          createdAt: new Date(),
+        }, { suppressAuth: true });
+      }
+
+      logAuditEvent(RESULTS_COLLECTION, 'record', memberId, {
+        topCategory: cleanCategory,
+        flavorCount: cleanFlavors.length,
+        recCount: cleanRecs.length,
+      });
+
+      return { success: true };
+    } catch (err) {
+      logError('futonSommelier.recordSommelierResult', err);
+      return { success: false, error: 'Failed to record result' };
+    }
+  }
+);
+
+/**
+ * Get stored quiz results for a member.
+ * @param {string} memberId
+ * @returns {Promise<{success: boolean, result?: Object}>}
+ */
+export const getSommelierResults = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    try {
+      if (!memberId) return { success: false };
+
+      const { currentMember } = await import('wix-members-backend');
+      const caller = await currentMember.getMember();
+      if (!caller?._id || caller._id !== memberId) return { success: false };
+
+      const existing = await wixData.query(RESULTS_COLLECTION)
+        .eq('memberId', memberId)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (existing.items.length === 0) return { success: true, result: null };
+
+      const item = existing.items[0];
+      return {
+        success: true,
+        result: {
+          topCategory: item.topCategory,
+          flavors: safeParse(item.flavors),
+          recommendations: safeParse(item.recommendations),
+          updatedAt: item.updatedAt,
+        },
+      };
+    } catch (err) {
+      logError('futonSommelier.getSommelierResults', err);
+      return { success: false };
+    }
+  }
+);
+
+function safeParse(str) {
+  try { return typeof str === 'string' ? JSON.parse(str) : (str || []); } catch (_) { return []; }
+}
+
 // ── Exports for testing ─────────────────────────────────────────────
 export { scoreProducts as _scoreProducts };
 export { matchesTrait as _matchesTrait };
 export { matchesBudget as _matchesBudget };
 export { generateReasoning as _generateReasoning };
+export const _RESULTS_COLLECTION = RESULTS_COLLECTION;

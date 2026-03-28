@@ -4,7 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getInserted, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 
 beforeEach(() => {
   __reset();
@@ -433,5 +434,143 @@ describe('_generateReasoning — additional branches', () => {
       [],
     );
     expect(result).not.toContain('pet');
+  });
+});
+
+// ── recordSommelierResult (CF-a220) ─────────────────────────────────
+
+describe('recordSommelierResult', () => {
+  let recordSommelierResult, getSommelierResults, _RESULTS_COLLECTION;
+
+  beforeEach(async () => {
+    __reset();
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Sarah' } });
+    ({ recordSommelierResult, getSommelierResults, _RESULTS_COLLECTION } =
+      await import('../src/backend/futonSommelier.web.js'));
+  });
+
+  it('inserts a new result for a member', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'SommelierResults') inserted = item; });
+
+    const result = await recordSommelierResult('member-1', {
+      topCategory: 'modern',
+      flavors: ['minimalist', 'warm'],
+      recommendations: [
+        { productId: 'prod-1', productName: 'Kodiak Frame', score: 0.95 },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+    expect(inserted).not.toBeNull();
+    expect(inserted.topCategory).toBe('modern');
+    expect(JSON.parse(inserted.flavors)).toEqual(['minimalist', 'warm']);
+    expect(JSON.parse(inserted.recommendations)).toHaveLength(1);
+  });
+
+  it('upserts — updates existing result instead of duplicating', async () => {
+    __seed('SommelierResults', [{
+      _id: 'existing-1', memberId: 'member-1',
+      topCategory: 'rustic', flavors: '["farmhouse"]',
+      recommendations: '[]', updatedAt: new Date('2026-03-01'),
+    }]);
+
+    let updated = null;
+    __onUpdate((col, item) => { if (col === 'SommelierResults') updated = item; });
+
+    const result = await recordSommelierResult('member-1', {
+      topCategory: 'modern',
+      flavors: ['clean-line'],
+      recommendations: [],
+    });
+
+    expect(result.success).toBe(true);
+    expect(updated).not.toBeNull();
+    expect(updated.topCategory).toBe('modern');
+    expect(updated._id).toBe('existing-1');
+  });
+
+  it('rejects when memberId does not match session', async () => {
+    const result = await recordSommelierResult('member-999', {
+      topCategory: 'modern', flavors: [], recommendations: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/unauthorized/i);
+  });
+
+  it('rejects without memberId', async () => {
+    const result = await recordSommelierResult(null, {
+      topCategory: 'modern', flavors: [], recommendations: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('memberId');
+  });
+
+  it('rejects without topCategory', async () => {
+    const result = await recordSommelierResult('member-1', {
+      topCategory: '', flavors: [], recommendations: [],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('topCategory');
+  });
+
+  it('caps flavors at 10 and recommendations at 5', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'SommelierResults') inserted = item; });
+
+    const manyFlavors = Array.from({ length: 20 }, (_, i) => `flavor-${i}`);
+    const manyRecs = Array.from({ length: 10 }, (_, i) => ({
+      productId: `prod-${i}`, productName: `Product ${i}`, score: 0.5,
+    }));
+
+    await recordSommelierResult('member-1', {
+      topCategory: 'eclectic',
+      flavors: manyFlavors,
+      recommendations: manyRecs,
+    });
+
+    expect(JSON.parse(inserted.flavors)).toHaveLength(10);
+    expect(JSON.parse(inserted.recommendations)).toHaveLength(5);
+  });
+});
+
+// ── getSommelierResults (CF-a220) ────────────────────────────────────
+
+describe('getSommelierResults', () => {
+  let getSommelierResults;
+
+  beforeEach(async () => {
+    __reset();
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Sarah' } });
+    ({ getSommelierResults } = await import('../src/backend/futonSommelier.web.js'));
+  });
+
+  it('returns stored results for a member', async () => {
+    __seed('SommelierResults', [{
+      _id: 'res-1', memberId: 'member-1',
+      topCategory: 'modern', flavors: '["minimalist"]',
+      recommendations: '[{"productId":"p1","productName":"Frame","score":0.9}]',
+      updatedAt: new Date(),
+    }]);
+
+    const result = await getSommelierResults('member-1');
+    expect(result.success).toBe(true);
+    expect(result.result.topCategory).toBe('modern');
+    expect(result.result.flavors).toEqual(['minimalist']);
+    expect(result.result.recommendations).toHaveLength(1);
+  });
+
+  it('returns null result for member with no quiz data', async () => {
+    const result = await getSommelierResults('member-1');
+    expect(result.success).toBe(true);
+    expect(result.result).toBeNull();
+  });
+
+  it('rejects unauthorized read', async () => {
+    const result = await getSommelierResults('member-999');
+    expect(result.success).toBe(false);
   });
 });
