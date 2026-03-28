@@ -226,6 +226,11 @@ async function initProductPage() {
         const m = await import('public/ProductAssemblyGuide.js');
         await m.initProductAssemblyGuide($w, state);
       }, critical: false },
+      // CF-ke61: Assembly help CTA — white glove, TaskRabbit, video (Medium/Expert only)
+      { name: 'assemblyCTA', init: async () => {
+        const m = await import('public/AssemblyCTA.js');
+        await m.initAssemblyCTA($w, state);
+      }, critical: false },
       // Size guide modal (lazy-loads ProductSizeGuide components on open)
       { name: 'sizeGuide', init: async () => {
         const m = await import('public/SizeGuideModal.js');
