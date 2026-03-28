@@ -436,7 +436,7 @@ export const triggerPostPurchaseSequence = webMethod(
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
       // CF-fzsd: deep-link to product review form using slug from first purchased item
-      const primarySlug = (lineItems || []).find(i => i.slug)?.slug || '';
+      const primarySlug = sanitize((lineItems || []).find(i => i.slug)?.slug || '', 200);
       const reviewUrl = primarySlug
         ? `${SITE_URL}/product-page/${primarySlug}#reviews`
         : `${SITE_URL}/member-page#reviews`;
@@ -983,7 +983,7 @@ export const getEmailAutomationStats = webMethod(
  * @function recordEmailEvent
  * @param {Object} params
  * @param {string} params.emailQueueId - ID of the EmailQueue record
- * @param {string} params.eventType - 'open' or 'click'
+ * @param {string} params.eventType - 'open', 'click', or 'conversion'
  * @param {string} [params.linkUrl] - Clicked link URL (for click events)
  * @returns {Promise<{success: boolean}>}
  * @permission Anyone — tracking pixels/links fire without auth
@@ -995,7 +995,8 @@ export const recordEmailEvent = webMethod(
       const { emailQueueId, eventType, linkUrl } = params;
 
       if (!emailQueueId || !eventType) return { success: false };
-      if (eventType !== 'open' && eventType !== 'click' && eventType !== 'conversion') return { success: false };
+      const VALID_EVENT_TYPES = new Set(['open', 'click', 'conversion']);
+      if (!VALID_EVENT_TYPES.has(eventType)) return { success: false };
 
       const cleanId = sanitize(emailQueueId, 50);
       const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
@@ -1049,9 +1050,12 @@ export const getEmailEvents = webMethod(
         events = events.filter(e => queueIds.has(e.emailQueueId));
       }
 
-      const opens = events.filter(e => e.eventType === 'open').length;
-      const clicks = events.filter(e => e.eventType === 'click').length;
-      const conversions = events.filter(e => e.eventType === 'conversion').length;
+      let opens = 0, clicks = 0, conversions = 0;
+      for (const e of events) {
+        if (e.eventType === 'open') opens++;
+        else if (e.eventType === 'click') clicks++;
+        else if (e.eventType === 'conversion') conversions++;
+      }
 
       return {
         opens,
@@ -1067,7 +1071,7 @@ export const getEmailEvents = webMethod(
       };
     } catch (err) {
       console.error('Error fetching email events:', err);
-      return { opens: 0, clicks: 0, events: [] };
+      return { opens: 0, clicks: 0, conversions: 0, events: [] };
     }
   }
 );
