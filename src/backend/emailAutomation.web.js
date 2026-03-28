@@ -134,7 +134,7 @@ export function wixEcom_onOrderCreated(event) {
     name: item.name || item.productName?.original || '',
     quantity: item.quantity || 1,
     price: item.price || item.price?.amount || 0,
-    slug: item.url?.relativePath?.replace('/product-page/', '') || '', // CF-fzsd
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '',
   }));
 
   if (!email) return;
@@ -435,7 +435,7 @@ export const triggerPostPurchaseSequence = webMethod(
 
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
-      // CF-fzsd: deep-link to product review form using slug from first purchased item
+      // Deep-link to product review form: use slug from first line item that has one
       const primarySlug = sanitize((lineItems || []).find(i => i.slug)?.slug || '', 200);
       if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
       const reviewUrl = primarySlug
@@ -552,6 +552,8 @@ export const triggerReviewRewardPrompt = webMethod(
       if (existing.items.length > 0) return { success: false };
 
       const SITE_URL = 'https://www.carolinafutons.com';
+      // Note: this function receives productNames only (no lineItems/slug).
+      // The post-purchase step-2 path uses product slug; this path uses order number.
       const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
       const scheduledFor = new Date(Date.now() + 336 * 60 * 60 * 1000); // 14 days
 
@@ -979,7 +981,7 @@ export const getEmailAutomationStats = webMethod(
 );
 
 /**
- * Record an email open or click event for tracking.
+ * Record an email open, click, or conversion event for tracking.
  *
  * @function recordEmailEvent
  * @param {Object} params
