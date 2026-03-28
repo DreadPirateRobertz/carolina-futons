@@ -196,6 +196,61 @@ describe('logComfortRating', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/failed to log/i);
   });
+
+  it('rejects invalid timelineId format', async () => {
+    const result = await logComfortRating('tl invalid!', 3);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/valid timeline id required/i);
+  });
+
+  it('returns error when timeline not found', async () => {
+    // Nothing seeded — get() returns null
+    const result = await logComfortRating('tl-missing', 3);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/timeline not found/i);
+  });
+
+  it('rejects inactive (completed) timeline', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-done',
+      memberId: 'm1',
+      status: 'complete',
+      comfortLogs: '[]',
+      deliveredAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+    }]);
+    const result = await logComfortRating('tl-done', 4);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/no longer active/i);
+  });
+
+  it('does not re-escalate when already escalated', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-esc',
+      memberId: 'm1',
+      status: 'active',
+      comfortLogs: '[]',
+      supportEscalated: true, // already escalated
+      deliveredAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days
+    }]);
+    const result = await logComfortRating('tl-esc', 2, 'Still hurting');
+    expect(result.success).toBe(true);
+    expect(result.supportEscalated).toBe(true);
+    // supportEscalated flag stays true but the update should NOT re-set it
+    const updated = __getUpdated('ComfortTimelines');
+    expect(updated[0].supportEscalated).toBe(true);
+  });
+
+  it('handles comfortLogs with invalid JSON gracefully', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-badjson',
+      memberId: 'm1',
+      status: 'active',
+      comfortLogs: 'not valid json',
+      deliveredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    }]);
+    const result = await logComfortRating('tl-badjson', 4);
+    expect(result.success).toBe(true);
+  });
 });
 
 // ── getTimeline ─────────────────────────────────────────────────────
@@ -259,6 +314,56 @@ describe('getTimeline', () => {
     const result = await getTimeline('order-x');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/failed to load comfort timeline/i);
+  });
+
+  it('reports crossSellEligible as false when already triggered', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-cs',
+      orderId: 'order-cs',
+      deliveredAt: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000),
+      status: 'complete',
+      comfortLogs: '[]',
+      milestonesCompleted: '[]',
+      crossSellTriggered: true,
+      supportEscalated: false,
+    }]);
+    const result = await getTimeline('order-cs');
+    expect(result.success).toBe(true);
+    expect(result.timeline.crossSellEligible).toBe(false);
+  });
+
+  it('returns nextMilestone as null when delivery is beyond Day 60', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-late',
+      orderId: 'order-late',
+      deliveredAt: new Date(Date.now() - 70 * 24 * 60 * 60 * 1000), // 70 days
+      status: 'complete',
+      comfortLogs: '[]',
+      milestonesCompleted: '[]',
+      crossSellTriggered: false,
+      supportEscalated: false,
+    }]);
+    const result = await getTimeline('order-late');
+    expect(result.success).toBe(true);
+    expect(result.timeline.nextMilestone).toBeNull();
+  });
+
+  it('reports needsCheckIn as false when recently checked in', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-ci',
+      orderId: 'order-ci',
+      deliveredAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days
+      status: 'active',
+      currentDay: 9, // almost same as days since delivery
+      lastCheckIn: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      comfortLogs: '[]',
+      milestonesCompleted: '[]',
+      crossSellTriggered: false,
+      supportEscalated: false,
+    }]);
+    const result = await getTimeline('order-ci');
+    expect(result.success).toBe(true);
+    expect(result.timeline.needsCheckIn).toBe(false);
   });
 });
 
@@ -457,6 +562,44 @@ describe('getMyTimelines', () => {
     const result = await getMyTimelines();
     expect(result.success).toBe(false);
     expect(result.error).toBe('Failed to load timelines');
+  });
+
+  it('needsCheckIn is false when member has a recent check-in within 6 days', async () => {
+    const deliveredAt = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    __setMember({ _id: 'mem-6' });
+    __seed('ComfortTimelines', [{
+      _id: 'tl-ci',
+      memberId: 'mem-6',
+      orderId: 'ord-ci',
+      productName: 'Comfort Mattress',
+      status: 'active',
+      deliveredAt,
+      lastCheckIn: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      currentDay: 9, // delivery was 10 days ago; 10 > 9+6=15 is false → needsCheckIn=false
+      comfortLogs: JSON.stringify([{ rating: 4 }]),
+    }]);
+
+    const result = await getMyTimelines();
+    expect(result.success).toBe(true);
+    expect(result.timelines[0].needsCheckIn).toBe(false);
+  });
+
+  it('lastRating is null when last log entry has no rating field', async () => {
+    const deliveredAt = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    __setMember({ _id: 'mem-7' });
+    __seed('ComfortTimelines', [{
+      _id: 'tl-norating',
+      memberId: 'mem-7',
+      orderId: 'ord-nr',
+      productName: 'Test',
+      status: 'active',
+      deliveredAt,
+      comfortLogs: JSON.stringify([{ day: 3, notes: 'no rating field' }]),
+    }]);
+
+    const result = await getMyTimelines();
+    expect(result.success).toBe(true);
+    expect(result.timelines[0].lastRating).toBeNull();
   });
 });
 
