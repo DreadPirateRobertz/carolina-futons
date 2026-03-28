@@ -14,6 +14,7 @@ export default defineConfig({
       exclude: [
         'src/**/*.d.ts',
         'src/main.tsx', // entry-point boilerplate: ReactDOM.createRoot render call only
+        'src/test/**',  // polecat stubs not under test — excluded from coverage measurement
       ],
       thresholds: {
         statements: 80,
