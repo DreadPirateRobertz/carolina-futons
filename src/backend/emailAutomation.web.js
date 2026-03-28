@@ -58,9 +58,9 @@ const SEQUENCES = {
   },
   cart_recovery: {
     steps: [
-      { step: 1, templateId: 'cart_recovery_1', delayHours: 1, description: 'Reminder with cart preview' },
-      { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Social proof + reviews' },
-      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Discount incentive' },
+      { step: 1, templateId: 'cart_recovery_1', delayHours: 1, description: 'You left something behind — cart contents with images + prices (CF-ji7j)' },
+      { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Still thinking? — urgency (limited stock) + free shipping if threshold met (CF-ji7j)' },
+      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Last chance — 5% recovery coupon, unique per cart, single-use (CF-ji7j)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -100,6 +100,10 @@ const MAX_RETRY_ATTEMPTS = 3;
 // Send window: only deliver emails between these hours (America/New_York).
 // Emails scheduled outside this window are deferred to the next window open.
 const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
+
+// CF-ji7j: Bronze-tier free shipping minimum (default for guest/unknown tier buyers).
+// Carts at or above this total qualify for the free shipping note in step 2.
+const CART_FREE_SHIPPING_THRESHOLD = 150;
 
 // ── Event Handlers (auto-register in backend/) ───────────────────────
 
@@ -690,6 +694,17 @@ export const triggerAbandonedCartRecovery = webMethod(
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
+        // CF-ji7j: structured cart items for step 1 template (name + price per item)
+        const cartItems = parsedItems.map(i => ({
+          name: i.name || '',
+          price: String(i.price || 0),
+          imageUrl: i.imageUrl || '',
+          quantity: i.quantity || 1,
+        }));
+
+        const cartTotalNum = Number(cart.cartTotal) || 0;
+        const qualifiesForFreeShipping = cartTotalNum >= CART_FREE_SHIPPING_THRESHOLD;
+
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
 
@@ -709,19 +724,40 @@ export const triggerAbandonedCartRecovery = webMethod(
             }
           }
 
+          const variables = {
+            buyerName: cart.buyerName || '',
+            cartTotal: `$${cartTotalNum.toFixed(2)}`,
+            itemSummary,
+            discountCode,
+            discountAvailable,
+            checkoutId: cart.checkoutId,
+            email: cartEmail,
+          };
+
+          // Step 1 (CF-ji7j): cart contents with structured item data for template images+prices
+          if (step.step === 1) {
+            variables.cartItems = cartItems;
+          }
+
+          // Step 2 (CF-ji7j): urgency + free shipping eligibility
+          if (step.step === 2) {
+            variables.stockWarning = true;
+            variables.qualifiesForFreeShipping = qualifiesForFreeShipping;
+            variables.freeShippingNote = qualifiesForFreeShipping
+              ? 'Your order qualifies for free shipping!'
+              : '';
+          }
+
+          // Step 3 (CF-ji7j): 5% coupon label so template can display "save 5%"
+          if (step.step === 3) {
+            variables.couponPercent = '5';
+          }
+
           await queueEmail({
             templateId: step.templateId,
             recipientEmail: cartEmail,
             recipientContactId: '',
-            variables: {
-              buyerName: cart.buyerName || '',
-              cartTotal: String(cart.cartTotal || 0),
-              itemSummary,
-              discountCode,
-              discountAvailable,
-              checkoutId: cart.checkoutId,
-              email: cartEmail,
-            },
+            variables,
             sequenceType: 'cart_recovery',
             sequenceStep: step.step,
             scheduledFor,
