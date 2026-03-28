@@ -231,7 +231,7 @@ describe('Product Page', () => {
       itemReadyCb($item, mockRelated[0]);
       expect(itemElements['#relatedImage'].src).toBe(mockRelated[0].mainMedia);
       expect(itemElements['#relatedName'].text).toBe(mockRelated[0].name);
-      expect(itemElements['#relatedPrice'].text).toBe(mockRelated[0].formattedPrice);
+      expect(itemElements['#relatedPrice'].text).toBe(mockRelated[0].formattedDiscountedPrice || mockRelated[0].formattedPrice);
     });
   });
 

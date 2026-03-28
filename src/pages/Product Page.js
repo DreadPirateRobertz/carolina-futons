@@ -232,6 +232,11 @@ async function initProductPage() {
         const { initShippingWidget } = await import('public/ShippingWidget.js');
         await initShippingWidget($w, state.product?._id || '');
       }, critical: false },
+      // CF-vu9m: PDP shipping estimate badge — surfaces cost before checkout
+      { name: 'pdpShippingEstimate', init: async () => {
+        const { initPDPShippingEstimate } = await import('public/PDPShippingEstimate.js');
+        await initPDPShippingEstimate($w, state.product);
+      }, critical: false },
       // CF-z64j: Size guide modal — static dimension table
       { name: 'sizeGuide', init: async () => {
         const { initSizeGuide } = await import('public/SizeGuide.js');
