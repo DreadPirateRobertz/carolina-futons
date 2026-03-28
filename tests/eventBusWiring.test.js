@@ -25,15 +25,16 @@ describe('web→mobile event bus — points_earned dispatch', () => {
   it('dispatches points_earned to mobile endpoint after awarding points', async () => {
     __setSecrets({ MOBILE_BUS_URL: 'https://mobile.example.com/bus', BUS_SECRET: 'sec' });
 
-    let dispatched = null;
+    const allDispatched = [];
     __setHandler((url, opts) => {
-      dispatched = { url, body: JSON.parse(opts.body) };
+      allDispatched.push({ url, body: JSON.parse(opts.body) });
       return { ok: true, status: 200 };
     });
 
     await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-wiring-1');
 
-    expect(dispatched).not.toBeNull();
+    const dispatched = allDispatched.find(d => d.body.event === 'points_earned');
+    expect(dispatched).toBeDefined();
     expect(dispatched.url).toBe('https://mobile.example.com/bus');
     expect(dispatched.body.event).toBe('points_earned');
     expect(dispatched.body.userId).toBe('mem-wiring-1');

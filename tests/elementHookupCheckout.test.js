@@ -137,6 +137,7 @@ vi.mock('backend/checkoutOptimization.web', () => ({
   getDeliveryEstimate: vi.fn(),
   calculateOrderSummary: vi.fn(),
   getExpressCheckoutSummary: vi.fn(),
+  trackCheckoutStep: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('backend/protectionPlan.web', () => ({
@@ -166,6 +167,21 @@ vi.mock('wix-window-frontend', () => ({
   default: { onBeforeUnload: vi.fn() },
 }));
 
+vi.mock('public/shippingPrefs', () => ({
+  getStoredZip: vi.fn(() => null),
+  setStoredZip: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('public/CheckoutShippingIntelligence.js', () => ({
+  initCheckoutShippingIntelligence: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('public/DeliveryWindowPicker.js', () => ({
+  initDeliveryWindowPicker: vi.fn(() => Promise.resolve()),
+  hideDeliveryWindowPicker: vi.fn(),
+  isWindowRequiredForCode: vi.fn(() => false),
+}));
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function simulateRepeaterItem(repeaterSel, itemData) {
@@ -182,9 +198,6 @@ function simulateRepeaterItem(repeaterSel, itemData) {
 }
 
 async function loadPage(overrides = {}) {
-  elements.clear();
-  onReadyHandler = null;
-
   const { getCurrentCart } = await import('public/cartService');
   getCurrentCart.mockResolvedValue(overrides.cart ?? {
     lineItems: [{ _id: 'i1', productId: 'p1', name: 'Frame', price: 549.99, quantity: 1 }],
@@ -234,9 +247,10 @@ async function loadPage(overrides = {}) {
     data: { subtotal: 549.99, shipping: { amount: 0 }, tax: 38.50, total: 588.49, itemCount: 1, savings: 0 },
   });
 
-  vi.resetModules();
   await import('../src/pages/Checkout.js');
-  if (onReadyHandler) await onReadyHandler();
+  if (onReadyHandler) {
+    await onReadyHandler();
+  }
   // Allow allSettled to resolve
   await new Promise(r => setTimeout(r, 50));
 }
@@ -246,7 +260,8 @@ async function loadPage(overrides = {}) {
 describe('Checkout — #paymentMethodsRepeater children', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('populates payment methods repeater with data', async () => {
@@ -305,7 +320,8 @@ describe('Checkout — #paymentMethodsRepeater children', () => {
 describe('Checkout — #trustIcon in trust repeater', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('sets ariaHidden on trust icons', async () => {
@@ -335,7 +351,8 @@ describe('Checkout — #trustIcon in trust repeater', () => {
 describe('Checkout — #afterpayMessage/#afterpayInstallment', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('shows afterpay message and installment amount', async () => {
@@ -370,7 +387,8 @@ describe('Checkout — #afterpayMessage/#afterpayInstallment', () => {
 describe('Checkout — #financingMessage/#checkoutFinancing', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('shows financing message when available', async () => {
@@ -404,7 +422,8 @@ describe('Checkout — #financingMessage/#checkoutFinancing', () => {
 describe('Checkout — #checkoutShippingMessage', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('sets shipping message text and ARIA role', async () => {
@@ -422,7 +441,8 @@ describe('Checkout — #checkoutShippingMessage', () => {
 describe('Checkout — shipping options repeater children', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('populates shipping options repeater', async () => {
@@ -530,7 +550,8 @@ describe('Checkout — shipping options repeater children', () => {
 describe('Checkout — address validation elements', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('sets ARIA labels on all address fields', async () => {
@@ -603,7 +624,8 @@ describe('Checkout — address validation elements', () => {
 describe('Checkout — #checkoutProgressNav element hookup', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('sets navigation role and ARIA label on progress nav', async () => {
@@ -659,7 +681,8 @@ describe('Checkout — #checkoutProgressNav element hookup', () => {
 describe('Checkout — #orderNotesToggle / #orderNotesField element hookup', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('collapses notes field initially', async () => {
@@ -700,7 +723,8 @@ describe('Checkout — #orderNotesToggle / #orderNotesField element hookup', () 
 describe('Checkout — #checkoutFreeShipping / #checkoutItemCount', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('hides free shipping element when free shipping is disabled', async () => {
@@ -744,7 +768,8 @@ describe('Checkout — #checkoutFreeShipping / #checkoutItemCount', () => {
 describe('Checkout — #orderSummarySidebar element hookup', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('shows order summary sidebar', async () => {
@@ -776,7 +801,8 @@ describe('Checkout — #orderSummarySidebar element hookup', () => {
 describe('Checkout — #expressCheckoutSection / #expressCheckoutBtn', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('styles express checkout button with coral CTA', async () => {
@@ -812,7 +838,8 @@ describe('Checkout — #expressCheckoutSection / #expressCheckoutBtn', () => {
 describe('Checkout — #checkoutDeliveryEstimate element hookup', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('sets delivery estimate text with date range', async () => {
@@ -840,7 +867,8 @@ describe('Checkout — #checkoutDeliveryEstimate element hookup', () => {
 describe('Checkout — #orderSummaryItemsRepeater children', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('populates order summary items repeater', async () => {
@@ -868,7 +896,8 @@ describe('Checkout — #orderSummaryItemsRepeater children', () => {
 describe('Checkout — address field-level error element hookup', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('hides all field error elements initially', async () => {
@@ -917,7 +946,8 @@ describe('Checkout — address field-level error element hookup', () => {
 describe('Checkout — iteration 5 edge cases', () => {
   beforeEach(() => {
     elements.clear();
-    vi.clearAllMocks();
+    onReadyHandler = null;
+    vi.resetModules();
   });
 
   it('calls applyAutocompleteHints on init', async () => {

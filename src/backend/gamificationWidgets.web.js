@@ -305,6 +305,10 @@ const MILESTONES = [
 export const getMilestones = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
+    const { currentMember } = await import('wix-members-backend');
+    const caller = await currentMember.getMember();
+    if (!caller?._id || caller._id !== memberId) return [];
+
     const [memberResult, reviewResult, wishlistResult] = await Promise.all([
       findMemberRecord(memberId),
       wixData.query('AnalyticsEvents')

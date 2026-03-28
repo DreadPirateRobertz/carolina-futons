@@ -379,6 +379,12 @@ describe('validateTemplateVariables', () => {
       itemSummary: 'Oak Futon',
       checkoutId: 'ck-1',
       email: 'j@e.com',
+      pointsBalance: 500,
+      pointsDiscount: '$5',
+      pointsToEarn: 100,
+      nextTierName: 'Gold',
+      pointsToNextTier: 200,
+      hasLoyalty: true,
     });
     expect(result.valid).toBe(true);
   });

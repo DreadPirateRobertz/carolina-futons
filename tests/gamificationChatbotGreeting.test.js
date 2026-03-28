@@ -16,8 +16,9 @@
  *  - chatWidget (Product Page): successful reply updates #chatResponseText
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
+import { __seed as __seedData, __reset as __resetData } from 'wix-data';
 
 // ── getChatGreeting (backend unit tests) ──────────────────────────────────────
 
@@ -156,7 +157,7 @@ vi.mock('public/galleryHelpers.js', () => ({ trackProductView: vi.fn(), getRecen
 vi.mock('public/productCache', () => ({ cacheProduct: vi.fn(), getCachedProduct: vi.fn() }));
 vi.mock('public/mobileHelpers', () => ({ collapseOnMobile: vi.fn(), initBackToTop: vi.fn(), isMobile: vi.fn(() => false) }));
 vi.mock('public/productPageUtils.js', () => ({ buildGridAlt: vi.fn(() => ''), isCallForPrice: vi.fn(() => false), CALL_FOR_PRICE_TEXT: '' }));
-vi.mock('wix-location-frontend', () => ({ default: { query: {}, path: [] }, to: vi.fn() }));
+vi.mock('wix-location-frontend', () => ({ default: { query: {}, path: ['product-page', 'luna-futon'] }, to: vi.fn() }));
 vi.mock('public/performanceHelpers.js', () => ({ prioritizeSections: vi.fn(async (sections) => { await Promise.allSettled(sections.map(s => s.init())); return { critical: [] }; }) }));
 vi.mock('public/galleryConfig.js', () => ({ getImageDimensions: vi.fn(() => ({ width: 800, height: 600 })), getGalleryConfig: vi.fn(() => ({})) }));
 vi.mock('public/ProductGallery.js', () => ({ initImageGallery: vi.fn(), initProductBadge: vi.fn(), initProductVideo: vi.fn() }));
@@ -177,19 +178,27 @@ vi.mock('public/videoHelpers.js', () => ({ buildYouTubeEmbed: vi.fn(() => '') })
 vi.mock('public/PDPSocialProofBadge.js', () => ({ initPDPSocialProofBadge: vi.fn() }));
 vi.mock('backend/socialProofBadge.web', () => ({ getNeighborCount: vi.fn().mockResolvedValue(0) }));
 vi.mock('backend/errorMonitoring.web', () => ({ logError: vi.fn() }));
+vi.mock('backend/productVideos.web', () => ({ getProductVideos: vi.fn().mockResolvedValue([]) }));
+vi.mock('public/productStructuredData.js', () => ({ initProductStructuredData: vi.fn() }));
 vi.mock('wix-members-frontend', () => ({ authentication: authMocks, currentMember: { getMember: vi.fn() } }));
+
+beforeAll(async () => {
+  await import('../src/pages/Product Page.js');
+});
 
 beforeEach(() => {
   elements.clear();
   vi.clearAllMocks();
+  __resetData();
+  __seedData('Stores/Products', [{ ...MOCK_PRODUCT, slug: MOCK_PRODUCT.slug }]);
   chatbotMocks.getChatGreeting.mockResolvedValue({ enabled: true, greeting: 'Hi! Ask me about this product.' });
   chatbotMocks.chatWithAssistant.mockResolvedValue({ reply: 'Here is the answer.', dailyMessagesRemaining: 19 });
   authMocks.promptLogin.mockResolvedValue(undefined);
 });
 
 async function loadPage() {
-  await import('../src/pages/Product Page.js');
-  if (onReadyHandler) await onReadyHandler();
+  if (!onReadyHandler) throw new Error('Product Page $w.onReady handler was not registered — import failed');
+  await onReadyHandler();
 }
 
 describe('chatWidget — PDP wiring', () => {
