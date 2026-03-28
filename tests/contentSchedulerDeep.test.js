@@ -1,6 +1,6 @@
 // contentSchedulerDeep.test.js — CF-xr0u: Deep coverage for contentScheduler.web.js
-// Edge cases: empty queue, cancelled items, rate limit exceeded, timezone boundaries,
-// dedup window boundaries, mixed status processing, auth, stats edge cases.
+// Edge cases: empty queue, cancelled items, dedup window boundaries, action execution,
+// auth, batch processing, queue filtering, stats edge cases.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
@@ -297,10 +297,10 @@ describe('getScheduleQueue — edge cases', () => {
     expect(result.success).toBe(true);
   });
 
-  it('handles null filters gracefully', async () => {
+  it('returns error for null filters (property access on null caught by error handler)', async () => {
     const result = await getScheduleQueue(null);
-    // null filters causes property access on null → caught by error handler
-    expect(result).toHaveProperty('success');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
   });
 
   it('sanitizes status filter', async () => {
