@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { __seed, __reset as resetData, __getInserted } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   getDesigners,
@@ -287,6 +287,76 @@ describe('bookConsultation', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Authentication');
+  });
+
+  it('stores pre-consultation quiz answers (CF-va6c)', async () => {
+    __seed('Designers', [
+      { _id: 'd-1', name: 'Sarah', specialty: 'living-room', bio: '', avatarUrl: '', isActive: true },
+    ]);
+
+    const result = await bookConsultation({
+      designerId: 'd-1',
+      date: getNextWeekday(),
+      timeSlot: '10:00',
+      consultationType: 'video',
+      quizAnswers: {
+        roomType: 'living-room',
+        budget: '$500-$1000',
+        style: 'modern',
+        roomSize: '12x15',
+        primaryUse: 'daily sleeper',
+      },
+    });
+
+    expect(result.success).toBe(true);
+
+    const bookings = __getInserted('ConsultationBookings');
+    expect(bookings).toHaveLength(1);
+    const quiz = JSON.parse(bookings[0].quizAnswers);
+    expect(quiz.roomType).toBe('living-room');
+    expect(quiz.budget).toBe('$500-$1000');
+    expect(quiz.style).toBe('modern');
+  });
+
+  it('queues confirmation email on booking (CF-va6c)', async () => {
+    __seed('Designers', [
+      { _id: 'd-1', name: 'Sarah', specialty: 'living-room', bio: '', avatarUrl: '', isActive: true },
+    ]);
+
+    await bookConsultation({
+      designerId: 'd-1',
+      date: getNextWeekday(),
+      timeSlot: '14:00',
+      consultationType: 'video',
+      email: 'customer@example.com',
+    });
+
+    const emails = __getInserted('EmailQueue');
+    expect(emails).toHaveLength(1);
+    expect(emails[0].templateId).toBe('consultation_confirmation');
+    expect(emails[0].recipientEmail).toBe('customer@example.com');
+
+    const vars = JSON.parse(emails[0].variables);
+    expect(vars.designerName).toBe('Sarah');
+    expect(vars.timeSlot).toBe('14:00');
+  });
+
+  it('handles missing quiz answers gracefully (CF-va6c)', async () => {
+    __seed('Designers', [
+      { _id: 'd-1', name: 'Sarah', specialty: 'living-room', bio: '', avatarUrl: '', isActive: true },
+    ]);
+
+    const result = await bookConsultation({
+      designerId: 'd-1',
+      date: getNextWeekday(),
+      timeSlot: '10:00',
+      consultationType: 'phone',
+    });
+
+    expect(result.success).toBe(true);
+    const bookings = __getInserted('ConsultationBookings');
+    const quiz = JSON.parse(bookings[0].quizAnswers);
+    expect(Object.keys(quiz)).toHaveLength(0);
   });
 });
 
