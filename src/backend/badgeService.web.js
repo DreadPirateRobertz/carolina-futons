@@ -245,17 +245,22 @@ export const getBatchProductBadges = webMethod(
 export const getWhiteGloveBadge = webMethod(
   Permissions.Anyone,
   (productCategory) => {
-    const category = sanitize(productCategory || '', 100).toLowerCase().trim();
-    if (!category || !_WHITE_GLOVE_CATEGORIES.includes(category)) {
-      return { success: true, badge: null };
+    try {
+      const category = sanitize(productCategory || '', 100).toLowerCase();
+      if (!category || !_WHITE_GLOVE_CATEGORIES.includes(category)) {
+        return { success: true, badge: null };
+      }
+      return {
+        success: true,
+        badge: {
+          ...BADGE_CONFIG.WHITE_GLOVE,
+          type: 'WHITE_GLOVE',
+          linkUrl: '/getting-it-home',
+        },
+      };
+    } catch (err) {
+      console.error('getWhiteGloveBadge error:', err);
+      return { success: false, error: 'Unable to determine white glove eligibility' };
     }
-    return {
-      success: true,
-      badge: {
-        ...BADGE_CONFIG.WHITE_GLOVE,
-        type: 'WHITE_GLOVE',
-        linkUrl: '/getting-it-home',
-      },
-    };
   }
 );

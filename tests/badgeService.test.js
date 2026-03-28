@@ -7,12 +7,14 @@ vi.mock('wix-web-module', () => ({
   webMethod: (_perm, fn) => fn,
 }));
 
+const mockSanitize = vi.fn((str, maxLen = 1000) => {
+  if (typeof str !== 'string') return '';
+  return str.trim().slice(0, maxLen);
+});
+
 vi.mock('backend/utils/sanitize', () => ({
   // Minimal mock: type-gate + length cap only (no HTML regex — real sanitize handles that)
-  sanitize: (str, maxLen = 1000) => {
-    if (typeof str !== 'string') return '';
-    return str.trim().slice(0, maxLen);
-  },
+  sanitize: mockSanitize,
 }));
 
 vi.mock('public/sharedTokens.js', () => ({
@@ -38,11 +40,13 @@ vi.mock('wix-data', () => ({
   default: { query: vi.fn(() => ({ ...mockQueryChain })) },
 }));
 
+export const WHITE_GLOVE_CATEGORIES_LIST = [
+  'futon-frames', 'murphy-cabinet-beds', 'platform-beds',
+  'casegoods-accessories', 'wall-hugger-frames',
+];
+
 vi.mock('backend/deliveryOptions.web', () => ({
-  _WHITE_GLOVE_CATEGORIES: [
-    'futon-frames', 'murphy-cabinet-beds', 'platform-beds',
-    'casegoods-accessories', 'wall-hugger-frames',
-  ],
+  _WHITE_GLOVE_CATEGORIES: WHITE_GLOVE_CATEGORIES_LIST,
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -369,5 +373,17 @@ describe('getWhiteGloveBadge', () => {
       const r = getWhiteGloveBadge(cat);
       expect(r.badge?.type, `expected WHITE_GLOVE for ${cat}`).toBe('WHITE_GLOVE');
     }
+  });
+
+  it('returns error shape and logs when sanitize throws', () => {
+    mockSanitize.mockImplementationOnce(() => { throw new Error('sanitize exploded'); });
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const r = getWhiteGloveBadge('futon-frames');
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/white glove/i);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'getWhiteGloveBadge error:',
+      expect.any(Error),
+    );
   });
 });
