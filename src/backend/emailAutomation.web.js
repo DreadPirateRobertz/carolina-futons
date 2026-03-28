@@ -99,6 +99,11 @@ const SEQUENCES = {
       { step: 2, templateId: 'swatch_followup_decide', delayHours: 240, description: 'Day 10 post-ship: Still deciding? Consultation offer + credit expiry (CF-jm5t)' },
     ],
   },
+  consultation_followup: {
+    steps: [
+      { step: 1, templateId: 'consultation_followup', delayHours: 2, description: 'Post-consultation follow-up: personalized product picks + CONSULT10 discount (CF-tcj5)' },
+    ],
+  },
 };
 
 // Maximum retry attempts for failed emails
@@ -691,6 +696,81 @@ export const triggerReviewRewardPrompt = webMethod(
     } catch (err) {
       console.error('[CF-qy79] Error queuing review reward prompt:', err);
       return { success: false };
+    }
+  }
+);
+
+// CF-tcj5: Consultation discount code (7-day expiry on each follow-up)
+const CONSULT_DISCOUNT_CODE = 'CONSULT10';
+
+/**
+ * Queue post-consultation follow-up email with personalized product picks.
+ * Triggered 2h after consultation end by addConsultationNotes in virtualConsultation.web.js.
+ *
+ * @param {string} contactId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {Object} opts
+ * @param {string}   opts.designerName - name of the designer who ran the consultation
+ * @param {string[]} opts.productIds - product IDs to feature in email (up to 5)
+ * @param {string}   [opts.notes] - optional consultation notes
+ * @param {Object}   [opts.quizAnswers] - intake form answers { roomType, budget }
+ * @returns {Promise<{success: boolean, queued: number}>}
+ */
+export const triggerConsultationFollowup = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, opts) => {
+    try {
+      const cleanEmail = (email || '').toLowerCase().trim();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanName = sanitize(firstName || '', 100).trim();
+      const safeOpts = (opts && typeof opts === 'object') ? opts : {};
+      const designerName = sanitize(safeOpts.designerName || '', 100).trim();
+      const productIds = (Array.isArray(safeOpts.productIds) ? safeOpts.productIds : [])
+        .slice(0, 5)
+        .map(id => sanitize(String(id), 100).trim())
+        .filter(Boolean);
+      const quizAnswers = (safeOpts.quizAnswers && typeof safeOpts.quizAnswers === 'object')
+        ? safeOpts.quizAnswers : null;
+
+      const now = new Date();
+      const variables = {
+        firstName: cleanName,
+        email: cleanEmail,
+        designerName,
+        productIds,
+        discountCode: CONSULT_DISCOUNT_CODE,
+      };
+
+      if (quizAnswers) {
+        if (quizAnswers.roomType) variables.roomType = sanitize(String(quizAnswers.roomType), 50);
+        if (quizAnswers.budget) variables.budget = sanitize(String(quizAnswers.budget), 50);
+      }
+
+      const step = SEQUENCES.consultation_followup.steps[0];
+      const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+
+      await wixData.insert('EmailQueue', {
+        templateId: step.templateId,
+        recipientEmail: cleanEmail,
+        recipientContactId: contactId || '',
+        variables,
+        sequenceType: 'consultation_followup',
+        sequenceStep: 1,
+        status: 'pending',
+        scheduledFor,
+        sentAt: null,
+        attempt: 0,
+        lastError: '',
+        abVariant: null,
+        createdAt: now,
+      });
+
+      return { success: true, queued: 1 };
+    } catch (err) {
+      logError('triggerConsultationFollowup', err);
+      return { success: false, queued: 0 };
     }
   }
 );

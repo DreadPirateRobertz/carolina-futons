@@ -34,6 +34,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { triggerConsultationFollowup } from 'backend/emailAutomation.web';
 
 const VALID_TYPES = ['video', 'phone'];
 const VALID_TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
@@ -633,6 +634,71 @@ export const getConsultationIntake = webMethod(
       }
       console.error('[virtualConsultation] Error getting intake:', err);
       return { success: false, error: 'Failed to load intake form.' };
+    }
+  }
+);
+
+/**
+ * Record post-consultation notes and product recommendations, then trigger follow-up email.
+ * Called by staff after each consultation via admin panel.
+ *
+ * @param {string}   bookingId - ConsultationBookings CMS _id
+ * @param {string[]} productIds - up to 5 product IDs to feature in follow-up email
+ * @param {string}   [notes] - optional internal notes from the designer
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const addConsultationNotes = webMethod(
+  Permissions.Admin,
+  async (bookingId, productIds, notes) => {
+    try {
+      const cleanId = validateId(bookingId);
+      if (!cleanId) return { success: false, error: 'bookingId is required' };
+
+      const booking = await wixData.get('ConsultationBookings', cleanId);
+      if (!booking) return { success: false, error: 'Consultation booking not found' };
+
+      const cleanProductIds = (Array.isArray(productIds) ? productIds : [])
+        .slice(0, 5)
+        .map(id => sanitize(String(id), 100).trim())
+        .filter(Boolean);
+      const cleanNotes = sanitize(String(notes || ''), 2000);
+
+      // Update booking: mark completed + save product recommendations
+      await wixData.update('ConsultationBookings', {
+        ...booking,
+        status: 'completed',
+        recommendedProductIds: JSON.stringify(cleanProductIds),
+        staffNotes: cleanNotes,
+        completedAt: new Date(),
+      });
+
+      // Resolve designer name for email
+      let designerName = '';
+      if (booking.designerId) {
+        const designer = await wixData.get('Designers', booking.designerId);
+        designerName = designer?.name || '';
+      }
+
+      // Parse quiz answers for email personalization
+      let quizAnswers = null;
+      try {
+        quizAnswers = booking.quizAnswers ? JSON.parse(booking.quizAnswers) : null;
+      } catch (_) { /* ignore malformed quiz answers */ }
+
+      // Fire-and-forget: queue follow-up email
+      const nameParts = (booking.contactName || '').split(' ');
+      const firstName = nameParts[0] || '';
+      triggerConsultationFollowup(
+        booking.memberId || '',
+        booking.recipientEmail || '',
+        firstName,
+        { designerName, productIds: cleanProductIds, notes: cleanNotes, quizAnswers },
+      ).catch(err => console.error('[virtualConsultation] addConsultationNotes: followup queue failed:', err));
+
+      return { success: true };
+    } catch (err) {
+      console.error('[virtualConsultation] addConsultationNotes error:', err);
+      return { success: false, error: err.message || 'Failed to save consultation notes.' };
     }
   }
 );
