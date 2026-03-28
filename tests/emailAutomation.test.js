@@ -52,10 +52,10 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.post_purchase.steps[3].delayHours).toBe(336);  // Day 14: Review reward prompt (CF-qy79)
   });
 
-  it('has post_purchase step descriptions matching day 3/7/30 redesign', () => {
-    expect(_SEQUENCES.post_purchase.steps[0].description).toContain('Assembly follow-up');
-    expect(_SEQUENCES.post_purchase.steps[1].description).toContain('Review solicitation');
-    expect(_SEQUENCES.post_purchase.steps[2].description).toContain('Care guide');
+  it('has post_purchase step descriptions matching day 3/7/30 redesign (CF-nkau)', () => {
+    expect(_SEQUENCES.post_purchase.steps[0].description).toMatch(/care guide/i);
+    expect(_SEQUENCES.post_purchase.steps[1].description).toMatch(/review/i);
+    expect(_SEQUENCES.post_purchase.steps[2].description).toMatch(/cross.sell|complete.*room/i);
   });
 
   it('has reengagement sequence with 1 step', () => {
