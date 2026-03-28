@@ -148,12 +148,12 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
           await _loadAndPopulate($w);
         } else {
           _showSaveError($w, result?.error || 'Failed to unsubscribe. Please try again.');
-          logError({ context: 'NotifPrefs.unsubscribeAll', message: result?.error || 'unsubscribeAll failed' });
+          logError({ context: 'NotifPrefs.unsubscribeAll', message: result?.error || 'unsubscribeAll failed', page: 'Notification Preferences', severity: 'warning' });
         }
       } catch (e) {
         console.error('[NotifPrefs] unsubscribeAll failed:', e);
         _showSaveError($w, 'Failed to unsubscribe. Please try again.');
-        logError({ context: 'NotifPrefs.unsubscribeAll', message: e?.message });
+        logError({ context: 'NotifPrefs.unsubscribeAll', message: e?.message, stack: e?.stack, page: 'Notification Preferences', severity: 'error' });
       }
     });
   } catch (e) {
@@ -187,12 +187,12 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
           announce($w, 'Preferences saved successfully');
         } else {
           _showSaveError($w, result?.error || 'Failed to save. Please try again.');
-          logError({ context: 'NotifPrefs.savePreferences', message: result?.error || 'save failed' });
+          logError({ context: 'NotifPrefs.savePreferences', message: result?.error || 'save failed', page: 'Notification Preferences', severity: 'warning' });
         }
       } catch (e) {
         console.error('[NotifPrefs] saveNotificationPreferences failed:', e);
         _showSaveError($w, 'Failed to save. Please try again.');
-        logError({ context: 'NotifPrefs.savePreferences', message: e?.message });
+        logError({ context: 'NotifPrefs.savePreferences', message: e?.message, stack: e?.stack, page: 'Notification Preferences', severity: 'error' });
       } finally {
         try { $w('#notifSaveSpinner').hide(); } catch (e) {
           console.error('[NotifPrefs] hide notifSaveSpinner failed:', e?.message);
@@ -216,19 +216,24 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
  * Calls logError on failure; does not throw.
  *
  * @param {Function} $w
+ * @param {string} memberId
  */
 async function _loadAndPopulate($w) {
   try {
     const response = await getNotificationPreferences();
     if (!response?.success) {
       console.error('[NotifPrefs] getNotificationPreferences returned failure:', response?.error);
-      logError({ context: 'NotifPrefs.loadPrefs', message: response?.error || 'load failed' });
+      logError({ context: 'NotifPrefs.loadPrefs', message: response?.error || 'load failed', page: 'Notification Preferences', severity: 'error' });
+      _showSaveError($w, 'Unable to load your preferences. Refresh the page to try again.');
+      try { $w('#notifSaveBtn').disable(); } catch (e) {}
       return;
     }
     _populateToggles($w, response.prefs);
   } catch (e) {
     console.error('[NotifPrefs] getNotificationPreferences threw:', e);
-    logError({ context: 'NotifPrefs.loadPrefs', message: e?.message });
+    logError({ context: 'NotifPrefs.loadPrefs', message: e?.message, stack: e?.stack, page: 'Notification Preferences', severity: 'error' });
+    _showSaveError($w, 'Unable to load your preferences. Refresh the page to try again.');
+    try { $w('#notifSaveBtn').disable(); } catch (e2) {}
   }
 }
 

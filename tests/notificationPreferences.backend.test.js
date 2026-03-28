@@ -6,9 +6,12 @@
  *
  * See CF-n3px for original specification.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __seed, __reset as resetData, __setQueryError, __setInsertError, __setUpdateError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
+
+vi.mock('backend/errorMonitoring.web.js', () => ({ logError: vi.fn().mockResolvedValue(undefined) }));
+import { logError } from 'backend/errorMonitoring.web.js';
 import {
   getNotificationPreferences,
   saveNotificationPreferences,
@@ -31,6 +34,7 @@ const DEFAULT_PREFS = {
 beforeEach(() => {
   resetData();
   resetMember();
+  logError.mockClear();
 });
 
 // ── getNotificationPreferences ────────────────────────────────────────
@@ -228,45 +232,38 @@ describe('unsubscribeAll', () => {
   });
 });
 
-// ── wixData error paths ───────────────────────────────────────────────
+// ── logError integration ──────────────────────────────────────────────
 
-describe('getNotificationPreferences — wixData error', () => {
-  it('returns success: false when wixData.query throws', async () => {
+describe('logError called on wixData errors', () => {
+  it('calls logError when getNotificationPreferences wixData throws', async () => {
     __setMember(MEMBER);
-    __setQueryError(COLLECTION, new Error('DB unavailable'));
-    const result = await getNotificationPreferences();
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    __setQueryError(COLLECTION, new Error('DB down'));
+    await getNotificationPreferences();
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.getNotificationPreferences',
+      severity: 'error',
+    }));
   });
-});
 
-describe('saveNotificationPreferences — wixData error', () => {
-  it('returns success: false when wixData.insert throws', async () => {
+  it('calls logError when saveNotificationPreferences wixData throws', async () => {
     __setMember(MEMBER);
     __seed(COLLECTION, []);
-    __setInsertError(COLLECTION, new Error('Insert failed'));
-    const result = await saveNotificationPreferences({ restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false });
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    __setInsertError(COLLECTION, new Error('DB down'));
+    await saveNotificationPreferences({ restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false });
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.saveNotificationPreferences',
+      severity: 'error',
+    }));
   });
 
-  it('returns success: false when wixData.update throws', async () => {
-    __setMember(MEMBER);
-    __seed(COLLECTION, [{ _id: 'rec-1', memberId: MEMBER_ID, restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false }]);
-    __setUpdateError(COLLECTION, new Error('Update failed'));
-    const result = await saveNotificationPreferences({ restock: false, orderUpdate: false, promo: true, cfPlus: false, sms: true });
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
-  });
-});
-
-describe('unsubscribeAll — wixData error', () => {
-  it('returns success: false when wixData.insert throws', async () => {
+  it('calls logError when unsubscribeAll wixData throws', async () => {
     __setMember(MEMBER);
     __seed(COLLECTION, []);
-    __setInsertError(COLLECTION, new Error('Insert failed'));
-    const result = await unsubscribeAll();
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    __setInsertError(COLLECTION, new Error('DB down'));
+    await unsubscribeAll();
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.unsubscribeAll',
+      severity: 'error',
+    }));
   });
 });
