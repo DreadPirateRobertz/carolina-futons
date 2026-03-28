@@ -195,6 +195,7 @@ export async function wixEcom_onOrderCreated(event) {
     name: item.productName?.original || item.name || '',
     quantity: item.quantity || 1,
     price: item.price?.amount || item.price || 0,
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '', // CF-fzsd
   }));
 
   if (!email) return;

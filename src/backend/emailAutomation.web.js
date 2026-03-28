@@ -134,6 +134,7 @@ export function wixEcom_onOrderCreated(event) {
     name: item.name || item.productName?.original || '',
     quantity: item.quantity || 1,
     price: item.price || item.price?.amount || 0,
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '', // CF-fzsd
   }));
 
   if (!email) return;
@@ -434,7 +435,12 @@ export const triggerPostPurchaseSequence = webMethod(
 
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
-      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      // CF-fzsd: deep-link to product review form using slug from first purchased item
+      const primarySlug = sanitize((lineItems || []).find(i => i.slug)?.slug || '', 200);
+      if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
+      const reviewUrl = primarySlug
+        ? `${SITE_URL}/product-page/${primarySlug}#reviews`
+        : `${SITE_URL}/member-page#reviews`;
 
       const now = new Date();
       let queued = 0;
@@ -978,7 +984,7 @@ export const getEmailAutomationStats = webMethod(
  * @function recordEmailEvent
  * @param {Object} params
  * @param {string} params.emailQueueId - ID of the EmailQueue record
- * @param {string} params.eventType - 'open' or 'click'
+ * @param {string} params.eventType - 'open', 'click', or 'conversion'
  * @param {string} [params.linkUrl] - Clicked link URL (for click events)
  * @returns {Promise<{success: boolean}>}
  * @permission Anyone — tracking pixels/links fire without auth
@@ -990,7 +996,8 @@ export const recordEmailEvent = webMethod(
       const { emailQueueId, eventType, linkUrl } = params;
 
       if (!emailQueueId || !eventType) return { success: false };
-      if (eventType !== 'open' && eventType !== 'click') return { success: false };
+      const VALID_EVENT_TYPES = new Set(['open', 'click', 'conversion']);
+      if (!VALID_EVENT_TYPES.has(eventType)) return { success: false };
 
       const cleanId = sanitize(emailQueueId, 50);
       const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
@@ -1044,12 +1051,17 @@ export const getEmailEvents = webMethod(
         events = events.filter(e => queueIds.has(e.emailQueueId));
       }
 
-      const opens = events.filter(e => e.eventType === 'open').length;
-      const clicks = events.filter(e => e.eventType === 'click').length;
+      let opens = 0, clicks = 0, conversions = 0;
+      for (const e of events) {
+        if (e.eventType === 'open') opens++;
+        else if (e.eventType === 'click') clicks++;
+        else if (e.eventType === 'conversion') conversions++;
+      }
 
       return {
         opens,
         clicks,
+        conversions,
         events: events.map(e => ({
           _id: e._id,
           emailQueueId: e.emailQueueId,
@@ -1060,7 +1072,7 @@ export const getEmailEvents = webMethod(
       };
     } catch (err) {
       console.error('Error fetching email events:', err);
-      return { opens: 0, clicks: 0, events: [] };
+      return { opens: 0, clicks: 0, conversions: 0, events: [] };
     }
   }
 );
@@ -1547,14 +1559,15 @@ export const getCampaignAnalytics = webMethod(
         .find();
       const events = eventsResult.items || [];
 
-      // Build event lookup: emailQueueId → { opens, clicks }
+      // Build event lookup: emailQueueId → { opens, clicks, conversions }
       const eventsByEmail = {};
       for (const evt of events) {
         if (!eventsByEmail[evt.emailQueueId]) {
-          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0 };
+          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0, conversions: 0 };
         }
         if (evt.eventType === 'open') eventsByEmail[evt.emailQueueId].opens++;
-        if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'conversion') eventsByEmail[evt.emailQueueId].conversions++;
       }
 
       // 3. Build per-campaign stats
@@ -1562,7 +1575,7 @@ export const getCampaignAnalytics = webMethod(
       for (const email of emails) {
         const seq = email.sequenceType || 'unknown';
         if (!campaigns[seq]) {
-          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0 };
+          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0, conversions: 0 };
         }
         campaigns[seq][email.status] = (campaigns[seq][email.status] || 0) + 1;
 
@@ -1570,6 +1583,7 @@ export const getCampaignAnalytics = webMethod(
         if (emailEvents) {
           campaigns[seq].opens += emailEvents.opens;
           campaigns[seq].clicks += emailEvents.clicks;
+          campaigns[seq].conversions += emailEvents.conversions;
         }
       }
 
@@ -1578,6 +1592,7 @@ export const getCampaignAnalytics = webMethod(
         const c = campaigns[seq];
         c.openRate = c.sent > 0 ? c.opens / c.sent : 0;
         c.clickRate = c.sent > 0 ? c.clicks / c.sent : 0;
+        c.conversionRate = c.sent > 0 ? c.conversions / c.sent : 0;
       }
 
       // 4. Sequence completion rates
