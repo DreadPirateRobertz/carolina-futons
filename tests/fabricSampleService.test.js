@@ -507,6 +507,9 @@ describe('database failure handling', () => {
   });
 });
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/cf-vi8u-zf97-phone-validation-birthday-migration
 
 // ── Phone format validation (CF-vi8u) ─────────────────────────────────────────
 
@@ -589,5 +592,8 @@ describe('phone format validation', () => {
     // Phone stored — CRM upsert received it (no error from that path)
   });
 });
+<<<<<<< HEAD
 =======
 >>>>>>> origin/feat/CF-gkbx
+=======
+>>>>>>> origin/cf-vi8u-zf97-phone-validation-birthday-migration
