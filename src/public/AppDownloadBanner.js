@@ -24,9 +24,9 @@
  * 3. Call initAppDownloadBanner($w, currentUrl) from masterPage.js onReady.
  */
 
-// ── App constants (TODO: replace with real values from dallas, CF-e2ib) ──────
-export const IOS_APP_ID = 'PENDING_IOS_APP_ID';       // e.g. '6478912345'
-export const ANDROID_PACKAGE = 'PENDING_ANDROID_PKG'; // e.g. 'com.carolinafutons.app'
+// ── App constants ─────────────────────────────────────────────────────────────
+export const IOS_APP_ID = 'PENDING_IOS_APP_ID';           // App Store ID — pending Apple Developer membership
+export const ANDROID_PACKAGE = 'com.carolinafutons.mobile'; // confirmed by dallas 2026-03-28
 export const APP_SCHEME = 'cfutons';                   // custom URL scheme
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -174,6 +174,9 @@ export function buildIOSMetaTags(appArgument) {
  */
 export async function initAppDownloadBanner($w, currentUrl, opts = {}) {
   try {
+    // Guard: skip if app constants are still placeholders (iOS App Store ID pending)
+    if (IOS_APP_ID.startsWith('PENDING') && ANDROID_PACKAGE.startsWith('PENDING')) return;
+
     const platform = detectPlatform(opts.userAgent);
     if (!platform) return;
 
