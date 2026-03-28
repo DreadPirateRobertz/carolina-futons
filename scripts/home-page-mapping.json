@@ -606,6 +606,11 @@
       "templateNickname": null,
       "confidence": "MISSING",
       "note": "Newsletter modal success"
+    },
+    "livingSkyFrame": {
+      "templateNickname": null,
+      "confidence": "MISSING",
+      "note": "cf-6oh: LivingSky iframe — receives sky state messages, drives footer mountain divider colors"
     }
   },
   "_summary": {

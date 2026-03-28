@@ -19,6 +19,8 @@ import {
   initFooterLogo,
   buildFooterMountainSVG,
   initMountainDivider,
+  buildFooterMountainSVG,
+  initMountainDividerWithSkyWiring,
   applyFooterStyles,
   fixFooterContactFallback,
   initFooter,
@@ -1455,5 +1457,112 @@ describe('initFooter', () => {
   it('survives $w that always throws', () => {
     const broken$w = () => { throw new Error('boom'); };
     expect(() => initFooter(broken$w)).not.toThrow();
+  });
+});
+
+// ── buildFooterMountainSVG ───────────────────────────────────────────
+
+describe('buildFooterMountainSVG', () => {
+  const ridgeColors = { r1: '#3A2518', r2: '#5C4033', r4: '#5B8FA8' };
+
+  it('returns a string containing <svg>', () => {
+    const svg = buildFooterMountainSVG(ridgeColors);
+    expect(typeof svg).toBe('string');
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('</svg>');
+  });
+
+  it('includes viewBox, aria-hidden, and preserveAspectRatio', () => {
+    const svg = buildFooterMountainSVG(ridgeColors);
+    expect(svg).toContain('viewBox="0 0 1440 80"');
+    expect(svg).toContain('aria-hidden="true"');
+    expect(svg).toContain('preserveAspectRatio="none"');
+  });
+
+  it('applies r1 color (near layer) at opacity 0.75', () => {
+    const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
+    const svg = buildFooterMountainSVG(colors);
+    // Near layer uses r1 at opacity 0.75
+    expect(svg).toContain('#AA1122');
+    expect(svg).toContain('opacity="0.75"');
+  });
+
+  it('applies r2 color (mid layer) at opacity 0.40', () => {
+    const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
+    const svg = buildFooterMountainSVG(colors);
+    expect(svg).toContain('#BB3344');
+    expect(svg).toContain('opacity="0.40"');
+  });
+
+  it('applies r4 color (far layer) at opacity 0.22', () => {
+    const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
+    const svg = buildFooterMountainSVG(colors);
+    expect(svg).toContain('#CC5566');
+    expect(svg).toContain('opacity="0.22"');
+  });
+
+  it('SVG filter chain: feTurbulence has result="cf-noise"', () => {
+    const svg = buildFooterMountainSVG(ridgeColors);
+    expect(svg).toContain('result="cf-noise"');
+  });
+
+  it('SVG filter chain: feDisplacementMap has in2="cf-noise"', () => {
+    const svg = buildFooterMountainSVG(ridgeColors);
+    expect(svg).toContain('in2="cf-noise"');
+  });
+
+  it('contains birds, pine-trees, and wildflowers decorations', () => {
+    const svg = buildFooterMountainSVG(ridgeColors);
+    expect(svg).toContain('birds');
+    expect(svg).toContain('pine-trees');
+    expect(svg).toContain('wildflowers');
+  });
+
+  it('falls back to default colors for invalid hex inputs', () => {
+    const svg = buildFooterMountainSVG({ r1: 'javascript:bad', r2: '<script>', r4: undefined });
+    // Must not contain the invalid values
+    expect(svg).not.toContain('javascript:bad');
+    expect(svg).not.toContain('<script>');
+    // Must still render valid SVG
+    expect(svg).toContain('<svg');
+  });
+
+  it('works with empty ridgeColors (uses all defaults)', () => {
+    const svg = buildFooterMountainSVG({});
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('</svg>');
+  });
+
+  it('works with no argument (uses all defaults)', () => {
+    const svg = buildFooterMountainSVG();
+    expect(svg).toContain('<svg');
+  });
+});
+
+// ── initMountainDividerWithSkyWiring ─────────────────────────────────
+
+describe('initMountainDividerWithSkyWiring', () => {
+  it('sets #footerMountainDivider.html using state.ridgeColors', () => {
+    const state = { ridgeColors: { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' } };
+    initMountainDividerWithSkyWiring($w, state);
+    const html = $w('#footerMountainDivider').html;
+    expect(html).toContain('#AA1122');
+    expect(html).toContain('#BB3344');
+    expect(html).toContain('#CC5566');
+    expect(html).toContain('<svg');
+  });
+
+  it('handles state with no ridgeColors gracefully (uses defaults)', () => {
+    initMountainDividerWithSkyWiring($w, {});
+    expect($w('#footerMountainDivider').html).toContain('<svg');
+  });
+
+  it('handles null state gracefully', () => {
+    expect(() => initMountainDividerWithSkyWiring($w, null)).not.toThrow();
+  });
+
+  it('handles missing divider element gracefully', () => {
+    const custom$w = () => null;
+    expect(() => initMountainDividerWithSkyWiring(custom$w, { ridgeColors: {} })).not.toThrow();
   });
 });

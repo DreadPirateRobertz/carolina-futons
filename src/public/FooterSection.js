@@ -24,6 +24,7 @@ import { fireCustomEvent } from 'public/ga4Tracking';
 import { colors, transitions, spacing } from 'public/designTokens.js';
 import { getFooterLogoImageUrl } from 'public/carolinaFutonsLogo';
 
+<<<<<<< HEAD
 // Hex color validation — prevents XSS from postMessage-delivered skyColors[0]/ridgeColors.r1/r2
 const SAFE_HEX_RE = /^#[0-9A-Fa-f]{3,8}$/;
 
@@ -62,6 +63,88 @@ export function buildFooterMountainSVG({ r1, r2, r4 } = {}) {
     + '<path d="M0,80 L0,56 C38,52 62,42 108,38 C154,34 182,46 232,42 C282,38 312,26 365,24 C418,22 448,34 498,30 C548,26 578,18 632,20 C686,22 715,34 765,30 C815,26 845,18 898,22 C951,26 982,36 1032,32 C1082,28 1112,20 1162,24 C1212,28 1242,38 1292,34 C1342,30 1372,22 1412,26 C1430,28 1438,34 1440,38 L1440,80 Z" fill="' + cr2 + '" opacity="0.40"/>'
     + '<path d="M0,80 L0,60 C42,56 68,48 118,44 C168,40 198,50 248,48 C298,46 328,36 382,34 C436,32 465,42 515,40 C565,38 598,28 652,30 C706,32 735,42 785,40 C835,38 868,30 918,32 C968,34 998,44 1048,42 C1098,40 1128,32 1178,34 C1228,36 1258,44 1308,42 C1358,40 1388,34 1422,36 C1434,37 1438,42 1440,44 L1440,80 Z" fill="' + cr1 + '" opacity="0.75" filter="url(#cf-ridge-warp)"/>'
     + MOUNTAIN_STATIC_GROUPS
+=======
+// Safe hex color validator — accepts #RGB, #RRGGBB, #RRGGBBAA only.
+const SAFE_COLOR_RE = /^#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{2})?)?$/;
+
+function safeColor(val, fallback) {
+  return typeof val === 'string' && SAFE_COLOR_RE.test(val) ? val : fallback;
+}
+
+// Default ridge colors — match original static SVG palette.
+const DEFAULT_R1 = '#3A2518'; // near (espresso-brown, not a brand token)
+const DEFAULT_R2 = '#5C4033'; // mid ridge (not a brand token)
+const DEFAULT_R4 = colors.mountainBlue; // far (use token, not hardcoded hex)
+
+/**
+ * Build a reactive Blue Ridge mountain silhouette SVG for the footer divider.
+ * Three ridge layers shift color based on LivingSkyState.ridgeColors.
+ *
+ * Layer mapping (SVG paint order, background → foreground):
+ *   Layer 1 far   — ridgeColors.r4 at opacity 0.22
+ *   Layer 2 mid   — ridgeColors.r2 at opacity 0.40
+ *   Layer 3 near  — ridgeColors.r1 at opacity 0.75
+ *
+ * SVG filter chain:
+ *   feTurbulence result="cf-noise" → feDisplacementMap in2="cf-noise"
+ *   (result/in2 must be wired or displacement is a no-op)
+ *
+ * @param {Object} [ridgeColors={}] - Color map from LivingSkyState. Fields: r1, r2, r4.
+ * @returns {string} Full SVG markup string.
+ */
+export function buildFooterMountainSVG(ridgeColors = {}) {
+  const r1 = safeColor(ridgeColors.r1, DEFAULT_R1);
+  const r2 = safeColor(ridgeColors.r2, DEFAULT_R2);
+  const r4 = safeColor(ridgeColors.r4, DEFAULT_R4);
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" style="display:block;width:100%;height:auto;">'
+    + '<defs>'
+    + '<filter id="haze-footer"><feGaussianBlur stdDeviation="2"/></filter>'
+    + '<filter id="cf-terrain" x="-5%" y="-5%" width="110%" height="110%">'
+    + '<feTurbulence type="fractalNoise" baseFrequency="0.04 0.08" numOctaves="3" seed="42" result="cf-noise"/>'
+    + '<feDisplacementMap in="SourceGraphic" in2="cf-noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>'
+    + '</filter>'
+    + '<linearGradient id="footer-sky" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="#F2E8D5" stop-opacity="0"/>'
+    + '<stop offset="30%" stop-color="#E8D5B7" stop-opacity="0.15"/>'
+    + '<stop offset="60%" stop-color="#B8D4E3" stop-opacity="0.08"/>'
+    + '<stop offset="100%" stop-color="#3A2518" stop-opacity="0.05"/>'
+    + '</linearGradient>'
+    + '</defs>'
+    + '<rect width="1440" height="80" fill="url(#footer-sky)"/>'
+    // Layer 1: far ridge — r4
+    + `<path d="M0,80 L0,52 C45,48 72,38 120,34 C168,30 195,40 245,36 C295,32 325,22 378,18 C431,14 462,28 512,24 C562,20 592,12 645,15 C698,18 728,30 778,26 C828,22 858,14 908,18 C958,22 988,32 1038,28 C1088,24 1118,16 1168,20 C1218,24 1248,34 1298,30 C1348,26 1378,18 1418,22 C1432,24 1438,30 1440,34 L1440,80 Z" fill="${r4}" opacity="0.22" filter="url(#cf-terrain)"/>`
+    + '<rect x="0" y="20" width="1440" height="18" fill="#B8D4E3" opacity="0.06" filter="url(#haze-footer)"/>'
+    // Layer 2: mid ridge — r2
+    + `<path d="M0,80 L0,56 C38,52 62,42 108,38 C154,34 182,46 232,42 C282,38 312,26 365,24 C418,22 448,34 498,30 C548,26 578,18 632,20 C686,22 715,34 765,30 C815,26 845,18 898,22 C951,26 982,36 1032,32 C1082,28 1112,20 1162,24 C1212,28 1242,38 1292,34 C1342,30 1372,22 1412,26 C1430,28 1438,34 1440,38 L1440,80 Z" fill="${r2}" opacity="0.40" filter="url(#cf-terrain)"/>`
+    + '<rect x="0" y="40" width="1440" height="12" fill="#B8D4E3" opacity="0.04" filter="url(#haze-footer)"/>'
+    // Layer 3: near ridge — r1
+    + `<path d="M0,80 L0,60 C42,56 68,48 118,44 C168,40 198,50 248,48 C298,46 328,36 382,34 C436,32 465,42 515,40 C565,38 598,28 652,30 C706,32 735,42 785,40 C835,38 868,30 918,32 C968,34 998,44 1048,42 C1098,40 1128,32 1178,34 C1228,36 1258,44 1308,42 C1358,40 1388,34 1422,36 C1434,37 1438,42 1440,44 L1440,80 Z" fill="${r1}" opacity="0.75" filter="url(#cf-terrain)"/>`
+    + '<g class="birds" opacity="0.3">'
+    + '<path d="M280,18 C284,14 288,12 292,15 C296,12 300,14 304,18" fill="none" stroke="#3A2518" stroke-width="1" stroke-linecap="round"/>'
+    + '<path d="M302,15 C305,12 308,11 311,14 C314,11 317,12 320,15" fill="none" stroke="#3A2518" stroke-width="0.8" stroke-linecap="round"/>'
+    + '<path d="M820,14 C824,10 828,9 832,12 C836,9 840,10 844,14" fill="none" stroke="#3A2518" stroke-width="0.9" stroke-linecap="round"/>'
+    + '<path d="M1120,20 C1123,17 1126,16 1129,18 C1132,16 1135,17 1138,20" fill="none" stroke="#3A2518" stroke-width="0.7" stroke-linecap="round"/>'
+    + '</g>'
+    + '<g class="pine-trees" opacity="0.5">'
+    + '<rect x="420" y="38" width="3" height="14" fill="#3A2518" opacity="0.6" rx="1"/>'
+    + '<path d="M412,42 C416,34 419,30 422,26 C425,30 428,34 432,42" fill="#5C4033" opacity="0.4"/>'
+    + '<path d="M414,39 C417,33 420,29 422,25 C424,29 427,33 430,39" fill="#5C4033" opacity="0.5"/>'
+    + '<rect x="980" y="40" width="2.5" height="12" fill="#3A2518" opacity="0.5" rx="1"/>'
+    + '<path d="M973,43 C976,37 979,33 981,30 C983,33 986,37 989,43" fill="#5C4033" opacity="0.35"/>'
+    + '<path d="M975,41 C978,35 980,32 981,29 C982,32 985,35 988,41" fill="#5C4033" opacity="0.45"/>'
+    + '</g>'
+    + '<g class="wildflowers" opacity="0.4">'
+    + '<line x1="160" y1="62" x2="160" y2="56" stroke="#5C4033" stroke-width="0.8" opacity="0.5"/>'
+    + '<circle cx="160" cy="55" r="1.8" fill="#E8845C" opacity="0.55"/>'
+    + '<line x1="175" y1="63" x2="175" y2="58" stroke="#5C4033" stroke-width="0.7" opacity="0.4"/>'
+    + '<circle cx="175" cy="57" r="1.5" fill="#F2A882" opacity="0.5"/>'
+    + '<line x1="650" y1="60" x2="650" y2="54" stroke="#5C4033" stroke-width="0.8" opacity="0.5"/>'
+    + '<circle cx="650" cy="53" r="1.8" fill="#E8845C" opacity="0.5"/>'
+    + '<line x1="1100" y1="61" x2="1100" y2="56" stroke="#5C4033" stroke-width="0.7" opacity="0.45"/>'
+    + '<circle cx="1100" cy="55" r="1.5" fill="#F2A882" opacity="0.5"/>'
+    + '</g>'
+>>>>>>> origin/feat/cf-6oh-footer-mountain-livesky
     + '</svg>';
 }
 
@@ -430,17 +513,22 @@ export function applyFooterStyles($w) {
 }
 
 /**
+<<<<<<< HEAD
  * Render the footer mountain divider and subscribe to LivingSkyState updates.
  * Sets initial SVG via buildFooterMountainSVG with design-token defaults, then
  * wires #livingSkyFrame onMessage to rerender with state-derived ridge colors.
  * Consumes e.data directly as LivingSkyState — no type field check (LivingSkyState
  * has no .type property; a type guard would always block the update).
+=======
+ * Render the footer mountain divider with static (default) ridge colors.
+>>>>>>> origin/feat/cf-6oh-footer-mountain-livesky
  * @param {Function} $w - Wix selector function
  */
 export function initMountainDivider($w) {
   try {
     const divider = $w('#footerMountainDivider');
     if (!divider) return;
+<<<<<<< HEAD
     divider.html = buildFooterMountainSVG({
       r1: colors.espresso,
       r2: colors.mountainBlue,
@@ -463,6 +551,26 @@ export function initMountainDivider($w) {
       });
     }
   } catch (e) { console.warn('[FooterSection] initMountainDivider failed:', e); }
+=======
+    divider.html = buildFooterMountainSVG({});
+  } catch (e) {}
+}
+
+/**
+ * Re-render the footer mountain divider using live ridge colors from LivingSkyState.
+ * Called on every livingSkyFrame message to keep the divider in sync with the sky.
+ *
+ * @param {Function} $w - Wix selector function
+ * @param {Object|null} state - LivingSkyState: { ridgeColors: {r1,r2,r4,...}, ... }
+ */
+export function initMountainDividerWithSkyWiring($w, state) {
+  try {
+    const divider = $w('#footerMountainDivider');
+    if (!divider) return;
+    const ridgeColors = (state && state.ridgeColors) || {};
+    divider.html = buildFooterMountainSVG(ridgeColors);
+  } catch (e) {}
+>>>>>>> origin/feat/cf-6oh-footer-mountain-livesky
 }
 
 /**
