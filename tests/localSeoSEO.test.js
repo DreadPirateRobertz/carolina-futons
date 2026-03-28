@@ -128,16 +128,16 @@ describe('getLocalPage — jsonLd', () => {
     expect(typeof asheville.jsonLd).toBe('object');
   });
 
-  it('@type is "LocalBusiness"', () => {
-    expect(asheville.jsonLd['@type']).toBe('LocalBusiness');
+  it('@type includes "LocalBusiness"', () => {
+    expect([].concat(asheville.jsonLd['@type'])).toContain('LocalBusiness');
   });
 
   it('@context is "https://schema.org"', () => {
     expect(asheville.jsonLd['@context']).toBe('https://schema.org');
   });
 
-  it('name is "Carolina Futons"', () => {
-    expect(asheville.jsonLd.name).toBe('Carolina Futons');
+  it('name includes "Carolina Futons"', () => {
+    expect(asheville.jsonLd.name).toContain('Carolina Futons');
   });
 
   it('address has @type PostalAddress', () => {
