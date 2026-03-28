@@ -1,10 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   buildStreakChipText,
   buildMultiplierBadgeText,
   buildToastText,
   shouldShowStreakChip,
+  updateStreakDisplay,
 } from '../src/public/StreakDisplay.js';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function makeEl(overrides = {}) {
+  return { html: '', text: '', show: vi.fn(), hide: vi.fn(), ...overrides };
+}
+
+function makeElements(overrides = {}) {
+  return {
+    $chip: makeEl(),
+    $badge: makeEl(),
+    $toast: makeEl(),
+    ...overrides,
+  };
+}
 
 describe('buildStreakChipText', () => {
   it('returns an HTML string containing an SVG hawk icon for 1 day', () => {
@@ -72,5 +88,70 @@ describe('shouldShowStreakChip', () => {
   it('returns false for null/undefined', () => {
     expect(shouldShowStreakChip(null)).toBe(false);
     expect(shouldShowStreakChip(undefined)).toBe(false);
+  });
+});
+
+// ── updateStreakDisplay ───────────────────────────────────────────────────────
+
+describe('updateStreakDisplay', () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('shows chip and sets html when streak >= 1', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 3, streakMultiplier: 1, milestoneUnlocked: false });
+    expect(els.$chip.show).toHaveBeenCalled();
+    expect(els.$chip.html).toContain('3');
+  });
+
+  it('hides chip when streak = 0', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 0, streakMultiplier: 1, milestoneUnlocked: false });
+    expect(els.$chip.hide).toHaveBeenCalled();
+    expect(els.$chip.show).not.toHaveBeenCalled();
+  });
+
+  it('shows badge when multiplier > 1', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 3, streakMultiplier: 1.5, milestoneUnlocked: false });
+    expect(els.$badge.show).toHaveBeenCalled();
+    expect(els.$badge.text).toBe('1.5× points');
+  });
+
+  it('hides badge when multiplier = 1 (no bonus)', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 3, streakMultiplier: 1, milestoneUnlocked: false });
+    expect(els.$badge.hide).toHaveBeenCalled();
+    expect(els.$badge.show).not.toHaveBeenCalled();
+  });
+
+  it('shows toast and hides after 3s when milestoneUnlocked = false', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 5, streakMultiplier: 1.5, milestoneUnlocked: false });
+    expect(els.$toast.show).toHaveBeenCalled();
+    expect(els.$toast.hide).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(3000);
+    expect(els.$toast.hide).toHaveBeenCalled();
+  });
+
+  it('hides toast after 5s when milestoneUnlocked = true', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 7, streakMultiplier: 2, milestoneUnlocked: true });
+    vi.advanceTimersByTime(4999);
+    expect(els.$toast.hide).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(els.$toast.hide).toHaveBeenCalled();
+  });
+
+  it('skips toast when reducedMotion = true', () => {
+    const els = makeElements();
+    updateStreakDisplay(els, { currentStreakDays: 3, streakMultiplier: 1, milestoneUnlocked: false }, true);
+    expect(els.$toast.show).not.toHaveBeenCalled();
+  });
+
+  it('skips toast when $toast is null', () => {
+    const els = makeElements({ $toast: null });
+    updateStreakDisplay(els, { currentStreakDays: 3, streakMultiplier: 1, milestoneUnlocked: false });
+    // no throw, no toast ops
   });
 });
