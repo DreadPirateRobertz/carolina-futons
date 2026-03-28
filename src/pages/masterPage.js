@@ -349,6 +349,7 @@ function initMiniCartAutoOpen() {
       // Only auto-open when item count increased (add event, not remove)
       if (_previousCartItemCount !== null && newCount > _previousCartItemCount) {
         openMiniCart($w, cart);
+        flashJustAddedHighlight($w);
       } else {
         // Update count badge on any cart change (remove, qty change)
         updateCartCount($w, newCount);
@@ -358,6 +359,23 @@ function initMiniCartAutoOpen() {
       // Non-critical — mini-cart just won't auto-open
     }
   });
+}
+
+// ── Just-Added Highlight Flash ──────────────────────────────────────
+// Brief visual flash in the side cart when a new item is added.
+// Fade in 200ms, hold 3s, fade out 300ms. Only on additions, not removals.
+
+function flashJustAddedHighlight($w) {
+  try {
+    const highlight = $w('#justAddedHighlight');
+    if (!highlight) return;
+    highlight.show('fade', { duration: 200 });
+    setTimeout(() => {
+      try { highlight.hide('fade', { duration: 300 }); } catch (_) {}
+    }, 3200); // 200ms fade-in + 3000ms hold
+  } catch (_) {
+    // Element not placed yet — non-critical
+  }
 }
 
 // ── Cart Icon → Mini-Cart ────────────────────────────────────────────

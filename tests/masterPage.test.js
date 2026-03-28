@@ -1228,6 +1228,64 @@ describe('masterPage.js', () => {
       expect(mockOpenMiniCart).toHaveBeenCalled();
     });
 
+    it('flashes justAddedHighlight when cart item count increases', async () => {
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+      mockOpenMiniCart.mockClear();
+
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }],
+      });
+      elements.clear();
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 100));
+
+      const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
+
+      // Cart increases from 1 to 2 items
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }, { _id: '2', quantity: 1 }],
+      });
+
+      for (const cb of allCallbacks) {
+        await cb();
+      }
+
+      const highlight = elements.get('#justAddedHighlight');
+      expect(highlight).toBeDefined();
+      expect(highlight.show).toHaveBeenCalledWith('fade', { duration: 200 });
+    });
+
+    it('does not flash justAddedHighlight when item count decreases', async () => {
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+      mockOpenMiniCart.mockClear();
+
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 2 }, { _id: '2', quantity: 1 }],
+      });
+      elements.clear();
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 100));
+
+      const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
+
+      // Cart decreases from 3 to 1
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }],
+      });
+
+      for (const cb of allCallbacks) {
+        await cb();
+      }
+
+      const highlight = elements.get('#justAddedHighlight');
+      // Either not accessed at all, or show was not called
+      if (highlight) {
+        expect(highlight.show).not.toHaveBeenCalled();
+      }
+    });
+
     it('does not call openMiniCart when item count decreases', async () => {
       onCartChanged.mockClear();
       getCurrentCart.mockClear();
