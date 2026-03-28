@@ -33,8 +33,8 @@ export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 export async function checkRateLimit(collection, key, opts = {}) {
   const now = opts.now ?? Date.now();
   const windowMs = opts.windowMs ?? RATE_LIMIT_WINDOW_MS;
+  const cleanKey = sanitize(key, 254).toLowerCase();
   try {
-    const cleanKey = sanitize(key, 254).toLowerCase();
 
     const existing = await wixData.query(collection)
       .eq('key', cleanKey)
