@@ -17,7 +17,6 @@ vi.mock('backend/utils/sanitize', () => ({
 }));
 
 let _createdCoupons = [];
-let _activeCoupons = [];
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
     createCoupon: vi.fn(async (data) => {
@@ -27,7 +26,7 @@ vi.mock('wix-marketing-backend', () => ({
     }),
     queryAllCoupons: () => ({
       eq: () => ({
-        find: async () => ({ items: _activeCoupons }),
+        find: async () => ({ items: [] }),
       }),
     }),
     queryV2: () => ({
@@ -73,12 +72,17 @@ vi.mock('wix-data', () => {
 });
 
 let mod;
+let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
+<<<<<<< HEAD
   _activeCoupons = [];
   _wixDataStore = {};
+=======
+>>>>>>> origin/hotfix-coupons-test-idor
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
+  wixDataMock = await import('wix-data');
 });
 
 // ── createWelcomeCoupon ──────────────────────────────────────────
@@ -154,21 +158,36 @@ describe('getActiveCoupons', () => {
     expect(r).toEqual([]);
   });
 
+<<<<<<< HEAD
   it('returns formatted active coupons', async () => {
     _wixDataStore['MemberCoupons'] = [
       { _id: 'mc1', memberEmail: 'test@example.com', code: 'WELCOME-ABC', displayName: 'Welcome 10% Off', percentOffRate: 10, active: true },
       { _id: 'mc2', memberEmail: 'test@example.com', code: 'BDAY-XYZ', displayName: 'Happy Birthday! 15% Off', percentOffRate: 15, active: true },
     ];
+=======
+  it('returns active coupons with discount from CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'WELCOME-ABC', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      { _id: 'c2', memberEmail: 'test@example.com', couponCode: 'BDAY-XYZ', couponType: 'Birthday', discount: '15%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
+>>>>>>> origin/hotfix-coupons-test-idor
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(2);
-    expect(r[0].discount).toBe('10% off');
-    expect(r[1].discount).toBe('15% off');
+    expect(r[0].discount).toBe('10%');
+    expect(r[1].discount).toBe('15%');
   });
 
+<<<<<<< HEAD
   it('formats money-off coupons', async () => {
     _wixDataStore['MemberCoupons'] = [
       { _id: 'mc3', memberEmail: 'test@example.com', code: 'FLAT50', displayName: '$50 Off', moneyOffAmount: 50, active: true },
     ];
+=======
+  it('returns money-off discount as stored in CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'FLAT50', couponType: 'Cart Recovery', discount: '$50 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
+>>>>>>> origin/hotfix-coupons-test-idor
     const r = await mod.getActiveCoupons();
     expect(r[0].discount).toBe('$50 off');
   });

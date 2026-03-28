@@ -5,9 +5,13 @@ import {
   createBirthdayCoupon,
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
-import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
+import { coupons } from './__mocks__/wix-marketing-backend.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+<<<<<<< HEAD
 import { __seed, __reset as resetWixData, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
+=======
+import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
+>>>>>>> origin/hotfix-coupons-test-idor
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -196,6 +200,7 @@ describe('getActiveCoupons', () => {
   const OTHER_EMAIL = 'other@example.com';
 
   beforeEach(() => {
+<<<<<<< HEAD
     resetWixData();
     coupons.queryAllCoupons.mockClear();
     __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
@@ -204,39 +209,69 @@ describe('getActiveCoupons', () => {
   it('returns active coupons with percent-off formatting', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-1', memberEmail: TEST_EMAIL, code: 'WELCOME-ABC123', displayName: 'Welcome 10% Off', percentOffRate: 10, active: true },
+=======
+    __resetData();
+    __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
+  });
+
+  it('returns active coupons with percent-off discount', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-1', memberEmail: TEST_EMAIL, couponCode: 'WELCOME-ABC123', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+>>>>>>> origin/hotfix-coupons-test-idor
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
     expect(result[0].code).toBe('WELCOME-ABC123');
-    expect(result[0].discount).toBe('10% off');
+    expect(result[0].discount).toBe('10%');
   });
 
+<<<<<<< HEAD
   it('formats money-off coupons correctly', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-2', memberEmail: TEST_EMAIL, code: 'SAVE25', displayName: '$25 Off', moneyOffAmount: 25, active: true },
+=======
+  it('returns discount string as stored in CMS', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-2', memberEmail: TEST_EMAIL, couponCode: 'SAVE25', couponType: 'Cart Recovery', discount: '$25 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+>>>>>>> origin/hotfix-coupons-test-idor
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
   });
 
+<<<<<<< HEAD
   it('defaults moneyOffAmount to 0 when missing', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-3', memberEmail: TEST_EMAIL, code: 'NOAMT', displayName: 'No Amount Coupon', active: true },
+=======
+  it('returns coupon with any discount string stored at creation time', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-3', memberEmail: TEST_EMAIL, couponCode: 'SPECIAL', couponType: 'Welcome', discount: '0%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+>>>>>>> origin/hotfix-coupons-test-idor
     ]);
     const result = await getActiveCoupons();
-    expect(result[0].discount).toBe('$0 off');
+    expect(result[0].discount).toBe('0%');
   });
 
   it('returns only specified fields (no internal data leak)', async () => {
+<<<<<<< HEAD
     __seed('MemberCoupons', [{
       _id: 'mc-4',
       memberEmail: TEST_EMAIL,
       code: 'FIELDS',
       displayName: 'Test Coupon',
       percentOffRate: 5,
+=======
+    __seed('Members/MemberCoupons', [{
+      _id: 'c-4',
+      memberEmail: TEST_EMAIL,
+      couponCode: 'FIELDS',
+      couponType: 'Welcome',
+      discount: '5%',
+>>>>>>> origin/hotfix-coupons-test-idor
       active: true,
       minimumSubtotal: 50,
-      expirationTime: new Date().toISOString(),
+      expiresAt: new Date().toISOString(),
       internalSecret: 'should-not-appear',
     }]);
     const result = await getActiveCoupons();
@@ -251,8 +286,12 @@ describe('getActiveCoupons', () => {
     expect(result[0]).not.toHaveProperty('memberEmail');
   });
 
+<<<<<<< HEAD
   it('returns empty array when member has no coupons', async () => {
     __seed('MemberCoupons', []);
+=======
+  it('returns empty array when no coupons', async () => {
+>>>>>>> origin/hotfix-coupons-test-idor
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
