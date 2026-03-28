@@ -6,7 +6,7 @@ import {
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
 import { coupons } from './__mocks__/wix-marketing-backend.js';
-import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __setMember, __resetMember } from './__mocks__/wix-members-backend.js';
 import { __seed, __reset as resetWixData, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
@@ -189,11 +189,13 @@ describe('createTierUpgradeCoupon', () => {
   });
 });
 
+// Module-level test constants (used across multiple describe blocks)
+const TEST_EMAIL = 'test@example.com';
+const OTHER_EMAIL = 'other@example.com';
+
 // ── getActiveCoupons ─────────────────────────────────────────────────
 
 describe('getActiveCoupons', () => {
-  const TEST_EMAIL = 'test@example.com';
-  const OTHER_EMAIL = 'other@example.com';
 
   beforeEach(() => {
     resetWixData();
@@ -208,7 +210,7 @@ describe('getActiveCoupons', () => {
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
     expect(result[0].code).toBe('WELCOME-ABC123');
-    expect(result[0].discount).toBe('10%');
+    expect(result[0].discount).toBe('10% off');
   });
 
   it('formats money-off coupons correctly', async () => {
@@ -224,7 +226,7 @@ describe('getActiveCoupons', () => {
       { _id: 'mc-3', memberEmail: TEST_EMAIL, code: 'NOAMT', displayName: 'No Amount Coupon', active: true },
     ]);
     const result = await getActiveCoupons();
-    expect(result[0].discount).toBe('0%');
+    expect(result[0].discount).toBe('$0 off');
   });
 
   it('returns only specified fields (no internal data leak)', async () => {
@@ -263,10 +265,15 @@ describe('getActiveCoupons', () => {
     __setMember(null);
     __seed('MemberCoupons', [
       { _id: 'mc-5', memberEmail: OTHER_EMAIL, code: 'OTHER-COUPON', displayName: 'Other Coupon', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toEqual([]);
+  });
+
   it('returns empty array when member has no email', async () => {
     __setMember({ _id: 'member-no-email' });
-    __setCoupons([
-      { _id: 'c-1', code: 'WELCOME-ABC', name: 'Welcome 10%', percentOffRate: 10, active: true },
+    __seed('MemberCoupons', [
+      { _id: 'c-1', memberEmail: OTHER_EMAIL, code: 'WELCOME-ABC', displayName: 'Welcome 10%', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
@@ -294,10 +301,15 @@ describe('getActiveCoupons', () => {
   it('does not return inactive coupons', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-9', memberEmail: TEST_EMAIL, code: 'INACTIVE', displayName: 'Old Coupon', percentOffRate: 5, active: false },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toEqual([]);
+  });
+
   it('does not return coupons belonging to other members', async () => {
-    __setCoupons([
-      { _id: 'c-victim', code: 'BDAY-VICTIM1', name: 'Happy Birthday Victim! 15% Off - victim@other.com', percentOffRate: 15, active: true },
-      { _id: 'c-mine', code: 'WELCOME-MINE1', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
+    __seed('MemberCoupons', [
+      { _id: 'c-victim', memberEmail: OTHER_EMAIL, code: 'BDAY-VICTIM1', displayName: 'Birthday 15% Off', percentOffRate: 15, active: true },
+      { _id: 'c-mine', memberEmail: TEST_EMAIL, code: 'WELCOME-MINE1', displayName: 'Welcome 10% Off', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -314,8 +326,8 @@ describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
   });
 
   it('getActiveCoupons returns empty when session has no member', async () => {
-    __setCoupons([
-      { _id: 'c-1', code: 'WELCOME-XYZ', name: 'Welcome 10%', percentOffRate: 10, active: true },
+    __seed('MemberCoupons', [
+      { _id: 'c-1', memberEmail: 'other@example.com', code: 'WELCOME-XYZ', displayName: 'Welcome 10%', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
@@ -328,6 +340,7 @@ describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
   });
 
   it('returns displayName not raw coupon name (no PII in name field)', async () => {
+    __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
     __seed('MemberCoupons', [{
       _id: 'mc-10',
       memberEmail: TEST_EMAIL,
@@ -388,12 +401,14 @@ describe('createTierUpgradeCoupon — MemberCoupons tracking', () => {
     expect(records[0].memberEmail).toBe('gold@example.com');
     expect(records[0].percentOffRate).toBe(20);
     expect(records[0].active).toBe(true);
+  });
+
   it('getActiveCoupons prevents attacker harvesting victim coupon codes', async () => {
     __setMember({ _id: 'attacker', loginEmail: 'attacker@evil.com' });
-    __setCoupons([
-      { _id: 'c-v1', code: 'BDAY-V12345', name: 'Happy Birthday Victim! 15% Off - victim@example.com', percentOffRate: 15, active: true },
-      { _id: 'c-v2', code: 'WELCOME-V678', name: 'Welcome 10% Off - victim@example.com', percentOffRate: 10, active: true },
-      { _id: 'c-a',  code: 'WELCOME-A123', name: 'Welcome 10% Off - attacker@evil.com', percentOffRate: 10, active: true },
+    __seed('MemberCoupons', [
+      { _id: 'c-v1', memberEmail: 'victim@example.com', code: 'BDAY-V12345', displayName: 'Birthday 15% Off', percentOffRate: 15, active: true },
+      { _id: 'c-v2', memberEmail: 'victim@example.com', code: 'WELCOME-V678', displayName: 'Welcome 10% Off', percentOffRate: 10, active: true },
+      { _id: 'c-a',  memberEmail: 'attacker@evil.com', code: 'WELCOME-A123', displayName: 'Welcome 10% Off', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -405,8 +420,8 @@ describe('createTierUpgradeCoupon — MemberCoupons tracking', () => {
 
   it('getActiveCoupons allows member to see their own coupons', async () => {
     __setMember({ _id: 'member-ok', loginEmail: 'mine@example.com' });
-    __setCoupons([
-      { _id: 'c-mine', code: 'RECOVER-MYCODE', name: 'Cart Recovery 10% Off - mine@example.com', percentOffRate: 10, active: true },
+    __seed('MemberCoupons', [
+      { _id: 'c-mine', memberEmail: 'mine@example.com', code: 'RECOVER-MYCODE', displayName: 'Cart Recovery 10% Off', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
