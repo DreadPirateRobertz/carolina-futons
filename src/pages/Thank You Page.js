@@ -752,8 +752,7 @@ async function initLoyaltyEnrollment(orderCtx) {
           try { $w('#loyaltyJoinButton').collapse(); } catch (e) {}
           try { $w('#loyaltySkipButton').collapse(); } catch (e) {}
           try { $w('#loyaltyBirthdayInput').collapse(); } catch (e) {}
-          trackEvent('loyalty_enroll', { source: 'thank_you', points: result.welcomePoints });
-          fireCustomEvent('loyalty_enrolled', { source: 'thank_you_page' });
+          fireCustomEvent('loyalty_enrolled', { source: 'thank_you_page', points: result.welcomePoints });
           announce(`Enrolled in rewards! ${result.welcomePoints} points added to your account.`);
         } else {
           try { $w('#loyaltyEnrollTitle').text = result.error || 'Enrollment failed. Try again later.'; } catch (e) {}
@@ -765,7 +764,7 @@ async function initLoyaltyEnrollment(orderCtx) {
     try {
       $w('#loyaltySkipButton').onClick(() => {
         try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
-        trackEvent('loyalty_skip', { source: 'thank_you' });
+        fireCustomEvent('loyalty_skip', { source: 'thank_you' });
       });
     } catch (e) {}
   } catch (err) {
