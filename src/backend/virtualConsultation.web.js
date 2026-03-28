@@ -34,6 +34,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import { triggerConsultationFollowup } from 'backend/emailAutomation.web';
 
 const VALID_TYPES = ['video', 'phone'];
@@ -686,14 +687,17 @@ export const addConsultationNotes = webMethod(
       } catch (_) { /* ignore malformed quiz answers */ }
 
       // Fire-and-forget: queue follow-up email
+      // NOTE: ConsultationBookings stores memberId (Wix member._id), not CRM contactId.
+      // These are different namespaces — never pass memberId as contactId (cf-lwkt P1 bug).
+      // Pass '' until a future improvement adds CRM lookup via contacts.queryContacts.
       const nameParts = (booking.contactName || '').split(' ');
       const firstName = nameParts[0] || '';
       triggerConsultationFollowup(
-        booking.memberId || '',
+        '',
         booking.recipientEmail || '',
         firstName,
         { designerName, productIds: cleanProductIds, notes: cleanNotes, quizAnswers },
-      ).catch(err => console.error('[virtualConsultation] addConsultationNotes: followup queue failed:', err));
+      ).catch(err => logError('virtualConsultation:addConsultationNotes:followup', err));
 
       return { success: true };
     } catch (err) {

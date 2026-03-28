@@ -721,6 +721,7 @@ export const triggerConsultationFollowup = webMethod(
   Permissions.Admin,
   async (contactId, email, firstName, opts) => {
     try {
+      const cleanContactId = sanitize(String(contactId || ''), 100).trim();
       const cleanEmail = (email || '').toLowerCase().trim();
       if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
 
@@ -754,7 +755,7 @@ export const triggerConsultationFollowup = webMethod(
       await wixData.insert('EmailQueue', {
         templateId: step.templateId,
         recipientEmail: cleanEmail,
-        recipientContactId: contactId || '',
+        recipientContactId: cleanContactId,
         variables,
         sequenceType: 'consultation_followup',
         sequenceStep: 1,
