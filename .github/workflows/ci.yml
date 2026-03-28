@@ -54,6 +54,9 @@ jobs:
             exit 1
           fi
 
+      - name: Check mock coverage (ratchet)
+        run: node scripts/check-mock-coverage.mjs
+
       - name: Run tests
         run: npm test
 
