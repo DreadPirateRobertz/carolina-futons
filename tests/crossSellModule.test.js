@@ -243,4 +243,62 @@ describe('initBundleSection', () => {
     await clickHandler();
     expect(getEl('#addBundleBtn').label).toBe('Error — Try Again');
   });
+
+  it('skips adding main product on second click (crossSellMainAdded guard)', async () => {
+    getBundleSuggestion.mockResolvedValue({
+      product: { _id: 'b1', name: 'B', mainMedia: 'b.jpg', slug: 'bp' },
+      bundlePrice: 100, savings: 20,
+    });
+    const product = { _id: 'p1' };
+    await initBundleSection($w, product);
+    const clickHandler = getEl('#addBundleBtn').onClick.mock.calls[0][0];
+    // First click — adds both
+    await clickHandler();
+    const firstCallCount = addToCart.mock.calls.length;
+    expect(addToCart).toHaveBeenCalledWith('p1', 1);
+    expect(addToCart).toHaveBeenCalledWith('b1', 1);
+    // Second click — main product reset, so adds both again
+    addToCart.mockClear();
+    await clickHandler();
+    expect(addToCart).toHaveBeenCalledWith('p1', 1);
+    expect(addToCart).toHaveBeenCalledWith('b1', 1);
+    expect(firstCallCount).toBe(2);
+  });
+});
+
+describe('loadRelatedProducts — ribbon branch', () => {
+  beforeEach(() => { elements.clear(); vi.clearAllMocks(); });
+
+  it('shows ribbon badge when product has ribbon', async () => {
+    const products = [{ _id: 'r1', name: 'Sale Prod', mainMedia: 'i.jpg', formattedPrice: '$50', slug: 's', ribbon: 'SALE' }];
+    getRelatedProducts.mockResolvedValue(products);
+    await loadRelatedProducts($w, { _id: 'p1', collections: ['c1'] });
+
+    const callback = getEl('#relatedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, products[0]);
+
+    expect($item('#relatedBadge').text).toBe('SALE');
+    expect($item('#relatedBadge').show).toHaveBeenCalled();
+  });
+
+  it('does not touch badge when product has no ribbon', async () => {
+    const products = [{ _id: 'r1', name: 'Prod', mainMedia: 'i.jpg', formattedPrice: '$50', slug: 's' }];
+    getRelatedProducts.mockResolvedValue(products);
+    await loadRelatedProducts($w, { _id: 'p1', collections: ['c1'] });
+
+    const callback = getEl('#relatedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, products[0]);
+
+    expect($item('#relatedBadge').show).not.toHaveBeenCalled();
+  });
 });

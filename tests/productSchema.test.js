@@ -34,6 +34,7 @@ import {
   buildGridAlt,
   detectProductCategory,
   getCategoryFromCollections,
+  initBreadcrumbs,
 } from '../src/public/product/productSchema.js';
 
 // ── buildGridAlt ────────────────────────────────────────────────────
@@ -238,5 +239,75 @@ describe('getCategoryFromCollections', () => {
   it('prioritizes platform over unfinished', () => {
     const cat = getCategoryFromCollections(['platform-beds', 'unfinished-wood']);
     expect(cat.label).toBe('Platform Beds');
+  });
+});
+
+// ── initBreadcrumbs ─────────────────────────────────────────────────
+
+import { getBreadcrumbSchema } from 'backend/seoHelpers.web';
+
+describe('initBreadcrumbs', () => {
+  const makeEl = () => ({ text: '', onClick: vi.fn() });
+  const makeW = (overrides = {}) => {
+    const els = {
+      '#breadcrumb1': makeEl(),
+      '#breadcrumb2': makeEl(),
+      '#breadcrumb3': makeEl(),
+      '#breadcrumbSchemaHtml': { postMessage: vi.fn() },
+      ...overrides,
+    };
+    return (sel) => els[sel] ?? makeEl();
+  };
+
+  beforeEach(() => vi.clearAllMocks());
+
+  it('does nothing when product is null', async () => {
+    const $w = makeW();
+    await initBreadcrumbs($w, null);
+    expect(getBreadcrumbSchema).not.toHaveBeenCalled();
+  });
+
+  it('sets breadcrumb text for product with collections', async () => {
+    getBreadcrumbSchema.mockResolvedValue('<script>bc</script>');
+    const els = {
+      '#breadcrumb1': makeEl(),
+      '#breadcrumb2': makeEl(),
+      '#breadcrumb3': makeEl(),
+      '#breadcrumbSchemaHtml': { postMessage: vi.fn() },
+    };
+    const $w = (sel) => els[sel] ?? makeEl();
+    await initBreadcrumbs($w, { name: 'Kodiak Futon Frame', collections: ['futon-frames'] });
+    expect(els['#breadcrumb1'].text).toBe('Home');
+    expect(els['#breadcrumb2'].text).toBe('Futon Frames');
+    expect(els['#breadcrumb3'].text).toBe('Kodiak Futon Frame');
+  });
+
+  it('posts breadcrumb schema when schema returned', async () => {
+    const schema = '<script type="application/ld+json">{}</script>';
+    getBreadcrumbSchema.mockResolvedValue(schema);
+    const postMessage = vi.fn();
+    const $w = (sel) => ({
+      '#breadcrumbSchemaHtml': { postMessage },
+      '#breadcrumb1': makeEl(), '#breadcrumb2': makeEl(), '#breadcrumb3': makeEl(),
+    }[sel] ?? makeEl());
+    await initBreadcrumbs($w, { name: 'Test', collections: ['futon-frames'] });
+    expect(postMessage).toHaveBeenCalledWith(schema);
+  });
+
+  it('does not post schema when getBreadcrumbSchema returns null', async () => {
+    getBreadcrumbSchema.mockResolvedValue(null);
+    const postMessage = vi.fn();
+    const $w = (sel) => ({
+      '#breadcrumbSchemaHtml': { postMessage },
+      '#breadcrumb1': makeEl(), '#breadcrumb2': makeEl(), '#breadcrumb3': makeEl(),
+    }[sel] ?? makeEl());
+    await initBreadcrumbs($w, { name: 'Test', collections: ['futon-frames'] });
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it('handles product with no collections gracefully', async () => {
+    getBreadcrumbSchema.mockResolvedValue(null);
+    const $w = makeW();
+    await expect(initBreadcrumbs($w, { name: 'No Cat', collections: [] })).resolves.not.toThrow();
   });
 });
