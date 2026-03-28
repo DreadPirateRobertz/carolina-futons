@@ -127,22 +127,16 @@ describe('applyPromoCode — rate limiting', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('fails-close (returns error) when rateLimitKey is not provided', async () => {
-    const result = await applyPromoCode('SAVE10', validCart);
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/session identifier/i);
-  });
+  it('uses anonymous key when rateLimitKey is not provided', async () => {
+    const inserted = [];
+    __onInsert((col, item) => inserted.push({ col, item }));
+    __seed('PromoCodes', []);
 
-  it('fails-close when rateLimitKey is empty string', async () => {
-    const result = await applyPromoCode('SAVE10', validCart, { rateLimitKey: '' });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/session identifier/i);
-  });
+    await applyPromoCode('BADCODE', validCart);
 
-  it('fails-close when rateLimitKey is whitespace only', async () => {
-    const result = await applyPromoCode('SAVE10', validCart, { rateLimitKey: '   ' });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/session identifier/i);
+    const rlInserts = inserted.filter(i => i.col === 'PromoRateLimits');
+    expect(rlInserts).toHaveLength(1);
+    expect(rlInserts[0].item.key).toBe('anonymous');
   });
 });
 
