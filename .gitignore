@@ -43,6 +43,8 @@ wix-velo-mcp/
 
 # Internal Gas Town / crew artifacts — not for public repo
 crew/
+polecats/
+mayor/
 memory.md
 s0-recon-findings.md
 content-qa-report-*.md
