@@ -61,11 +61,11 @@ jobs:
         run: npm test
 
       - name: Run tests with coverage
-        if: matrix.node-version == 20
+        if: matrix.node-version == 22
         run: npx vitest run --coverage
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == 20
+        if: matrix.node-version == 22
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
@@ -150,10 +150,10 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const fs = require('fs');
+            const { readFileSync } = await import('node:fs');
             let output = '';
             try {
-              output = fs.readFileSync('test-results/full-output.txt', 'utf8');
+              output = readFileSync('test-results/full-output.txt', 'utf8');
             } catch (e) {
               output = 'Could not read test output.';
             }
