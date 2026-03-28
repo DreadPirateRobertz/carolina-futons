@@ -59,12 +59,15 @@ $w.onReady(async function () {
     { name: 'testimonialPrompt', init: initTestimonialPrompt },
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
+<<<<<<< HEAD
     { name: 'loyaltyEnrollment', init: () => initLoyaltyEnrollment(orderCtx) },
     { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
       orderTotal: orderCtx?.total || 0,
       getLoyaltyAccount: getMyLoyaltyAccount,
       getLeaderboard: getZipLeaderboard,
     }) },
+=======
+>>>>>>> origin/cf-ou1f-gift-cards-s4
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
