@@ -441,19 +441,27 @@ export const triggerPostPurchaseSequence = webMethod(
       for (const step of SEQUENCES.post_purchase.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
 
+        const variables = {
+          firstName: cleanName,
+          orderNumber: cleanOrderNumber,
+          total: String(total),
+          productNames,
+          email: cleanEmail,
+          assemblyGuideUrl,
+          reviewUrl,
+        };
+
+        // Step 2 (Day 7 review request): include loyalty points incentive (CF-i64b)
+        if (step.step === 2) {
+          variables.pointsReward = '50';
+          variables.photoBonusPoints = '25';
+        }
+
         await queueEmail({
           templateId: step.templateId,
           recipientEmail: cleanEmail,
           recipientContactId: cleanContactId,
-          variables: {
-            firstName: cleanName,
-            orderNumber: cleanOrderNumber,
-            total: String(total),
-            productNames,
-            email: cleanEmail,
-            assemblyGuideUrl,
-            reviewUrl,
-          },
+          variables,
           sequenceType: 'post_purchase',
           sequenceStep: step.step,
           scheduledFor,

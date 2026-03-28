@@ -136,9 +136,9 @@ const TEMPLATE_REGISTRY = {
     name: 'Post-Purchase — Review Solicitation',
     sequence: 'post_purchase',
     step: 2,
-    subjectLine: 'Enjoying your new furniture, {firstName}? Leave a review!',
-    previewText: 'Your feedback helps other customers find the perfect piece.',
-    variables: ['firstName', 'orderNumber', 'productNames', 'reviewUrl', 'email'],
+    subjectLine: "How's your new {productNames}? Share your experience",
+    previewText: 'Leave a review and earn 50 loyalty points.',
+    variables: ['firstName', 'orderNumber', 'productNames', 'reviewUrl', 'email', 'pointsReward', 'photoBonusPoints'],
     category: 'transactional',
   },
   post_purchase_3: {
@@ -1032,6 +1032,69 @@ export const getDeliveryConfirmationTemplate = webMethod(
       subject,
       previewText: meta.previewText,
       html: wrapEmailHtml(`Order #${num} Delivered — Carolina Futons`, `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+/**
+ * Day 7 post-purchase review request email with loyalty points incentive.
+ * CF-i64b
+ *
+ * @param {Object} params
+ * @param {string} params.firstName
+ * @param {string} params.productNames - Primary product name(s)
+ * @param {string} params.reviewUrl - Direct link to review form
+ * @param {string} [params.productImage] - Product image URL
+ * @param {string} [params.pointsReward='50'] - Points for text review
+ * @param {string} [params.photoBonusPoints='25'] - Bonus points for photo review
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getPostPurchaseDay7ReviewTemplate = webMethod(
+  Permissions.Anyone,
+  ({ firstName, productNames, reviewUrl, productImage, pointsReward, photoBonusPoints } = {}) => {
+    const name = sanitize(firstName || '', 200);
+    const products = sanitize(productNames || 'furniture', 500);
+    const url = sanitize(reviewUrl || `${SITE_URL}/member-page`, 500);
+    const image = sanitize(productImage || '', 500);
+    const points = sanitize(pointsReward || '50', 10);
+    const photoPoints = sanitize(photoBonusPoints || '25', 10);
+    const meta = TEMPLATE_REGISTRY.post_purchase_2;
+
+    const subject = (meta.subjectLine || '')
+      .replace('{firstName}', name)
+      .replace('{productNames}', products);
+
+    const imageBlock = image
+      ? `<tr><td style="padding:16px 0;text-align:center;">
+          <img src="${image}" alt="${products}" style="max-width:300px;border-radius:4px;" />
+        </td></tr>`
+      : '';
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `${name}, how's your new ${products}?` : `How's your new ${products}?`}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>It's been a week since your order arrived. We'd love to hear how you're enjoying it — your feedback helps other customers find the perfect piece.</p>
+      </td></tr>
+      ${imageBlock}
+      <tr><td style="padding:16px;background-color:#F0F4F8;border-radius:4px;text-align:center;">
+        <p style="font-family:Arial,sans-serif;font-size:14px;color:#1E3A5F;margin:0 0 8px;font-weight:bold;">Earn rewards for your review</p>
+        <p style="font-family:Arial,sans-serif;font-size:13px;color:#333;margin:0 0 4px;">⭐ Leave a review → <strong>${points} loyalty points</strong></p>
+        <p style="font-family:Arial,sans-serif;font-size:13px;color:#333;margin:0;">📸 Add a photo → <strong>${photoPoints} bonus points</strong></p>
+      </td></tr>
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${url}" style="display:inline-block;padding:14px 32px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Write a Review</a>
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+        <p>It takes less than 2 minutes and helps fellow furniture shoppers make confident choices.</p>
+        <p>Questions about your order? Call us at ${SUPPORT_PHONE}.</p>
+      </td></tr>`;
+
+    return {
+      subject,
+      previewText: meta.previewText,
+      html: wrapEmailHtml('Review Your Purchase — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
     };
   }
 );
