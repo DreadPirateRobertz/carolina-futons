@@ -341,22 +341,26 @@ export const triggerWelcomeSequence = webMethod(
       let queued = 0;
 
       const bestSellersUrl = `${SITE_URL_BASE}/best-sellers`;
-      const buyingGuideUrl = opts.quizCategory
-        ? `${SITE_URL_BASE}/buying-guide/${opts.quizCategory}`
+      // CF-o63p: category-specific buying guide URL for step 3.
+      // Restrict to slug-safe chars ([a-z0-9-]) to prevent path injection in email links.
+      const rawCategory = sanitize(opts?.quizCategory || '', 50);
+      const quizCategory = rawCategory.replace(/[^a-z0-9-]/gi, '');
+      const buyingGuideUrl = quizCategory
+        ? `${SITE_URL_BASE}/buying-guide/${quizCategory}`
         : `${SITE_URL_BASE}/buying-guide`;
 
       for (const step of SEQUENCES.welcome.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
         const variables = {
           firstName: cleanName,
-          discountCode,
-          discountAvailable,
           email: cleanEmail,
         };
 
         // Step-specific variables (CF-o63p)
         if (step.step === 1) {
-          variables.discountPercent = '10';
+          variables.discountCode = discountCode;
+          variables.discountAvailable = discountAvailable;
+          if (discountAvailable) variables.discountPercent = '10';
         }
         if (step.step === 2) {
           variables.bestSellersUrl = bestSellersUrl;

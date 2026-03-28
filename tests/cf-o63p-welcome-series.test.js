@@ -112,8 +112,7 @@ describe('Step 2 — best sellers (Day 2)', () => {
     await triggerWelcomeSequence('c-1', 'new@test.com', 'Alex');
 
     const step2 = items.find(i => i.sequenceStep === 2);
-    // Step 2 may have discountCode from base variables but should not have bestSellersUrl on step 1
-    // More importantly: no buyingGuideUrl on step 2
+    expect(step2.variables.discountCode).toBeUndefined();
     expect(step2.variables.buyingGuideUrl).toBeUndefined();
   });
 });
@@ -162,6 +161,57 @@ describe('Step 3 — buying guide (Day 5)', () => {
 
     const step3 = items.find(i => i.sequenceStep === 3);
     expect(step3.variables.bestSellersUrl).toBeUndefined();
+  });
+});
+
+// ── quizCategory path safety ──────────────────────────────────────────
+
+describe('quizCategory path injection safety', () => {
+  it('strips path-traversal chars from quizCategory', async () => {
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerWelcomeSequence('c-1', 'new@test.com', 'Alex', { quizCategory: '../admin' });
+
+    const step3 = items.find(i => i.sequenceStep === 3);
+    expect(step3.variables.buyingGuideUrl).toBe('https://www.carolinafutons.com/buying-guide/admin');
+  });
+
+  it('falls back to generic guide when quizCategory is all-special-chars', async () => {
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerWelcomeSequence('c-1', 'new@test.com', 'Alex', { quizCategory: '../../' });
+
+    const step3 = items.find(i => i.sequenceStep === 3);
+    expect(step3.variables.buyingGuideUrl).toBe('https://www.carolinafutons.com/buying-guide');
+  });
+
+  it('strips XSS chars from quizCategory', async () => {
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerWelcomeSequence('c-1', 'new@test.com', 'Alex', { quizCategory: '<script>x</script>' });
+
+    const step3 = items.find(i => i.sequenceStep === 3);
+    // sanitize() strips HTML tags first (<script> → ''), leaving only text content 'x'
+    expect(step3.variables.buyingGuideUrl).toBe('https://www.carolinafutons.com/buying-guide/x');
+  });
+});
+
+// ── discountPercent gating ────────────────────────────────────────────
+
+describe('discountPercent absent when no discount available', () => {
+  it('omits discountPercent on step 1 when getSecret fails', async () => {
+    __resetSecrets(); // no WELCOME_DISCOUNT_CODE set
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerWelcomeSequence('c-1', 'new@test.com', 'Alex');
+
+    const step1 = items.find(i => i.sequenceStep === 1);
+    expect(step1.variables.discountAvailable).toBe(false);
+    expect(step1.variables.discountPercent).toBeUndefined();
   });
 });
 
