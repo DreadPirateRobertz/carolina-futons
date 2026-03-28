@@ -1,7 +1,6 @@
 /**
  * HookupPanel — main panel UI for the CF Hookup Assistant editor add-on.
  *
-<<<<<<< HEAD
  * Phase 1 scope (S1 + S2 + S3 + S10):
  *  - Renders app name + "Manual Mode" header indicator when active
  *  - Page selector to switch between all pages (see PAGES array for current count)
@@ -27,11 +26,8 @@ import { ProgressDashboard } from './ProgressDashboard.js';
 import type { PageDef } from '../types/index.js';
 import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
 import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
-<<<<<<< HEAD
 import { useSessionTimer, formatElapsed, loadHistory } from '../hooks/useSessionTimer.js';
 import type { SessionRecord } from '../hooks/useSessionTimer.js';
-=======
->>>>>>> origin/polecat/rust/CF-yixo
 
 const APP_VERSION = '0.1.0';
 const DEFAULT_PAGE = PAGES[0]?.name ?? '';
@@ -41,10 +37,7 @@ export function HookupPanel() {
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-<<<<<<< HEAD
   const [showProgress, setShowProgress] = useState(false);
-=======
->>>>>>> origin/polecat/rust/CF-yixo
   // S15: import status feedback ('idle' | 'success' | 'error')
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,11 +54,7 @@ export function HookupPanel() {
     // Run only when detection fires — not on every selectedPageName change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detectedPageName]);
-<<<<<<< HEAD
   const { applyId, clearId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
-=======
-  const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
->>>>>>> origin/polecat/chrome/CF-267m
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
   const { elapsed, paused, pace, recordApply } = useSessionTimer();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
@@ -326,11 +315,8 @@ export function HookupPanel() {
               onChange={handleImportFile}
             />
           </div>
-<<<<<<< HEAD
           {/* S9: Session history */}
           <SessionHistorySection />
-=======
->>>>>>> origin/polecat/rust/CF-yixo
         </div>
       )}
 
@@ -462,53 +448,12 @@ export function HookupPanel() {
             {pace > 0 && <> · {pace.toFixed(1)}/hr</>}
           </span>
         )}
-=======
- * S1 scope: renders app name, version, and a placeholder state indicating
- * that the PAGES data bundle (S2) and element detection (S3) are pending.
- */
-
-import React from 'react';
-
-const APP_VERSION = '0.1.0';
-
-export function HookupPanel() {
-  return (
-    <div style={styles.root}>
-      <header style={styles.header}>
-        <span style={styles.icon}>🔗</span>
-        <div>
-          <div style={styles.appName}>CF Hookup Assistant</div>
-          <div style={styles.version}>v{APP_VERSION}</div>
-        </div>
-      </header>
-
-      <div style={styles.divider} />
-
-      <main style={styles.body}>
-        <div style={styles.placeholder}>
-          <div style={styles.placeholderIcon}>🔧</div>
-          <p style={styles.placeholderTitle}>Setting up…</p>
-          <p style={styles.placeholderText}>
-            Select an element on the canvas to get started.
-          </p>
-          <div style={styles.statusChips}>
-            <StatusChip label="PAGES data" status="pending" />
-            <StatusChip label="Element detection" status="pending" />
-            <StatusChip label="Manual mode" status="pending" />
-          </div>
-        </div>
-      </main>
-
-      <footer style={styles.footer}>
-        <span style={styles.footerText}>Carolina Futons · Private Add-on</span>
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
       </footer>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-<<<<<<< HEAD
 // S9: Session history display (rendered inside the settings drawer)
 
 function SessionHistorySection() {
@@ -530,31 +475,10 @@ function SessionHistorySection() {
           </span>
         </div>
       ))}
-=======
-// Sub-component
-// ---------------------------------------------------------------------------
-
-type ChipStatus = 'ready' | 'pending' | 'error';
-
-function StatusChip({ label, status }: { label: string; status: ChipStatus }) {
-  const colors: Record<ChipStatus, { bg: string; text: string }> = {
-    ready:   { bg: '#e6f4ea', text: '#1e7e34' },
-    pending: { bg: '#fff3cd', text: '#856404' },
-    error:   { bg: '#f8d7da', text: '#721c24' },
-  };
-  const emoji: Record<ChipStatus, string> = {
-    ready: '✓', pending: '…', error: '✕',
-  };
-  const { bg, text } = colors[status];
-  return (
-    <div style={{ ...styles.chip, backgroundColor: bg, color: text }}>
-      {emoji[status]} {label}
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
     </div>
   );
 }
 
-<<<<<<< HEAD
 const sh: Record<string, React.CSSProperties> = {
   root: {
     borderTop: '1px solid #dfe5eb',
@@ -614,13 +538,6 @@ function priorityLabel(p: string): string {
 // Styles (panel: 288px × 480px per spec)
 
 const s: Record<string, React.CSSProperties> = {
-=======
-// ---------------------------------------------------------------------------
-// Inline styles (panel is 288px wide × 480px tall per spec)
-// ---------------------------------------------------------------------------
-
-const styles: Record<string, React.CSSProperties> = {
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   root: {
     width: '288px',
     height: '480px',
@@ -632,15 +549,11 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: '#fff',
     boxSizing: 'border-box',
     overflow: 'hidden',
-<<<<<<< HEAD
     position: 'relative', // needed for HelpOverlay's position:absolute backdrop
-=======
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   },
   header: {
     display: 'flex',
     alignItems: 'center',
-<<<<<<< HEAD
     justifyContent: 'space-between',
     padding: '10px 12px 8px',
     backgroundColor: '#f0f4f7',
@@ -774,7 +687,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
   },
   footerText: { fontSize: '10px', color: '#7a92a5' },
-<<<<<<< HEAD
   timerText: { fontSize: '10px', color: '#4e6579' },
   // S11: conflict banner
   conflictBanner: {
@@ -826,8 +738,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '3px 10px',
     cursor: 'pointer',
   },
-=======
->>>>>>> origin/polecat/rust/CF-yixo
   // S15: export/import controls
   exportRow: {
     display: 'flex',
@@ -860,75 +770,5 @@ const styles: Record<string, React.CSSProperties> = {
   importError: {
     fontSize: '11px',
     color: '#c94b4b',
-=======
-    gap: '10px',
-    padding: '14px 16px 10px',
-    backgroundColor: '#f0f4f7',
-  },
-  icon: {
-    fontSize: '22px',
-    lineHeight: 1,
-  },
-  appName: {
-    fontWeight: 700,
-    fontSize: '15px',
-    color: '#162d3d',
-  },
-  version: {
-    fontSize: '11px',
-    color: '#7a92a5',
-    marginTop: '1px',
-  },
-  divider: {
-    height: '1px',
-    backgroundColor: '#dfe5eb',
-  },
-  body: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '20px 16px',
-  },
-  placeholder: {
-    textAlign: 'center',
-    padding: '30px 10px',
-  },
-  placeholderIcon: {
-    fontSize: '36px',
-    marginBottom: '12px',
-  },
-  placeholderTitle: {
-    fontWeight: 600,
-    fontSize: '14px',
-    color: '#162d3d',
-    margin: '0 0 8px',
-  },
-  placeholderText: {
-    color: '#7a92a5',
-    lineHeight: 1.5,
-    margin: '0 0 20px',
-  },
-  statusChips: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    alignItems: 'flex-start',
-    textAlign: 'left',
-  },
-  chip: {
-    display: 'inline-block',
-    padding: '4px 10px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: 600,
-  },
-  footer: {
-    padding: '8px 16px',
-    borderTop: '1px solid #dfe5eb',
-    backgroundColor: '#f0f4f7',
-  },
-  footerText: {
-    fontSize: '11px',
-    color: '#7a92a5',
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   },
 };
