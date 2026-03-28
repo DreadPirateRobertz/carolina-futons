@@ -27,7 +27,7 @@
 // ── App constants ─────────────────────────────────────────────────────────────
 export const IOS_APP_ID = 'PENDING_IOS_APP_ID';           // App Store ID — pending Apple Developer membership
 export const ANDROID_PACKAGE = 'com.carolinafutons.mobile'; // confirmed by dallas 2026-03-28
-export const APP_SCHEME = 'cfutons';                   // custom URL scheme
+export const APP_SCHEME = 'carolinafutons';                   // custom URL scheme (confirmed by dallas 2026-03-28)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const BANNER_MESSAGE =
