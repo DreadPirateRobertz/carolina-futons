@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * PAGES data bundle — S2 (CF-4rv2).
  * Extracted from docs/EDITOR_HOOKUP_GUIDE.html.
  * 31 pages, 1093+ elements. DO NOT edit by hand — re-run extraction script.
@@ -2738,6 +2739,21 @@ export const PAGES: PageDef[] = [
     ],
   },
 ];
+=======
+ * PAGES data bundle — stub for S1 scaffold.
+ *
+ * S2 (CF-4rv2) will replace this stub with the full 28-page / 1,093-element
+ * dataset extracted from docs/editor-hookup-guide.html.
+ *
+ * This module exports the data helpers used by the panel; the actual data
+ * array is intentionally empty here so the app compiles and the panel
+ * renders its placeholder state.
+ */
+
+import type { PageDef, ElementDef } from '../types/index.js';
+
+export const PAGES: PageDef[] = [];
+>>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
 
 /** Return the ElementDef for a specific element ID on a page, or null. */
 export function getElementDef(pageName: string, elementId: string): ElementDef | null {
@@ -2768,6 +2784,7 @@ export function getUnhookedElements(pageName: string, hookedIds: string[]): Elem
   const hookedSet = new Set(hookedIds);
   return getAllElements(pageName).filter((e) => !hookedSet.has(e.id));
 }
+<<<<<<< HEAD
 
 /**
  * S14: Return the section where elementId is a repeater child, or null.
@@ -2784,3 +2801,5 @@ export function getRepeaterSection(pageName: string, elementId: string): Section
   }
   return null;
 }
+=======
+>>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t

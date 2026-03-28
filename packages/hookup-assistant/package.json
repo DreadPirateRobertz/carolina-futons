@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+<<<<<<< HEAD
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc --noEmit"
@@ -29,6 +30,21 @@
     "@wix/sdk": "^1.21.4",
     "@wix/sdk-react": "^1.0.2"
   },
+=======
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@wix/design-system": "1.259.1",
+    "@wix/editor": "^1.451.0",
+    "@wix/sdk": "^1.21.4",
+    "@wix/sdk-react": "^1.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+>>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
