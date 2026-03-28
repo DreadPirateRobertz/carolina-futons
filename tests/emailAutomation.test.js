@@ -30,11 +30,11 @@ beforeEach(() => {
 // ── Sequence Definitions ────────────────────────────────────────────
 
 describe('sequence definitions', () => {
-  it('has welcome sequence with 3 steps', () => {
+  it('has welcome sequence with 3 steps at Day 0/2/5 timing (CF-o63p)', () => {
     expect(_SEQUENCES.welcome.steps).toHaveLength(3);
     expect(_SEQUENCES.welcome.steps[0].delayHours).toBe(0);
-    expect(_SEQUENCES.welcome.steps[1].delayHours).toBe(72);
-    expect(_SEQUENCES.welcome.steps[2].delayHours).toBe(168);
+    expect(_SEQUENCES.welcome.steps[1].delayHours).toBe(48);   // Day 2
+    expect(_SEQUENCES.welcome.steps[2].delayHours).toBe(120);  // Day 5
   });
 
   it('has cart_recovery sequence with 1h/24h/72h triggers', () => {
@@ -201,11 +201,11 @@ describe('triggerWelcomeSequence', () => {
     expect(step1Time).toBeGreaterThanOrEqual(before);
     expect(step1Time).toBeLessThan(before + 5000);
 
-    // Step 2: 72h delay
-    expect(step2Time - step1Time).toBeGreaterThanOrEqual(72 * 60 * 60 * 1000 - 1000);
+    // Step 2: 48h delay (Day 2 — CF-o63p)
+    expect(step2Time - step1Time).toBeGreaterThanOrEqual(48 * 60 * 60 * 1000 - 1000);
 
-    // Step 3: 168h delay
-    expect(step3Time - step1Time).toBeGreaterThanOrEqual(168 * 60 * 60 * 1000 - 1000);
+    // Step 3: 120h delay (Day 5 — CF-o63p)
+    expect(step3Time - step1Time).toBeGreaterThanOrEqual(120 * 60 * 60 * 1000 - 1000);
   });
 
   it('handles missing discount code secret gracefully', async () => {
