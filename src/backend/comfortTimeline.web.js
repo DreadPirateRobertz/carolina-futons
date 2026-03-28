@@ -317,14 +317,25 @@ export const processMilestones = webMethod(
         return { success: false, error: 'Authentication failed' };
       }
 
-      const result = await wixData.query(COLLECTION)
-        .eq('status', 'active')
-        .find({ suppressAuth: true });
+      // Paginate past Wix 50-item default limit
+      let allTimelines = [];
+      let skip = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const page = await wixData.query(COLLECTION)
+          .eq('status', 'active')
+          .limit(1000)
+          .skip(skip)
+          .find({ suppressAuth: true });
+        allTimelines = allTimelines.concat(page.items ?? []);
+        skip += 1000;
+        hasMore = (page.items ?? []).length === 1000;
+      }
 
       let processed = 0;
       let notifications = 0;
 
-      for (const timeline of result.items) {
+      for (const timeline of allTimelines) {
         const daysSinceDelivery = Math.floor(
           (Date.now() - new Date(timeline.deliveredAt).getTime()) / (24 * 60 * 60 * 1000)
         );
