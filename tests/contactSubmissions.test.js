@@ -1,50 +1,47 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
 import { submitContactForm } from '../src/backend/contactSubmissions.web.js';
 
 // ── submitContactForm ───────────────────────────────────────────────
 
 describe('submitContactForm', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
   it('succeeds with valid email', async () => {
     const result = await submitContactForm({ email: 'customer@test.com' });
     expect(result.success).toBe(true);
   });
 
   it('persists submission to ContactSubmissions collection', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'customer@test.com',
       name: 'Jane Doe',
       source: 'exit_intent_popup',
     });
 
-    expect(inserted).not.toBeNull();
-    expect(inserted.collection).toBe('ContactSubmissions');
-    expect(inserted.item.email).toBe('customer@test.com');
-    expect(inserted.item.name).toBe('Jane Doe');
-    expect(inserted.item.source).toBe('exit_intent_popup');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0].email).toBe('customer@test.com');
+    expect(inserts[0].name).toBe('Jane Doe');
+    expect(inserts[0].source).toBe('exit_intent_popup');
   });
 
   it('normalizes email to lowercase', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({ email: 'USER@Example.COM' });
-    expect(inserted.item.email).toBe('user@example.com');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].email).toBe('user@example.com');
   });
 
   it('sanitizes name field (strips HTML)', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       name: '<script>alert("xss")</script>Jane',
     });
-    expect(inserted.item.name).not.toContain('<script>');
-    expect(inserted.item.name).toContain('Jane');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].name).not.toContain('<script>');
+    expect(inserts[0].name).toContain('Jane');
   });
 
   it('rejects missing data', async () => {
@@ -71,19 +68,13 @@ describe('submitContactForm', () => {
       windowStart: new Date(Date.now() - 1000), // 1 second ago (within window)
     }]);
 
-    const insertedCols = [];
-    __onInsert((collection) => insertedCols.push(collection));
-
     const result = await submitContactForm({ email: 'repeat@test.com' });
     // Should return silent success but NOT insert to ContactSubmissions
     expect(result.success).toBe(true);
-    expect(insertedCols).not.toContain('ContactSubmissions');
+    expect(__getInserted('ContactSubmissions')).toHaveLength(0);
   });
 
   it('includes optional fields when provided', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       name: 'John',
@@ -95,84 +86,73 @@ describe('submitContactForm', () => {
       productName: 'Kodiak Futon Frame',
     });
 
-    expect(inserted.item.phone).toBe('555-0123');
-    expect(inserted.item.source).toBe('back_in_stock');
-    expect(inserted.item.status).toBe('back_in_stock_request');
-    expect(inserted.item.productId).toBe('prod-abc');
-    expect(inserted.item.productName).toBe('Kodiak Futon Frame');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].phone).toBe('555-0123');
+    expect(inserts[0].source).toBe('back_in_stock');
+    expect(inserts[0].status).toBe('back_in_stock_request');
+    expect(inserts[0].productId).toBe('prod-abc');
+    expect(inserts[0].productName).toBe('Kodiak Futon Frame');
   });
 
   it('strips img tag XSS vectors from name', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       name: '<img src=x onerror=alert(1)>John',
     });
-    expect(inserted.item.name).not.toContain('<img');
-    expect(inserted.item.name).not.toContain('onerror');
-    expect(inserted.item.name).toBe('John');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].name).not.toContain('<img');
+    expect(inserts[0].name).not.toContain('onerror');
+    expect(inserts[0].name).toBe('John');
   });
 
   it('strips nested/malformed HTML tags from name', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       name: '<div><script>alert("xss")</script></div>Safe',
     });
-    expect(inserted.item.name).not.toContain('<div');
-    expect(inserted.item.name).not.toContain('<script');
-    expect(inserted.item.name).toContain('Safe');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].name).not.toContain('<div');
+    expect(inserts[0].name).not.toContain('<script');
+    expect(inserts[0].name).toContain('Safe');
   });
 
   it('strips event handler XSS from notes field', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       notes: 'Hello <iframe src="javascript:alert(1)">click</iframe> world',
     });
-    expect(inserted.item.notes).not.toContain('<iframe');
-    expect(inserted.item.notes).not.toContain('javascript:');
-    expect(inserted.item.notes).toContain('Hello');
-    expect(inserted.item.notes).toContain('world');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].notes).not.toContain('<iframe');
+    expect(inserts[0].notes).not.toContain('javascript:');
+    expect(inserts[0].notes).toContain('Hello');
+    expect(inserts[0].notes).toContain('world');
   });
 
   it('strips SVG-based XSS vectors', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({
       email: 'user@test.com',
       name: '<svg onload=alert(1)>Bob</svg>',
     });
-    expect(inserted.item.name).not.toContain('<svg');
-    expect(inserted.item.name).not.toContain('onload');
-    expect(inserted.item.name).toContain('Bob');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].name).not.toContain('<svg');
+    expect(inserts[0].name).not.toContain('onload');
+    expect(inserts[0].name).toContain('Bob');
   });
 
   it('defaults source to "unknown" when not provided', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     await submitContactForm({ email: 'user@test.com' });
-    expect(inserted.item.source).toBe('unknown');
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].source).toBe('unknown');
   });
 
   it('sets submittedAt timestamp', async () => {
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
-
     const before = Date.now();
     await submitContactForm({ email: 'user@test.com' });
     const after = Date.now();
 
-    expect(inserted.item.submittedAt).toBeInstanceOf(Date);
-    expect(inserted.item.submittedAt.getTime()).toBeGreaterThanOrEqual(before);
-    expect(inserted.item.submittedAt.getTime()).toBeLessThanOrEqual(after);
+    const inserts = __getInserted('ContactSubmissions');
+    expect(inserts[0].submittedAt).toBeInstanceOf(Date);
+    expect(inserts[0].submittedAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(inserts[0].submittedAt.getTime()).toBeLessThanOrEqual(after);
   });
 });
