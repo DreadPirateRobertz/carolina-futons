@@ -46,9 +46,9 @@ import { logAuditEvent } from 'backend/utils/auditLog';
 const SEQUENCES = {
   welcome: {
     steps: [
-      { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
-      { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
+      { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Welcome to Carolina Futons + 10% first-order coupon (CF-o63p)' },
+      { step: 2, templateId: 'welcome_series_2', delayHours: 48, description: 'Day 2 — Our Best Sellers with lifestyle photos (CF-o63p)' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 120, description: 'Day 5 — Your Futon Buying Guide, category-matched to quiz results (CF-o63p)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -100,6 +100,8 @@ const MAX_RETRY_ATTEMPTS = 3;
 // Send window: only deliver emails between these hours (America/New_York).
 // Emails scheduled outside this window are deferred to the next window open.
 const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
+
+const SITE_URL_BASE = 'https://www.carolinafutons.com';
 
 // ── Event Handlers (auto-register in backend/) ───────────────────────
 
@@ -266,12 +268,14 @@ export function wixEcom_onOrderCanceled(event) {
  * @param {string} contactId - Wix contact ID
  * @param {string} email - Member email
  * @param {string} firstName - Member first name
+ * @param {Object} [opts] - Optional overrides
+ * @param {string} [opts.quizCategory] - Product category from style quiz; used to deep-link step 3 buying guide
  * @returns {Promise<{success: boolean, queued: number}>}
  * @permission Admin
  */
 export const triggerWelcomeSequence = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName) => {
+  async (contactId, email, firstName, opts = {}) => {
     try {
       if (!email) return { success: false, queued: 0 };
 
@@ -309,14 +313,36 @@ export const triggerWelcomeSequence = webMethod(
       const now = new Date();
       let queued = 0;
 
+      // CF-o63p: category-specific buying guide URL for step 3.
+      // Uses quiz result if provided; defaults to generic guide.
+      const quizCategory = sanitize(opts?.quizCategory || '', 50);
+      const buyingGuideUrl = quizCategory
+        ? `${SITE_URL_BASE}/buying-guide/${quizCategory}`
+        : `${SITE_URL_BASE}/buying-guide`;
+
       for (const step of SEQUENCES.welcome.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
         const variables = {
           firstName: cleanName,
-          discountCode,
-          discountAvailable,
           email: cleanEmail,
         };
+
+        // Step 1 (CF-o63p): welcome + 10% first-order coupon
+        if (step.step === 1) {
+          variables.discountCode = discountCode;
+          variables.discountAvailable = discountAvailable;
+          variables.discountPercent = '10';
+        }
+
+        // Step 2 (CF-o63p): best sellers collection link
+        if (step.step === 2) {
+          variables.bestSellersUrl = `${SITE_URL_BASE}/collections/best-sellers`;
+        }
+
+        // Step 3 (CF-o63p): buying guide, category-matched when quiz results available
+        if (step.step === 3) {
+          variables.buyingGuideUrl = buyingGuideUrl;
+        }
 
         // Add A/B subject line for step 1
         if (step.step === SEQUENCES.welcome.abTestStep) {
