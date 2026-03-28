@@ -38,6 +38,7 @@ import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -248,12 +249,12 @@ export function wixEcom_onOrderDelivered(event) {
       firstName,
       orderNumber: String(orderNumber),
     }))
-    .catch(err => console.error('Error sending delivery confirmation:', err));
+    .catch(err => logError('wixEcom_onOrderDelivered:confirmation', err));
 
   // CF-nkau: Queue post-purchase care sequence starting from delivery date
   // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
   triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
-    .catch(err => console.error('[CF-nkau] Error queuing post-purchase care sequence on delivery:', err));
+    .catch(err => logError('wixEcom_onOrderDelivered:postPurchaseCare', err));
 
   // CF-qy79: Queue Day-14 review prompt with points reward
   const productNames = lineItems
@@ -262,7 +263,7 @@ export function wixEcom_onOrderDelivered(event) {
     .join(', ');
   const primarySlug = extractPrimarySlug(lineItems);
   triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
-    .catch(err => console.error('[CF-qy79] Error queuing review reward prompt on delivery:', err));
+    .catch(err => logError('wixEcom_onOrderDelivered:reviewReward', err));
 }
 
 /**
@@ -538,7 +539,7 @@ export const triggerPostPurchaseSequence = webMethod(
           variables.crossSellLabel = crossSell.label;
         }
 
-        // Step 5 (Day 14 referral invite): generate personalized referral link (CF-6p0o)
+        // Step 5 (Day 15 referral invite): generate personalized referral link (CF-6p0o)
         // CF-lwkt fix: use memberId (not contactId) — different Wix namespaces.
         // Skip referral enrichment for guest checkouts (no memberId).
         if (step.step === 5) {
