@@ -111,7 +111,7 @@ describe('trackAddToCart', () => {
 
   it('does not insert a new record for untracked product', async () => {
     let inserted = false;
-    __onInsert(() => { inserted = true; });
+    __onInsert((col) => { if (col === 'ProductAnalytics') inserted = true; });
 
     await trackAddToCart('prod-nonexistent');
     expect(inserted).toBe(false);

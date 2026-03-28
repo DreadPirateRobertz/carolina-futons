@@ -277,6 +277,9 @@ describe('protectionPlan', () => {
       });
 
       const { findFn } = setupQueryMock();
+      // Rate limit query result (no existing rate record)
+      findFn.mockResolvedValueOnce({ items: [], totalCount: 0 });
+      // Business query — existing plan selection
       findFn.mockResolvedValueOnce({
         items: [{ _id: 'existing1', productId: 'prod1', tier: 'basic', sessionId: 'sess1' }],
         totalCount: 1,
@@ -286,7 +289,8 @@ describe('protectionPlan', () => {
       expect(result.success).toBe(true);
       expect(result.data.tier).toBe('extended');
       expect(wixData.update).toHaveBeenCalled();
-      expect(wixData.insert).not.toHaveBeenCalled();
+      const planInserts = wixData.insert.mock.calls.filter(c => c[0] === 'ProtectionPlanSelections');
+      expect(planInserts).toHaveLength(0);
     });
 
     it('rejects when product not found', async () => {

@@ -74,7 +74,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
     });
     return { allowed: true };
   } catch (err) {
-    logError(`rateLimit.checkRateLimit[${collection}/${cleanKey}]`, err);
+    logError(`rateLimit.checkRateLimit[${collection}/${key}]`, err);
     return { allowed: true }; // Fail open — don't block on DB errors
   }
 }

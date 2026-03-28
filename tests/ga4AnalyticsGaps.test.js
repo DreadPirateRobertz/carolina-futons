@@ -163,7 +163,7 @@ describe('trackPurchase (Gap 3: purchaseCount increment)', () => {
   it('does not insert a new record for untracked product', async () => {
     let inserted = false;
     const { __onInsert } = await import('./__mocks__/wix-data.js');
-    __onInsert(() => { inserted = true; });
+    __onInsert((col) => { if (col === 'ProductAnalytics') inserted = true; });
 
     await trackPurchase('prod-nonexistent');
     expect(inserted).toBe(false);

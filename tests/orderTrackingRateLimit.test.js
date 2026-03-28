@@ -140,14 +140,14 @@ describe('subscribeToNotifications — rate limiting', () => {
   it('fails open (allows) when the rate limit DB check throws, and still persists the subscription', async () => {
     seedOrderAndFulfillment();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let insertedCollection, insertedItem;
     __onInsert((col, item) => { insertedCollection = col; insertedItem = item; });
     const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
     expect(insertedCollection).toBe('TrackingNotifications');
     expect(insertedItem.email).toBe('buyer@example.com');
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String), expect.any(String));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String));
     warnSpy.mockRestore();
   });
 
@@ -232,10 +232,10 @@ describe('unsubscribeFromNotifications — rate limiting', () => {
   it('fails open (allows) when the rate limit DB check throws', async () => {
     seedSubscription();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String), expect.any(String));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String));
     warnSpy.mockRestore();
   });
 

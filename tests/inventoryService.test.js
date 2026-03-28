@@ -292,7 +292,7 @@ describe('signUpBackInStock', () => {
     ]);
 
     let insertCount = 0;
-    __onInsert(() => { insertCount++; });
+    __onInsert((col) => { if (col === 'BackInStockSignups') insertCount++; });
 
     const result = await signUpBackInStock({
       email: 'test@example.com',

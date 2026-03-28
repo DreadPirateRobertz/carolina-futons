@@ -517,6 +517,9 @@ describe('dynamicPricing', () => {
 
   describe('recordDemandSignal', () => {
     it('records a view signal', async () => {
+      // Rate limit query (no existing record)
+      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
+      // Business query — existing metrics
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -527,13 +530,13 @@ describe('dynamicPricing', () => {
 
       const result = await recordDemandSignal('prod1', 'view');
       expect(result.success).toBe(true);
-      expect(wixData.update).toHaveBeenCalledWith(
-        'ProductDemandMetrics',
-        expect.objectContaining({ viewCount30d: 11 })
-      );
+      const updateCall = wixData.update.mock.calls.find(c => c[0] === 'ProductDemandMetrics');
+      expect(updateCall).toBeDefined();
+      expect(updateCall[1]).toEqual(expect.objectContaining({ viewCount30d: 11 }));
     });
 
     it('records a cart_add signal', async () => {
+      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -544,13 +547,13 @@ describe('dynamicPricing', () => {
 
       const result = await recordDemandSignal('prod1', 'cart_add');
       expect(result.success).toBe(true);
-      expect(wixData.update).toHaveBeenCalledWith(
-        'ProductDemandMetrics',
-        expect.objectContaining({ cartAdds30d: 3 })
-      );
+      const updateCall = wixData.update.mock.calls.find(c => c[0] === 'ProductDemandMetrics');
+      expect(updateCall).toBeDefined();
+      expect(updateCall[1]).toEqual(expect.objectContaining({ cartAdds30d: 3 }));
     });
 
     it('records a purchase signal', async () => {
+      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -561,13 +564,15 @@ describe('dynamicPricing', () => {
 
       const result = await recordDemandSignal('prod1', 'purchase');
       expect(result.success).toBe(true);
-      expect(wixData.update).toHaveBeenCalledWith(
-        'ProductDemandMetrics',
-        expect.objectContaining({ salesCount30d: 3 })
-      );
+      const updateCall = wixData.update.mock.calls.find(c => c[0] === 'ProductDemandMetrics');
+      expect(updateCall).toBeDefined();
+      expect(updateCall[1]).toEqual(expect.objectContaining({ salesCount30d: 3 }));
     });
 
     it('creates new metrics record if none exists', async () => {
+      // Rate limit query
+      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
+      // Business query — no existing metrics
       mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
 
       const result = await recordDemandSignal('prod1', 'view');
@@ -595,6 +600,9 @@ describe('dynamicPricing', () => {
     });
 
     it('handles wix-data errors gracefully', async () => {
+      // Rate limit query fails (checkRateLimit fails open)
+      mockQueryChain.find.mockRejectedValueOnce(new Error('DB down'));
+      // Business query also fails
       mockQueryChain.find.mockRejectedValueOnce(new Error('DB down'));
       const result = await recordDemandSignal('prod1', 'view');
       expect(result.success).toBe(false);
