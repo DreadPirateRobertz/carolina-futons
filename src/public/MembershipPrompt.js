@@ -66,7 +66,10 @@ export function initMembershipPrompt($w) {
     const dialog = setupAccessibleDialog($w, {
       panelId: '#membershipPromptModal',
       closeId: '#membershipPromptClose',
+<<<<<<< HEAD
       titleId: '#membershipPromptTitle',
+=======
+>>>>>>> origin/feat/CF-llrd-membership-prompt
       focusableIds: [
         '#membershipPromptClose',
         '#membershipUpgradeBtn',
