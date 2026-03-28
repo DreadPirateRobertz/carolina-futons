@@ -133,6 +133,22 @@ describe('triggerConsultationFollowup variables', () => {
 
     expect(items[0].sequenceType).toBe('consultation_followup');
   });
+
+  it('sanitizes oversized or malicious contactId before storing in EmailQueue', async () => {
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    // Pass contactId with HTML injection attempt
+    await triggerConsultationFollowup('<script>x</script>', 'buyer@test.com', 'Alex', {
+      designerName: 'Brenda',
+      productIds: ['pid-1'],
+    });
+
+    const queued = items.find(i => i.sequenceType === 'consultation_followup');
+    expect(queued.recipientContactId).not.toContain('<script>');
+    // sanitize() strips HTML tags, leaving inner text: 'x'
+    expect(queued.recipientContactId).toBe('x');
+  });
 });
 
 // ── addConsultationNotes ──────────────────────────────────────────────
@@ -193,5 +209,20 @@ describe('addConsultationNotes', () => {
     __seed('ConsultationBookings', []);
     const result = await addConsultationNotes('bk-missing', ['pid-1'], 'Notes');
     expect(result.success).toBe(false);
+  });
+
+  it('recipientContactId is empty string — never passes memberId as contactId', async () => {
+    __seed('ConsultationBookings', [BOOKING]); // BOOKING.memberId = 'm-1'
+    __seed('Designers', [DESIGNER]);
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await addConsultationNotes('bk-1', ['pid-1'], 'Notes here');
+    await new Promise(r => setTimeout(r, 100));
+
+    const queued = items.find(i => i.sequenceType === 'consultation_followup');
+    expect(queued).toBeDefined();
+    expect(queued.recipientContactId).toBe('');
+    expect(queued.recipientContactId).not.toBe(BOOKING.memberId); // never passes memberId
   });
 });
