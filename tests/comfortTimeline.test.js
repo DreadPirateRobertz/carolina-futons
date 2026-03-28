@@ -4,12 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted, __getUpdated, __setUpdateError } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getInserted, __getUpdated, __setUpdateError, __setQueryError, __setInsertError } from './__mocks__/wix-data.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
+import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
 
 beforeEach(() => {
   __reset();
   __resetSecrets();
+  __resetMember();
   vi.clearAllMocks();
 });
 
@@ -71,6 +73,19 @@ describe('createTimeline', () => {
     const result = await createTimeline({ orderId: 'o1' });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/required/i);
+  });
+
+  it('returns error response when wix-data insert throws', async () => {
+    __setInsertError('ComfortTimelines', new Error('DB unavailable'));
+    const result = await createTimeline({
+      orderId: 'ord-x',
+      memberId: 'mem-x',
+      productId: 'prod-x',
+      productName: 'Test',
+      deliveredAt: new Date().toISOString(),
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/failed to create/i);
   });
 });
 
@@ -167,6 +182,20 @@ describe('logComfortRating', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many/i);
   });
+
+  it('returns error response when wix-data throws during rating log', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-err',
+      memberId: 'm1',
+      status: 'active',
+      comfortLogs: '[]',
+      deliveredAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    }]);
+    __setUpdateError('ComfortTimelines', new Error('DB unavailable'));
+    const result = await logComfortRating('tl-err', 3);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/failed to log/i);
+  });
 });
 
 // ── getTimeline ─────────────────────────────────────────────────────
@@ -223,6 +252,13 @@ describe('getTimeline', () => {
     const result = await getTimeline('order-2');
     expect(result.success).toBe(true);
     expect(result.timeline.crossSellEligible).toBe(true);
+  });
+
+  it('returns error response when wix-data throws during getTimeline', async () => {
+    __setQueryError('ComfortTimelines', new Error('DB unavailable'));
+    const result = await getTimeline('order-x');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/failed to load comfort timeline/i);
   });
 });
 
@@ -334,6 +370,93 @@ describe('processMilestones', () => {
     const result = await processMilestones(CRON);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/milestone processing failed/i);
+  });
+});
+
+// ── getMyTimelines ──────────────────────────────────────────────────
+
+describe('getMyTimelines', () => {
+  let getMyTimelines;
+
+  beforeEach(async () => {
+    ({ getMyTimelines } = await import('../src/backend/comfortTimeline.web.js'));
+  });
+
+  it('returns not-logged-in error when no member session exists', async () => {
+    // __resetMember leaves _currentMember = null → getMember resolves null
+    const result = await getMyTimelines();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Not logged in');
+  });
+
+  it('returns empty timelines for logged-in member with no records', async () => {
+    __setMember({ _id: 'mem-1' });
+    const result = await getMyTimelines();
+    expect(result.success).toBe(true);
+    expect(result.timelines).toEqual([]);
+  });
+
+  it('maps timeline fields correctly including daysSinceDelivery and breakInProgress', async () => {
+    const deliveredAt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days ago
+    __setMember({ _id: 'mem-2' });
+    __seed('ComfortTimelines', [
+      {
+        _id: 'tl-1',
+        memberId: 'mem-2',
+        orderId: 'ord-99',
+        productName: 'Eureka Mattress',
+        status: 'active',
+        deliveredAt,
+        lastCheckIn: null,
+        currentDay: 7,
+        comfortLogs: JSON.stringify([{ rating: 4 }]),
+      },
+    ]);
+
+    const result = await getMyTimelines();
+    expect(result.success).toBe(true);
+    expect(result.timelines).toHaveLength(1);
+    const tl = result.timelines[0];
+    expect(tl.id).toBe('tl-1');
+    expect(tl.orderId).toBe('ord-99');
+    expect(tl.productName).toBe('Eureka Mattress');
+    expect(tl.status).toBe('active');
+    expect(tl.currentDay).toBeGreaterThanOrEqual(6);
+    expect(tl.breakInProgress).toBeGreaterThan(0);
+    expect(tl.breakInProgress).toBeLessThanOrEqual(100);
+    expect(tl.lastRating).toBe(4);
+    expect(tl.needsCheckIn).toBe(true); // no lastCheckIn
+  });
+
+  it('sets lastRating to null when comfortLogs is empty', async () => {
+    const deliveredAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    __setMember({ _id: 'mem-3' });
+    __seed('ComfortTimelines', [
+      { _id: 'tl-2', memberId: 'mem-3', orderId: 'ord-2', productName: 'P', status: 'active', deliveredAt, comfortLogs: null },
+    ]);
+
+    const result = await getMyTimelines();
+    expect(result.timelines[0].lastRating).toBeNull();
+  });
+
+  it('caps breakInProgress at 100 for timelines beyond Day 30', async () => {
+    const deliveredAt = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(); // 60 days ago
+    __setMember({ _id: 'mem-4' });
+    __seed('ComfortTimelines', [
+      { _id: 'tl-3', memberId: 'mem-4', orderId: 'ord-3', productName: 'P', status: 'active', deliveredAt, comfortLogs: [] },
+    ]);
+
+    const result = await getMyTimelines();
+    expect(result.timelines[0].breakInProgress).toBe(100);
+  });
+
+  it('returns error response when wix-data throws', async () => {
+    __setMember({ _id: 'mem-5' });
+    __setQueryError('ComfortTimelines', new Error('DB down'));
+
+    const result = await getMyTimelines();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Failed to load timelines');
   });
 });
 
