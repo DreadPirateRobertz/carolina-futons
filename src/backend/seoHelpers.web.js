@@ -63,7 +63,8 @@ export const getProductSchema = webMethod(
 
     const slug = typeof product.slug === 'string' ? product.slug : '';
     const productUrl = `${BUSINESS_INFO.url}/product-page/${slug}`;
-    const brand = detectProductBrand(product);
+    const detectedBrand = detectProductBrand(product);
+    const brand = detectedBrand || product.manufacturer || BUSINESS_INFO.name;
     const category = getCategoryLabel(product);
 
     const schema = {
@@ -86,14 +87,18 @@ export const getProductSchema = webMethod(
         url: productUrl,
         priceCurrency: 'USD',
         price: product.discountedPrice != null ? product.discountedPrice : product.price,
-        availability: product.inStock !== false
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
+        availability: product.preOrder
+          ? 'https://schema.org/PreOrder'
+          : product.inStock !== false
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
         itemCondition: 'https://schema.org/NewCondition',
         seller: {
-          '@type': 'Organization',
+          '@type': 'LocalBusiness',
           name: BUSINESS_INFO.name,
           url: BUSINESS_INFO.url,
+          telephone: BUSINESS_INFO.telephone,
+          address: BUSINESS_INFO.address,
         },
         shippingDetails: {
           '@type': 'OfferShippingDetails',
@@ -179,8 +184,16 @@ export const getProductSchema = webMethod(
       };
     }
 
-    // Add aggregate rating if available
-    if (product.numericRating && product.numericRating > 0) {
+    // Add aggregate rating — prefer reviewStats (from getAggregateRating()), fall back to product fields
+    if (product.reviewStats && product.reviewStats.average > 0) {
+      schema.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: product.reviewStats.average,
+        bestRating: 5,
+        worstRating: 1,
+        reviewCount: product.reviewStats.total,
+      };
+    } else if (product.numericRating && product.numericRating > 0) {
       schema.aggregateRating = {
         '@type': 'AggregateRating',
         ratingValue: product.numericRating,

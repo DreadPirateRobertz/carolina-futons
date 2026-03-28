@@ -52,11 +52,57 @@ describe('getProductSchema', () => {
     expect(schema.offers.availability).toBe('https://schema.org/OutOfStock');
   });
 
+  it('marks pre-order products correctly', () => {
+    const preOrder = { ...futonFrame, preOrder: true };
+    const schema = JSON.parse(getProductSchema(preOrder));
+    expect(schema.offers.availability).toBe('https://schema.org/PreOrder');
+  });
+
+  it('preOrder takes precedence over inStock', () => {
+    const preOrderInStock = { ...futonFrame, inStock: true, preOrder: true };
+    const schema = JSON.parse(getProductSchema(preOrderInStock));
+    expect(schema.offers.availability).toBe('https://schema.org/PreOrder');
+  });
+
   it('includes aggregate rating when present', () => {
     const schema = JSON.parse(getProductSchema(futonFrame));
     expect(schema.aggregateRating).toBeDefined();
     expect(schema.aggregateRating.ratingValue).toBe(4.5);
     expect(schema.aggregateRating.reviewCount).toBe(12);
+  });
+
+  it('prefers reviewStats over numericRating for aggregateRating', () => {
+    const withStats = {
+      ...futonFrame,
+      numericRating: 3.0,
+      numReviews: 5,
+      reviewStats: { average: 4.8, total: 42 },
+    };
+    const schema = JSON.parse(getProductSchema(withStats));
+    expect(schema.aggregateRating.ratingValue).toBe(4.8);
+    expect(schema.aggregateRating.reviewCount).toBe(42);
+  });
+
+  it('falls back to numericRating when reviewStats.average is 0', () => {
+    const withEmptyStats = {
+      ...futonFrame,
+      reviewStats: { average: 0, total: 0 },
+    };
+    const schema = JSON.parse(getProductSchema(withEmptyStats));
+    expect(schema.aggregateRating.ratingValue).toBe(4.5);
+    expect(schema.aggregateRating.reviewCount).toBe(12);
+  });
+
+  it('uses manufacturer as brand fallback when detectProductBrand returns empty', () => {
+    const noDetectedBrand = {
+      ...futonFrame,
+      brand: undefined,
+      name: 'Generic Frame',
+      collections: null,
+      manufacturer: 'KD Frames',
+    };
+    const schema = JSON.parse(getProductSchema(noDetectedBrand));
+    expect(schema.brand.name).toBe('KD Frames');
   });
 
   it('omits aggregate rating when no rating', () => {
@@ -792,9 +838,11 @@ describe('Google Rich Results: Product schema', () => {
     expect(schema.offers.itemCondition).toBe('https://schema.org/NewCondition');
   });
 
-  it('has offers.seller with @type (recommended)', () => {
-    expect(schema.offers.seller['@type']).toBe('Organization');
+  it('has offers.seller with @type LocalBusiness (recommended)', () => {
+    expect(schema.offers.seller['@type']).toBe('LocalBusiness');
     expect(schema.offers.seller.name).toBe('Carolina Futons');
+    expect(schema.offers.seller.telephone).toBeDefined();
+    expect(schema.offers.seller.address).toBeDefined();
   });
 
   it('has offers.priceValidUntil in ISO date format (required for price drop)', () => {
