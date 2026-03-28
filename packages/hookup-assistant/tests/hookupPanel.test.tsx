@@ -25,7 +25,10 @@ const {
   mockUseRepeaterGuard,
   mockUseConflictDetector,
   mockDetectConflict,
+<<<<<<< HEAD
   mockUseSessionTimer,
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
 } = vi.hoisted(() => ({
   mockUseElementDetection: vi.fn(),
   mockUsePageNavigator: vi.fn(),
@@ -34,7 +37,10 @@ const {
   mockUseRepeaterGuard: vi.fn(),
   mockUseConflictDetector: vi.fn(),
   mockDetectConflict: vi.fn(),
+<<<<<<< HEAD
   mockUseSessionTimer: vi.fn(),
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
 }));
 
 vi.mock('../src/hooks/useElementDetection.js', () => ({
@@ -60,6 +66,7 @@ vi.mock('../src/hooks/useConflictDetector.js', () => ({
   useConflictDetector: mockUseConflictDetector,
   detectConflict: mockDetectConflict,
 }));
+<<<<<<< HEAD
 vi.mock('../src/hooks/useSessionTimer.js', () => ({
   useSessionTimer: mockUseSessionTimer,
   formatElapsed: (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`,
@@ -80,6 +87,8 @@ vi.mock('../src/hooks/useProgressDashboard.js', () => ({
 vi.mock('../src/components/ProgressDashboard.js', () => ({
   ProgressDashboard: () => <div data-testid="progress-dashboard">Progress Dashboard</div>,
 }));
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
 
 import { HookupPanel } from '../src/components/HookupPanel.js';
 
@@ -117,6 +126,7 @@ function setupDefaults({
     clearConflict: vi.fn(),
   });
   mockDetectConflict.mockReturnValue({ type: 'none' });
+<<<<<<< HEAD
   mockUseSessionTimer.mockReturnValue({
     started: false,
     elapsed: 0,
@@ -125,6 +135,8 @@ function setupDefaults({
     pace: 0,
     recordApply: vi.fn(),
   });
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
 }
 
 beforeEach(() => {
@@ -251,6 +263,7 @@ describe('HookupPanel — footer', () => {
   });
 });
 
+<<<<<<< HEAD
 // ── Session timer display (S9) ────────────────────────────────────────────────
 
 describe('HookupPanel — session timer (S9)', () => {
@@ -285,6 +298,8 @@ describe('HookupPanel — session timer (S9)', () => {
   });
 });
 
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
 // ── Auto-page-switch ──────────────────────────────────────────────────────────
 
 describe('HookupPanel — auto page switch via detectedPageName', () => {
@@ -295,6 +310,7 @@ describe('HookupPanel — auto page switch via detectedPageName', () => {
     expect((select as HTMLSelectElement).value).toBe('Product Page');
   });
 });
+<<<<<<< HEAD
 
 // ── S8: Progress Dashboard toggle ─────────────────────────────────────────────
 
@@ -327,3 +343,5 @@ describe('HookupPanel — progress dashboard toggle', () => {
     expect(screen.queryByTestId('progress-dashboard')).not.toBeInTheDocument();
   });
 });
+=======
+>>>>>>> origin/cf-iols-hookup-assistant-ci
