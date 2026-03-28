@@ -18,16 +18,17 @@
  * Both are loaded lazily at runtime — not available in test environments.
  *
  * @setup
- * 1. Replace IOS_APP_ID and ANDROID_PACKAGE with real values from dallas.
+ * 1. Replace IOS_APP_ID with numeric App Store ID once app is published (dallas will ping).
+ *    ANDROID_PACKAGE and APP_SCHEME are already set (dallas, 2026-03-28).
  * 2. Add #appDownloadBanner, #appDownloadBannerText, #appDownloadBannerBtn,
  *    #appDownloadBannerDismiss elements to Wix Editor (Android path only).
  * 3. Call initAppDownloadBanner($w, currentUrl) from masterPage.js onReady.
  */
 
 // ── App constants (TODO: replace with real values from dallas, CF-e2ib) ──────
-export const IOS_APP_ID = 'PENDING_IOS_APP_ID';       // e.g. '6478912345'
-export const ANDROID_PACKAGE = 'PENDING_ANDROID_PKG'; // e.g. 'com.carolinafutons.app'
-export const APP_SCHEME = 'cfutons';                   // custom URL scheme
+export const IOS_APP_ID = 'PENDING_IOS_APP_ID'; // TODO: update when app publishes to App Store (CF-e2ib)
+export const ANDROID_PACKAGE = 'com.carolinafutons.mobile'; // confirmed by dallas 2026-03-28
+export const APP_SCHEME = 'carolinafutons';                   // custom URL scheme
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const BANNER_MESSAGE =
