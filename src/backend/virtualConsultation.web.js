@@ -66,7 +66,7 @@ async function resolveOwnedBooking(consultationId) {
   if (!booking || booking.memberId !== memberId) {
     return { error: 'Consultation not found.' };
   }
-  return { cleanId, memberId };
+  return { cleanId, memberId, booking };
 }
 
 async function requireMember() {
@@ -546,7 +546,11 @@ export const submitConsultationIntake = webMethod(
       if (resolved.error) {
         return { success: false, error: resolved.error };
       }
-      const { cleanId, memberId } = resolved;
+      const { cleanId, memberId, booking } = resolved;
+
+      if (booking.status === 'cancelled' || booking.status === 'completed') {
+        return { success: false, error: 'Cannot submit intake for a cancelled or completed consultation.' };
+      }
 
       if (!data || typeof data !== 'object') {
         return { success: false, error: 'Intake data is required.' };

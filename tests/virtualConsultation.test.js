@@ -674,6 +674,56 @@ describe('submitConsultationIntake', () => {
     expect(result.error).toMatch(/budget/i);
   });
 
+  it('rejects invalid roomSize enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, roomSize: 'huge' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/roomSize/i);
+  });
+
+  it('rejects invalid primaryUse enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, primaryUse: 'nightly' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/primaryUse/i);
+  });
+
+  it('rejects invalid stylePreference enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, stylePreference: 'baroque' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/stylePreference/i);
+  });
+
+  it('rejects invalid timeline enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, timeline: 'someday' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/timeline/i);
+  });
+
+  it('accepts description at exactly 200 chars', async () => {
+    const result = await submitConsultationIntake('booking-1', {
+      ...VALID_INTAKE,
+      description: 'x'.repeat(200),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects intake for a cancelled consultation', async () => {
+    __seed('ConsultationBookings', [
+      { _id: 'booking-cancelled', memberId: 'member-1', designerId: 'd-1', date: '2099-06-01',
+        timeSlot: '10:00', consultationType: 'video', status: 'cancelled', notes: '',
+        videoCallUrl: '', photos: '[]', quizAnswers: '{}' },
+    ]);
+    const result = await submitConsultationIntake('booking-cancelled', VALID_INTAKE);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/cancelled/i);
+  });
+
+  it('treats empty string painPoint as absent', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, painPoint: '' });
+    expect(result.success).toBe(true);
+    const row = __getInserted('ConsultationIntake')[0];
+    expect(row.painPoint).toBeNull();
+  });
+
   it('rejects description over 200 chars', async () => {
     const result = await submitConsultationIntake('booking-1', {
       ...VALID_INTAKE,
