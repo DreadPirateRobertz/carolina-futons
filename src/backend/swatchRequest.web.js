@@ -19,6 +19,7 @@ import { contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { triggerSwatchFollowupSequence } from 'backend/emailAutomation.web';
+import { logError } from 'backend/utils/errorHandler';
 
 // Swatch nurture sequence: confirmation + Day 3 + Day 7 + Day 14
 const SWATCH_NURTURE = [
@@ -259,11 +260,11 @@ export const markSwatchShipped = webMethod(
         request.contactEmail || '',
         firstName,
         request.swatchNames || [],
-      ).catch(err => console.error('[swatchRequest] markSwatchShipped: failed to queue followup:', err));
+      ).catch(err => logError('markSwatchShipped:followupQueue', err));
 
       return { success: true };
     } catch (err) {
-      console.error('[swatchRequest] markSwatchShipped error:', err);
+      logError('markSwatchShipped', err);
       return { success: false, error: err.message || 'Failed to mark swatch as shipped.' };
     }
   }

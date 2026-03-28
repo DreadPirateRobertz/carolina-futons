@@ -796,6 +796,7 @@ export const triggerSwatchFollowupSequence = webMethod(
       const cleanEmail = (email || '').toLowerCase().trim();
       if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
 
+      const cleanContactId = sanitize(String(contactId || ''), 100).trim();
       const cleanName = sanitize(firstName || '', 100).trim();
       const cleanFabricNames = (Array.isArray(fabricNames) ? fabricNames : [])
         .map(n => sanitize(String(n), 100).trim())
@@ -837,7 +838,7 @@ export const triggerSwatchFollowupSequence = webMethod(
         await wixData.insert('EmailQueue', {
           templateId: step.templateId,
           recipientEmail: cleanEmail,
-          recipientContactId: contactId || '',
+          recipientContactId: cleanContactId,
           variables,
           sequenceType: 'swatch_followup',
           sequenceStep: step.step,
