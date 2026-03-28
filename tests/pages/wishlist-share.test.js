@@ -1,36 +1,14 @@
 /**
-<<<<<<< HEAD
-<<<<<<< HEAD
- * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-4qll S2, CF-muzy S5)
- * Tests: token parsing, invalid message builder, S2 card population, SEO helpers
- */
-import { describe, it, expect, vi } from 'vitest';
-import {
-  parseShareToken,
-  buildInvalidMessage,
-  buildWishlistTitle,
-  buildWishlistDescription,
-  buildWishlistOgTags,
-  populateShareCard,
-=======
- * Wishlist Share — pure helper unit tests (CF-y24r S1)
- * Tests: token parsing, invalid message builder
-=======
  * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-muzy S5)
  * Tests: token parsing, invalid message builder, SEO helpers
->>>>>>> origin/cf-muzy-wishlist-share-s5
  */
 import { describe, it, expect } from 'vitest';
 import {
   parseShareToken,
   buildInvalidMessage,
-<<<<<<< HEAD
->>>>>>> origin/cf-y24r-wishlist-share
-=======
   buildWishlistTitle,
   buildWishlistDescription,
   buildWishlistOgTags,
->>>>>>> origin/cf-muzy-wishlist-share-s5
 } from '../../src/public/wishlistShareHelpers.js';
 
 // ── parseShareToken ────────────────────────────────────────────────────────────
@@ -101,63 +79,6 @@ describe('buildInvalidMessage', () => {
     }
   });
 });
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-// ── S2: populateShareCard ─────────────────────────────────────────────────────
-
-function createItemScope() {
-  const itemEls = new Map();
-  const $item = (sel) => {
-    if (!itemEls.has(sel)) {
-      itemEls.set(sel, {
-        src: '', alt: '', text: '',
-        show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
-      });
-    }
-    return itemEls.get(sel);
-  };
-  return $item;
-}
-
-describe('populateShareCard', () => {
-  it('sets #shareImage src from productImage', () => {
-    const $item = createItemScope();
-    populateShareCard($item, { productName: 'Futon A', productImage: 'https://example.com/a.jpg' });
-    expect($item('#shareImage').src).toBe('https://example.com/a.jpg');
-  });
-
-  it('sets #shareImage alt from productName', () => {
-    const $item = createItemScope();
-    populateShareCard($item, { productName: 'Sunset Frame', productImage: '' });
-    expect($item('#shareImage').alt).toContain('Sunset Frame');
-  });
-
-  it('sets #shareName text from productName', () => {
-    const $item = createItemScope();
-    populateShareCard($item, { productName: 'Walnut Futon', productImage: '' });
-    expect($item('#shareName').text).toBe('Walnut Futon');
-  });
-
-  it('uses empty string when productImage is missing', () => {
-    const $item = createItemScope();
-    populateShareCard($item, { productName: 'Frame', productImage: null });
-    expect($item('#shareImage').src).toBe('');
-  });
-
-  it('uses fallback alt text when productName is missing', () => {
-    const $item = createItemScope();
-    populateShareCard($item, { productName: '', productImage: 'https://example.com/a.jpg' });
-    expect($item('#shareImage').alt).toContain('Product');
-  });
-
-  it('does not throw when $item selector returns missing element (DOM errors swallowed)', () => {
-    const $item = () => { throw new Error('element not found'); };
-    expect(() => populateShareCard($item, { productName: 'X', productImage: 'y' })).not.toThrow();
-  });
-});
-=======
->>>>>>> origin/cf-muzy-wishlist-share-s5
 
 // ── S5: buildWishlistTitle ─────────────────────────────────────────────────────
 
@@ -278,8 +199,3 @@ describe('buildWishlistOgTags', () => {
     expect(ogType?.content).toBe('website');
   });
 });
-<<<<<<< HEAD
-=======
->>>>>>> origin/cf-y24r-wishlist-share
-=======
->>>>>>> origin/cf-muzy-wishlist-share-s5

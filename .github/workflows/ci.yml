@@ -270,11 +270,7 @@ jobs:
         working-directory: packages/hookup-assistant
 
     steps:
-<<<<<<< HEAD
       - uses: actions/checkout@v6
-=======
-      - uses: actions/checkout@v4
->>>>>>> origin/cf-iols-hookup-assistant-ci
 
       - name: Use Node.js 20
         uses: actions/setup-node@v6

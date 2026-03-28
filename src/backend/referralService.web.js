@@ -35,8 +35,12 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { accounts } from 'wix-loyalty.v2';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
-import { randomBytes } from 'crypto';
+import { logError } from 'backend/utils/errorHandler';
+import crypto from 'crypto';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { BONUS_POINTS } from 'backend/loyaltyBonusPoints.web';
 
 const REFERRALS_COLLECTION = 'Referrals';
 const CREDITS_COLLECTION = 'ReferralCredits';
@@ -49,12 +53,75 @@ const REFERRAL_CODE_LENGTH = 8;
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars (0/O, 1/I/L)
-  const bytes = randomBytes(REFERRAL_CODE_LENGTH);
+  // chars.length === 32; 256 / 32 === 8 exactly — no modulo bias.
+  const bytes = crypto.randomBytes(REFERRAL_CODE_LENGTH);
   let code = '';
   for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
     code += chars[bytes[i] % chars.length];
   }
   return code;
+}
+
+// ── _getReferralLinkForMember (internal, for email automation) ───────
+
+/**
+ * Get or create a referral code for a given member ID.
+ * Internal function — called by email automation to generate referral
+ * links for post-purchase emails without requiring SiteMember context.
+ *
+ * @param {string} memberId - Wix member ID
+ * @returns {Promise<{referralCode: string, referralUrl: string} | null>}
+ */
+export async function _getReferralLinkForMember(memberId) {
+  try {
+    if (!memberId) return null;
+
+    const existing = await wixData.query(REFERRALS_COLLECTION)
+      .eq('referrerMemberId', memberId)
+      .eq('status', 'pending')
+      .descending('_createdDate')
+      .limit(1)
+      .find({ suppressAuth: true });
+
+    if (existing.items.length > 0) {
+      const code = existing.items[0].referralCode;
+      return {
+        referralCode: code,
+        referralUrl: `https://www.carolinafutons.com/?ref=${code}`,
+      };
+    }
+
+    // Generate new unique code — fail after 5 attempts to prevent duplicates
+    let code = generateCode();
+    let codeIsUnique = false;
+    for (let attempts = 0; attempts < 5; attempts++) {
+      const conflict = await wixData.query(REFERRALS_COLLECTION)
+        .eq('referralCode', code)
+        .find({ suppressAuth: true });
+      if (conflict.items.length === 0) { codeIsUnique = true; break; }
+      code = generateCode();
+    }
+    if (!codeIsUnique) {
+      console.error('[referralService] Failed to generate unique referral code after 5 attempts');
+      return null;
+    }
+
+    await wixData.insert(REFERRALS_COLLECTION, {
+      referrerMemberId: memberId,
+      referralCode: code,
+      status: 'pending',
+      referrerCredit: REFERRER_CREDIT_AMOUNT,
+      refereeCredit: REFEREE_CREDIT_AMOUNT,
+    }, { suppressAuth: true });
+
+    return {
+      referralCode: code,
+      referralUrl: `https://www.carolinafutons.com/?ref=${code}`,
+    };
+  } catch (err) {
+    console.error('[referralService] _getReferralLinkForMember error:', err);
+    return null;
+  }
 }
 
 // ── getReferralLink ─────────────────────────────────────────────────
@@ -292,6 +359,119 @@ export const completeReferral = webMethod(
   }
 );
 
+// ── _processReferralOnOrderCreated (cf-bu2, cf-exxy) ──────────────────────────
+//
+// Backend-callable (not a webMethod). Called from wixEcom_onOrderCreated
+// when a member places an order. Looks up any signed_up referral for the
+// member and issues both referrer + referee credits.
+//
+// cf-exxy: when isFirstPurchase===true, also awards BONUS_POINTS.REFERRAL_COMPLETE
+// loyalty points to the referrer (guarded by rewardPaid flag on the referral record).
+//
+// Returns { success: true, referrerCredit, refereeCredit, pointsAwarded? } or { skipped: true }.
+// Never throws — caller should treat skipped as "no referral to process."
+
+export async function _processReferralOnOrderCreated(refereeMemberId, orderNumber, isFirstPurchase = false) {
+  if (!refereeMemberId || !orderNumber) return { skipped: true };
+
+  try {
+    const result = await wixData
+      .query(REFERRALS_COLLECTION)
+      .eq('refereeMemberId', refereeMemberId)
+      .hasSome('status', ['signed_up', 'processing'])
+      .find({ suppressAuth: true });
+
+    if (result.items.length === 0) return { skipped: true };
+
+    const referral = { ...result.items[0] };
+
+    // Claim by marking processing — prevents double-credit if event fires twice
+    referral.status = 'processing';
+    referral.orderNumber = orderNumber;
+    await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
+
+    // Idempotent referrer credit
+    const existingReferrerCredit = await wixData
+      .query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referrer_bonus')
+      .find({ suppressAuth: true });
+    if (existingReferrerCredit.items.length === 0) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: referral.referrerMemberId,
+        amount: REFERRER_CREDIT_AMOUNT,
+        source: 'referrer_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    // Idempotent referee credit
+    const existingRefereeCredit = await wixData
+      .query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referee_bonus')
+      .find({ suppressAuth: true });
+    if (existingRefereeCredit.items.length === 0) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: refereeMemberId,
+        amount: REFEREE_CREDIT_AMOUNT,
+        source: 'referee_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    // cf-exxy: award loyalty points to referrer on referred member's first purchase
+    let pointsAwarded = 0;
+    if (isFirstPurchase && !referral.rewardPaid) {
+      try {
+        const { account: loyaltyAccount } = await accounts.getAccountBySecondaryId({
+          memberId: referral.referrerMemberId,
+        });
+        await accounts.earnPoints(loyaltyAccount._id, {
+          points:         BONUS_POINTS.REFERRAL_COMPLETE,
+          description:    'Bonus: referral purchase completed',
+          appId:          'cf-loyalty-bonus',
+          idempotencyKey: `referral_${referral._id}_firstpurchase`,
+        });
+        referral.rewardPaid = true;
+        pointsAwarded = BONUS_POINTS.REFERRAL_COMPLETE;
+      } catch (err) {
+        logError(
+          `[referralService] earnPoints for referral [referral=${referral._id}, referrer=${referral.referrerMemberId}] failed`,
+          err,
+        );
+        // Non-fatal — credits were issued. rewardPaid stays false so a retry is safe;
+        // idempotency key (referral_<id>_firstpurchase) prevents double-award.
+      }
+    }
+
+    referral.status = 'credited';
+    await wixData.update(REFERRALS_COLLECTION, referral, { suppressAuth: true });
+
+    // Fire gamification earn event for the referrer — non-blocking, never throws
+    receiveGamificationEvent(
+      'gamification_referral_accepted',
+      { referral_count: 1 },
+      referral.referrerMemberId,
+    ).catch((err) =>
+      console.warn('[referralService] gamification_referral_accepted event failed:', err?.message),
+    );
+
+    const outcome = { success: true, referrerCredit: REFERRER_CREDIT_AMOUNT, refereeCredit: REFEREE_CREDIT_AMOUNT };
+    if (pointsAwarded > 0) outcome.pointsAwarded = pointsAwarded;
+    return outcome;
+  } catch (err) {
+    console.error('[referralService] _processReferralOnOrderCreated failed:', err);
+    return { skipped: true };
+  }
+}
+
 // ── getMyReferrals ──────────────────────────────────────────────────
 
 export const getMyReferrals = webMethod(
@@ -472,6 +652,99 @@ export const getReferralStats = webMethod(
     } catch (err) {
       console.error('getReferralStats error:', err);
       return { success: false, error: 'Unable to load stats' };
+    }
+  }
+);
+
+const SITE_URL = 'https://www.carolinafutons.com';
+
+/**
+ * Returns the referral link and completed-referral count for the given member.
+ * Combines getReferralLink and getReferralStats into a single call for the
+ * member dashboard ReferralWidget.
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ referralUrl: string, completedReferrals: number } | { error: string }>}
+ */
+export const getReferralStatus = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member || !member._id) return { error: 'auth_required' };
+      if (member._id !== memberId) return { error: 'forbidden' };
+
+      // Fetch referral code (create if needed) and completed count in parallel
+      const [linkResult, statsResult] = await Promise.allSettled([
+        getReferralLink(),
+        getReferralStats(),
+      ]);
+
+      const referralCode =
+        linkResult.status === 'fulfilled' && linkResult.value.success
+          ? linkResult.value.referralCode
+          : null;
+
+      const completedReferrals =
+        statsResult.status === 'fulfilled' && statsResult.value.success
+          ? statsResult.value.stats.completedReferrals
+          : 0;
+
+      const referralUrl = referralCode
+        ? `${SITE_URL}/shop?ref=${referralCode}`
+        : `${SITE_URL}/shop`;
+
+      return { referralUrl, completedReferrals };
+    } catch (err) {
+      console.error('[referralService] getReferralStatus failed:', err);
+      return { error: 'Unable to load referral status' };
+    }
+  }
+);
+
+// ── CF-fawn: Post-purchase reward summary ─────────────────────────────────────
+
+/**
+ * Returns purchase points earned + referral link for the Thank You page.
+ * Combines order-based points calculation with referral link generation.
+ * For non-members, returns null (graceful degradation).
+ *
+ * CF-fawn
+ *
+ * @param {number} orderTotal - Order total in dollars
+ * @returns {Promise<{ pointsEarned: number, referralUrl: string, referralCode: string|null, referralBonusPoints: number } | null>}
+ */
+export const getPostPurchaseRewardSummary = webMethod(
+  Permissions.Anyone,
+  async (orderTotal) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return null; // Non-member — graceful degradation
+
+      // Calculate points earned from this purchase (2 pts per dollar)
+      const PURCHASE_PER_DOLLAR = 2;
+      const pointsEarned = Math.floor((Number(orderTotal) || 0) * PURCHASE_PER_DOLLAR);
+
+      // Get or create referral link
+      let referralCode = null;
+      let referralUrl = `${SITE_URL}/shop`;
+      try {
+        const linkResult = await getReferralLink();
+        if (linkResult.success && linkResult.referralCode) {
+          referralCode = linkResult.referralCode;
+          referralUrl = `${SITE_URL}/shop?ref=${linkResult.referralCode}`;
+        }
+      } catch (_) { /* best-effort */ }
+
+      return {
+        pointsEarned,
+        referralUrl,
+        referralCode,
+        referralBonusPoints: 500,
+      };
+    } catch (err) {
+      console.error('[referralService] getPostPurchaseRewardSummary failed:', err);
+      return null;
     }
   }
 );
