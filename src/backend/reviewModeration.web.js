@@ -287,6 +287,150 @@ export const getModerationStats = webMethod(
   }
 );
 
+
+// ── Profanity Filter ────────────────────────────────────────────────
+
+const PROFANITY_KEYWORDS = [
+  'fuck', 'shit', 'asshole', 'bitch', 'cunt', 'damn it', 'bastard',
+  'motherfucker', 'cock', 'pussy', 'whore', 'faggot', 'nigger', 'nigga',
+];
+
+/**
+ * Check if text contains any profanity keywords (case-insensitive).
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function containsProfanity(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  return PROFANITY_KEYWORDS.some(word => lower.includes(word));
+}
+
+/**
+ * Determine if a review is eligible for auto-approval.
+ * Criteria: 4+ stars AND no profanity in title or body.
+ *
+ * @param {{rating: number, title?: string, body?: string}} review
+ * @returns {boolean}
+ */
+export function isAutoApprovable(review) {
+  if (!review || review.rating < 4) return false;
+  return !containsProfanity(review.title) && !containsProfanity(review.body);
+}
+
+// ── Stamped.io Ingest ───────────────────────────────────────────────
+
+/**
+ * Ingest a review from the Stamped.io webhook payload.
+ * Inserts into ProductReviews with status 'pending', or 'approved' if
+ * the review passes the auto-approve threshold.
+ *
+ * Called by http-functions.js post_stampedWebhook after signature verification.
+ *
+ * @param {Object} payload - Stamped.io review object
+ * @returns {Promise<{success: boolean, reviewId?: string, status?: string}>}
+ */
+export async function ingestStampedReview(payload) {
+  try {
+    const productId = sanitize(String(payload.productId || ''), 100);
+    const author = sanitize(payload.author || payload.reviewerName || 'Anonymous', 200);
+    const rating = Number(payload.rating) || 0;
+    const title = sanitize(payload.title || payload.reviewTitle || '', 300);
+    const body = sanitize(payload.body || payload.reviewMessage || '', 5000);
+    const email = sanitize(payload.email || '', 254);
+    const externalId = sanitize(String(payload.id || payload.reviewId || ''), 100);
+
+    if (!productId || !rating || rating < 1 || rating > 5) {
+      return { success: false };
+    }
+
+    // Avoid duplicate ingestion
+    if (externalId) {
+      const existing = await wixData.query(COLLECTION)
+        .eq('externalId', externalId)
+        .eq('source', 'stamped')
+        .find();
+      if (existing.items.length > 0) {
+        return { success: true, reviewId: existing.items[0]._id, status: 'duplicate' };
+      }
+    }
+
+    const autoApprovable = isAutoApprovable({ rating, title, body });
+    const status = autoApprovable ? 'approved' : 'pending';
+
+    const record = {
+      productId,
+      author,
+      rating,
+      title,
+      body,
+      email,
+      status,
+      source: 'stamped',
+      externalId,
+      verifiedPurchase: !!(payload.isVerifiedBuyer || payload.verified),
+      createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+    };
+
+    const saved = await wixData.insert(COLLECTION, record);
+
+    logAuditEvent(COLLECTION, 'stamped_ingest', saved._id, {
+      status,
+      rating,
+      autoApproved: autoApprovable,
+      externalId,
+    });
+
+    return { success: true, reviewId: saved._id, status };
+  } catch (err) {
+    console.error('[reviewModeration] ingestStampedReview error:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Scan pending reviews and auto-approve those meeting the threshold
+ * (4+ stars, no profanity). Admin utility for backfilling.
+ *
+ * @returns {Promise<{success: boolean, scanned: number, approved: number}>}
+ * @permission Admin
+ */
+export const autoApproveEligible = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const result = await wixData.query(COLLECTION)
+        .eq('status', 'pending')
+        .limit(100)
+        .find();
+
+      let approved = 0;
+
+      for (const review of result.items) {
+        if (isAutoApprovable(review)) {
+          review.status = 'approved';
+          review.moderatedAt = new Date();
+          review.autoApproved = true;
+          await wixData.update(COLLECTION, review);
+          approved++;
+        }
+      }
+
+      logAuditEvent(COLLECTION, 'auto_approve_eligible', 'system', {
+        scanned: result.items.length, approved,
+      });
+
+      return { success: true, scanned: result.items.length, approved };
+    } catch (err) {
+      console.error('[reviewModeration] autoApproveEligible error:', err);
+      return { success: false, scanned: 0, approved: 0 };
+    }
+  }
+);
+
+export const _PROFANITY_KEYWORDS = PROFANITY_KEYWORDS;
+
 // Exports for testing
 export const _SPAM_KEYWORDS = SPAM_KEYWORDS;
 export const _SPAM_SCORE_THRESHOLD = SPAM_SCORE_THRESHOLD;

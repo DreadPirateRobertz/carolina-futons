@@ -26,6 +26,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 import { recordEmailEvent } from 'backend/emailAutomation.web'; // CF-fzsd: conversion tracking
 
@@ -384,6 +385,7 @@ export const moderateReview = webMethod(
       review.moderatedAt = new Date();
       await wixData.update(COLLECTION, review);
 
+      logAuditEvent(COLLECTION, `moderate_${action}`, rid, { previousStatus, newStatus });
       return { success: true, previousStatus, newStatus };
     } catch (err) {
       console.error('[reviewsService] moderateReview error:', err);
