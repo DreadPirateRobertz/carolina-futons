@@ -1,4 +1,5 @@
 /**
+<<<<<<< HEAD
  * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-4qll S2, CF-muzy S5)
  * Tests: token parsing, invalid message builder, S2 card population, SEO helpers
  */
@@ -10,6 +11,15 @@ import {
   buildWishlistDescription,
   buildWishlistOgTags,
   populateShareCard,
+=======
+ * Wishlist Share — pure helper unit tests (CF-y24r S1)
+ * Tests: token parsing, invalid message builder
+ */
+import { describe, it, expect } from 'vitest';
+import {
+  parseShareToken,
+  buildInvalidMessage,
+>>>>>>> origin/cf-y24r-wishlist-share
 } from '../../src/public/wishlistShareHelpers.js';
 
 // ── parseShareToken ────────────────────────────────────────────────────────────
@@ -80,6 +90,7 @@ describe('buildInvalidMessage', () => {
     }
   });
 });
+<<<<<<< HEAD
 
 // ── S2: populateShareCard ─────────────────────────────────────────────────────
 
@@ -253,3 +264,5 @@ describe('buildWishlistOgTags', () => {
     expect(ogType?.content).toBe('website');
   });
 });
+=======
+>>>>>>> origin/cf-y24r-wishlist-share
