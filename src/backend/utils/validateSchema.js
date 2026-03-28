@@ -28,7 +28,7 @@
 export function validateSchema(data, schema) {
   const errors = [];
 
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return ['Request data is required.'];
   }
 
