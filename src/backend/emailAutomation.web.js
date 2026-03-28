@@ -314,8 +314,9 @@ export const triggerWelcomeSequence = webMethod(
       let queued = 0;
 
       // CF-o63p: category-specific buying guide URL for step 3.
-      // Uses quiz result if provided; defaults to generic guide.
-      const quizCategory = sanitize(opts?.quizCategory || '', 50);
+      // Restrict to slug-safe chars ([a-z0-9-]) to prevent path injection in email links.
+      const rawCategory = sanitize(opts?.quizCategory || '', 50);
+      const quizCategory = rawCategory.replace(/[^a-z0-9-]/gi, '');
       const buyingGuideUrl = quizCategory
         ? `${SITE_URL_BASE}/buying-guide/${quizCategory}`
         : `${SITE_URL_BASE}/buying-guide`;
@@ -331,7 +332,7 @@ export const triggerWelcomeSequence = webMethod(
         if (step.step === 1) {
           variables.discountCode = discountCode;
           variables.discountAvailable = discountAvailable;
-          variables.discountPercent = '10';
+          if (discountAvailable) variables.discountPercent = '10';
         }
 
         // Step 2 (CF-o63p): best sellers collection link
