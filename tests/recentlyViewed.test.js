@@ -258,6 +258,28 @@ describe('initRecentlyViewedCarousel', () => {
     expect(makeClickable).toHaveBeenCalled();
   });
 
+  it('shows call-for-price text when product price <= $1.00', () => {
+    const callForPriceProduct = {
+      _id: 'cfp1', name: 'Asheville Frame', slug: 'asheville-frame',
+      price: 1, formattedPrice: '$1.00', mainMedia: '/asheville.jpg',
+    };
+    getRecentlyViewed.mockReturnValue([callForPriceProduct]);
+
+    initRecentlyViewedCarousel($w);
+
+    const repeater = $w('#recentlyViewedRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, callForPriceProduct);
+
+    expect(itemEls.get('#recentPrice').text).toContain('Call for Pricing');
+  });
+
   it('sets ARIA landmark on section', () => {
     getRecentlyViewed.mockReturnValue(mockProducts);
 

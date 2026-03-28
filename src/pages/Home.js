@@ -533,7 +533,7 @@ async function initRecentlyViewed() {
         try { $item('#recentImage').alt = `${name} - Carolina Futons`; } catch (e2) {}
       }
       try { $item('#recentName').text = name; } catch (e) {}
-      try { $item('#recentPrice').text = itemData.price || ''; } catch (e) {}
+      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : (itemData.price || ''); } catch (e) {}
       try { $item('#recentImage').accessibility.ariaLabel = `View ${name}`; } catch (e) {}
       try { $item('#recentName').accessibility.ariaLabel = `View ${name} details`; } catch (e) {}
 

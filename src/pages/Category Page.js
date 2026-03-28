@@ -1007,7 +1007,7 @@ function initRecentlyViewed() {
 
       const name = itemData.name || 'Product';
       try { $item('#recentName').text = name; } catch (e) {}
-      try { $item('#recentPrice').text = itemData.price || ''; } catch (e) {}
+      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : (itemData.price || ''); } catch (e) {}
 
       const slug = itemData.slug || '';
       const navigateToProduct = () => {

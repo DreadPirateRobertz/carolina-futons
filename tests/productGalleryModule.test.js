@@ -247,6 +247,22 @@ describe('loadRecentlyViewed', () => {
     expect($item('#recentPrice').text).toBe('$50');
   });
 
+  it('shows call-for-price text for $1.00 placeholder products', async () => {
+    const items = [{ _id: 'r1', name: 'Asheville Frame', mainMedia: 'ash.jpg', price: 1, slug: 'asheville' }];
+    getRecentlyViewed.mockReturnValue(items);
+    await loadRecentlyViewed($w, { _id: 'p1' });
+
+    const callback = getEl('#recentlyViewedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, items[0]);
+
+    expect($item('#recentPrice').text).toContain('Call for Pricing');
+  });
+
   it('sets keyboard a11y on recent items', async () => {
     const items = [{ _id: 'r1', name: 'R', mainMedia: 'r.jpg', price: '$1', slug: 'r' }];
     getRecentlyViewed.mockReturnValue(items);

@@ -11,6 +11,7 @@ import { session } from 'wix-storage-frontend';
 import { getRecentlyViewed, cacheProduct } from 'public/productCache';
 import { getSimilarProducts } from 'backend/productRecommendations.web';
 import { makeClickable } from 'public/a11yHelpers.js';
+import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 
 const SESSION_KEY = 'cf_session_viewed';
 const MAX_HISTORY = 20;
@@ -129,7 +130,7 @@ export function initRecentlyViewedCarousel($w, options = {}) {
       } catch (e) { /* noop */ }
 
       try { $item('#recentName').text = itemData.name; } catch (e) { /* noop */ }
-      try { $item('#recentPrice').text = itemData.formattedPrice || String(itemData.price); } catch (e) { /* noop */ }
+      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : (itemData.formattedPrice || String(itemData.price)); } catch (e) { /* noop */ }
 
       const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {
