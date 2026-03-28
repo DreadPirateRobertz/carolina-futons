@@ -40,6 +40,35 @@ const VALID_TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', 
 const BOOKING_WINDOW_DAYS = 14;
 const MAX_PHOTOS = 10;
 
+// Pre-consultation intake form allowed values (cf-osnt)
+const INTAKE_ENUMS = {
+  roomType: ['living-room', 'guest-room', 'studio', 'bedroom', 'office', 'other'],
+  roomSize: ['small', 'medium', 'large'],
+  primaryUse: ['daily-sleeping', 'occasional-guest', 'both'],
+  stylePreference: ['modern', 'traditional', 'rustic', 'eclectic'],
+  budget: ['under-500', '500-1000', '1000-2000', '2000-plus'],
+  timeline: ['within-week', 'within-month', 'browsing'],
+  painPoint: ['price', 'space', 'comfort', 'style', 'assembly'],
+};
+const REQUIRED_INTAKE_FIELDS = Object.keys(INTAKE_ENUMS).filter(k => k !== 'painPoint');
+
+/**
+ * Validate consultationId and verify booking ownership.
+ * Returns { cleanId, memberId } on success, or { error } on failure.
+ */
+async function resolveOwnedBooking(consultationId) {
+  const memberId = await requireMember();
+  const cleanId = validateId(consultationId);
+  if (!cleanId) {
+    return { error: 'Consultation ID is required.' };
+  }
+  const booking = await wixData.get('ConsultationBookings', cleanId);
+  if (!booking || booking.memberId !== memberId) {
+    return { error: 'Consultation not found.' };
+  }
+  return { cleanId, memberId, booking };
+}
+
 async function requireMember() {
   const member = await currentMember.getMember();
   if (!member) throw new Error('Authentication required');
@@ -487,6 +516,123 @@ export const getConsultationDetails = webMethod(
       }
       console.error('[virtualConsultation] Error getting consultation details:', err);
       return { success: false, error: 'Failed to load consultation details.' };
+    }
+  }
+);
+
+/**
+ * Submit a pre-consultation intake form linked to a booking.
+ *
+ * Saves the customer's space details, preferences, and budget to the
+ * ConsultationIntake collection so the designer is prepared before the call.
+ *
+ * @param {string} consultationId - ConsultationBookings _id
+ * @param {Object} data
+ * @param {string} data.roomType - 'living-room'|'guest-room'|'studio'|'bedroom'|'office'|'other'
+ * @param {string} data.roomSize - 'small'|'medium'|'large'
+ * @param {string} data.primaryUse - 'daily-sleeping'|'occasional-guest'|'both'
+ * @param {string} data.stylePreference - 'modern'|'traditional'|'rustic'|'eclectic'
+ * @param {string} data.budget - 'under-500'|'500-1000'|'1000-2000'|'2000-plus'
+ * @param {string} data.timeline - 'within-week'|'within-month'|'browsing'
+ * @param {string} [data.description] - What the customer is looking for (max 200 chars)
+ * @param {string} [data.painPoint] - 'price'|'space'|'comfort'|'style'|'assembly'
+ * @returns {Promise<{success: boolean, intakeId?: string, error?: string}>}
+ */
+export const submitConsultationIntake = webMethod(
+  Permissions.SiteMember,
+  async (consultationId, data) => {
+    try {
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
+      }
+      const { cleanId, memberId, booking } = resolved;
+
+      if (booking.status === 'cancelled' || booking.status === 'completed') {
+        return { success: false, error: 'Cannot submit intake for a cancelled or completed consultation.' };
+      }
+
+      if (!data || typeof data !== 'object') {
+        return { success: false, error: 'Intake data is required.' };
+      }
+
+      // Validate required enum fields
+      for (const field of REQUIRED_INTAKE_FIELDS) {
+        const value = data?.[field];
+        if (!value || !INTAKE_ENUMS[field].includes(value)) {
+          return { success: false, error: `Invalid or missing ${field}.` };
+        }
+      }
+
+      // Validate optional description (max 200 chars)
+      if (data.description && data.description.length > 200) {
+        return { success: false, error: 'description must be 200 characters or fewer.' };
+      }
+
+      // Validate optional painPoint
+      if (data.painPoint && !INTAKE_ENUMS.painPoint.includes(data.painPoint)) {
+        return { success: false, error: 'Invalid painPoint.' };
+      }
+
+      const record = {
+        consultationId: cleanId,
+        memberId,
+        ...Object.fromEntries(REQUIRED_INTAKE_FIELDS.map(f => [f, data[f]])),
+        description: sanitize(data.description || '', 200),
+        painPoint: data.painPoint || null,
+        createdAt: new Date(),
+      };
+
+      const existing = await wixData.query('ConsultationIntake')
+        .eq('consultationId', cleanId)
+        .find();
+
+      if (existing.items.length > 0) {
+        const saved = await wixData.update('ConsultationIntake', { ...existing.items[0], ...record });
+        return { success: true, intakeId: saved._id };
+      }
+
+      const inserted = await wixData.insert('ConsultationIntake', record);
+      return { success: true, intakeId: inserted._id };
+    } catch (err) {
+      if (err.message === 'Authentication required') {
+        return { success: false, error: 'Authentication required.' };
+      }
+      console.error('[virtualConsultation] Error submitting intake:', err);
+      return { success: false, error: 'Failed to submit intake form.' };
+    }
+  }
+);
+
+/**
+ * Get the pre-consultation intake form response for a booking.
+ *
+ * @param {string} consultationId - ConsultationBookings _id
+ * @returns {Promise<{success: boolean, intake: Object|null, error?: string}>}
+ */
+export const getConsultationIntake = webMethod(
+  Permissions.SiteMember,
+  async (consultationId) => {
+    try {
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
+      }
+
+      const { cleanId, memberId } = resolved;
+
+      const result = await wixData.query('ConsultationIntake')
+        .eq('consultationId', cleanId)
+        .eq('memberId', memberId)
+        .find();
+
+      return { success: true, intake: result.items[0] ?? null };
+    } catch (err) {
+      if (err.message === 'Authentication required') {
+        return { success: false, error: 'Authentication required.' };
+      }
+      console.error('[virtualConsultation] Error getting intake:', err);
+      return { success: false, error: 'Failed to load intake form.' };
     }
   }
 );
