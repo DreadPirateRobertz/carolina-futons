@@ -27,7 +27,7 @@ import { logError } from 'backend/utils/errorHandler';
 import { sanitize } from 'backend/utils/sanitize';
 
 const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000; // 1s, 4s, 16s (exponential)
+const BASE_DELAY_MS = 1000; // delays between attempts: 1s, 4s (16s would fire after last retry but is gated out)
 
 /**
  * Status labels for the mobile push notification.
@@ -125,7 +125,7 @@ export async function sendWebhook(payload) {
       lastError = err.message || 'Network error';
     }
 
-    // Exponential backoff: 1s, 4s, 16s
+    // Exponential backoff: 1s before retry 2, 4s before retry 3
     if (attempt < MAX_RETRIES) {
       const delay = BASE_DELAY_MS * Math.pow(4, attempt - 1);
       await new Promise(r => setTimeout(r, delay));
