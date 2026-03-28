@@ -20,7 +20,7 @@
  *   $w.onReady(() => initLoyaltyDashboard());
  */
 import { getMyLoyaltyAccount, getMyBurnRate } from 'backend/loyaltyService.web';
-import { saveBirthday } from 'backend/loyaltyMarketing.web';
+import { saveBirthday, getBirthdayStatus } from 'backend/loyaltyMarketing.web';
 import {
   formatProgressText,
   getProgressPercent,
@@ -308,8 +308,10 @@ export async function initLoyaltyDashboard(opts = {}) {
  */
 export async function initBirthdayCapture($wFn, memberId) {
   try {
-    // Show the section — if member already has DOB, saveBirthday returns already_set
-    // and we hide it again immediately, avoiding a separate read call
+    // Skip if member already has a birthday on file
+    const status = await getBirthdayStatus(memberId);
+    if (status.hasBirthday) return;
+
     try { $wFn('#birthdayCaptureSection').expand(); } catch (_) { return; }
     try { $wFn('#birthdayCaptureMessage').text = 'Add your birthday for +50 bonus points!'; } catch (_) {}
 
@@ -330,6 +332,9 @@ export async function initBirthdayCapture($wFn, memberId) {
         try { $wFn('#birthdayCaptureSection').collapse(); } catch (_) {}
       } else if (result.reason === 'invalid_month' || result.reason === 'invalid_day') {
         try { $wFn('#birthdayCaptureMessage').text = 'Please enter a valid birthday (month 1–12, day 1–31).'; } catch (_) {}
+        try { $wFn('#birthdaySaveButton').enable(); } catch (_) {}
+      } else if (!result.success && result.reason === 'error') {
+        try { $wFn('#birthdayCaptureMessage').text = 'Something went wrong. Please try again.'; } catch (_) {}
         try { $wFn('#birthdaySaveButton').enable(); } catch (_) {}
       } else {
         try { $wFn('#birthdayCaptureMessage').text = result.message || 'Birthday saved!'; } catch (_) {}
