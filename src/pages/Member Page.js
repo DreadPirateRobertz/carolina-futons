@@ -21,6 +21,7 @@ import {
 } from 'public/loyaltyHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { addShareToken } from 'backend/wishlistShare.web.js';
+<<<<<<< HEAD
 import { getMyStreakData, getMyAchievements, getMyDailyQuests } from 'backend/loyaltyService.web';
 import { getActiveChallenges, recoverStreak } from 'backend/gamificationEventReceiver.web';
 import { initChallengesDisplay } from 'public/ChallengesDisplay.js';
@@ -38,6 +39,8 @@ import {
   shouldShowStreakChip,
   updateStreakDisplay,
 } from 'public/StreakDisplay.js';
+=======
+>>>>>>> origin/cf-pvxf-wishlist-share-s4
 
 let currentMember = null;
 let wishlistData = [];

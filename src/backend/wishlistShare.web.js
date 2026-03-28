@@ -19,6 +19,9 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/cf-pvxf-wishlist-share-s4
 import { currentMember } from 'wix-members-backend';
 
 // ── addShareToken ─────────────────────────────────────────────────────────────
@@ -100,8 +103,11 @@ export const addShareToken = webMethod(
     return { token, shareUrl, expiresAt };
   }
 );
+<<<<<<< HEAD
 =======
 >>>>>>> origin/cf-y24r-wishlist-share
+=======
+>>>>>>> origin/cf-pvxf-wishlist-share-s4
 
 // ── resolveShareToken ─────────────────────────────────────────────────────────
 
