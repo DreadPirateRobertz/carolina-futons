@@ -142,7 +142,7 @@ describe('subscribeToNotifications — rate limiting', () => {
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let insertedCollection, insertedItem;
-    __onInsert((col, item) => { insertedCollection = col; insertedItem = item; });
+    __onInsert((col, item) => { if (col === 'TrackingNotifications') { insertedCollection = col; insertedItem = item; } });
     const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
     expect(insertedCollection).toBe('TrackingNotifications');

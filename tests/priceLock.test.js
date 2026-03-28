@@ -61,7 +61,7 @@ describe('createPriceLock', () => {
       productName: 'Asheville Futon Frame',
       email: 'jane@example.com',
       tier: 30,
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(true);
     expect(result.data.lockedPrice).toBe(549.99);
@@ -81,7 +81,7 @@ describe('createPriceLock', () => {
       productName: 'Murphy Cabinet Bed',
       email: 'jane@example.com',
       tier: 90,
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(true);
     expect(result.data.tier).toBe('90');
@@ -93,9 +93,10 @@ describe('createPriceLock', () => {
   });
 
   it('rejects without memberId', async () => {
+    __setMember(null);
     const result = await createPriceLock({
       productId: 'prod-1', currentPrice: 500, productName: 'Test', email: 'a@b.com',
-    }, null);
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Authentication');
@@ -105,7 +106,7 @@ describe('createPriceLock', () => {
     withRateLimit('PriceLockRateLimit', { key: 'member-1' });
     const result = await createPriceLock({
       productId: 'prod-1', currentPrice: 500, productName: 'Test', email: 'a@b.com', tier: 45,
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid tier');
@@ -115,7 +116,7 @@ describe('createPriceLock', () => {
     withRateLimit('PriceLockRateLimit', { key: 'member-1' });
     const result = await createPriceLock({
       productId: 'prod-1', currentPrice: -10, productName: 'Test', email: 'a@b.com',
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid price');
@@ -125,7 +126,7 @@ describe('createPriceLock', () => {
     withRateLimit('PriceLockRateLimit', { key: 'member-1' });
     const result = await createPriceLock({
       productId: '', currentPrice: 500, productName: 'Test', email: 'a@b.com',
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Product ID');
@@ -144,7 +145,7 @@ describe('createPriceLock', () => {
 
     const result = await createPriceLock({
       productId: 'prod-1', currentPrice: 549.99, productName: 'Test', email: 'a@b.com',
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('already have an active');
@@ -163,7 +164,7 @@ describe('createPriceLock', () => {
 
     const result = await createPriceLock({
       productId: 'prod-new', currentPrice: 500, productName: 'Test', email: 'a@b.com',
-    }, 'member-1');
+    });
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Maximum');
@@ -184,14 +185,14 @@ describe('checkPriceLock', () => {
       expiresAt: new Date(Date.now() + 15 * MS_PER_DAY),
     }]);
 
-    const result = await checkPriceLock('prod-1', 'member-1');
+    const result = await checkPriceLock('prod-1');
     expect(result.hasLock).toBe(true);
     expect(result.lock.lockedPrice).toBe(549.99);
     expect(result.lock.daysRemaining).toBeGreaterThan(0);
   });
 
   it('returns hasLock false when no lock exists', async () => {
-    const result = await checkPriceLock('prod-1', 'member-1');
+    const result = await checkPriceLock('prod-1');
     expect(result.hasLock).toBe(false);
   });
 
@@ -208,7 +209,7 @@ describe('checkPriceLock', () => {
       expiresAt: new Date(Date.now() - MS_PER_DAY), // expired yesterday
     }]);
 
-    const result = await checkPriceLock('prod-1', 'member-1');
+    const result = await checkPriceLock('prod-1');
     expect(result.hasLock).toBe(false);
     expect(updatedStatus).toBe('expired');
   });
