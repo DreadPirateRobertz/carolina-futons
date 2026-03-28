@@ -187,7 +187,7 @@ export async function initAppDownloadBanner($w, currentUrl, opts = {}) {
     }
 
     // Android
-    _showAndroidBanner($w, currentUrl, opts.navigateTo);
+    _showAndroidBanner($w, opts.navigateTo);
   } catch {}
 }
 
@@ -202,11 +202,10 @@ function _injectIOSBanner(currentUrl, setMetaTagsFn) {
   }).catch(() => {});
 }
 
-function _showAndroidBanner($w, currentUrl, navigateFn) {
+function _showAndroidBanner($w, navigateFn) {
   let banner;
   try {
     banner = $w('#appDownloadBanner');
-    if (!banner) return;
   } catch {
     return;
   }
@@ -217,7 +216,6 @@ function _showAndroidBanner($w, currentUrl, navigateFn) {
 
   try {
     $w('#appDownloadBannerBtn').onClick(() => {
-      storeDeferredDeepLink(currentUrl);
       recordDismissal();
       const storeUrl = getAndroidStoreUrl();
       if (navigateFn) {
