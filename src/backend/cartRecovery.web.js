@@ -368,6 +368,88 @@ function parseLineItems(raw) {
     }));
 }
 
+/**
+ * Expose cart abandon payload for mobile push deduplication.
+ * Mobile's cm-cart-abandonment-recovery calls this to get cart items
+ * and check if the member has push enabled (to suppress web email).
+ *
+ * @param {Object} params
+ * @param {string} [params.cartId] - AbandonedCarts record _id
+ * @param {string} [params.memberId] - Member ID (alternative lookup)
+ * @returns {Promise<{success: boolean, cart_items: Array, total_price: number, cart_id: string, member_push_enabled: boolean}>}
+ * @permission Admin
+ * CF-b0lk
+ */
+export const exposeCartAbandonPayload = webMethod(
+  Permissions.Admin,
+  async (params = {}) => {
+    try {
+      const cartId = params.cartId ? sanitize(params.cartId, 50) : null;
+      const memberId = params.memberId ? sanitize(params.memberId, 50) : null;
+
+      if (!cartId && !memberId) {
+        return { success: false, cart_items: [], total_price: 0, cart_id: '', member_push_enabled: false };
+      }
+
+      // Find the abandoned cart
+      let cart = null;
+      if (cartId) {
+        cart = await wixData.get('AbandonedCarts', cartId);
+      } else if (memberId) {
+        const result = await wixData.query('AbandonedCarts')
+          .eq('memberId', memberId)
+          .eq('status', 'abandoned')
+          .descending('abandonedAt')
+          .limit(1)
+          .find();
+        cart = result.items.length > 0 ? result.items[0] : null;
+      }
+
+      if (!cart) {
+        return { success: false, cart_items: [], total_price: 0, cart_id: '', member_push_enabled: false };
+      }
+
+      // Parse line items (max 3 for push notification)
+      // Use raw items to preserve image URLs (parseLineItems strips them)
+      let rawItems = [];
+      try {
+        rawItems = typeof cart.lineItems === 'string'
+          ? JSON.parse(cart.lineItems)
+          : (cart.lineItems || []);
+      } catch (e) { rawItems = []; }
+
+      const cartItems = (Array.isArray(rawItems) ? rawItems : []).slice(0, 3).map(item => ({
+        name: String(item.name || ''),
+        image_url: String(item.imageUrl || item.image || item.image_url || ''),
+        price: Number(item.price) || 0,
+      }));
+
+      // Check mobile push subscription
+      let memberPushEnabled = false;
+      const contactId = cart.memberId || memberId;
+      if (contactId) {
+        const pushSubs = await wixData.query('MobilePushSubscriptions')
+          .eq('memberId', contactId)
+          .eq('enabled', true)
+          .limit(1)
+          .find();
+        memberPushEnabled = pushSubs.items.length > 0;
+      }
+
+      return {
+        success: true,
+        cart_items: cartItems,
+        total_price: cart.cartTotal || 0,
+        cart_id: cart._id,
+        member_push_enabled: memberPushEnabled,
+      };
+    } catch (err) {
+      console.error('[cartRecovery] exposeCartAbandonPayload error:', err);
+      return { success: false, cart_items: [], total_price: 0, cart_id: '', member_push_enabled: false };
+    }
+  }
+);
+
 async function markCartRecovered(checkoutId) {
   if (!checkoutId) return;
   const clean = sanitize(checkoutId, 50);
