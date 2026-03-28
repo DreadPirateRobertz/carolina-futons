@@ -434,6 +434,26 @@ describe('post_klarna_confirm', () => {
       const second = await post_klarna_confirm(confirmReq());
       expect(second.status).toBe(403);
     });
+
+    it('encodes special characters in klarnaOrderId in confirm URL path', async () => {
+      const specialId = 'order/with?special#chars';
+      __seed('Klarna_PendingOrders', [{
+        _id: specialId, klarnaOrderId: specialId, memberId: 'member-abc', cartId: 'cart-123',
+        createdAt: new Date().toISOString(),
+      }]);
+      let capturedUrl = '';
+      __setHandler((url) => {
+        capturedUrl = url;
+        if (url.endsWith('/confirm')) {
+          return { ok: true, status: 200, async json() { return { order_id: specialId }; } };
+        }
+        return { ok: false, status: 500, async json() { return {}; } };
+      });
+      const req = makeRequest({ klarnaOrderId: specialId, cartId: 'cart-123' });
+      await post_klarna_confirm(req);
+      expect(capturedUrl).toContain(encodeURIComponent(specialId));
+      expect(capturedUrl).not.toContain('/with?special');
+    });
   });
 
   describe('Klarna API error', () => {

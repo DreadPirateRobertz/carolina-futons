@@ -105,6 +105,22 @@ describe('isValidImageUrl', () => {
     expect(isValidImageUrl('https://0.0.0.0/photo.jpg')).toBe(false);
   });
 
+  it('rejects decimal-encoded IP (SSRF bypass: 2130706433 = 127.0.0.1)', () => {
+    expect(isValidImageUrl('https://2130706433/photo.jpg')).toBe(false);
+  });
+
+  it('rejects decimal-encoded private IP (SSRF bypass: 3232235777 = 192.168.1.1)', () => {
+    expect(isValidImageUrl('https://3232235777/photo.jpg')).toBe(false);
+  });
+
+  it('rejects hex-encoded IP (SSRF bypass: 0x7f000001 = 127.0.0.1)', () => {
+    expect(isValidImageUrl('https://0x7f000001/photo.jpg')).toBe(false);
+  });
+
+  it('rejects bracketed IPv6 loopback [::1] (SSRF)', () => {
+    expect(isValidImageUrl('https://[::1]/photo.jpg')).toBe(false);
+  });
+
   it('accepts a real public IP over https (not private)', () => {
     expect(isValidImageUrl('https://8.8.8.8/photo.jpg')).toBe(true);
   });
