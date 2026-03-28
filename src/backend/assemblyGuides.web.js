@@ -139,6 +139,144 @@ export const listAssemblyGuides = webMethod(
   }
 );
 
+// ── Assembly Info by Category (CF-xmjr) ────────────────────────────
+
+const ASSEMBLY_DATA = {
+  'futon-frames': {
+    difficulty: 'Medium',
+    estimatedMinutes: 45,
+    stepCount: 8,
+    tools: ['Phillips screwdriver', 'Allen key (included)', 'Rubber mallet (optional)'],
+    notes: 'Two people recommended for frame assembly. All hardware included.',
+  },
+  'murphy-cabinet-beds': {
+    difficulty: 'Expert',
+    estimatedMinutes: 120,
+    stepCount: 18,
+    tools: ['Phillips screwdriver', 'Drill with bits', 'Level', 'Stud finder', 'Allen key (included)'],
+    notes: 'Wall anchoring required. Professional installation recommended. Two people minimum.',
+  },
+  'platform-beds': {
+    difficulty: 'Easy',
+    estimatedMinutes: 30,
+    stepCount: 6,
+    tools: ['Phillips screwdriver', 'Allen key (included)'],
+    notes: 'Simple slat-based assembly. No tools beyond included hardware needed.',
+  },
+  'mattresses': {
+    difficulty: 'Easy',
+    estimatedMinutes: 5,
+    stepCount: 2,
+    tools: [],
+    notes: 'Unroll and allow 24-48 hours to fully expand. No assembly required.',
+  },
+  'covers': {
+    difficulty: 'Easy',
+    estimatedMinutes: 10,
+    stepCount: 3,
+    tools: [],
+    notes: 'Stretch cover over mattress, tuck corners, zip closed. Machine washable.',
+  },
+  'casegoods-accessories': {
+    difficulty: 'Easy',
+    estimatedMinutes: 15,
+    stepCount: 4,
+    tools: ['Phillips screwdriver'],
+    notes: 'Most accessories are pre-assembled or require minimal hardware.',
+  },
+  'wall-hugger-frames': {
+    difficulty: 'Medium',
+    estimatedMinutes: 60,
+    stepCount: 10,
+    tools: ['Phillips screwdriver', 'Allen key (included)', 'Rubber mallet (optional)'],
+    notes: 'Wall-hugger mechanism requires careful alignment. Two people recommended.',
+  },
+  'log-frames': {
+    difficulty: 'Medium',
+    estimatedMinutes: 40,
+    stepCount: 7,
+    tools: ['Phillips screwdriver', 'Allen key (included)'],
+    notes: 'Heavier than standard frames. Two people required for safe assembly.',
+  },
+  'outdoor-furniture': {
+    difficulty: 'Easy',
+    estimatedMinutes: 20,
+    stepCount: 5,
+    tools: ['Phillips screwdriver', 'Wrench (included)'],
+    notes: 'Weather-resistant hardware included. Place on level surface.',
+  },
+};
+
+/**
+ * Get assembly difficulty and info for a product category.
+ * Called by PDP for the "Assembly Info" section.
+ *
+ * @param {string} category - Product category slug
+ * @returns {{success: boolean, info: Object|null}}
+ * @permission Anyone
+ * CF-xmjr
+ */
+export const getAssemblyInfo = webMethod(
+  Permissions.Anyone,
+  (category) => {
+    const cleanCategory = sanitize(category || '', 50);
+    const data = ASSEMBLY_DATA[cleanCategory];
+
+    if (!data) {
+      return { success: true, info: null };
+    }
+
+    return {
+      success: true,
+      info: {
+        category: cleanCategory,
+        ...data,
+        estimatedTimeLabel: data.estimatedMinutes < 60
+          ? `${data.estimatedMinutes} min`
+          : `${Math.round(data.estimatedMinutes / 60 * 10) / 10} hr`,
+        difficultyLevel: { Easy: 1, Medium: 2, Expert: 3 }[data.difficulty] || 0,
+      },
+    };
+  }
+);
+
+/**
+ * Generate a TaskRabbit deep link for furniture assembly help.
+ *
+ * @param {string} productName - Product name for task description
+ * @param {string} zipCode - Customer's zip code
+ * @param {string} [category] - Product category for estimated time
+ * @returns {{success: boolean, url: string, estimatedCost: string}}
+ * @permission Anyone
+ * CF-xmjr
+ */
+export const getTaskRabbitLink = webMethod(
+  Permissions.Anyone,
+  (productName, zipCode, category) => {
+    const cleanName = sanitize(productName || 'Furniture', 200);
+    const cleanZip = sanitize(zipCode || '', 10).replace(/[^0-9]/g, '').substring(0, 5);
+
+    if (!cleanZip || cleanZip.length !== 5) {
+      return { success: false, url: '', estimatedCost: '' };
+    }
+
+    const task = encodeURIComponent(`Assemble ${cleanName}`);
+    const url = `https://www.taskrabbit.com/m/featured/furniture-assembly?zip=${cleanZip}&description=${task}`;
+
+    const data = ASSEMBLY_DATA[category];
+    const minutes = data ? data.estimatedMinutes : 45;
+    const hourlyRate = 50; // Avg TaskRabbit furniture assembly rate
+    const estimatedCost = Math.ceil(minutes / 60) * hourlyRate;
+
+    return {
+      success: true,
+      url,
+      estimatedCost: `~$${estimatedCost}`,
+      estimatedTime: data ? data.estimatedTimeLabel || `${minutes} min` : '45 min',
+    };
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 function getDefaultCareTips() {
