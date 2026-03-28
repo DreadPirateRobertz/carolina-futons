@@ -4,8 +4,8 @@
  * Dallas mobile app calls this to validate coupon codes before payment
  * without applying them (no usage increment, no cart mutation).
  *
- * Wraps promotionsEngine.validatePromoCode for code validation and
- * calculates discount preview against provided cart items.
+ * Mirrors promotionsEngine validation logic (independent CMS queries)
+ * and calculates discount preview against provided cart items.
  *
  * @requires wix-web-module
  * @requires wix-data
@@ -26,7 +26,7 @@ import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
 
-const MAX_CODE_LENGTH = 30;
+const MAX_CODE_LENGTH = 50; // Match promotionsEngine.web.js
 const MAX_CART_ITEMS = 50;
 
 /**
@@ -64,8 +64,8 @@ export const validateBundleCoupon = webMethod(
       try {
         const member = await currentMember.getMember();
         if (member) memberId = member._id;
-      } catch {
-        // Not logged in — shouldn't happen with SiteMember permission
+      } catch (memberErr) {
+        logError('couponValidation.getMember', memberErr);
       }
 
       const rateLimitKey = memberId || 'anon';
@@ -155,8 +155,8 @@ async function checkBundleCoupon(code, cartItems) {
 
     // Calculate bundle discount
     const cartSubtotal = calculateSubtotal(cartItems);
-    const bundlePrice = bundle.bundlePrice || 0;
-    const savings = bundle.savings || 0;
+    const bundlePrice = bundle.bundlePrice ?? 0;
+    const savings = bundle.savings ?? 0;
     const discount = round2(Math.min(savings, cartSubtotal));
 
     return {
@@ -258,7 +258,7 @@ async function checkPromoCoupon(code, cartItems) {
       const pct = Math.min(100, Math.max(0, Number(promo.value) || 0));
       discount = round2(eligibleSubtotal * pct / 100);
     } else if (promo.type === 'fixed') {
-      discount = Math.min(subtotal, Math.max(0, Number(promo.value) || 0));
+      discount = Math.min(eligibleSubtotal, Math.max(0, Number(promo.value) || 0));
     }
 
     discount = round2(Math.min(discount, subtotal));
