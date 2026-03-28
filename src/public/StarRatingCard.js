@@ -46,6 +46,16 @@ export async function batchLoadRatings(productIds) {
 
   _ratingsPromise = (async () => {
     try {
+      // Try Stamped.io first (primary review source), fall back to CMS
+      const { getBatchStampedRatings } = await import('backend/stampedIoService.web');
+      const stampedRatings = await getBatchStampedRatings(productIds);
+      // If Stamped.io returned data for any products, use it
+      if (Object.keys(stampedRatings).length > 0) {
+        _ratingsCache = stampedRatings;
+        return _ratingsCache;
+      }
+    } catch { /* Stamped.io unavailable — fall through to CMS */ }
+    try {
       const { getCategoryReviewSummaries } = await import('backend/reviewsService.web');
       _ratingsCache = await getCategoryReviewSummaries(productIds);
       return _ratingsCache;

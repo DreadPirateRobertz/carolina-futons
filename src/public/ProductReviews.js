@@ -28,13 +28,34 @@ export async function initProductReviews($w, state) {
     state.reviewPage = DEFAULT_PAGE;
     state.reviewFilterStars = undefined;
 
-    // Load aggregate + reviews in parallel
-    const { getAggregateRating, getProductReviews } = await import('backend/reviewsService.web');
+    // Load aggregate + reviews — try Stamped.io first, fall back to CMS
+    let aggregate, reviewsResult, getProductReviewsFn;
 
-    const [aggregate, reviewsResult] = await Promise.all([
-      getAggregateRating(productId),
-      getProductReviews(productId, { sort: state.reviewSort, page: DEFAULT_PAGE }),
-    ]);
+    try {
+      const stamped = await import('backend/stampedIoService.web');
+      const [stampedAgg, stampedReviews] = await Promise.all([
+        stamped.getStampedRating(productId),
+        stamped.getStampedReviews(productId, { page: 1, perPage: 10 }),
+      ]);
+      if (stampedAgg.total > 0 || stampedReviews.reviews.length > 0) {
+        aggregate = stampedAgg;
+        reviewsResult = stampedReviews;
+        getProductReviewsFn = (pid, opts) => stamped.getStampedReviews(pid, {
+          page: (opts?.page || 0) + 1, // CMS is 0-indexed, Stamped.io is 1-indexed
+          perPage: 10,
+          sort: opts?.sort === 'newest' ? 'recent' : opts?.sort || 'recent',
+        });
+      }
+    } catch { /* Stamped.io unavailable */ }
+
+    if (!aggregate) {
+      const cms = await import('backend/reviewsService.web');
+      [aggregate, reviewsResult] = await Promise.all([
+        cms.getAggregateRating(productId),
+        cms.getProductReviews(productId, { sort: state.reviewSort, page: DEFAULT_PAGE }),
+      ]);
+      getProductReviewsFn = cms.getProductReviews;
+    }
 
     // Show section
     section.expand();
@@ -49,13 +70,13 @@ export async function initProductReviews($w, state) {
     renderReviews($w, reviewsResult);
 
     // Sort dropdown
-    initSortDropdown($w, state, getProductReviews);
+    initSortDropdown($w, state, getProductReviewsFn);
 
     // Star filter
-    initStarFilter($w, state, getProductReviews);
+    initStarFilter($w, state, getProductReviewsFn);
 
     // Pagination
-    initPagination($w, state, reviewsResult, getProductReviews);
+    initPagination($w, state, reviewsResult, getProductReviewsFn);
 
     // Submit form
     initReviewForm($w, state);
