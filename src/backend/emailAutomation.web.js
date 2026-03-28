@@ -74,6 +74,7 @@ const SEQUENCES = {
       { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
       { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
       { step: 4, templateId: 'post_purchase_review_reward', delayHours: 336, description: 'Day-14 review prompt — earn 100 pts (CF-qy79)' },
+      { step: 5, templateId: 'post_purchase_referral', delayHours: 336, description: 'Day-14 referral invite — share the love, earn $25 (CF-heou)' },
     ],
   },
   reengagement: {

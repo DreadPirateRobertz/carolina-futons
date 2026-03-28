@@ -122,7 +122,7 @@ describe('getTemplateIndex', () => {
       'welcome_series_1', 'welcome_series_2', 'welcome_series_3',
     ]));
     expect(index.cart_recovery).toHaveLength(3);
-    expect(index.post_purchase).toHaveLength(3);
+    expect(index.post_purchase).toHaveLength(4);
     expect(index.promotional).toHaveLength(3);
     expect(index.reengagement).toHaveLength(1);
   });

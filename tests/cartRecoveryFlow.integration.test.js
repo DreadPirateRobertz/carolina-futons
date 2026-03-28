@@ -481,7 +481,7 @@ describe('Cart Stats Integration', () => {
 // ── Post-Purchase Sequence ─────────────────────────────────────────────
 
 describe('Post-Purchase Sequence', () => {
-  it('queues 4-step post-purchase care sequence', async () => {
+  it('queues 5-step post-purchase care sequence', async () => {
     const queued = captureInserts('EmailQueue');
 
     const result = await triggerPostPurchaseSequence(
@@ -494,12 +494,13 @@ describe('Post-Purchase Sequence', () => {
     );
 
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(4);
-    expect(queued).toHaveLength(4);
+    expect(result.queued).toBe(5);
+    expect(queued).toHaveLength(5);
     expect(queued[0].templateId).toBe('post_purchase_1');
     expect(queued[1].templateId).toBe('post_purchase_2');
     expect(queued[2].templateId).toBe('post_purchase_3');
     expect(queued[3].templateId).toBe('post_purchase_review_reward');
+    expect(queued[4].templateId).toBe('post_purchase_referral');
     expect(queued[0].variables.orderNumber).toBeTruthy();
     expect(queued[0].variables.firstName).toBe('Alex');
   });

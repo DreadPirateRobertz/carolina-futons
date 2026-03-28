@@ -151,6 +151,16 @@ const TEMPLATE_REGISTRY = {
     variables: ['firstName', 'orderNumber', 'productNames', 'email'],
     category: 'transactional',
   },
+  post_purchase_referral: {
+    id: 'post_purchase_referral',
+    name: 'Post-Purchase — Referral Invite (Day 14)',
+    sequence: 'post_purchase',
+    step: 5,
+    subjectLine: 'Love your new furniture, {firstName}? Share the love — earn $25',
+    previewText: 'Give friends $25 off their first order. You earn $25 store credit when they buy.',
+    variables: ['firstName', 'referralUrl', 'referralCode', 'email'],
+    category: 'transactional',
+  },
 
   // Promotional
   promotional_sale: {

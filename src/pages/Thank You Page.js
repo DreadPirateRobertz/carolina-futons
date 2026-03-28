@@ -395,6 +395,37 @@ async function initReferralSection() {
       });
     } catch (e) {}
 
+    // Facebook share
+    try {
+      try { $w('#referralFacebookBtn').accessibility.ariaLabel = 'Share referral on Facebook'; } catch (e) {}
+      $w('#referralFacebookBtn').onClick(() => {
+        trackReferralAction('share_facebook');
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl)}`;
+        import('wix-window-frontend').then(({ openUrl }) => { openUrl(fbUrl, '_blank'); });
+      });
+    } catch (e) {}
+
+    // Twitter share
+    try {
+      try { $w('#referralTwitterBtn').accessibility.ariaLabel = 'Share referral on Twitter'; } catch (e) {}
+      $w('#referralTwitterBtn').onClick(() => {
+        trackReferralAction('share_twitter');
+        const tweetText = encodeURIComponent(`Just got amazing furniture from @CarolinaFutons! Get $25 off: ${referralUrl}`);
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+        import('wix-window-frontend').then(({ openUrl }) => { openUrl(twitterUrl, '_blank'); });
+      });
+    } catch (e) {}
+
+    // SMS share
+    try {
+      try { $w('#referralSmsBtn').accessibility.ariaLabel = 'Share referral via text message'; } catch (e) {}
+      $w('#referralSmsBtn').onClick(() => {
+        trackReferralAction('share_sms');
+        const smsBody = encodeURIComponent(`Hey! Check out Carolina Futons. Use my link for $25 off: ${referralUrl}`);
+        import('wix-window-frontend').then(({ openUrl }) => { openUrl(`sms:?body=${smsBody}`, '_self'); });
+      });
+    } catch (e) {}
+
     section.expand();
   } catch (e) {}
 }

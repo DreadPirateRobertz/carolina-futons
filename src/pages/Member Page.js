@@ -113,6 +113,10 @@ async function initMemberPage() {
         const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
         await initGamificationTourOverlay();
       }},
+      { name: 'referralDashboard', init: async () => {
+        const { initMemberReferralDashboard } = await import('public/MemberReferralDashboard.js');
+        await initMemberReferralDashboard($w, currentMember?._id);
+      }},
     ];
 
     const results = await Promise.allSettled(sections.map(s => s.init()));

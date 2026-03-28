@@ -30,9 +30,9 @@ describe('_TEMPLATE_REGISTRY', () => {
     expect(cart).toHaveLength(3);
   });
 
-  it('contains post-purchase templates (3 steps) with day 3/7/30 focus', () => {
+  it('contains post-purchase templates (4 steps) with day 3/7/30/14 focus', () => {
     const pp = Object.values(_TEMPLATE_REGISTRY).filter(t => t.sequence === 'post_purchase');
-    expect(pp).toHaveLength(3);
+    expect(pp).toHaveLength(4);
     const sorted = pp.sort((a, b) => a.step - b.step);
 
     // Step 1 (Day 3): Assembly follow-up
@@ -149,7 +149,7 @@ describe('getTemplatesBySequence', () => {
 
   it('returns post_purchase templates', async () => {
     const templates = await getTemplatesBySequence('post_purchase');
-    expect(templates).toHaveLength(3);
+    expect(templates).toHaveLength(4);
     expect(templates.every(t => t.sequence === 'post_purchase')).toBe(true);
   });
 
@@ -234,9 +234,9 @@ describe('getTemplateIndex', () => {
     expect(index.cart_recovery).toHaveLength(3);
   });
 
-  it('post_purchase has 3 template IDs', async () => {
+  it('post_purchase has 4 template IDs', async () => {
     const index = await getTemplateIndex();
-    expect(index.post_purchase).toHaveLength(3);
+    expect(index.post_purchase).toHaveLength(4);
   });
 
   it('all IDs in index exist in registry', async () => {

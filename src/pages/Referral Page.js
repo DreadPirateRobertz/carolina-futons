@@ -212,6 +212,17 @@ function initShareButtons() {
       });
       try { $w('#shareFacebookBtn').accessibility.ariaLabel = 'Share referral on Facebook'; } catch (e) {}
     } catch (e) {}
+
+    // Twitter share
+    try {
+      $w('#shareTwitterBtn').onClick(() => {
+        import('wix-window-frontend').then((wixWindow) => {
+          wixWindow.openUrl(links.twitter, '_blank');
+        });
+        trackReferralAction('share_twitter');
+      });
+      try { $w('#shareTwitterBtn').accessibility.ariaLabel = 'Share referral on Twitter'; } catch (e) {}
+    } catch (e) {}
   };
 
   // Try immediately, then retry after a short delay for link init

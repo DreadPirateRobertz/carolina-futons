@@ -93,7 +93,7 @@ describe('getTemplateIndex', () => {
     const r = await mod.getTemplateIndex();
     expect(r.welcome).toHaveLength(3);
     expect(r.cart_recovery).toHaveLength(3);
-    expect(r.post_purchase).toHaveLength(3);
+    expect(r.post_purchase).toHaveLength(4);
     expect(r.promotional.length).toBeGreaterThanOrEqual(3);
     expect(r.reengagement).toHaveLength(1);
   });

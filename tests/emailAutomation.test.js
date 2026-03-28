@@ -44,8 +44,8 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.cart_recovery.steps[2].delayHours).toBe(72);
   });
 
-  it('has post_purchase sequence with day 3/7/14/30 timing', () => {
-    expect(_SEQUENCES.post_purchase.steps).toHaveLength(4);
+  it('has post_purchase sequence with day 3/7/14/14/30 timing', () => {
+    expect(_SEQUENCES.post_purchase.steps).toHaveLength(5);
     expect(_SEQUENCES.post_purchase.steps[0].delayHours).toBe(72);   // Day 3: Assembly follow-up
     expect(_SEQUENCES.post_purchase.steps[1].delayHours).toBe(168);  // Day 7: Review solicitation
     expect(_SEQUENCES.post_purchase.steps[2].delayHours).toBe(720);  // Day 30: Care guide + upsell
@@ -228,7 +228,7 @@ describe('triggerPostPurchaseSequence', () => {
       ]
     );
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(4);
+    expect(result.queued).toBe(5);
   });
 
   it('includes order details in email variables', async () => {
@@ -1042,7 +1042,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(4);
+    expect(postPurchaseEmails).toHaveLength(5);
     expect(postPurchaseEmails[0].variables.orderNumber).toBe('ORD-100');
   });
 
@@ -1062,7 +1062,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(4);
+    expect(postPurchaseEmails).toHaveLength(5);
   });
 
   it('does nothing when buyer email is missing', async () => {

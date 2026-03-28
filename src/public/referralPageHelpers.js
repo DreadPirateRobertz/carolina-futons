@@ -114,7 +114,7 @@ export function getHowItWorksSteps() {
 /**
  * Generate social sharing URLs for a referral code.
  * @param {string} code - Referral code
- * @returns {{email?: string, sms?: string, facebook?: string}}
+ * @returns {{email?: string, sms?: string, facebook?: string, twitter?: string}}
  */
 export function getSocialShareLinks(code) {
   if (!code) return {};
@@ -131,10 +131,15 @@ export function getSocialShareLinks(code) {
     `Hey! Check out Carolina Futons. Use my link for $${REFEREE_CREDIT} off: ${referralUrl}`
   );
 
+  const twitterText = encodeURIComponent(
+    `Just got amazing furniture from @CarolinaFutons. Get $${REFEREE_CREDIT} off your first order: ${referralUrl}`
+  );
+
   return {
     email: `mailto:?subject=${subject}&body=${emailBody}`,
     sms: `sms:?body=${smsBody}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${twitterText}`,
   };
 }
 
