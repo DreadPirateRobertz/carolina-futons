@@ -251,6 +251,28 @@ describe('logComfortRating', () => {
     const result = await logComfortRating('tl-badjson', 4);
     expect(result.success).toBe(true);
   });
+
+  it('rejects non-numeric rating type', async () => {
+    // Covers typeof rating !== 'number' branch (line 131)
+    const result = await logComfortRating('tl-1', 'great');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/between 1 and 5/i);
+  });
+
+  it('returns milestone 0 when rated on delivery day (day 0)', async () => {
+    // Covers the `?? 0` fallback on line 183 when no milestone <= daysSinceDelivery
+    __seed('ComfortTimelines', [{
+      _id: 'tl-day0',
+      memberId: 'm1',
+      status: 'active',
+      comfortLogs: '[]',
+      supportEscalated: false,
+      deliveredAt: new Date(), // today — 0 days elapsed
+    }]);
+    const result = await logComfortRating('tl-day0', 4);
+    expect(result.success).toBe(true);
+    expect(result.milestone).toBe(0);
+  });
 });
 
 // ── getTimeline ─────────────────────────────────────────────────────
@@ -364,6 +386,33 @@ describe('getTimeline', () => {
     const result = await getTimeline('order-ci');
     expect(result.success).toBe(true);
     expect(result.timeline.needsCheckIn).toBe(false);
+  });
+
+  it('returns error when orderId is not provided', async () => {
+    // Covers the !orderId early-return branch (line 206)
+    const result = await getTimeline('');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/order id required/i);
+  });
+
+  it('uses 0 as currentDay default when field is absent (needsCheckIn ?? branch)', async () => {
+    // Covers (timeline.currentDay ?? 0) when currentDay is not stored on the record
+    __seed('ComfortTimelines', [{
+      _id: 'tl-noday',
+      orderId: 'order-noday',
+      deliveredAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days
+      status: 'active',
+      // currentDay intentionally omitted → ?? 0 fires → daysSinceDelivery(10) > 0+6=6 → needsCheckIn=true
+      lastCheckIn: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      comfortLogs: '[]',
+      milestonesCompleted: '[]',
+      crossSellTriggered: false,
+      supportEscalated: false,
+    }]);
+    const result = await getTimeline('order-noday');
+    expect(result.success).toBe(true);
+    // daysSinceDelivery(~10) > (undefined ?? 0) + 6 = 6 → needsCheckIn is true
+    expect(result.timeline.needsCheckIn).toBe(true);
   });
 });
 
