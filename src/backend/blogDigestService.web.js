@@ -49,7 +49,7 @@ export const sendWeeklyBlogDigest = webMethod(
       const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
       const weekOf = getWeekStart(new Date());
 
-      // Dedup: skip if we already sent a digest this week
+      // Dedup: claim this week's slot early to prevent concurrent cron double-sends
       const alreadySent = await wixData.query('BlogDigestLog')
         .ge('weekOf', weekOf)
         .find();
@@ -67,10 +67,8 @@ export const sendWeeklyBlogDigest = webMethod(
         return { success: true, queued: 0, skipped: 0, postCount: recentPosts.length };
       }
 
-      const allUnsubs = await wixData.query('Unsubscribes')
-        .hasSome('sequenceType', ['all', SEQUENCE_TYPE])
-        .find();
-      const unsubEmails = new Set(allUnsubs.items.map(u => u.email));
+      // Paginate unsubscribes to avoid the default 50-item truncation (CAN-SPAM)
+      const unsubEmails = await fetchUnsubscribeEmails();
 
       const weekLabel = formatWeekLabel(since, new Date());
       const postsJson = JSON.stringify(recentPosts.map(normalizePostForEmail));
@@ -79,11 +77,7 @@ export const sendWeeklyBlogDigest = webMethod(
 
       for (const sub of subscribers) {
         const email = (sub.email || '').toLowerCase().trim();
-        if (!email || !validateEmail(email)) {
-          skipped++;
-          continue;
-        }
-        if (unsubEmails.has(email)) {
+        if (!email || !validateEmail(email) || unsubEmails.has(email)) {
           skipped++;
           continue;
         }
@@ -178,7 +172,36 @@ async function fetchRecentPosts(since) {
       const pub = p.publishedDate ? new Date(p.publishedDate) : null;
       return pub && pub >= since;
     })
+    .sort((a, b) => new Date(b.publishedDate) - new Date(a.publishedDate))
     .slice(0, MAX_POSTS_IN_DIGEST);
+}
+
+/**
+ * Paginate through all Unsubscribes for this sequence and return a Set of emails.
+ * Pagination is required — wix-data defaults to 50 items; missing unsubscribes
+ * would cause CAN-SPAM violations.
+ * @returns {Promise<Set<string>>}
+ */
+async function fetchUnsubscribeEmails() {
+  const emails = new Set();
+  let skip = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const result = await wixData.query('Unsubscribes')
+      .hasSome('sequenceType', ['all', SEQUENCE_TYPE])
+      .limit(SUBSCRIBER_PAGE_SIZE)
+      .skip(skip)
+      .find();
+
+    for (const u of result.items) {
+      if (u.email) emails.add(u.email);
+    }
+    skip += SUBSCRIBER_PAGE_SIZE;
+    hasMore = result.items.length === SUBSCRIBER_PAGE_SIZE;
+  }
+
+  return emails;
 }
 
 /**
@@ -197,7 +220,7 @@ async function fetchActiveSubscribers() {
       .skip(skip)
       .find();
 
-    all = all.concat(result.items);
+    all.push(...result.items);
     skip += SUBSCRIBER_PAGE_SIZE;
     hasMore = result.items.length === SUBSCRIBER_PAGE_SIZE;
   }
@@ -211,14 +234,17 @@ async function fetchActiveSubscribers() {
  * @returns {Object}
  */
 function normalizePostForEmail(raw) {
+  const slug = sanitize(raw.slug || '', 200);
+  const rawImageUrl = raw.media?.wixMedia?.image?.url ?? '';
+  const coverImageUrl = /^https?:\/\//.test(rawImageUrl) ? sanitize(rawImageUrl, 500) : '';
   return {
     title: sanitize(raw.title || '', 200),
-    slug: sanitize(raw.slug || '', 200),
+    slug,
     excerpt: sanitize(raw.excerpt || '', 400),
-    url: `${SITE_URL}/blog/${sanitize(raw.slug || '', 200)}`,
-    coverImageUrl: raw.media?.wixMedia?.image?.url ?? '',
+    url: `${SITE_URL}/blog/${slug}`,
+    coverImageUrl,
     category: sanitize(raw.categories?.[0]?.label ?? '', 100),
-    publishedDate: raw.publishedDate || '',
+    publishedDate: sanitize(raw.publishedDate || '', 30),
   };
 }
 

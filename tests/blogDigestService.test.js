@@ -285,9 +285,9 @@ describe('sendWeeklyBlogDigest — lookbackDays option', () => {
   });
 });
 
-// ── sendWeeklyBlogDigest — post limit ────────────────────────────────
+// ── sendWeeklyBlogDigest — post limit and sort ───────────────────────
 
-describe('sendWeeklyBlogDigest — post limit', () => {
+describe('sendWeeklyBlogDigest — post limit and sort', () => {
   it('caps digest at 5 posts', async () => {
     const manyPosts = Array.from({ length: 8 }, (_, i) =>
       makePost({ _id: `post-${i}`, slug: `post-${i}`, title: `Post ${i}` })
@@ -305,6 +305,47 @@ describe('sendWeeklyBlogDigest — post limit', () => {
     const posts = JSON.parse(queueItem.variables.postsJson);
     expect(posts.length).toBe(5);
     expect(result.postCount).toBe(5);
+  });
+
+  it('orders posts newest-first in digest', async () => {
+    const older = makePost({ _id: 'old', slug: 'older-post', publishedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() });
+    const newer = makePost({ _id: 'new', slug: 'newer-post', publishedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() });
+    __setPosts([older, newer]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const inserted = makeInsertSpy();
+
+    await sendWeeklyBlogDigest();
+
+    const queueItem = inserted.find(i => i._coll === 'EmailQueue' && i.templateId === _DIGEST_TEMPLATE);
+    const posts = JSON.parse(queueItem.variables.postsJson);
+    expect(posts[0].slug).toBe('newer-post');
+    expect(posts[1].slug).toBe('older-post');
+  });
+});
+
+// ── sendWeeklyBlogDigest — unsubscribe pagination ────────────────────
+
+describe('sendWeeklyBlogDigest — unsubscribe pagination', () => {
+  it('respects unsubscribes beyond 50-item default', async () => {
+    __setPosts([makePost()]);
+    // Seed 60 unsubscribe records, subscriber email is the 60th
+    const unsubs = Array.from({ length: 60 }, (_, i) => ({
+      _id: `unsub-${i}`,
+      email: i === 59 ? 'alice@example.com' : `user${i}@example.com`,
+      sequenceType: _SEQUENCE_TYPE,
+    }));
+    __seed('Unsubscribes', unsubs);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const result = await sendWeeklyBlogDigest();
+
+    expect(result.queued).toBe(0);
+    expect(result.skipped).toBe(1);
   });
 });
 
