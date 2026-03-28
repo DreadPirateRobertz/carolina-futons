@@ -4,10 +4,12 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted, __getUpdated } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getInserted, __getUpdated, __setUpdateError } from './__mocks__/wix-data.js';
+import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 
 beforeEach(() => {
   __reset();
+  __resetSecrets();
   vi.clearAllMocks();
 });
 
@@ -221,6 +223,117 @@ describe('getTimeline', () => {
     const result = await getTimeline('order-2');
     expect(result.success).toBe(true);
     expect(result.timeline.crossSellEligible).toBe(true);
+  });
+});
+
+// ── processMilestones ───────────────────────────────────────────────
+
+describe('processMilestones', () => {
+  let processMilestones;
+  const CRON = 'test-cron-secret';
+
+  beforeEach(async () => {
+    ({ processMilestones } = await import('../src/backend/comfortTimeline.web.js'));
+    __setSecrets({ CRON_SECRET: CRON });
+  });
+
+  it('rejects wrong cron secret', async () => {
+    const result = await processMilestones('bad-secret');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/authentication failed/i);
+  });
+
+  it('rejects missing cron secret', async () => {
+    const result = await processMilestones(undefined);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/authentication failed/i);
+  });
+
+  it('returns success with zero counts when no active timelines exist', async () => {
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(true);
+    expect(result.processed).toBe(0);
+    expect(result.notifications).toBe(0);
+  });
+
+  it('discovers and marks new milestones for a timeline', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-1',
+      memberId: 'mem-1',
+      productId: 'prod-1',
+      deliveredAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+      status: 'active',
+      milestonesCompleted: JSON.stringify([1]), // day-1 already done
+    }]);
+
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(true);
+    expect(result.processed).toBe(1);
+    expect(result.notifications).toBe(1); // day-7 milestone fires
+
+    const updated = __getUpdated('ComfortTimelines');
+    expect(updated).toHaveLength(1);
+    const milestones = JSON.parse(updated[0].milestonesCompleted);
+    expect(milestones).toContain(7);
+  });
+
+  it('skips update when all milestones are already completed', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-1',
+      deliveredAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      milestonesCompleted: JSON.stringify([1, 7]),
+    }]);
+
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(true);
+    expect(result.processed).toBe(1);
+    expect(result.notifications).toBe(0);
+    expect(__getUpdated('ComfortTimelines')).toHaveLength(0);
+  });
+
+  it('auto-completes timeline at Day 30+', async () => {
+    __seed('ComfortTimelines', [{
+      _id: 'tl-1',
+      deliveredAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000), // 31 days ago
+      status: 'active',
+      milestonesCompleted: '[]',
+    }]);
+
+    await processMilestones(CRON);
+
+    const updated = __getUpdated('ComfortTimelines');
+    expect(updated[0].status).toBe('complete');
+  });
+
+  it('skips timeline with invalid deliveredAt without throwing', async () => {
+    __seed('ComfortTimelines', [
+      { _id: 'tl-bad', deliveredAt: 'not-a-date', status: 'active', milestonesCompleted: '[]' },
+      { _id: 'tl-ok', deliveredAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), status: 'active', milestonesCompleted: '[]' },
+    ]);
+
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(true);
+    expect(result.processed).toBe(1); // only tl-ok processed; tl-bad was skipped
+  });
+
+  it('continues processing remaining timelines after per-item error', async () => {
+    __seed('ComfortTimelines', [
+      { _id: 'tl-err', deliveredAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), status: 'active', milestonesCompleted: '[]' },
+      { _id: 'tl-ok', deliveredAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: 'active', milestonesCompleted: '[]' },
+    ]);
+    __setUpdateError('ComfortTimelines', new Error('DB write failed'));
+
+    // Should not throw even though the update fails
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(true);
+  });
+
+  it('returns failure when secret store is unreachable', async () => {
+    __resetSecrets(); // clears CRON_SECRET → getSecret throws
+    const result = await processMilestones(CRON);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/milestone processing failed/i);
   });
 });
 
