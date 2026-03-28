@@ -156,6 +156,7 @@ async function initProductPage() {
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
       { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); await m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
+      { name: 'roomStaging', init: async () => { const m = await import('public/RoomStagingUI.js'); m.initRoomStaging($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
       { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
       { name: 'subscribeAndSave', init: async () => { const m = await import('public/SubscribeAndSave.js'); await m.initSubscribeAndSave(state.product?._id, state.product?.name, { $w }); }, critical: false },
