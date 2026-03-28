@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const VALID_EVENTS = ['impression', 'click', 'add_to_cart', 'purchase'];
 const VALID_SOURCES = ['product_page', 'cart', 'homepage', 'category'];
@@ -52,6 +53,9 @@ export const trackBundleImpression = webMethod(
       if (!VALID_EVENTS.includes(event)) {
         return { success: false, error: 'Invalid event type. Must be impression, click, add_to_cart, or purchase.' };
       }
+
+      const { allowed } = await checkRateLimit('BundleImpressionRateLimit', bundleId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       let memberId = '';
       try {

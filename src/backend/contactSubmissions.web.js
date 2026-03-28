@@ -20,6 +20,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // Rate limiting for submitContactForm — prevents contact form spam flood.
 // CMS collection `ContactRateLimits`: key (Text), count (Number), windowStart (DateTime).
@@ -117,7 +118,7 @@ export const submitContactForm = webMethod(
       }
 
       // Rate limit: 3 submissions/hour per email to prevent spam flood
-      const rateCheck = await _checkContactRateLimit(email, { now: opts && opts.rateLimitNow });
+      const rateCheck = await checkRateLimit('ContactRateLimits', email, { now: opts && opts.rateLimitNow });
       if (!rateCheck.allowed) {
         return { success: true }; // Silent success to avoid leaking info
       }

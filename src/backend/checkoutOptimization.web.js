@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -253,6 +254,9 @@ export const trackCheckoutStep = webMethod(
       if (!CHECKOUT_STEPS.includes(step)) {
         return { success: false, error: `Invalid step. Must be one of: ${CHECKOUT_STEPS.join(', ')}` };
       }
+
+      const { allowed } = await checkRateLimit('CheckoutTrackingRateLimit', sessionId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       await wixData.insert('CheckoutAnalytics', {
         sessionId,

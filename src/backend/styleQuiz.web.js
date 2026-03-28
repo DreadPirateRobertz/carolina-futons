@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // Map quiz answers to product collection queries and scoring criteria
 const ROOM_CATEGORY_MAP = {
@@ -317,6 +318,9 @@ export const captureQuizLead = webMethod(
       if (!validateEmail(cleaned)) {
         return { success: false, message: 'Invalid email format' };
       }
+
+      const { allowed } = await checkRateLimit('QuizLeadRateLimit', cleaned);
+      if (!allowed) return { success: false, message: 'Too many requests. Please try again later.' };
 
       // Delegate to newsletterService for CMS insert + Klaviyo sync.
       // subscribeToNewsletter deduplicates silently and triggers the welcome flow.

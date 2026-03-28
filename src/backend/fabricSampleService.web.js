@@ -20,6 +20,7 @@ import { webMethod, Permissions } from 'wix-web-module';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const MAX_SWATCHES = 3;
 const RATE_LIMIT_DAYS = 30;
@@ -200,6 +201,9 @@ export const submitFabricSampleRequest = webMethod(
 
       const contact = validateContact(contactInfo);
       if (contact.error) return { success: false, error: contact.error };
+
+      const { allowed } = await checkRateLimit('FabricSampleRateLimit', contact.email);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       let limited;
       try {

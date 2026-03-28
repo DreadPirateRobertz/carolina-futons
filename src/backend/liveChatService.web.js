@@ -10,6 +10,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ─── Office Hours Config ─────────────────────────────────────────
 
@@ -147,6 +148,9 @@ export const sendMessage = webMethod(
         return { success: false, error: 'Message cannot be empty' };
       }
 
+      const { allowed } = await checkRateLimit('ChatMessageRateLimit', sanitize(sessionId, 100), { max: 30, windowMs: 60_000 });
+      if (!allowed) return { success: false, error: 'Too many messages. Please slow down.' };
+
       const record = {
         sessionId: sanitize(sessionId, 100),
         message: cleanMessage,
@@ -232,6 +236,9 @@ export const createSupportTicket = webMethod(
       if (!message) {
         return { success: false, error: 'Message is required' };
       }
+
+      const { allowed } = await checkRateLimit('SupportTicketRateLimit', email.trim().toLowerCase());
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       const ticket = {
         customerName: sanitize(name || '', 100),

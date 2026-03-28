@@ -25,6 +25,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 const SALES_VELOCITY_DAYS = 30;
@@ -299,6 +300,9 @@ export const signUpBackInStock = webMethod(
       const cleanEmail = sanitize(email, 254).toLowerCase();
       const cleanProductId = sanitize(productId, 50);
       const cleanVariantId = variantId ? sanitize(variantId, 50) : '';
+
+      const { allowed } = await checkRateLimit('BackInStockRateLimit', cleanEmail);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       // Dedup
       const existing = await wixData.query('BackInStockSignups')

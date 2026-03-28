@@ -17,6 +17,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const HIGH_INTENT_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
 const RECOVERY_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
@@ -53,6 +54,9 @@ export const trackBrowseSession = webMethod(
 
       const sessionId = sanitize(sessionData.sessionId, 100);
       if (!sessionId) return { success: false, error: 'Invalid session ID' };
+
+      const { allowed } = await checkRateLimit('BrowseSessionRateLimit', sessionId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       const products = (sessionData.productsViewed || [])
         .slice(0, MAX_PRODUCTS_TRACKED)
@@ -139,6 +143,9 @@ export const captureRemindMeRequest = webMethod(
 
       const cleanEmail = sanitize(email, 254);
       const cleanName = sanitize(name || '', 100);
+
+      const { allowed } = await checkRateLimit('RemindMeRateLimit', cleanEmail);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       // Check unsubscribes
       const unsub = await wixData.query('Unsubscribes')

@@ -62,6 +62,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 import { orders } from 'wix-ecom-backend';
 import crypto from 'crypto';
 
@@ -343,6 +344,9 @@ export const trackAffiliateClick = webMethod(
       if (!cleanCode) {
         return { success: false, error: 'Link code is required' };
       }
+
+      const { allowed } = await checkRateLimit('AffiliateClickRateLimit', cleanCode, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       const result = await wixData.query(LINKS_COLLECTION)
         .eq('linkCode', cleanCode)

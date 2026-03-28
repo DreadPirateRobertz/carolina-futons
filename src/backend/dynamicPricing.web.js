@@ -40,6 +40,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { shippingConfig } from 'public/sharedTokens.js';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -458,6 +459,9 @@ export const recordDemandSignal = webMethod(
       if (!VALID_SIGNAL_TYPES.includes(signalType)) {
         return { success: false, error: `Invalid signal type. Must be: ${VALID_SIGNAL_TYPES.join(', ')}` };
       }
+
+      const { allowed } = await checkRateLimit('DemandSignalRateLimit', cleanId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       // Find existing metrics
       const existing = await wixData.query('ProductDemandMetrics')
