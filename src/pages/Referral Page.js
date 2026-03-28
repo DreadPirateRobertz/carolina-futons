@@ -22,6 +22,8 @@ $w.onReady(async function () {
   initBackToTop($w);
   initPageSeo('referral');
   trackEvent('page_view', { page: 'referral' });
+  // CF-73zw: set dynamic OG tags when a ref= param is in the URL
+  initReferralOgTags().catch(() => {});
   await initReferralPage();
 });
 
@@ -83,6 +85,32 @@ function showLoggedOutState() {
     });
     try { $w('#referralLoginBtn').accessibility.ariaLabel = 'Log in to access your referral link'; } catch (e) {}
   } catch (e) {}
+}
+
+// ── Referral OG Tags (CF-73zw) ──────────────────────────────────────
+// When a visitor arrives via /referral?ref=CODE, look up the referrer's name
+// and set dynamic OG title so Facebook previews show their name.
+
+async function initReferralOgTags() {
+  try {
+    const wixLocation = await import('wix-location-frontend');
+    const refCode = wixLocation.query?.ref;
+    if (!refCode) return;
+
+    const { getReferralLinkOwnerName } = await import('backend/referralService.web');
+    const result = await getReferralLinkOwnerName(refCode);
+    if (!result?.success || !result.referrerName) return;
+
+    const { wixSeo } = await import('wix-seo-frontend');
+    wixSeo.setTitle(`${result.referrerName} thinks you'll love Carolina Futons`);
+    wixSeo.setMetaTags([
+      { property: 'og:title', content: `${result.referrerName} thinks you'll love Carolina Futons` },
+      { property: 'og:description', content: `Use ${result.referrerName}'s referral link and get $25 off your first order at Carolina Futons.` },
+      { property: 'og:url', content: `https://www.carolinafutons.com/referral?ref=${refCode.replace(/[^A-Z0-9]/gi, '').toUpperCase()}` },
+    ]);
+  } catch (e) {
+    // OG tag update is best-effort — do not block page render
+  }
 }
 
 // ── How It Works ────────────────────────────────────────────────────

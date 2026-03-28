@@ -479,6 +479,39 @@ export const getReferralStats = webMethod(
   }
 );
 
+// ── getReferralLinkOwnerName ──────────────────────────────────────────────
+
+/**
+ * Look up the referrer's display name for a given referral code.
+ * Used by the Referral Page to personalize OG tags on social shares (CF-73zw).
+ *
+ * @param {string} code - Referral code from URL ?ref= param
+ * @returns {Promise<{success: boolean, referrerName?: string}>}
+ * @permission Anyone — referrer name is not sensitive (used in public OG tags)
+ */
+export const getReferralLinkOwnerName = webMethod(
+  Permissions.Anyone,
+  async (code) => {
+    try {
+      const cleanCode = sanitize(code || '', 20).toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!cleanCode) return { success: false };
+
+      const result = await wixData.query(REFERRALS_COLLECTION)
+        .eq('referralCode', cleanCode)
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (result.items.length === 0) return { success: false };
+
+      const referrerName = result.items[0].referrerName || '';
+      return { success: true, referrerName };
+    } catch (err) {
+      console.error('getReferralLinkOwnerName error:', err);
+      return { success: false };
+    }
+  }
+);
+
 // ── _getReferralLinkForMember ───────────────────────────────────────────
 // Internal helper (not a webMethod) — looks up or creates a referral link
 // for a given memberId without requiring a session context.
@@ -495,7 +528,7 @@ export async function _getReferralLinkForMember(memberId) {
 
     if (existing.items.length > 0) {
       const code = existing.items[0].referralCode;
-      return { referralCode: code, referralUrl: `https://www.carolinafutons.com/?ref=${code}` };
+      return { referralCode: code, referralUrl: `https://www.carolinafutons.com/referral?ref=${code}` };
     }
 
     let code = generateCode();
@@ -511,7 +544,7 @@ export async function _getReferralLinkForMember(memberId) {
       orderNumber: '',
     });
 
-    return { referralCode: code, referralUrl: `https://www.carolinafutons.com/?ref=${code}` };
+    return { referralCode: code, referralUrl: `https://www.carolinafutons.com/referral?ref=${code}` };
   } catch (err) {
     console.error('_getReferralLinkForMember error:', err);
     return null;
