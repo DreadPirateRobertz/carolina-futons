@@ -26,7 +26,7 @@ import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
 import { sanitize } from 'backend/utils/sanitize';
 
-const MAX_RETRIES = 3;
+export const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000; // delays between attempts: 1s, 4s (16s would fire after last retry but is gated out)
 
 /**
