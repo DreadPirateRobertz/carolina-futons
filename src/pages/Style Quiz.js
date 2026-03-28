@@ -342,6 +342,7 @@ async function submitQuiz() {
       // S4: Persist result and surface share URL for members
       const profile = buildStyleProfile(state.answers);
       saveAndShowShareUrl(state.answers, profile.title);
+<<<<<<< HEAD
 
       // CF-009p: Registration gate for non-logged-in visitors
       import('public/StyleQuizRegistrationGate.js').then(({ initStyleQuizRegistrationGate }) => {
@@ -358,6 +359,8 @@ async function submitQuiz() {
           },
         });
       }).catch(() => {});
+=======
+>>>>>>> origin/feat/CF-4qca.1-quiz-persistence-sharing
     }
   } catch (err) {
     console.error('Quiz recommendation error:', err);
