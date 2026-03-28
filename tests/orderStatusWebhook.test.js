@@ -12,6 +12,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as __resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -19,6 +20,7 @@ globalThis.fetch = mockFetch;
 
 beforeEach(() => {
   __reset();
+  __resetSecrets();
   vi.clearAllMocks();
   mockFetch.mockReset();
 });
@@ -158,5 +160,77 @@ describe('status labels', () => {
   it('uses raw status when not in STATUS_LABELS', () => {
     const payload = buildWebhookPayload({ _id: 'o1', buyerInfo: {} }, 'unknown_status');
     expect(payload.statusLabel).toBe('unknown_status');
+  });
+});
+
+// ── sendWebhook: branch coverage (CF-qe31.1) ───────────────────────
+
+describe('sendWebhook: uncovered branches', () => {
+  const ENDPOINT = 'https://push.carolinafutons.app/api/push/order-status';
+  const PAYLOAD = { orderId: 'o1', status: 'confirmed', customerId: 'mbr-1' };
+
+  let sendWebhook;
+
+  beforeEach(async () => {
+    __setSecrets({ MOBILE_PUSH_ENDPOINT: ENDPOINT });
+    ({ sendWebhook } = await import('../src/backend/orderStatusWebhook.web.js'));
+  });
+
+  it('returns failure when pushEndpoint is empty string', async () => {
+    // Override: secret exists but is blank
+    __setSecrets({ MOBILE_PUSH_ENDPOINT: '' });
+    const result = await sendWebhook(PAYLOAD);
+    expect(result.success).toBe(false);
+    expect(result.attempts).toBe(0);
+    expect(result.lastError).toMatch(/not configured/i);
+  });
+
+  it('returns failure with lastError after all retries exhausted (HTTP 500)', async () => {
+    vi.useFakeTimers();
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(false);
+    expect(result.attempts).toBe(3);
+    expect(result.lastError).toBe('HTTP 500');
+    vi.useRealTimers();
+  });
+
+  it('returns success with attempts=2 when first attempt fails then recovers', async () => {
+    vi.useFakeTimers();
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: true });
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(true);
+    expect(result.attempts).toBe(2);
+    vi.useRealTimers();
+  });
+
+  it('captures network error message as lastError', async () => {
+    vi.useFakeTimers();
+    mockFetch.mockRejectedValue(new Error('ECONNREFUSED'));
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(false);
+    expect(result.lastError).toBe('ECONNREFUSED');
+    vi.useRealTimers();
+  });
+
+  it('returns success on first attempt', async () => {
+    mockFetch.mockResolvedValue({ ok: true });
+    const result = await sendWebhook(PAYLOAD);
+    expect(result.success).toBe(true);
+    expect(result.attempts).toBe(1);
   });
 });
