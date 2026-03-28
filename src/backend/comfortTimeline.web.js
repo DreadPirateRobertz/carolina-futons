@@ -336,34 +336,43 @@ export const processMilestones = webMethod(
       let notifications = 0;
 
       for (const timeline of allTimelines) {
-        const daysSinceDelivery = Math.floor(
-          (Date.now() - new Date(timeline.deliveredAt).getTime()) / (24 * 60 * 60 * 1000)
-        );
+        try {
+          const daysSinceDelivery = Math.floor(
+            (Date.now() - new Date(timeline.deliveredAt).getTime()) / (24 * 60 * 60 * 1000)
+          );
 
-        const milestonesCompleted = safeParseArray(timeline.milestonesCompleted);
-        const newMilestones = MILESTONES.filter(m =>
-          m <= daysSinceDelivery && !milestonesCompleted.includes(m)
-        );
-
-        if (newMilestones.length > 0) {
-          milestonesCompleted.push(...newMilestones);
-
-          const updates = {
-            ...timeline,
-            milestonesCompleted: JSON.stringify(milestonesCompleted),
-            currentDay: daysSinceDelivery,
-          };
-
-          // Auto-complete at break-in day
-          if (daysSinceDelivery >= BREAK_IN_COMPLETE_DAY) {
-            updates.status = 'complete';
+          if (Number.isNaN(daysSinceDelivery)) {
+            logError('comfortTimeline.processMilestones', new Error(`Invalid deliveredAt for timeline ${timeline._id}`));
+            continue;
           }
 
-          await wixData.update(COLLECTION, updates, { suppressAuth: true });
-          notifications += newMilestones.length;
-        }
+          const milestonesCompleted = safeParseArray(timeline.milestonesCompleted);
+          const newMilestones = MILESTONES.filter(m =>
+            m <= daysSinceDelivery && !milestonesCompleted.includes(m)
+          );
 
-        processed++;
+          if (newMilestones.length > 0) {
+            milestonesCompleted.push(...newMilestones);
+
+            const updates = {
+              ...timeline,
+              milestonesCompleted: JSON.stringify(milestonesCompleted),
+              currentDay: daysSinceDelivery,
+            };
+
+            // Auto-complete at break-in day
+            if (daysSinceDelivery >= BREAK_IN_COMPLETE_DAY) {
+              updates.status = 'complete';
+            }
+
+            await wixData.update(COLLECTION, updates, { suppressAuth: true });
+            notifications += newMilestones.length;
+          }
+
+          processed++;
+        } catch (itemErr) {
+          logError('comfortTimeline.processMilestones.item', itemErr);
+        }
       }
 
       logAuditEvent('ComfortTimelines', 'process_milestones', 'cron', { processed, notifications });
