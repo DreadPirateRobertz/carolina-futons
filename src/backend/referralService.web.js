@@ -91,16 +91,19 @@ export async function _getReferralLinkForMember(memberId) {
       };
     }
 
-    // Generate new code
+    // Generate new unique code — fail after 5 attempts to prevent duplicates
     let code = generateCode();
-    let attempts = 0;
-    while (attempts < 5) {
+    let codeIsUnique = false;
+    for (let attempts = 0; attempts < 5; attempts++) {
       const conflict = await wixData.query(REFERRALS_COLLECTION)
         .eq('referralCode', code)
         .find({ suppressAuth: true });
-      if (conflict.items.length === 0) break;
+      if (conflict.items.length === 0) { codeIsUnique = true; break; }
       code = generateCode();
-      attempts++;
+    }
+    if (!codeIsUnique) {
+      console.error('[referralService] Failed to generate unique referral code after 5 attempts');
+      return null;
     }
 
     await wixData.insert(REFERRALS_COLLECTION, {

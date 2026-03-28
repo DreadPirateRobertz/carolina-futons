@@ -89,18 +89,13 @@ describe('post_purchase_referral template', () => {
 // ── Post-Purchase Sequence Integration ──────────────────────────────
 
 describe('post-purchase sequence includes referral step', () => {
-  it('SEQUENCES.post_purchase has step 5 (referral) at 336 hours (Day 14)', async () => {
-    const mod = await import('../src/backend/emailAutomation.web.js');
-    // Access SEQUENCES through the module — it's defined at module level
-    // We verify by checking the queued emails include the referral template
-    // when triggerPostPurchaseSequence is called
-
-    // Seed empty collections to allow the sequence to queue
-    const { triggerPostPurchaseSequence } = mod;
+  it('SEQUENCES.post_purchase has step 5 (referral) at 360 hours (Day 15)', async () => {
+    const { triggerPostPurchaseSequence } = await import('../src/backend/emailAutomation.web.js');
 
     const result = await triggerPostPurchaseSequence(
       'contact-1', 'buyer@test.com', 'Jane', 'ORD-5678', 549,
       [{ name: 'Monterey Frame', quantity: 1, price: 549 }],
+      { memberId: 'member-1' },
     );
 
     expect(result.success).toBe(true);
@@ -112,5 +107,36 @@ describe('post-purchase sequence includes referral step', () => {
     expect(referralEmail).toBeDefined();
     expect(referralEmail.sequenceStep).toBe(5);
     expect(referralEmail.sequenceType).toBe('post_purchase');
+  });
+
+  it('queued referral email has referralUrl and referralCode variables', async () => {
+    const { triggerPostPurchaseSequence } = await import('../src/backend/emailAutomation.web.js');
+
+    await triggerPostPurchaseSequence(
+      'contact-1', 'buyer@test.com', 'Jane', 'ORD-5678', 549,
+      [{ name: 'Monterey Frame', quantity: 1, price: 549 }],
+      { memberId: 'member-1' },
+    );
+
+    const queued = __getInserted('EmailQueue');
+    const referralEmail = queued.find(e => e.templateId === 'post_purchase_referral');
+    expect(referralEmail).toBeDefined();
+    expect(referralEmail.variables.referralUrl).toBeTruthy();
+    expect(referralEmail.variables.referralCode).toBeTruthy();
+  });
+
+  it('uses sentinel defaults for guest checkouts (no memberId)', async () => {
+    const { triggerPostPurchaseSequence } = await import('../src/backend/emailAutomation.web.js');
+
+    await triggerPostPurchaseSequence(
+      'contact-guest', 'guest@test.com', 'Guest', 'ORD-GUEST', 299,
+      [{ name: 'Budget Frame', quantity: 1, price: 299 }],
+    );
+
+    const queued = __getInserted('EmailQueue');
+    const referralEmail = queued.find(e => e.templateId === 'post_purchase_referral');
+    expect(referralEmail).toBeDefined();
+    expect(referralEmail.variables.referralUrl).toBe('https://www.carolinafutons.com/referral');
+    expect(referralEmail.variables.referralCode).toBe('');
   });
 });
