@@ -10,20 +10,26 @@
  * across page reloads, but each undoLast() call does write the resulting ID
  * state back to localStorage so the undo effect survives a reload.
  *
+<<<<<<< HEAD
  * S12 addition: history is capped at HISTORY_LIMIT (10) entries. markHooked
  * accepts an optional compRef (the Wix editor ComponentRef used during
  * auto-apply). undoLast returns that compRef so callers can call
  * editor.components.setNickname(compRef, '') to clear the ID in the editor.
  *
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
  * S15: storage helpers extracted to ../utils/storage.ts so exportReport and
  * importReport can share the same key format without duplication.
  */
 
 import { useState, useCallback } from 'react';
 import { loadIds, saveIds } from '../utils/storage.js';
+<<<<<<< HEAD
 
 const TAG = '[usePageProgress]';
 const HISTORY_LIMIT = 10;
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
 
 // wasSkipped records whether the element was in skippedIds before markHooked
 // moved it — needed to fully reverse a markHooked that displaced a skip.
@@ -33,6 +39,7 @@ type ProgressAction =
   | { type: 'hooked'; elementId: string; wasSkipped: boolean; compRef?: unknown }
   | { type: 'skipped'; elementId: string };
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 function storageKey(pageName: string, kind: 'hooked' | 'skipped') {
@@ -83,6 +90,8 @@ export function readPageHookedCount(pageName: string): number {
 }
 
 >>>>>>> origin/polecat/chrome/CF-267m
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
 export function usePageProgress(pageName: string) {
   const [hookedIds, setHookedIds] = useState<string[]>(() => loadIds(pageName, 'hooked'));
   const [skippedIds, setSkippedIds] = useState<string[]>(() => loadIds(pageName, 'skipped'));

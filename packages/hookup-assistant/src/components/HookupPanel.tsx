@@ -26,8 +26,11 @@ import { ProgressDashboard } from './ProgressDashboard.js';
 import type { PageDef } from '../types/index.js';
 import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
 import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
+<<<<<<< HEAD
 import { useSessionTimer, formatElapsed, loadHistory } from '../hooks/useSessionTimer.js';
 import type { SessionRecord } from '../hooks/useSessionTimer.js';
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
 
 const APP_VERSION = '0.1.0';
 const DEFAULT_PAGE = PAGES[0]?.name ?? '';
@@ -37,7 +40,10 @@ export function HookupPanel() {
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+<<<<<<< HEAD
   const [showProgress, setShowProgress] = useState(false);
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
   // S15: import status feedback ('idle' | 'success' | 'error')
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,8 +325,11 @@ export function HookupPanel() {
               onChange={handleImportFile}
             />
           </div>
+<<<<<<< HEAD
           {/* S9: Session history */}
           <SessionHistorySection />
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
         </div>
       )}
 
@@ -691,6 +700,7 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
   },
   footerText: { fontSize: '10px', color: '#7a92a5' },
+<<<<<<< HEAD
   timerText: { fontSize: '10px', color: '#4e6579' },
   // S11: conflict banner
   conflictBanner: {
@@ -742,6 +752,8 @@ const s: Record<string, React.CSSProperties> = {
     padding: '3px 10px',
     cursor: 'pointer',
   },
+=======
+>>>>>>> origin/polecat/rust/CF-yixo
   // S15: export/import controls
   exportRow: {
     display: 'flex',

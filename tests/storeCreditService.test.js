@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset } from './__mocks__/wix-data.js';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { __setMember } from './__mocks__/wix-members-backend.js';
 =======
 import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 >>>>>>> origin/cf-ld8w-referral-ui
+=======
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
+>>>>>>> origin/polecat/rust/CF-yixo
 import {
   issueStoreCredit,
   getMyStoreCredit,
