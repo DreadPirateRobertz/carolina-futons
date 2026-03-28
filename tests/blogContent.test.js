@@ -32,14 +32,17 @@ const EXPECTED_SLUGS = [
   'wood-frame-care-guide',
   'studio-apartment-furniture',
   'eco-friendly-furniture-guide',
+  'futon-for-guest-room',
+  'how-to-clean-futon-mattress',
+  'mountain-living-furniture',
 ];
 
 // ── blogContent exports ──────────────────────────────────────────────
 
 describe('getBlogSlugs', () => {
-  it('returns all 14 pillar post slugs', () => {
+  it('returns all 17 pillar post slugs', () => {
     const slugs = getBlogSlugs();
-    expect(slugs).toHaveLength(14);
+    expect(slugs).toHaveLength(17);
     for (const expected of EXPECTED_SLUGS) {
       expect(slugs).toContain(expected);
     }
@@ -183,9 +186,9 @@ describe('getBlogFaqs', () => {
 });
 
 describe('getAllBlogPosts', () => {
-  it('returns array of all 14 posts', () => {
+  it('returns array of all 17 posts', () => {
     const posts = getAllBlogPosts();
-    expect(posts).toHaveLength(14);
+    expect(posts).toHaveLength(17);
     for (const post of posts) {
       expect(post.slug).toBeTruthy();
       expect(post.title).toBeTruthy();
