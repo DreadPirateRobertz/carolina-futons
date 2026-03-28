@@ -387,7 +387,13 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount, ov
  * Returns null if product has no profile (use category defaults).
  *
  * CMS fields: productId, productName, category, weight_lbs, length_in, width_in, height_in,
+<<<<<<< HEAD
  *             handlingFee_usd, requiresPallet, requiresFreight, customItemFlag
+=======
+ *             handlingFee_usd, carrierOverride, ltlRequired
+ *
+ * @private
+>>>>>>> origin/polecat/chrome/CF-wpuw@mn16gddb
  */
 export async function _resolveProfile(productId) {
   if (!productId) return null;
