@@ -52,10 +52,10 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.post_purchase.steps[3].delayHours).toBe(336);  // Day 14: Review reward prompt (CF-qy79)
   });
 
-  it('has post_purchase step descriptions matching day 3/7/30 redesign', () => {
-    expect(_SEQUENCES.post_purchase.steps[0].description).toContain('Assembly follow-up');
-    expect(_SEQUENCES.post_purchase.steps[1].description).toContain('Review solicitation');
-    expect(_SEQUENCES.post_purchase.steps[2].description).toContain('Care guide');
+  it('has post_purchase step descriptions matching day 3/7/30 redesign (CF-nkau)', () => {
+    expect(_SEQUENCES.post_purchase.steps[0].description).toMatch(/care guide/i);
+    expect(_SEQUENCES.post_purchase.steps[1].description).toMatch(/review/i);
+    expect(_SEQUENCES.post_purchase.steps[2].description).toMatch(/cross.sell|complete.*room/i);
   });
 
   it('has reengagement sequence with 1 step', () => {
@@ -1022,7 +1022,9 @@ describe('wixMembers_onMemberCreated', () => {
 });
 
 describe('wixEcom_onOrderCreated', () => {
-  it('triggers post-purchase sequence for new orders', async () => {
+  // CF-nkau: post-purchase care sequence now triggers from wixEcom_onOrderDelivered
+  // (delivery date), not order creation date. onOrderCreated only sends order confirmation.
+  it('sends order confirmation but does NOT queue post-purchase sequence', async () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
@@ -1042,27 +1044,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(5);
-    expect(postPurchaseEmails[0].variables.orderNumber).toBe('ORD-100');
-  });
-
-  it('extracts total from priceSummary when totals missing', async () => {
-    let insertedItems = [];
-    __onInsert((collection, item) => { insertedItems.push(item); });
-
-    wixEcom_onOrderCreated({
-      entity: {
-        number: 'ORD-101',
-        buyerInfo: { email: 'buyer@test.com', contactId: 'contact-b2', firstName: 'Buyer' },
-        priceSummary: { total: { amount: 1299 } },
-        lineItems: [],
-      },
-    });
-
-    await new Promise(r => setTimeout(r, 100));
-
-    const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(5);
+    expect(postPurchaseEmails).toHaveLength(0);
   });
 
   it('does nothing when buyer email is missing', async () => {

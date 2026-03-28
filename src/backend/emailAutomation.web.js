@@ -70,9 +70,9 @@ const SEQUENCES = {
   },
   post_purchase: {
     steps: [
-      { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Assembly follow-up — How\'s setup going?' },
-      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
-      { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
+      { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Day 3 care guide — assembly tips, fabric care, warranty info (CF-nkau)' },
+      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Day 7 review request — How\'s your new [Product]? Earn 50 pts (CF-nkau)' },
+      { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Day 30 cross-sell — Complete your room, recommendations based on purchase (CF-nkau)' },
       { step: 4, templateId: 'post_purchase_review_reward', delayHours: 336, description: 'Day-14 review prompt — earn 100 pts (CF-qy79)' },
       { step: 5, templateId: 'post_purchase_referral', delayHours: 360, description: 'Day-15 referral invite — share the love, earn $25 (CF-6p0o)' },
     ],
@@ -96,6 +96,27 @@ const SEQUENCES = {
 
 // Maximum retry attempts for failed emails
 const MAX_RETRY_ATTEMPTS = 3;
+
+const SITE_URL_BASE = 'https://www.carolinafutons.com';
+
+// CF-nkau: Post-purchase care guide URLs (Day 3 step)
+const FABRIC_CARE_URL = `${SITE_URL_BASE}/fabric-care-guide`;
+const WARRANTY_URL = `${SITE_URL_BASE}/warranty`;
+
+/**
+ * Determine the best cross-sell category for Day 30 recommendations.
+ * Inspects the primary item's slug to suggest a complementary collection.
+ *
+ * @param {Array} lineItems
+ * @returns {{ label: string, url: string }}
+ */
+function _getCrossSell(lineItems) {
+  const primarySlug = (lineItems || []).map(i => i.slug || '').find(Boolean) || '';
+  let label = 'accessories';
+  if (/frame/.test(primarySlug)) label = 'futon-mattresses';
+  else if (/mattress/.test(primarySlug)) label = 'futon-covers';
+  return { label, url: `${SITE_URL_BASE}/collections/${label}` };
+}
 
 // Send window: only deliver emails between these hours (America/New_York).
 // Emails scheduled outside this window are deferred to the next window open.
@@ -143,23 +164,18 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
-  return Promise.all([
-    // Send customer-facing order confirmation
-    import('backend/emailService.web')
-      .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
-        contactId,
-        email,
-        firstName,
-        orderNumber: String(orderNumber),
-        total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-        itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-      }))
-      .catch(err => console.error('Error sending order confirmation:', err)),
-
-    // Queue post-purchase care sequence
-    triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
-      .catch(err => console.error('Error triggering post-purchase sequence:', err)),
-  ]);
+  // CF-nkau: post-purchase care sequence is now triggered from wixEcom_onOrderDelivered
+  // (delivery date) instead of here (order creation date). Do NOT queue it here.
+  return import('backend/emailService.web')
+    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    }))
+    .catch(err => console.error('Error sending order confirmation:', err));
 }
 
 /**
@@ -215,7 +231,8 @@ export function wixEcom_onFulfillmentCreated(event) {
 
 /**
  * Triggered when an order is marked as delivered.
- * Sends a delivery confirmation email to the buyer.
+ * Sends a delivery confirmation email and queues the post-purchase care sequence.
+ * Trigger for CF-nkau Day 3/7/30 drip: starts countdown from actual delivery date.
  */
 export function wixEcom_onOrderDelivered(event) {
   const order = event.entity || event;
@@ -224,6 +241,7 @@ export function wixEcom_onOrderDelivered(event) {
   const contactId = order.buyerInfo?.contactId || '';
   const orderNumber = order.number || '';
   const lineItems = order.lineItems || [];
+  const total = order.priceSummary?.total?.amount || order.totals?.total || 0;
 
   if (!email) return;
 
@@ -235,6 +253,11 @@ export function wixEcom_onOrderDelivered(event) {
       orderNumber: String(orderNumber),
     }))
     .catch(err => console.error('Error sending delivery confirmation:', err));
+
+  // CF-nkau: Queue post-purchase care sequence starting from delivery date
+  // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
+  triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
+    .catch(err => console.error('[CF-nkau] Error queuing post-purchase care sequence on delivery:', err));
 
   // CF-qy79: Queue Day-14 review prompt with points reward
   const productNames = lineItems
@@ -476,14 +499,13 @@ export const triggerPostPurchaseSequence = webMethod(
         .filter(Boolean)
         .join(', ');
 
-      const SITE_URL = 'https://www.carolinafutons.com';
-      const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
+      const assemblyGuideUrl = `${SITE_URL_BASE}/getting-it-home#assembly`;
       // Deep-link to product review form: use slug from first line item that has one
       const primarySlug = extractPrimarySlug(lineItems);
       if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
       const reviewUrl = primarySlug
-        ? `${SITE_URL}/product-page/${primarySlug}#reviews`
-        : `${SITE_URL}/member-page#reviews`;
+        ? `${SITE_URL_BASE}/product-page/${primarySlug}#reviews`
+        : `${SITE_URL_BASE}/member-page#reviews`;
 
       const now = new Date();
       let queued = 0;
@@ -501,10 +523,23 @@ export const triggerPostPurchaseSequence = webMethod(
           reviewUrl,
         };
 
+        // Step 1 (Day 3 care guide): fabric care guide and warranty URLs (CF-nkau)
+        if (step.step === 1) {
+          variables.fabricCareUrl = FABRIC_CARE_URL;
+          variables.warrantyUrl = WARRANTY_URL;
+        }
+
         // Step 2 (Day 7 review request): include loyalty points incentive (CF-i64b)
         if (step.step === 2) {
           variables.pointsReward = '50';
           variables.photoBonusPoints = '25';
+        }
+
+        // Step 3 (Day 30 cross-sell): recommend complementary products (CF-nkau)
+        if (step.step === 3) {
+          const crossSell = _getCrossSell(lineItems);
+          variables.crossSellUrl = crossSell.url;
+          variables.crossSellLabel = crossSell.label;
         }
 
         // Step 5 (Day 14 referral invite): generate personalized referral link (CF-6p0o)
@@ -525,7 +560,7 @@ export const triggerPostPurchaseSequence = webMethod(
             }
           }
           // Sentinel defaults — template should handle gracefully
-          if (!variables.referralUrl) variables.referralUrl = 'https://www.carolinafutons.com/referral';
+          if (!variables.referralUrl) variables.referralUrl = `${SITE_URL_BASE}/referral`;
           if (!variables.referralCode) variables.referralCode = '';
         }
 
