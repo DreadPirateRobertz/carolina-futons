@@ -208,7 +208,8 @@ vi.mock('backend/loyaltyService.web', () => ({
   redeemReward: vi.fn(() => Promise.resolve({ success: true, couponCode: 'SAVE10' })),
   getLoyaltyTiers: vi.fn(() => Promise.resolve(mockTiers)),
   getMyStreakData: vi.fn(() => Promise.resolve({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null })),
-  getMyAchievements: vi.fn(() => Promise.resolve([])),
+  getMyAchievements: vi.fn(() => Promise.resolve({ achievements: [] })),
+  getMyDailyQuests: vi.fn(() => Promise.resolve({ quests: [] })),
 }));
 
 vi.mock('backend/accountDashboard.web', () => ({
