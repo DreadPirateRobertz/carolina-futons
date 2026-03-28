@@ -180,7 +180,7 @@ export const logComfortRating = webMethod(
 
       return {
         success: true,
-        milestone: MILESTONES.find(m => m <= daysSinceDelivery) ?? 0,
+        milestone: [...MILESTONES].reverse().find(m => m <= daysSinceDelivery) ?? 0,
         supportEscalated,
       };
     } catch (err) {
