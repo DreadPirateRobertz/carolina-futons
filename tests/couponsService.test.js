@@ -17,9 +17,12 @@ import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
 import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
 import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -206,6 +209,7 @@ describe('createTierUpgradeCoupon', () => {
 describe('getActiveCoupons', () => {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   const TEST_EMAIL = 'test@example.com';
   const OTHER_EMAIL = 'other@example.com';
 
@@ -231,6 +235,8 @@ describe('getActiveCoupons', () => {
 =======
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
   beforeEach(() => {
     __resetMember();
     __setMember({ _id: 'member-123', loginEmail: 'member@test.com' });
@@ -240,9 +246,12 @@ describe('getActiveCoupons', () => {
     __setCoupons([
       { _id: 'c-1', code: 'WELCOME-ABC123', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -264,9 +273,12 @@ describe('getActiveCoupons', () => {
     __setCoupons([
       { _id: 'c-2', code: 'SAVE25', name: '$25 Off - member@test.com', moneyOffAmount: 25, active: true },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
@@ -286,9 +298,12 @@ describe('getActiveCoupons', () => {
     __setCoupons([
       { _id: 'c-3', code: 'NOAMT', name: 'No Amount - member@test.com', active: true },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('0%');
@@ -302,6 +317,7 @@ describe('getActiveCoupons', () => {
       code: 'FIELDS',
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       displayName: 'Test Coupon',
 =======
       name: 'Test - member@test.com',
@@ -309,6 +325,9 @@ describe('getActiveCoupons', () => {
 =======
       name: 'Test - member@test.com',
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+      name: 'Test - member@test.com',
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
       percentOffRate: 5,
 =======
     __seed('Members/MemberCoupons', [{
@@ -347,6 +366,7 @@ describe('getActiveCoupons', () => {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // ── IDOR security gates ──────────────────────────────────────────────
 
   it('IDOR gate: returns empty array when no member session', async () => {
@@ -356,19 +376,25 @@ describe('getActiveCoupons', () => {
 =======
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
   it('returns empty array when member has no email', async () => {
     __setMember({ _id: 'member-no-email' });
     __setCoupons([
       { _id: 'c-1', code: 'WELCOME-ABC', name: 'Welcome 10%', percentOffRate: 10, active: true },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   it('IDOR gate: wrong member gets empty array (cannot see other members coupons)', async () => {
@@ -396,6 +422,8 @@ describe('getActiveCoupons', () => {
 =======
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
   it('does not return coupons belonging to other members', async () => {
     __setCoupons([
       { _id: 'c-victim', code: 'BDAY-VICTIM1', name: 'Happy Birthday Victim! 15% Off - victim@other.com', percentOffRate: 15, active: true },
@@ -419,14 +447,18 @@ describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
     __setCoupons([
       { _id: 'c-1', code: 'WELCOME-XYZ', name: 'Welcome 10%', percentOffRate: 10, active: true },
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   it('does not call queryAllCoupons — confirms DB-level member scoping', async () => {
@@ -499,6 +531,8 @@ describe('createTierUpgradeCoupon — MemberCoupons tracking', () => {
 =======
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
   it('getActiveCoupons prevents attacker harvesting victim coupon codes', async () => {
     __setMember({ _id: 'attacker', loginEmail: 'attacker@evil.com' });
     __setCoupons([
@@ -523,8 +557,11 @@ describe('createTierUpgradeCoupon — MemberCoupons tracking', () => {
     expect(result).toHaveLength(1);
     expect(result[0].code).toBe('RECOVER-MYCODE');
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
   });
 });

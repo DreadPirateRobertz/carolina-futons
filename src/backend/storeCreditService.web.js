@@ -203,12 +203,16 @@ export const applyStoreCredit = webMethod(
       }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
       const now = new Date();
 
       // Get active credits sorted by expiration (soonest first)
@@ -480,12 +484,16 @@ export const getExpiringCredits = webMethod(
       }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
       const days = Math.max(1, Math.min(365, Math.round(Number(withinDays) || 30)));
       const now = new Date();
       const cutoff = new Date(Date.now() + days * 24 * 60 * 60 * 1000);

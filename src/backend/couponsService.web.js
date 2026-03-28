@@ -104,6 +104,7 @@ export const getActiveCoupons = webMethod(
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       const result = await wixData.query('MemberCoupons')
         .eq('memberEmail', memberEmail)
         .eq('active', true)
@@ -129,6 +130,12 @@ export const getActiveCoupons = webMethod(
         .find();
 
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+      const result = await coupons.queryAllCoupons()
+        .eq('active', true)
+        .find();
+
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
       return (result.items || [])
         .filter(c => c.name?.toLowerCase().includes(memberEmail))
         .map(c => ({
@@ -141,9 +148,12 @@ export const getActiveCoupons = webMethod(
           active: c.active,
         }));
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> origin/cf-ld8w-referral-ui
 =======
 >>>>>>> origin/polecat/rust/CF-yixo
+=======
+>>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];
