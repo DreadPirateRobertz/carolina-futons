@@ -879,7 +879,7 @@ function initHeroAnimation() {
     try { heroSubtitle = $w('#heroSubtitle'); } catch (e) {}
     try { heroCta = $w('#heroCTA'); } catch (e) {}
 
-    // Staggered fade-in: title → subtitle → CTA
+    // Default hero content (shown immediately, may be overridden by personalization)
     if (heroTitle) {
       heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
       heroTitle.show('fade', { duration: 300, delay: 200 });
@@ -899,6 +899,17 @@ function initHeroAnimation() {
         });
       }
     }
+
+    // CF-tj6f: Personalized hero for logged-in members (async, overwrites default)
+    import('public/PersonalizedHero').then(async ({ getPersonalizedHero, applyPersonalizedHero }) => {
+      const heroConfig = await getPersonalizedHero();
+      if (heroConfig) {
+        applyPersonalizedHero($w, heroConfig, (imageKey) => {
+          try { return getHomepageHeroImage(imageKey); } catch { return null; }
+        });
+        trackEvent('personalized_hero', { source: heroConfig.source, category: heroConfig.imageKey });
+      }
+    }).catch(() => {});
   } catch (e) {
     // Hero elements may not exist
   }
