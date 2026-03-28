@@ -212,6 +212,12 @@ vi.mock('public/productCardHelpers.js', () => ({
   formatCardPrice: vi.fn().mockReturnValue(''),
   setCardImage: vi.fn(),
   renderCardFinancingBadge: vi.fn(),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
 }));
 
 vi.mock('public/galleryConfig.js', () => ({

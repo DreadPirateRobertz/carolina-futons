@@ -265,6 +265,12 @@ vi.mock('public/productCardHelpers.js', () => ({
   initCardHover: vi.fn(),
   formatCardPrice: vi.fn(),
   setCardImage: vi.fn(),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
 }));
 
 vi.mock('public/galleryConfig.js', () => ({

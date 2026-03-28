@@ -26,7 +26,7 @@ import { getBatchPaymentBadges } from 'backend/paymentOptions.web';
 import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
-import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, renderCardFinancingBadge } from 'public/productCardHelpers.js';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, renderCardFinancingBadge, renderSimplePrice } from 'public/productCardHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
@@ -870,7 +870,7 @@ function openQuickView(product) {
     currentQuickViewProduct = product;
     setCardImage($w('#qvImage'), product, '', getImageDimensions('productPageMain'));
     $w('#qvName').text = product.name || 'Product';
-    $w('#qvPrice').text = isCallForPrice(product) ? CALL_FOR_PRICE_TEXT : (product.formattedPrice || '');
+    renderSimplePrice($w('#qvPrice'), product);
     $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
     if (isCallForPrice(product)) {
       $w('#qvAddToCart').label = 'Call for Pricing';
@@ -1007,7 +1007,7 @@ function initRecentlyViewed() {
 
       const name = itemData.name || 'Product';
       try { $item('#recentName').text = name; } catch (e) {}
-      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : (itemData.price || ''); } catch (e) {}
+      renderSimplePrice($item('#recentPrice'), itemData);
 
       const slug = itemData.slug || '';
       const navigateToProduct = () => {
@@ -1636,7 +1636,7 @@ function refreshCompareBarUI() {
         setCardImage($item('#compareThumb'), itemData, '', getImageDimensions('thumbnail'));
         try { $item('#compareThumb').alt = buildGridAlt(itemData); } catch (e) {}
         try { $item('#compareName').text = itemData.name; } catch (e) {}
-        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
+        try { renderSimplePrice($item('#comparePrice'), itemData); } catch (e) {}
         try {
           $item('#compareRemove').onClick(() => {
             removeFromCompare(itemData._id);

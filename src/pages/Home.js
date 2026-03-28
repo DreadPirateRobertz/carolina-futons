@@ -13,7 +13,7 @@ import { colors } from 'public/designTokens.js';
 import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
-import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor, renderSimplePrice } from 'public/productCardHelpers.js';
 import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 import { initSocialFeeds } from 'public/SocialFeedEmbed.js';
@@ -307,7 +307,7 @@ function openFeaturedQuickView(product) {
     $w('#featuredQvImage').src = product.mainMedia || '';
     $w('#featuredQvImage').alt = buildProductAlt(product, 'featured');
     $w('#featuredQvName').text = product.name || 'Product';
-    $w('#featuredQvPrice').text = isCallForPrice(product) ? CALL_FOR_PRICE_TEXT : (product.formattedDiscountedPrice || product.formattedPrice || '');
+    renderSimplePrice($w('#featuredQvPrice'), product);
     if (isCallForPrice(product)) {
       try { $w('#featuredQvAddToCart').label = 'Call for Pricing'; } catch (e) {}
       try { $w('#featuredQvAddToCart').disable(); } catch (e) {}
@@ -533,7 +533,7 @@ async function initRecentlyViewed() {
         try { $item('#recentImage').alt = `${name} - Carolina Futons`; } catch (e2) {}
       }
       try { $item('#recentName').text = name; } catch (e) {}
-      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : (itemData.price || ''); } catch (e) {}
+      renderSimplePrice($item('#recentPrice'), itemData);
       try { $item('#recentImage').accessibility.ariaLabel = `View ${name}`; } catch (e) {}
       try { $item('#recentName').accessibility.ariaLabel = `View ${name} details`; } catch (e) {}
 

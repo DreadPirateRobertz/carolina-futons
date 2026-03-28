@@ -13,6 +13,15 @@ vi.mock('public/sharedTokens.js', () => ({
   },
 }));
 
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
+
 import {
   buildRoomBundles,
   calculateBundleSavings,

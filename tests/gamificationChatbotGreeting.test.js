@@ -166,7 +166,15 @@ vi.mock('public/ProductDetails.js', () => ({ initBreadcrumbs: vi.fn(), initProdu
 vi.mock('public/AddToCart.js', () => ({ initQuantitySelector: vi.fn(), initAddToCartEnhancements: vi.fn(), initStickyCartBar: vi.fn(), initBundleSection: vi.fn(), initStockUrgency: vi.fn(), initBackInStockNotification: vi.fn(), initWishlistButton: vi.fn() }));
 vi.mock('public/BrowseReminder.js', () => ({ initBrowseTracking: vi.fn(), _createBrowseState: vi.fn(() => ({})) }));
 vi.mock('public/a11yHelpers.js', () => ({ makeClickable: vi.fn(), announce: vi.fn() }));
-vi.mock('public/productCardHelpers.js', () => ({ setCardImage: vi.fn() }));
+vi.mock('public/productCardHelpers.js', () => ({
+  setCardImage: vi.fn(),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
 vi.mock('public/socialProofToast', () => ({ initProductSocialProof: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('backend/promotions.web', () => ({ getFlashSales: vi.fn().mockResolvedValue([]) }));
 vi.mock('public/flashSaleHelpers', () => ({ initProductUrgencyBadge: vi.fn() }));

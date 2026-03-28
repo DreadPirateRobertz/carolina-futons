@@ -4,6 +4,7 @@ import wixData from 'wix-data';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { isMobile } from 'public/mobileHelpers';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 $w.onReady(function () {
   initSearchSuggestions();
@@ -26,7 +27,7 @@ function initSearchSuggestions() {
       $item('#sugImage').src = itemData.image;
       try { $item('#sugImage').alt = `${itemData.name}`; } catch (e) {}
       $item('#sugName').text = itemData.name;
-      $item('#sugPrice').text = itemData.price;
+      renderSimplePrice($item('#sugPrice'), itemData);
 
       try { $item('#sugImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       try { $item('#sugName').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}

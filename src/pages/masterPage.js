@@ -20,6 +20,7 @@ import { initCartUpsell } from 'public/CartUpsell';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
 import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
+import { formatCardPrice, renderSimplePrice } from 'public/productCardHelpers.js';
 import {
   applyActiveNavState,
   initMegaMenu,
@@ -575,17 +576,7 @@ function initPromoProducts(products) {
       try { $item('#promoImage').src = itemData.mainMedia; } catch (e) {}
       try { $item('#promoImage').alt = `${itemData.name} - promotional product`; } catch (e) {}
       try { $item('#promoName').text = itemData.name; } catch (e) {}
-      try {
-        $item('#promoPrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
-      } catch (e) {}
-      try {
-        if (itemData.formattedDiscountedPrice && itemData.formattedDiscountedPrice !== itemData.formattedPrice) {
-          $item('#promoOrigPrice').text = itemData.formattedPrice;
-          $item('#promoOrigPrice').show();
-        } else {
-          $item('#promoOrigPrice').hide();
-        }
-      } catch (e) {}
+      formatCardPrice($item('#promoPrice'), $item('#promoOrigPrice'), null, itemData);
       try {
         $item('#promoQuickAdd').onClick(() => {
           import('wix-location-frontend').then(({ to }) => {

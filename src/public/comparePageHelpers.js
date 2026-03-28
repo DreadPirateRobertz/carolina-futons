@@ -5,6 +5,7 @@
  */
 
 import { business } from 'public/sharedTokens.js';
+import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 
 // ── XSS protection ───────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export function buildColumnData(products) {
       name: p.name,
       slug: p.slug,
       image: p.mainMedia,
-      price: p.formattedPrice,
+      price: isCallForPrice(p) ? CALL_FOR_PRICE_TEXT : p.formattedPrice,
       salePrice: onSale ? _formatPrice(p.price) : null,
       origPrice: onSale ? _formatPrice(p.compareAtPrice) : null,
       showOrigPrice: onSale,

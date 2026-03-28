@@ -9,6 +9,7 @@ import { limitForViewport, initBackToTop, onViewportChange } from 'public/mobile
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import { colors } from 'public/designTokens.js';
 import {
   getCategories,
@@ -279,7 +280,7 @@ async function initRelatedProductsSidebar() {
         $item('#sidebarProductImage').src = itemData.mainMedia || '';
         $item('#sidebarProductImage').alt = itemData.name || 'Product';
         $item('#sidebarProductName').text = itemData.name || '';
-        $item('#sidebarProductPrice').text = itemData.formattedPrice || '';
+        renderSimplePrice($item('#sidebarProductPrice'), itemData);
         makeClickable($item('#sidebarProductLink'), () => {
           wixLocationFrontend.to(`/product-page/${itemData.slug}`);
         }, { ariaLabel: `View ${itemData.name}` });

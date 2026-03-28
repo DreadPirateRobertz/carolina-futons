@@ -21,6 +21,7 @@ import { initBackToTop, collapseOnMobile, limitForViewport } from 'public/mobile
 import { trackEvent } from 'public/engagementTracker';
 import { fireViewCart } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import {
   getCartItemStyles,
   getProgressBarStyles,
@@ -253,7 +254,7 @@ async function loadRecentlyViewed(cart) {
         try { $item('#cartRecentImage').alt = `${itemData.name} - recently viewed`; } catch (e) {}
         try { $item('#cartRecentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
         try { $item('#cartRecentName').text = itemData.name; } catch (e) {}
-        try { $item('#cartRecentPrice').text = itemData.price; } catch (e) {}
+        renderSimplePrice($item('#cartRecentPrice'), itemData);
 
         const navigate = () => {
           import('wix-location-frontend').then(({ to }) => {

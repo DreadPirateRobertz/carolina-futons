@@ -9,6 +9,7 @@ import { formatCurrency } from 'public/product/variantSelector.js';
 import { buildGridAlt } from 'public/product/productSchema.js';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { isCallForPrice } from 'public/productPageUtils.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 /**
  * Load "You Might Also Like" cross-category recommendations.
@@ -31,7 +32,7 @@ export async function loadRelatedProducts($w, product) {
       $item('#relatedImage').src = itemData.mainMedia;
       $item('#relatedImage').alt = buildGridAlt(itemData);
       $item('#relatedName').text = itemData.name;
-      $item('#relatedPrice').text = itemData.formattedPrice;
+      renderSimplePrice($item('#relatedPrice'), itemData);
 
       if (itemData.ribbon) {
         try {
@@ -77,7 +78,7 @@ export async function loadCollectionProducts($w, product) {
       $item('#collectionImage').src = itemData.mainMedia;
       $item('#collectionImage').alt = buildGridAlt(itemData);
       $item('#collectionName').text = itemData.name;
-      $item('#collectionPrice').text = itemData.formattedPrice;
+      renderSimplePrice($item('#collectionPrice'), itemData);
 
       const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {

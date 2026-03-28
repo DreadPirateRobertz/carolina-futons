@@ -129,7 +129,15 @@ vi.mock('public/a11yHelpers.js', () => ({
   makeClickable: vi.fn(),
   setupAccessibleDialog: vi.fn(),
 }));
-vi.mock('public/productCardHelpers.js', () => ({ setCardImage: vi.fn() }));
+vi.mock('public/productCardHelpers.js', () => ({
+  setCardImage: vi.fn(),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
 vi.mock('public/socialProofToast', () => ({ initProductSocialProof: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('backend/promotions.web', () => ({ getFlashSales: vi.fn().mockResolvedValue([]) }));
 vi.mock('public/flashSaleHelpers', () => ({ initProductUrgencyBadge: vi.fn() }));

@@ -25,6 +25,7 @@
 
 import { getRecentlyViewed } from 'public/galleryHelpers.js';
 import { to } from 'wix-location-frontend';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 const MAX_ITEMS = 6;
 const SLUG_RE = /^[a-z0-9-]+$/;
@@ -58,7 +59,7 @@ export function initContinueShoppingSection($w, opts = {}) {
     $item('#continueShoppingImage').src = itemData.mainMedia || '';
     $item('#continueShoppingImage').alt = itemData.name || '';
     $item('#continueShoppingName').text = itemData.name || '';
-    $item('#continueShoppingPrice').text = itemData.price || '';
+    renderSimplePrice($item('#continueShoppingPrice'), itemData);
 
     $item('#continueShoppingLink').onClick(() => {
       const slug = safeSlug(itemData.slug);

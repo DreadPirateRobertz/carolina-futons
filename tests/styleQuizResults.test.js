@@ -71,6 +71,15 @@ vi.mock('public/productPageUtils.js', () => ({
   buildGridAlt: vi.fn((p) => `${p.name} - Carolina Futons`),
 }));
 
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
+
 // ── Quiz option fixture ────────────────────────────────────────────
 
 const QUIZ_OPTIONS = {

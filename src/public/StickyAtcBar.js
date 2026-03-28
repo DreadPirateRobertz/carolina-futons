@@ -26,6 +26,8 @@
 
 // ── Constants ──────────────────────────────────────────────────────────
 
+import { renderSimplePrice } from 'public/productCardHelpers.js';
+
 const RESET_DELAY_MS    = 3000;
 const LABEL_DEFAULT     = 'Add to Cart';
 const LABEL_ADDING      = 'Adding...';
@@ -56,7 +58,7 @@ export function syncStickyBarState($wFn, state) {
     const btn   = safeGet($wFn, '#stickyAtcBtn');
 
     if (name  && product?.name)           name.text  = product.name;
-    if (price && product?.formattedPrice) price.text = product.formattedPrice;
+    renderSimplePrice(price, product);
 
     if (btn) {
       if (isOutOfStock) {

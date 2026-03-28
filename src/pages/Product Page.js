@@ -9,6 +9,7 @@ import { cacheProduct } from 'public/productCache';
 // to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixData from 'wix-data';
@@ -61,7 +62,7 @@ async function initProductPage() {
     const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
     if (cached && (!cached._cachedAt || (Date.now() - cached._cachedAt) < CACHE_MAX_AGE_MS)) {
       try { $w('#productName').text = cached.name; } catch (e) { console.warn('[ProductPage] Cached name display failed:', e.message); }
-      try { $w('#productPrice').text = isCallForPrice(cached) ? CALL_FOR_PRICE_TEXT : cached.formattedPrice; } catch (e) { console.warn('[ProductPage] Cached price display failed:', e.message); }
+      renderSimplePrice($w('#productPrice'), cached);
       try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) { console.warn('[ProductPage] Cached image display failed:', e.message); }
     }
 
@@ -367,7 +368,7 @@ async function loadRelatedProducts() {
       if (!itemData) return;
       setCardImage($item('#relatedImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#relatedName').text = itemData.name; } catch (e) {}
-      try { $item('#relatedPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
+      renderSimplePrice($item('#relatedPrice'), itemData);
       if (itemData.ribbon) {
         try { $item('#relatedBadge').text = itemData.ribbon; $item('#relatedBadge').show(); } catch (e) {}
       }
@@ -394,7 +395,7 @@ async function loadCollectionProducts() {
       if (!itemData) return;
       setCardImage($item('#collectionImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#collectionName').text = itemData.name; } catch (e) {}
-      try { $item('#collectionPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
+      renderSimplePrice($item('#collectionPrice'), itemData);
       const slug = itemData.slug || '';
       const name = itemData.name || 'Product';
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
@@ -426,7 +427,7 @@ async function loadRecentlyViewed() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#recentName').text = itemData.name; } catch (e) {}
-      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.price; } catch (e) {}
+      renderSimplePrice($item('#recentPrice'), itemData);
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
       makeClickable($item('#recentImage'), nav, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), nav, { ariaLabel: `View ${itemData.name} details` });
@@ -478,7 +479,7 @@ async function loadAlsoBought() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#alsoBoughtImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#alsoBoughtName').text = itemData.name; } catch (e) {}
-      try { $item('#alsoBoughtPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
+      renderSimplePrice($item('#alsoBoughtPrice'), itemData);
       if (itemData.ribbon) {
         try { $item('#alsoBoughtBadge').text = itemData.ribbon; $item('#alsoBoughtBadge').show(); } catch (e) {}
       }

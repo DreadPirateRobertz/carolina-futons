@@ -22,6 +22,7 @@
 
 import { getViewHistory } from 'public/recentlyViewed';
 import { addToCart } from 'public/cartService';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 const MAX_ITEMS = 4;
 const SUCCESS_LABEL = '✓ Added';
@@ -49,7 +50,7 @@ export function initCartRecentlyViewed($w, cartItems = []) {
   repeater.onItemReady(($item, itemData) => {
     $item('#crvProductImage').src = itemData.mainMedia;
     $item('#crvProductName').text = itemData.name;
-    $item('#crvProductPrice').text = itemData.formattedPrice;
+    renderSimplePrice($item('#crvProductPrice'), itemData);
 
     const btn = $item('#crvAddToCartBtn');
     btn.onClick(async () => {

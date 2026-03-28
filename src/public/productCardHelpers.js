@@ -112,6 +112,26 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
+/**
+ * Render a single price element with call-for-price guard.
+ * Use this for simple price displays (recently viewed, quick view, cross-sell)
+ * where there is no sale strikethrough or badge. For full sale price rendering,
+ * use formatCardPrice() instead.
+ *
+ * @param {Object} $el - Wix text element, or falsy to no-op
+ * @param {Object} product - Product data with price/formattedPrice/formattedDiscountedPrice
+ */
+export function renderSimplePrice($el, product) {
+  if (!$el) return;
+  try {
+    if (isCallForPrice(product)) {
+      $el.text = CALL_FOR_PRICE_TEXT;
+    } else {
+      $el.text = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '') || '';
+    }
+  } catch (e) { /* element may not support text */ }
+}
+
 // Matches batchAltText.web.js + imageAltText.web.js keyword convention (3 terms only).
 // 'context' excluded — matches Wix CDN URL params. 'living/bedroom/setting' excluded — too broad.
 const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];

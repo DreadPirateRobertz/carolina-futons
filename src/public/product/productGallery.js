@@ -14,7 +14,7 @@ import { generateAltText } from 'backend/seoHelpers.web';
 import { enableSwipe } from 'public/touchHelpers';
 import { trackGalleryInteraction } from 'public/engagementTracker';
 import { buildGridAlt } from 'public/product/productSchema.js';
-import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 /**
  * Initialize the product image gallery with zoom, lightbox, and swipe.
@@ -130,7 +130,7 @@ export async function loadRecentlyViewed($w, product) {
       $item('#recentImage').src = itemData.mainMedia;
       $item('#recentImage').alt = buildGridAlt(itemData);
       $item('#recentName').text = itemData.name;
-      $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.price;
+      renderSimplePrice($item('#recentPrice'), itemData);
 
       const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {

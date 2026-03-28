@@ -2,6 +2,7 @@
 // Transforms raw product suggestions into room-context bundles with savings.
 // Used by Cart Page.js and Side Cart.js to render cross-sell widgets.
 import { colors } from 'public/sharedTokens.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 /** @type {number} Bundle discount rate (5% off when completing the room) */
 export const BUNDLE_DISCOUNT_RATE = 0.05;
@@ -220,7 +221,7 @@ export function initCrossSellWidget($w, options) {
       $item(cardElements.name).style.color = styles.nameColor;
     } catch (e) {}
     try {
-      $item(cardElements.price).text = product.formattedPrice;
+      renderSimplePrice($item(cardElements.price), product);
       $item(cardElements.price).style.color = styles.priceColor;
     } catch (e) {}
 

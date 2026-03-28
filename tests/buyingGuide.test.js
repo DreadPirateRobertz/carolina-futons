@@ -115,6 +115,15 @@ vi.mock('public/buyingGuidesHelpers', () => ({
   formatGuideDate: vi.fn(() => 'Mar 14, 2026'),
 }));
 
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
+
 // ── Test Data ───────────────────────────────────────────────────────
 
 const mockGuide = {

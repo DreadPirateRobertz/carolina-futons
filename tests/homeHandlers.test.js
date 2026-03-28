@@ -123,6 +123,12 @@ vi.mock('public/productCardHelpers.js', () => ({
   formatCardPrice: vi.fn(() => '$199'),
   setCardImage: vi.fn(),
   getBadgeColor: vi.fn(() => '#red'),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
 }));
 
 vi.mock('public/productPageUtils.js', () => ({

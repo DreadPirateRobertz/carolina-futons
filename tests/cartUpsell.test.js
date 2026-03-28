@@ -43,6 +43,15 @@ vi.mock('public/ga4Tracking', () => ({
   fireCustomEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
+}));
+
 import { initCartUpsell } from '../src/public/CartUpsell.js';
 import { addToCart, onCartChanged, getCurrentCart } from 'public/cartService';
 import { getRecommendations } from 'backend/productRecommendations.web';
@@ -252,7 +261,7 @@ describe('CartUpsell', () => {
 
     // Get the onItemReady callback that was registered
     const onItemReadyCallback = $w('#upsellRepeater').onItemReady.mock.calls[0][0];
-    const itemData = makeProduct({ _id: 'rec-1', name: 'Sedona Frame', price: 599, mainMedia: 'https://example.com/sedona.jpg' });
+    const itemData = makeProduct({ _id: 'rec-1', name: 'Sedona Frame', price: 599, formattedPrice: '$599.00', mainMedia: 'https://example.com/sedona.jpg' });
 
     const $item = create$w();
     onItemReadyCallback($item, itemData);

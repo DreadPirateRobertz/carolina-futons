@@ -16,6 +16,7 @@ import { initBackToTop, isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { buildGridAlt } from 'public/productPageUtils.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import {
   buildBreadcrumbs,
   buildTableOfContents,
@@ -348,7 +349,7 @@ function initRelatedProducts(products) {
     productRepeater.data = products.map(p => ({ ...p, _id: p._id || `prod-${p.slug}` }));
     productRepeater.onItemReady(($item, itemData) => {
       try { $item('#productName').text = itemData.name; } catch (e) {}
-      try { $item('#productPrice').text = itemData.formattedPrice; } catch (e) {}
+      try { renderSimplePrice($item('#productPrice'), itemData); } catch (e) {}
       try {
         if (itemData.mainMedia) {
           $item('#productImage').src = itemData.mainMedia;

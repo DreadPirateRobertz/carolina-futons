@@ -10,6 +10,7 @@ import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 // Email gate shown after this step index (0-based). Step 2 = Q3 stylePreference.
 const EMAIL_GATE_AFTER_STEP = 2;
@@ -387,7 +388,7 @@ function renderResults(results) {
         const { product, score, reason } = itemData;
 
         try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
-        try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
+        try { renderSimplePrice($item('#resultProductPrice'), product); } catch (e) {}
         try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
 
         // Match score badge
@@ -430,7 +431,7 @@ function renderResults(results) {
         const { product, score, reason } = itemData;
 
         try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
-        try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
+        try { renderSimplePrice($item('#resultProductPrice'), product); } catch (e) {}
         try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
 
         // Match score badge

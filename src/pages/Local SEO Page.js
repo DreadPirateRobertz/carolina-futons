@@ -5,6 +5,7 @@ import { getLocalPage, getFeaturedProductsForCity, getRelatedCityLinks } from 'b
 import wixLocationFrontend from 'wix-location-frontend';
 import wixSeo from 'wix-seo';
 import { announce } from 'public/a11yHelpers';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 $w.onReady(async function () {
   try {
@@ -156,7 +157,7 @@ function initFeaturedProducts(products) {
     repeater.onItemReady(($item, itemData) => {
       try { $item('#productImage').src = itemData.imageUrl; } catch (e) {}
       try { $item('#productName').text = itemData.name; } catch (e) {}
-      try { $item('#productPrice').text = itemData.formattedPrice || `$${itemData.price}`; } catch (e) {}
+      renderSimplePrice($item('#productPrice'), itemData);
       try {
         $item('#viewProductBtn').onClick(() => {
           wixLocationFrontend.to(itemData.productPageUrl);

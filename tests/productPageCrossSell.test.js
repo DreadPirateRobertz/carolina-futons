@@ -146,9 +146,22 @@ vi.mock('public/a11yHelpers.js', () => ({
   makeClickable: vi.fn(),
 }));
 
-vi.mock('public/productCardHelpers.js', () => ({
-  setCardImage: vi.fn(),
-}));
+vi.mock('public/productCardHelpers.js', async () => {
+  const { isCallForPrice, CALL_FOR_PRICE_TEXT } = await import('public/productPageUtils.js');
+  return {
+    setCardImage: vi.fn(),
+    renderSimplePrice: vi.fn(($el, product) => {
+      if (!$el) return;
+      try {
+        if (isCallForPrice(product)) {
+          $el.text = CALL_FOR_PRICE_TEXT;
+        } else {
+          $el.text = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+        }
+      } catch (e) {}
+    }),
+  };
+});
 
 vi.mock('public/socialProofToast', () => ({
   initProductSocialProof: vi.fn(() => Promise.resolve()),

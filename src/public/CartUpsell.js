@@ -23,6 +23,7 @@ import { getRecommendations } from 'backend/productRecommendations.web';
 import { addToCart, onCartChanged, getCurrentCart } from 'public/cartService';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 
 const AUTO_DISMISS_MS = 8000;
 const UPSELL_COUNT = 3;
@@ -58,7 +59,7 @@ export function initCartUpsell($w) {
     $item('#upsellItemImage').src = itemData.mainMedia || '';
     $item('#upsellItemImage').alt = itemData.name || '';
     $item('#upsellItemName').text = itemData.name || '';
-    $item('#upsellItemPrice').text = itemData.price ? `$${Number(itemData.price).toFixed(2)}` : '';
+    renderSimplePrice($item('#upsellItemPrice'), itemData);
 
     $item('#upsellAddBtn').onClick(async () => {
       try {

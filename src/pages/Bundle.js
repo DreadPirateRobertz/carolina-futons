@@ -24,6 +24,7 @@
 //   bundleError             — Text: error message (hidden by default)
 
 import { announce } from 'public/a11yHelpers.js';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import {
   getBundlePageProducts,
   calculateBundlePrice,
@@ -75,9 +76,7 @@ export async function initBundle($w) {
       try { $item('#bundleSummaryName').text = itemData.name || ''; } catch (e) {
         console.error('[Bundle] bundleSummaryName text failed:', e?.message);
       }
-      try { $item('#bundleSummaryPrice').text = itemData.formattedPrice || ''; } catch (e) {
-        console.error('[Bundle] bundleSummaryPrice text failed:', e?.message);
-      }
+      renderSimplePrice($item('#bundleSummaryPrice'), itemData);
       try {
         $item('#bundleSummaryRemoveBtn').onClick(async () => {
           selected.delete(itemData._id);
@@ -148,9 +147,7 @@ export async function initBundle($w) {
           try { $item('#bundleProductName').text = itemData.name || ''; } catch (e) {
             console.error('[Bundle] bundleProductName text failed:', e?.message);
           }
-          try { $item('#bundleProductPrice').text = itemData.formattedPrice || ''; } catch (e) {
-            console.error('[Bundle] bundleProductPrice text failed:', e?.message);
-          }
+          renderSimplePrice($item('#bundleProductPrice'), itemData);
           try { $item('#bundleSelectedBadge').hide(); } catch (e) {
             console.error('[Bundle] bundleSelectedBadge hide failed:', e?.message);
           }

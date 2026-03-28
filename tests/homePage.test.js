@@ -122,6 +122,12 @@ vi.mock('public/productCardHelpers.js', () => ({
     if (el && product) el.src = product.mainMedia || '';
   }),
   getBadgeColor: vi.fn(() => '#FF0000'),
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) {
+      const p = product?.formattedDiscountedPrice || product?.formattedPrice || String(product?.price ?? '');
+      try { $el.text = p; } catch (e) {}
+    }
+  }),
 }));
 
 vi.mock('public/productPageUtils.js', () => ({

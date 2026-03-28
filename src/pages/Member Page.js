@@ -2,6 +2,7 @@
 // Account dashboard, order history, wishlist, and account settings
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
+import { renderSimplePrice } from 'public/productCardHelpers.js';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { initReturnsSection } from 'public/ReturnsPortal.js';
@@ -1232,7 +1233,7 @@ async function initWishlist() {
       try { $item('#wishImage').src = itemData.mainMedia; } catch (e) {}
       try { $item('#wishImage').alt = `${itemData.name} - saved item`; } catch (e) {}
       try { $item('#wishName').text = itemData.name; } catch (e) {}
-      try { $item('#wishPrice').text = itemData.formattedPrice; } catch (e) {}
+      renderSimplePrice($item('#wishPrice'), itemData);
 
       // Stock status
       try {
