@@ -199,6 +199,14 @@ export async function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
+  // CF-hfao: mobile push notification for order confirmation
+  try {
+    const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
+    await handleOrderStatusChange(order, 'confirmed');
+  } catch (err) {
+    console.error('[events] Order status webhook (confirmed) failed:', err);
+  }
+
   try {
     const { triggerPostPurchaseSequence } = await import('backend/emailAutomation.web');
     await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems);
@@ -272,6 +280,14 @@ export async function wixEcom_onOrderFulfilled(event) {
     || order.trackingInfo?.trackingNumber
     || '';
 
+  // CF-hfao: mobile push notification for order shipped
+  try {
+    const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
+    await handleOrderStatusChange(order, 'shipped');
+  } catch (err) {
+    console.error('[events] Order status webhook (shipped) failed:', err);
+  }
+
   if (!memberId) return;
 
   try {
@@ -290,6 +306,14 @@ export async function wixEcom_onOrderCanceled(event) {
   const order = event.entity || event;
   const email = order.buyerInfo?.email || '';
   const orderNumber = order.number || '';
+
+  // CF-hfao: mobile push notification for order cancelled
+  try {
+    const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
+    await handleOrderStatusChange(order, 'cancelled');
+  } catch (err) {
+    console.error('[events] Order status webhook (cancelled) failed:', err);
+  }
 
   if (!email) return;
 
