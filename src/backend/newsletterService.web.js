@@ -21,6 +21,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const DISCOUNT_CODE = 'WELCOME10';
 const KLAVIYO_API_BASE = 'https://a.klaviyo.com/api';
@@ -378,6 +379,7 @@ export const subscribeToNewsletter = webMethod(
       // but syncToESP webMethod requires SiteMember)
       _syncToESPInternal(cleaned, source).catch(() => {});
 
+      logAuditEvent('NewsletterSubscribers', 'subscribe', cleaned, { source });
       return { success: true, discountCode: DISCOUNT_CODE };
     } catch (err) {
       console.error('Newsletter subscription error:', err);
@@ -464,6 +466,7 @@ export const captureExitIntentEmail = webMethod(
         });
       }
 
+      logAuditEvent('EmailQueue', 'exit_intent_capture', cleaned, { queued: WELCOME_STEPS.length });
       return { success: true, discountCode: DISCOUNT_CODE, queued: WELCOME_STEPS.length };
     } catch (err) {
       console.error('Exit intent email capture error:', err);

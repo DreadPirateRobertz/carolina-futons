@@ -37,6 +37,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -890,6 +891,7 @@ export const unsubscribeContact = webMethod(
         }
       }
 
+      logAuditEvent('Unsubscribes', 'unsubscribe', cleanEmail, { sequenceType: cleanType });
       return { success: true };
     } catch (err) {
       console.error('Error processing unsubscribe:', err);

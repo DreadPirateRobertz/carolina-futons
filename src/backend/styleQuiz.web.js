@@ -12,6 +12,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // Map quiz answers to product collection queries and scoring criteria
 const ROOM_CATEGORY_MAP = {
@@ -345,6 +346,7 @@ export const captureQuizLead = webMethod(
         }
       }
 
+      logAuditEvent('NewsletterSubscribers', 'quiz_lead', cleaned);
       return { success: true };
     } catch (err) {
       console.error('Quiz lead capture error:', err);

@@ -27,6 +27,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Default office hours (EST) ──────────────────────────────────────
 
@@ -331,6 +332,7 @@ export const createSupportTicket = webMethod(
         notes: '',
       });
 
+      logAuditEvent('SupportTickets', 'submit', rateLimitKey, { page: cleanPage });
       return {
         success: true,
         ticketId: ticket._id,

@@ -21,6 +21,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // Rate limiting for submitContactForm — prevents contact form spam flood.
 // CMS collection `ContactRateLimits`: key (Text), count (Number), windowStart (DateTime).
@@ -139,6 +140,7 @@ export const submitContactForm = webMethod(
         productName: sanitize(data.productName || '', 200),
       });
 
+      logAuditEvent('ContactSubmissions', 'submit', email, { source });
       return { success: true };
     } catch (err) {
       console.error('Error submitting contact form:', err);

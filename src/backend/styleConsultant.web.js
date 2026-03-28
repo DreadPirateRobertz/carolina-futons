@@ -42,6 +42,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, isWixMediaUrl } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const SESSION_COLLECTION = 'StyleConsultantSessions';
 
@@ -521,6 +522,7 @@ export const getStyleConsultation = webMethod(
       return { success: false, error: 'No matching products found for your style.', errorCode: 'NO_RESULTS' };
     }
 
+    logAuditEvent('StyleConsultantSessions', 'consultation', cleanKey, { resultCount: recommendations.length });
     return {
       success: true,
       sessionKey: cleanKey,

@@ -22,6 +22,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { trackShipment } from 'backend/ups-shipping.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Status display mapping ──────────────────────────────────────────
 
@@ -239,6 +240,7 @@ export const subscribeToNotifications = webMethod(
         enabled: true,
       });
 
+      logAuditEvent('TrackingNotifications', 'subscribe', cleanEmail, { orderNumber: cleanOrderNumber });
       return { success: true, alreadySubscribed: false };
     } catch (err) {
       console.error('subscribeToNotifications error:', err);

@@ -22,6 +22,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const SELECTIONS_COLLECTION = 'ProtectionPlanSelections';
 
@@ -201,6 +202,7 @@ export const addProtectionPlan = webMethod(
         await wixData.insert(SELECTIONS_COLLECTION, selectionData);
       }
 
+      logAuditEvent('ProtectionPlanSelections', 'add_plan', rateLimitKey, { tier: cleanTier, productId: cleanId });
       return {
         success: true,
         data: {

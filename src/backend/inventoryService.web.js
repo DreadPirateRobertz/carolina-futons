@@ -26,6 +26,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 const SALES_VELOCITY_DAYS = 30;
@@ -322,6 +323,7 @@ export const signUpBackInStock = webMethod(
         notified: false,
       });
 
+      logAuditEvent('BackInStockSignups', 'submit', cleanEmail, { productId: cleanProductId });
       return { success: true };
     } catch (err) {
       console.error('Error signing up for back-in-stock:', err);

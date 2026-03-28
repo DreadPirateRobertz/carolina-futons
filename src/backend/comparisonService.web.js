@@ -13,6 +13,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const MAX_COMPARE = 3;
 
@@ -371,6 +372,7 @@ export const trackComparison = webMethod(
         });
       }
 
+      logAuditEvent('CompareHistory', 'track', comparisonKey, { productCount: sortedIds.length });
       return true;
     } catch (err) {
       console.error('[comparisonService] Error tracking comparison:', err);

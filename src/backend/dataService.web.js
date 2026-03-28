@@ -22,6 +22,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ─── Input Sanitization ────────────────────────────────────────────
 
@@ -316,6 +317,7 @@ export const submitReview = webMethod(
       record.reviewText = sanitize(reviewText, 5000);
       await wixData.update('ReviewRequests', record);
 
+      logAuditEvent('ReviewRequests', 'submit_review', record.customerEmail, { rating });
       return { success: true };
     } catch (err) {
       console.error('Error submitting review:', err);

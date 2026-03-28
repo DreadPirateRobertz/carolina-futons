@@ -19,6 +19,7 @@ import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -388,6 +389,7 @@ export const captureSpinEmail = webMethod(
         logError('spinWheel.captureSpinEmail.crm', crmErr);
       }
 
+      logAuditEvent('SpinEmailCaptures', 'submit', trimmed);
       return { success: true };
     } catch (err) {
       logError('spinWheel.captureSpinEmail', err);
