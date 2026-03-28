@@ -15,6 +15,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __setInsertError,
+  __getInserted,
 } from './__mocks__/wix-data.js';
 import {
   __reset as __resetMembers,
@@ -22,10 +23,6 @@ import {
 } from './__mocks__/wix-members-backend.js';
 import { crossRigEvent } from '../src/backend/crossRigEventReceiver.web.js';
 import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
-
-// wix-data __getInserted is re-exported from the mock, but we need to read _store
-// directly. Import the helper via the mock.
-import { __getInserted } from './__mocks__/wix-data.js';
 
 beforeEach(() => {
   __reset();
@@ -197,6 +194,260 @@ describe('crossRigEvent — redemption_initiated', () => {
     const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
     expect(payload.delta).toBe(-75);
     expect(payload.newTotal).toBe(25);
+  });
+});
+
+// ── quiz_completed ────────────────────────────────────────────────────────────
+
+describe('crossRigEvent — quiz_completed', () => {
+  it('returns success and logs analytics event', async () => {
+    __setMember({ _id: 'mem-5' });
+    const result = await crossRigEvent({
+      eventId: 'ev-q1',
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      quizId: 'sommelier-v2',
+      resultSlug: 'cozy-minimalist',
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].eventType).toBe('quiz_completed');
+    expect(inserted[0].memberId).toBe('mem-5');
+  });
+
+  it('stores quizId and resultSlug in payload', async () => {
+    __setMember({ _id: 'mem-5' });
+    await crossRigEvent({
+      eventId: 'ev-q2',
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      quizId: 'style-quiz-v1',
+      resultSlug: 'bold-industrial',
+    });
+    const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
+    expect(payload.quizId).toBe('style-quiz-v1');
+    expect(payload.resultSlug).toBe('bold-industrial');
+  });
+
+  it('returns 400 when quizId is missing', async () => {
+    __setMember({ _id: 'mem-5' });
+    const result = await crossRigEvent({
+      eventId: 'ev-q-bad',
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      resultSlug: 'cozy-minimalist',
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+
+  it('returns 400 when resultSlug is missing', async () => {
+    __setMember({ _id: 'mem-5' });
+    const result = await crossRigEvent({
+      eventId: 'ev-q-bad2',
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      quizId: 'sommelier-v2',
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+});
+
+// ── product_favorited ─────────────────────────────────────────────────────────
+
+describe('crossRigEvent — product_favorited', () => {
+  it('returns success and logs analytics event', async () => {
+    __setMember({ _id: 'mem-6' });
+    const result = await crossRigEvent({
+      eventId: 'ev-pf1',
+      schemaVersion: '1.0',
+      event: 'product_favorited',
+      productId: 'prod-abc123',
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted[0].eventType).toBe('product_favorited');
+    expect(inserted[0].memberId).toBe('mem-6');
+  });
+
+  it('stores productId in payload', async () => {
+    __setMember({ _id: 'mem-6' });
+    await crossRigEvent({
+      eventId: 'ev-pf2',
+      schemaVersion: '1.0',
+      event: 'product_favorited',
+      productId: 'prod-xyz789',
+    });
+    const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
+    expect(payload.productId).toBe('prod-xyz789');
+  });
+
+  it('returns 400 when productId is missing', async () => {
+    __setMember({ _id: 'mem-6' });
+    const result = await crossRigEvent({
+      eventId: 'ev-pf-bad',
+      schemaVersion: '1.0',
+      event: 'product_favorited',
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+});
+
+// ── cart_abandoned ────────────────────────────────────────────────────────────
+
+describe('crossRigEvent — cart_abandoned', () => {
+  it('returns success and logs analytics event', async () => {
+    __setMember({ _id: 'mem-7' });
+    const result = await crossRigEvent({
+      eventId: 'ev-ca1',
+      schemaVersion: '1.0',
+      event: 'cart_abandoned',
+      cartId: 'cart-111',
+      cartTotal: 499.99,
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted[0].eventType).toBe('cart_abandoned');
+    expect(inserted[0].memberId).toBe('mem-7');
+  });
+
+  it('stores cartId and cartTotal in payload', async () => {
+    __setMember({ _id: 'mem-7' });
+    await crossRigEvent({
+      eventId: 'ev-ca2',
+      schemaVersion: '1.0',
+      event: 'cart_abandoned',
+      cartId: 'cart-222',
+      cartTotal: 1299.00,
+    });
+    const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
+    expect(payload.cartId).toBe('cart-222');
+    expect(payload.cartTotal).toBe(1299.00);
+  });
+
+  it('returns 400 when cartId is missing', async () => {
+    __setMember({ _id: 'mem-7' });
+    const result = await crossRigEvent({
+      eventId: 'ev-ca-bad',
+      schemaVersion: '1.0',
+      event: 'cart_abandoned',
+      cartTotal: 499.99,
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+
+  it('accepts cartTotal of 0 (valid value)', async () => {
+    __setMember({ _id: 'mem-7' });
+    const result = await crossRigEvent({
+      eventId: 'ev-ca-zero',
+      schemaVersion: '1.0',
+      event: 'cart_abandoned',
+      cartId: 'cart-empty',
+      cartTotal: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+// ── loyalty_tier_reached ──────────────────────────────────────────────────────
+
+describe('crossRigEvent — loyalty_tier_reached', () => {
+  it('returns success and logs analytics event', async () => {
+    __setMember({ _id: 'mem-8' });
+    const result = await crossRigEvent({
+      eventId: 'ev-lt1',
+      schemaVersion: '1.0',
+      event: 'loyalty_tier_reached',
+      tier: 'Gold',
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted[0].eventType).toBe('loyalty_tier_reached');
+    expect(inserted[0].memberId).toBe('mem-8');
+  });
+
+  it('stores tier in payload', async () => {
+    __setMember({ _id: 'mem-8' });
+    await crossRigEvent({
+      eventId: 'ev-lt2',
+      schemaVersion: '1.0',
+      event: 'loyalty_tier_reached',
+      tier: 'Silver',
+    });
+    const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
+    expect(payload.tier).toBe('Silver');
+  });
+
+  it('returns 400 when tier is missing', async () => {
+    __setMember({ _id: 'mem-8' });
+    const result = await crossRigEvent({
+      eventId: 'ev-lt-bad',
+      schemaVersion: '1.0',
+      event: 'loyalty_tier_reached',
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+});
+
+// ── review_submitted ──────────────────────────────────────────────────────────
+
+describe('crossRigEvent — review_submitted', () => {
+  it('returns success and logs analytics event', async () => {
+    __setMember({ _id: 'mem-9' });
+    const result = await crossRigEvent({
+      eventId: 'ev-rs1',
+      schemaVersion: '1.0',
+      event: 'review_submitted',
+      productId: 'prod-sofa-1',
+      rating: 5,
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted[0].eventType).toBe('review_submitted');
+    expect(inserted[0].memberId).toBe('mem-9');
+  });
+
+  it('stores productId and rating in payload', async () => {
+    __setMember({ _id: 'mem-9' });
+    await crossRigEvent({
+      eventId: 'ev-rs2',
+      schemaVersion: '1.0',
+      event: 'review_submitted',
+      productId: 'prod-bed-2',
+      rating: 4,
+    });
+    const payload = JSON.parse(__getInserted(ANALYTICS_EVENTS_COLLECTION)[0].payload);
+    expect(payload.productId).toBe('prod-bed-2');
+    expect(payload.rating).toBe(4);
+  });
+
+  it('returns 400 when productId is missing', async () => {
+    __setMember({ _id: 'mem-9' });
+    const result = await crossRigEvent({
+      eventId: 'ev-rs-bad',
+      schemaVersion: '1.0',
+      event: 'review_submitted',
+      rating: 5,
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+
+  it('accepts rating of 0', async () => {
+    __setMember({ _id: 'mem-9' });
+    const result = await crossRigEvent({
+      eventId: 'ev-rs-zero',
+      schemaVersion: '1.0',
+      event: 'review_submitted',
+      productId: 'prod-sofa-3',
+      rating: 0,
+    });
+    expect(result.success).toBe(true);
   });
 });
 
