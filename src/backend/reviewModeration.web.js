@@ -9,7 +9,7 @@
  * - Moderation queue with filtering (status, flagged, date range)
  * - Moderation stats for dashboard widgets
  *
- * CF-zew2
+ * CF-w3jc
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -205,6 +205,7 @@ export const bulkModerate = webMethod(
             failed++;
           }
         } catch (e) {
+          console.error("[reviewModeration] bulkModerate item error:", id, e);
           failed++;
         }
       }

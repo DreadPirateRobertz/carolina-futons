@@ -239,7 +239,7 @@ export const submitReview = webMethod(
 
 /**
  * Mark a review as helpful. Increments the helpful counter.
- * Anyone can vote (rate-limited by client to prevent abuse).
+ * Site members can vote (rate-limited by client to prevent abuse).
  *
  * @param {string} reviewId
  * @returns {Promise<{success: boolean, helpful?: number}>}
