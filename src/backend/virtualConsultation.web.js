@@ -546,10 +546,10 @@ export const submitConsultationIntake = webMethod(
       }
 
       // Validate optional description (max 200 chars)
-      const description = sanitize(data.description || '', 200);
       if (data.description && data.description.length > 200) {
         return { success: false, error: 'description must be 200 characters or fewer.' };
       }
+      const description = sanitize(data.description || '', 200);
 
       // Validate optional painPoint
       let painPoint = null;
