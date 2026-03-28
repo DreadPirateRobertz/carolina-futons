@@ -20,6 +20,8 @@ export const STORE_ADDRESS = {
 };
 export const STORE_GEO = { latitude: 35.3162, longitude: -82.4609 };
 export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
+// Static Google Maps directions URL — store is always the destination.
+export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
 /**
  * Approximate city-center geo coordinates for each /near/[city] page.
