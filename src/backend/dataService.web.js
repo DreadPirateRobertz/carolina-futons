@@ -22,7 +22,10 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+<<<<<<< HEAD
 import { logAuditEvent } from 'backend/utils/auditLog';
+=======
+>>>>>>> origin/feat/CF-3t9f-rate-limiting-qa-review
 
 // ─── Input Sanitization ────────────────────────────────────────────
 
