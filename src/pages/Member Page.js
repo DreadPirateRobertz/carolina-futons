@@ -1565,9 +1565,17 @@ async function initCommunicationPrefs() {
 // ── Wishlist Share URL Builder ────────────────────────────────────────
 
 async function getWishlistShareUrl() {
+<<<<<<< HEAD
   const result = await addShareToken();
   if (result.error) throw new Error(result.error);
   return result.shareUrl;
+=======
+  const { generateShareToken } = await import('backend/wishlistShare.web');
+  const result = await generateShareToken({ expiryDays: 30 });
+  if (result.shareUrl) return result.shareUrl;
+  // Token generation returned an error (e.g. not authenticated)
+  throw new Error(result.error || 'Could not generate share link');
+>>>>>>> origin/cf-wishlist-share-s1-s5
 }
 
 // ── Error Fallback ──────────────────────────────────────────────────

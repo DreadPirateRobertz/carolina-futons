@@ -7,12 +7,16 @@ let _insertSpy = null;
 let _updateSpy = null;
 let _removeSpy = null;
 let _queryErrors = {};  // collection -> Error to throw on query
+<<<<<<< HEAD
 let _lastFindOptions = {};  // collection -> options passed to find()
 let _lastGetOptions = {};   // collection -> options passed to get()
 let _lastUpdateOptions = {}; // collection -> options passed to update()
 let _insertErrors = {}; // collection -> Error to throw on insert
 let _updateErrors = {}; // collection -> Error to throw on update
 let _uniqueFields = {};  // collection -> field name to enforce uniqueness on
+=======
+let _insertError = null; // Error to throw on any insert
+>>>>>>> origin/cf-wishlist-share-s1-s5
 
 // Reset all mock state between tests
 export function __reset() {
@@ -22,6 +26,7 @@ export function __reset() {
   _updateSpy = null;
   _removeSpy = null;
   _queryErrors = {};
+<<<<<<< HEAD
   _insertErrors = {};
   _updateErrors = {};
   _uniqueFields = {};
@@ -45,6 +50,14 @@ export function __setUniqueField(collection, field) {
 // Force the next update on a collection to throw
 export function __setUpdateError(collection, error) {
   _updateErrors[collection] = error;
+=======
+  _insertError = null;
+}
+
+// Force an error on any insert call
+export function __setInsertError(error) {
+  _insertError = error;
+>>>>>>> origin/cf-wishlist-share-s1-s5
 }
 
 // Force a query error for a specific collection
@@ -156,8 +169,12 @@ function createQueryBuilder(collection) {
     skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
+<<<<<<< HEAD
     async find(options) {
       _lastFindOptions[collection] = options;
+=======
+    async find(_options = {}) {
+>>>>>>> origin/cf-wishlist-share-s1-s5
       if (_queryErrors[collection]) throw _queryErrors[collection];
       let items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
@@ -241,11 +258,15 @@ const wixData = {
   },
 
   async insert(collection, item) {
+<<<<<<< HEAD
     if (_insertErrors[collection]) {
       const err = _insertErrors[collection];
       delete _insertErrors[collection];
       throw err;
     }
+=======
+    if (_insertError) throw _insertError;
+>>>>>>> origin/cf-wishlist-share-s1-s5
     if (!_store[collection]) _store[collection] = [];
     // Always enforce _id uniqueness (Wix Data guarantees this at the DB layer)
     if (item._id !== undefined) {
