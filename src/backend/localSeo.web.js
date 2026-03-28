@@ -33,9 +33,7 @@ export const STORE_HOURS_DISPLAY = ['Wed–Fri: 10am–5pm', 'Sat: 10am–4pm'];
 export function generateLocalBusinessSchema(city, products = []) {
   const hasCity = city != null && typeof city === 'object' && city.city;
 
-  const name = hasCity
-    ? `Carolina Futons - ${city.city} Area`
-    : 'Carolina Futons';
+  const name = 'Carolina Futons';
 
   const url = hasCity && city.slug
     ? `${SITE_URL}/near/${city.slug}`
@@ -55,7 +53,7 @@ export function generateLocalBusinessSchema(city, products = []) {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': ['LocalBusiness', 'FurnitureStore'],
+    '@type': 'LocalBusiness',
     name,
     url,
     telephone: STORE_PHONE,

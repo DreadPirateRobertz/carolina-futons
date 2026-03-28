@@ -37,6 +37,9 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { randomBytes } from 'crypto';
+import { accounts } from 'wix-loyalty.v2';
+import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { BONUS_POINTS } from 'backend/loyaltyBonusPoints.web';
 
 const REFERRALS_COLLECTION = 'Referrals';
 const CREDITS_COLLECTION = 'ReferralCredits';
@@ -472,6 +475,169 @@ export const getReferralStats = webMethod(
     } catch (err) {
       console.error('getReferralStats error:', err);
       return { success: false, error: 'Unable to load stats' };
+    }
+  }
+);
+
+// ── _getReferralLinkForMember ───────────────────────────────────────────
+// Internal helper (not a webMethod) — looks up or creates a referral link
+// for a given memberId without requiring a session context.
+
+export async function _getReferralLinkForMember(memberId) {
+  if (!memberId) return null;
+  try {
+    const existing = await wixData.query(REFERRALS_COLLECTION)
+      .eq('referrerMemberId', memberId)
+      .eq('status', 'pending')
+      .descending('_createdDate')
+      .limit(1)
+      .find();
+
+    if (existing.items.length > 0) {
+      const code = existing.items[0].referralCode;
+      return { referralCode: code, referralUrl: `https://www.carolinafutons.com/?ref=${code}` };
+    }
+
+    let code = generateCode();
+    await wixData.insert(REFERRALS_COLLECTION, {
+      referrerMemberId: memberId,
+      referralCode: code,
+      status: 'pending',
+      referrerCredit: REFERRER_CREDIT_AMOUNT,
+      refereeCredit: REFEREE_CREDIT_AMOUNT,
+      refereeEmail: '',
+      refereeName: '',
+      refereeMemberId: '',
+      orderNumber: '',
+    });
+
+    return { referralCode: code, referralUrl: `https://www.carolinafutons.com/?ref=${code}` };
+  } catch (err) {
+    console.error('_getReferralLinkForMember error:', err);
+    return null;
+  }
+}
+
+// ── _processReferralOnOrderCreated ─────────────────────────────────────
+// Backend-callable (not a webMethod) — invoked from wixEcom_onOrderCreated.
+// Issues credits when a referred member completes their first qualifying order.
+
+export async function _processReferralOnOrderCreated(memberId, orderNumber, isFirstPurchase = false) {
+  if (!memberId || !orderNumber) return { skipped: true };
+  try {
+    const result = await wixData.query(REFERRALS_COLLECTION)
+      .hasSome('status', ['signed_up', 'processing'])
+      .eq('refereeMemberId', memberId)
+      .limit(1)
+      .find();
+
+    if (!result.items.length) return { skipped: true };
+
+    const referral = result.items[0];
+
+    // Set processing state
+    referral.status = 'processing';
+    referral.orderNumber = orderNumber;
+    await wixData.update(REFERRALS_COLLECTION, referral);
+
+    // Issue referrer credit (idempotency)
+    const existingReferrerCredit = await wixData.query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referrer_bonus')
+      .find();
+    if (!existingReferrerCredit.items.length) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: referral.referrerMemberId,
+        amount: REFERRER_CREDIT_AMOUNT,
+        source: 'referrer_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    // Issue referee credit (idempotency)
+    const existingRefereeCredit = await wixData.query(CREDITS_COLLECTION)
+      .eq('referralId', referral._id)
+      .eq('source', 'referee_bonus')
+      .find();
+    if (!existingRefereeCredit.items.length) {
+      const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId,
+        amount: REFEREE_CREDIT_AMOUNT,
+        source: 'referee_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
+    }
+
+    // Finalize
+    referral.status = 'credited';
+    await wixData.update(REFERRALS_COLLECTION, referral);
+
+    // Fire gamification event — non-blocking
+    receiveGamificationEvent('gamification_referral_accepted', { referral_count: 1 }, referral.referrerMemberId).catch(() => {});
+
+    const resultObj = {
+      success: true,
+      referrerCredit: REFERRER_CREDIT_AMOUNT,
+      refereeCredit: REFEREE_CREDIT_AMOUNT,
+    };
+
+    // First-purchase loyalty points for referrer
+    if (isFirstPurchase && !referral.rewardPaid) {
+      try {
+        const { account } = await accounts.getAccountBySecondaryId({ memberId: referral.referrerMemberId });
+        if (account?._id) {
+          await accounts.earnPoints(account._id, {
+            points: BONUS_POINTS.REFERRAL_COMPLETE,
+            idempotencyKey: `referral_${referral._id}_firstpurchase`,
+          });
+          referral.rewardPaid = true;
+          await wixData.update(REFERRALS_COLLECTION, referral);
+          resultObj.pointsAwarded = BONUS_POINTS.REFERRAL_COMPLETE;
+        }
+      } catch (loyaltyErr) {
+        console.warn('_processReferralOnOrderCreated: earnPoints failed (non-fatal)', loyaltyErr.message);
+      }
+    }
+
+    return resultObj;
+  } catch (err) {
+    console.error('_processReferralOnOrderCreated error:', err);
+    return { skipped: true };
+  }
+}
+
+// ── getPostPurchaseRewardSummary ─────────────────────────────────────────
+// WebMethod: summarizes loyalty + referral rewards earned on a recent order.
+
+export const getPostPurchaseRewardSummary = webMethod(
+  Permissions.SiteMember,
+  async (orderTotal) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return null;
+
+      const pointsEarned = Math.floor((orderTotal || 0) * 2);
+      const referralBonusPoints = BONUS_POINTS.REFERRAL_COMPLETE;
+
+      let referralUrl = 'https://www.carolinafutons.com/';
+      let referralCode = null;
+
+      const linkResult = await _getReferralLinkForMember(member._id);
+      if (linkResult) {
+        referralUrl = linkResult.referralUrl;
+        referralCode = linkResult.referralCode;
+      }
+
+      return { pointsEarned, referralUrl, referralCode, referralBonusPoints };
+    } catch (err) {
+      console.error('getPostPurchaseRewardSummary error:', err);
+      return null;
     }
   }
 );

@@ -17,6 +17,7 @@ vi.mock('backend/utils/sanitize', () => ({
 }));
 
 let _createdCoupons = [];
+let _activeCoupons = [];
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
     createCoupon: vi.fn(async (data) => {

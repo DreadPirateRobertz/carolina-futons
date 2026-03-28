@@ -43,6 +43,23 @@ export const CITY_GEO = {
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
 
+/**
+ * Catalog of specific featured products per category for city landing pages.
+ * productId values correspond to Wix Stores product _id fields.
+ */
+export const FEATURED_PRODUCT_CATALOG = {
+  'futon-frames':  { productId: 'cf-seo-frame-001' },
+  'mattresses':    { productId: 'cf-seo-mattress-001' },
+  'covers':        { productId: 'cf-seo-cover-001' },
+  'accessories':   { productId: 'cf-seo-accessory-001' },
+};
+
+/** Categories shown on the home city (Hendersonville) landing page — 4 categories. */
+export const HOME_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses', 'covers', 'accessories'];
+
+/** Categories shown on nearby city landing pages — 2 categories. */
+export const NEARBY_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses'];
+
 export const LOCAL_PAGES = {
   'hendersonville-nc': {
     slug: 'hendersonville-nc',

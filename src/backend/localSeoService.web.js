@@ -15,6 +15,9 @@ import {
   LOCAL_PAGES,
   SITE_URL,
   STORE_DIRECTIONS_URL,
+  FEATURED_PRODUCT_CATALOG,
+  HOME_CITY_FEATURED_CATEGORIES,
+  NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
@@ -200,16 +203,19 @@ function _buildMetaDescription(cityData) {
  * @returns {Promise<Array>} Mapped product objects.
  */
 async function _fetchProductsByCity(cityData, limit = 4) {
-  const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
-  let query = wixData.query('Stores/Products').ascending('salesRank').limit(safeLimit);
+  const safeLimit = (typeof limit === 'number' && limit >= 1) ? Math.min(limit, 20) : 4;
+  const categories = cityData.isHomeCity
+    ? HOME_CITY_FEATURED_CATEGORIES
+    : NEARBY_CITY_FEATURED_CATEGORIES;
 
-  if (Array.isArray(cityData.preferredCategories) && cityData.preferredCategories.length > 0) {
-    query = query.hasSome('categories', cityData.preferredCategories);
-  }
+  const result = await wixData
+    .query('Stores/Products')
+    .hasSome('categories', categories)
+    .ascending('salesRank')
+    .limit(safeLimit)
+    .find();
 
-  const result = await query.find();
-  const items = Array.isArray(result?.items) ? result.items : [];
-  return items.map(p => ({
+  return (result?.items || []).map(p => ({
     productId: p._id,
     name: p.name,
     price: p.price,
