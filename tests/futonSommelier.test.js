@@ -332,4 +332,106 @@ describe('rateRecommendation', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/between 1 and 5/i);
   });
+
+  it('rejects missing session key', async () => {
+    const result = await rateRecommendation(null, 4);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Session key');
+  });
+
+  it('rejects non-number rating', async () => {
+    const result = await rateRecommendation('sess-1', 'five');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/between 1 and 5/i);
+  });
+
+  it('returns error when session not found', async () => {
+    // No SommelierSessions seed — query returns empty
+    const result = await rateRecommendation('nonexistent-session', 4);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+});
+
+// ── getRecommendation — additional branch coverage ────────────────────
+
+describe('getRecommendation — additional branches', () => {
+  let getRecommendation;
+
+  beforeEach(async () => {
+    ({ getRecommendation } = await import('../src/backend/futonSommelier.web.js'));
+  });
+
+  it('returns error when product catalog is empty', async () => {
+    __seed('Stores/Products', []); // no products
+    const result = await getRecommendation({
+      primaryUse: 'daily_sleeping',
+      pets: 'no_pets',
+      backIssues: 'none',
+      budget: '500_to_1000',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('unavailable');
+  });
+
+  it('falls through cache miss and computes fresh recommendations', async () => {
+    // sessionKey provided but SommelierSessions is empty (cache miss)
+    __seed('Stores/Products', [{
+      _id: 'p1', name: 'Budget Compact Frame', slug: 'compact',
+      description: 'compact affordable frame', category: 'futon-frames',
+      price: 299, visible: true, variants: [],
+    }]);
+    const result = await getRecommendation(
+      { primaryUse: 'dorm', pets: 'no_pets', backIssues: 'none', budget: 'under_500' },
+      'cache-miss-session',
+    );
+    expect(result.success).toBe(true);
+    expect(result.cached).toBe(false);
+  });
+});
+
+// ── _matchesBudget — additional branch coverage ───────────────────────
+
+describe('_matchesBudget — additional branches', () => {
+  let _matchesBudget;
+
+  beforeEach(async () => {
+    ({ _matchesBudget } = await import('../src/backend/futonSommelier.web.js'));
+  });
+
+  it('returns -5 when price is slightly over budget (within 120%)', async () => {
+    // price=550 on budget under_500 (max=500): 550 <= 600 → -5
+    expect(_matchesBudget(550, 'under_500')).toBe(-5);
+  });
+});
+
+// ── _generateReasoning — additional branch coverage ────────────────────
+
+describe('_generateReasoning — additional branches', () => {
+  let _generateReasoning;
+
+  beforeEach(async () => {
+    ({ _generateReasoning } = await import('../src/backend/futonSommelier.web.js'));
+  });
+
+  it('handles answers with no primaryUse', async () => {
+    const result = _generateReasoning({ pets: 'no_pets', backIssues: 'none' }, []);
+    expect(typeof result).toBe('string');
+  });
+
+  it('includes sun-resistant when sunExposure is not minimal', async () => {
+    const result = _generateReasoning(
+      { primaryUse: 'lounging', pets: 'no_pets', backIssues: 'none', sunExposure: 'high' },
+      [],
+    );
+    expect(result).toContain('sun');
+  });
+
+  it('skips pet mention when pets is no_pets', async () => {
+    const result = _generateReasoning(
+      { primaryUse: 'lounging', pets: 'no_pets', backIssues: 'none' },
+      [],
+    );
+    expect(result).not.toContain('pet');
+  });
 });

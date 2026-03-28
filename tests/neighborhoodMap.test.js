@@ -3,9 +3,13 @@
  * @description Tests for the neighborhood furniture map module (cf-zp8o).
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { __reset, __seed, __getInserted, __setInsertError, __setUpdateError, __setQueryError, __onRemove } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import {
+  createPin,
+  removePin,
   getNearbyPins,
   getMapStats,
   _fuzzLocation,
@@ -15,6 +19,7 @@ import {
 
 beforeEach(() => {
   __reset();
+  __setMember({ _id: 'member-1', contactDetails: { firstName: 'Jane' } });
 });
 
 // ── Location Fuzzing ────────────────────────────────────────────────
@@ -140,5 +145,191 @@ describe('neighborhood map constants', () => {
 
   it('default search radius is 5 miles', () => {
     expect(_SEARCH_RADIUS_MILES).toBe(5);
+  });
+});
+
+// ── createPin ────────────────────────────────────────────────────────
+
+describe('createPin', () => {
+  it('returns error when not authenticated', async () => {
+    __setMember(null);
+    const result = await createPin({ lat: 35.32, lng: -82.46, productName: 'Frame', productId: 'p1' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('authenticated');
+  });
+
+  it('returns error when location is missing', async () => {
+    const result = await createPin({ productName: 'Frame', productId: 'p1' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Location');
+  });
+
+  it('returns error when lat is not a number', async () => {
+    const result = await createPin({ lat: 'bad', lng: -82.46, productName: 'Frame', productId: 'p1' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Location');
+  });
+
+  it('returns error when product is missing', async () => {
+    const result = await createPin({ lat: 35.32, lng: -82.46, productName: '', productId: '' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Product');
+  });
+
+  it('creates new pin for member with no existing pin', async () => {
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Eureka Frame', productId: 'prod-1',
+      neighborhood: 'Downtown', reviewText: 'Great!',
+      rating: 5, displayName: 'Jane',
+    });
+    expect(result.success).toBe(true);
+    expect(result.pinId).toBeDefined();
+    const allPins = __getInserted('NeighborhoodPins');
+    const inserted = allPins.at(-1);
+    expect(inserted).toBeDefined();
+    expect(inserted.status).toBe('active');
+    expect(inserted.rating).toBe(5);
+  });
+
+  it('updates existing pin when member already has one for same product', async () => {
+    __seed('NeighborhoodPins', [{
+      _id: 'existing-pin',
+      memberId: 'member-1',
+      productId: 'prod-1',
+      status: 'active',
+      lat: 35.30, lng: -82.44,
+    }]);
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Eureka Frame', productId: 'prod-1',
+      rating: 4,
+    });
+    expect(result.success).toBe(true);
+    expect(result.pinId).toBe('existing-pin');
+  });
+
+  it('limits photos to MAX_PHOTOS_PER_PIN (3)', async () => {
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Frame', productId: 'p1',
+      photoUrls: ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg'],
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('NeighborhoodPins').at(-1);
+    const photos = JSON.parse(inserted.photoUrls);
+    expect(photos).toHaveLength(3);
+  });
+
+  it('uses member firstName as fallback displayName', async () => {
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Frame', productId: 'p1',
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('NeighborhoodPins').at(-1);
+    expect(inserted.displayName).toBe('Jane');
+  });
+
+  it('uses "A Customer" when no displayName and no firstName', async () => {
+    __setMember({ _id: 'member-1' }); // no contactDetails
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Frame', productId: 'p1',
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('NeighborhoodPins').at(-1);
+    expect(inserted.displayName).toBe('A Customer');
+  });
+
+  it('returns error on database failure', async () => {
+    __setInsertError('NeighborhoodPins', new Error('DB error'));
+    const result = await createPin({
+      lat: 35.32, lng: -82.46,
+      productName: 'Frame', productId: 'p1',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Failed to create');
+  });
+});
+
+// ── removePin ────────────────────────────────────────────────────────
+
+describe('removePin', () => {
+  it('returns error when not authenticated', async () => {
+    __setMember(null);
+    const result = await removePin('pin-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('authenticated');
+  });
+
+  it('returns error when pin not found', async () => {
+    const result = await removePin('nonexistent-pin');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('returns error when pin belongs to another member', async () => {
+    __seed('NeighborhoodPins', [{
+      _id: 'other-pin',
+      memberId: 'member-2',
+      status: 'active',
+    }]);
+    const result = await removePin('other-pin');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('removes own pin successfully', async () => {
+    __seed('NeighborhoodPins', [{
+      _id: 'own-pin',
+      memberId: 'member-1',
+      status: 'active',
+    }]);
+    let removed = null;
+    __onRemove((col, id) => { removed = id; });
+    const result = await removePin('own-pin');
+    expect(result.success).toBe(true);
+    expect(removed).toBe('own-pin');
+  });
+});
+
+// ── getNearbyPins — rate limit branch ────────────────────────────────
+
+describe('getNearbyPins — rate limit', () => {
+  it('returns failure when rate limit is exceeded', async () => {
+    withRateLimit('MapQueryRateLimit', { blocked: true, key: '35_-82' });
+    const result = await getNearbyPins(35.32, -82.46, 5);
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── formatPin — bad JSON fallback ─────────────────────────────────────
+
+describe('getNearbyPins — formatPin bad JSON', () => {
+  it('handles malformed photoUrls JSON gracefully', async () => {
+    __seed('NeighborhoodPins', [{
+      _id: 'pin-bad',
+      lat: 35.32, lng: -82.46,
+      status: 'active',
+      productName: 'Frame', productId: 'p1',
+      photoUrls: 'INVALID_JSON',
+      displayName: 'Bob', rating: 4,
+    }]);
+    withRateLimit('MapQueryRateLimit', { key: '35_-82' });
+    const result = await getNearbyPins(35.32, -82.46, 5);
+    expect(result.success).toBe(true);
+    expect(result.pins[0].photoUrls).toEqual([]);
+  });
+});
+
+// ── getMapStats — error catch ─────────────────────────────────────────
+
+describe('getMapStats — error handling', () => {
+  it('returns failure on database error', async () => {
+    __setQueryError('NeighborhoodPins', new Error('DB error'));
+    const result = await getMapStats();
+    expect(result.success).toBe(false);
+    expect(result.stats).toBeNull();
   });
 });
