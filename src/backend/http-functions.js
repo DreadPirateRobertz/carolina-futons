@@ -977,6 +977,71 @@ function detectProductType(product) {
   return 'Bedroom > Futon Frames';
 }
 
+
+// ── Stamped.io Review Webhook ─────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/stampedWebhook
+// Configure in Stamped.io > Settings > Webhooks with STAMPED_WEBHOOK_SECRET.
+// Ingests new reviews into the ProductReviews moderation queue.
+// Reviews with 4+ stars and no profanity are auto-approved.
+
+/**
+ * @function post_stampedWebhook
+ * @param {Object} request - Wix HTTP request object.
+ * @returns {Promise<Object>} HTTP response.
+ */
+export async function post_stampedWebhook(request) {
+  try {
+    let webhookSecret;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      webhookSecret = await getSecret('STAMPED_WEBHOOK_SECRET');
+    } catch (_) { /* Secret not configured — reject */ }
+
+    const requestSecret = request.headers['x-stamped-secret'] || request.headers['x-stamped-webhook-secret'];
+    if (!webhookSecret || !requestSecret || !timingSafeEqual(requestSecret, webhookSecret)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    let payload;
+    try {
+      const bodyText = await request.body.text();
+      payload = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const reviewData = payload.review || payload;
+    const event = payload.event || 'review.created';
+
+    if (!reviewData || !reviewData.productId) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Missing required fields: productId' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { ingestStampedReview } = await import('backend/reviewModeration.web');
+    const result = await ingestStampedReview(reviewData);
+
+    return ok({
+      body: JSON.stringify({ success: result.success, reviewId: result.reviewId, status: result.status, event }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('[http-functions] stampedWebhook error:', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 // ── Klaviyo Webhook Endpoint ──────────────────────────────────────────
 // URL: POST https://www.carolinafutons.com/_functions/klaviyoWebhook
 // Configure in Klaviyo > Settings > Webhooks with the KLAVIYO_WEBHOOK_SECRET.
