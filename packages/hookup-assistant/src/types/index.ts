@@ -1,15 +1,9 @@
 /**
-<<<<<<< HEAD
  * Core TypeScript interfaces and type mappings for CF Hookup Assistant.
  * S2: TypeScript interfaces for PAGES data.
  * S3: Wix internal type → WixElementType mapping.
  */
 
-=======
- * Wix element types used in the PAGES data.
- * Maps from Wix internal component type strings to human-readable names.
- */
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
 export type WixElementType =
   | 'Section'
   | 'Box'
@@ -44,10 +38,6 @@ export interface SectionDef {
   repeater?: string;
   elements: ElementDef[];
   children?: ElementDef[];
-<<<<<<< HEAD
-=======
-  impl?: string;
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
 }
 
 export interface PageDef {
@@ -58,11 +48,7 @@ export interface PageDef {
   sections: SectionDef[];
 }
 
-<<<<<<< HEAD
 /** Wix internal component type string → WixElementType (S3 type mapping table) */
-=======
-/** Wix internal component type → WixElementType mapping */
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
 export const WIX_TYPE_MAP: Record<string, WixElementType> = {
   'wysiwyg.viewer.components.WRichText': 'Text',
   'wysiwyg.viewer.components.SiteButton': 'Button',
@@ -91,7 +77,6 @@ export const WIX_TYPE_MAP: Record<string, WixElementType> = {
 export function mapWixType(internalType: string): WixElementType | null {
   return WIX_TYPE_MAP[internalType] ?? null;
 }
-<<<<<<< HEAD
 
 /** Detected element from the Wix editor canvas (S3) */
 export interface SelectedElement {
@@ -107,5 +92,3 @@ export interface PageProgress {
   hookedIds: string[];
   skippedIds: string[];
 }
-=======
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t

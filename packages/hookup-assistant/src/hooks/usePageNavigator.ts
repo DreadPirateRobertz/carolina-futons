@@ -20,12 +20,8 @@ async function getEditorModule() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — dynamic Wix SDK import
     return await import('@wix/editor');
-<<<<<<< HEAD
   } catch (err) {
     console.warn('[usePageNavigator] @wix/editor module unavailable:', err);
-=======
-  } catch {
->>>>>>> origin/polecat/chrome/CF-267m
     return null;
   }
 }
@@ -67,14 +63,9 @@ export function usePageNavigator() {
           const matched = matchPageName(page.title as string);
           if (matched) setDetectedPageName(matched);
         }
-<<<<<<< HEAD
       } catch (err) {
         // API unavailable — fall through to event listener only
         console.warn('[usePageNavigator] pages.getCurrent failed:', err);
-=======
-      } catch {
-        // API unavailable — fall through to event listener only
->>>>>>> origin/polecat/chrome/CF-267m
       }
 
       // Subscribe to page navigation events so the panel auto-switches
@@ -92,7 +83,6 @@ export function usePageNavigator() {
               const matched = matchPageName(page.title as string);
               if (matched) setDetectedPageName(matched);
             }
-<<<<<<< HEAD
           } catch (err) {
             console.warn('[usePageNavigator] pageNavigated getCurrent failed:', err);
           }
@@ -101,15 +91,6 @@ export function usePageNavigator() {
       } catch (err) {
         // Event API unavailable — no page-change tracking
         console.warn('[usePageNavigator] events.addEventListener failed:', err);
-=======
-          } catch {
-            // ignore
-          }
-        });
-        if (typeof off === 'function') unsubscribe = off;
-      } catch {
-        // Event API unavailable — no page-change tracking
->>>>>>> origin/polecat/chrome/CF-267m
       }
     })();
 
