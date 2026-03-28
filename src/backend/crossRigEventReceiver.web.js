@@ -29,6 +29,11 @@ const SUPPORTED_EVENTS = new Set([
   'cart_abandoned',
   'loyalty_tier_reached',
   'review_submitted',
+  'badge_earned',
+  'tier_changed',
+  'sommelier_completed',
+  'price_drop_watching',
+  'wishlist_synced',
 ]);
 
 /**
