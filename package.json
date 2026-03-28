@@ -25,6 +25,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "node --test e2e/smoke.js"
+    "test:e2e": "node --test e2e/smoke.js",
+    "validate:catalog": "node scripts/validate-catalog.js"
   }
 }

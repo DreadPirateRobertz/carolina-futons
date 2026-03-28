@@ -1,62 +1,197 @@
 #!/usr/bin/env node
 /**
- * validate-catalog.js — Integrity check for catalog-MASTER.json
+ * validate-catalog.js — CI integrity check for catalog data
  *
- * Prints a validation report to stdout covering:
- * - Missing or zero prices
- * - Unknown/invalid categories (against VALID_CATEGORIES)
- * - Missing required fields (SKU, slug, name, images)
- * - Category and price distribution stats
+ * Validates:
+ * 1. Category consistency: all VALID_CATEGORIES arrays and CATEGORY_FOLDERS
+ *    keys across the codebase must match a canonical set
+ * 2. SKU uniqueness: no duplicate SKUs in catalog-MASTER.json
+ * 3. Price sanity: all prices > 0 and < 10000
+ * 4. Required fields: every product has name, slug, sku, category, images
+ * 5. Category validity: every product category is in the canonical set
+ *
+ * Exit 0 = clean, exit 1 = errors found
  *
  * Usage: node scripts/validate-catalog.js
- * No arguments. Reads from content/catalog-MASTER.json.
  */
-const catalog = require('../content/catalog-MASTER.json');
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.resolve(__dirname, '..');
+const errors = [];
+const warnings = [];
+
+function error(check, msg) { errors.push(`[${check}] ${msg}`); }
+function warn(check, msg) { warnings.push(`[${check}] ${msg}`); }
+
+// ── 1. Parse VALID_CATEGORIES from all source files ─────────────────
 
 /**
- * Canonical category slugs accepted by catalogImport.web.js and Wix Stores.
- * Any product with a category not in this list will be flagged as invalid.
- * Must stay in sync with VALID_CATEGORIES in src/backend/catalogImport.web.js.
+ * Extract array literal contents from a VALID_CATEGORIES = [...] declaration.
+ * Handles multi-line arrays with single-quoted string elements.
  */
-const VALID_CATEGORIES = [
-  'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-  'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
-  'unfinished-wood', 'covers', 'outdoor-furniture', 'pillows-702', 'log-frames',
+function extractCategories(filePath) {
+  const src = fs.readFileSync(filePath, 'utf8');
+  const match = src.match(/VALID_CATEGORIES\s*=\s*\[([\s\S]*?)\]/);
+  if (!match) return null;
+  const items = match[1].match(/'([^']+)'/g);
+  if (!items) return [];
+  return items.map(s => s.replace(/'/g, ''));
+}
+
+/**
+ * Extract object keys from a CATEGORY_FOLDERS = {...} declaration.
+ */
+function extractFolderKeys(filePath) {
+  const src = fs.readFileSync(filePath, 'utf8');
+  const match = src.match(/CATEGORY_FOLDERS\s*=\s*\{([\s\S]*?)\}/);
+  if (!match) return null;
+  const keys = match[1].match(/'([^']+)'\s*:/g);
+  if (!keys) return [];
+  return keys.map(s => s.replace(/'|:/g, '').trim());
+}
+
+// Files that contain VALID_CATEGORIES
+const categoryFiles = [
+  'src/backend/catalogImport.web.js',
+  'src/backend/catalogContent.web.js',
+  'src/backend/loadCatalogMaster.web.js',
+  'src/backend/productVideos.web.js',
 ];
 
+// File with CATEGORY_FOLDERS
+const folderFile = 'src/backend/mediaGallery.web.js';
+
+// The canonical source: catalogImport.web.js (the importer defines what's valid)
+const canonicalPath = path.join(ROOT, categoryFiles[0]);
+const canonical = extractCategories(canonicalPath);
+if (!canonical) {
+  console.error('FATAL: Could not parse VALID_CATEGORIES from', categoryFiles[0]);
+  process.exit(1);
+}
+const canonicalSet = new Set(canonical);
+
+console.log(`Canonical categories (${categoryFiles[0]}): ${canonical.length}`);
+console.log(`  ${canonical.join(', ')}\n`);
+
+// Check each file's VALID_CATEGORIES against canonical
+for (const relPath of categoryFiles) {
+  const fullPath = path.join(ROOT, relPath);
+  if (!fs.existsSync(fullPath)) {
+    error('category-sync', `File not found: ${relPath}`);
+    continue;
+  }
+  const cats = extractCategories(fullPath);
+  if (!cats) {
+    error('category-sync', `Could not parse VALID_CATEGORIES from ${relPath}`);
+    continue;
+  }
+  const fileSet = new Set(cats);
+
+  // Check for entries missing from this file
+  for (const c of canonical) {
+    if (!fileSet.has(c)) {
+      error('category-sync', `${relPath} is missing category '${c}'`);
+    }
+  }
+  // Check for extra entries not in canonical
+  for (const c of cats) {
+    if (!canonicalSet.has(c)) {
+      error('category-sync', `${relPath} has extra category '${c}' not in canonical`);
+    }
+  }
+}
+
+// Check CATEGORY_FOLDERS keys
+const folderFullPath = path.join(ROOT, folderFile);
+if (fs.existsSync(folderFullPath)) {
+  const folderKeys = extractFolderKeys(folderFullPath);
+  if (folderKeys) {
+    const folderSet = new Set(folderKeys);
+    for (const c of canonical) {
+      if (!folderSet.has(c)) {
+        warn('folder-sync', `${folderFile} CATEGORY_FOLDERS missing key '${c}'`);
+      }
+    }
+    for (const k of folderKeys) {
+      if (!canonicalSet.has(k)) {
+        // pillows-702 vs pillows mismatch is a known mapping, check for it
+        warn('folder-sync', `${folderFile} CATEGORY_FOLDERS has key '${k}' not in VALID_CATEGORIES`);
+      }
+    }
+  }
+}
+
+// ── 2. Validate catalog-MASTER.json ─────────────────────────────────
+
+const catalogPath = path.join(ROOT, 'content/catalog-MASTER.json');
+const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
 const products = catalog.products;
-const nullPrices = products.filter(p => p.price == null);
-const zeroPrices = products.filter(p => p.price === 0);
-const invalidCats = products.filter(p => !VALID_CATEGORIES.includes(p.category));
-const missingSku = products.filter(p => !p.sku);
-const missingSlug = products.filter(p => !p.slug);
-const missingName = products.filter(p => !p.name);
-const missingImages = products.filter(p => !Array.isArray(p.images));
-const noImages = products.filter(p => Array.isArray(p.images) && p.images.length === 0);
 
-console.log('=== Catalog Validation Report ===');
-console.log('Total products:', products.length);
-console.log('');
-console.log('Null prices:', nullPrices.length, nullPrices.map(p => p.name));
-console.log('Zero prices:', zeroPrices.length, zeroPrices.map(p => p.name));
-console.log('Invalid category:', invalidCats.length, invalidCats.map(p => p.category + ': ' + p.name));
-console.log('Missing SKU:', missingSku.length, missingSku.map(p => p.name));
-console.log('Missing slug:', missingSlug.length);
-console.log('Missing name:', missingName.length);
-console.log('Missing images array:', missingImages.length);
-console.log('Empty images:', noImages.length, noImages.map(p => p.name));
+console.log(`Catalog: ${products.length} products\n`);
 
-// Category distribution
-const cats = {};
-products.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1; });
-console.log('\nCategory distribution:');
-Object.entries(cats).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => console.log('  ' + k + ': ' + v));
+// Required fields
+const REQUIRED = ['name', 'slug', 'sku', 'category'];
+for (let i = 0; i < products.length; i++) {
+  const p = products[i];
+  for (const field of REQUIRED) {
+    if (!p[field]) {
+      error('required-field', `Product ${i} (${p.name || 'unnamed'}): missing '${field}'`);
+    }
+  }
+  if (!Array.isArray(p.images)) {
+    error('required-field', `Product ${i} (${p.name || 'unnamed'}): 'images' must be an array`);
+  }
+}
 
-// Price distribution
-const withPrice = products.filter(p => p.price > 0);
-const prices = withPrice.map(p => p.price).sort((a, b) => a - b);
-console.log('\nPrice stats (products with price > 0):');
-console.log('  Count:', withPrice.length);
-console.log('  Min:', prices[0]);
-console.log('  Max:', prices[prices.length - 1]);
-console.log('  Median:', prices[Math.floor(prices.length / 2)]);
+// Category validity
+for (let i = 0; i < products.length; i++) {
+  const p = products[i];
+  if (p.category && !canonicalSet.has(p.category)) {
+    error('category-valid', `Product ${i} (${p.name}): category '${p.category}' not in VALID_CATEGORIES`);
+  }
+}
+
+// SKU uniqueness
+const skuMap = new Map();
+for (let i = 0; i < products.length; i++) {
+  const sku = products[i].sku;
+  if (!sku) continue;
+  if (skuMap.has(sku)) {
+    error('sku-unique', `Duplicate SKU '${sku}': products ${skuMap.get(sku)} and ${i} (${products[i].name})`);
+  } else {
+    skuMap.set(sku, i);
+  }
+}
+
+// Price sanity
+for (let i = 0; i < products.length; i++) {
+  const p = products[i];
+  if (p.price == null) {
+    warn('price', `Product ${i} (${p.name}): null price`);
+  } else if (p.price <= 0) {
+    error('price', `Product ${i} (${p.name}): price ${p.price} <= 0`);
+  } else if (p.price >= 10000) {
+    error('price', `Product ${i} (${p.name}): price ${p.price} >= 10000`);
+  }
+}
+
+// ── 3. Report ───────────────────────────────────────────────────────
+
+console.log('=== Validation Results ===\n');
+
+if (warnings.length > 0) {
+  console.log(`Warnings (${warnings.length}):`);
+  warnings.forEach(w => console.log(`  ⚠ ${w}`));
+  console.log('');
+}
+
+if (errors.length > 0) {
+  console.log(`Errors (${errors.length}):`);
+  errors.forEach(e => console.log(`  ✗ ${e}`));
+  console.log('\nValidation FAILED');
+  process.exit(1);
+} else {
+  console.log('✓ All checks passed');
+  process.exit(0);
+}

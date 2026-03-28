@@ -321,7 +321,7 @@ describe('getAllCategories edge cases', () => {
     expect(result.data[0].title).toBe('Futon Frames');
     expect(result.data[1].category).toBe('mattresses');
     expect(result.data[1].title).toBe('Mattresses');
-    expect(result.data[11].category).toBe('pillows');
+    expect(result.data[11].category).toBe('pillows-702');
   });
 
   it('assigns sequential sortOrder to default categories', async () => {

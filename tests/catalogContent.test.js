@@ -292,7 +292,7 @@ describe('getCategoryContent', () => {
     const categories = [
       'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
       'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
-      'covers', 'outdoor-furniture', 'log-frames', 'pillows',
+      'covers', 'outdoor-furniture', 'log-frames', 'pillows-702',
     ];
 
     for (const cat of categories) {

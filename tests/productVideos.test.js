@@ -47,7 +47,7 @@ const STRATA_DILLON_VIDEO = {
   title: 'Dillon Wall Hugger Futon Conversion Animation',
   brand: 'Strata Furniture',
   type: 'animation',
-  category: 'wall-huggers',
+  category: 'wall-hugger-frames',
   youtubeUrl: null,
   mp4Url: 'https://store.stratafurniture.com/wp-content/uploads/2022/01/Dillon_animation.mp4',
   thumbnailUrl: null,
@@ -174,7 +174,7 @@ describe('getCategoryVideos', () => {
   it('returns wall-hugger videos', async () => {
     __seed('ProductVideos', ALL_VIDEOS);
 
-    const result = await getCategoryVideos('wall-huggers');
+    const result = await getCategoryVideos('wall-hugger-frames');
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(1);
     expect(result.data[0].brand).toBe('Strata Furniture');

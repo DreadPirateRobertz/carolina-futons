@@ -224,7 +224,7 @@ describe('getCategoryContent', () => {
   it('accepts all valid categories', async () => {
     const cats = ['futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
       'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
-      'unfinished-wood', 'covers', 'outdoor-furniture', 'log-frames', 'pillows'];
+      'unfinished-wood', 'covers', 'outdoor-furniture', 'log-frames', 'pillows-702'];
     for (const cat of cats) {
       _collections = {};
       __seed('CategoryContent', []);
