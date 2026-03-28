@@ -49,6 +49,7 @@ $w.onReady(async function () {
     { name: 'orderSummary', init: initOrderSummary },
     { name: 'brendaMessage', init: initBrendaMessage },
     { name: 'deliveryTimeline', init: initDeliveryTimeline },
+    { name: 'freightTracking', init: () => initFreightTracking(orderCtx) },
     { name: 'socialSharing', init: () => initSocialSharing(orderCtx) },
     { name: 'newsletterSignup', init: initNewsletterSignup },
     { name: 'referralSection', init: initReferralSection },
@@ -224,6 +225,56 @@ function initDeliveryTimeline() {
 
     timeline.expand();
   } catch (e) {}
+}
+
+// ── Freight Tracking ───────────────────────────────────────────────
+// Shown when the order contains an LTL freight item (murphy beds, heavy frames).
+// At Thank You time the order has just been placed — no tracking number yet.
+// Shows a static freight scheduling message; tracking link appears via email later.
+
+/**
+ * If the order was shipped via LTL freight, show a freight-specific section
+ * explaining the delivery scheduling process and that tracking will arrive by email.
+ *
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+function initFreightTracking(orderCtx) {
+  try {
+    const section = $w('#freightTrackingSection');
+    if (!section) return;
+
+    // Detect freight from selected shipping option code/title
+    const shippingOption = orderCtx?.selectedShippingOption || orderCtx?.shippingOption || {};
+    const code = shippingOption.code || shippingOption.id || '';
+    const title = shippingOption.title || shippingOption.label || shippingOption.name || '';
+
+    const isFreight = code.includes('ltl') || code.includes('wwex') || code.includes('freight') ||
+                      title.toLowerCase().includes('ltl') || title.toLowerCase().includes('freight') ||
+                      title.toLowerCase().includes('wwex');
+
+    if (!isFreight) return; // parcel order — hide section, no-op
+
+    try {
+      $w('#freightTrackingTitle').text = '🚛 Freight Delivery Information';
+    } catch (e) {}
+
+    try {
+      $w('#freightTrackingMessage').text =
+        'Your order contains large items that ship via LTL freight. ' +
+        'A freight carrier will contact you to schedule a delivery appointment. ' +
+        'You\'ll receive a separate email with your PRO tracking number once your shipment is picked up.';
+    } catch (e) {}
+
+    try {
+      $w('#freightScheduleNote').text =
+        'Freight deliveries typically arrive within 5–10 business days. ' +
+        'Please ensure someone 18+ is home to accept the delivery.';
+    } catch (e) {}
+
+    try { section.expand(); } catch (e) {}
+  } catch (e) {
+    // Freight section is optional
+  }
 }
 
 // ── Social Sharing ─────────────────────────────────────────────────

@@ -479,6 +479,52 @@ export const sendShippingNotification = webMethod(
 );
 
 /**
+ * Send a freight shipping notification email to the buyer.
+ * Used for LTL freight orders (XPO, Estes, WWEX) where tracking works via
+ * PRO number rather than a UPS tracking number.
+ *
+ * @function sendFreightShippingNotification
+ * @param {Object} orderDetails
+ * @param {string} orderDetails.contactId     - Buyer's Wix contact ID
+ * @param {string} orderDetails.email         - Buyer's email
+ * @param {string} orderDetails.firstName     - Buyer's first name
+ * @param {string} orderDetails.orderNumber   - Order number
+ * @param {string} orderDetails.proNumber     - LTL PRO / tracking number
+ * @param {string} [orderDetails.trackingUrl] - Carrier tracking URL (null if carrier unknown)
+ * @param {string} [orderDetails.carrier]     - Display carrier name (e.g. 'XPO Logistics')
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin — called from wixEcom_onFulfillmentCreated event handler
+ */
+export const sendFreightShippingNotification = webMethod(
+  Permissions.Admin,
+  async (orderDetails) => {
+    try {
+      const { contactId, email, firstName, orderNumber, proNumber, trackingUrl, carrier } = orderDetails || {};
+      if (!contactId || !email) return { success: false };
+
+      await triggeredEmails.emailContact(
+        'freight_shipped',
+        contactId,
+        {
+          variables: {
+            firstName: sanitize(firstName || '', 200),
+            orderNumber: sanitize(orderNumber || '', 50),
+            proNumber: sanitize(proNumber || '', 100),
+            trackingUrl: sanitize(trackingUrl || '', 500),
+            carrier: sanitize(carrier || 'WWEX Freight', 100),
+            email: sanitize(email, 254),
+          },
+        }
+      );
+      return { success: true };
+    } catch (err) {
+      console.error('[emailService] Error sending freight shipping notification:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
  * Send a delivery confirmation email to the buyer.
  *
  * @function sendDeliveryConfirmation

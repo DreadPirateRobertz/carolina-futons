@@ -250,16 +250,59 @@ function renderShippingDetails(shipping) {
         }
       } catch (e) {}
 
-      // UPS tracking link button
-      try {
-        try { $w('#upsTrackingBtn').accessibility.ariaLabel = 'View on UPS website'; } catch (e) {}
-        $w('#upsTrackingBtn').onClick(() => {
-          import('wix-window-frontend').then(({ openUrl }) => {
-            openUrl(`https://www.ups.com/track?tracknum=${shipping.trackingNumber}`, '_blank');
+      // Carrier-specific tracking link — UPS parcel or LTL freight (XPO/Estes/WWEX)
+      const carrierLower = (shipping.carrier || '').toLowerCase();
+      const isLTL = carrierLower.includes('xpo') || carrierLower.includes('estes') ||
+                    carrierLower.includes('wwex') || carrierLower.includes('ltl') ||
+                    carrierLower.includes('ups freight');
+
+      if (isLTL) {
+        // LTL freight: construct PRO tracking URL per carrier
+        let ltlUrl = null;
+        if (carrierLower.includes('xpo')) {
+          ltlUrl = `https://www.xpo.com/track/${encodeURIComponent(shipping.trackingNumber)}`;
+        } else if (carrierLower.includes('estes')) {
+          ltlUrl = `https://www.estes-express.com/tools/tracking?query=${encodeURIComponent(shipping.trackingNumber)}`;
+        }
+
+        try {
+          const displayCarrier = carrierLower.includes('xpo') ? 'XPO Logistics'
+            : carrierLower.includes('estes') ? 'Estes Express'
+            : 'WWEX Freight';
+          try { $w('#upsTrackingBtn').label = `Track on ${displayCarrier}`; } catch (e) {}
+          try { $w('#upsTrackingBtn').accessibility.ariaLabel = `Track your freight shipment on ${displayCarrier} (opens in new window)`; } catch (e) {}
+          if (ltlUrl) {
+            $w('#upsTrackingBtn').onClick(() => {
+              import('wix-window-frontend').then(({ openUrl }) => {
+                openUrl(ltlUrl, '_blank');
+              });
+              trackEvent('ltl_tracking_click', { carrier: shipping.carrier, proNumber: shipping.trackingNumber });
+            });
+          } else {
+            // WWEX-brokered with unknown final carrier — show PRO number, no link
+            try { $w('#upsTrackingBtn').disable(); } catch (e) {}
+          }
+        } catch (e) {}
+
+        // Freight scheduling message
+        try {
+          $w('#freightScheduleMessage').text =
+            'Your freight shipment will be scheduled. ' +
+            'A delivery appointment window will be confirmed by the carrier directly.';
+          $w('#freightScheduleMessage').show();
+        } catch (e) {}
+      } else {
+        // UPS parcel
+        try {
+          try { $w('#upsTrackingBtn').accessibility.ariaLabel = 'View on UPS website (opens in new window)'; } catch (e) {}
+          $w('#upsTrackingBtn').onClick(() => {
+            import('wix-window-frontend').then(({ openUrl }) => {
+              openUrl(`https://www.ups.com/track?tracknum=${shipping.trackingNumber}`, '_blank');
+            });
+            trackEvent('ups_tracking_click', { trackingNumber: shipping.trackingNumber });
           });
-          trackEvent('ups_tracking_click', { trackingNumber: shipping.trackingNumber });
-        });
-      } catch (e) {}
+        } catch (e) {}
+      }
 
       section.expand();
     } else {
