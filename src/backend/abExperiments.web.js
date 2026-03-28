@@ -13,7 +13,6 @@
  *
  * @requires wix-web-module
  * @requires wix-data
- * @requires backend/abTesting.web - getVariant, createTest
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -28,7 +27,7 @@ import { logError } from 'backend/utils/errorHandler';
 export const EXPERIMENTS = {
   'free-shipping-threshold': {
     testName: 'free-shipping-threshold',
-    description: 'Free shipping threshold: $999 vs $799 vs $599',
+    description: 'Free shipping threshold: $999 vs $799 vs $599 (PREREQUISITE: re-enable free shipping in cartService — disabled in PR #422)',
     hypothesis: 'Lowering from $999 to $799 increases checkout completion without destroying margin',
     metric: 'checkout_completion_rate',
     secondaryMetric: 'aov',
@@ -213,11 +212,6 @@ export const getExperimentVariant = webMethod(
       // Deterministic assignment
       const variant = assignVariant(cleanId, cleanUser, variants);
 
-      logAuditEvent('AbTests', 'variant_assignment', cleanUser, {
-        experimentId: cleanId,
-        variantId: variant.id,
-      });
-
       return {
         success: true,
         experimentId: cleanId,
@@ -303,7 +297,12 @@ function buildVariantConfig(experimentId, variantId) {
 function parseVariants(variantsField) {
   if (!variantsField) return [];
   if (Array.isArray(variantsField)) return variantsField;
-  try { return JSON.parse(variantsField); } catch { return []; }
+  try {
+    return JSON.parse(variantsField);
+  } catch (err) {
+    logError('abExperiments.parseVariants', err);
+    return [];
+  }
 }
 
 function simpleHash(str) {
