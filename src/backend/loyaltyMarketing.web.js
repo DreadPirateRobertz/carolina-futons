@@ -7,6 +7,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
@@ -511,9 +512,10 @@ export const calculatePointsForOrder = webMethod(
  */
 export const saveBirthday = webMethod(
   Permissions.SiteMember,
-  async (memberId, month, day) => {
+  async (month, day) => {
     try {
-      const mid = sanitize(memberId, 50);
+      const member = await currentMember.getMember();
+      const mid = member?._id;
       const m = parseInt(month, 10);
       const d = parseInt(day, 10);
       if (!mid) return { success: false, reason: 'invalid_member' };
@@ -580,7 +582,7 @@ export const saveBirthday = webMethod(
 
       return { success: true, pointsAwarded: BIRTHDAY_BONUS_POINTS, message: 'Birthday saved! 50 bonus points added' };
     } catch (err) {
-      logError(`[loyaltyMarketing] saveBirthday — member: ${memberId}`, err);
+      logError(`[loyaltyMarketing] saveBirthday — member: ${mid}`, err);
       return { success: false, reason: 'error' };
     }
   }
@@ -590,15 +592,15 @@ export const saveBirthday = webMethod(
  * Check whether a member has a birthday on file in MemberProfiles.
  * Used by initBirthdayCapture to avoid showing the prompt unnecessarily.
  *
- * @param {string} memberId
  * @returns {Promise<{hasBirthday: boolean}>}
  * @permission SiteMember
  */
 export const getBirthdayStatus = webMethod(
   Permissions.SiteMember,
-  async (memberId) => {
+  async () => {
     try {
-      const mid = sanitize(memberId, 50);
+      const member = await currentMember.getMember();
+      const mid = member?._id;
       if (!mid) return { hasBirthday: false };
       const result = await wixData.query('MemberProfiles')
         .eq('memberId', mid)

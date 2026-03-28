@@ -368,7 +368,8 @@ describe('wixEcom_onOrderCreated', () => {
       'Alice',
       'ORD-001',
       899,
-      [{ name: 'Eureka Futon', quantity: 1, price: 899 }],
+      [{ name: 'Eureka Futon', quantity: 1, price: 899, slug: '' }],
+      { memberId: '' },
     );
   });
 
@@ -382,7 +383,7 @@ describe('wixEcom_onOrderCreated', () => {
     });
 
     expect(mockTriggerPostPurchaseSequence).toHaveBeenCalledWith(
-      'c2', 'bob@test.com', 'Bob', 'ORD-002', 0, [],
+      'c2', 'bob@test.com', 'Bob', 'ORD-002', 0, [], { memberId: '' },
     );
   });
 
@@ -405,7 +406,7 @@ describe('wixEcom_onOrderCreated', () => {
     });
 
     expect(mockTriggerPostPurchaseSequence).toHaveBeenCalledWith(
-      'c4', 'x@test.com', '', 'ORD-004', 499, [],
+      'c4', 'x@test.com', '', 'ORD-004', 499, [], { memberId: '' },
     );
   });
 
@@ -421,7 +422,7 @@ describe('wixEcom_onOrderCreated', () => {
     });
 
     const callArgs = mockTriggerPostPurchaseSequence.mock.calls[0];
-    expect(callArgs[5]).toEqual([{ name: 'Night Frame', quantity: 2, price: 299 }]);
+    expect(callArgs[5]).toEqual([{ name: 'Night Frame', quantity: 2, price: 299, slug: '' }]);
   });
 
   it('does not throw when triggerPostPurchaseSequence fails', async () => {

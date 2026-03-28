@@ -1,6 +1,7 @@
 // Tests for cf-c5z6: loyalty DOB capture — saveBirthday + getBirthdayStatus + enrollMember sync
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted, __getUpdated, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 import {
   saveBirthday,
   getBirthdayStatus,
@@ -9,6 +10,8 @@ import {
 
 beforeEach(() => {
   __reset();
+  __resetMember();
+  __setMember({ _id: 'mem-1' });
 });
 
 // ── saveBirthday ──────────────────────────────────────────────────────────────
@@ -18,7 +21,7 @@ describe('saveBirthday', () => {
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 100 }]);
     __seed('PointsHistory', []);
 
-    const result = await saveBirthday('mem-1', 6, 15);
+    const result = await saveBirthday(6, 15);
 
     expect(result.success).toBe(true);
     expect(result.pointsAwarded).toBe(50);
@@ -31,7 +34,7 @@ describe('saveBirthday', () => {
   it('awards 50 bonus points and logs PointsHistory', async () => {
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 100 }]);
 
-    const result = await saveBirthday('mem-1', 3, 8);
+    const result = await saveBirthday(3, 8);
 
     expect(result.pointsAwarded).toBe(50);
     const history = __getInserted('PointsHistory');
@@ -44,7 +47,7 @@ describe('saveBirthday', () => {
   it('updates LoyaltyAccounts.totalPoints', async () => {
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 200 }]);
 
-    await saveBirthday('mem-1', 12, 25);
+    await saveBirthday(12, 25);
 
     const updated = __getUpdated('LoyaltyAccounts');
     expect(updated[0].totalPoints).toBe(250);
@@ -56,7 +59,7 @@ describe('saveBirthday', () => {
     __onUpdate((coll) => { if (coll === 'LoyaltyAccounts') order.push('accounts_updated'); });
     __onInsert((coll) => { if (coll === 'PointsHistory') order.push('history_inserted'); });
 
-    await saveBirthday('mem-1', 6, 15);
+    await saveBirthday(6, 15);
 
     expect(order).toEqual(['accounts_updated', 'history_inserted']);
   });
@@ -64,7 +67,7 @@ describe('saveBirthday', () => {
   it('returns already_set when birthdayMonth already in MemberProfiles', async () => {
     __seed('MemberProfiles', [{ memberId: 'mem-1', birthdayMonth: 4, birthdayDay: 10 }]);
 
-    const result = await saveBirthday('mem-1', 6, 15);
+    const result = await saveBirthday(6, 15);
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe('already_set');
@@ -74,7 +77,7 @@ describe('saveBirthday', () => {
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 150 }]);
     __seed('PointsHistory', [{ memberId: 'mem-1', source: 'birthday_enrollment', points: 50 }]);
 
-    const result = await saveBirthday('mem-1', 7, 4);
+    const result = await saveBirthday(7, 4);
 
     expect(result.success).toBe(true);
     expect(result.pointsAwarded).toBe(0);
@@ -83,8 +86,9 @@ describe('saveBirthday', () => {
   });
 
   it('saves birthday but awards 0 points when member not enrolled in loyalty', async () => {
+    __setMember({ _id: 'mem-new' });
     // No LoyaltyAccounts entry
-    const result = await saveBirthday('mem-new', 5, 20);
+    const result = await saveBirthday(5, 20);
 
     expect(result.success).toBe(true);
     expect(result.pointsAwarded).toBe(0);
@@ -95,43 +99,44 @@ describe('saveBirthday', () => {
   });
 
   it('returns invalid_month for month 0', async () => {
-    const result = await saveBirthday('mem-1', 0, 15);
+    const result = await saveBirthday(0, 15);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_month');
   });
 
   it('returns invalid_month for month 13', async () => {
-    const result = await saveBirthday('mem-1', 13, 15);
+    const result = await saveBirthday(13, 15);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_month');
   });
 
   it('returns invalid_day for day 0', async () => {
-    const result = await saveBirthday('mem-1', 6, 0);
+    const result = await saveBirthday(6, 0);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_day');
   });
 
   it('returns invalid_day for day 32', async () => {
-    const result = await saveBirthday('mem-1', 6, 32);
+    const result = await saveBirthday(6, 32);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_day');
   });
 
   it('returns invalid_day for impossible calendar date (Feb 30)', async () => {
-    const result = await saveBirthday('mem-1', 2, 30);
+    const result = await saveBirthday(2, 30);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_day');
   });
 
   it('accepts Feb 29 (leap year date is valid)', async () => {
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 100 }]);
-    const result = await saveBirthday('mem-1', 2, 29);
+    const result = await saveBirthday(2, 29);
     expect(result.success).toBe(true);
   });
 
-  it('returns invalid_member for empty memberId', async () => {
-    const result = await saveBirthday('', 6, 15);
+  it('returns invalid_member when not authenticated', async () => {
+    __setMember(null);
+    const result = await saveBirthday(6, 15);
     expect(result.success).toBe(false);
     expect(result.reason).toBe('invalid_member');
   });
@@ -140,7 +145,7 @@ describe('saveBirthday', () => {
     __seed('MemberProfiles', [{ _id: 'prof-1', memberId: 'mem-1', firstName: 'Alice' }]);
     __seed('LoyaltyAccounts', [{ _id: 'acc-1', memberId: 'mem-1', totalPoints: 100 }]);
 
-    await saveBirthday('mem-1', 9, 30);
+    await saveBirthday(9, 30);
 
     const updated = __getUpdated('MemberProfiles');
     expect(updated[0]).toMatchObject({ memberId: 'mem-1', birthdayMonth: 9, birthdayDay: 30, firstName: 'Alice' });
@@ -152,23 +157,25 @@ describe('saveBirthday', () => {
 describe('getBirthdayStatus', () => {
   it('returns hasBirthday: true when MemberProfiles has birthdayMonth', async () => {
     __seed('MemberProfiles', [{ memberId: 'mem-1', birthdayMonth: 6, birthdayDay: 15 }]);
-    const result = await getBirthdayStatus('mem-1');
+    const result = await getBirthdayStatus();
     expect(result.hasBirthday).toBe(true);
   });
 
   it('returns hasBirthday: false when no MemberProfiles entry', async () => {
-    const result = await getBirthdayStatus('mem-unknown');
+    __setMember({ _id: 'mem-unknown' });
+    const result = await getBirthdayStatus();
     expect(result.hasBirthday).toBe(false);
   });
 
   it('returns hasBirthday: false when profile exists but birthdayMonth is null', async () => {
     __seed('MemberProfiles', [{ memberId: 'mem-1', firstName: 'Alice' }]);
-    const result = await getBirthdayStatus('mem-1');
+    const result = await getBirthdayStatus();
     expect(result.hasBirthday).toBe(false);
   });
 
-  it('returns hasBirthday: false for empty memberId', async () => {
-    const result = await getBirthdayStatus('');
+  it('returns hasBirthday: false when not authenticated', async () => {
+    __setMember(null);
+    const result = await getBirthdayStatus();
     expect(result.hasBirthday).toBe(false);
   });
 });

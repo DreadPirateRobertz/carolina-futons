@@ -177,7 +177,7 @@ describe('sendWebhook: retry and error paths', () => {
   let MAX_RETRIES;
 
   beforeEach(async () => {
-    __setSecrets({ MOBILE_PUSH_ENDPOINT: ENDPOINT });
+    __setSecrets({ MOBILE_PUSH_ENDPOINT: ENDPOINT, MOBILE_PUSH_SECRET: 'test-secret' });
     ({ sendWebhook, MAX_RETRIES } = await import('../src/backend/orderStatusWebhook.web.js'));
   });
 
