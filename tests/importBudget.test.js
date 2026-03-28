@@ -24,6 +24,7 @@ const KNOWN_OVERBUDGET = {
   'Category Page.js': 27,
   'Product Page.js': 29, // CF-7byz: +1 getProductVideos; CF-06xu: +1 getProductStructuredData; hq-kgno: +1 wix-data; CF-wzv8: +1 subscribeAndSave; CF-qgg0: +1 renderSimplePrice
   'masterPage.js': 22, // CF-qgg0: +1 formatCardPrice/renderSimplePrice from productCardHelpers; CF-e2ib: +1 initAppDownloadBanner
+  'Thank You Page.js': 21, // CF-2zr3: +1 getSoftPromptConfig from guestCheckout.web
 };
 
 /**
