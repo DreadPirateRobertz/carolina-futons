@@ -42,6 +42,7 @@ carolina-futons-stage3-velo/
 wix-velo-mcp/
 
 # Internal Gas Town / crew artifacts — not for public repo
+crew/
 memory.md
 s0-recon-findings.md
 content-qa-report-*.md
@@ -67,3 +68,14 @@ staging-site-vision.md
 css-tricks-notes.md
 wix-browser-tricks.md
 scripts/secrets.env.example
+
+# Gas Town (added by gt)
+state.json
+scripts/secrets.env
+.gt-secrets
+gt-*.log
+mol-*.json
+convoy-*.json
+polecat-*.json
+.superpowers/
+blue-ridge-search.png
