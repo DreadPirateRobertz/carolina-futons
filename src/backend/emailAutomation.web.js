@@ -214,7 +214,7 @@ export function wixEcom_onOrderDelivered(event) {
     .map(i => i.name || i.productName || '')
     .filter(Boolean)
     .join(', ');
-  const primarySlug = lineItems.find(i => i.url?.relativePath)?.url?.relativePath?.replace('/product-page/', '') || '';
+  const primarySlug = extractPrimarySlug(lineItems);
   triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
     .catch(err => console.error('[CF-qy79] Error queuing review reward prompt on delivery:', err));
 }
@@ -412,6 +412,21 @@ export const triggerWelcomeSeries = webMethod(
  * @returns {Promise<{success: boolean, queued: number}>}
  * @permission Admin
  */
+/**
+ * Extract the primary product slug from order line items.
+ * Prefers items with a pre-parsed .slug field; falls back to parsing url.relativePath.
+ *
+ * @param {Array} lineItems
+ * @returns {string} Validated slug, or '' if none found
+ */
+function extractPrimarySlug(lineItems) {
+  const items = lineItems || [];
+  const fromSlug = items.find(i => i.slug)?.slug || '';
+  if (fromSlug) return validateSlug(fromSlug);
+  const fromUrl = items.find(i => i.url?.relativePath)?.url?.relativePath?.replace('/product-page/', '') || '';
+  return validateSlug(fromUrl);
+}
+
 export const triggerPostPurchaseSequence = webMethod(
   Permissions.Admin,
   async (contactId, email, firstName, orderNumber, total, lineItems, opts = {}) => {
@@ -437,7 +452,7 @@ export const triggerPostPurchaseSequence = webMethod(
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
       // Deep-link to product review form: use slug from first line item that has one
-      const primarySlug = validateSlug((lineItems || []).find(i => i.slug)?.slug || '');
+      const primarySlug = extractPrimarySlug(lineItems);
       if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
       const reviewUrl = primarySlug
         ? `${SITE_URL}/product-page/${primarySlug}#reviews`
@@ -521,6 +536,7 @@ export const triggerPostPurchaseSequence = webMethod(
  * @param {string} firstName
  * @param {string} orderNumber
  * @param {string} productNames - Comma-separated product names
+ * @param {string} [slug=''] - Product slug for deep-linked review URL; falls back to /member-page#reviews
  * @returns {Promise<{success: boolean}>}
  * @permission Admin
  */
@@ -554,6 +570,7 @@ export const triggerReviewRewardPrompt = webMethod(
 
       const SITE_URL = 'https://www.carolinafutons.com';
       const cleanSlug = validateSlug(slug);
+      if (!cleanSlug) console.warn('[emailAutomation] No product slug for review reward prompt, order', cleanOrderNumber, '— falling back to member-page');
       const reviewUrl = cleanSlug
         ? `${SITE_URL}/product-page/${cleanSlug}#reviews`
         : `${SITE_URL}/member-page#reviews`;
