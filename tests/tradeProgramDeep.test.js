@@ -125,7 +125,7 @@ describe('applyForTradeAccount — deep edge cases', () => {
   it('rejects null application', async () => {
     const result = await applyForTradeAccount(null);
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Application data required');
+    expect(result.error).toContain('Request data is required');
   });
 
   it('rejects undefined application', async () => {
@@ -171,29 +171,25 @@ describe('applyForTradeAccount — deep edge cases', () => {
     expect(inserted.contactEmail).toBe('test@biz.com');
   });
 
-  it('clamps estimatedAnnualUnits to 0-99999', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { if (col === 'TradeAccounts') inserted = item; });
-
-    await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'a@b.com', estimatedAnnualUnits: -50 });
-    expect(inserted.estimatedAnnualUnits).toBe(0);
+  it('rejects estimatedAnnualUnits below 0 (schema validation)', async () => {
+    // CF-5r7k: schema validates min:0, so negative values are rejected outright
+    const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'a@b.com', estimatedAnnualUnits: -50 });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('at least 0');
   });
 
-  it('caps estimatedAnnualUnits at 99999', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { if (col === 'TradeAccounts') inserted = item; });
-
-    await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'b@c.com', estimatedAnnualUnits: 200000 });
-    expect(inserted.estimatedAnnualUnits).toBe(99999);
+  it('rejects estimatedAnnualUnits above 99999 (schema validation)', async () => {
+    // CF-5r7k: schema validates max:99999, so oversized values are rejected outright
+    const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'b@c.com', estimatedAnnualUnits: 200000 });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('at most 99999');
   });
 
-  // Known gap: NaN estimatedAnnualUnits → Number(NaN) || 0 = 0
-  it('NaN estimatedAnnualUnits defaults to 0', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { if (col === 'TradeAccounts') inserted = item; });
-
-    await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'c@d.com', estimatedAnnualUnits: NaN });
-    expect(inserted.estimatedAnnualUnits).toBe(0);
+  it('rejects NaN estimatedAnnualUnits (schema type validation)', async () => {
+    // CF-5r7k: schema type:number rejects NaN
+    const result = await applyForTradeAccount({ businessName: 'Biz', contactName: 'A', contactEmail: 'c@d.com', estimatedAnnualUnits: NaN });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('must be a number');
   });
 
   it('sets default tier to bronze and status to pending', async () => {
