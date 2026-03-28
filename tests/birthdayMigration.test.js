@@ -456,7 +456,6 @@ describe('backfillBirthdayFields', () => {
     expect(result.updated).toBe(5);
   });
 
-<<<<<<< HEAD
   it('uses cursor-based pagination — advances by _id, not skip()', async () => {
     // Regression test for CF-zf97 review finding: wixData skip() silently caps
     // at 1000 records. Cursor pagination uses .gt('_id', lastSeenId) instead.
@@ -476,8 +475,6 @@ describe('backfillBirthdayFields', () => {
     expect(result.updated).toBe(3);
   });
 
-=======
->>>>>>> origin/cf-vi8u-zf97-phone-validation-birthday-migration
   it('returns processed count equal to total members examined', async () => {
     __seed('Members/PrivateMembersData', [
       { _id: 'ct-1', birthday: '1990-05-15' },

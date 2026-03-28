@@ -12,12 +12,9 @@ export const cart = {
   }),
 };
 
-<<<<<<< HEAD
 let _order = { _id: 'mock-order', number: '1001' };
 let _orderError = null;
 
-=======
->>>>>>> origin/cf-rmu1-bundle-deals
 export const orders = {
   getOrder: async (orderId) => {
     if (_orderError) throw _orderError;
@@ -27,7 +24,6 @@ export const orders = {
   listOrders: async () => ({ orders: [] }),
 };
 
-<<<<<<< HEAD
 /**
  * Set the order returned by getOrder. Pass null to simulate not found.
  * Also clears any error set by __setOrderError.
@@ -51,14 +47,6 @@ export function __setCart(c) {
   cart.getCurrentCart.mockImplementation(async () => ({ ..._cart }));
 }
 
-=======
-/** Preset cart state (e.g. to simulate an already-applied coupon). */
-export function __setCart(c) {
-  _cart = { lineItems: [], appliedCoupon: null, ...c };
-  cart.getCurrentCart.mockImplementation(async () => ({ ..._cart }));
-}
-
->>>>>>> origin/cf-rmu1-bundle-deals
 /** Make getCurrentCart throw on the next call. */
 export function __setGetCurrentCartError(err) {
   cart.getCurrentCart.mockRejectedValueOnce(err);
@@ -75,11 +63,8 @@ export function __setApplyCouponError(err) {
 }
 
 export function __reset() {
-<<<<<<< HEAD
   _order = { _id: 'mock-order', number: '1001' };
   _orderError = null;
-=======
->>>>>>> origin/cf-rmu1-bundle-deals
   _cart = { lineItems: [], appliedCoupon: null };
   cart.getCurrentCart.mockReset();
   cart.addProducts.mockReset();

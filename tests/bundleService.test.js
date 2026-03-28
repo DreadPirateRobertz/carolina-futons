@@ -3,16 +3,10 @@
  *
  * Covers: getBundlesByFrame, addBundle, validateBundleCohesion webMethods.
  * Scenarios: happy path, missing/inactive bundles, component validation,
-<<<<<<< HEAD
  * cart cohesion detection, coupon application, UserBundleCart tracking,
  * input sanitization, cart API errors.
  *
  * TDD: written before implementation (CF-vtle, updated CF-ynyn).
-=======
- * cart cohesion detection, input sanitization, cart API errors.
- *
- * TDD: written before implementation (CF-vtle).
->>>>>>> origin/cf-vtle-bundle-builder
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -26,7 +20,6 @@ import {
   addBundle,
   validateBundleCohesion,
 } from '../src/backend/bundleService.web.js';
-<<<<<<< HEAD
 import {
   __seed,
   __reset as __resetData,
@@ -39,12 +32,6 @@ import {
   cart,
   __setAddProductsError,
   __setApplyCouponError,
-=======
-import { __seed, __reset as __resetData, __setQueryError } from './__mocks__/wix-data.js';
-import {
-  cart,
-  __setAddProductsError,
->>>>>>> origin/cf-vtle-bundle-builder
   __reset as __resetCart,
 } from './__mocks__/wix-ecom-backend.js';
 
@@ -62,10 +49,7 @@ const BUNDLES = [
     coverProductId: 'cover-sunset-cotton',
     bundlePrice: 549,
     savings: 75,
-<<<<<<< HEAD
     couponCode: 'SUNSET-BUNDLE',
-=======
->>>>>>> origin/cf-vtle-bundle-builder
     isActive: true,
   },
   {
@@ -76,10 +60,7 @@ const BUNDLES = [
     coverProductId: 'cover-sunset-micro',
     bundlePrice: 529,
     savings: 65,
-<<<<<<< HEAD
     couponCode: 'SUNSET-MICRO',
-=======
->>>>>>> origin/cf-vtle-bundle-builder
     isActive: true,
   },
   {
@@ -90,7 +71,6 @@ const BUNDLES = [
     coverProductId: 'cover-empire-velvet',
     bundlePrice: 899,
     savings: 120,
-<<<<<<< HEAD
     couponCode: 'EMPIRE-DELUXE',
     isActive: true,
   },
@@ -103,8 +83,6 @@ const BUNDLES = [
     bundlePrice: 299,
     savings: 30,
     couponCode: null,
-=======
->>>>>>> origin/cf-vtle-bundle-builder
     isActive: true,
   },
   {
@@ -115,26 +93,11 @@ const BUNDLES = [
     coverProductId: 'cover-old',
     bundlePrice: 399,
     savings: 0,
-<<<<<<< HEAD
     couponCode: null,
-=======
->>>>>>> origin/cf-vtle-bundle-builder
     isActive: false,
   },
 ];
 
-<<<<<<< HEAD
-=======
-function makeBundleLineItems(bundleId, bundle) {
-  const tag = `bundle:${bundleId}`;
-  return [
-    { productId: bundle.frameProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
-    { productId: bundle.mattressProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
-    { productId: bundle.coverProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
-  ];
-}
-
->>>>>>> origin/cf-vtle-bundle-builder
 beforeEach(() => {
   __resetData();
   __resetCart();
@@ -256,7 +219,6 @@ describe('addBundle', () => {
     }
   });
 
-<<<<<<< HEAD
   it('line items have no customTextFields (ecom API does not support this field)', async () => {
     await addBundle('bundle-001');
     const [lineItems] = cart.addProducts.mock.calls[0];
@@ -321,30 +283,6 @@ describe('addBundle', () => {
     await addBundle('bundle-001', 'session-abc');
     const [record] = __getInserted('UserBundleCart');
     expect(record.bundleTag).toBe('bundle:bundle-001');
-=======
-  it('each line item carries the bundleTag in customTextFields', async () => {
-    await addBundle('bundle-001');
-    const [lineItems] = cart.addProducts.mock.calls[0];
-    for (const item of lineItems) {
-      const tagField = item.customTextFields?.find(f => f.title === 'bundleTag');
-      expect(tagField).toBeDefined();
-      expect(tagField.value).toMatch(/^bundle:/);
-    }
-  });
-
-  it('all 3 line items share the same bundleTag', async () => {
-    await addBundle('bundle-001');
-    const [lineItems] = cart.addProducts.mock.calls[0];
-    const tags = lineItems.map(li => li.customTextFields.find(f => f.title === 'bundleTag').value);
-    expect(new Set(tags).size).toBe(1);
-  });
-
-  it('bundleTag format is bundle:<bundleId>', async () => {
-    await addBundle('bundle-001');
-    const [lineItems] = cart.addProducts.mock.calls[0];
-    const tag = lineItems[0].customTextFields.find(f => f.title === 'bundleTag').value;
-    expect(tag).toBe('bundle:bundle-001');
->>>>>>> origin/cf-vtle-bundle-builder
   });
 
   it('returns bundleTag, bundlePrice, savings, and displayName', async () => {
@@ -381,7 +319,6 @@ describe('addBundle', () => {
     expect(result.error).toBeDefined();
   });
 
-<<<<<<< HEAD
   it('does not write UserBundleCart when addProducts fails', async () => {
     __setAddProductsError(new Error('Cart service unavailable'));
     await addBundle('bundle-001', 'session-abc');
@@ -390,10 +327,6 @@ describe('addBundle', () => {
 
   it('pricing comes from CMS — bundlePrice not overridable by caller', async () => {
     // addBundle accepts only bundleId + optional sessionId — no price param
-=======
-  it('pricing comes from CMS — bundlePrice not overridable by caller', async () => {
-    // addBundle accepts only bundleId — no price param
->>>>>>> origin/cf-vtle-bundle-builder
     const result = await addBundle('bundle-001');
     expect(result.bundlePrice).toBe(549); // exact CMS value, not manipulable
   });
@@ -415,10 +348,7 @@ describe('addBundle', () => {
       coverProductId: 'cover-ok',
       bundlePrice: 400,
       savings: 50,
-<<<<<<< HEAD
       couponCode: null,
-=======
->>>>>>> origin/cf-vtle-bundle-builder
       isActive: true,
     }]);
     const result = await addBundle('bundle-bad');
@@ -437,10 +367,7 @@ describe('addBundle', () => {
       coverProductId: 'cover-ok',
       bundlePrice: 400,
       savings: 50,
-<<<<<<< HEAD
       couponCode: null,
-=======
->>>>>>> origin/cf-vtle-bundle-builder
       isActive: true,
     }]);
     const result = await addBundle('bundle-no-mattress');
@@ -450,7 +377,6 @@ describe('addBundle', () => {
 });
 
 // ── validateBundleCohesion ───────────────────────────────────────────────────
-<<<<<<< HEAD
 //
 // New approach (CF-ynyn): cross-references UserBundleCart CMS against current
 // cart items by productId — no longer relies on customTextFields.
@@ -493,33 +419,18 @@ describe('validateBundleCohesion', () => {
       'frame-sunset-full', 'mattress-sunset-6in', 'cover-sunset-cotton'
     );
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-
-describe('validateBundleCohesion', () => {
-  it('returns valid:true for a complete bundle (3 items with same tag)', async () => {
-    const cartItems = makeBundleLineItems('bundle-001', BUNDLES[0]);
-    const result = await validateBundleCohesion(cartItems);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(true);
     expect(result.brokenBundles).toHaveLength(0);
   });
 
-<<<<<<< HEAD
   it('returns valid:false when one component productId is missing from cart', async () => {
     seedUserBundleCart([UBC_001]);
     const cartItems = makeCartItems('frame-sunset-full', 'mattress-sunset-6in'); // no cover
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-  it('returns valid:false when one component is removed', async () => {
-    const cartItems = makeBundleLineItems('bundle-001', BUNDLES[0]);
-    const incomplete = cartItems.slice(0, 2); // only frame + mattress
-    const result = await validateBundleCohesion(incomplete);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(false);
     expect(result.brokenBundles).toHaveLength(1);
   });
 
-<<<<<<< HEAD
   it('returns valid:false when two component productIds are missing from cart', async () => {
     seedUserBundleCart([UBC_001]);
     const cartItems = makeCartItems('frame-sunset-full'); // only frame
@@ -532,41 +443,21 @@ describe('validateBundleCohesion', () => {
     seedUserBundleCart([UBC_001]);
     const cartItems = makeCartItems('frame-sunset-full', 'mattress-sunset-6in');
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-  it('returns valid:false when only one component remains', async () => {
-    const cartItems = makeBundleLineItems('bundle-001', BUNDLES[0]).slice(0, 1);
-    const result = await validateBundleCohesion(cartItems);
-    expect(result.valid).toBe(false);
-  });
-
-  it('identifies the specific bundleTag that is broken', async () => {
-    const incomplete = makeBundleLineItems('bundle-001', BUNDLES[0]).slice(0, 2);
-    const result = await validateBundleCohesion(incomplete);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.brokenBundles[0].bundleTag).toBe('bundle:bundle-001');
   });
 
   it('returns valid:true for two complete bundles in cart', async () => {
-<<<<<<< HEAD
     seedUserBundleCart([UBC_001, UBC_003]);
     const cartItems = makeCartItems(
       'frame-sunset-full', 'mattress-sunset-6in', 'cover-sunset-cotton',
       'frame-empire-queen', 'mattress-empire-8in', 'cover-empire-velvet',
     );
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-    const items = [
-      ...makeBundleLineItems('bundle-001', BUNDLES[0]),
-      ...makeBundleLineItems('bundle-003', BUNDLES[2]),
-    ];
-    const result = await validateBundleCohesion(items);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(true);
     expect(result.brokenBundles).toHaveLength(0);
   });
 
   it('identifies one broken bundle when another is complete', async () => {
-<<<<<<< HEAD
     seedUserBundleCart([UBC_001, UBC_003]);
     // bundle-001 complete, bundle-003 missing cover
     const cartItems = makeCartItems(
@@ -574,32 +465,19 @@ describe('validateBundleCohesion', () => {
       'frame-empire-queen', 'mattress-empire-8in', // no cover-empire-velvet
     );
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-    const items = [
-      ...makeBundleLineItems('bundle-001', BUNDLES[0]),
-      ...makeBundleLineItems('bundle-003', BUNDLES[2]).slice(0, 2),
-    ];
-    const result = await validateBundleCohesion(items);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(false);
     expect(result.brokenBundles).toHaveLength(1);
     expect(result.brokenBundles[0].bundleTag).toBe('bundle:bundle-003');
   });
 
-<<<<<<< HEAD
   it('returns valid:true when no UserBundleCart records exist for session', async () => {
     // no __seed for UserBundleCart → empty
     const cartItems = makeCartItems('some-product');
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-  it('returns valid:true for empty cart', async () => {
-    const result = await validateBundleCohesion([]);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(true);
     expect(result.brokenBundles).toHaveLength(0);
   });
 
-<<<<<<< HEAD
   it('returns valid:true for empty cart (session has bundles but cart is empty)', async () => {
     seedUserBundleCart([UBC_001]);
     const result = await validateBundleCohesion(SESSION, []);
@@ -612,54 +490,33 @@ describe('validateBundleCohesion', () => {
     const cartItems = makeCartItems('frame-sunset-full', 'mattress-sunset-6in', 'cover-sunset-cotton');
     const result = await validateBundleCohesion(SESSION, cartItems);
     // other session's bundles not visible to SESSION
-=======
-  it('ignores items with no bundleTag (non-bundle items)', async () => {
-    const cartItems = [{ productId: 'standalone-product', customTextFields: [] }];
-    const result = await validateBundleCohesion(cartItems);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(true);
     expect(result.brokenBundles).toHaveLength(0);
   });
 
   it('includes componentCount and expectedCount in broken bundle report', async () => {
-<<<<<<< HEAD
     seedUserBundleCart([UBC_001]);
     const cartItems = makeCartItems('frame-sunset-full'); // only 1 of 3
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-    const incomplete = makeBundleLineItems('bundle-001', BUNDLES[0]).slice(0, 1);
-    const result = await validateBundleCohesion(incomplete);
->>>>>>> origin/cf-vtle-bundle-builder
     const broken = result.brokenBundles[0];
     expect(broken.componentCount).toBe(1);
     expect(broken.expectedCount).toBe(3);
   });
 
   it('provides a human-readable message for broken bundles', async () => {
-<<<<<<< HEAD
     seedUserBundleCart([UBC_001]);
     const cartItems = makeCartItems('frame-sunset-full', 'mattress-sunset-6in');
     const result = await validateBundleCohesion(SESSION, cartItems);
-=======
-    const incomplete = makeBundleLineItems('bundle-001', BUNDLES[0]).slice(0, 2);
-    const result = await validateBundleCohesion(incomplete);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(typeof result.brokenBundles[0].message).toBe('string');
     expect(result.brokenBundles[0].message.length).toBeGreaterThan(0);
   });
 
-<<<<<<< HEAD
   it('returns valid:true for null sessionId', async () => {
     const result = await validateBundleCohesion(null, []);
-=======
-  it('returns valid:true for null input (non-array guard)', async () => {
-    const result = await validateBundleCohesion(null);
->>>>>>> origin/cf-vtle-bundle-builder
     expect(result.valid).toBe(true);
     expect(result.brokenBundles).toHaveLength(0);
   });
 
-<<<<<<< HEAD
   it('returns valid:true for undefined cartItems', async () => {
     seedUserBundleCart([UBC_001]);
     const result = await validateBundleCohesion(SESSION, undefined);
@@ -707,11 +564,3 @@ describe('addBundle — sessionId sanitization', () => {
     expect(inserted[0].sessionId).toBeNull();
   });
 });
-=======
-  it('returns valid:true for undefined input', async () => {
-    const result = await validateBundleCohesion(undefined);
-    expect(result.valid).toBe(true);
-    expect(result.brokenBundles).toHaveLength(0);
-  });
-});
->>>>>>> origin/cf-vtle-bundle-builder

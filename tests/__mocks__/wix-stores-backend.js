@@ -69,12 +69,8 @@ export const products = {
 
   getProduct: vi.fn(async (id) => {
     if (_queryError) throw _queryError;
-<<<<<<< HEAD
     const allProducts = _pages.flat();
     return allProducts.find(p => p._id === id) || null;
-=======
-    return _products.find(p => p._id === id) || null;
->>>>>>> origin/feat/CF-st0c-live-inventory-badges
   }),
 
   updateProductFields: vi.fn(async (id, fields) => {

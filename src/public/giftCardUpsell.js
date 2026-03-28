@@ -63,27 +63,9 @@ function markUpsellShown(opts = {}) {
 }
 
 /**
-<<<<<<< HEAD
  * Initialize the gift card upsell section on the Thank You page.
  * Shows the next denomination above orderTotal; collapses if none available
  * or already shown this session.
-=======
- * Resolve the session storage object from opts or global.
- * @param {Object} opts
- * @returns {Object|null}
- */
-function _resolveStorage(opts) {
-  return 'storage' in opts
-    ? opts.storage
-    : (typeof sessionStorage !== 'undefined' ? sessionStorage : null);
-}
-
-/**
- * Initialize the gift card upsell section on the Thank You page.
- * Calls selectUpsellDenomination once and threads the result through
- * to avoid recomputation. Collapses the section if no denomination is
- * available or the upsell was already shown this session.
->>>>>>> origin/cf-ou1f-gift-cards-s4
  *
  * @param {Function} $wFn - Wix selector function
  * @param {number} orderTotal - Confirmed order total in dollars
@@ -93,33 +75,12 @@ function _resolveStorage(opts) {
  * @returns {Promise<void>}
  */
 export async function initGiftCardUpsell($wFn, orderTotal, opts = {}) {
-<<<<<<< HEAD
   if (!shouldShowGiftCardUpsell(orderTotal, opts)) {
     try { $wFn('#giftCardUpsellSection').collapse(); } catch (_) {}
     return;
   }
 
   const denomination = selectUpsellDenomination(orderTotal);
-=======
-  // Compute denomination once — threads through instead of calling selectUpsellDenomination twice
-  const denomination = selectUpsellDenomination(orderTotal);
-
-  let alreadyShown = false;
-  try {
-    const storage = _resolveStorage(opts);
-    alreadyShown = Boolean(storage?.getItem(UPSELL_SESSION_KEY));
-  } catch (e) {
-    console.warn('[giftCardUpsell] Could not read session storage:', e);
-  }
-
-  if (!denomination || alreadyShown) {
-    try { $wFn('#giftCardUpsellSection').collapse(); } catch (e) {
-      console.warn('[giftCardUpsell] Could not collapse upsell section:', e);
-    }
-    return;
-  }
-
->>>>>>> origin/cf-ou1f-gift-cards-s4
   markUpsellShown(opts);
 
   try {
@@ -145,26 +106,11 @@ export async function initGiftCardUpsell($wFn, orderTotal, opts = {}) {
       } else {
         import('wix-location-frontend').then(loc => {
           const navFn = loc.default?.to ?? loc.to;
-<<<<<<< HEAD
           navFn(url);
         }).catch(() => {});
       }
     });
   } catch (_) {
     // Elements may not exist in all page layouts — graceful no-op
-=======
-          if (typeof navFn === 'function') {
-            navFn(url);
-          } else {
-            console.warn('[giftCardUpsell] wix-location-frontend.to not found');
-          }
-        }).catch(err => {
-          console.warn('[giftCardUpsell] wix-location-frontend unavailable:', err);
-        });
-      }
-    });
-  } catch (e) {
-    console.warn('[giftCardUpsell] Could not initialize upsell elements:', e);
->>>>>>> origin/cf-ou1f-gift-cards-s4
   }
 }

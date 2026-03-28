@@ -1,14 +1,6 @@
 /**
  * @module wishlistShareHelpers
-<<<<<<< HEAD
-<<<<<<< HEAD
  * Wishlist Share Page — pure helper functions for CF-y24r + CF-4qll S2 + CF-muzy S5
-=======
- * Wishlist Share Page — pure helper functions for CF-y24r
->>>>>>> origin/cf-y24r-wishlist-share
-=======
- * Wishlist Share Page — pure helper functions for CF-y24r + CF-muzy S5
->>>>>>> origin/cf-muzy-wishlist-share-s5
  * All $w() wiring is in 'Wishlist Share.js'; this module is pure functions only.
  */
 
@@ -43,8 +35,6 @@ const INVALID_MESSAGES = {
 export function buildInvalidMessage(reason) {
   return INVALID_MESSAGES[reason] || INVALID_MESSAGES.error;
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 // ── S2: Product card population ───────────────────────────────────────────────
 
@@ -60,8 +50,6 @@ export function populateShareCard($item, itemData) {
   try { $item('#shareImage').alt = `${itemData.productName || 'Product'} - wishlist item`; } catch (e) {}
   try { $item('#shareName').text = itemData.productName || ''; } catch (e) {}
 }
-=======
->>>>>>> origin/cf-muzy-wishlist-share-s5
 
 // ── S5: SEO helpers ───────────────────────────────────────────────────────────
 
@@ -111,8 +99,3 @@ export function buildWishlistOgTags(ownerName, description, items) {
   }
   return tags;
 }
-<<<<<<< HEAD
-=======
->>>>>>> origin/cf-y24r-wishlist-share
-=======
->>>>>>> origin/cf-muzy-wishlist-share-s5

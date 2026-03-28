@@ -32,10 +32,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
-<<<<<<< HEAD
 import { logAuditEvent } from 'backend/utils/auditLog';
-=======
->>>>>>> origin/feat/CF-3t9f-rate-limiting-qa-review
 
 const OWNER_EMAIL_TEMPLATE = 'new_product_question';
 const SITE_OWNER_SECRET = 'SITE_OWNER_CONTACT_ID';

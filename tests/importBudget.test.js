@@ -20,15 +20,10 @@ const IMPORT_BUDGET = 20;
 // Each entry caps the allowed count — if a page INCREASES beyond its cap, the test fails.
 // To remove a page from the allowlist, refactor it below the budget and delete the entry.
 const KNOWN_OVERBUDGET = {
-<<<<<<< HEAD
   'Cart Page.js': 23, // CF-qgg0: +1 renderSimplePrice from productCardHelpers
   'Category Page.js': 27,
   'Product Page.js': 29, // CF-7byz: +1 getProductVideos; CF-06xu: +1 getProductStructuredData; hq-kgno: +1 wix-data; CF-wzv8: +1 subscribeAndSave; CF-qgg0: +1 renderSimplePrice
   'masterPage.js': 22, // CF-qgg0: +1 formatCardPrice/renderSimplePrice from productCardHelpers; CF-e2ib: +1 initAppDownloadBanner
-=======
-  'Category Page.js': 26,
-  'Product Page.js': 23,
->>>>>>> origin/cf-9fv2-gift-cards-s2
 };
 
 /**

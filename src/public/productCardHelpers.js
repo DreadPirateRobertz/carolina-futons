@@ -112,34 +112,6 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   }
 }
 
-// Matches batchAltText.web.js + imageAltText.web.js keyword convention (3 terms only).
-// 'context' excluded — matches Wix CDN URL params. 'living/bedroom/setting' excluded — too broad.
-const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
-
-/**
- * Select the best image for a product card — lifestyle room shot preferred over
- * white-background product shots. Checks mediaItems title/alt/url for lifestyle
- * keywords; falls back to mainMedia when no match.
- *
- * Keywords aligned with batchAltText.web.js + imageAltText.web.js convention.
- * No index-based fallback — mediaItems[1] is not guaranteed to be a lifestyle
- * shot (could be a back view, dimension diagram, or detail photo).
- *
- * @param {Object} product - Wix product with mainMedia and optional mediaItems array
- * @returns {string} Image URL — keyword-matched lifestyle shot if found, else mainMedia
- */
-export function getLifestyleImage(product) {
-  const mediaItems = product?.mediaItems;
-  if (Array.isArray(mediaItems) && mediaItems.length > 0) {
-    const keywordMatch = mediaItems.find(item => {
-      const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
-      return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
-    });
-    if (keywordMatch) return keywordMatch.url || keywordMatch.src || '';
-  }
-  return product?.mainMedia || '';
-}
-
 /**
  * Render a single price element with call-for-price guard.
  * Use this for simple price displays (recently viewed, quick view, cross-sell)

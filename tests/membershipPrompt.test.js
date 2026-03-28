@@ -106,21 +106,14 @@ describe('initMembershipPrompt — modal setup', () => {
     expect(text).toContain('\n• ');
   });
 
-<<<<<<< HEAD
   it('calls setupAccessibleDialog with correct panel, close, and title IDs', () => {
-=======
-  it('calls setupAccessibleDialog with correct panel and close IDs', () => {
->>>>>>> origin/feat/CF-llrd-membership-prompt
     initMembershipPrompt($w);
     expect(setupAccessibleDialog).toHaveBeenCalledWith(
       $w,
       expect.objectContaining({
         panelId: '#membershipPromptModal',
         closeId: '#membershipPromptClose',
-<<<<<<< HEAD
         titleId: '#membershipPromptTitle',
-=======
->>>>>>> origin/feat/CF-llrd-membership-prompt
       })
     );
   });

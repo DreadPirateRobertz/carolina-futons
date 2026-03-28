@@ -102,9 +102,6 @@ export const getActiveCoupons = webMethod(
       ).toLowerCase();
       if (!memberEmail) return [];
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
       const result = await wixData.query('MemberCoupons')
         .eq('memberEmail', memberEmail)
         .eq('active', true)
@@ -119,23 +116,6 @@ export const getActiveCoupons = webMethod(
         expirationTime: c.expirationTime,
         active: c.active,
       }));
-=======
-      const result = await coupons.queryAllCoupons()
-        .eq('active', true)
-        .find();
-
-=======
-      const result = await coupons.queryAllCoupons()
-        .eq('active', true)
-        .find();
-
->>>>>>> origin/polecat/rust/CF-yixo
-=======
-      const result = await coupons.queryAllCoupons()
-        .eq('active', true)
-        .find();
-
->>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
       return (result.items || [])
         .filter(c => c.name?.toLowerCase().includes(memberEmail))
         .map(c => ({
@@ -147,13 +127,6 @@ export const getActiveCoupons = webMethod(
           expirationTime: c.expirationTime,
           active: c.active,
         }));
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> origin/cf-ld8w-referral-ui
-=======
->>>>>>> origin/polecat/rust/CF-yixo
-=======
->>>>>>> origin/polecat/radrat/CF-0aqh@mmzyn35s
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];
@@ -361,7 +334,6 @@ export const generateRecoveryCoupon = webMethod(
           '— idempotency not guaranteed on retry:', insertErr.message);
       }
 
-<<<<<<< HEAD
       // Track in MemberCoupons for DB-level member scoping in getActiveCoupons
       try {
         await wixData.insert('MemberCoupons', {
@@ -380,8 +352,6 @@ export const generateRecoveryCoupon = webMethod(
           ':', insertErr.message);
       }
 
-=======
->>>>>>> origin/polecat/rust/CF-yixo
       return {
         success: true,
         code: coupon.code,
@@ -414,10 +384,7 @@ export const createCartRecoveryCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
-<<<<<<< HEAD
       const expirationTime = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
-=======
->>>>>>> origin/polecat/rust/CF-yixo
       const coupon = await coupons.createCoupon({
         name: `Cart Recovery 10% Off - ${cleanEmail}`,
         code: await generateCode('RECOVER'),
@@ -429,7 +396,6 @@ export const createCartRecoveryCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-<<<<<<< HEAD
         expirationTime,
       });
 
@@ -449,11 +415,6 @@ export const createCartRecoveryCoupon = webMethod(
         console.warn('[couponsService] MemberCoupons insert failed for cart recovery coupon:', insertErr.message);
       }
 
-=======
-        expirationTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
-      });
-
->>>>>>> origin/polecat/rust/CF-yixo
       return {
         success: true,
         code: coupon.code,

@@ -32,12 +32,9 @@ import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
-<<<<<<< HEAD
 import { buildYouTubeEmbed } from 'public/videoHelpers.js';
 import { initPDPSocialProofBadge } from 'public/PDPSocialProofBadge.js';
 import { initProductStructuredData } from 'public/productStructuredData.js';
-=======
->>>>>>> origin/cf-9fv2-gift-cards-s2
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -252,7 +249,6 @@ async function initProductPage() {
         const navigate = (navModule?.default?.to ?? navModule?.to) ? (url => (navModule?.default?.to ?? navModule?.to)(url)) : undefined;
         _initGiftProductBtnModule($w, product, { addToCart, navigate });
       }, critical: false },
-<<<<<<< HEAD
       // CF-75d1: Style Quiz CTA — nudges shoppers to the quiz when browsing products
       { name: 'quizCTA', init: () => initProductPageQuizCTA($w), critical: false },
       // CF-o0va: Shipping estimate widget — zip input + rate display
@@ -309,8 +305,6 @@ async function initProductPage() {
         try { $w('#chatGreetingText').text = greetResult.greeting; } catch (e) {}
         try { $w('#chatAssistantWidget').show(); } catch (e) {}
       }, critical: false },
-=======
->>>>>>> origin/cf-9fv2-gift-cards-s2
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
