@@ -6,14 +6,14 @@
  * errors without exposing schema internals to callers.
  *
  * Schema format:
- *   { fieldName: { type, required, maxLength, allowedValues, pattern, min, max } }
+ *   { fieldName: { type, required, maxLength, allowedValues, pattern, min, max, label } }
  *
  * @example
  *   const errors = validateSchema(data, {
- *     email: { type: 'string', required: true, maxLength: 254 },
- *     phone: { type: 'string', maxLength: 20 },
- *     quantity: { type: 'number', min: 1, max: 100 },
- *     tier: { type: 'string', allowedValues: ['basic', 'extended', 'premium'] },
+ *     email: { type: 'string', required: true, maxLength: 254, label: 'Email' },
+ *     phone: { type: 'string', maxLength: 20, label: 'Phone' },
+ *     quantity: { type: 'number', min: 1, max: 100, label: 'Quantity' },
+ *     tier: { type: 'string', allowedValues: ['basic', 'extended', 'premium'], label: 'Tier' },
  *   });
  *   if (errors.length > 0) return { success: false, error: errors[0] };
  */
@@ -66,7 +66,7 @@ export function validateSchema(data, schema) {
 
     // String-specific checks
     if (typeof value === 'string') {
-      if (rules.maxLength && value.length > rules.maxLength) {
+      if (rules.maxLength !== undefined && value.length > rules.maxLength) {
         errors.push(`${label} is too long (max ${rules.maxLength} characters).`);
       }
       if (rules.pattern && !rules.pattern.test(value)) {
