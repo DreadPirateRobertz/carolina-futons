@@ -154,6 +154,7 @@ async function initProductPage() {
       { name: 'recentlyViewed', init: loadRecentlyViewed, critical: false },
       { name: 'recentlyViewedWidget', init: async () => { const { renderWidget } = await import('public/RecentlyViewedWidget.js'); return renderWidget($w, { excludeCurrentId: state.product?._id }); }, critical: false },
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
+      { name: 'recommendations', init: async () => { const m = await import('public/ProductRecommendations.js'); m.initRecommendationsCarousel($w, state); }, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
