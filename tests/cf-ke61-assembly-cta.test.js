@@ -4,8 +4,10 @@
  *
  * Covers:
  *  - CTA hidden for Easy/unknown difficulty products
- *  - CTA shown for Medium difficulty products
- *  - 'Professional assembly recommended' title for Expert difficulty
+ *  - CTA shown for Medium/moderate difficulty products
+ *  - CTA shown for Expert/difficult difficulty products
+ *  - 'Professional assembly recommended' title for Expert/difficult difficulty
+ *  - Standard CTA title for Medium/moderate difficulty
  *  - White glove button wired to /getting-it-home
  *  - TaskRabbit button wired to dynamic URL from getTaskRabbitLink
  *  - TaskRabbit button falls back to static URL when backend returns failure
@@ -26,6 +28,10 @@ vi.mock('backend/assemblyGuides.web', () => ({
 
 vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
+}));
+
+vi.mock('public/a11yHelpers', () => ({
+  announce: vi.fn(),
 }));
 
 import { initAssemblyCTA } from '../src/public/AssemblyCTA.js';
@@ -271,5 +277,37 @@ describe('edge cases', () => {
     const $w = make$w();
     await initAssemblyCTA($w, makeState());
     expect($w('#assemblyCTASection').collapsed).toBe(true);
+  });
+
+  it('hides video button when getAssemblyGuide throws', async () => {
+    getAssemblyInfo.mockResolvedValue(makeMediumInfo());
+    getAssemblyGuide.mockRejectedValue(new Error('DB timeout'));
+    const $w = make$w();
+    await initAssemblyCTA($w, makeState());
+    expect($w('#btnAssemblyVideo').hidden).toBe(true);
+  });
+
+  it('falls back to static TaskRabbit URL when getTaskRabbitLink throws', async () => {
+    getAssemblyInfo.mockResolvedValue(makeMediumInfo());
+    getTaskRabbitLink.mockRejectedValue(new Error('timeout'));
+    const $w = make$w();
+    await initAssemblyCTA($w, makeState());
+    expect($w('#btnTaskRabbit').link).toContain('taskrabbit.com');
+    expect($w('#btnTaskRabbit').link).toContain('28792');
+  });
+
+  it('treats videoUrl empty string as no video', async () => {
+    getAssemblyInfo.mockResolvedValue(makeMediumInfo());
+    getAssemblyGuide.mockResolvedValue({ videoUrl: '' });
+    const $w = make$w();
+    await initAssemblyCTA($w, makeState());
+    expect($w('#btnAssemblyVideo').hidden).toBe(true);
+  });
+
+  it('shows "Professional assembly recommended" for "difficult" (catalogContent value)', async () => {
+    getAssemblyInfo.mockResolvedValue({ success: true, info: { difficulty: 'difficult' } });
+    const $w = make$w();
+    await initAssemblyCTA($w, makeState());
+    expect($w('#assemblyCTATitle').text).toBe('Professional assembly recommended');
   });
 });
