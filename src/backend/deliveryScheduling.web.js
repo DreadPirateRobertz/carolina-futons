@@ -32,6 +32,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { validateSchema } from 'backend/utils/validateSchema';
 
 /** Constant-time string comparison to prevent timing attacks on cancel tokens. */
 function timingSafeEqual(a, b) {
@@ -158,9 +159,15 @@ export const reserveDeliveryWindow = webMethod(
   Permissions.Anyone,
   async (data) => {
     try {
-      if (!data || !data.orderId || !data.date || !data.timeSlot || !data.deliveryType) {
-        return { success: false, message: 'orderId, date, timeSlot, and deliveryType are required' };
-      }
+      const schemaErrors = validateSchema(data, {
+        orderId: { type: 'string', required: true, maxLength: 50, label: 'Order ID' },
+        date: { type: 'string', required: true, maxLength: 10, pattern: /^\d{4}-\d{2}-\d{2}$/, label: 'Date' },
+        timeSlot: { type: 'string', required: true, maxLength: 20, label: 'Time slot' },
+        deliveryType: { type: 'string', required: true, allowedValues: ['white_glove', 'local'], label: 'Delivery type' },
+        customerEmail: { type: 'string', maxLength: 254, label: 'Email' },
+        address: { type: 'string', maxLength: 500, label: 'Address' },
+      });
+      if (schemaErrors.length > 0) return { success: false, message: schemaErrors[0] };
 
       const orderId = sanitize(data.orderId, 50);
       const date = sanitize(data.date, 10);

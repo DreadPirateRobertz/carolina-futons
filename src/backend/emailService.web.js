@@ -26,6 +26,7 @@ import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { validateSchema } from 'backend/utils/validateSchema';
 
 // ── Rate Limiting (CF-rw9g) ──────────────────────────────────────────
 // CMS collection: EmailRateLimit (key, count, windowStart)
@@ -116,6 +117,15 @@ export const sendEmail = webMethod(
   Permissions.Anyone,
   async ({ name, email, phone, subject, message }) => {
     try {
+      const schemaErrors = validateSchema({ name, email, phone, subject, message }, {
+        name: { type: 'string', required: true, maxLength: 200, label: 'Name' },
+        email: { type: 'string', required: true, maxLength: 254, label: 'Email' },
+        phone: { type: 'string', maxLength: 20, label: 'Phone' },
+        subject: { type: 'string', maxLength: 300, label: 'Subject' },
+        message: { type: 'string', required: true, maxLength: 2000, label: 'Message' },
+      });
+      if (schemaErrors.length > 0) return { success: false, message: schemaErrors[0] };
+
       const cleanName = sanitize(name, 200);
       const cleanEmail = sanitize(email, 254);
       const cleanPhone = sanitize(phone, 20);

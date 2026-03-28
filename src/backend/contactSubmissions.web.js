@@ -22,6 +22,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { validateSchema } from 'backend/utils/validateSchema';
 
 // Rate limiting for submitContactForm — prevents contact form spam flood.
 // CMS collection `ContactRateLimits`: key (Text), count (Number), windowStart (DateTime).
@@ -109,9 +110,16 @@ export const submitContactForm = webMethod(
   Permissions.Anyone,
   async (data, opts = {}) => {
     try {
-      if (!data || !data.email) {
-        return { success: false, message: 'Email is required' };
-      }
+      const schemaErrors = validateSchema(data, {
+        email: { type: 'string', required: true, maxLength: 254, label: 'Email' },
+        name: { type: 'string', maxLength: 200, label: 'Name' },
+        phone: { type: 'string', maxLength: 20, label: 'Phone' },
+        source: { type: 'string', maxLength: 50, label: 'Source' },
+        notes: { type: 'string', maxLength: 2000, label: 'Notes' },
+        productId: { type: 'string', maxLength: 50, label: 'Product ID' },
+        productName: { type: 'string', maxLength: 200, label: 'Product name' },
+      });
+      if (schemaErrors.length > 0) return { success: false, message: schemaErrors[0] };
 
       const email = sanitize(data.email, 254).toLowerCase();
       if (!validateEmail(email)) {

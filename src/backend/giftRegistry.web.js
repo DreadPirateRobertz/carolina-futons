@@ -39,6 +39,7 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateSlug } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { validateSchema } from 'backend/utils/validateSchema';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -370,7 +371,12 @@ export const removeRegistryItem = webMethod(Permissions.SiteMember, async (regis
 export const markItemPurchased = webMethod(Permissions.Anyone, async (itemId, data) => {
   try {
     if (!validateId(itemId)) return { success: false, error: 'Invalid item ID' };
-    if (!data || typeof data !== 'object') return { success: false, error: 'Invalid data' };
+
+    const schemaErrors = validateSchema(data, {
+      buyerName: { type: 'string', maxLength: 50, label: 'Buyer name' },
+      quantity: { type: 'number', min: 1, max: 100, label: 'Quantity' },
+    });
+    if (schemaErrors.length > 0) return { success: false, error: schemaErrors[0] };
 
     const { allowed } = await checkRateLimit('RegistryPurchaseRateLimit', itemId);
     if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };

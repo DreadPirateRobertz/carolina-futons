@@ -34,6 +34,7 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { validateSchema } from 'backend/utils/validateSchema';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -105,7 +106,16 @@ export const applyForTradeAccount = webMethod(
   Permissions.Anyone,
   async (application) => {
     try {
-      if (!application) return { success: false, error: 'Application data required' };
+      const schemaErrors = validateSchema(application, {
+        businessName: { type: 'string', required: true, maxLength: 200, label: 'Business name' },
+        contactName: { type: 'string', required: true, maxLength: 200, label: 'Contact name' },
+        contactEmail: { type: 'string', required: true, maxLength: 254, label: 'Email' },
+        phone: { type: 'string', maxLength: 20, label: 'Phone' },
+        taxId: { type: 'string', maxLength: 20, label: 'Tax ID' },
+        businessType: { type: 'string', maxLength: 100, label: 'Business type' },
+        estimatedAnnualUnits: { type: 'number', min: 0, max: 99999, label: 'Estimated annual units' },
+      });
+      if (schemaErrors.length > 0) return { success: false, error: schemaErrors[0] };
 
       const businessName = sanitize(application.businessName || '', 200);
       const contactName = sanitize(application.contactName || '', 200);
