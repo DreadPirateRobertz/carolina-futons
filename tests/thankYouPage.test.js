@@ -217,6 +217,9 @@ vi.mock('backend/loyaltyService.web', () => ({
 vi.mock('backend/zipLeaderboard.web', () => ({
   getZipLeaderboard: vi.fn().mockResolvedValue({ myRank: 8, zipPrefix: '287' }),
 }));
+vi.mock('backend/guestCheckout.web', () => ({
+  getSoftPromptConfig: vi.fn().mockReturnValue({ title: 'Save your order history', description: '', ctaLabel: 'Create Account', skipLabel: 'No thanks' }),
+}));
 
 // ── Import Page ─────────────────────────────────────────────────────
 

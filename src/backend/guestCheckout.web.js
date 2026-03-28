@@ -62,7 +62,7 @@ export const saveGuestSession = webMethod(
         return { success: false, error: 'sessionId and email are required' };
       }
 
-      if (!cleanEmail.includes('@')) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
         return { success: false, error: 'Invalid email address' };
       }
 
@@ -73,7 +73,7 @@ export const saveGuestSession = webMethod(
         .limit(1)
         .find({ suppressAuth: true });
 
-      const record = {
+      const fields = {
         sessionId: cleanSessionId,
         email: cleanEmail,
         firstName: cleanFirst,
@@ -81,14 +81,14 @@ export const saveGuestSession = webMethod(
         orderTotal: typeof orderTotal === 'number' && isFinite(orderTotal) ? orderTotal : 0,
         status: 'pending',
         linkedMemberId: '',
-        createdAt: new Date(),
       };
 
       let saved;
       if (existing.items.length > 0) {
-        saved = await wixData.update(COLLECTION, { ...existing.items[0], ...record }, { suppressAuth: true });
+        // Preserve original createdAt on update — do not overwrite
+        saved = await wixData.update(COLLECTION, { ...existing.items[0], ...fields }, { suppressAuth: true });
       } else {
-        saved = await wixData.insert(COLLECTION, record, { suppressAuth: true });
+        saved = await wixData.insert(COLLECTION, { ...fields, createdAt: new Date() }, { suppressAuth: true });
       }
 
       return { success: true, _id: saved._id };
@@ -164,6 +164,8 @@ export const linkGuestOrdersToMember = webMethod(
 
 /**
  * Retrieve guest orders for a given email (for order history merge preview).
+ * IDOR guard: caller must be authenticated and the requested email must match
+ * their own loginEmail — prevents member A from reading member B's orders.
  *
  * @param {string} email
  * @returns {Promise<{success: boolean, orders: Array}>}
@@ -175,6 +177,12 @@ export const getGuestOrdersByEmail = webMethod(
     try {
       const cleanEmail = sanitize(email || '', 254).toLowerCase().trim();
       if (!cleanEmail) return { success: false, orders: [] };
+
+      // IDOR: verify caller owns this email
+      const member = await currentMember.getMember();
+      if (!member?.loginEmail || member.loginEmail.toLowerCase() !== cleanEmail) {
+        return { success: false, orders: [] };
+      }
 
       const result = await wixData
         .query(COLLECTION)

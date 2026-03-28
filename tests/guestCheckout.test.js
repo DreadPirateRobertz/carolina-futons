@@ -9,7 +9,7 @@
  * - SESSION_TTL_MS constant
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __seed, __getInserted, __getUpdated } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 
 vi.mock('wix-web-module', () => ({
@@ -54,11 +54,20 @@ describe('saveGuestSession', () => {
     await saveGuestSession({ sessionId: 'sess-same', email: 'first@example.com' });
     const result = await saveGuestSession({ sessionId: 'sess-same', email: 'second@example.com', orderId: 'order-001' });
     expect(result.success).toBe(true);
-    // Seeded + inserted = 2 items total, but the second call should update not insert
-    const items = __getInserted('GuestOrders').filter(i => i.sessionId === 'sess-same');
-    // The second call updates so the orderId should appear
-    const updated = items.find(i => i.orderId === 'order-001');
+    // The second call should update not insert
+    const updated = __getUpdated('GuestOrders').find(i => i.orderId === 'order-001');
     expect(updated).toBeTruthy();
+  });
+
+  it('preserves original createdAt on upsert update', async () => {
+    const originalDate = new Date(Date.now() - 5000);
+    __seed('GuestOrders', [
+      { _id: 'go-orig', sessionId: 'sess-preserve', email: 'x@y.com', createdAt: originalDate, status: 'pending' },
+    ]);
+    await saveGuestSession({ sessionId: 'sess-preserve', email: 'x@y.com', orderId: 'order-new' });
+    const updated = __getUpdated('GuestOrders').find(i => i.sessionId === 'sess-preserve');
+    expect(updated).toBeTruthy();
+    expect(updated.createdAt).toBe(originalDate);
   });
 
   it('returns error for empty sessionId', async () => {
@@ -74,6 +83,18 @@ describe('saveGuestSession', () => {
 
   it('returns error for invalid email (no @)', async () => {
     const result = await saveGuestSession({ sessionId: 'sess-004', email: 'notanemail' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid email');
+  });
+
+  it('returns error for invalid email (@ only, no domain)', async () => {
+    const result = await saveGuestSession({ sessionId: 'sess-004b', email: 'user@' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid email');
+  });
+
+  it('returns error for invalid email (no TLD dot)', async () => {
+    const result = await saveGuestSession({ sessionId: 'sess-004c', email: 'user@nodot' });
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid email');
   });
@@ -167,8 +188,8 @@ describe('linkGuestOrdersToMember', () => {
 // ── getGuestOrdersByEmail ──────────────────────────────────────────
 
 describe('getGuestOrdersByEmail', () => {
-  it('returns orders for a given email', async () => {
-
+  it('returns orders for authenticated member with matching email', async () => {
+    __setMember({ _id: 'mem-d1', loginEmail: 'diana@example.com' });
     __seed('GuestOrders', [
       { _id: 'go-10', email: 'diana@example.com', orderId: 'order-A', orderTotal: 199, status: 'pending', createdAt: new Date() },
     ]);
@@ -179,22 +200,32 @@ describe('getGuestOrdersByEmail', () => {
     expect(result.orders[0].orderId).toBe('order-A');
   });
 
-  it('returns empty orders for unknown email', async () => {
-
+  it('returns empty orders for unknown email (own email, no records)', async () => {
+    __setMember({ _id: 'mem-u1', loginEmail: 'unknown@example.com' });
     const result = await getGuestOrdersByEmail('unknown@example.com');
     expect(result.success).toBe(true);
     expect(result.orders).toHaveLength(0);
   });
 
   it('returns success: false for empty email', async () => {
-
+    __setMember({ _id: 'mem-e1', loginEmail: 'x@y.com' });
     const result = await getGuestOrdersByEmail('');
     expect(result.success).toBe(false);
     expect(result.orders).toHaveLength(0);
   });
 
-  it('returned orders have expected shape', async () => {
+  it('rejects IDOR — member cannot read another member\'s orders', async () => {
+    __setMember({ _id: 'mem-attacker', loginEmail: 'attacker@example.com' });
+    __seed('GuestOrders', [
+      { _id: 'go-victim', email: 'victim@example.com', orderId: 'order-V', orderTotal: 99, status: 'pending', createdAt: new Date() },
+    ]);
+    const result = await getGuestOrdersByEmail('victim@example.com');
+    expect(result.success).toBe(false);
+    expect(result.orders).toHaveLength(0);
+  });
 
+  it('returned orders have expected shape', async () => {
+    __setMember({ _id: 'mem-e2', loginEmail: 'eve@example.com' });
     __seed('GuestOrders', [
       { _id: 'go-11', email: 'eve@example.com', orderId: 'order-B', orderTotal: 299, status: 'pending', createdAt: new Date() },
     ]);
