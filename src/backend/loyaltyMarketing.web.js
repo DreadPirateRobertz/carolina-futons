@@ -432,6 +432,21 @@ export const enrollMember = webMethod(
           description: 'Birthday bonus for sharing DOB',
           timestamp: new Date(),
         });
+
+        // Also write to MemberProfiles so annual checkBirthdayReward fires correctly
+        const [, bMonth, bDay] = birthday.split('-').map(Number);
+        const profileResult = await wixData.query('MemberProfiles')
+          .eq('memberId', memberId)
+          .limit(1)
+          .find();
+        const existingProfile = profileResult.items[0];
+        if (existingProfile) {
+          if (existingProfile.birthdayMonth == null) {
+            await wixData.update('MemberProfiles', { ...existingProfile, birthdayMonth: bMonth, birthdayDay: bDay });
+          }
+        } else {
+          await wixData.insert('MemberProfiles', { memberId, birthdayMonth: bMonth, birthdayDay: bDay });
+        }
       }
 
       logAuditEvent('LoyaltyAccounts', 'enroll', memberId, { email, welcomePoints: totalWelcome });
@@ -462,6 +477,90 @@ export const calculatePointsForOrder = webMethod(
 
     const points = Math.round(total * POINTS_PER_DOLLAR * mult);
     return { points, multiplier: `${mult}x`, tier };
+  }
+);
+
+// ── Birthday capture (CF-c5z6) ───────────────────────────────────────────────
+
+/**
+ * Save a member's birthday and award the one-time 50-point enrollment bonus.
+ *
+ * Writes birthdayMonth/birthdayDay to MemberProfiles so the annual birthday
+ * reward (checkBirthdayReward in loyaltyBonusPoints.web.js) can fire.
+ * Idempotent: points are only awarded once (guarded by PointsHistory source).
+ *
+ * @param {string} memberId
+ * @param {number} month - 1–12
+ * @param {number} day   - 1–31
+ * @returns {Promise<{success: boolean, pointsAwarded: number, message?: string, reason?: string}>}
+ * @permission SiteMember
+ */
+export const saveBirthday = webMethod(
+  Permissions.SiteMember,
+  async (memberId, month, day) => {
+    try {
+      const mid = sanitize(memberId, 50);
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      if (!mid) return { success: false, reason: 'invalid_member' };
+      if (!Number.isInteger(m) || m < 1 || m > 12) return { success: false, reason: 'invalid_month' };
+      if (!Number.isInteger(d) || d < 1 || d > 31) return { success: false, reason: 'invalid_day' };
+
+      // Check if birthday already on file in MemberProfiles
+      const profileResult = await wixData.query('MemberProfiles')
+        .eq('memberId', mid)
+        .limit(1)
+        .find();
+      const existingProfile = profileResult.items[0];
+      if (existingProfile?.birthdayMonth != null) {
+        return { success: false, reason: 'already_set' };
+      }
+
+      // Upsert MemberProfiles with birthday fields
+      if (existingProfile) {
+        await wixData.update('MemberProfiles', { ...existingProfile, birthdayMonth: m, birthdayDay: d });
+      } else {
+        await wixData.insert('MemberProfiles', { memberId: mid, birthdayMonth: m, birthdayDay: d });
+      }
+
+      // Award points only if the member is enrolled in loyalty
+      const accountResult = await wixData.query('LoyaltyAccounts')
+        .eq('memberId', mid)
+        .limit(1)
+        .find();
+      const account = accountResult.items[0];
+      if (!account) {
+        return { success: true, pointsAwarded: 0, message: 'Birthday saved' };
+      }
+
+      // Idempotency guard — only award once
+      const alreadyAwarded = await wixData.query('PointsHistory')
+        .eq('memberId', mid)
+        .eq('source', 'birthday_enrollment')
+        .limit(1)
+        .find();
+      if (alreadyAwarded.items.length > 0) {
+        return { success: true, pointsAwarded: 0, message: 'Birthday saved (points already credited)' };
+      }
+
+      await wixData.insert('PointsHistory', {
+        memberId: mid,
+        points: BIRTHDAY_BONUS_POINTS,
+        source: 'birthday_enrollment',
+        description: 'Birthday bonus for sharing DOB',
+        timestamp: new Date(),
+      });
+      await wixData.update('LoyaltyAccounts', {
+        ...account,
+        totalPoints: (account.totalPoints || 0) + BIRTHDAY_BONUS_POINTS,
+      });
+      logAuditEvent('LoyaltyAccounts', 'birthday_bonus', mid, { pointsAwarded: BIRTHDAY_BONUS_POINTS });
+
+      return { success: true, pointsAwarded: BIRTHDAY_BONUS_POINTS, message: 'Birthday saved! 50 bonus points added' };
+    } catch (err) {
+      console.error('[loyaltyMarketing] saveBirthday error:', err);
+      return { success: false, reason: 'error' };
+    }
   }
 );
 
