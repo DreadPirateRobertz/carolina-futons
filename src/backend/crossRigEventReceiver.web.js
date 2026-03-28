@@ -20,7 +20,16 @@ import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
 
-const SUPPORTED_EVENTS = new Set(['streak_extended', 'challenge_started', 'redemption_initiated']);
+const SUPPORTED_EVENTS = new Set([
+  'streak_extended',
+  'challenge_started',
+  'redemption_initiated',
+  'badge_earned',
+  'tier_changed',
+  'sommelier_completed',
+  'price_drop_watching',
+  'wishlist_synced',
+]);
 
 /**
  * Receive a cross-rig event from the mobile app.

@@ -22,6 +22,11 @@ export const INBOUND_EVENTS = new Set([
   'streak_extended',
   'challenge_started',
   'redemption_initiated',
+  'badge_earned',
+  'tier_changed',
+  'sommelier_completed',
+  'price_drop_watching',
+  'wishlist_synced',
 ]);
 
 /** Web→Mobile events (outbound) */

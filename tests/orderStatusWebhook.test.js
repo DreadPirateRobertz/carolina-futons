@@ -174,10 +174,11 @@ describe('sendWebhook: retry and error paths', () => {
   const PAYLOAD = { orderId: 'o1', status: 'confirmed', customerId: 'mbr-1' };
 
   let sendWebhook;
+  let MAX_RETRIES;
 
   beforeEach(async () => {
     __setSecrets({ MOBILE_PUSH_ENDPOINT: ENDPOINT });
-    ({ sendWebhook } = await import('../src/backend/orderStatusWebhook.web.js'));
+    ({ sendWebhook, MAX_RETRIES } = await import('../src/backend/orderStatusWebhook.web.js'));
   });
 
   // Guard: if an assertion inside a fake-timer test throws, useRealTimers still runs.
@@ -202,7 +203,7 @@ describe('sendWebhook: retry and error paths', () => {
     const result = await promise;
 
     expect(result.success).toBe(false);
-    expect(result.attempts).toBe(3);
+    expect(result.attempts).toBe(MAX_RETRIES);
     expect(result.lastError).toBe('HTTP 500');
   });
 
@@ -229,7 +230,7 @@ describe('sendWebhook: retry and error paths', () => {
     const result = await promise;
 
     expect(result.success).toBe(false);
-    expect(result.attempts).toBe(3);
+    expect(result.attempts).toBe(MAX_RETRIES);
     expect(result.lastError).toBe('ECONNREFUSED');
   });
 
