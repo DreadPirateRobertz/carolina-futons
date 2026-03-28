@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { posts as blogPosts } from 'wix-blog-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const DIGEST_TEMPLATE = 'blog_weekly_digest';
@@ -104,17 +105,21 @@ export const sendWeeklyBlogDigest = webMethod(
         queued++;
       }
 
-      // Record that we sent this week's digest
-      await wixData.insert('BlogDigestLog', {
-        weekOf,
-        postCount: recentPosts.length,
-        subscriberCount: queued,
-        sentAt: new Date(),
-      });
+      // Only record the dedup log when at least one email was sent.
+      // Writing the log on zero sends would block the entire week even if
+      // all subscribers were invalid — they'd silently miss the digest.
+      if (queued > 0) {
+        await wixData.insert('BlogDigestLog', {
+          weekOf,
+          postCount: recentPosts.length,
+          subscriberCount: queued,
+          sentAt: new Date(),
+        });
+      }
 
       return { success: true, queued, skipped, postCount: recentPosts.length };
     } catch (err) {
-      console.error('[blogDigestService] sendWeeklyBlogDigest error:', err);
+      logError('blogDigestService.sendWeeklyBlogDigest', err);
       return { success: false, queued: 0, skipped: 0, postCount: 0, error: err.message };
     }
   }
@@ -151,14 +156,15 @@ export const previewWeeklyBlogDigest = webMethod(
         alreadySent: alreadySent.items.length > 0,
       };
     } catch (err) {
-      console.error('[blogDigestService] previewWeeklyBlogDigest error:', err);
+      logError('blogDigestService.previewWeeklyBlogDigest', err);
       return { success: false, error: err.message };
     }
   }
 );
 
 /**
- * Fetch posts published on or after `since`, up to MAX_POSTS_IN_DIGEST.
+ * Fetch up to MAX_POSTS_FETCH posts from the blog API, filter to those published
+ * on or after `since`, sort newest-first, then slice to MAX_POSTS_IN_DIGEST.
  * @param {Date} since
  * @returns {Promise<Array>}
  */
@@ -205,7 +211,8 @@ async function fetchUnsubscribeEmails() {
 }
 
 /**
- * Paginate through NewsletterSubscribers, excluding unsubscribed.
+ * Paginate through NewsletterSubscribers, excluding rows with status='unsubscribed'.
+ * Note: does NOT check the Unsubscribes collection — callers must apply that filter.
  * @returns {Promise<Array<{email: string, contactId?: string}>>}
  */
 async function fetchActiveSubscribers() {

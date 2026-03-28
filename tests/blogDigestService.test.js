@@ -1,8 +1,10 @@
 // blogDigestService.test.js — CF-e3yo: Blog → newsletter automation weekly digest
 // Covers: sendWeeklyBlogDigest, previewWeeklyBlogDigest, helper functions.
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __onInsert } from 'wix-data';
+import { __reset, __seed, __onInsert, __setInsertError } from 'wix-data';
 import { __reset as blogReset, __setPosts } from 'wix-blog-backend';
+import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
+import { get_weeklyBlogDigestCron } from '../src/backend/http-functions.js';
 
 import {
   sendWeeklyBlogDigest,
@@ -34,9 +36,14 @@ function makeInsertSpy() {
   return items;
 }
 
+const CRON_KEY = 'test-cron-secret';
+const cronReq = (key = CRON_KEY) => ({ headers: { 'x-cron-secret': key } });
+
 beforeEach(() => {
   __reset();
   blogReset();
+  resetSecrets();
+  __setSecrets({ ALERT_CRON_KEY: CRON_KEY });
 });
 
 // ── sendWeeklyBlogDigest — no posts ─────────────────────────────────
@@ -463,5 +470,171 @@ describe('_formatWeekLabel', () => {
     const now = new Date('2026-03-27T00:00:00Z');
     const label = _formatWeekLabel(since, now);
     expect(label).toContain('2026');
+  });
+
+  it('produces the exact expected label for fixed inputs', () => {
+    const since = new Date('2026-03-20T00:00:00Z');
+    const now = new Date('2026-03-27T00:00:00Z');
+    const label = _formatWeekLabel(since, now);
+    // Exact assertion to prevent trivially-passing "contains 2026" tests
+    expect(label).toMatch(/March\s+20.*March\s+27.*2026/);
+  });
+});
+
+// ── get_weeklyBlogDigestCron — auth ───────────────────────────────────
+
+describe('get_weeklyBlogDigestCron — auth', () => {
+  it('returns 403 with wrong cron key', async () => {
+    const res = await get_weeklyBlogDigestCron(cronReq('bad-key'));
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 403 with missing cron key', async () => {
+    const res = await get_weeklyBlogDigestCron({ headers: {} });
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 500 when secret is not configured (getSecret throws)', async () => {
+    resetSecrets(); // clears ALERT_CRON_KEY — getSecret will throw
+    const res = await get_weeklyBlogDigestCron(cronReq());
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('get_weeklyBlogDigestCron — success', () => {
+  it('returns 200 with queued/skipped/postCount on valid key', async () => {
+    __setPosts([makePost()]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const res = await get_weeklyBlogDigestCron(cronReq());
+
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.status).toBe('ok');
+    expect(body.queued).toBe(1);
+    expect(body.postCount).toBe(1);
+    expect(body.timestamp).toBeDefined();
+  });
+
+  it('returns 200 with queued=0 when no recent posts', async () => {
+    const res = await get_weeklyBlogDigestCron(cronReq());
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.queued).toBe(0);
+    expect(body.postCount).toBe(0);
+  });
+});
+
+// ── sendWeeklyBlogDigest — dedup on zero sends ────────────────────────
+
+describe('sendWeeklyBlogDigest — dedup log only on successful sends', () => {
+  it('does not write BlogDigestLog when all subscribers are invalid', async () => {
+    __setPosts([makePost()]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'not-an-email', status: 'active' },
+    ]);
+
+    const inserted = makeInsertSpy();
+    const result = await sendWeeklyBlogDigest();
+
+    expect(result.queued).toBe(0);
+    expect(inserted.filter(i => i._coll === 'BlogDigestLog')).toHaveLength(0);
+  });
+
+  it('allows retry when previous run sent zero emails', async () => {
+    __setPosts([makePost()]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'not-an-email', status: 'active' },
+    ]);
+
+    // First run: all invalid, no log written
+    await sendWeeklyBlogDigest();
+
+    // Fix the subscriber, retry
+    __reset();
+    blogReset();
+    __setSecrets({ ALERT_CRON_KEY: CRON_KEY });
+    __setPosts([makePost()]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const result = await sendWeeklyBlogDigest();
+    expect(result.queued).toBe(1);
+  });
+});
+
+// ── sendWeeklyBlogDigest — subscriber pagination ─────────────────────
+
+describe('sendWeeklyBlogDigest — subscriber pagination', () => {
+  it('sends to all subscribers across multiple pages', async () => {
+    __setPosts([makePost()]);
+    // 51 subscribers — forces two pages (50 + 1)
+    const subs = Array.from({ length: 51 }, (_, i) => ({
+      _id: `sub-${i}`,
+      email: `user${i}@example.com`,
+      status: 'active',
+    }));
+    __seed('NewsletterSubscribers', subs);
+
+    const result = await sendWeeklyBlogDigest();
+
+    expect(result.queued).toBe(51);
+  });
+});
+
+// ── normalizePostForEmail — null/missing fields ───────────────────────
+
+describe('normalizePostForEmail — missing fields gracefully handled', () => {
+  it('handles post with no media', async () => {
+    __setPosts([makePost({ media: undefined })]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const inserted = makeInsertSpy();
+    await sendWeeklyBlogDigest();
+
+    const queueItem = inserted.find(i => i._coll === 'EmailQueue' && i.templateId === _DIGEST_TEMPLATE);
+    const posts = JSON.parse(queueItem.variables.postsJson);
+    expect(posts[0].coverImageUrl).toBe('');
+  });
+
+  it('handles post with no categories', async () => {
+    __setPosts([makePost({ categories: undefined })]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const inserted = makeInsertSpy();
+    await sendWeeklyBlogDigest();
+
+    const queueItem = inserted.find(i => i._coll === 'EmailQueue' && i.templateId === _DIGEST_TEMPLATE);
+    const posts = JSON.parse(queueItem.variables.postsJson);
+    expect(posts[0].category).toBe('');
+  });
+
+  it('excludes post with null publishedDate from digest', async () => {
+    __setPosts([makePost({ publishedDate: null })]);
+
+    const result = await sendWeeklyBlogDigest();
+
+    expect(result.postCount).toBe(0);
+  });
+
+  it('strips non-https coverImageUrl', async () => {
+    __setPosts([makePost({ media: { wixMedia: { image: { url: 'javascript:alert(1)' } } } })]);
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
+    ]);
+
+    const inserted = makeInsertSpy();
+    await sendWeeklyBlogDigest();
+
+    const queueItem = inserted.find(i => i._coll === 'EmailQueue' && i.templateId === _DIGEST_TEMPLATE);
+    const posts = JSON.parse(queueItem.variables.postsJson);
+    expect(posts[0].coverImageUrl).toBe('');
   });
 });
