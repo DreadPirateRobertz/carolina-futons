@@ -33,6 +33,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -143,6 +144,7 @@ export const applyForTradeAccount = webMethod(
         _createdDate: new Date().toISOString(),
       });
 
+      logAuditEvent('TradeAccounts', 'submit', contactEmail, { businessName });
       return { success: true, message: 'Application submitted. We will review within 2-3 business days.' };
     } catch (err) {
       console.error('applyForTradeAccount error:', err);

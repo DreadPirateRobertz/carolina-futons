@@ -31,6 +31,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 /** Constant-time string comparison to prevent timing attacks on cancel tokens. */
 function timingSafeEqual(a, b) {
@@ -221,6 +222,7 @@ export const reserveDeliveryWindow = webMethod(
       record.status = 'scheduled';
       await wixData.update('DeliverySchedule', record);
 
+      logAuditEvent('DeliverySchedule', 'reserve', rateLimitKey, { date, timeSlot, deliveryType });
       return {
         success: true,
         reservationId: record._id,

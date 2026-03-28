@@ -25,6 +25,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Rate Limiting (CF-rw9g) ──────────────────────────────────────────
 // CMS collection: EmailRateLimit (key, count, windowStart)
@@ -164,6 +165,7 @@ export const sendEmail = webMethod(
         status: 'new',
       });
 
+      logAuditEvent('ContactSubmissions', 'send_email', cleanEmail, { subject: cleanSubject });
       return { success: true };
     } catch (err) {
       console.error('Error sending contact email:', err);
@@ -267,6 +269,7 @@ export const submitSwatchRequest = webMethod(
         console.error('Swatch confirmation email failed (non-blocking):', confirmErr);
       }
 
+      logAuditEvent('ContactSubmissions', 'swatch_request', cleanEmail, { product: cleanProductName });
       return { success: true };
     } catch (err) {
       console.error('Error submitting swatch request:', err);

@@ -21,6 +21,7 @@ import { triggeredEmails, contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const MAX_SWATCHES = 3;
 const RATE_LIMIT_DAYS = 30;
@@ -251,6 +252,7 @@ export const submitFabricSampleRequest = webMethod(
         console.error('[fabricSampleService] No contactId — skipping automation emails. Manual fulfillment required for:', contact.email);
       }
 
+      logAuditEvent('FabricSampleRequests', 'submit', contact.email, { swatchCount: cleanIds.length });
       return { success: true, requestId: inserted._id };
     } catch (err) {
       console.error('[fabricSampleService] submitFabricSampleRequest error:', err);

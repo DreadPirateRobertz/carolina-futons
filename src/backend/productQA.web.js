@@ -32,6 +32,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const OWNER_EMAIL_TEMPLATE = 'new_product_question';
 const SITE_OWNER_SECRET = 'SITE_OWNER_CONTACT_ID';
@@ -443,6 +444,7 @@ export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ produc
     // Notify owner — best-effort
     notifyOwnerOfQuestion(cleanProductId, cleanQuestion, cleanName).catch(() => {});
 
+    logAuditEvent('ProductQuestions', 'submit', cleanEmail, { productId: cleanProductId });
     return { success: true, data: { _id: inserted._id, question: cleanQuestion } };
   } catch (err) {
     return { success: false, error: 'Failed to submit question' };

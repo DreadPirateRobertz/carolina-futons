@@ -28,6 +28,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
 
@@ -543,6 +544,7 @@ export const submitGuestReturn = webMethod(
       };
 
       await wixData.insert(COLLECTION, record);
+      logAuditEvent('Returns', 'submit_return', record.email, { rmaNumber, orderId: record.orderId });
       return { success: true, rmaNumber };
     } catch (err) {
       console.error('[returnsService] submitGuestReturn error:', err);

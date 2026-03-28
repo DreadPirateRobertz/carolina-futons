@@ -49,6 +49,7 @@ import { validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import { getBundleTag } from 'public/bundleHelpers';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const COLLECTION = 'Bundles';
 const UBC_COLLECTION = 'UserBundleCart';
@@ -205,6 +206,7 @@ export const addBundle = webMethod(
         logError('bundleService.addBundle.userBundleCart', ubcErr);
       }
 
+      logAuditEvent('UserBundleCart', 'add_bundle', cleanSessionId || cleanId, { bundleTag });
       return {
         success: true,
         bundleTag,

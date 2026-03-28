@@ -18,6 +18,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 const HIGH_INTENT_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
 const RECOVERY_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
@@ -194,6 +195,7 @@ export const captureRemindMeRequest = webMethod(
         });
       }
 
+      logAuditEvent('BrowseSessions', 'remind_me', cleanEmail, { sessionId: cleanSessionId });
       return { success: true };
     } catch (err) {
       console.error('[browseAbandonment] Error capturing remind-me:', err);

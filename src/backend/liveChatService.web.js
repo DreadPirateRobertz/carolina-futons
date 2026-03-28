@@ -11,6 +11,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ─── Office Hours Config ─────────────────────────────────────────
 
@@ -163,6 +164,7 @@ export const sendMessage = webMethod(
 
       const inserted = await wixData.insert('ChatMessages', record);
 
+      logAuditEvent('ChatMessages', 'insert', record.sessionId);
       return { success: true, messageId: inserted._id };
     } catch (err) {
       console.error('Error sending chat message:', err);
@@ -253,6 +255,7 @@ export const createSupportTicket = webMethod(
 
       const inserted = await wixData.insert('SupportTickets', ticket);
 
+      logAuditEvent('SupportTickets', 'submit', email.trim());
       return { success: true, ticketId: inserted._id };
     } catch (err) {
       console.error('Error creating support ticket:', err);

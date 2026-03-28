@@ -38,6 +38,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateSlug } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logAuditEvent } from 'backend/utils/auditLog';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -391,6 +392,7 @@ export const markItemPurchased = webMethod(Permissions.Anyone, async (itemId, da
       purchasedBy: buyerName,
     });
 
+    logAuditEvent('GiftRegistryItems', 'purchase', itemId, { quantity: purchaseQty, buyerName });
     return { success: true, data: { purchasedQuantity: purchaseQty, remaining: remaining - purchaseQty } };
   } catch (err) {
     return { success: false, error: 'Failed to mark item as purchased' };
