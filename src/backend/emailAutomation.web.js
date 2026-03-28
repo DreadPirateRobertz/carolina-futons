@@ -92,6 +92,12 @@ const SEQUENCES = {
       { step: 1, templateId: 'review_thank_you', delayHours: 0, description: 'Thank you for your review + 10% discount' },
     ],
   },
+  swatch_followup: {
+    steps: [
+      { step: 1, templateId: 'swatch_followup_arrived', delayHours: 72, description: 'Day 3 post-ship: Did your swatches arrive? Fabric preference + $5 credit (CF-jm5t)' },
+      { step: 2, templateId: 'swatch_followup_decide', delayHours: 240, description: 'Day 10 post-ship: Still deciding? Consultation offer + credit expiry (CF-jm5t)' },
+    ],
+  },
 };
 
 // Maximum retry attempts for failed emails
@@ -680,6 +686,91 @@ export const triggerReviewRewardPrompt = webMethod(
     } catch (err) {
       console.error('[CF-qy79] Error queuing review reward prompt:', err);
       return { success: false };
+    }
+  }
+);
+
+// CF-jm5t: Swatch credit expiry window
+const SWATCH_CREDIT_EXPIRY_DAYS = 30;
+const CONSULTATION_URL = `${SITE_URL_BASE}/book-consultation`;
+
+/**
+ * Queue swatch follow-up emails after swatch shipment (Day 3 + Day 10).
+ * Called by markSwatchShipped in swatchRequest.web.js.
+ *
+ * @param {string} contactId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {string[]} fabricNames - selected swatch fabric names
+ * @returns {Promise<{success: boolean, queued: number}>}
+ */
+export const triggerSwatchFollowupSequence = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, fabricNames) => {
+    try {
+      const cleanEmail = (email || '').toLowerCase().trim();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanName = sanitize(firstName || '', 100).trim();
+      const cleanFabricNames = (Array.isArray(fabricNames) ? fabricNames : [])
+        .map(n => sanitize(String(n), 100).trim())
+        .filter(Boolean);
+
+      const now = new Date();
+      const creditExpiry = new Date(now.getTime() + SWATCH_CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+      // Derive a fabric shop URL from the first fabric name (slug-ify for URL)
+      const primaryFabric = cleanFabricNames[0] || '';
+      const fabricSlug = primaryFabric.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const fabricShopUrl = fabricSlug
+        ? `${SITE_URL_BASE}/shop?fabric=${fabricSlug}`
+        : `${SITE_URL_BASE}/collections/all`;
+
+      const baseVars = {
+        firstName: cleanName,
+        email: cleanEmail,
+        fabricNames: cleanFabricNames,
+        creditAmount: '5',
+        creditExpiry: creditExpiry.toISOString(),
+      };
+
+      let queued = 0;
+      for (const step of SEQUENCES.swatch_followup.steps) {
+        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        const variables = { ...baseVars };
+
+        // Step 1 (CF-jm5t): fabric preference + shop link
+        if (step.step === 1) {
+          variables.fabricShopUrl = fabricShopUrl;
+        }
+
+        // Step 2 (CF-jm5t): consultation offer
+        if (step.step === 2) {
+          variables.consultationUrl = CONSULTATION_URL;
+        }
+
+        await wixData.insert('EmailQueue', {
+          templateId: step.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: contactId || '',
+          variables,
+          sequenceType: 'swatch_followup',
+          sequenceStep: step.step,
+          status: 'pending',
+          scheduledFor,
+          sentAt: null,
+          attempt: 0,
+          lastError: '',
+          abVariant: null,
+          createdAt: now,
+        });
+        queued++;
+      }
+
+      return { success: true, queued };
+    } catch (err) {
+      logError('triggerSwatchFollowupSequence', err);
+      return { success: false, queued: 0 };
     }
   }
 );

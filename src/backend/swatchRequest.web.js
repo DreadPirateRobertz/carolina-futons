@@ -18,6 +18,7 @@ import { webMethod, Permissions } from 'wix-web-module';
 import { contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { triggerSwatchFollowupSequence } from 'backend/emailAutomation.web';
 
 // Swatch nurture sequence: confirmation + Day 3 + Day 7 + Day 14
 const SWATCH_NURTURE = [
@@ -225,6 +226,45 @@ export const submitSwatchRequest = webMethod(
     } catch (err) {
       console.error('[swatchRequest] submitSwatchRequest error:', err);
       return { success: false, error: err.message || 'Failed to submit swatch request.' };
+    }
+  }
+);
+
+/**
+ * Mark a swatch request as shipped and trigger the Day 3 / Day 10 follow-up sequence.
+ * Called by Wix Automations when a swatch order is fulfilled.
+ *
+ * @param {string} requestId - SwatchRequests CMS _id
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const markSwatchShipped = webMethod(
+  Permissions.Admin,
+  async (requestId) => {
+    try {
+      const cleanId = sanitize(String(requestId || ''), 100).trim();
+      if (!cleanId) return { success: false, error: 'requestId is required' };
+
+      const result = await wixData.query('SwatchRequests').eq('_id', cleanId).limit(1).find();
+      const request = result.items[0];
+      if (!request) return { success: false, error: 'Swatch request not found' };
+
+      // Update status to shipped
+      await wixData.update('SwatchRequests', { ...request, status: 'shipped', shippedAt: new Date() });
+
+      // Fire-and-forget: queue follow-up sequence — don't fail the status update if email queuing fails
+      const nameParts = (request.contactName || '').split(' ');
+      const firstName = nameParts[0] || '';
+      triggerSwatchFollowupSequence(
+        request.contactId || '',
+        request.contactEmail || '',
+        firstName,
+        request.swatchNames || [],
+      ).catch(err => console.error('[swatchRequest] markSwatchShipped: failed to queue followup:', err));
+
+      return { success: true };
+    } catch (err) {
+      console.error('[swatchRequest] markSwatchShipped error:', err);
+      return { success: false, error: err.message || 'Failed to mark swatch as shipped.' };
     }
   }
 );
