@@ -24,6 +24,7 @@ import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWe
 import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
 export { post_getLeaderboard } from 'backend/leaderboard-http';
 import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
+import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
 
 /**
@@ -2237,4 +2238,38 @@ export async function post_busEvent(request) {
   }
 
   return ok({ body: json({ received: true, eventId: body.eventId }), headers: JSON_HEADERS });
+}
+
+// ── CMS Garbage Collection Cron ───────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/cmsGarbageCollect
+// Schedule daily at 3 AM via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// Purges: rate-limit records >24h, browse sessions >30d, email queue sent/cancelled >7d,
+// orphan viewer sessions >48h, audit log >90d (365d for flagged records).
+// CF-au1w
+export async function get_cmsGarbageCollect(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const result = await runGarbageCollection();
+    return ok({
+      body: JSON.stringify(result),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (cmsGarbageCollect):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
 }

@@ -125,7 +125,7 @@ describe('submitQuestion — owner email notification', () => {
 describe('insertGuestQuestion', () => {
   it('inserts question without member authentication', async () => {
     let inserted = null;
-    __onInsert((_col, item) => { inserted = item; });
+    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
 
     const result = await insertGuestQuestion({
       productId: 'product-1',
@@ -143,7 +143,7 @@ describe('insertGuestQuestion', () => {
 
   it('falls back to Customer when no name provided', async () => {
     let inserted = null;
-    __onInsert((_col, item) => { inserted = item; });
+    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
 
     await insertGuestQuestion({
       productId: 'product-1',
@@ -230,7 +230,7 @@ describe('HTTP get_productQA', () => {
 describe('HTTP post_submitQuestion', () => {
   it('inserts question and returns 200 success', async () => {
     let inserted = null;
-    __onInsert((_col, item) => { inserted = item; });
+    __onInsert((col, item) => { if (col === 'ProductQuestions') inserted = item; });
 
     const req = makeRequest({
       body: { productId: 'product-1', question: 'Can this futon be used as a permanent bed?', name: 'Tom', email: 'tom@example.com' },
