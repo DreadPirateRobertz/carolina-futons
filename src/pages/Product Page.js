@@ -451,7 +451,6 @@ async function loadRecentlyViewed() {
       $w('#recentlyViewedSection').accessibility.ariaLabel = 'Recently viewed products';
       $w('#recentlyViewedSection').accessibility.role = 'region';
     } catch (e) {}
-    repeater.data = recent;
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#recentName').text = itemData.name; } catch (e) {}
@@ -482,7 +481,8 @@ async function loadRecentlyViewed() {
         }
       } catch (e) {}
     });
-  } catch (e) {}
+    repeater.data = recent;
+  } catch (e) { console.error('[RecentlyViewedWidget] loadRecentlyViewed error', e); }
 }
 
 async function loadAlsoBought() {

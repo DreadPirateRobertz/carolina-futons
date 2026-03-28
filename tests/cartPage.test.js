@@ -61,8 +61,8 @@ vi.mock('backend/financingCalc.web', () => ({
   getCartFinancing: vi.fn(),
 }));
 
-vi.mock('public/galleryHelpers', () => ({
-  getRecentlyViewed: vi.fn(() => []),
+vi.mock('public/RecentlyViewedWidget.js', () => ({
+  renderWidget: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('public/cartService', () => ({
@@ -454,21 +454,10 @@ describe('financing', () => {
 // ── Recently Viewed ─────────────────────────────────────────────────
 
 describe('recently viewed', () => {
-  it('collapses section when no recent products', async () => {
+  it('calls renderWidget from RecentlyViewedWidget on page load', async () => {
     await loadPage();
-    expect(getEl('#cartRecentSection').collapse).toHaveBeenCalled();
-  });
-
-  it('populates recently viewed repeater', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv-1', name: 'Side Table', slug: 'side-table', mainMedia: 'table.jpg', price: '$79.99' },
-    ]);
-
-    await loadPage();
-
-    const repeater = getEl('#cartRecentRepeater');
-    expect(repeater.data).toHaveLength(1);
+    const { renderWidget } = await import('public/RecentlyViewedWidget.js');
+    expect(renderWidget).toHaveBeenCalledWith($w);
   });
 });
 
@@ -656,97 +645,6 @@ describe('tier progress (deep)', () => {
 
     const { updateSpendToTierBar } = await import('public/CartSpendToTierBar.js');
     expect(updateSpendToTierBar).toHaveBeenCalled();
-  });
-});
-
-// ── Recently Viewed (Deep) ─────────────────────────────────────────
-
-describe('recently viewed (deep)', () => {
-  it('filters out items already in cart', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'prod-1', name: 'In Cart', slug: 'in-cart', mainMedia: 'x.jpg', price: '$99' },
-      { _id: 'rv-new', name: 'Not In Cart', slug: 'not-in-cart', mainMedia: 'y.jpg', price: '$49' },
-    ]);
-    await loadPage();
-    const repeater = getEl('#cartRecentRepeater');
-    expect(repeater.data).toHaveLength(1);
-    expect(repeater.data[0]._id).toBe('rv-new');
-  });
-
-  it('expands section when recent products exist', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' },
-    ]);
-    await loadPage();
-    expect(getEl('#cartRecentSection').expand).toHaveBeenCalled();
-  });
-
-  it('renders repeater items with image, name, and price', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv-1', name: 'Side Table', slug: 'side-table', mainMedia: 'table.jpg', price: '$79.99' },
-    ]);
-    await loadPage();
-
-    const repeater = getEl('#cartRecentRepeater');
-    expect(repeater.onItemReady).toHaveBeenCalled();
-
-    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
-    const itemEls = new Map();
-    const $item = (sel) => {
-      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
-      return itemEls.get(sel);
-    };
-    itemReadyFn($item, { _id: 'rv-1', name: 'Side Table', slug: 'side-table', mainMedia: 'table.jpg', price: '$79.99' });
-
-    expect($item('#cartRecentImage').src).toBe('table.jpg');
-    expect($item('#cartRecentImage').alt).toContain('Side Table');
-    expect($item('#cartRecentName').text).toBe('Side Table');
-    expect($item('#cartRecentPrice').text).toBe('$79.99');
-  });
-
-  it('makes recent items clickable for navigation', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' },
-    ]);
-    const { makeClickable } = await import('public/a11yHelpers');
-    await loadPage();
-
-    const repeater = getEl('#cartRecentRepeater');
-    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
-    const itemEls = new Map();
-    const $item = (sel) => {
-      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
-      return itemEls.get(sel);
-    };
-    itemReadyFn($item, { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' });
-
-    const clickableCalls = makeClickable.mock.calls.filter(
-      c => c[0] === $item('#cartRecentImage') || c[0] === $item('#cartRecentName')
-    );
-    expect(clickableCalls.length).toBe(2);
-  });
-
-  it('sets ARIA label on recent item images', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv-1', name: 'Desk', slug: 'desk', mainMedia: 'desk.jpg', price: '$199' },
-    ]);
-    await loadPage();
-
-    const repeater = getEl('#cartRecentRepeater');
-    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
-    const itemEls = new Map();
-    const $item = (sel) => {
-      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
-      return itemEls.get(sel);
-    };
-    itemReadyFn($item, { _id: 'rv-1', name: 'Desk', slug: 'desk', mainMedia: 'desk.jpg', price: '$199' });
-
-    expect($item('#cartRecentImage').accessibility.ariaLabel).toContain('Desk');
   });
 });
 
