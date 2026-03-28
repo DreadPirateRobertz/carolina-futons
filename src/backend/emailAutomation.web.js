@@ -862,8 +862,8 @@ export const unsubscribeContact = webMethod(
       const cleanEmail = sanitize(email, 254).toLowerCase();
       if (!validateEmail(cleanEmail)) return { success: false };
 
-      const { allowed } = await checkRateLimit('UnsubscribeRateLimit', cleanEmail, { max: 10 });
-      if (!allowed) return { success: false };
+      const { allowed } = await checkRateLimit('UnsubscribeRateLimit', cleanEmail, { max: 100 });
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       const cleanType = sanitize(sequenceType, 50);
 

@@ -168,7 +168,7 @@ export const addProtectionPlan = webMethod(
 
       const rateLimitKey = sessionId ? sanitize(sessionId, 100) : cleanId;
       const { allowed } = await checkRateLimit('ProtectionPlanRateLimit', rateLimitKey, { max: 10 });
-      if (!allowed) return { success: false };
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       const cleanSession = sanitize(sessionId || '', 100);
 

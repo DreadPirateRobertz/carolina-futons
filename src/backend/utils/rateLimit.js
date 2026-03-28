@@ -11,6 +11,7 @@
 
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 export const RATE_LIMIT_MAX = 3;
 export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -73,7 +74,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
     });
     return { allowed: true };
   } catch (err) {
-    console.warn(`[rateLimit] Check failed for ${collection}, allowing request:`, err.message, err.stack);
+    logError(`rateLimit.checkRateLimit[${collection}/${cleanKey}]`, err);
     return { allowed: true }; // Fail open — don't block on DB errors
   }
 }

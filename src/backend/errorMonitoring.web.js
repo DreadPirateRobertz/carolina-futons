@@ -107,8 +107,12 @@ export const logError = webMethod(
       const groupKey = generateGroupKey(cleanMessage, cleanContext);
 
       const rateLimitKey = cleanUserId || cleanPage || 'anon';
-      const { allowed } = await checkRateLimit('ErrorLogRateLimit', rateLimitKey, { max: 30, windowMs: 60_000 });
-      if (!allowed) return { success: true }; // Silent drop to prevent error flood
+      const rateLimitMax = rateLimitKey === 'anon' ? 200 : 30;
+      const { allowed } = await checkRateLimit('ErrorLogRateLimit', rateLimitKey, { max: rateLimitMax, windowMs: 60_000 });
+      if (!allowed) {
+        console.warn(`[errorMonitoring] Error flood throttled for key=${rateLimitKey}`);
+        return { success: true, throttled: true };
+      }
 
       // Insert the error log entry
       await wixData.insert(ERROR_LOGS_COLLECTION, {
