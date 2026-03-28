@@ -26,7 +26,7 @@ import { getBatchPaymentBadges } from 'backend/paymentOptions.web';
 import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
-import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, renderCardFinancingBadge, renderSimplePrice } from 'public/productCardHelpers.js';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, renderCardFinancingBadge, renderSimplePrice, renderCardAssemblyBadge } from 'public/productCardHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
@@ -689,6 +689,13 @@ function initProductGrid() {
           console.warn('[CategoryPage] could not hide #gridFinancingBadge:', e?.message);
         }
       }
+
+      // Assembly difficulty badge (Easy/Medium/Expert) — cf-73fz
+      renderCardAssemblyBadge(
+        $item('#gridAssemblyBadge'),
+        itemData.assemblyDifficulty,
+        itemData.assemblyTimeMinutes
+      );
 
       // Quick view button (keyboard-accessible)
       try {
