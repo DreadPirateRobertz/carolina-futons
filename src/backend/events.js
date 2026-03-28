@@ -221,7 +221,19 @@ export async function wixEcom_onOrderCreated(event) {
 
       // Award points for purchase — web customers earn points on every order.
       // CF-tf1: this call was missing, leaving web-only customers with zero points.
-      await receiveGamificationEvent('gamification_order_complete', { orderTotal: Number(total) }, memberId);
+      const gamResult = await receiveGamificationEvent('gamification_order_complete', { orderTotal: Number(total) }, memberId);
+
+      // cf-8onx: tier milestone notifications — fire when award crosses a threshold
+      if (gamResult.success && email) {
+        const newTotal = gamResult.newTotal || 0;
+        const oldTotal = newTotal - (gamResult.pointsEarned || 0);
+        try {
+          const { checkAndTriggerTierMilestone } = await import('backend/emailAutomation.web');
+          await checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal);
+        } catch (err) {
+          console.error('[events] Error checking tier milestone:', err);
+        }
+      }
 
       const challengeQuery = await wixData
         .query('Challenges')

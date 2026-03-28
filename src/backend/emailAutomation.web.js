@@ -104,6 +104,14 @@ const SEQUENCES = {
       { step: 1, templateId: 'consultation_followup', delayHours: 2, description: 'Post-consultation follow-up: personalized product picks + CONSULT10 discount (CF-tcj5)' },
     ],
   },
+  tier_milestone: {
+    steps: [
+      { step: 1, templateId: 'tier_mountain_guide_approach', delayHours: 0, description: 'Almost Mountain Guide — 100 pts away from tier upgrade (CF-8onx)' },
+      { step: 2, templateId: 'tier_mountain_guide_achieved', delayHours: 0, description: 'Mountain Guide achieved! Welcome to the next tier (CF-8onx)' },
+      { step: 3, templateId: 'tier_summit_master_approach', delayHours: 0, description: 'Almost Summit Master — 100 pts away from tier upgrade (CF-8onx)' },
+      { step: 4, templateId: 'tier_summit_master_achieved', delayHours: 0, description: 'Summit Master achieved! Welcome to the next tier (CF-8onx)' },
+    ],
+  },
 };
 
 // Maximum retry attempts for failed emails
@@ -1991,6 +1999,93 @@ export const getCampaignAnalytics = webMethod(
     }
   }
 );
+
+// ── CF-8onx: Tier milestone notification emails ───────────────────────
+
+/**
+ * Tier milestone definitions — threshold is the point value that triggers the notification.
+ * Approach milestones fire 100 pts before the tier; achieved milestones fire on crossing.
+ * milestoneKey is used as a dedup key: `{memberId}_{milestoneKey}`.
+ */
+export const TIER_MILESTONES = [
+  { threshold: 400,  milestoneKey: 'mountain_guide_approach', templateId: 'tier_mountain_guide_approach', nextTier: 'Mountain Guide', pointsToNext: 100 },
+  { threshold: 500,  milestoneKey: 'mountain_guide_achieved', templateId: 'tier_mountain_guide_achieved', nextTier: 'Summit Master',  pointsToNext: 1500 },
+  { threshold: 1900, milestoneKey: 'summit_master_approach',  templateId: 'tier_summit_master_approach',  nextTier: 'Summit Master',  pointsToNext: 100 },
+  { threshold: 2000, milestoneKey: 'summit_master_achieved',  templateId: 'tier_summit_master_achieved',  nextTier: 'Blue Ridge Legend', pointsToNext: 3000 },
+];
+
+const TIER_MILESTONE_COLLECTION = 'TierMilestoneNotifications';
+
+/**
+ * Check whether a point award just crossed any tier milestone threshold, and if so,
+ * queue the appropriate notification email. Idempotent — uses TierMilestoneNotifications
+ * for dedup so each member only receives each milestone email once.
+ *
+ * @param {string} memberId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {number} newTotal - Points total after the award
+ * @param {number} oldTotal - Points total before the award
+ * @returns {Promise<void>}
+ */
+export async function checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal) {
+  const cleanMemberId = sanitize(String(memberId || ''), 100).trim();
+  const cleanEmail = (email || '').toLowerCase().trim();
+  if (!cleanMemberId || !cleanEmail) return;
+
+  const cleanName = sanitize(firstName || '', 100).trim();
+  const now = new Date();
+
+  for (const milestone of TIER_MILESTONES) {
+    // Threshold crossed = oldTotal was below threshold AND newTotal is at or above it
+    if (oldTotal < milestone.threshold && newTotal >= milestone.threshold) {
+      const dedupId = `${cleanMemberId}_${milestone.milestoneKey}`;
+
+      // Dedup check — skip if already sent
+      let alreadySent = false;
+      try {
+        const existing = await wixData.get(TIER_MILESTONE_COLLECTION, dedupId);
+        if (existing) alreadySent = true;
+      } catch (_) { /* record not found = not sent yet */ }
+
+      if (alreadySent) continue;
+
+      // Queue email
+      try {
+        await wixData.insert('EmailQueue', {
+          templateId: milestone.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: '',
+          variables: {
+            firstName: cleanName,
+            currentPoints: newTotal,
+            pointsToNext: milestone.pointsToNext,
+            nextTier: milestone.nextTier,
+          },
+          sequenceType: 'tier_milestone',
+          sequenceStep: TIER_MILESTONES.indexOf(milestone) + 1,
+          status: 'pending',
+          scheduledFor: now,
+          sentAt: null,
+          attempt: 0,
+          lastError: '',
+          abVariant: null,
+          createdAt: now,
+        });
+
+        // Record dedup
+        await wixData.insert(TIER_MILESTONE_COLLECTION, {
+          _id: dedupId,
+          memberId: cleanMemberId,
+          milestoneKey: milestone.milestoneKey,
+          sentAt: now,
+        });
+      } catch (err) {
+        logError(`checkAndTriggerTierMilestone:${milestone.milestoneKey}`, err);
+      }
+    }
+  }
+}
 
 // Export sequence definitions for testing
 export const _SEQUENCES = SEQUENCES;
