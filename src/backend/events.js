@@ -209,7 +209,7 @@ export async function wixEcom_onOrderCreated(event) {
 
   try {
     const { triggerPostPurchaseSequence } = await import('backend/emailAutomation.web');
-    await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems);
+    await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems, { memberId });
   } catch (err) {
     console.error('[events] Error triggering post-purchase sequence:', err);
   }

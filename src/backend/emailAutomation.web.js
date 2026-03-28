@@ -74,7 +74,7 @@ const SEQUENCES = {
       { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
       { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
       { step: 4, templateId: 'post_purchase_review_reward', delayHours: 336, description: 'Day-14 review prompt — earn 100 pts (CF-qy79)' },
-      { step: 5, templateId: 'post_purchase_referral', delayHours: 336, description: 'Day-14 referral invite — share the love, earn $25 (CF-heou)' },
+      { step: 5, templateId: 'post_purchase_referral', delayHours: 360, description: 'Day-15 referral invite — share the love, earn $25 (CF-6p0o)' },
     ],
   },
   reengagement: {
@@ -412,7 +412,7 @@ export const triggerWelcomeSeries = webMethod(
  */
 export const triggerPostPurchaseSequence = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName, orderNumber, total, lineItems) => {
+  async (contactId, email, firstName, orderNumber, total, lineItems, opts = {}) => {
     try {
       if (!email) return { success: false, queued: 0 };
 
@@ -459,19 +459,25 @@ export const triggerPostPurchaseSequence = webMethod(
         }
 
         // Step 5 (Day 14 referral invite): generate personalized referral link (CF-6p0o)
-        if (step.step === 5 && cleanContactId) {
-          try {
-            const { _getReferralLinkForMember } = await import('backend/referralService.web');
-            const refData = await _getReferralLinkForMember(cleanContactId);
-            if (refData) {
-              variables.referralUrl = refData.referralUrl;
-              variables.referralCode = refData.referralCode;
+        // CF-lwkt fix: use memberId (not contactId) — different Wix namespaces.
+        // Skip referral enrichment for guest checkouts (no memberId).
+        if (step.step === 5) {
+          const memberId = sanitize(opts?.memberId || '', 50);
+          if (memberId) {
+            try {
+              const { _getReferralLinkForMember } = await import('backend/referralService.web');
+              const refData = await _getReferralLinkForMember(memberId);
+              if (refData) {
+                variables.referralUrl = refData.referralUrl;
+                variables.referralCode = refData.referralCode;
+              }
+            } catch (refErr) {
+              console.error('[emailAutomation] Referral link generation failed (non-blocking):', refErr);
             }
-          } catch (refErr) {
-            console.error('[emailAutomation] Referral link generation failed (non-blocking):', refErr);
-            // Non-fatal: email still sends, referralUrl will be empty
-            // Template should handle missing referralUrl gracefully
           }
+          // Sentinel defaults — template should handle gracefully
+          if (!variables.referralUrl) variables.referralUrl = 'https://www.carolinafutons.com/referral';
+          if (!variables.referralCode) variables.referralCode = '';
         }
 
         await queueEmail({
