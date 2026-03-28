@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import { allProducts, analyticsRecords, futonFrame, sampleOrder } from './fixtures/products.js';
 import {
   trackProductView,
@@ -110,6 +111,7 @@ describe('trackAddToCart', () => {
   });
 
   it('does not insert a new record for untracked product', async () => {
+    withRateLimit('AnalyticsEventRateLimit', { key: 'prod-nonexistent' });
     let inserted = false;
     __onInsert((col) => { if (col === 'ProductAnalytics') inserted = true; });
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { __seed, __onUpdate } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import { allProducts, analyticsRecords, futonFrame, futonMattress, sampleOrder } from './fixtures/products.js';
 
 // ── Gap 1: view_item_list (Category Page) ─────────────────────────────
@@ -163,6 +164,7 @@ describe('trackPurchase (Gap 3: purchaseCount increment)', () => {
   it('does not insert a new record for untracked product', async () => {
     let inserted = false;
     const { __onInsert } = await import('./__mocks__/wix-data.js');
+    withRateLimit('AnalyticsEventRateLimit', { key: 'prod-nonexistent' });
     __onInsert((col) => { if (col === 'ProductAnalytics') inserted = true; });
 
     await trackPurchase('prod-nonexistent');

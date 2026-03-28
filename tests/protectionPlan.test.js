@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { prependRateLimitQuery } from './helpers/withRateLimit.js';
 
 // Mock wix modules
 vi.mock('wix-web-module', () => ({
@@ -277,9 +278,7 @@ describe('protectionPlan', () => {
       });
 
       const { findFn } = setupQueryMock();
-      // Rate limit query result (no existing rate record)
-      findFn.mockResolvedValueOnce({ items: [], totalCount: 0 });
-      // Business query — existing plan selection
+      prependRateLimitQuery(findFn);
       findFn.mockResolvedValueOnce({
         items: [{ _id: 'existing1', productId: 'prod1', tier: 'basic', sessionId: 'sess1' }],
         totalCount: 1,

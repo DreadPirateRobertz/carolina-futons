@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate, __setQueryError } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import {
   getStockStatus,
   getInventoryDashboard,
@@ -291,6 +292,7 @@ describe('signUpBackInStock', () => {
       { _id: 'bis-1', email: 'test@example.com', productId: 'prod-1', notified: false },
     ]);
 
+    withRateLimit('BackInStockRateLimit', { key: 'test@example.com' });
     let insertCount = 0;
     __onInsert((col) => { if (col === 'BackInStockSignups') insertCount++; });
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { prependRateLimitQuery } from './helpers/withRateLimit.js';
 
 // Mock wix modules
 vi.mock('wix-web-module', () => ({
@@ -517,9 +518,7 @@ describe('dynamicPricing', () => {
 
   describe('recordDemandSignal', () => {
     it('records a view signal', async () => {
-      // Rate limit query (no existing record)
-      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
-      // Business query — existing metrics
+      prependRateLimitQuery(mockQueryChain.find);
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -536,7 +535,7 @@ describe('dynamicPricing', () => {
     });
 
     it('records a cart_add signal', async () => {
-      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
+      prependRateLimitQuery(mockQueryChain.find);
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -553,7 +552,7 @@ describe('dynamicPricing', () => {
     });
 
     it('records a purchase signal', async () => {
-      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
+      prependRateLimitQuery(mockQueryChain.find);
       mockQueryChain.find.mockResolvedValueOnce({
         items: [{
           _id: 'metrics1', productId: 'prod1',
@@ -570,9 +569,7 @@ describe('dynamicPricing', () => {
     });
 
     it('creates new metrics record if none exists', async () => {
-      // Rate limit query
-      mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
-      // Business query — no existing metrics
+      prependRateLimitQuery(mockQueryChain.find);
       mockQueryChain.find.mockResolvedValueOnce({ items: [], totalCount: 0 });
 
       const result = await recordDemandSignal('prod1', 'view');
@@ -600,10 +597,8 @@ describe('dynamicPricing', () => {
     });
 
     it('handles wix-data errors gracefully', async () => {
-      // Rate limit query fails (checkRateLimit fails open)
-      mockQueryChain.find.mockRejectedValueOnce(new Error('DB down'));
-      // Business query also fails
-      mockQueryChain.find.mockRejectedValueOnce(new Error('DB down'));
+      prependRateLimitQuery(mockQueryChain.find); // rate limit passes
+      mockQueryChain.find.mockRejectedValueOnce(new Error('DB down')); // business query fails
       const result = await recordDemandSignal('prod1', 'view');
       expect(result.success).toBe(false);
       expect(result.error).toBeTruthy();
