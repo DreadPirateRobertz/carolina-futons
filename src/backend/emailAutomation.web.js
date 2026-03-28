@@ -160,23 +160,18 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
-  return Promise.all([
-    // Send customer-facing order confirmation
-    import('backend/emailService.web')
-      .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
-        contactId,
-        email,
-        firstName,
-        orderNumber: String(orderNumber),
-        total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-        itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-      }))
-      .catch(err => console.error('Error sending order confirmation:', err)),
-
-    // Queue post-purchase care sequence
-    triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
-      .catch(err => console.error('Error triggering post-purchase sequence:', err)),
-  ]);
+  // CF-nkau: post-purchase care sequence is now triggered from wixEcom_onOrderDelivered
+  // (delivery date) instead of here (order creation date). Do NOT queue it here.
+  return import('backend/emailService.web')
+    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    }))
+    .catch(err => console.error('Error sending order confirmation:', err));
 }
 
 /**
