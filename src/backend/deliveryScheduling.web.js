@@ -18,7 +18,9 @@
  * Create 'DeliverySchedule' CMS collection with fields:
  *   orderId (Text), date (Date), timeWindow (Text: 'morning'|'afternoon'),
  *   type (Text: 'standard'|'white_glove'), status (Text), customerEmail (Text),
- *   customerPhone (Text), address (Text), notes (Text), createdAt (Date)
+ *   customerPhone (Text), address (Text), notes (Text), createdAt (Date),
+ *   smsOptIn (Boolean), smsSentConfirmation (Boolean),
+ *   smsSent48h (Boolean), smsSentDayOf (Boolean)
  *
  * Create 'ShowroomAppointments' CMS collection with fields:
  *   date (Text: YYYY-MM-DD), timeSlot (Text: HH:MM), visitType (Text),
@@ -33,6 +35,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { validateSchema } from 'backend/utils/validateSchema';
+import { sendDeliveryBookingConfirmationSms } from 'backend/deliveryNotifications.web';
 
 /** Constant-time string comparison to prevent timing attacks on cancel tokens. */
 function timingSafeEqual(a, b) {
@@ -314,6 +317,7 @@ export const getAvailableDeliverySlots = webMethod(
  * @param {string} [data.customerPhone] - Customer phone
  * @param {string} [data.address] - Delivery address
  * @param {string} [data.notes] - Special instructions
+ * @param {boolean} [data.smsOptIn] - TCPA SMS opt-in (required for delivery SMS notifications)
  * @returns {Promise<Object>} { success, scheduleId?, message? }
  * @permission SiteMember
  */
@@ -329,6 +333,7 @@ export const scheduleDelivery = webMethod(
       const date = sanitize(data.date, 10);
       const timeWindow = sanitize(data.timeWindow, 20);
       const type = sanitize(data.type || 'standard', 20);
+      const smsOptIn = data.smsOptIn === true;
 
       // Validate date format
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -377,6 +382,7 @@ export const scheduleDelivery = webMethod(
         customerPhone: sanitize(data.customerPhone || '', 20),
         address: sanitize(data.address || '', 500),
         notes: sanitize(data.notes || '', 1000),
+        smsOptIn,
         createdAt: new Date(),
       });
 
@@ -391,6 +397,17 @@ export const scheduleDelivery = webMethod(
       // Confirm the booking
       schedule.status = 'scheduled';
       await wixData.update('DeliverySchedule', schedule);
+
+      // Fire SMS booking confirmation if customer opted in (non-blocking)
+      if (smsOptIn && data.customerPhone) {
+        sendDeliveryBookingConfirmationSms({
+          scheduleId: schedule._id,
+          customerPhone: data.customerPhone,
+          orderId,
+          date,
+          timeWindow,
+        }).catch(err => console.error('[deliveryScheduling] SMS confirmation fire failed:', err?.message));
+      }
 
       return { success: true, scheduleId: schedule._id };
     } catch (err) {
