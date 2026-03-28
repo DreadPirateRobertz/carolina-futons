@@ -47,8 +47,8 @@ const SEQUENCES = {
   welcome: {
     steps: [
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
-      { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
+      { step: 2, templateId: 'welcome_series_2', delayHours: 48, description: 'Best sellers showcase (Day 2 — CF-o63p)' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 120, description: 'Buying guide + purchase nudge (Day 5 — CF-o63p)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -164,9 +164,7 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
-  // CF-nkau: post-purchase care sequence is now triggered from wixEcom_onOrderDelivered
-  // (delivery date) instead of here (order creation date). Do NOT queue it here.
-  return import('backend/emailService.web')
+  import('backend/emailService.web')
     .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
       contactId,
       email,
@@ -176,6 +174,11 @@ export function wixEcom_onOrderCreated(event) {
       itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
     }))
     .catch(err => console.error('Error sending order confirmation:', err));
+
+  // CF-fzsd: Queue post-purchase care sequence at order creation so slug
+  // extraction from lineItems is available (Day 7 review URL uses product slug).
+  return triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
+    .catch(err => console.error('[CF-fzsd] Error queuing post-purchase sequence on order created:', err));
 }
 
 /**
@@ -298,7 +301,7 @@ export function wixEcom_onOrderCanceled(event) {
  */
 export const triggerWelcomeSequence = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName) => {
+  async (contactId, email, firstName, opts = {}) => {
     try {
       if (!email) return { success: false, queued: 0 };
 
@@ -336,6 +339,11 @@ export const triggerWelcomeSequence = webMethod(
       const now = new Date();
       let queued = 0;
 
+      const bestSellersUrl = `${SITE_URL_BASE}/best-sellers`;
+      const buyingGuideUrl = opts.quizCategory
+        ? `${SITE_URL_BASE}/buying-guide/${opts.quizCategory}`
+        : `${SITE_URL_BASE}/buying-guide`;
+
       for (const step of SEQUENCES.welcome.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
         const variables = {
@@ -344,6 +352,17 @@ export const triggerWelcomeSequence = webMethod(
           discountAvailable,
           email: cleanEmail,
         };
+
+        // Step-specific variables (CF-o63p)
+        if (step.step === 1) {
+          variables.discountPercent = '10';
+        }
+        if (step.step === 2) {
+          variables.bestSellersUrl = bestSellersUrl;
+        }
+        if (step.step === 3) {
+          variables.buyingGuideUrl = buyingGuideUrl;
+        }
 
         // Add A/B subject line for step 1
         if (step.step === SEQUENCES.welcome.abTestStep) {

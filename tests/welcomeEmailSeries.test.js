@@ -76,21 +76,21 @@ describe('triggerWelcomeSeries — happy path', () => {
     expect(step1.scheduledFor.getTime()).toBeLessThanOrEqual(after + 100);
   });
 
-  it('step 2 scheduledFor is approximately 72h from now', async () => {
+  it('step 2 scheduledFor is approximately 48h from now (CF-o63p: Day 2)', async () => {
     const before = Date.now();
     await triggerWelcomeSeries(EMAIL, FIRST_NAME);
     const step2 = __getInserted('EmailQueue').find(r => r.sequenceStep === 2);
-    const expected = 72 * 60 * 60 * 1000;
+    const expected = 48 * 60 * 60 * 1000;
     const actual = step2.scheduledFor.getTime() - before;
     expect(actual).toBeGreaterThanOrEqual(expected - 1000);
     expect(actual).toBeLessThanOrEqual(expected + 5000);
   });
 
-  it('step 3 scheduledFor is approximately 168h from now', async () => {
+  it('step 3 scheduledFor is approximately 120h from now (CF-o63p: Day 5)', async () => {
     const before = Date.now();
     await triggerWelcomeSeries(EMAIL, FIRST_NAME);
     const step3 = __getInserted('EmailQueue').find(r => r.sequenceStep === 3);
-    const expected = 168 * 60 * 60 * 1000;
+    const expected = 120 * 60 * 60 * 1000;
     const actual = step3.scheduledFor.getTime() - before;
     expect(actual).toBeGreaterThanOrEqual(expected - 1000);
     expect(actual).toBeLessThanOrEqual(expected + 5000);

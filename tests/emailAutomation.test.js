@@ -1022,9 +1022,9 @@ describe('wixMembers_onMemberCreated', () => {
 });
 
 describe('wixEcom_onOrderCreated', () => {
-  // CF-nkau: post-purchase care sequence now triggers from wixEcom_onOrderDelivered
-  // (delivery date), not order creation date. onOrderCreated only sends order confirmation.
-  it('sends order confirmation but does NOT queue post-purchase sequence', async () => {
+  // CF-fzsd: post-purchase care sequence is queued from wixEcom_onOrderCreated
+  // so that product slug from lineItems.url is available for the Day-7 review URL.
+  it('sends order confirmation and queues post-purchase sequence with slug', async () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
@@ -1044,7 +1044,7 @@ describe('wixEcom_onOrderCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const postPurchaseEmails = insertedItems.filter(i => i.sequenceType === 'post_purchase');
-    expect(postPurchaseEmails).toHaveLength(0);
+    expect(postPurchaseEmails.length).toBeGreaterThan(0);
   });
 
   it('does nothing when buyer email is missing', async () => {
