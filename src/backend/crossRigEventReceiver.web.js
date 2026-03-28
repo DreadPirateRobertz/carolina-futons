@@ -20,7 +20,16 @@ import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
 
-const SUPPORTED_EVENTS = new Set(['streak_extended', 'challenge_started', 'redemption_initiated']);
+const SUPPORTED_EVENTS = new Set([
+  'streak_extended',
+  'challenge_started',
+  'redemption_initiated',
+  'quiz_completed',
+  'product_favorited',
+  'cart_abandoned',
+  'loyalty_tier_reached',
+  'review_submitted',
+]);
 
 /**
  * Receive a cross-rig event from the mobile app.
@@ -43,13 +52,30 @@ export const crossRigEvent = webMethod(
       };
     }
 
+    // ── Event-specific required-field validation ───────────────────────────
+    if (body.event === 'quiz_completed' && (!body.quizId || !body.resultSlug)) {
+      return { success: false, status: 400, error: 'quiz_completed requires quizId and resultSlug' };
+    }
+    if (body.event === 'product_favorited' && !body.productId) {
+      return { success: false, status: 400, error: 'product_favorited requires productId' };
+    }
+    if (body.event === 'cart_abandoned' && (!body.cartId || body.cartTotal == null)) {
+      return { success: false, status: 400, error: 'cart_abandoned requires cartId and cartTotal' };
+    }
+    if (body.event === 'loyalty_tier_reached' && !body.tier) {
+      return { success: false, status: 400, error: 'loyalty_tier_reached requires tier' };
+    }
+    if (body.event === 'review_submitted' && (!body.productId || body.rating == null)) {
+      return { success: false, status: 400, error: 'review_submitted requires productId and rating' };
+    }
+
     // ── Resolve memberId from session (not from body) ──────────────────────
     let memberId = null;
     try {
       const member = await currentMember.getMember();
       memberId = member?._id ?? null;
     } catch (err) {
-      logError('crossRigEvent — getMember failed', err);
+      logError(`crossRigEvent(${body.event}) — getMember failed`, err);
     }
 
     if (!memberId) {
@@ -57,16 +83,38 @@ export const crossRigEvent = webMethod(
     }
 
     // ── Build event-specific payload ───────────────────────────────────────
-    const analyticsPayload = {
-      eventId: body.eventId,
-      delta: body.delta,
-      newTotal: body.newTotal,
-    };
+    const analyticsPayload = { eventId: body.eventId };
     if (body.event === 'streak_extended') {
       analyticsPayload.streak = body.streak;
+      analyticsPayload.delta = body.delta;
+      analyticsPayload.newTotal = body.newTotal;
     }
     if (body.event === 'challenge_started') {
       analyticsPayload.challengeId = body.challengeId;
+      analyticsPayload.delta = body.delta;
+      analyticsPayload.newTotal = body.newTotal;
+    }
+    if (body.event === 'redemption_initiated') {
+      analyticsPayload.delta = body.delta;
+      analyticsPayload.newTotal = body.newTotal;
+    }
+    if (body.event === 'quiz_completed') {
+      analyticsPayload.quizId = body.quizId;
+      analyticsPayload.resultSlug = body.resultSlug;
+    }
+    if (body.event === 'product_favorited') {
+      analyticsPayload.productId = body.productId;
+    }
+    if (body.event === 'cart_abandoned') {
+      analyticsPayload.cartId = body.cartId;
+      analyticsPayload.cartTotal = body.cartTotal;
+    }
+    if (body.event === 'loyalty_tier_reached') {
+      analyticsPayload.tier = body.tier;
+    }
+    if (body.event === 'review_submitted') {
+      analyticsPayload.productId = body.productId;
+      analyticsPayload.rating = body.rating;
     }
 
     // ── Log to analytics ───────────────────────────────────────────────────
