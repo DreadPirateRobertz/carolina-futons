@@ -701,7 +701,7 @@ export const addConsultationNotes = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[virtualConsultation] addConsultationNotes error:', err);
+      logError('virtualConsultation:addConsultationNotes', err);
       return { success: false, error: err.message || 'Failed to save consultation notes.' };
     }
   }
