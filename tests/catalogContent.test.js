@@ -291,7 +291,7 @@ describe('getCategoryContent', () => {
   it('accepts all valid categories', async () => {
     const categories = [
       'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-      'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',
+      'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
       'covers', 'outdoor-furniture', 'log-frames', 'pillows',
     ];
 

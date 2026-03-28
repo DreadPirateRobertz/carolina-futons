@@ -311,17 +311,17 @@ describe('getCategoryContent edge cases', () => {
 // getAllCategories edge cases
 // ═════════════════════════════════════════════════════════════════════
 describe('getAllCategories edge cases', () => {
-  it('returns all 13 default categories when DB is empty', async () => {
+  it('returns all 12 default categories when DB is empty', async () => {
     __seed('CategoryContent', []);
     const result = await getAllCategories();
     expect(result.success).toBe(true);
-    expect(result.data).toHaveLength(13);
+    expect(result.data).toHaveLength(12);
     // Spot-check a few
     expect(result.data[0].category).toBe('futon-frames');
     expect(result.data[0].title).toBe('Futon Frames');
     expect(result.data[1].category).toBe('mattresses');
     expect(result.data[1].title).toBe('Mattresses');
-    expect(result.data[12].category).toBe('pillows');
+    expect(result.data[11].category).toBe('pillows');
   });
 
   it('assigns sequential sortOrder to default categories', async () => {

@@ -223,7 +223,7 @@ describe('getCategoryContent', () => {
 
   it('accepts all valid categories', async () => {
     const cats = ['futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-      'casegoods-accessories', 'front-loading-nesting', 'wall-huggers', 'wall-hugger-frames',
+      'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
       'unfinished-wood', 'covers', 'outdoor-furniture', 'log-frames', 'pillows'];
     for (const cat of cats) {
       _collections = {};
@@ -260,7 +260,7 @@ describe('getAllCategories', () => {
     __seed('CategoryContent', []);
     const result = await getAllCategories();
     expect(result.success).toBe(true);
-    expect(result.data.length).toBe(13);
+    expect(result.data.length).toBe(12);
     expect(result.data[0].category).toBe('futon-frames');
     expect(result.data[0].title).toBe('Futon Frames');
   });

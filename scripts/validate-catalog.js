@@ -20,8 +20,8 @@ const catalog = require('../content/catalog-MASTER.json');
  */
 const VALID_CATEGORIES = [
   'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-  'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',
-  'wall-hugger-frames', 'unfinished-wood', 'covers', 'outdoor-furniture', 'pillows-702', 'log-frames',
+  'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
+  'unfinished-wood', 'covers', 'outdoor-furniture', 'pillows-702', 'log-frames',
 ];
 
 const products = catalog.products;
