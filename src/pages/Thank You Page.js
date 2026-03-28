@@ -734,6 +734,7 @@ async function initLoyaltyEnrollment(orderCtx) {
     try { $w('#loyaltyEnrollTitle').text = 'Join Carolina Futons Rewards'; } catch (e) {}
     try { $w('#loyaltyEnrollPoints').text = `You just earned ${earnedPoints} points!`; } catch (e) {}
     try { $w('#loyaltyEnrollDescription').text = 'Earn points on every purchase. Unlock discounts, free shipping, and exclusive perks.'; } catch (e) {}
+    try { $w('#loyaltyBirthdayLabel').text = 'Birthday (optional) — +50 bonus points'; } catch (e) {}
     try { $w('#loyaltyEnrollSection').expand(); } catch (e) {}
 
     try {
