@@ -200,6 +200,17 @@ describe('Step 2 — urgency + free shipping', () => {
     expect(step2.variables.freeShippingNote).toBeTruthy();
   });
 
+  it('omits freeShippingNote entirely when cart does not qualify', async () => {
+    __seed('AbandonedCarts', [CART_LOW]);
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerAbandonedCartRecovery();
+
+    const step2 = items.find(i => i.sequenceStep === 2);
+    expect(step2.variables.freeShippingNote).toBeUndefined();
+  });
+
   it('step 2 does not include couponPercent', async () => {
     __seed('AbandonedCarts', [CART_HIGH]);
     const items = [];
