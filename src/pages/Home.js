@@ -121,6 +121,21 @@ $w.onReady(async function () {
   initBackToTop($w);
   trackEvent('page_view', { page: 'home' });
 
+  // A/B: shipping threshold banner
+  import('public/shippingThresholdExperiment').then(async ({ initShippingThresholdTest }) => {
+    const { threshold, variantId, experimentActive } = await initShippingThresholdTest('Home');
+    if (experimentActive && variantId) {
+      trackEvent('ab_experiment_assigned', {
+        page: 'home', experiment: 'shipping_threshold_test',
+        variant: variantId, threshold,
+      });
+      try {
+        $w('#shippingBanner').text = `Free shipping on orders over $${threshold}!`;
+        $w('#shippingBanner').expand();
+      } catch (e) { /* editor element not yet added */ }
+    }
+  }).catch(() => {});
+
   // On mobile: defer non-critical sections for faster first paint
   collapseOnMobile($w, ['#testimonialSection', '#videoShowcaseSection']);
 

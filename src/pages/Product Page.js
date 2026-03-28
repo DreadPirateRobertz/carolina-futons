@@ -156,6 +156,27 @@ async function initProductPage() {
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
       { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); await m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
+      { name: 'bundleExperiment', init: async () => {
+        const { initBundleDiscountTest } = await import('public/bundleDiscountExperiment');
+        const { trackEvent } = await import('public/engagementTracker');
+        const { variant, experimentActive } = await initBundleDiscountTest('ProductPage');
+        if (experimentActive && variant) {
+          trackEvent('ab_experiment_assigned', {
+            page: 'product', experiment: 'bundle_discount_test',
+            variant: variant.id, discountType: variant.type,
+          });
+          try {
+            $w('#bundleCTA').label = variant.type === 'free_accessory'
+              ? `Add Bundle — ${variant.accessoryName} FREE!`
+              : `Add Bundle — ${variant.badgeText}`;
+            $w('#bundleCTA').expand();
+          } catch (e) { /* editor element not yet added */ }
+          try {
+            $w('#bundleBadge').text = variant.badgeText;
+            $w('#bundleBadge').expand();
+          } catch (e) {}
+        }
+      }, critical: false },
       { name: 'roomStaging', init: async () => { const m = await import('public/RoomStagingUI.js'); m.initRoomStaging($w, state); }, critical: false },
       { name: 'liveShowroom', init: async () => { const m = await import('public/LiveShowroomUI.js'); m.initLiveShowroom($w, state); }, critical: false },
       { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },

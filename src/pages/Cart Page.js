@@ -84,6 +84,31 @@ async function initCartPage() {
     try { $w('#cartSubtotal').accessibility.ariaLive = 'polite'; $w('#cartSubtotal').accessibility.role = 'status'; } catch (e) {}
     try { $w('#cartTotal').accessibility.ariaLive = 'polite'; $w('#cartTotal').accessibility.role = 'status'; } catch (e) {}
 
+    // A/B: shipping threshold for free-shipping progress bar
+    import('public/shippingThresholdExperiment').then(async ({ initShippingThresholdTest }) => {
+      const { threshold, variantId, experimentActive } = await initShippingThresholdTest('Cart');
+      if (experimentActive && variantId) {
+        trackEvent('ab_experiment_assigned', {
+          page: 'cart', experiment: 'shipping_threshold_test',
+          variant: variantId, threshold,
+        });
+        // Apply threshold to progress bar
+        try {
+          const subtotal = cart.totals?.subtotal || 0;
+          const remaining = Math.max(0, threshold - subtotal);
+          if (remaining > 0) {
+            $w('#shippingProgressText').text = `Add $${remaining.toFixed(2)} more for FREE shipping!`;
+            $w('#shippingProgressBar').targetValue = 100;
+            $w('#shippingProgressBar').value = Math.round((subtotal / threshold) * 100);
+          } else {
+            $w('#shippingProgressText').text = 'You qualify for FREE shipping!';
+            $w('#shippingProgressBar').value = 100;
+          }
+          $w('#shippingProgressSection').expand();
+        } catch (e) { /* editor elements not yet added */ }
+      }
+    }).catch(() => {});
+
     // Pass fetched cart to avoid redundant API calls
     updateShippingProgressFromCart(cart);
     updateCartFinancingFromCart(cart);
