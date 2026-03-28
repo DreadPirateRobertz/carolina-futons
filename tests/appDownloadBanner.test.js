@@ -153,6 +153,11 @@ describe('recordDismissal', () => {
     expect(stored).toBeGreaterThanOrEqual(before);
     expect(stored).toBeLessThanOrEqual(after);
   });
+
+  it('does not throw when localStorage.setItem throws', () => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('quota exceeded'); });
+    expect(() => recordDismissal()).not.toThrow();
+  });
 });
 
 // ── isNativeAppInstalled ──────────────────────────────────────────────────────

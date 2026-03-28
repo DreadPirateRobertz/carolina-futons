@@ -188,7 +188,9 @@ export async function initAppDownloadBanner($w, currentUrl, opts = {}) {
 
     // Android
     _showAndroidBanner($w, opts.navigateTo);
-  } catch {}
+  } catch (err) {
+    console.error('[AppDownloadBanner] initAppDownloadBanner failed:', err?.message);
+  }
 }
 
 function _injectIOSBanner(currentUrl, setMetaTagsFn) {
