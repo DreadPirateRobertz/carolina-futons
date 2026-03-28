@@ -293,6 +293,7 @@ describe('rate limiting (1 per email per 30 days)', () => {
   });
 
   it('blocks request at exactly 30 days (rate limit boundary is inclusive)', async () => {
+<<<<<<< HEAD
     // Seed 1 second inside the 30-day window to avoid a race between the seed
     // timestamp and the service's cutoff computation (both use Date.now()).
     const thirtyDaysAgoWithBuffer = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000 + 1000);
@@ -300,6 +301,12 @@ describe('rate limiting (1 per email per 30 days)', () => {
       _id: 'boundary-001',
       contactEmail: 'jane@example.com',
       requestedAt: thirtyDaysAgoWithBuffer,
+=======
+    __seed('FabricSampleRequests', [{
+      _id: 'boundary-001',
+      contactEmail: 'jane@example.com',
+      requestedAt: daysAgo(30),
+>>>>>>> origin/feat/CF-gkbx
       status: 'pending',
     }]);
     const result = await submitFabricSampleRequest({
@@ -499,6 +506,7 @@ describe('database failure handling', () => {
     expect(__getEmailLog()).toHaveLength(0);
   });
 });
+<<<<<<< HEAD
 
 // ── Phone format validation (CF-vi8u) ─────────────────────────────────────────
 
@@ -581,3 +589,5 @@ describe('phone format validation', () => {
     // Phone stored — CRM upsert received it (no error from that path)
   });
 });
+=======
+>>>>>>> origin/feat/CF-gkbx

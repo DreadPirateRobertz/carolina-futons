@@ -8,6 +8,7 @@ let _updateSpy = null;
 let _removeSpy = null;
 let _queryErrors = {};  // collection -> Error to throw on query
 <<<<<<< HEAD
+<<<<<<< HEAD
 let _lastFindOptions = {};  // collection -> options passed to find()
 let _lastGetOptions = {};   // collection -> options passed to get()
 let _lastUpdateOptions = {}; // collection -> options passed to update()
@@ -17,6 +18,9 @@ let _uniqueFields = {};  // collection -> field name to enforce uniqueness on
 =======
 let _insertError = null; // Error to throw on any insert
 >>>>>>> origin/cf-wishlist-share-s1-s5
+=======
+let _insertErrors = {}; // collection -> Error to throw on insert
+>>>>>>> origin/feat/CF-gkbx
 
 // Reset all mock state between tests
 export function __reset() {
@@ -27,17 +31,22 @@ export function __reset() {
   _removeSpy = null;
   _queryErrors = {};
 <<<<<<< HEAD
+<<<<<<< HEAD
   _insertErrors = {};
   _updateErrors = {};
   _uniqueFields = {};
   _lastFindOptions = {};
   _lastGetOptions = {};
   _lastUpdateOptions = {};
+=======
+  _insertErrors = {};
+>>>>>>> origin/feat/CF-gkbx
 }
 
 // Force the next insert on a collection to throw
 export function __setInsertError(collection, error) {
   _insertErrors[collection] = error;
+<<<<<<< HEAD
 }
 
 // Enforce uniqueness on a single field for a collection.
@@ -58,6 +67,8 @@ export function __setUpdateError(collection, error) {
 export function __setInsertError(error) {
   _insertError = error;
 >>>>>>> origin/cf-wishlist-share-s1-s5
+=======
+>>>>>>> origin/feat/CF-gkbx
 }
 
 // Force a query error for a specific collection
@@ -259,14 +270,20 @@ const wixData = {
 
   async insert(collection, item) {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/feat/CF-gkbx
     if (_insertErrors[collection]) {
       const err = _insertErrors[collection];
       delete _insertErrors[collection];
       throw err;
     }
+<<<<<<< HEAD
 =======
     if (_insertError) throw _insertError;
 >>>>>>> origin/cf-wishlist-share-s1-s5
+=======
+>>>>>>> origin/feat/CF-gkbx
     if (!_store[collection]) _store[collection] = [];
     // Always enforce _id uniqueness (Wix Data guarantees this at the DB layer)
     if (item._id !== undefined) {

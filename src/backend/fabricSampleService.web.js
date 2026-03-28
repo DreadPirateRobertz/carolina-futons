@@ -20,18 +20,24 @@ import { webMethod, Permissions } from 'wix-web-module';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
+<<<<<<< HEAD
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+=======
+>>>>>>> origin/feat/CF-gkbx
 
 const MAX_SWATCHES = 3;
 const RATE_LIMIT_DAYS = 30;
 const ZIP_RE = /^\d{5}$/;
 
+<<<<<<< HEAD
 // Accepts E.164 (+15551234567, +441234567890, etc.) or NANP
 // (5551234567, 555-123-4567, (555) 123-4567, 555.123.4567).
 // Phone is optional — validated only when present.
 const PHONE_RE = /^(\+\d{7,15}|(\+?1[\s.-]?)?(\(?\d{3}\)?[\s.\-]?)\d{3}[\s.\-]?\d{4})$/;
 
+=======
+>>>>>>> origin/feat/CF-gkbx
 // ── Validators ───────────────────────────────────────────────────────────────
 
 function validateSwatchIds(ids) {
@@ -70,11 +76,14 @@ function validateContact(raw) {
   const zip = (raw.zip || '').trim();
   if (!ZIP_RE.test(zip)) return { error: 'ZIP code must be 5 digits.' };
 
+<<<<<<< HEAD
   const phone = raw.phone ? sanitize(raw.phone, 30).trim() : undefined;
   if (phone && !PHONE_RE.test(phone)) {
     return { error: 'Phone number format is invalid. Use a 10-digit US number or E.164 format (e.g. +15551234567).' };
   }
 
+=======
+>>>>>>> origin/feat/CF-gkbx
   return {
     firstName,
     lastName,
@@ -84,7 +93,11 @@ function validateContact(raw) {
     city,
     state,
     zip,
+<<<<<<< HEAD
     phone,
+=======
+    phone: raw.phone ? sanitize(raw.phone, 30).trim() : undefined,
+>>>>>>> origin/feat/CF-gkbx
   };
 }
 
@@ -93,11 +106,14 @@ function validateContact(raw) {
 /**
  * Returns true if there is a FabricSampleRequests record for this email
  * (lowercase-normalized, stored in `contactEmail`) within the last RATE_LIMIT_DAYS days.
+<<<<<<< HEAD
  *
  * TOCTOU note: wix-data provides no atomic conditional insert, so a small
  * race window exists between this check and the subsequent wixData.insert().
  * Duplicate requests within milliseconds could both pass. Acceptable given
  * the low-volume, low-stakes nature of fabric sample requests.
+=======
+>>>>>>> origin/feat/CF-gkbx
  */
 async function isRateLimited(email) {
   try {
@@ -203,9 +219,12 @@ export const submitFabricSampleRequest = webMethod(
       const contact = validateContact(contactInfo);
       if (contact.error) return { success: false, error: contact.error };
 
+<<<<<<< HEAD
       const { allowed } = await checkRateLimit('FabricSampleRateLimit', contact.email);
       if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
+=======
+>>>>>>> origin/feat/CF-gkbx
       let limited;
       try {
         limited = await isRateLimited(contact.email);
@@ -252,7 +271,10 @@ export const submitFabricSampleRequest = webMethod(
         console.error('[fabricSampleService] No contactId — skipping automation emails. Manual fulfillment required for:', contact.email);
       }
 
+<<<<<<< HEAD
       logAuditEvent('FabricSampleRequests', 'submit', contact.email, { swatchCount: cleanIds.length });
+=======
+>>>>>>> origin/feat/CF-gkbx
       return { success: true, requestId: inserted._id };
     } catch (err) {
       console.error('[fabricSampleService] submitFabricSampleRequest error:', err);
