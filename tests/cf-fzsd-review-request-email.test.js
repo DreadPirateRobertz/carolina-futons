@@ -229,11 +229,20 @@ describe('submitReview: email conversion tracking', () => {
     const events = __getInserted('EmailEvents');
     expect(events.filter(e => e.eventType === 'conversion')).toHaveLength(0);
   });
+
+  it('review succeeds even when recordEmailEvent throws', async () => {
+    // Wire wix-data to throw on EmailEvents insert to simulate recordEmailEvent failure
+    const { __setInsertError } = await import('./__mocks__/wix-data.js');
+    __setInsertError('EmailEvents', new Error('DB unavailable'));
+
+    const result = await submitReview({ ...VALID_REVIEW, emailQueueId: 'eq-day7-fail' });
+    expect(result.success).toBe(true);
+  });
 });
 
-// ── wixEcom_onOrderCreated: slug extraction ─────────────────────────
+// ── wixEcom_onOrderCreated (emailAutomation): slug extraction ──────
 
-describe('wixEcom_onOrderCreated: extracts product slug from line items', () => {
+describe('wixEcom_onOrderCreated (emailAutomation): extracts product slug from line items', () => {
   it('passes slug to queuePostPurchaseSequence via lineItems', async () => {
     await wixEcom_onOrderCreated({ entity: ORDER });
 
@@ -266,5 +275,24 @@ describe('wixEcom_onOrderCreated: extracts product slug from line items', () => 
 
     const vars = typeof step2.variables === 'string' ? JSON.parse(step2.variables) : step2.variables;
     expect(vars.reviewUrl).toBe('https://www.carolinafutons.com/member-page#reviews');
+  });
+});
+
+// ── wixEcom_onOrderCreated (events.js): slug extraction ────────────
+// Separate import to verify events.js and emailAutomation.web.js stay in sync
+
+import { wixEcom_onOrderCreated as eventsOnOrderCreated } from '../src/backend/events.js';
+
+describe('wixEcom_onOrderCreated (events.js): extracts product slug from line items', () => {
+  it('queues Day-7 review email with product slug deep-link', async () => {
+    await eventsOnOrderCreated({ entity: ORDER });
+
+    const queued = __getInserted('EmailQueue');
+    const step2 = queued.find(e => e.sequenceStep === 2);
+    expect(step2).toBeDefined();
+
+    const vars = typeof step2.variables === 'string' ? JSON.parse(step2.variables) : step2.variables;
+    expect(vars.reviewUrl).toContain('eureka-futon-frame');
+    expect(vars.reviewUrl).not.toContain('ORD-999');
   });
 });
