@@ -28,7 +28,7 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
-});
+})
 
 // ── Quiz ─────────────────────────────────────────────────────────────
 
@@ -38,9 +38,11 @@ describe('fireQuizStarted', () => {
     expect(trackEvent).toHaveBeenCalledWith('CustomEvent', { event: 'quiz_started', quiz_id: 'q1' });
   });
 
-  it('fires with undefined quiz_id when not provided', async () => {
+  it('omits undefined fields from payload', async () => {
     await fireQuizStarted({});
-    expect(trackEvent).toHaveBeenCalledWith('CustomEvent', expect.objectContaining({ event: 'quiz_started' }));
+    const call = trackEvent.mock.calls[0][1];
+    expect(call.event).toBe('quiz_started');
+    expect('quiz_id' in call).toBe(false);
   });
 
   it('fires with no args', async () => {
@@ -66,13 +68,21 @@ describe('fireQuizCompleted', () => {
 });
 
 describe('fireLeadCaptured', () => {
-  it('fires lead_captured with quiz_id and email', async () => {
-    await fireLeadCaptured({ quizId: 'q1', email: 'test@example.com' });
-    expect(trackEvent).toHaveBeenCalledWith('CustomEvent', {
-      event: 'lead_captured',
-      quiz_id: 'q1',
-      email: 'test@example.com',
-    });
+  it('hashes email as SHA-256 before sending to GA4', async () => {
+    await fireLeadCaptured({ quizId: 'q1', email: 'Test@Example.COM' });
+    const call = trackEvent.mock.calls[0][1];
+    expect(call.event).toBe('lead_captured');
+    expect(call.quiz_id).toBe('q1');
+    // SHA-256 of 'test@example.com' (lowercased, trimmed)
+    expect(call.email_sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect('email' in call).toBe(false);
+  });
+
+  it('omits email_sha256 when no email provided', async () => {
+    await fireLeadCaptured({ quizId: 'q1' });
+    const call = trackEvent.mock.calls[0][1];
+    expect('email_sha256' in call).toBe(false);
+    expect('email' in call).toBe(false);
   });
 
   it('fires with no args', async () => {
@@ -329,9 +339,18 @@ describe('fireCompareStarted', () => {
     });
   });
 
-  it('fires with no args', async () => {
+  it('omits product_ids when array is empty', async () => {
+    await fireCompareStarted({ productIds: [] });
+    const call = trackEvent.mock.calls[0][1];
+    expect(call.event).toBe('compare_started');
+    expect('product_ids' in call).toBe(false);
+  });
+
+  it('fires with no args without sending product_ids', async () => {
     await fireCompareStarted();
-    expect(trackEvent).toHaveBeenCalledOnce();
+    const call = trackEvent.mock.calls[0][1];
+    expect(call.event).toBe('compare_started');
+    expect('product_ids' in call).toBe(false);
   });
 });
 
@@ -373,7 +392,7 @@ describe('fireRoomPlannerToCart', () => {
 // ── Resilience ───────────────────────────────────────────────────────
 
 describe('resilience', () => {
-  it('does not throw when trackEvent is not available', async () => {
+  it('does not throw when trackEvent throws', async () => {
     trackEvent.mockImplementationOnce(() => { throw new Error('GA4 offline'); });
     await expect(fireQuizStarted({ quizId: 'q1' })).resolves.toBeUndefined();
   });
