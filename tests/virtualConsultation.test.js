@@ -9,6 +9,8 @@ import {
   getMyConsultations,
   uploadRoomPhoto,
   getConsultationDetails,
+  submitConsultationIntake,
+  getConsultationIntake,
 } from '../src/backend/virtualConsultation.web.js';
 
 beforeEach(() => {
@@ -555,6 +557,204 @@ describe('getConsultationDetails', () => {
     __setMember(null);
     const result = await getConsultationDetails('b-1');
     expect(result.success).toBe(false);
+  });
+});
+
+// ── submitConsultationIntake ──────────────────────────────────────────
+
+describe('submitConsultationIntake', () => {
+  const VALID_INTAKE = {
+    roomType: 'living-room',
+    roomSize: 'medium',
+    primaryUse: 'daily-sleeping',
+    stylePreference: 'modern',
+    budget: '500-1000',
+    timeline: 'within-month',
+    description: 'Looking for a futon that converts easily',
+    painPoint: 'space',
+  };
+
+  beforeEach(() => {
+    __seed('ConsultationBookings', [
+      {
+        _id: 'booking-1',
+        memberId: 'member-1',
+        designerId: 'd-1',
+        date: '2099-06-01',
+        timeSlot: '10:00',
+        consultationType: 'video',
+        status: 'confirmed',
+        notes: '',
+        videoCallUrl: '',
+        photos: '[]',
+        quizAnswers: '{}',
+      },
+    ]);
+  });
+
+  it('saves intake to ConsultationIntake and returns intakeId', async () => {
+    const result = await submitConsultationIntake('booking-1', VALID_INTAKE);
+    expect(result.success).toBe(true);
+    expect(result.intakeId).toBeTruthy();
+
+    const rows = __getInserted('ConsultationIntake');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].consultationId).toBe('booking-1');
+    expect(rows[0].roomType).toBe('living-room');
+    expect(rows[0].budget).toBe('500-1000');
+  });
+
+  it('saves all 8 intake fields', async () => {
+    await submitConsultationIntake('booking-1', VALID_INTAKE);
+    const row = __getInserted('ConsultationIntake')[0];
+    expect(row.roomType).toBe('living-room');
+    expect(row.roomSize).toBe('medium');
+    expect(row.primaryUse).toBe('daily-sleeping');
+    expect(row.stylePreference).toBe('modern');
+    expect(row.budget).toBe('500-1000');
+    expect(row.timeline).toBe('within-month');
+    expect(row.description).toBe('Looking for a futon that converts easily');
+    expect(row.painPoint).toBe('space');
+  });
+
+  it('succeeds with optional fields omitted', async () => {
+    const { description: _d, painPoint: _p, ...minimal } = VALID_INTAKE;
+    const result = await submitConsultationIntake('booking-1', minimal);
+    expect(result.success).toBe(true);
+    const row = __getInserted('ConsultationIntake')[0];
+    expect(row.description).toBe('');
+    expect(row.painPoint).toBeNull();
+  });
+
+  it('sets memberId from session on saved record', async () => {
+    await submitConsultationIntake('booking-1', VALID_INTAKE);
+    const row = __getInserted('ConsultationIntake')[0];
+    expect(row.memberId).toBe('member-1');
+  });
+
+  it('rejects missing consultationId', async () => {
+    const result = await submitConsultationIntake(null, VALID_INTAKE);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/consultation id/i);
+  });
+
+  it('rejects booking not found', async () => {
+    const result = await submitConsultationIntake('nonexistent-booking', VALID_INTAKE);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/not found/i);
+  });
+
+  it('rejects booking owned by different member', async () => {
+    __seed('ConsultationBookings', [
+      { _id: 'booking-other', memberId: 'member-99', designerId: 'd-1', date: '2099-06-01',
+        timeSlot: '10:00', consultationType: 'video', status: 'confirmed', notes: '',
+        videoCallUrl: '', photos: '[]', quizAnswers: '{}' },
+    ]);
+    const result = await submitConsultationIntake('booking-other', VALID_INTAKE);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/not found/i);
+  });
+
+  it('rejects missing required field roomType', async () => {
+    const { roomType: _r, ...data } = VALID_INTAKE;
+    const result = await submitConsultationIntake('booking-1', data);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/roomType/i);
+  });
+
+  it('rejects invalid roomType enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, roomType: 'castle' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/roomType/i);
+  });
+
+  it('rejects invalid budget enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, budget: '$100' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/budget/i);
+  });
+
+  it('rejects description over 200 chars', async () => {
+    const result = await submitConsultationIntake('booking-1', {
+      ...VALID_INTAKE,
+      description: 'x'.repeat(201),
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/description/i);
+  });
+
+  it('rejects invalid painPoint enum value', async () => {
+    const result = await submitConsultationIntake('booking-1', { ...VALID_INTAKE, painPoint: 'unknown' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/painPoint/i);
+  });
+
+  it('rejects unauthenticated call', async () => {
+    __setMember(null);
+    const result = await submitConsultationIntake('booking-1', VALID_INTAKE);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/authentication/i);
+  });
+});
+
+// ── getConsultationIntake ─────────────────────────────────────────────
+
+describe('getConsultationIntake', () => {
+  beforeEach(() => {
+    __seed('ConsultationBookings', [
+      { _id: 'booking-1', memberId: 'member-1', designerId: 'd-1', date: '2099-06-01',
+        timeSlot: '10:00', consultationType: 'video', status: 'confirmed', notes: '',
+        videoCallUrl: '', photos: '[]', quizAnswers: '{}' },
+    ]);
+    __seed('ConsultationIntake', [
+      { _id: 'intake-1', consultationId: 'booking-1', memberId: 'member-1',
+        roomType: 'bedroom', roomSize: 'small', primaryUse: 'occasional-guest',
+        stylePreference: 'rustic', budget: 'under-500', timeline: 'browsing',
+        description: 'Guest room refresh', painPoint: 'price', createdAt: new Date() },
+    ]);
+  });
+
+  it('returns intake data for own booking', async () => {
+    const result = await getConsultationIntake('booking-1');
+    expect(result.success).toBe(true);
+    expect(result.intake.roomType).toBe('bedroom');
+    expect(result.intake.budget).toBe('under-500');
+    expect(result.intake.description).toBe('Guest room refresh');
+  });
+
+  it('returns null intake when none submitted yet', async () => {
+    __seed('ConsultationBookings', [
+      { _id: 'booking-2', memberId: 'member-1', designerId: 'd-1', date: '2099-06-02',
+        timeSlot: '11:00', consultationType: 'phone', status: 'confirmed', notes: '',
+        videoCallUrl: '', photos: '[]', quizAnswers: '{}' },
+    ]);
+    const result = await getConsultationIntake('booking-2');
+    expect(result.success).toBe(true);
+    expect(result.intake).toBeNull();
+  });
+
+  it('rejects missing consultationId', async () => {
+    const result = await getConsultationIntake(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/consultation id/i);
+  });
+
+  it('rejects booking owned by different member', async () => {
+    __seed('ConsultationBookings', [
+      { _id: 'booking-other', memberId: 'member-99', designerId: 'd-1', date: '2099-06-01',
+        timeSlot: '10:00', consultationType: 'video', status: 'confirmed', notes: '',
+        videoCallUrl: '', photos: '[]', quizAnswers: '{}' },
+    ]);
+    const result = await getConsultationIntake('booking-other');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/not found/i);
+  });
+
+  it('rejects unauthenticated call', async () => {
+    __setMember(null);
+    const result = await getConsultationIntake('booking-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/authentication/i);
   });
 });
 
