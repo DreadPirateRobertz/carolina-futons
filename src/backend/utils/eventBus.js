@@ -2,6 +2,15 @@
  * Cross-rig event bus utilities.
  * Schema: { eventId, schemaVersion: '1.0', traceId, event, userId, delta?, newTotal?, source, ts }
  * CF-44r
+ *
+ * ── CartSessions collection (mobile read) ──────────────────────────────────────
+ * Web writes cart session state to CartSessions for mobile to query by memberId.
+ * Schema: { _id, memberId, sessionId, items: Array<{productId, qty, price}>,
+ *           updatedAt: Date, source: 'web'|'mobile' }
+ * Mobile queries: wixData.query('CartSessions').eq('memberId', memberId).find()
+ * NOTE: As of CF-qe31.2 audit, CartSessions writes are not yet wired in this repo.
+ * Dallas (cfutons_mobile) confirmed mobile reads this collection — web side
+ * should write on cart update. Tracked as part of cf-qe31 convoy.
  */
 import wixData from 'wix-data';
 

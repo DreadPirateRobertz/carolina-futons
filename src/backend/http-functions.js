@@ -2173,6 +2173,18 @@ export async function get_badges(request) {
 // Rate-limited per userId (BusEventRateLimit collection): 30 req/min.
 //
 // Schema: { eventId, schemaVersion: '1.0', traceId, event, userId, source, ts, ...extras }
+//
+// ── Error contract (mobile retry policy) ──────────────────────────────────────
+// 400 Bad Request  — Permanent failure: schema invalid or unknown event.
+//                   Mobile MUST NOT retry. Fix the payload before re-sending.
+// 401 Unauthorized — Session expired or missing.
+//                   Mobile SHOULD refresh the Wix session token and retry.
+// 429 Too Many Req — Rate limited (30 req/min per member).
+//                   Mobile SHOULD retry after 60 seconds.
+// 5xx Server Error — Transient failure (DB write, runtime error).
+//                   Mobile SHOULD retry with exponential backoff.
+// 200 OK           — Event accepted (not necessarily processed yet).
+//                   Check EventTraceLog by eventId to confirm processing.
 
 /**
  * @function post_busEvent
