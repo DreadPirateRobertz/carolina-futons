@@ -130,7 +130,7 @@ describe('saveGuestSession', () => {
 
 describe('linkGuestOrdersToMember', () => {
   it('links pending guest orders to authenticated member', async () => {
-    __setMember({ _id: 'mem-001' });
+    __setMember({ _id: 'mem-001', loginEmail: 'alice@example.com' });
     __seed('GuestOrders', [
       { _id: 'go-1', email: 'alice@example.com', status: 'pending', createdAt: new Date() },
       { _id: 'go-2', email: 'alice@example.com', status: 'pending', createdAt: new Date() },
@@ -142,7 +142,7 @@ describe('linkGuestOrdersToMember', () => {
   });
 
   it('does not link already-linked orders', async () => {
-    __setMember({ _id: 'mem-002' });
+    __setMember({ _id: 'mem-002', loginEmail: 'bob@example.com' });
     __seed('GuestOrders', [
       { _id: 'go-3', email: 'bob@example.com', status: 'linked', linkedMemberId: 'mem-old', createdAt: new Date() },
     ]);
@@ -153,7 +153,7 @@ describe('linkGuestOrdersToMember', () => {
   });
 
   it('does not link expired orders (older than TTL)', async () => {
-    __setMember({ _id: 'mem-003' });
+    __setMember({ _id: 'mem-003', loginEmail: 'carol@example.com' });
     const expired = new Date(Date.now() - _SESSION_TTL_MS - 1000);
     __seed('GuestOrders', [
       { _id: 'go-4', email: 'carol@example.com', status: 'pending', createdAt: expired },
@@ -177,8 +177,18 @@ describe('linkGuestOrdersToMember', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects IDOR — member cannot link another member\'s guest orders', async () => {
+    __setMember({ _id: 'mem-attacker', loginEmail: 'attacker@example.com' });
+    __seed('GuestOrders', [
+      { _id: 'go-victim', email: 'victim@example.com', status: 'pending', createdAt: new Date() },
+    ]);
+    const result = await linkGuestOrdersToMember('victim@example.com');
+    expect(result.success).toBe(false);
+    expect(result.linkedCount).toBe(0);
+  });
+
   it('returns linkedCount: 0 when no matching orders', async () => {
-    __setMember({ _id: 'mem-006' });
+    __setMember({ _id: 'mem-006', loginEmail: 'nobody@example.com' });
     const result = await linkGuestOrdersToMember('nobody@example.com');
     expect(result.success).toBe(true);
     expect(result.linkedCount).toBe(0);

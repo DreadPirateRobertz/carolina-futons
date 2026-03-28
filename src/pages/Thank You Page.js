@@ -832,8 +832,9 @@ async function initLoyaltyEnrollment(orderCtx) {
 
 async function initGuestAccountPrompt(orderCtx) {
   try {
-    // Only show to anonymous buyers (no memberId on the order)
-    const memberId = orderCtx?.memberId || orderCtx?.contactId || '';
+    // Only show to anonymous buyers (no memberId on the order).
+    // contactId is set for ALL visitors (guests too), so use memberId only.
+    const memberId = orderCtx?.memberId || '';
     if (memberId) {
       try { $w('#guestAccountSection').collapse(); } catch (e) {}
       return;

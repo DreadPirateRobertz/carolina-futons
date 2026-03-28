@@ -125,6 +125,11 @@ export const linkGuestOrdersToMember = webMethod(
         return { success: false, linkedCount: 0 };
       }
 
+      // IDOR: verify caller owns this email before linking their orders
+      if (!member.loginEmail || member.loginEmail.toLowerCase() !== cleanEmail) {
+        return { success: false, linkedCount: 0 };
+      }
+
       const cutoff = new Date(Date.now() - SESSION_TTL_MS);
 
       const result = await wixData
