@@ -1330,8 +1330,34 @@ describe('triggerReviewRewardPrompt', () => {
     expect(vars.photoBonusPoints).toBe('50');
     expect(vars.productNames).toBe('Cover Set');
     expect(vars.firstName).toBe('Jordan');
-    expect(vars.reviewUrl).toContain('ORD-002');
-    expect(vars.reviewUrl).toContain('#reviews');
+    // No slug provided — falls back to member-page
+    expect(vars.reviewUrl).toBe('https://www.carolinafutons.com/member-page#reviews');
+  });
+
+  it('uses product slug in review URL when slug provided', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    await triggerReviewRewardPrompt(
+      'contact-rr2b', 'buyer2b@test.com', 'Morgan', 'ORD-002B', 'Cover Set', 'cover-set'
+    );
+
+    const vars = insertedItems[0].variables;
+    expect(vars.reviewUrl).toBe('https://www.carolinafutons.com/product-page/cover-set#reviews');
+    expect(vars.reviewUrl).not.toContain('ORD-002B');
+  });
+
+  it('falls back to member-page when slug is invalid (fails validateSlug)', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    // validateSlug rejects strings with uppercase, spaces, or special chars
+    await triggerReviewRewardPrompt(
+      'contact-rr2c', 'buyer2c@test.com', 'Robin', 'ORD-002C', 'Futon', 'Invalid Slug!'
+    );
+
+    const vars = insertedItems[0].variables;
+    expect(vars.reviewUrl).toBe('https://www.carolinafutons.com/member-page#reviews');
   });
 
   it('schedules for 14 days (336 hours) from now', async () => {

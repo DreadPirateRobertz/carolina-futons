@@ -34,7 +34,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
@@ -214,7 +214,8 @@ export function wixEcom_onOrderDelivered(event) {
     .map(i => i.name || i.productName || '')
     .filter(Boolean)
     .join(', ');
-  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames)
+  const primarySlug = lineItems.find(i => i.url?.relativePath)?.url?.relativePath?.replace('/product-page/', '') || '';
+  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
     .catch(err => console.error('[CF-qy79] Error queuing review reward prompt on delivery:', err));
 }
 
@@ -436,7 +437,7 @@ export const triggerPostPurchaseSequence = webMethod(
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
       // Deep-link to product review form: use slug from first line item that has one
-      const primarySlug = sanitize((lineItems || []).find(i => i.slug)?.slug || '', 200);
+      const primarySlug = validateSlug((lineItems || []).find(i => i.slug)?.slug || '');
       if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
       const reviewUrl = primarySlug
         ? `${SITE_URL}/product-page/${primarySlug}#reviews`
@@ -525,7 +526,7 @@ export const triggerPostPurchaseSequence = webMethod(
  */
 export const triggerReviewRewardPrompt = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName, orderNumber, productNames) => {
+  async (contactId, email, firstName, orderNumber, productNames, slug = '') => {
     try {
       if (!email) return { success: false };
 
@@ -552,9 +553,10 @@ export const triggerReviewRewardPrompt = webMethod(
       if (existing.items.length > 0) return { success: false };
 
       const SITE_URL = 'https://www.carolinafutons.com';
-      // Note: this function receives productNames only (no lineItems/slug).
-      // The post-purchase step-2 path uses product slug; this path uses order number.
-      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      const cleanSlug = validateSlug(slug);
+      const reviewUrl = cleanSlug
+        ? `${SITE_URL}/product-page/${cleanSlug}#reviews`
+        : `${SITE_URL}/member-page#reviews`;
       const scheduledFor = new Date(Date.now() + 336 * 60 * 60 * 1000); // 14 days
 
       await queueEmail({
