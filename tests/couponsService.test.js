@@ -5,6 +5,7 @@ import {
   createBirthdayCoupon,
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
+<<<<<<< HEAD
 import { coupons } from './__mocks__/wix-marketing-backend.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 <<<<<<< HEAD
@@ -12,6 +13,10 @@ import { __seed, __reset as resetWixData, __getInserted, __setInsertError } from
 =======
 import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
 >>>>>>> origin/hotfix-coupons-test-idor
+=======
+import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
+>>>>>>> origin/cf-ld8w-referral-ui
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -196,6 +201,7 @@ describe('createTierUpgradeCoupon', () => {
 // ── getActiveCoupons ─────────────────────────────────────────────────
 
 describe('getActiveCoupons', () => {
+<<<<<<< HEAD
   const TEST_EMAIL = 'test@example.com';
   const OTHER_EMAIL = 'other@example.com';
 
@@ -218,6 +224,16 @@ describe('getActiveCoupons', () => {
     __seed('Members/MemberCoupons', [
       { _id: 'c-1', memberEmail: TEST_EMAIL, couponCode: 'WELCOME-ABC123', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
 >>>>>>> origin/hotfix-coupons-test-idor
+=======
+  beforeEach(() => {
+    __resetMember();
+    __setMember({ _id: 'member-123', loginEmail: 'member@test.com' });
+  });
+
+  it('returns active coupons with percent-off formatting', async () => {
+    __setCoupons([
+      { _id: 'c-1', code: 'WELCOME-ABC123', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
+>>>>>>> origin/cf-ld8w-referral-ui
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -227,6 +243,7 @@ describe('getActiveCoupons', () => {
 
 <<<<<<< HEAD
   it('formats money-off coupons correctly', async () => {
+<<<<<<< HEAD
     __seed('MemberCoupons', [
       { _id: 'mc-2', memberEmail: TEST_EMAIL, code: 'SAVE25', displayName: '$25 Off', moneyOffAmount: 25, active: true },
 =======
@@ -234,6 +251,10 @@ describe('getActiveCoupons', () => {
     __seed('Members/MemberCoupons', [
       { _id: 'c-2', memberEmail: TEST_EMAIL, couponCode: 'SAVE25', couponType: 'Cart Recovery', discount: '$25 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
 >>>>>>> origin/hotfix-coupons-test-idor
+=======
+    __setCoupons([
+      { _id: 'c-2', code: 'SAVE25', name: '$25 Off - member@test.com', moneyOffAmount: 25, active: true },
+>>>>>>> origin/cf-ld8w-referral-ui
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
@@ -241,6 +262,7 @@ describe('getActiveCoupons', () => {
 
 <<<<<<< HEAD
   it('defaults moneyOffAmount to 0 when missing', async () => {
+<<<<<<< HEAD
     __seed('MemberCoupons', [
       { _id: 'mc-3', memberEmail: TEST_EMAIL, code: 'NOAMT', displayName: 'No Amount Coupon', active: true },
 =======
@@ -248,6 +270,10 @@ describe('getActiveCoupons', () => {
     __seed('Members/MemberCoupons', [
       { _id: 'c-3', memberEmail: TEST_EMAIL, couponCode: 'SPECIAL', couponType: 'Welcome', discount: '0%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
 >>>>>>> origin/hotfix-coupons-test-idor
+=======
+    __setCoupons([
+      { _id: 'c-3', code: 'NOAMT', name: 'No Amount - member@test.com', active: true },
+>>>>>>> origin/cf-ld8w-referral-ui
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('0%');
@@ -259,7 +285,11 @@ describe('getActiveCoupons', () => {
       _id: 'mc-4',
       memberEmail: TEST_EMAIL,
       code: 'FIELDS',
+<<<<<<< HEAD
       displayName: 'Test Coupon',
+=======
+      name: 'Test - member@test.com',
+>>>>>>> origin/cf-ld8w-referral-ui
       percentOffRate: 5,
 =======
     __seed('Members/MemberCoupons', [{
@@ -296,17 +326,25 @@ describe('getActiveCoupons', () => {
     expect(result).toEqual([]);
   });
 
+<<<<<<< HEAD
   // ── IDOR security gates ──────────────────────────────────────────────
 
   it('IDOR gate: returns empty array when no member session', async () => {
     __setMember(null);
     __seed('MemberCoupons', [
       { _id: 'mc-5', memberEmail: OTHER_EMAIL, code: 'OTHER-COUPON', displayName: 'Other Coupon', percentOffRate: 10, active: true },
+=======
+  it('returns empty array when member has no email', async () => {
+    __setMember({ _id: 'member-no-email' });
+    __setCoupons([
+      { _id: 'c-1', code: 'WELCOME-ABC', name: 'Welcome 10%', percentOffRate: 10, active: true },
+>>>>>>> origin/cf-ld8w-referral-ui
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
 
+<<<<<<< HEAD
   it('IDOR gate: wrong member gets empty array (cannot see other members coupons)', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-6', memberEmail: OTHER_EMAIL, code: 'NOT-YOURS', displayName: 'Not Your Coupon', percentOffRate: 15, active: true },
@@ -329,11 +367,36 @@ describe('getActiveCoupons', () => {
   it('does not return inactive coupons', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-9', memberEmail: TEST_EMAIL, code: 'INACTIVE', displayName: 'Old Coupon', percentOffRate: 5, active: false },
+=======
+  it('does not return coupons belonging to other members', async () => {
+    __setCoupons([
+      { _id: 'c-victim', code: 'BDAY-VICTIM1', name: 'Happy Birthday Victim! 15% Off - victim@other.com', percentOffRate: 15, active: true },
+      { _id: 'c-mine', code: 'WELCOME-MINE1', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('WELCOME-MINE1');
+    expect(result.find(c => c.code === 'BDAY-VICTIM1')).toBeUndefined();
+  });
+});
+
+// ── IDOR ownership enforcement (CF-fug9 P0) ──────────────────────────
+
+describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
+  beforeEach(() => {
+    __resetMember();
+  });
+
+  it('getActiveCoupons returns empty when session has no member', async () => {
+    __setCoupons([
+      { _id: 'c-1', code: 'WELCOME-XYZ', name: 'Welcome 10%', percentOffRate: 10, active: true },
+>>>>>>> origin/cf-ld8w-referral-ui
     ]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
 
+<<<<<<< HEAD
   it('does not call queryAllCoupons — confirms DB-level member scoping', async () => {
     __seed('MemberCoupons', []);
     await getActiveCoupons();
@@ -401,5 +464,30 @@ describe('createTierUpgradeCoupon — MemberCoupons tracking', () => {
     expect(records[0].memberEmail).toBe('gold@example.com');
     expect(records[0].percentOffRate).toBe(20);
     expect(records[0].active).toBe(true);
+=======
+  it('getActiveCoupons prevents attacker harvesting victim coupon codes', async () => {
+    __setMember({ _id: 'attacker', loginEmail: 'attacker@evil.com' });
+    __setCoupons([
+      { _id: 'c-v1', code: 'BDAY-V12345', name: 'Happy Birthday Victim! 15% Off - victim@example.com', percentOffRate: 15, active: true },
+      { _id: 'c-v2', code: 'WELCOME-V678', name: 'Welcome 10% Off - victim@example.com', percentOffRate: 10, active: true },
+      { _id: 'c-a',  code: 'WELCOME-A123', name: 'Welcome 10% Off - attacker@evil.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('WELCOME-A123');
+    const codes = result.map(c => c.code);
+    expect(codes).not.toContain('BDAY-V12345');
+    expect(codes).not.toContain('WELCOME-V678');
+  });
+
+  it('getActiveCoupons allows member to see their own coupons', async () => {
+    __setMember({ _id: 'member-ok', loginEmail: 'mine@example.com' });
+    __setCoupons([
+      { _id: 'c-mine', code: 'RECOVER-MYCODE', name: 'Cart Recovery 10% Off - mine@example.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('RECOVER-MYCODE');
+>>>>>>> origin/cf-ld8w-referral-ui
   });
 });

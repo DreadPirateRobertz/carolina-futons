@@ -201,7 +201,10 @@ export const applyStoreCredit = webMethod(
       if (!member || cleanId !== member._id) {
         return { success: false, message: 'Unauthorized' };
       }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/cf-ld8w-referral-ui
       const now = new Date();
 
       // Get active credits sorted by expiration (soonest first)
@@ -471,7 +474,10 @@ export const getExpiringCredits = webMethod(
       if (!member || cleanId !== member._id) {
         return { success: false, message: 'Unauthorized' };
       }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/cf-ld8w-referral-ui
       const days = Math.max(1, Math.min(365, Math.round(Number(withinDays) || 30)));
       const now = new Date();
       const cutoff = new Date(Date.now() + days * 24 * 60 * 60 * 1000);

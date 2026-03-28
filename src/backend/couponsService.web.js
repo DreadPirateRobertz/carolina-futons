@@ -102,6 +102,7 @@ export const getActiveCoupons = webMethod(
       ).toLowerCase();
       if (!memberEmail) return [];
 
+<<<<<<< HEAD
       const result = await wixData.query('MemberCoupons')
         .eq('memberEmail', memberEmail)
         .eq('active', true)
@@ -116,6 +117,23 @@ export const getActiveCoupons = webMethod(
         expirationTime: c.expirationTime,
         active: c.active,
       }));
+=======
+      const result = await coupons.queryAllCoupons()
+        .eq('active', true)
+        .find();
+
+      return (result.items || [])
+        .filter(c => c.name?.toLowerCase().includes(memberEmail))
+        .map(c => ({
+          _id: c._id,
+          code: c.code,
+          name: c.name,
+          discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
+          minimumSubtotal: c.minimumSubtotal || 0,
+          expirationTime: c.expirationTime,
+          active: c.active,
+        }));
+>>>>>>> origin/cf-ld8w-referral-ui
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];

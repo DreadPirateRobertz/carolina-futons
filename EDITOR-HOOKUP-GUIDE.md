@@ -586,6 +586,16 @@ For each section below:
 | `newsletterSuccess` | Text | Hidden, shown on success |
 | `newsletterError` | Text | Hidden, shown on error |
 
+### Gift Card Section (PR #533 — CF-mwpw)
+Add to **Home page**:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `giftCardSection` | Section/Box | Hero CTA section for gift cards — collapsed if gift cards disabled |
+| `giftCardHeading` | Text | "Give the gift of great furniture" |
+| `giftCardDesc` | Text | Description text |
+| `giftCardBtn` | Button | "Shop Gift Cards" → links to /gift-cards |
+
 ### SEO / Decorative
 | Element ID | Wix Element | Notes |
 |---|---|---|
@@ -1102,6 +1112,7 @@ Generates empty state HTML with mountain illustrations for injection via `$w('#e
 
 Backend utility for social media story generation — no editor elements needed.
 
+<<<<<<< HEAD
 ### CF+ Upgrade Prompt Modal — Product Page Instance (NEW v1.2.0+ — PR #666 / CF-llrd)
 *Source: `src/public/MembershipPrompt.js` — same 5 elements as Member Page instance*
 *Triggered for `swatch-request` and `price-match` contexts on PDP.*
@@ -1184,6 +1195,14 @@ Added to product page via `initProduct360Viewer`. Elements live on **Product Pag
 | `qnaThankYou` | Text | Hidden — shown on successful submit |
 
 **Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
+=======
+### Gift as a Gift CTA (PR #529 — CF-9fv2)
+Add to **Product Page**:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `giftProductBtn` | Button | "Give as a Gift" CTA — links to Wix Stores gift card flow with product context |
+>>>>>>> origin/cf-ld8w-referral-ui
 
 ---
 
@@ -1867,6 +1886,7 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
+<<<<<<< HEAD
 ## SUSTAINABILITY (`Sustainability.js`)
 
 ### Hero
@@ -2192,6 +2212,88 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 - **Google Analytics 4**: Connected via Wix Analytics (requires Premium for full event tracking)
 - **Facebook Pixel**: Configured (requires Premium/Go-live for production events)
 - All pixels blocked on staging — need Premium upgrade + custom domain for production tracking
+=======
+## LOCAL SEO CITY PAGE (`Near City Page.js`)
+
+**Route**: `/near/[city-slug]` (dynamic, router-based)
+**Source**: `src/pages/Near City Page.js`
+**PR**: #522 (CF-kj47), #531 (CF-kljz), #530 (CF-4poq), #528 (CF-gjy4), #536 (CF-54s6)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `routerData` | HtmlComponent | Hidden — receives router data via postMessage |
+| `localPageContent` | Box/Section | Main content container — hidden if city not found |
+| `notFoundMessage` | Text | "City page not found" fallback |
+| `cityTitle` | Text | `{city}, {state}` heading |
+| `cityHeadline` | Text | SEO headline for the city |
+| `directionsText` | Text | Directions description text |
+| `directionsBtn` | Button | "Get Directions" → Google Maps link |
+| `mapEmbed` | Iframe/Image | Google Maps static embed |
+| `homeCityBadge` | Box/Text | "Serving the {city} area" badge — show/hide based on city proximity |
+
+**`featuredProductsRepeater`** ⚠️ REPEATER — city-relevant products:
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `productImage` | Image | Product image |
+| `productName` | Text | Product name |
+| `productPrice` | Text | Price display |
+| `viewProductBtn` | Button | "View Product" CTA |
+
+**`nearbyAreasRepeater`** ⚠️ REPEATER — cross-links to nearby city pages (PR #536):
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `nearbyAreaLink` | Button/Link | Link to nearby city page |
+| `nearbyAreaLabel` | Text | City name label |
+
+**JSON-LD**: Injected via backend — no editor element needed (uses `wix-seo` module).
+
+---
+
+## REFERRAL SHARE PAGE (`Referral Share.js`)
+
+**Route**: `/referral` (static page)
+**Source**: `src/pages/Referral Share.js` (or `public/referralUI.js`)
+**PR**: #524 (CF-ld8w)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `referralWidget` | Box | Main referral widget container |
+| `loadingState` | Box | Spinner/loading state — shown while fetching referral data |
+| `errorState` | Box | Error message container |
+| `dashboardError` | Text | Error message text |
+| `referralLink` | Text/Input | Displays the referral URL for copying |
+| `copyBtn` | Button | "Copy Link" — copies referralLink to clipboard |
+| `shareButtons` | Box | Social share buttons container |
+| `totalReferrals` | Text | "X friends referred" count |
+| `earnedRewards` | Text | "You've earned $X" |
+| `pendingRewards` | Text | "Pending: $X" |
+
+**Clone candidate**: Member Page (has similar dashboard layout).
+
+---
+
+## SUBMIT PHOTO REVIEW PAGE (`Submit Photo Review.js`)
+
+**Route**: `/submit-review` (static page)
+**Source**: `src/pages/Submit Photo Review.js`
+**PR**: #532 (CF-zkdy-ui-submit)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `submitFormSection` | Box | Main form container — expand/collapse |
+| `productNameDisplay` | Text | Pre-filled product name (from query param) |
+| `photoUploadButton` | UploadButton | Wix UploadButton for photo selection |
+| `photoPreview` | Image | Preview of selected photo — collapsed until file chosen |
+| `ratingInput` | StarRating/Slider | Rating (1-5 stars) |
+| `reviewTextInput` | TextArea | Review body text |
+| `captionInput` | TextInput | Short photo caption |
+| `validationMessage` | Text | Inline validation error — expanded on error |
+| `submitBtn` | Button | "Submit Photo" — disabled during upload |
+| `successSection` | Box | Success state container — collapsed by default |
+| `successMessage` | Text | "Thanks! Your photo is in review." |
+>>>>>>> origin/cf-ld8w-referral-ui
 
 ---
 
@@ -2199,6 +2301,7 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 All major pages now have both backend and frontend code. The following are in development or planned:
 
+<<<<<<< HEAD
 | Page | Status | Notes |
 |---|---|---|
 | Style Quiz | ✅ Frontend + backend complete | S4 (state persistence + share) in progress |
@@ -2206,6 +2309,14 @@ All major pages now have both backend and frontend code. The following are in de
 | Room Planner | ✅ Frontend + backend complete (S1–S7) | — |
 | Gift Cards | ✅ Frontend + backend complete | — |
 | Local SEO | ✅ Frontend + backend complete | S2 (schema + FAQ) in progress |
+=======
+| Page | Backend File | What It Does | Clone Candidate |
+|---|---|---|---|
+| Style Quiz | `styleQuiz.web.js` | 60-second product recommendation quiz | FAQ page (repeater + progress) |
+| Blog | `blogContent.js` | 8 SEO pillar posts, FAQ schema | Privacy/Terms (repeater + TOC) |
+| Room Planner | `roomPlanner.web.js` | Virtual room layout tool | New page (unique UI) |
+| Admin Reviews | `adminReviews HTTP fn` | Moderation queue — approve/reject UGC photos | Interim: HTTP-only until dashboard wired |
+>>>>>>> origin/cf-ld8w-referral-ui
 
 ---
 

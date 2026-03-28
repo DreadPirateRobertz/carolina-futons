@@ -730,6 +730,19 @@ const PAGES = [
         ["newsletterSuccess","Text","Hidden success msg"],
         ["newsletterError","Text","Hidden error msg"]
       ]},
+      { name: "Gift Card Section (PR #533)", impl: `<h4>🎁 Implementation — Gift Card Section</h4>
+<p><strong>CF-mwpw</strong>: A hero CTA section for gift cards. Add as a Section on the Home page.</p>
+<ul>
+  <li><strong>#giftCardSection</strong>: Section or Box container. <span class="impl-warn">Code collapses this if gift cards are disabled</span> — hidden until gift card feature is active.</li>
+  <li><strong>#giftCardHeading</strong>: Text element. Code sets to "Give the gift of great furniture".</li>
+  <li><strong>#giftCardDesc</strong>: Text element. Code sets description copy.</li>
+  <li><strong>#giftCardBtn</strong>: Button element. Label "Shop Gift Cards" — onClick navigates to <code>/gift-cards</code>.</li>
+</ul>`, elements: [
+        ["giftCardSection","Section","Gift card CTA container — collapsed if feature disabled"],
+        ["giftCardHeading","Text","'Give the gift of great furniture'"],
+        ["giftCardDesc","Text","Gift card description copy"],
+        ["giftCardBtn","Button","'Shop Gift Cards' → /gift-cards"]
+      ]},
       { name: "SEO / Decorative", impl: `<h4>🔍 Implementation — SEO / Decorative</h4>
 <ul>
   <li><strong>#websiteSchemaHtml</strong>: Hidden HtmlComponent. Code injects WebSite JSON-LD schema (Google sitelinks searchbox). Place anywhere on page — not visible to users.</li>
@@ -1165,6 +1178,13 @@ Right column:
         ["stickyAtcProductName","Text","Sticky bar: product name"],
         ["stickyAtcPrice","Text","Sticky bar: formatted price"],
         ["stickyAtcBtn","Button","Sticky bar: Add to Cart CTA"]
+      ]},
+      { name: "Gift as a Gift CTA (PR #529)", impl: `<h4>🎁 Implementation — Gift as a Gift CTA</h4>
+<p><strong>CF-9fv2</strong>: Add a "Give as a Gift" button on the Product Page. Links to the Wix Stores gift card flow with product context.</p>
+<ul>
+  <li><strong>#giftProductBtn</strong>: Button element. Label "Give as a Gift". Code sets <code>link</code> to the Wix Stores gift card flow URL with the current product slug as a query param. <span class="impl-warn">Fails silently if absent</span> — not all product variants require this.</li>
+</ul>`, elements: [
+        ["giftProductBtn","Button","'Give as a Gift' → Wix Stores gift card flow"]
       ]},
       { name: "Related Products", repeater: "relatedRepeater", impl: `<h4>🔗 Implementation — Related Products</h4>
 <p><strong>Layout: Section heading + 4-card product grid (below-fold, deferred)</strong></p>
@@ -4282,6 +4302,7 @@ SHARING:
     ]
   },
   {
+<<<<<<< HEAD
     name: "Style Quiz", file: "Style Quiz.js", priority: "P1", est: "30 min",
     sections: [
       { name: "Quiz Steps", impl: `<h4>🎯 Implementation — Quiz Steps (Style Quiz)</h4>
@@ -4564,10 +4585,49 @@ SHARING:
       ], children: [
         ["crossLinkLabel","Text","Link text"],
         ["crossLinkBtn","Button","Target page link"]
+=======
+    name: "Local SEO City Page", file: "Near City Page.js", priority: "P2", est: "40 min",
+    sections: [
+      { name: "City Content (PRs #522, #528, #530, #531, #536)", impl: `<h4>📍 Implementation — Local SEO City Page</h4>
+<p><strong>Route</strong>: <code>/near/[city-slug]</code> (dynamic, router-based). Source: <code>src/pages/Near City Page.js</code>. PRs: #522 (CF-kj47), #531 (CF-kljz), #530 (CF-4poq), #528 (CF-gjy4), #536 (CF-54s6).</p>
+<ul>
+  <li><strong>#routerData</strong>: Hidden HtmlComponent. Receives router data (city slug, state, etc.) via <code>postMessage()</code> from the router backend.</li>
+  <li><strong>#localPageContent</strong>: Box or Section — the main content container. <span class="impl-warn">Hidden if city not found</span>; shown on successful data load.</li>
+  <li><strong>#notFoundMessage</strong>: Text fallback. Code shows this if the city slug doesn't match any known city.</li>
+  <li><strong>#cityTitle</strong>: Text — code sets to "{city}, {state}" heading.</li>
+  <li><strong>#cityHeadline</strong>: Text — SEO headline for the city page.</li>
+  <li><strong>#directionsText</strong>: Text — directions description text from the city data.</li>
+  <li><strong>#directionsBtn</strong>: Button — "Get Directions" → opens Google Maps link for that city.</li>
+  <li><strong>#mapEmbed</strong>: Iframe or Image — code sets <code>src</code>/<code>url</code> to Google Maps static embed for the city.</li>
+  <li><strong>#homeCityBadge</strong>: Box or Text — "Serving the {city} area" badge. <span class="impl-warn">Show/hide based on city proximity to showroom</span>.</li>
+</ul>
+<p><strong>#featuredProductsRepeater</strong>: ⚠️ REPEATER — city-relevant products grid.</p>
+<p><strong>#nearbyAreasRepeater</strong>: ⚠️ REPEATER — cross-links to nearby city pages (PR #536).</p>
+<p><strong>JSON-LD</strong>: LocalBusiness schema injected via backend (<code>wix-seo</code> module) — no editor element needed.</p>`, elements: [
+        ["routerData","HtmlComponent","Hidden — receives router data via postMessage"],
+        ["localPageContent","Box","Main content — hidden if city not found"],
+        ["notFoundMessage","Text","City not found fallback"],
+        ["cityTitle","Text","{city}, {state} heading"],
+        ["cityHeadline","Text","SEO headline"],
+        ["directionsText","Text","Directions copy"],
+        ["directionsBtn","Button","Get Directions → Google Maps"],
+        ["mapEmbed","Iframe","Google Maps static embed"],
+        ["homeCityBadge","Box","Serving {city} area badge"],
+        ["featuredProductsRepeater","Repeater","City-relevant products"],
+        ["nearbyAreasRepeater","Repeater","Nearby city cross-links"]
+      ], children: [
+        ["productImage","Image","Product image (featuredProductsRepeater)"],
+        ["productName","Text","Product name"],
+        ["productPrice","Text","Price display"],
+        ["viewProductBtn","Button","View Product CTA"],
+        ["nearbyAreaLink","Button","Link to nearby city page (nearbyAreasRepeater)"],
+        ["nearbyAreaLabel","Text","City name label"]
+>>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   },
   {
+<<<<<<< HEAD
     name: "Community Gallery", file: "Community Gallery.js", priority: "P2", est: "40 min",
     sections: [
       { name: "Gallery Grid", repeater: "galleryMasonryRepeater", impl: `<h4>📷 Implementation — Gallery Grid (Community Gallery)</h4>
@@ -4631,10 +4691,40 @@ SHARING:
         ["galleryLightboxCaption","Text","Caption/room type"],
         ["galleryLightboxCustomer","Text","Customer name"],
         ["galleryLightboxProductLink","Button","Shop This Product"]
+=======
+    name: "Referral Share Page", file: "Referral Share.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "Referral Dashboard (PR #524 — CF-ld8w)", impl: `<h4>🔗 Implementation — Referral Share Page</h4>
+<p><strong>Route</strong>: <code>/referral</code> (static page). Source: <code>src/pages/Referral Share.js</code>. PR: #524 (CF-ld8w).</p>
+<p><strong>Clone candidate</strong>: Member Page (has similar dashboard layout).</p>
+<ul>
+  <li><strong>#referralWidget</strong>: Box — main referral widget container. Shown after data loads.</li>
+  <li><strong>#loadingState</strong>: Box — spinner/loading state. <span class="impl-warn">Shown while fetching referral data</span>, hidden on resolve.</li>
+  <li><strong>#errorState</strong>: Box — error message container. Shown on fetch failure.</li>
+  <li><strong>#dashboardError</strong>: Text — error message copy inside errorState.</li>
+  <li><strong>#referralLink</strong>: Text or Input — code sets value/text to the user's full referral URL for display.</li>
+  <li><strong>#copyBtn</strong>: Button — "Copy Link". Code copies <code>#referralLink</code> value to clipboard on click.</li>
+  <li><strong>#shareButtons</strong>: Box — container for social share buttons (rendered by code).</li>
+  <li><strong>#totalReferrals</strong>: Text — code sets to "X friends referred".</li>
+  <li><strong>#earnedRewards</strong>: Text — code sets to "You've earned $X".</li>
+  <li><strong>#pendingRewards</strong>: Text — code sets to "Pending: $X".</li>
+</ul>`, elements: [
+        ["referralWidget","Box","Main referral container"],
+        ["loadingState","Box","Spinner — shown while fetching"],
+        ["errorState","Box","Error message container"],
+        ["dashboardError","Text","Error message text"],
+        ["referralLink","Text","Displays referral URL"],
+        ["copyBtn","Button","Copy Link to clipboard"],
+        ["shareButtons","Box","Social share buttons container"],
+        ["totalReferrals","Text","X friends referred"],
+        ["earnedRewards","Text","You've earned $X"],
+        ["pendingRewards","Text","Pending: $X"]
+>>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   },
   {
+<<<<<<< HEAD
     name: "Referral Page", file: "Referral Page.js", priority: "P2", est: "35 min",
     sections: [
       { name: "Auth State", impl: `<h4>🔐 Implementation — Auth State (Referral Page)</h4>
@@ -5084,6 +5174,36 @@ SHARING:
         ["roomCaptionInput","Input","Caption input"],
         ["roomRoomTypeDropdown","Dropdown","Room type selector"],
         ["roomSubmitStatus","Text","Status/error message"]
+=======
+    name: "Submit Photo Review Page", file: "Submit Photo Review.js", priority: "P2", est: "30 min",
+    sections: [
+      { name: "UGC Upload Form (PR #532 — CF-zkdy)", impl: `<h4>📸 Implementation — Submit Photo Review Page</h4>
+<p><strong>Route</strong>: <code>/submit-review</code> (static page). Source: <code>src/pages/Submit Photo Review.js</code>. PR: #532 (CF-zkdy-ui-submit).</p>
+<ul>
+  <li><strong>#submitFormSection</strong>: Box — main form container. Expand/collapse state managed by code.</li>
+  <li><strong>#productNameDisplay</strong>: Text — code pre-fills product name from <code>?product=</code> query param.</li>
+  <li><strong>#photoUploadButton</strong>: Wix UploadButton — for photo file selection. Code listens to <code>onChange</code>.</li>
+  <li><strong>#photoPreview</strong>: Image — preview of selected photo. <span class="impl-warn">Collapsed until a file is chosen</span>.</li>
+  <li><strong>#ratingInput</strong>: StarRating or Slider element — 1–5 rating. Code reads <code>.value</code> on submit.</li>
+  <li><strong>#reviewTextInput</strong>: TextArea — review body text. Required field.</li>
+  <li><strong>#captionInput</strong>: TextInput — short photo caption. Optional.</li>
+  <li><strong>#validationMessage</strong>: Text — inline validation error. <span class="impl-warn">Expanded on validation failure</span>, collapsed otherwise.</li>
+  <li><strong>#submitBtn</strong>: Button — "Submit Photo". Code disables during upload to prevent double-submit.</li>
+  <li><strong>#successSection</strong>: Box — success state container. <span class="impl-warn">Collapsed by default</span>, shown after successful submit.</li>
+  <li><strong>#successMessage</strong>: Text — code sets to "Thanks! Your photo is in review."</li>
+</ul>`, elements: [
+        ["submitFormSection","Box","Main form container"],
+        ["productNameDisplay","Text","Pre-filled product name from query param"],
+        ["photoUploadButton","UploadButton","Wix photo upload"],
+        ["photoPreview","Image","Selected photo preview — collapsed until chosen"],
+        ["ratingInput","StarRating","1–5 star rating"],
+        ["reviewTextInput","TextArea","Review body text"],
+        ["captionInput","TextInput","Short photo caption (optional)"],
+        ["validationMessage","Text","Inline validation error — expanded on failure"],
+        ["submitBtn","Button","Submit Photo — disabled during upload"],
+        ["successSection","Box","Success state — collapsed by default"],
+        ["successMessage","Text","'Thanks! Your photo is in review.'"]
+>>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   }
