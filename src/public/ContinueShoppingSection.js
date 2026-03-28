@@ -25,7 +25,10 @@
 
 import { getRecentlyViewed } from 'public/galleryHelpers.js';
 import { to } from 'wix-location-frontend';
+<<<<<<< HEAD
 import { renderSimplePrice } from 'public/productCardHelpers.js';
+=======
+>>>>>>> origin/cf-ku3x-continue-shopping
 
 const MAX_ITEMS = 6;
 const SLUG_RE = /^[a-z0-9-]+$/;
@@ -59,7 +62,11 @@ export function initContinueShoppingSection($w, opts = {}) {
     $item('#continueShoppingImage').src = itemData.mainMedia || '';
     $item('#continueShoppingImage').alt = itemData.name || '';
     $item('#continueShoppingName').text = itemData.name || '';
+<<<<<<< HEAD
     renderSimplePrice($item('#continueShoppingPrice'), itemData);
+=======
+    $item('#continueShoppingPrice').text = itemData.price || '';
+>>>>>>> origin/cf-ku3x-continue-shopping
 
     $item('#continueShoppingLink').onClick(() => {
       const slug = safeSlug(itemData.slug);

@@ -265,13 +265,21 @@ describe('Home page onReady', () => {
     expect(seo.critical).toBe(false);
   });
 
+<<<<<<< HEAD
   it('has exactly 3 critical and 17 deferred sections', async () => {
+=======
+  it('has exactly 3 critical and 16 deferred sections', async () => {
+>>>>>>> origin/cf-ku3x-continue-shopping
     await onReadyHandler();
     const sections = prioritizeSections.mock.calls[0][0];
     const critical = sections.filter(s => s.critical);
     const deferred = sections.filter(s => !s.critical);
     expect(critical).toHaveLength(3);
+<<<<<<< HEAD
     expect(deferred).toHaveLength(17);
+=======
+    expect(deferred).toHaveLength(16);
+>>>>>>> origin/cf-ku3x-continue-shopping
   });
 
   it('every section has a name and init function', async () => {
