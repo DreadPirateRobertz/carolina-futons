@@ -99,6 +99,14 @@ vi.mock('public/productPageUtils.js', () => ({
   CALL_FOR_PRICE_TEXT: 'Call for Pricing',
 }));
 
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(($el, product) => {
+    if ($el && product) $el.text = product.formattedPrice || '';
+  }),
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+}));
+
 vi.mock('wix-location-frontend', () => ({ to: vi.fn() }));
 
 // ── Obtain mock references via await import ───────────────────────

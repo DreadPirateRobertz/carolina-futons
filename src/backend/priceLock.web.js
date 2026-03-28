@@ -18,6 +18,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import { logAuditEvent } from 'backend/utils/auditLog';
@@ -52,8 +53,10 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  */
 export const createPriceLock = webMethod(
   Permissions.SiteMember,
-  async ({ productId, currentPrice, productName, email, tier = 30 }, memberId) => {
+  async ({ productId, currentPrice, productName, email, tier = 30 }) => {
     try {
+      const member = await currentMember.getMember();
+      const memberId = member?._id;
       if (!memberId) return { success: false, error: 'Authentication required' };
 
       const cleanProductId = sanitize(productId, 50);
@@ -207,8 +210,10 @@ export const getMyPriceLocks = webMethod(
  */
 export const checkPriceLock = webMethod(
   Permissions.SiteMember,
-  async (productId, memberId) => {
+  async (productId) => {
     try {
+      const member = await currentMember.getMember();
+      const memberId = member?._id;
       if (!memberId || !productId) return { hasLock: false };
 
       const cleanProductId = sanitize(productId, 50);

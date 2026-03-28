@@ -164,7 +164,7 @@ describe('submitReturnRequest — quantity coercion edge cases', () => {
 
   it('floors fractional quantity 1.9 to 1', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     const result = await submitReturnRequest({
       ...baseData(),
       items: [{ lineItemId: 'aaa11111-0000-0000-0000-000000000001', quantity: 1.9 }],
@@ -176,7 +176,7 @@ describe('submitReturnRequest — quantity coercion edge cases', () => {
 
   it('clamps quantity to max(1, floor(qty)) so 0.1 becomes 1', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     const result = await submitReturnRequest({
       ...baseData(),
       items: [{ lineItemId: 'aaa11111-0000-0000-0000-000000000001', quantity: 0.1 }],
@@ -213,35 +213,35 @@ describe('submitReturnRequest — type field edge cases', () => {
 
   it('defaults type to "return" when type is undefined', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitReturnRequest(baseData());
     expect(inserted.type).toBe('return');
   });
 
   it('defaults type to "return" when type is null', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitReturnRequest({ ...baseData(), type: null });
     expect(inserted.type).toBe('return');
   });
 
   it('defaults type to "return" when type is arbitrary string', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitReturnRequest({ ...baseData(), type: 'refund' });
     expect(inserted.type).toBe('return');
   });
 
   it('preserves "exchange" type exactly', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitReturnRequest({ ...baseData(), type: 'exchange' });
     expect(inserted.type).toBe('exchange');
   });
 
   it('type "Exchange" (capitalized) defaults to "return" — case sensitive', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitReturnRequest({ ...baseData(), type: 'Exchange' });
     expect(inserted.type).toBe('return');
   });
@@ -311,7 +311,7 @@ describe('submitReturnRequest — details edge cases', () => {
 
   it('accepts empty string details gracefully', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     const result = await submitReturnRequest({ ...baseData(), details: '' });
     expect(result.success).toBe(true);
     expect(inserted.details).toBe('');
@@ -319,7 +319,7 @@ describe('submitReturnRequest — details edge cases', () => {
 
   it('accepts undefined details (defaults to empty)', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     const result = await submitReturnRequest(baseData());
     expect(result.success).toBe(true);
     expect(typeof inserted.details).toBe('string');
@@ -327,7 +327,7 @@ describe('submitReturnRequest — details edge cases', () => {
 
   it('truncates details exceeding 2000 chars', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     const longDetails = 'A'.repeat(3000);
     const result = await submitReturnRequest({ ...baseData(), details: longDetails });
     expect(result.success).toBe(true);
@@ -553,7 +553,7 @@ describe('submitGuestReturn — edge cases', () => {
 
   it('builds memberName from billingInfo when present', async () => {
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitGuestReturn({
       orderNumber: '20001',
       email: 'deep@example.com',
@@ -568,7 +568,7 @@ describe('submitGuestReturn — edge cases', () => {
       billingInfo: { firstName: '', lastName: '', contactDetails: {} },
     })]);
     let inserted;
-    __onInsert((col, rec) => { inserted = rec; });
+    __onInsert((col, rec) => { if (col === 'Returns') inserted = rec; });
     await submitGuestReturn({
       orderNumber: '20001',
       email: 'deep@example.com',

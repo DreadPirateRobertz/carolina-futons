@@ -30,7 +30,7 @@ describe('subscribeToNewsletter', () => {
 
   it('persists subscriber to NewsletterSubscribers collection', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('jane@test.com');
 
@@ -43,7 +43,7 @@ describe('subscribeToNewsletter', () => {
 
   it('normalizes email to lowercase', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('USER@Example.COM');
     expect(inserted.item.email).toBe('user@example.com');
@@ -51,7 +51,7 @@ describe('subscribeToNewsletter', () => {
 
   it('trims whitespace from email', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('  test@test.com  ');
     expect(inserted.item.email).toBe('test@test.com');
@@ -59,7 +59,7 @@ describe('subscribeToNewsletter', () => {
 
   it('accepts custom source parameter', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('user@test.com', { source: 'homepage_footer' });
     expect(inserted.item.source).toBe('homepage_footer');
@@ -83,7 +83,7 @@ describe('subscribeToNewsletter', () => {
     ]);
 
     let insertCount = 0;
-    __onInsert(() => { insertCount++; });
+    __onInsert((collection) => { if (collection === 'NewsletterSubscribers') insertCount++; });
 
     await subscribeToNewsletter('dupe@test.com');
     expect(insertCount).toBe(0);
@@ -95,7 +95,7 @@ describe('subscribeToNewsletter', () => {
     ]);
 
     let insertCount = 0;
-    __onInsert(() => { insertCount++; });
+    __onInsert((collection) => { if (collection === 'NewsletterSubscribers') insertCount++; });
 
     await subscribeToNewsletter('USER@TEST.COM');
     expect(insertCount).toBe(0);
@@ -143,7 +143,7 @@ describe('subscribeToNewsletter', () => {
 
   it('sanitizes HTML in email (strips tags before storing)', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     // sanitize strips <script> tags → "alert(\"xss\")user@test.com" is valid email format
     const result = await subscribeToNewsletter('<script>alert("xss")</script>user@test.com');
@@ -155,7 +155,7 @@ describe('subscribeToNewsletter', () => {
 
   it('sanitizes source parameter', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('user@test.com', { source: '<img onerror=alert(1)>popup' });
     if (inserted) {
@@ -167,7 +167,7 @@ describe('subscribeToNewsletter', () => {
 
   it('records loyalty tier as Bronze for new subscriber', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'NewsletterSubscribers') inserted = { collection, item }; });
 
     await subscribeToNewsletter('loyal@test.com');
     expect(inserted.item.loyaltyTier).toBe('Bronze');

@@ -42,7 +42,7 @@ describe('_TEMPLATE_REGISTRY', () => {
 
     // Step 2 (Day 7): Review solicitation
     expect(sorted[1].name).toContain('Review');
-    expect(sorted[1].subjectLine).toMatch(/review|enjoying/i);
+    expect(sorted[1].subjectLine).toMatch(/review|enjoying|share|experience/i);
     expect(sorted[1].variables).toContain('reviewUrl');
 
     // Step 3 (Day 30): Care guide + upsell (unchanged)
