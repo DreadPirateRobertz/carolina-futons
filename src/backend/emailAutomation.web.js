@@ -134,6 +134,7 @@ export function wixEcom_onOrderCreated(event) {
     name: item.name || item.productName?.original || '',
     quantity: item.quantity || 1,
     price: item.price || item.price?.amount || 0,
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '', // CF-fzsd
   }));
 
   if (!email) return;
@@ -434,7 +435,11 @@ export const triggerPostPurchaseSequence = webMethod(
 
       const SITE_URL = 'https://www.carolinafutons.com';
       const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
-      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      // CF-fzsd: deep-link to product review form using slug from first purchased item
+      const primarySlug = (lineItems || []).find(i => i.slug)?.slug || '';
+      const reviewUrl = primarySlug
+        ? `${SITE_URL}/product-page/${primarySlug}#reviews`
+        : `${SITE_URL}/member-page#reviews`;
 
       const now = new Date();
       let queued = 0;
@@ -990,7 +995,7 @@ export const recordEmailEvent = webMethod(
       const { emailQueueId, eventType, linkUrl } = params;
 
       if (!emailQueueId || !eventType) return { success: false };
-      if (eventType !== 'open' && eventType !== 'click') return { success: false };
+      if (eventType !== 'open' && eventType !== 'click' && eventType !== 'conversion') return { success: false };
 
       const cleanId = sanitize(emailQueueId, 50);
       const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
@@ -1046,10 +1051,12 @@ export const getEmailEvents = webMethod(
 
       const opens = events.filter(e => e.eventType === 'open').length;
       const clicks = events.filter(e => e.eventType === 'click').length;
+      const conversions = events.filter(e => e.eventType === 'conversion').length;
 
       return {
         opens,
         clicks,
+        conversions,
         events: events.map(e => ({
           _id: e._id,
           emailQueueId: e.emailQueueId,

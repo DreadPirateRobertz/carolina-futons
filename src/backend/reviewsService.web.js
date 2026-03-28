@@ -27,6 +27,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { recordEmailEvent } from 'backend/emailAutomation.web'; // CF-fzsd: conversion tracking
 
 const COLLECTION = 'Reviews';
 const MAX_PHOTOS = 3;
@@ -218,6 +219,13 @@ export const submitReview = webMethod(
         { has_photo: photos.length > 0 },
         memberId,
       ).catch(err => console.warn('[reviewsService] gamification event failed:', err));
+
+      // CF-fzsd: record email conversion when review came from a review-request email
+      const emailQueueId = data.emailQueueId ? sanitize(data.emailQueueId, 50) : '';
+      if (emailQueueId) {
+        recordEmailEvent({ emailQueueId, eventType: 'conversion' })
+          .catch(err => console.warn('[reviewsService] email conversion record failed:', err));
+      }
 
       return { success: true, reviewId: saved._id };
     } catch (err) {
