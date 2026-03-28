@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-28 (v2.5 — Added Comfort Timeline (CF-256r, PR #875) and Futon Sommelier (CF-ofc0, PR #876). Both backend-only modules requiring CMS collections + wiring.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-28 (v2.6 — Session 28/29 wave: Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib, PR #884 merged), Day-7 Review Email (CF-fzsd, PR #885 merged), A/B Testing (CF-blhq, PR #874), GA4 Funnel Events (CF-zqz2, PR #881), Cross-rig Event Bus (CF-qe31, PR #882). All backend-only — editor wiring pending Stilgar hookup.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2370,4 +2370,9 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Comfort Timeline Widget | 🔲 Backend merged (PR #875) — Member Dashboard section TBD | CF-256r — break-in tracker |
 | Futon Sommelier Widget | 🔲 Backend merged (PR #876) — Style Quiz handoff or standalone page TBD | CF-ofc0 — lifestyle recommendation engine |
+| Personalized Hero | 🔲 Backend merged (commit f0fbb9fd) — Home page hero wiring TBD | CF-tj6f — blocked on Home page hookup |
+| Futon Fit Score | 🔲 Backend merged (commit 92ed82b2) — Product card wiring TBD | CF-hx8m — "94% match" badge on product cards |
+| AI Room Staging | 🔲 Backend merged (commit 17a72f85) — PDP "See It In Your Room" button TBD | CF-s22f — photo upload + AI composite |
+| Live Showroom Camera | 🔲 Backend merged (commit f72ddb7e) — PDP "See It Live" toggle TBD | CF-gt99 — webcam feed + reserve button |
+| App Download Banner | 🔲 Backend merged (PR #884) — Android elements need editor wiring | CF-e2ib — iOS auto via meta tag; Android needs #appDownloadBanner |
 | Charcoal | `#2C2C2C` | Body text |
