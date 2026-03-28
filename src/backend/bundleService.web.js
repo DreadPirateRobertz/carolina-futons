@@ -48,6 +48,7 @@ import { cart as ecomCart } from 'wix-ecom-backend';
 import { validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import { getBundleTag } from 'public/bundleHelpers';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const COLLECTION = 'Bundles';
 const UBC_COLLECTION = 'UserBundleCart';
@@ -155,6 +156,9 @@ export const addBundle = webMethod(
     }
     // Sanitize caller-supplied sessionId before CMS storage — reject invalid, truncate long
     const cleanSessionId = sessionId ? (validateId(sessionId, 128) || null) : null;
+
+    const { allowed } = await checkRateLimit('BundleAddRateLimit', cleanSessionId || cleanId, { max: 10 });
+    if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
     try {
       const result = await wixData.query(COLLECTION)

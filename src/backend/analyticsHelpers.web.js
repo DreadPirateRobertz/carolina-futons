@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 /**
  * Track a product page view for analytics and "popular products" features.
@@ -44,6 +45,9 @@ export const trackProductView = webMethod(
       const cleanId = sanitize(productId, 50);
       const cleanName = sanitize(productName, 200);
       const cleanCategory = sanitize(category, 100);
+
+      const { allowed } = await checkRateLimit('AnalyticsEventRateLimit', cleanId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return; // Silent drop for tracking
 
       // Check if we already have an analytics record for this product
       const existing = await wixData.query('ProductAnalytics')
@@ -89,8 +93,12 @@ export const trackAddToCart = webMethod(
   Permissions.Anyone,
   async (productId) => {
     try {
+      const cleanProdId = sanitize(productId, 50);
+      const { allowed } = await checkRateLimit('AnalyticsEventRateLimit', cleanProdId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return; // Silent drop for tracking
+
       const existing = await wixData.query('ProductAnalytics')
-        .eq('productId', sanitize(productId, 50))
+        .eq('productId', cleanProdId)
         .find();
 
       if (existing.items.length > 0) {
@@ -120,6 +128,9 @@ export const trackSocialShare = webMethod(
     try {
       const cleanId = sanitize(productId, 50);
       const cleanPlatform = sanitize(platform || '', 50);
+
+      const { allowed } = await checkRateLimit('AnalyticsEventRateLimit', cleanId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return; // Silent drop for tracking
 
       const existing = await wixData.query('ProductAnalytics')
         .eq('productId', cleanId)
@@ -426,8 +437,12 @@ export const trackPurchase = webMethod(
   Permissions.Anyone,
   async (productId) => {
     try {
+      const cleanProdId = sanitize(productId, 50);
+      const { allowed } = await checkRateLimit('AnalyticsEventRateLimit', cleanProdId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return; // Silent drop for tracking
+
       const existing = await wixData.query('ProductAnalytics')
-        .eq('productId', sanitize(productId, 50))
+        .eq('productId', cleanProdId)
         .find();
 
       if (existing.items.length > 0) {

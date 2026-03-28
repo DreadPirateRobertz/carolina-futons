@@ -19,6 +19,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const LOW_STOCK_THRESHOLD = 5;
 const RECENT_PURCHASE_HOURS = 48;
@@ -241,6 +242,9 @@ export const incrementViewerCount = webMethod(
     if (!productId) return { ok: false };
     const id = validateId(productId, 50);
     if (!id) return { ok: false };
+
+    const { allowed } = await checkRateLimit('ViewerCountRateLimit', id, { max: 60, windowMs: 60_000 });
+    if (!allowed) return { ok: false };
 
     // Server-side rate limiting: reject duplicate increments within TTL window
     if (sessionToken) {

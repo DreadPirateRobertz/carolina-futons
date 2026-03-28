@@ -36,6 +36,7 @@ import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -861,6 +862,9 @@ export const unsubscribeContact = webMethod(
       const cleanEmail = sanitize(email, 254).toLowerCase();
       if (!validateEmail(cleanEmail)) return { success: false };
 
+      const { allowed } = await checkRateLimit('UnsubscribeRateLimit', cleanEmail, { max: 10 });
+      if (!allowed) return { success: false };
+
       const cleanType = sanitize(sequenceType, 50);
 
       // Record unsubscribe
@@ -957,6 +961,9 @@ export const recordEmailEvent = webMethod(
 
       const cleanId = sanitize(emailQueueId, 50);
       const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
+
+      const { allowed } = await checkRateLimit('EmailEventRateLimit', cleanId, { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       await wixData.insert('EmailEvents', {
         emailQueueId: cleanId,

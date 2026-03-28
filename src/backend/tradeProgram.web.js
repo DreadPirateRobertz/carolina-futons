@@ -32,6 +32,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -116,6 +117,9 @@ export const applyForTradeAccount = webMethod(
       if (!businessName) return { success: false, error: 'Business name is required' };
       if (!contactName) return { success: false, error: 'Contact name is required' };
       if (!contactEmail || !validateEmail(contactEmail)) return { success: false, error: 'Valid email is required' };
+
+      const { allowed } = await checkRateLimit('TradeApplicationRateLimit', contactEmail);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       // Check for existing application
       const existing = await getTradeAccountByEmail(contactEmail);

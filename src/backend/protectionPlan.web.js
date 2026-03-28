@@ -21,6 +21,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const SELECTIONS_COLLECTION = 'ProtectionPlanSelections';
 
@@ -164,6 +165,10 @@ export const addProtectionPlan = webMethod(
 
       const cleanTier = sanitize(tier, 20);
       if (!PLAN_TIERS[cleanTier]) return { success: false };
+
+      const rateLimitKey = sessionId ? sanitize(sessionId, 100) : cleanId;
+      const { allowed } = await checkRateLimit('ProtectionPlanRateLimit', rateLimitKey, { max: 10 });
+      if (!allowed) return { success: false };
 
       const cleanSession = sanitize(sessionId || '', 100);
 

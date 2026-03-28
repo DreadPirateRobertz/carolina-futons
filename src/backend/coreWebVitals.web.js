@@ -32,6 +32,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const METRICS_COLLECTION = 'PerformanceMetrics';
 const BUDGETS_COLLECTION = 'PerformanceBudgets';
@@ -81,6 +82,9 @@ export const reportMetrics = webMethod(
       if (!sessionId || !page) {
         return { success: false, error: 'Invalid sessionId or page' };
       }
+
+      const { allowed } = await checkRateLimit('MetricsReportRateLimit', sessionId, { max: 30, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       const deviceType = VALID_DEVICE_TYPES.includes(data.deviceType)
         ? data.deviceType

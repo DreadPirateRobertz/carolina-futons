@@ -30,6 +30,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 /** Constant-time string comparison to prevent timing attacks on cancel tokens. */
 function timingSafeEqual(a, b) {
@@ -176,6 +177,10 @@ export const reserveDeliveryWindow = webMethod(
       if (!['white_glove', 'local'].includes(deliveryType)) {
         return { success: false, message: 'Invalid delivery type' };
       }
+
+      const rateLimitKey = data.customerEmail ? sanitize(data.customerEmail, 254).toLowerCase() : orderId;
+      const { allowed } = await checkRateLimit('DeliveryReservationRateLimit', rateLimitKey);
+      if (!allowed) return { success: false, message: 'Too many requests. Please try again later.' };
 
       const dateObj = new Date(date + 'T12:00:00');
       if (!DELIVERY_DAYS.includes(dateObj.getDay())) {

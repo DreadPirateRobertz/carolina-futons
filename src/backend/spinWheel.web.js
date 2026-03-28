@@ -18,6 +18,7 @@ import { getTodayET } from 'backend/utils/dateUtils';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Collections ──────────────────────────────────────────────────────────────
 
@@ -359,6 +360,9 @@ export const captureSpinEmail = webMethod(
       if (!/^[^\s@<>]+@[^\s@<>.][^\s@<>]*\.[^\s@<>]+$/.test(trimmed)) {
         return { success: false, error: 'INVALID_EMAIL' };
       }
+
+      const { allowed } = await checkRateLimit('SpinWheelRateLimit', trimmed);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       // Check if already captured (avoid duplicates)
       const existing = await wixData.query(SPIN_EMAIL_COLLECTION)

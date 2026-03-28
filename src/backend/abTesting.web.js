@@ -22,6 +22,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // Z-score for 95% confidence (p < 0.05, two-tailed)
 const Z_95 = 1.96;
@@ -119,6 +120,9 @@ export const trackEvent = webMethod(
       if (!validEvents.includes(cleanEvent)) {
         return { success: false };
       }
+
+      const { allowed } = await checkRateLimit('AbTestEventRateLimit', sanitize(visitorId, 100), { max: 60, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop for tracking
 
       await wixData.insert('AbEvents', {
         testName: sanitize(testName, 100),

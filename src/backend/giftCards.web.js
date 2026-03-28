@@ -18,6 +18,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const GIFT_CARD_AMOUNTS = [25, 50, 100, 150, 200, 500];
 const EXPIRATION_DAYS = 365;
@@ -110,6 +111,9 @@ export const checkBalance = webMethod(
     try {
       if (!code) return { found: false };
       const cleanCode = sanitize(code, 30).toUpperCase();
+
+      const { allowed } = await checkRateLimit('GiftCardBalanceRateLimit', cleanCode, { max: 10 });
+      if (!allowed) return { found: false };
 
       const result = await wixData.query('GiftCards')
         .eq('code', cleanCode)

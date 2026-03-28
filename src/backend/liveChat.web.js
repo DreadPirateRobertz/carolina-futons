@@ -26,6 +26,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Default office hours (EST) ──────────────────────────────────────
 
@@ -315,6 +316,10 @@ export const createSupportTicket = webMethod(
       if (cleanEmail && !validateEmail(cleanEmail)) {
         return { success: false, error: 'Please provide a valid email address' };
       }
+
+      const rateLimitKey = cleanEmail || 'anon';
+      const { allowed } = await checkRateLimit('SupportTicketRateLimit', rateLimitKey);
+      if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
       const ticket = await wixData.insert('SupportTickets', {
         name: cleanName || 'Anonymous',

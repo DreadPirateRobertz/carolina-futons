@@ -37,6 +37,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateSlug } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -369,6 +370,9 @@ export const markItemPurchased = webMethod(Permissions.Anyone, async (itemId, da
   try {
     if (!validateId(itemId)) return { success: false, error: 'Invalid item ID' };
     if (!data || typeof data !== 'object') return { success: false, error: 'Invalid data' };
+
+    const { allowed } = await checkRateLimit('RegistryPurchaseRateLimit', itemId);
+    if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
     const item = await wixData.get('GiftRegistryItems', itemId);
     if (!item) return { success: false, error: 'Item not found' };

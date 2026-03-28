@@ -37,6 +37,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const ERROR_LOGS_COLLECTION = 'ErrorLogs';
 const ERROR_GROUPS_COLLECTION = 'ErrorGroups';
@@ -104,6 +105,10 @@ export const logError = webMethod(
         : '';
 
       const groupKey = generateGroupKey(cleanMessage, cleanContext);
+
+      const rateLimitKey = cleanUserId || cleanPage || 'anon';
+      const { allowed } = await checkRateLimit('ErrorLogRateLimit', rateLimitKey, { max: 30, windowMs: 60_000 });
+      if (!allowed) return { success: true }; // Silent drop to prevent error flood
 
       // Insert the error log entry
       await wixData.insert(ERROR_LOGS_COLLECTION, {
