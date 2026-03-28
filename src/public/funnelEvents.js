@@ -5,14 +5,21 @@
 //
 // CF-zqz2
 
+import { logError } from 'backend/errorMonitoring.web';
+
+// Sentinel: LOAD_FAILED prevents re-attempting a broken import on every fire() call.
+const LOAD_FAILED = Symbol('LOAD_FAILED');
 let _wixWindow = null;
 
 async function getWixWindow() {
+  if (_wixWindow === LOAD_FAILED) return null;
   if (!_wixWindow) {
     try {
       _wixWindow = await import('wix-window-frontend');
     } catch (e) {
-      _wixWindow = null;
+      logError({ context: 'funnelEvents.getWixWindow', message: e?.message ?? String(e) });
+      _wixWindow = LOAD_FAILED;
+      return null;
     }
   }
   return _wixWindow;
@@ -22,9 +29,12 @@ async function fire(eventName, params = {}) {
   try {
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
-    ww.trackEvent('CustomEvent', { event: eventName, ...params });
+    // Filter out undefined values so GA4 doesn't receive "undefined" strings.
+    const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined));
+    await ww.trackEvent('CustomEvent', { event: eventName, ...clean });
   } catch (e) {
-    // GA4 events are non-critical
+    // GA4 events are non-critical — log but never throw.
+    logError({ context: `funnelEvents.fire(${eventName})`, message: e?.message ?? String(e) });
   }
 }
 
@@ -38,8 +48,22 @@ export async function fireQuizCompleted({ quizId, result } = {}) {
   await fire('quiz_completed', { quiz_id: quizId, result });
 }
 
+/**
+ * Fire lead_captured event. Email is SHA-256 hashed before sending to GA4
+ * to comply with Google Measurement Protocol ToS and GDPR.
+ */
 export async function fireLeadCaptured({ quizId, email } = {}) {
-  await fire('lead_captured', { quiz_id: quizId, email });
+  let emailHash;
+  if (email) {
+    try {
+      const enc = new TextEncoder().encode(email.trim().toLowerCase());
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      emailHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {
+      // crypto unavailable — omit email
+    }
+  }
+  await fire('lead_captured', { quiz_id: quizId, email_sha256: emailHash });
 }
 
 // ── Swatch ───────────────────────────────────────────────────────────
@@ -122,8 +146,16 @@ export async function fireFinancingApplied({ productId, amount, provider } = {})
 
 // ── Compare ──────────────────────────────────────────────────────────
 
+/**
+ * @param {{ productIds: string[] | string }} [params]
+ * productIds may be an array (joined to CSV) or a pre-formatted CSV string.
+ * Empty array produces no product_ids field (filtered by fire()).
+ */
 export async function fireCompareStarted({ productIds } = {}) {
-  await fire('compare_started', { product_ids: Array.isArray(productIds) ? productIds.join(',') : productIds });
+  const ids = Array.isArray(productIds)
+    ? (productIds.length ? productIds.join(',') : undefined)
+    : productIds;
+  await fire('compare_started', { product_ids: ids });
 }
 
 export async function fireCompareToCart({ productId } = {}) {

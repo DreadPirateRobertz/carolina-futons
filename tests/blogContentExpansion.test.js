@@ -25,8 +25,8 @@ describe('blog content expansion — 6 new posts', () => {
     }
   });
 
-  it('total blog post count is now 14', () => {
-    expect(getAllBlogPosts()).toHaveLength(14);
+  it('total blog post count is now 17', () => {
+    expect(getAllBlogPosts()).toHaveLength(17);
   });
 
   for (const slug of NEW_SLUGS) {
