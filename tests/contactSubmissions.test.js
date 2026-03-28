@@ -12,7 +12,7 @@ describe('submitContactForm', () => {
 
   it('persists submission to ContactSubmissions collection', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'customer@test.com',
@@ -29,7 +29,7 @@ describe('submitContactForm', () => {
 
   it('normalizes email to lowercase', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({ email: 'USER@Example.COM' });
     expect(inserted.item.email).toBe('user@example.com');
@@ -37,7 +37,7 @@ describe('submitContactForm', () => {
 
   it('sanitizes name field (strips HTML)', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -82,7 +82,7 @@ describe('submitContactForm', () => {
 
   it('includes optional fields when provided', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -104,7 +104,7 @@ describe('submitContactForm', () => {
 
   it('strips img tag XSS vectors from name', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -117,7 +117,7 @@ describe('submitContactForm', () => {
 
   it('strips nested/malformed HTML tags from name', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -130,7 +130,7 @@ describe('submitContactForm', () => {
 
   it('strips event handler XSS from notes field', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -144,7 +144,7 @@ describe('submitContactForm', () => {
 
   it('strips SVG-based XSS vectors', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({
       email: 'user@test.com',
@@ -157,7 +157,7 @@ describe('submitContactForm', () => {
 
   it('defaults source to "unknown" when not provided', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     await submitContactForm({ email: 'user@test.com' });
     expect(inserted.item.source).toBe('unknown');
@@ -165,7 +165,7 @@ describe('submitContactForm', () => {
 
   it('sets submittedAt timestamp', async () => {
     let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    __onInsert((collection, item) => { if (collection === 'ContactSubmissions') inserted = { collection, item }; });
 
     const before = Date.now();
     await submitContactForm({ email: 'user@test.com' });
