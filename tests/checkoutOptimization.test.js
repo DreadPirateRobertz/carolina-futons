@@ -501,3 +501,46 @@ describe('getExpressCheckoutSummary', () => {
     expect(result.data.shippingAddress.fullName).not.toContain('<script>');
   });
 });
+
+// ── Branch coverage additions ──────────────────────────────────────
+
+describe('calculateOrderSummary — free shipping threshold', () => {
+  it('qualifies for free shipping at threshold price', () => {
+    const result = calculateOrderSummary({
+      items: [{ price: 999999, quantity: 1 }],
+      state: 'NC',
+    });
+    expect(result.success).toBe(true);
+    expect(result.data.freeShippingProgress.qualifies).toBe(true);
+    expect(result.data.freeShippingProgress.remaining).toBe(0);
+    expect(result.data.freeShippingProgress.percentage).toBe(100);
+    expect(result.data.savings).toBeGreaterThan(0);
+  });
+});
+
+describe('getShippingOptions — free shipping labels', () => {
+  it('shows FREE labels at threshold subtotal', () => {
+    const result = getShippingOptions(999999);
+    const standard = result.options.find(o => o.id === 'standard');
+    const wgLocal = result.options.find(o => o.id === 'white_glove_local');
+    const wgRegional = result.options.find(o => o.id === 'white_glove_regional');
+    expect(standard.price).toBe(0);
+    expect(standard.label).toContain('FREE');
+    expect(wgLocal.price).toBe(0);
+    expect(wgRegional.price).toBe(0);
+  });
+});
+
+describe('getExpressCheckoutSummary — missing optional address fields', () => {
+  it('defaults empty string for missing address fields', () => {
+    const result = getExpressCheckoutSummary({
+      items: [{ price: 400, quantity: 1 }],
+      address: { state: 'NC' }, // only required field
+    });
+    expect(result.success).toBe(true);
+    expect(result.data.shippingAddress.fullName).toBe('');
+    expect(result.data.shippingAddress.line1).toBe('');
+    expect(result.data.shippingAddress.city).toBe('');
+    expect(result.data.shippingAddress.zip).toBe('');
+  });
+});

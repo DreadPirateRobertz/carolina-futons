@@ -4,10 +4,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset, __seed, __getInserted, __setInsertError, __setUpdateError, __setQueryError } from './__mocks__/wix-data.js';
+import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
 import {
   createPassport,
+  getMyPassports,
   getPassport,
+  logCareEvent,
   createResaleListing,
   browseListings,
   _estimateResaleValue,
@@ -18,6 +21,8 @@ import {
 
 beforeEach(() => {
   __reset();
+  __resetMember();
+  __setMember({ _id: 'member-1' });
 });
 
 // ── Passport Creation ───────────────────────────────────────────────
@@ -87,6 +92,15 @@ describe('createPassport', () => {
     expect(audits).toHaveLength(1);
     expect(audits[0].action).toBe('create');
   });
+
+  it('returns error on database failure', async () => {
+    __setInsertError('ProductPassports', new Error('DB error'));
+    const result = await createPassport({
+      orderId: 'o1', productId: 'p1', productName: 'Frame', purchasePrice: 300, memberId: 'm1',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Failed to create');
+  });
 });
 
 // ── Get Passport ────────────────────────────────────────────────────
@@ -111,6 +125,20 @@ describe('getPassport', () => {
   it('returns failure for unknown passport', async () => {
     __seed('ProductPassports', []);
     const result = await getPassport('nonexistent');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns failure when passportId is missing', async () => {
+    const result = await getPassport(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error on database failure', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-1', productName: 'Eureka', purchasePrice: 499, purchaseDate: new Date('2025-06-01'), status: 'active' },
+    ]);
+    __setQueryError('PassportCareLog', new Error('DB error'));
+    const result = await getPassport('pp-1');
     expect(result.success).toBe(false);
   });
 });
@@ -202,6 +230,180 @@ describe('browseListings', () => {
   it('returns empty for no listings', async () => {
     __seed('ResaleListings', []);
     const result = await browseListings();
+    expect(result.listings).toEqual([]);
+    expect(result.total).toBe(0);
+  });
+});
+
+// ── Get My Passports ────────────────────────────────────────────────
+
+describe('getMyPassports', () => {
+  it('returns failure when not authenticated', async () => {
+    __setMember(null);
+    const result = await getMyPassports();
+    expect(result.success).toBe(false);
+    expect(result.passports).toEqual([]);
+  });
+
+  it('returns empty array when member has no passports', async () => {
+    __seed('ProductPassports', []);
+    const result = await getMyPassports();
+    expect(result.success).toBe(true);
+    expect(result.passports).toEqual([]);
+  });
+
+  it('returns passports with resaleValue and tradeUpCredit', async () => {
+    __seed('ProductPassports', [
+      {
+        _id: 'pp-1', memberId: 'member-1', productName: 'Eureka Frame',
+        purchasePrice: 599, purchaseDate: new Date('2024-01-01'),
+        status: 'active', condition: 'good', careLogCount: 2,
+      },
+    ]);
+    const result = await getMyPassports();
+    expect(result.success).toBe(true);
+    expect(result.passports).toHaveLength(1);
+    expect(result.passports[0].resaleValue).toBeGreaterThan(0);
+    expect(result.passports[0].tradeUpCredit).toBeGreaterThanOrEqual(result.passports[0].resaleValue);
+  });
+
+  it('returns failure on database error', async () => {
+    __setQueryError('ProductPassports', new Error('DB error'));
+    const result = await getMyPassports();
+    expect(result.success).toBe(false);
+    expect(result.passports).toEqual([]);
+  });
+});
+
+// ── Log Care Event ──────────────────────────────────────────────────
+
+describe('logCareEvent', () => {
+  it('returns error when not authenticated', async () => {
+    __setMember(null);
+    const result = await logCareEvent('pp-1', 'cleaned', 'Deep clean');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Not authenticated');
+  });
+
+  it('rejects invalid event type', async () => {
+    const result = await logCareEvent('pp-1', 'waxed', 'Wax job');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid care event type');
+  });
+
+  it('returns error when passport not found', async () => {
+    __seed('ProductPassports', []);
+    const result = await logCareEvent('nonexistent', 'cleaned');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('returns error when passport belongs to another member', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-other', memberId: 'other-member', status: 'active' },
+    ]);
+    const result = await logCareEvent('pp-other', 'cleaned');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('logs care event successfully', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-mine', memberId: 'member-1', status: 'active', careLogCount: 1 },
+    ]);
+    const result = await logCareEvent('pp-mine', 'repaired', 'Fixed the armrest');
+    expect(result.success).toBe(true);
+    const logs = __getInserted('PassportCareLog');
+    expect(logs).toHaveLength(1);
+    expect(logs[0].eventType).toBe('repaired');
+    expect(logs[0].notes).toBe('Fixed the armrest');
+  });
+
+  it('returns error on database failure', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-mine', memberId: 'member-1', status: 'active', careLogCount: 0 },
+    ]);
+    __setInsertError('PassportCareLog', new Error('DB error'));
+    const result = await logCareEvent('pp-mine', 'conditioned');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Failed to log');
+  });
+});
+
+// ── createResaleListing — additional branch coverage ─────────────────
+
+describe('createResaleListing — auth and passport checks', () => {
+  it('returns error when not authenticated', async () => {
+    __setMember(null);
+    const result = await createResaleListing('pp-1', 300, 'good', 'Nice frame');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Not authenticated');
+  });
+
+  it('returns error when passport not found', async () => {
+    __seed('ProductPassports', []);
+    const result = await createResaleListing('nonexistent', 300, 'good');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('returns error when passport belongs to another member', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-other', memberId: 'other-member', status: 'active', purchasePrice: 500, productName: 'Frame' },
+    ]);
+    const result = await createResaleListing('pp-other', 300, 'good');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('returns error when passport is already listed', async () => {
+    __seed('ProductPassports', [
+      { _id: 'pp-listed', memberId: 'member-1', status: 'listed', purchasePrice: 500, productName: 'Frame' },
+    ]);
+    const result = await createResaleListing('pp-listed', 300, 'good');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('already listed');
+  });
+
+  it('creates listing successfully', async () => {
+    __seed('ProductPassports', [
+      {
+        _id: 'pp-active', memberId: 'member-1', status: 'active',
+        purchasePrice: 599, purchaseDate: new Date('2024-01-01'),
+        productName: 'Eureka Frame', productId: 'prod-1',
+      },
+    ]);
+    const result = await createResaleListing('pp-active', 350, 'excellent', 'Great condition');
+    expect(result.success).toBe(true);
+    expect(result.listingId).toBeTruthy();
+    const listings = __getInserted('ResaleListings');
+    expect(listings).toHaveLength(1);
+    expect(listings[0].askingPrice).toBe(350);
+    expect(listings[0].condition).toBe('excellent');
+  });
+
+  it('returns error on database failure', async () => {
+    __seed('ProductPassports', [
+      {
+        _id: 'pp-active', memberId: 'member-1', status: 'active',
+        purchasePrice: 599, purchaseDate: new Date('2024-01-01'),
+        productName: 'Eureka Frame', productId: 'prod-1',
+      },
+    ]);
+    __setInsertError('ResaleListings', new Error('DB error'));
+    const result = await createResaleListing('pp-active', 350, 'good');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Failed to create');
+  });
+});
+
+// ── browseListings — additional branch coverage ────────────────────────
+
+describe('browseListings — error handling', () => {
+  it('returns failure on database error', async () => {
+    __setQueryError('ResaleListings', new Error('DB error'));
+    const result = await browseListings();
+    expect(result.success).toBe(false);
     expect(result.listings).toEqual([]);
     expect(result.total).toBe(0);
   });

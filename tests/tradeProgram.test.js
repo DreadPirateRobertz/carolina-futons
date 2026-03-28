@@ -709,3 +709,25 @@ describe('getTradePricingTiers', () => {
     }
   });
 });
+
+// ── applyForTradeAccount — optional field fallbacks ─────────────────
+
+describe('applyForTradeAccount — optional fields omitted', () => {
+  it('succeeds with only required fields (phone/taxId/businessType default to empty)', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'TradeAccounts') inserted = item; });
+
+    const result = await mod.applyForTradeAccount({
+      businessName: 'Minimal Corp',
+      contactName: 'John Smith',
+      contactEmail: 'john@minimal.com',
+      // phone, taxId, businessType, estimatedAnnualUnits all omitted
+    });
+
+    expect(result.success).toBe(true);
+    expect(inserted.phone).toBe('');
+    expect(inserted.taxId).toBe('');
+    expect(inserted.businessType).toBe('');
+    expect(inserted.estimatedAnnualUnits).toBe(0);
+  });
+});

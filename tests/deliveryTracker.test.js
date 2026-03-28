@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import {
   createDeliveryTracking,
   updateDriverLocation,
@@ -284,6 +285,96 @@ describe('checkDoorFit', () => {
   it('returns failure for missing input', () => {
     expect(checkDoorFit(null, []).success).toBe(false);
     expect(checkDoorFit({}, null).success).toBe(false);
+  });
+});
+
+// ── Branch coverage additions ──────────────────────────────────────
+
+describe('createDeliveryTracking — item field fallbacks', () => {
+  it('handles missing items field (items || [])', async () => {
+    const result = await createDeliveryTracking({
+      orderId: 'ORD-no-items',
+      contactEmail: 'test@example.com',
+      deliveryAddress: '123 Main St',
+      estimatedDelivery: new Date(Date.now() + 86400000 * 5).toISOString(),
+      // No items field → triggers (params.items || []) right branch
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('handles items with missing optional fields (|| 0 / || "" fallbacks)', async () => {
+    const result = await createDeliveryTracking({
+      orderId: 'ORD-sparse-items',
+      contactEmail: 'test@example.com',
+      deliveryAddress: '456 Oak Ave',
+      estimatedDelivery: new Date(Date.now() + 86400000 * 5).toISOString(),
+      items: [{}], // empty item object → all || fallbacks triggered
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('DeliveryTracking').at(-1);
+    const items = JSON.parse(inserted.items);
+    expect(items[0].name).toBe('');
+    expect(items[0].widthInches).toBe(0);
+    expect(items[0].weightLbs).toBe(0);
+  });
+});
+
+describe('updateDriverLocation — not found branch', () => {
+  it('returns failure when tracking record not found', async () => {
+    // No seed → wixData.get returns null → triggers !tracking branch
+    const result = await updateDriverLocation('nonexistent-track', 35.32, -82.46, 30);
+    expect(result.success).toBe(false);
+  });
+
+  it('handles null notificationsSent (|| [] fallback)', async () => {
+    __seed('DeliveryTracking', [{
+      _id: 'track-null-notifs',
+      orderId: 'ORD-1',
+      status: 'scheduled',
+      notificationsSent: null, // triggers JSON.parse(... || '[]')
+    }]);
+    const result = await updateDriverLocation('track-null-notifs', 35.32, -82.46, 45);
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('markDeliveryStatus — not found branch', () => {
+  it('returns failure when tracking record not found', async () => {
+    // No seed → wixData.get returns null
+    const result = await markDeliveryStatus('nonexistent', 'arrived');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+});
+
+describe('getTrackingByToken — missing token and rate limit', () => {
+  it('returns failure when token is null', async () => {
+    const result = await getTrackingByToken(null);
+    expect(result.success).toBe(false);
+    expect(result.tracking).toBeNull();
+  });
+
+  it('returns failure when rate limit is exceeded', async () => {
+    withRateLimit('TrackingViewRateLimit', { blocked: true, max: 30, key: 'ratelimited-token' });
+    const result = await getTrackingByToken('ratelimited-token');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('generateRoomPrepChecklist — dimension fallbacks and large item', () => {
+  it('handles items with no dimensions (|| 0 fallbacks)', () => {
+    const result = generateRoomPrepChecklist([{}]); // no widthInches, depthInches, weightLbs
+    expect(result.success).toBe(true);
+    // largestDim = 0, so no door/hallway warnings
+  });
+
+  it('adds door measurement task for oversized item', () => {
+    const result = generateRoomPrepChecklist([
+      { widthInches: 90, depthInches: 40, heightInches: 36, weightLbs: 150 },
+    ]);
+    expect(result.success).toBe(true);
+    const highPriority = result.checklist.filter(c => c.priority === 'high' && c.category === 'access');
+    expect(highPriority.length).toBeGreaterThan(0);
   });
 });
 

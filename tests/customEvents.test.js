@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __getInserted } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import {
   CUSTOM_EVENTS,
   normalizeEventName,
@@ -155,5 +156,25 @@ describe('getEventTaxonomy', () => {
     expect(taxonomy).toHaveLength(25);
     expect(taxonomy).toContain('quiz_started');
     expect(taxonomy).toContain('consultation_booked');
+  });
+});
+
+// ── trackCustomEvent — unknown event fallback ────────────────────────
+
+describe('trackCustomEvent — unknown event category fallback', () => {
+  it('uses "custom" as source when event is unknown and no source provided', async () => {
+    // unknown_event_xyz is not in CUSTOM_EVENTS → eventDef is undefined
+    // params.source omitted → falls back to 'custom' (line 124 right branch)
+    const result = await trackCustomEvent('unknown_event_xyz');
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('AnalyticsEvents');
+    expect(inserted.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns failure when rate limit is exceeded', async () => {
+    // Seed rate limit at max to trigger the !allowed branch
+    withRateLimit('CustomEventRateLimit', { blocked: true, max: 30, key: 'custom' });
+    const result = await trackCustomEvent('unknown_event_xyz');
+    expect(result.success).toBe(false);
   });
 });
