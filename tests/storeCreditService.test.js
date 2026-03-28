@@ -156,7 +156,6 @@ describe('issueStoreCredit', () => {
 
 describe('getMyStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
     __resetMember();
     __setMember({ _id: 'member-123' });
@@ -283,7 +282,6 @@ describe('getMyStoreCredit', () => {
 
 describe('applyStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
     __resetMember();
     __setMember({ _id: 'member-123' });
@@ -446,7 +444,6 @@ describe('applyStoreCredit', () => {
 
 describe('getStoreCreditHistory', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
     __resetMember();
     __setMember({ _id: 'member-123' });
@@ -517,7 +514,6 @@ describe('getStoreCreditHistory', () => {
 
 describe('giftStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
     __resetMember();
     __setMember({ _id: 'member-giver' });
@@ -539,7 +535,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('transfers credit from giver to recipient', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -552,7 +547,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('deducts from giver balance', async () => {
-    __setMember({ _id: 'member-giver' });
     await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -563,7 +557,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gift exceeding available balance', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -574,7 +567,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gifting to self', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-giver',
@@ -619,7 +611,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('sanitizes message input', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -639,7 +630,6 @@ describe('giftStoreCredit', () => {
 
 describe('getExpiringCredits', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
     __resetMember();
     __setMember({ _id: 'member-123' });

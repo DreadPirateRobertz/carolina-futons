@@ -216,7 +216,7 @@ function _mapProduct(p) {
 }
 
 async function _fetchProductsByCity(cityData, limit = 4) {
-  const safeLimit = (typeof limit === 'number' && limit >= 1) ? Math.min(limit, 20) : 4;
+  const safeLimit = (typeof limit === 'number' && Number.isFinite(limit)) ? Math.max(1, Math.min(limit, 20)) : 4;
   const baseCategories = cityData.isHomeCity
     ? HOME_CITY_FEATURED_CATEGORIES
     : NEARBY_CITY_FEATURED_CATEGORIES;
