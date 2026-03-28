@@ -14,6 +14,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
 import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
+import { initAppDownloadBanner } from 'public/AppDownloadBanner';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
 import { initCartUpsell } from 'public/CartUpsell';
@@ -63,6 +64,7 @@ $w.onReady(async function () {
   initHeaderShippingProgress();
   initNewsletterModal();
   initInstallBanner();
+  initAppDownloadBanner($w, wixLocationFrontend.url).catch(() => {});
   injectCanonicalUrl();
   initScrollDepthTracking();
   initConsentGate();
