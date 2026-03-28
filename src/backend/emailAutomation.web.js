@@ -60,7 +60,7 @@ const SEQUENCES = {
     steps: [
       { step: 1, templateId: 'cart_recovery_1', delayHours: 1, description: 'You left something behind — cart contents with images + prices (CF-ji7j)' },
       { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Still thinking? — urgency (limited stock) + free shipping if threshold met (CF-ji7j)' },
-      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Last chance — 5% recovery coupon, unique per cart, single-use (CF-ji7j)' },
+      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Last chance — 10% recovery coupon, unique per cart, single-use (CF-ji7j)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -748,11 +748,11 @@ export const triggerAbandonedCartRecovery = webMethod(
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
-        // CF-ji7j: structured cart items for step 1 template (name + price per item)
+        // CF-ji7j: structured cart items for step 1 template (name + price + image per item)
         const cartItems = parsedItems.map(i => ({
-          name: i.name || '',
-          price: String(i.price || 0),
-          imageUrl: i.imageUrl || '',
+          name: sanitize(i.name || '', 200),
+          price: String(i.price ?? 0),
+          imageUrl: sanitize(i.imageUrl || '', 500),
           quantity: i.quantity || 1,
         }));
 
@@ -797,14 +797,14 @@ export const triggerAbandonedCartRecovery = webMethod(
           if (step.step === 2) {
             variables.stockWarning = true;
             variables.qualifiesForFreeShipping = qualifiesForFreeShipping;
-            variables.freeShippingNote = qualifiesForFreeShipping
-              ? 'Your order qualifies for free shipping!'
-              : '';
+            if (qualifiesForFreeShipping) {
+              variables.freeShippingNote = 'Your order qualifies for free shipping!';
+            }
           }
 
-          // Step 3 (CF-ji7j): 5% coupon label so template can display "save 5%"
+          // Step 3 (CF-ji7j): 10% coupon label matching createCartRecoveryCoupon (percentOffRate: 10)
           if (step.step === 3) {
-            variables.couponPercent = '5';
+            variables.couponPercent = '10';
           }
 
           await queueEmail({

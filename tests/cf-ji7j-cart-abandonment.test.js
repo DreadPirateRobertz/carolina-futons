@@ -10,7 +10,7 @@
  *  - Step 2: qualifiesForFreeShipping true when cartTotal >= FREE_SHIPPING_THRESHOLD
  *  - Step 2: qualifiesForFreeShipping false when cartTotal < FREE_SHIPPING_THRESHOLD
  *  - Step 2: freeShippingNote present when qualifies
- *  - Step 3 (72h): includes couponPercent = '5'
+ *  - Step 3 (72h): includes couponPercent = '10'
  *  - Step 3: discountCode populated from createCartRecoveryCoupon
  *  - Step 3: discountAvailable = true when coupon created
  *  - cartItems not present on step 2 or 3 (only step 1 needs the full listing)
@@ -200,6 +200,17 @@ describe('Step 2 — urgency + free shipping', () => {
     expect(step2.variables.freeShippingNote).toBeTruthy();
   });
 
+  it('omits freeShippingNote entirely when cart does not qualify', async () => {
+    __seed('AbandonedCarts', [CART_LOW]);
+    const items = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
+
+    await triggerAbandonedCartRecovery();
+
+    const step2 = items.find(i => i.sequenceStep === 2);
+    expect(step2.variables.freeShippingNote).toBeUndefined();
+  });
+
   it('step 2 does not include couponPercent', async () => {
     __seed('AbandonedCarts', [CART_HIGH]);
     const items = [];
@@ -212,10 +223,10 @@ describe('Step 2 — urgency + free shipping', () => {
   });
 });
 
-// ── Step 3: 5% recovery coupon ────────────────────────────────────────
+// ── Step 3: 10% recovery coupon ────────────────────────────────────────
 
 describe('Step 3 — recovery coupon', () => {
-  it('includes couponPercent = "5" in step 3', async () => {
+  it('includes couponPercent = "10" in step 3', async () => {
     __seed('AbandonedCarts', [CART_HIGH]);
     const items = [];
     __onInsert((col, item) => { if (col === 'EmailQueue') items.push(item); });
@@ -223,7 +234,7 @@ describe('Step 3 — recovery coupon', () => {
     await triggerAbandonedCartRecovery();
 
     const step3 = items.find(i => i.sequenceStep === 3);
-    expect(step3.variables.couponPercent).toBe('5');
+    expect(step3.variables.couponPercent).toBe('10');
   });
 
   it('discountCode populated from createCartRecoveryCoupon', async () => {
