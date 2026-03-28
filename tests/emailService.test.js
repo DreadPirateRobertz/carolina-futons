@@ -37,7 +37,7 @@ describe('sendEmail', () => {
 
   it('persists submission to ContactSubmissions CMS', async () => {
     let inserted;
-    __onInsert((col, item) => { inserted = { col, item }; });
+    __onInsert((col, item) => { if (col === 'ContactSubmissions') inserted = { col, item }; });
 
     await sendEmail({
       name: 'Jane Smith',
@@ -131,9 +131,9 @@ describe('sendEmail', () => {
     expect(emails[0].options.variables.subject).not.toContain('<img');
   });
 
-  it('truncates overlong name field', async () => {
+  it('rejects overlong name field via schema validation', async () => {
     const longName = 'A'.repeat(500);
-    await sendEmail({
+    const result = await sendEmail({
       name: longName,
       email: 'test@test.com',
       phone: '',
@@ -141,13 +141,13 @@ describe('sendEmail', () => {
       message: 'Test',
     });
 
-    const emails = __getEmailLog();
-    expect(emails[0].options.variables.customerName.length).toBeLessThanOrEqual(200);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too long/i);
   });
 
-  it('truncates overlong message field', async () => {
+  it('rejects overlong message field via schema validation', async () => {
     const longMsg = 'X'.repeat(5000);
-    await sendEmail({
+    const result = await sendEmail({
       name: 'Test',
       email: 'test@test.com',
       phone: '',
@@ -155,8 +155,8 @@ describe('sendEmail', () => {
       message: longMsg,
     });
 
-    const emails = __getEmailLog();
-    expect(emails[0].options.variables.message.length).toBeLessThanOrEqual(2000);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too long/i);
   });
 
   it('returns user-friendly error with phone number on email failure', async () => {
@@ -210,7 +210,7 @@ describe('submitSwatchRequest', () => {
 
   it('persists swatch request to CMS with correct status', async () => {
     let inserted;
-    __onInsert((col, item) => { inserted = { col, item }; });
+    __onInsert((col, item) => { if (col === 'ContactSubmissions') inserted = { col, item }; });
 
     await submitSwatchRequest({
       name: 'CMS Test',
@@ -309,7 +309,7 @@ describe('submitSwatchRequest', () => {
   it('sanitizes overlong address', async () => {
     const longAddr = 'A'.repeat(1000);
     let inserted;
-    __onInsert((col, item) => { inserted = { col, item }; });
+    __onInsert((col, item) => { if (col === 'ContactSubmissions') inserted = { col, item }; });
 
     await submitSwatchRequest({
       name: 'Test',

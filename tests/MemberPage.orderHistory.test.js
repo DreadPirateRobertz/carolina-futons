@@ -184,6 +184,7 @@ vi.mock('backend/notificationService.web', () => ({
 }));
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+vi.mock('public/productCardHelpers.js', () => ({ initProductCards: vi.fn() }));
 
 // ── Test fixtures ──────────────────────────────────────────────────
 

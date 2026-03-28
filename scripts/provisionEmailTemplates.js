@@ -99,7 +99,7 @@ const TEMPLATE_MANIFEST = [
   },
   {
     templateId: 'post_purchase_2',
-    subject: 'Enjoying your new furniture, {firstName}? Leave a review!',
+    subject: "How's your new {productNames}? Share your experience",
     variables: ['firstName', 'orderNumber', 'productNames', 'reviewUrl', 'email'],
     priority: 2,
     description: 'Day 7 post-purchase: review solicitation.',

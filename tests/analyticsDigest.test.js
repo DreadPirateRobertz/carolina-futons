@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
-import { generateWeeklyDigest } from '../src/backend/analyticsDigest.web.js';
+import { generateWeeklyDigest, sendWeeklyDigestEmail } from '../src/backend/analyticsDigest.web.js';
 
 beforeEach(() => {
   __reset();
@@ -122,5 +122,66 @@ describe('generateWeeklyDigest', () => {
     __seed('AnalyticsEvents', []);
     const result = await generateWeeklyDigest({ days: 200 });
     expect(result.digest.period.days).toBe(90);
+  });
+});
+
+// ── sendWeeklyDigestEmail (CF-epnm) ────────────────────────────────
+
+describe('sendWeeklyDigestEmail', () => {
+  it('queues a digest email to the default recipient', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+
+    const result = await sendWeeklyDigestEmail();
+    expect(result.success).toBe(true);
+
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(1);
+    expect(queued[0].templateId).toBe('analytics_digest');
+    expect(queued[0].recipientEmail).toBe('carolinafutons@gmail.com');
+    expect(queued[0].sequenceType).toBe('analytics_digest');
+  });
+
+  it('allows recipient override for testing', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+
+    const result = await sendWeeklyDigestEmail({ recipientEmail: 'test@example.com' });
+    expect(result.success).toBe(true);
+
+    const queued = __getInserted('EmailQueue');
+    expect(queued[0].recipientEmail).toBe('test@example.com');
+  });
+
+  it('includes HTML email body in variables', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+
+    await sendWeeklyDigestEmail();
+
+    const queued = __getInserted('EmailQueue');
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.subject).toContain('Weekly Analytics Digest');
+    expect(vars.html).toContain('Weekly Analytics Digest');
+    expect(vars.html).toContain('Top Events');
+  });
+
+  it('logs to AuditLog', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+
+    await sendWeeklyDigestEmail();
+
+    const audits = __getInserted('AuditLog');
+    const digestAudit = audits.find(a => a.action === 'email_sent');
+    expect(digestAudit).toBeDefined();
+    expect(digestAudit.collection).toBe('AnalyticsDigest');
+  });
+
+  it('handles empty events gracefully', async () => {
+    __seed('AnalyticsEvents', []);
+
+    const result = await sendWeeklyDigestEmail();
+    expect(result.success).toBe(true);
+
+    const queued = __getInserted('EmailQueue');
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.html).toContain('0');
   });
 });
