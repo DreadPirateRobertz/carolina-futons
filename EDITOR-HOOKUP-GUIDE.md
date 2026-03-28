@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-25 (v2.4 — Consolidated: all orphaned sections folded into parent pages. Showroom→PDP/Category, Financing→PDP, Bundle Shipping→Bundle Builder, Returns→Member, AI Style Consultant→Style Quiz. Verified against src/ code. Phase 8 COMPLETE.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-28 (v2.5 — Added Comfort Timeline (CF-256r, PR #875) and Futon Sommelier (CF-ofc0, PR #876). Both backend-only modules requiring CMS collections + wiring.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2317,6 +2317,43 @@ All major pages now have both backend and frontend code. The following are in de
 
 Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to existing `MemberPoints` collection).
 
+## CMS COLLECTIONS — Comfort Timeline (CF-256r, PR #875, 2026-03-28)
+
+| Collection | Purpose | Key Fields |
+|---|---|---|
+| `ComfortTimelines` | Per-order mattress break-in tracker | orderId (Text, indexed), memberId (Text, indexed), productId (Text), productName (Text), deliveredAt (DateTime), status (Text: active\|complete\|cancelled), currentDay (Number), lastCheckIn (DateTime), comfortLogs (Text/JSON: [{day, rating, notes, loggedAt}]), milestonesCompleted (Text/JSON: [day numbers]), crossSellTriggered (Boolean), supportEscalated (Boolean) |
+| `ComfortTimelineRateLimit` | Rate-limit table for logComfortRating | key (Text), count (Number), windowStart (DateTime) |
+
+**Backend methods** (`src/backend/comfortTimeline.web.js`):
+- `createTimeline({ orderId, memberId, productId, productName })` — called from `events.js` on order delivered
+- `logComfortRating(timelineId, rating, notes)` — SiteMember permission
+- `getTimeline(orderId)` — SiteMember permission
+- `getMyTimelines()` — SiteMember permission
+- `processMilestones(cronSecret)` — Admin permission, runs daily
+
+**Cron job** — add to `vercel.json` or Wix scheduled jobs: `processMilestones` daily at 06:00 UTC.
+
+**No page wiring yet** — Member Dashboard section to show break-in progress is a follow-on task.
+
+---
+
+## CMS COLLECTIONS — Futon Sommelier (CF-ofc0, PR #876, 2026-03-28)
+
+| Collection | Purpose | Key Fields |
+|---|---|---|
+| `SommelierSessions` | Cached recommendation sessions | sessionKey (Text, indexed), memberId (Text), answers (Text/JSON), recommendations (Text/JSON), reasoning (Text), createdAt (DateTime), feedbackRating (Number) |
+| `SommelierRateLimit` | Rate-limit table for getRecommendations | key (Text), count (Number), windowStart (DateTime) |
+
+**Backend methods** (`src/backend/futonSommelier.web.js`):
+- `getRecommendations(answers)` — SiteMember permission; returns top-5 scored products with reasoning
+- `submitFeedback(sessionId, rating)` — SiteMember permission
+
+**Lifecycle scoring** — rule-based trait matching against product descriptions; no AI API call. Scores across 6 lifestyle factors: primaryUse, petOwner, backIssues, guestFrequency, sunExposure, budget.
+
+**No page wiring yet** — Style Quiz handoff or standalone "Find My Match" page is a follow-on task.
+
+---
+
 ## PAGES THAT NEED CREATING (updated Sprint 5)
 
 | Page | Status | Notes |
@@ -2331,4 +2368,6 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Product Q&A Widget | ✅ Frontend + backend complete | PR #678 merged 2026-03-22 |
 | Customer Room Gallery | 🔄 In review PR #673 — onItemReady fix pending | `/rooms` — Sprint 5 |
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
+| Comfort Timeline Widget | 🔲 Backend merged (PR #875) — Member Dashboard section TBD | CF-256r — break-in tracker |
+| Futon Sommelier Widget | 🔲 Backend merged (PR #876) — Style Quiz handoff or standalone page TBD | CF-ofc0 — lifestyle recommendation engine |
 | Charcoal | `#2C2C2C` | Body text |
