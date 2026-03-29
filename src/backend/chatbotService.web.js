@@ -160,6 +160,10 @@ export const sendMessage = webMethod(
       flagEnabled = false;
     }
     if (!flagEnabled) return { enabled: false };
+    if (!apiKey) {
+      console.error('[chatbotService] ANTHROPIC_API_KEY is missing or empty');
+      return { error: 'assistant_unavailable' };
+    }
 
     // 2. Validate sessionId
     const cleanSessionId = validateId(sessionId, 64);

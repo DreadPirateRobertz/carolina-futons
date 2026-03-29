@@ -103,6 +103,20 @@ describe('feature flag', () => {
     const result = await sendMessage(SESSION_ID, USER_MSG);
     expect(result).not.toEqual({ enabled: false });
   });
+
+  it('returns { error: assistant_unavailable } when ANTHROPIC_API_KEY resolves to empty string', async () => {
+    resetSecrets();
+    __setSecrets({ CHATBOT_ENABLED: 'true', ANTHROPIC_API_KEY: '' });
+    const result = await sendMessage(SESSION_ID, USER_MSG);
+    expect(result).toEqual({ error: 'assistant_unavailable' });
+  });
+
+  it('returns { error: assistant_unavailable } when ANTHROPIC_API_KEY resolves to undefined', async () => {
+    resetSecrets();
+    __setSecrets({ CHATBOT_ENABLED: 'true', ANTHROPIC_API_KEY: undefined });
+    const result = await sendMessage(SESSION_ID, USER_MSG);
+    expect(result).toEqual({ error: 'assistant_unavailable' });
+  });
 });
 
 // ---------------------------------------------------------------------------
