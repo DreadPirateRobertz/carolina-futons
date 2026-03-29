@@ -12,7 +12,7 @@
  *   - getUGCStats with no photos (empty result)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import wixData, { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __setRoles, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 
 import { moderatePhoto, getUGCStats } from '../src/backend/ugcService.web.js';
