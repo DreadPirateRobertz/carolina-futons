@@ -6,14 +6,17 @@
  *  - formatBNPLEstimates: Affirm = price/12 rounded to 2dp, "As low as $X/mo with Affirm"
  *  - formatBNPLEstimates: Klarna = price/4 rounded to 2dp, "4 payments of $X with Klarna"
  *  - whole-dollar amounts omit cents (e.g. "$25" not "$25.00")
- *  - fractional cents round to 2dp
- *  - price = 0 returns zero strings
- *  - negative price returns zero strings
- *  - non-numeric input returns zero strings
- *  - null/undefined input returns zero strings
+ *  - fractional amounts display with 2dp
+ *  - price = 0 returns empty strings
+ *  - negative price returns empty strings
+ *  - Infinity returns empty strings (isFinite guard)
+ *  - non-numeric input returns empty strings
+ *  - null/undefined input returns empty strings
  *  - initBNPLWidget: shows #bnplAffirm and #bnplKlarna with formatted strings
- *  - initBNPLWidget: hides #bnplContainer when price is invalid
- *  - initBNPLWidget: shows #bnplContainer when price is valid
+ *  - initBNPLWidget: hides #bnplContainer when price is invalid; does not show it
+ *  - initBNPLWidget: shows #bnplContainer when price is valid; does not hide it
+ *  - initBNPLWidget: tolerates missing elements via safeGet (returns null)
+ *  - initBNPLWidget: warns (not silently swallows) unexpected $w errors
  *
  * CF-nqb5.1
  */
@@ -39,7 +42,13 @@ describe('formatBNPLEstimates', () => {
     expect(affirm).toBe('As low as $8.33/mo with Affirm');
   });
 
-  it('rounds Klarna to 2 decimal places', () => {
+  it('shows 2dp for a fractional Affirm amount', () => {
+    // 10 / 12 = 0.8333... → $0.83
+    const { affirm } = formatBNPLEstimates(10);
+    expect(affirm).toBe('As low as $0.83/mo with Affirm');
+  });
+
+  it('shows 2dp for a fractional Klarna amount', () => {
     // 10 / 4 = 2.5 → $2.50
     const { klarna } = formatBNPLEstimates(10);
     expect(klarna).toBe('4 payments of $2.50 with Klarna');
@@ -62,31 +71,37 @@ describe('formatBNPLEstimates', () => {
     expect(affirm).toBe('As low as $10/mo with Affirm');
   });
 
-  it('returns zero strings for price = 0', () => {
+  it('returns empty strings for price = 0', () => {
     const { affirm, klarna } = formatBNPLEstimates(0);
     expect(affirm).toBe('');
     expect(klarna).toBe('');
   });
 
-  it('returns zero strings for negative price', () => {
+  it('returns empty strings for negative price', () => {
     const { affirm, klarna } = formatBNPLEstimates(-50);
     expect(affirm).toBe('');
     expect(klarna).toBe('');
   });
 
-  it('returns zero strings for non-numeric input', () => {
+  it('returns empty strings for Infinity (isFinite guard)', () => {
+    const { affirm, klarna } = formatBNPLEstimates(Infinity);
+    expect(affirm).toBe('');
+    expect(klarna).toBe('');
+  });
+
+  it('returns empty strings for non-numeric input', () => {
     const { affirm, klarna } = formatBNPLEstimates('abc');
     expect(affirm).toBe('');
     expect(klarna).toBe('');
   });
 
-  it('returns zero strings for null', () => {
+  it('returns empty strings for null', () => {
     const { affirm, klarna } = formatBNPLEstimates(null);
     expect(affirm).toBe('');
     expect(klarna).toBe('');
   });
 
-  it('returns zero strings for undefined', () => {
+  it('returns empty strings for undefined', () => {
     const { affirm, klarna } = formatBNPLEstimates(undefined);
     expect(affirm).toBe('');
     expect(klarna).toBe('');
@@ -95,12 +110,11 @@ describe('formatBNPLEstimates', () => {
 
 // ── initBNPLWidget ────────────────────────────────────────────────────────────
 
-function makeEl(text = '') {
+function makeEl() {
   return {
-    text,
-    _visible: true,
-    show: vi.fn(function () { this._visible = true; }),
-    hide: vi.fn(function () { this._visible = false; }),
+    show: vi.fn(),
+    hide: vi.fn(),
+    text:  '',
   };
 }
 
@@ -110,7 +124,7 @@ function make$w() {
     '#bnplAffirm':    makeEl(),
     '#bnplKlarna':    makeEl(),
   };
-  return (id) => els[id] ?? makeEl();
+  return (id) => els[id] ?? null;
 }
 
 describe('initBNPLWidget', () => {
@@ -130,27 +144,44 @@ describe('initBNPLWidget', () => {
     const $w = make$w();
     initBNPLWidget($w, 100);
     expect($w('#bnplContainer').show).toHaveBeenCalled();
+    expect($w('#bnplContainer').hide).not.toHaveBeenCalled();
   });
 
   it('hides #bnplContainer when price is 0', () => {
     const $w = make$w();
     initBNPLWidget($w, 0);
     expect($w('#bnplContainer').hide).toHaveBeenCalled();
+    expect($w('#bnplContainer').show).not.toHaveBeenCalled();
   });
 
   it('hides #bnplContainer when price is negative', () => {
     const $w = make$w();
     initBNPLWidget($w, -1);
     expect($w('#bnplContainer').hide).toHaveBeenCalled();
+    expect($w('#bnplContainer').show).not.toHaveBeenCalled();
   });
 
   it('hides #bnplContainer when price is non-numeric', () => {
     const $w = make$w();
     initBNPLWidget($w, 'bad');
     expect($w('#bnplContainer').hide).toHaveBeenCalled();
+    expect($w('#bnplContainer').show).not.toHaveBeenCalled();
   });
 
-  it('does not throw when $w selector returns nothing', () => {
+  it('does not throw when $w returns null for all selectors', () => {
     expect(() => initBNPLWidget(() => null, 100)).not.toThrow();
+  });
+
+  it('does not throw when $w throws "not found" for all selectors (safeGet tolerates it)', () => {
+    const notFound = () => { throw new Error('Element with selector not found'); };
+    expect(() => initBNPLWidget(notFound, 100)).not.toThrow();
+  });
+
+  it('warns (not silently ignores) unexpected $w errors', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const boom = () => { throw new TypeError('something unexpected'); };
+    initBNPLWidget(boom, 100);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

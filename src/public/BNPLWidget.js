@@ -12,6 +12,21 @@
  * CF-nqb5.1
  */
 
+// ── safeGet ──────────────────────────────────────────────────────────────────
+// Returns null when the element is not found (normal on pages where the widget
+// is partially rendered). Warns on unexpected runtime errors so they are not
+// silently swallowed.
+function safeGet($wFn, sel) {
+  try {
+    return $wFn(sel) || null;
+  } catch (err) {
+    const msg = err?.message ?? '';
+    if (!msg.includes('not found') && !msg.includes('Cannot read'))
+      console.warn('[BNPLWidget] safeGet unexpected error:', sel, msg);
+    return null;
+  }
+}
+
 /**
  * Format a price as "$X" — whole dollars omit cents, others show 2dp.
  * @param {number} amount
@@ -44,18 +59,26 @@ export function formatBNPLEstimates(price) {
 /**
  * Initialise the BNPL widget on a product page.
  *
- * @param {Function} $w    - Wix element selector
- * @param {number}   price - Product price
+ * Element access uses safeGet so unknown selectors (pages where the widget
+ * is partially wired) degrade gracefully. Unexpected errors are warned to
+ * the console rather than silently discarded.
+ *
+ * @param {function(string): object} $w - Wix element selector
+ * @param {number} price - Product price
  */
 export function initBNPLWidget($w, price) {
   const { affirm, klarna } = formatBNPLEstimates(price);
 
   if (!affirm) {
-    try { $w('#bnplContainer').hide(); } catch (e) {}
+    safeGet($w, '#bnplContainer')?.hide();
     return;
   }
 
-  try { $w('#bnplAffirm').text = affirm; } catch (e) {}
-  try { $w('#bnplKlarna').text = klarna; } catch (e) {}
-  try { $w('#bnplContainer').show(); } catch (e) {}
+  const affirmEl    = safeGet($w, '#bnplAffirm');
+  const klarnaEl    = safeGet($w, '#bnplKlarna');
+  const containerEl = safeGet($w, '#bnplContainer');
+
+  if (affirmEl)    affirmEl.text    = affirm;
+  if (klarnaEl)    klarnaEl.text    = klarna;
+  if (containerEl) containerEl.show();
 }
