@@ -18,6 +18,34 @@ import { sanitize } from 'backend/utils/sanitize';
 const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const PLATFORMS = ['instagram', 'facebook', 'pinterest'];
 
+// Day-of-week content rotation: 0=Sun, 1=Mon, ..., 6=Sat
+const CONTENT_ROTATION = {
+  0: 'weekend_promo',    // Sunday
+  1: 'featured_product', // Monday
+  2: 'review_highlight', // Tuesday
+  3: 'featured_product', // Wednesday
+  4: 'review_highlight', // Thursday
+  5: 'featured_product', // Friday
+  6: 'furniture_tip',    // Saturday
+};
+
+const FURNITURE_CARE_TIPS = [
+  { title: 'Rotate your futon mattress monthly', tip: 'Flip and rotate your futon mattress every month to ensure even wear and extend its life by years.' },
+  { title: 'Protect from direct sunlight', tip: 'Keep your futon frame away from direct sunlight. UV rays can fade and crack wood finishes over time.' },
+  { title: 'Clean spills immediately', tip: 'Blot spills right away with a clean cloth. Never rub — rubbing pushes the stain deeper into the fabric.' },
+  { title: 'Tighten bolts every 6 months', tip: 'Check and tighten all bolts every 6 months. A loose bolt is the #1 cause of a squeaky futon frame.' },
+  { title: 'Use a mattress pad', tip: 'A quality mattress pad protects your futon cover from daily wear and can extend mattress life by years.' },
+  { title: 'Vacuum bi-weekly', tip: 'Vacuum your futon mattress with an upholstery attachment every two weeks to remove dust and allergens.' },
+  { title: 'Air it out monthly', tip: 'Stand your futon mattress on its side outdoors for a few hours monthly — fresh air prevents mold and odors.' },
+];
+
+const WEEKEND_PROMO = {
+  title: 'Weekend at Carolina Futons',
+  message: 'Stop in this weekend and browse our full showroom in Hendersonville, NC. Our craftspeople are here to help you find the perfect piece.',
+  hours: 'Mon–Sat 10am–6pm · Sun 12pm–5pm',
+  url: 'carolinafutons.com',
+};
+
 // Engagement windows (hours, server time) — optimal posting times per platform
 const ENGAGEMENT_WINDOWS = {
   instagram: { start: 11, end: 13 },  // 11am-1pm
@@ -696,12 +724,245 @@ async function schedulePriceDropStoriesInternal(product) {
   return { scheduled, skipped, rateLimited, errors };
 }
 
+// ── Content Rotation Internals ──────────────────────────────────────────
+
+/**
+ * Pick the rotation content type for a given day of week.
+ * @param {number} dayOfWeek - 0=Sun...6=Sat
+ * @returns {string}
+ */
+function getDayRotationContent(dayOfWeek) {
+  return CONTENT_ROTATION[dayOfWeek] || 'featured_product';
+}
+
+/**
+ * Pick a featured product: prefer ribbon-tagged products, fall back to newest.
+ * Returns null if catalog is empty.
+ */
+async function pickFeaturedProduct() {
+  // Try ribbon-tagged products first
+  const featured = await wixData.query('Stores/Products')
+    .isNotEmpty('ribbon')
+    .descending('_updatedDate')
+    .limit(1)
+    .find();
+
+  if (featured.items.length > 0) return featured.items[0];
+
+  // Fall back to most recently updated product
+  const fallback = await wixData.query('Stores/Products')
+    .descending('_updatedDate')
+    .limit(1)
+    .find();
+
+  return fallback.items.length > 0 ? fallback.items[0] : null;
+}
+
+/**
+ * Pick a recent high-rated review. Returns null if none found.
+ */
+async function pickRecentReview() {
+  const result = await wixData.query('ProductReviews')
+    .ge('rating', 4)
+    .descending('_createdDate')
+    .limit(1)
+    .find();
+  return result.items.length > 0 ? result.items[0] : null;
+}
+
+/**
+ * Schedule content-rotation stories across platforms.
+ * @param {string} contentType - featured_product | review_highlight | furniture_tip | weekend_promo
+ * @param {Object} payload - content data for the post
+ * @param {string} eventType - CMS eventType field value
+ */
+async function scheduleRotationContentInternal(contentType, payload, eventType) {
+  let scheduled = 0;
+  let rateLimited = 0;
+  const errors = [];
+
+  for (const platform of PLATFORMS) {
+    if (!(await isWithinRateLimit(platform))) {
+      rateLimited++;
+      errors.push(`${platform}: daily rate limit reached`);
+      continue;
+    }
+
+    const content = {
+      contentType,
+      platform,
+      payload,
+    };
+
+    const caption = buildRotationCaption(platform, contentType, payload);
+    const scheduledAt = getNextEngagementWindow(platform) || new Date();
+
+    try {
+      await wixData.insert('ContentSchedule', {
+        contentType: 'social_story',
+        platform,
+        productId: payload.productId || `rotation-${eventType}-${new Date().toISOString().slice(0, 10)}`,
+        productName: sanitize(payload.title || payload.productName || contentType, 200),
+        eventType,
+        priority: 3,
+        status: 'pending',
+        scheduledAt,
+        payload: JSON.stringify({ ...content, caption }),
+        createdBy: `rotation-${eventType}-${new Date().toISOString().slice(0, 10)}`,
+        processedAt: null,
+        error: '',
+      });
+      scheduled++;
+    } catch (insertErr) {
+      errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+    }
+  }
+  return { scheduled, rateLimited, errors };
+}
+
+/**
+ * Build a platform-appropriate caption for rotation content.
+ */
+function buildRotationCaption(platform, contentType, payload) {
+  switch (contentType) {
+    case 'featured_product': {
+      const price = payload.price != null ? `$${Number(payload.price).toFixed(2)}` : '';
+      const lines = [`Featured: ${payload.productName}`];
+      if (price) lines.push(`Starting at ${price}`);
+      if (platform !== 'pinterest') lines.push('Shop at carolinafutons.com');
+      if (platform === 'instagram') lines.push('#CarolinaFutons #HendersonvilleNC #FutonLiving');
+      return lines.filter(Boolean).join('\n');
+    }
+    case 'review_highlight': {
+      const lines = [];
+      if (payload.reviewerName) lines.push(`"${payload.reviewText}" — ${payload.reviewerName}`);
+      else lines.push(payload.reviewText || 'Our customers love their Carolina Futons pieces!');
+      if (payload.productName) lines.push(`Product: ${payload.productName}`);
+      if (platform !== 'pinterest') lines.push('carolinafutons.com');
+      return lines.filter(Boolean).join('\n');
+    }
+    case 'furniture_tip': {
+      const lines = [`Did you know? ${payload.title}`, payload.tip];
+      if (platform !== 'pinterest') lines.push('More tips at carolinafutons.com');
+      if (platform === 'instagram') lines.push('#FurnitureCare #FutonLife #HomeDecor');
+      return lines.filter(Boolean).join('\n');
+    }
+    case 'weekend_promo': {
+      const lines = [payload.title, payload.message];
+      if (payload.hours) lines.push(payload.hours);
+      lines.push(payload.url || 'carolinafutons.com');
+      return lines.filter(Boolean).join('\n');
+    }
+    default:
+      return payload.message || '';
+  }
+}
+
+/**
+ * Cron-callable: run the day-of-week content rotation (featured product / review highlight /
+ * furniture tip / weekend promo). Called once daily, separate from new arrivals/price drops.
+ *
+ * Content schedule:
+ *   Mon/Wed/Fri  → Featured product with price + link
+ *   Tue/Thu      → Customer review highlight
+ *   Sat          → "Did you know?" furniture care tip
+ *   Sun          → Weekend promo / store hours
+ *
+ * @returns {Promise<{success: boolean, contentType: string, scheduled: number, rateLimited: number, errors: string[]}>}
+ */
+export const runDailyContentRotation = webMethod(
+  Permissions.Admin,
+  async () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const contentType = getDayRotationContent(dayOfWeek);
+
+    let rotationPayload = null;
+    const errors = [];
+
+    try {
+      if (contentType === 'featured_product') {
+        const product = await pickFeaturedProduct();
+        if (!product) {
+          const msg = 'featured_product: no products found in catalog';
+          console.warn('[socialStoryScheduler] runDailyContentRotation:', msg);
+          return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [msg] };
+        }
+        rotationPayload = {
+          productId: product._id || product.slug || '',
+          productName: product.name,
+          price: product.price,
+          imageUrl: (product.images && product.images[0]) || '',
+          title: product.name,
+        };
+
+      } else if (contentType === 'review_highlight') {
+        const review = await pickRecentReview();
+        if (review) {
+          rotationPayload = {
+            reviewText: sanitize(review.content || review.text || review.review || 'Wonderful quality and craftsmanship!', 280),
+            reviewerName: review.authorName || review.memberName || '',
+            rating: review.rating || 5,
+            productName: review.productName || '',
+            productId: review.productId || `review-${new Date().toISOString().slice(0, 10)}`,
+            title: 'Customer Review',
+          };
+        } else {
+          // Fallback: brand testimonial when no reviews in DB
+          rotationPayload = {
+            reviewText: 'Wonderful quality and craftsmanship — exactly what we needed for our home.',
+            reviewerName: 'Happy Customer',
+            rating: 5,
+            productName: '',
+            productId: `review-fallback-${new Date().toISOString().slice(0, 10)}`,
+            title: 'Customer Review',
+          };
+        }
+
+      } else if (contentType === 'furniture_tip') {
+        const weekIndex = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+        const tip = FURNITURE_CARE_TIPS[weekIndex % FURNITURE_CARE_TIPS.length];
+        rotationPayload = {
+          ...tip,
+          productId: `tip-${weekIndex % FURNITURE_CARE_TIPS.length}`,
+        };
+
+      } else if (contentType === 'weekend_promo') {
+        rotationPayload = {
+          ...WEEKEND_PROMO,
+          productId: `promo-${new Date().toISOString().slice(0, 10)}`,
+        };
+      }
+
+      if (!rotationPayload) {
+        return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [`No payload for contentType: ${contentType}`] };
+      }
+
+      const result = await scheduleRotationContentInternal(contentType, rotationPayload, contentType);
+      errors.push(...result.errors);
+
+      const summary = { success: result.errors.length === 0, contentType, ...result, errors };
+      console.log('[socialStoryScheduler] runDailyContentRotation complete:', JSON.stringify(summary));
+      return summary;
+
+    } catch (err) {
+      console.error('[socialStoryScheduler] runDailyContentRotation error:', err);
+      return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [err.message] };
+    }
+  }
+);
+
 // Export internals for testing
 export const _DEDUP_WINDOW_MS = DEDUP_WINDOW_MS;
 export const _PLATFORMS = PLATFORMS;
 export const _ENGAGEMENT_WINDOWS = ENGAGEMENT_WINDOWS;
 export const _DAILY_RATE_LIMITS = DAILY_RATE_LIMITS;
+export const _CONTENT_ROTATION = CONTENT_ROTATION;
+export const _FURNITURE_CARE_TIPS = FURNITURE_CARE_TIPS;
+export const _WEEKEND_PROMO = WEEKEND_PROMO;
 export { getNextEngagementWindow as _getNextEngagementWindow };
 export { buildPlatformContent as _buildPlatformContent };
 export { isProductDuplicate as _isProductDuplicate };
 export { isWithinRateLimit as _isWithinRateLimit };
+export { getDayRotationContent as _getDayRotationContent };
+export { buildRotationCaption as _buildRotationCaption };
