@@ -242,6 +242,16 @@ describe('submitTradeInRequest', () => {
     expect(JSON.parse(inserted[0].photoUrls)).toEqual([]);
   });
 
+  it('truncates photo URLs longer than 500 characters', async () => {
+    const longUrl = 'https://cdn.example.com/' + 'a'.repeat(490);
+    expect(longUrl.length).toBeGreaterThan(500);
+    await submitTradeInRequest({ ...validData, photoUrls: [longUrl] });
+    const inserted = __getInserted(COLLECTION);
+    const urls = JSON.parse(inserted[0].photoUrls);
+    expect(urls).toHaveLength(1);
+    expect(urls[0].length).toBe(500);
+  });
+
   it('filters out non-https photo URLs to prevent stored XSS', async () => {
     const mixed = [
       'https://cdn.example.com/safe.jpg',
@@ -373,6 +383,14 @@ describe('getTradeInRequests', () => {
     __seed(COLLECTION, Array.from({ length: 5 }, (_, i) => makeRequest({ _id: `req-${i}` })));
     const result = await getTradeInRequests({ pageSize: 999 });
     expect(result.success).toBe(true);
+  });
+
+  it('uses default pageSize and skip when called with no options', async () => {
+    __seed(COLLECTION, Array.from({ length: 3 }, (_, i) => makeRequest({ _id: `req-${i}` })));
+    const result = await getTradeInRequests();
+    expect(result.success).toBe(true);
+    expect(result.requests).toHaveLength(3);
+    expect(result.totalCount).toBe(3);
   });
 });
 

@@ -21,8 +21,9 @@ import wixLocationFrontend from 'wix-location-frontend';
 
 const TRADE_IN_PAGE_URL = '/trade-in';
 
-// Best-condition credit caps by type — used for the PDP teaser line.
-// Actual estimates come from the backend; these are display hints only.
+// Known-type guard: if a productType is not listed here, the widget hides without
+// making a backend call. Must stay in sync with VALUATION_MATRIX item types in
+// tradeInService.web.js. The displayed dollar value always comes from the backend.
 const DISPLAY_MAX = {
   frame:    75,
   mattress: 40,
@@ -80,6 +81,9 @@ export async function initTradeInWidget($w, productType) {
 /**
  * Get the display credit maximum for a product type (synchronous, for static display).
  * Returns 0 for unknown types.
+ *
+ * WARNING: returns a hardcoded frontend constant, not a live backend value.
+ * Update DISPLAY_MAX if VALUATION_MATRIX credit amounts change in tradeInService.web.js.
  *
  * @param {string} productType - 'frame' | 'mattress'
  * @returns {number}

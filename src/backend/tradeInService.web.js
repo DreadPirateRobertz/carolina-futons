@@ -3,6 +3,8 @@
  * @description Trade-in / Trade-up program backend for Carolina Futons.
  * Customers submit trade-in requests online; staff confirms condition
  * in-store and issues store credit toward a new purchase.
+ * Guest customers (no memberId) receive a manual-issuance prompt instead
+ * of automatic credit.
  *
  * @requires wix-web-module
  * @requires wix-data
@@ -33,6 +35,7 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { issueStoreCredit } from 'backend/storeCreditService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -40,7 +43,8 @@ const COLLECTION = 'TradeInRequests';
 
 /**
  * Condition-based credit values per item type.
- * Mattress in 'poor' condition is ineligible for hygiene reasons.
+ * Credit values of 0 signal ineligibility. Mattress 'poor' is intentionally 0
+ * (hygiene policy — no resale value). Frame 'poor' remains eligible at $25.
  */
 const VALUATION_MATRIX = {
   frame:    { good: 75, fair: 50, poor: 25 },
@@ -83,7 +87,10 @@ function getValuation(itemType, condition) {
 async function getMember() {
   try {
     return await currentMember.getMember();
-  } catch {
+  } catch (err) {
+    // Guest checkout — null is the expected return for unauthenticated callers.
+    // Log warnings so auth-service failures are distinguishable from genuine guests.
+    console.warn('[tradeInService] getMember failed, treating as guest:', err);
     return null;
   }
 }
@@ -134,7 +141,7 @@ export const getTradeInValuation = webMethod(
         message: `Estimated trade-in credit: $${val.creditMin}–$${val.creditMax}. Final value confirmed in-store.`,
       };
     } catch (err) {
-      console.error('[tradeInService] Error getting valuation:', err);
+      logError('[tradeInService] Error getting valuation:', err);
       return { success: false, message: 'Failed to calculate valuation.' };
     }
   }
@@ -248,7 +255,7 @@ export const submitTradeInRequest = webMethod(
         message: `Trade-in request submitted! Bring your ${itemType} in-store for confirmation. Estimated credit: $${val.creditMin}–$${val.creditMax}.`,
       };
     } catch (err) {
-      console.error('[tradeInService] Error submitting trade-in request:', err);
+      logError('[tradeInService] Error submitting trade-in request:', err);
       return { success: false, message: 'Failed to submit trade-in request.' };
     }
   }
@@ -288,7 +295,7 @@ export const getMyTradeInRequests = webMethod(
 
       return { success: true, requests };
     } catch (err) {
-      console.error('[tradeInService] Error getting member requests:', err);
+      logError('[tradeInService] Error getting member requests:', err);
       return { success: false, message: 'Failed to retrieve trade-in requests.' };
     }
   }
@@ -328,7 +335,7 @@ export const getTradeInRequests = webMethod(
         totalCount: result.totalCount || 0,
       };
     } catch (err) {
-      console.error('[tradeInService] Error getting trade-in requests:', err);
+      logError('[tradeInService] Error getting trade-in requests:', err);
       return { success: false, message: 'Failed to retrieve requests.' };
     }
   }
@@ -337,6 +344,13 @@ export const getTradeInRequests = webMethod(
 /**
  * Confirm a trade-in in-store: verify actual condition, issue store credit.
  * Staff calls this when the customer brings the item in.
+ *
+ * On success, record status transitions directly from 'pending' to 'credited'
+ * (via an intermediate 'confirmed' staging write for idempotency). The 'confirmed'
+ * status in the schema marks a successfully staged but not-yet-credited record;
+ * retrying from 'confirmed' re-attempts credit issuance without double-issuing.
+ * Guest customers receive success: true but storeCreditId: null — staff must
+ * issue credit manually.
  *
  * @function confirmTradeIn
  * @param {string} requestId - TradeInRequests CMS record ID
@@ -402,7 +416,7 @@ export const confirmTradeIn = webMethod(
         });
 
         if (!creditResult.success) {
-          console.error('[tradeInService] Failed to issue store credit:', creditResult.message);
+          logError('[tradeInService] Failed to issue store credit:', creditResult.message);
           // Record remains 'confirmed' — staff can see the confirmation happened
           // and manually issue credit if needed
           return { success: false, message: 'Trade-in confirmed but store credit issuance failed. Contact admin.' };
@@ -416,7 +430,7 @@ export const confirmTradeIn = webMethod(
       } catch (stage3Err) {
         // Credit was already issued — log for manual reconciliation and return success.
         // Staff can retry; the storeCreditId guard in Stage 2 prevents double-issuance.
-        console.error('[tradeInService] MANUAL RECONCILIATION REQUIRED: store credit issued but status update failed', {
+        logError('[tradeInService] MANUAL RECONCILIATION REQUIRED: store credit issued but status update failed', {
           requestId: cleanId,
           storeCreditId,
           creditAmount,
@@ -439,7 +453,7 @@ export const confirmTradeIn = webMethod(
           : `Trade-in confirmed. Issue $${creditAmount} store credit manually (guest customer).`,
       };
     } catch (err) {
-      console.error('[tradeInService] Error confirming trade-in:', err);
+      logError('[tradeInService] Error confirming trade-in:', err);
       return { success: false, message: 'Failed to confirm trade-in.' };
     }
   }
@@ -477,7 +491,7 @@ export const rejectTradeIn = webMethod(
 
       return { success: true, message: 'Trade-in request rejected.' };
     } catch (err) {
-      console.error('[tradeInService] Error rejecting trade-in:', err);
+      logError('[tradeInService] Error rejecting trade-in:', err);
       return { success: false, message: 'Failed to reject trade-in.' };
     }
   }
