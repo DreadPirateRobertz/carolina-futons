@@ -1,5 +1,5 @@
 /**
- * Tests for lifecycleCron.js — scanLifecycleMilestones
+ * Tests for lifecycleCron.web.js — scanLifecycleMilestones
  * (CF-3izl.1)
  *
  * Covers:
@@ -15,6 +15,8 @@
  * - ordersScanned count matches total orders fetched
  * - milestonesFound count matches results.length
  * - Pagination: processes more than 100 orders
+ * - suppressAuth: true passed to all wix-data queries (required for cron jobs)
+ * - _createdDate stored as ISO string (not Date object) handled correctly
  * - Error resilience: wixData failure returns success:false
  * - Exported constants: DAY7_WINDOW, MONTH1_WINDOW, YEAR1_WINDOW
  */
@@ -23,6 +25,7 @@ import {
   __reset,
   __seed,
   __setQueryError,
+  __getLastFindOptions,
 } from 'wix-data';
 
 import {
@@ -30,7 +33,7 @@ import {
   _DAY7_WINDOW,
   _MONTH1_WINDOW,
   _YEAR1_WINDOW,
-} from '../src/backend/lifecycleCron.js';
+} from '../src/backend/lifecycleCron.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -314,13 +317,15 @@ describe('nothing due', () => {
 
 describe('duplicate prevention', () => {
   it('does not return the same orderId+milestone combo twice', async () => {
-    // The query mock could theoretically return the same item twice (e.g. pagination overlap).
-    // The implementation should dedup on orderId+milestone.
+    // The wix-data mock allows seeding duplicate _id records even though Wix
+    // enforces uniqueness in production. We use this capability purely to
+    // exercise the dedup Set — it is a safety net for future query-strategy
+    // changes (e.g. cursor pagination, union queries) that could produce
+    // the same order more than once in a single scan.
     const order = namedOrder('ord-dup', 7);
-    // Seed with the same logical order twice to simulate a dedup scenario
     __seed('Stores/Orders', [
       { ...order, _id: 'ord-dup' },
-      { ...order, _id: 'ord-dup' }, // same _id
+      { ...order, _id: 'ord-dup' },
     ]);
     const result = await scanLifecycleMilestones();
     const day7Hits = result.results.filter(r => r.orderId === 'ord-dup' && r.milestone === 'day_7');
@@ -419,6 +424,39 @@ describe('pagination', () => {
     expect(result.ordersScanned).toBe(150);
     expect(result.results).toHaveLength(1);
     expect(result.results[0].orderId).toBe('ord-paginated-day7');
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// suppressAuth
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('suppressAuth', () => {
+  it('passes suppressAuth: true to the orders query', async () => {
+    __seed('Stores/Orders', []);
+    await scanLifecycleMilestones();
+    const opts = __getLastFindOptions('Stores/Orders');
+    expect(opts).toMatchObject({ suppressAuth: true });
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// _createdDate as ISO string
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('_createdDate as ISO string', () => {
+  it('correctly detects milestone when _createdDate is an ISO string', async () => {
+    const orderDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const order = {
+      _id: 'ord-isostring',
+      _createdDate: orderDate.toISOString(), // string, not Date object
+      buyerInfo: { email: 'iso@example.com', memberId: 'mem-iso' },
+    };
+    __seed('Stores/Orders', [order]);
+    const result = await scanLifecycleMilestones();
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0].milestone).toBe('day_7');
+    expect(result.results[0].orderDate).toBeInstanceOf(Date);
   });
 });
 
