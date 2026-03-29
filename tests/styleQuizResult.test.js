@@ -366,10 +366,10 @@ describe('initSommelierSection — success', () => {
     expect(data).toHaveLength(2);
     expect(data[0]._id).toBe('prod-s1');
     expect(data[0].name).toBe('DuraSleep Hardwood Futon');
-    expect(data[0].price).toBe('$799');
+    expect(data[0].price).toBe('$799.00');
     expect(data[0].slug).toBe('durasleep-hardwood-futon');
     expect(data[0].matchReasons).toBe('Solid hardwood construction, Firm support for back health');
-    expect(data[1].price).toBe('$649');
+    expect(data[1].price).toBe('$649.00');
   });
 
   it('uses empty string for image when image is falsy', async () => {

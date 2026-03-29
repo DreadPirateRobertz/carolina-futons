@@ -38,7 +38,9 @@ const SOMMELIER_SESSION_KEY = 'sommelierSessionKey';
 
 $w.onReady(async function () {
   // Start registration gate check concurrently — does not block result loading
-  initStyleQuizRegistrationGate({ $w });
+  initStyleQuizRegistrationGate({ $w }).catch(e =>
+    console.error('[StyleQuizResult] Registration gate error:', e)
+  );
   await initStyleQuizResult($w);
   await initSommelierSection($w);
 });
@@ -204,7 +206,7 @@ export async function initSommelierSection($w) {
     $w('#sommelierRecommendations').data = result.recommendations.map(r => ({
       _id: r.productId,
       name: r.name,
-      price: r.price != null ? `$${r.price}` : '',
+      price: r.price != null ? `$${Number(r.price).toFixed(2)}` : '',
       image: r.image || '',
       slug: r.slug || '',
       matchReasons: (r.matchReasons || []).join(', '),
