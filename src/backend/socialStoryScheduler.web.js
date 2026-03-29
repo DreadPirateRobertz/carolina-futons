@@ -43,7 +43,7 @@ const FURNITURE_CARE_TIPS = [
 const WEEKEND_PROMO = {
   title: 'Weekend at Carolina Futons',
   message: 'Stop in this weekend and browse our full showroom in Hendersonville, NC. Our craftspeople are here to help you find the perfect piece.',
-  hours: 'Mon–Sat 10am–6pm · Sun 12pm–5pm',
+  hours: 'Wed–Fri 10am–5pm · Sat 10am–4pm',
   url: 'carolinafutons.com',
 };
 
@@ -836,7 +836,7 @@ async function scheduleRotationContentInternal(contentType, payload, eventType, 
       errors.push(msg);
     }
   }
-  return { scheduled, rateLimited, errors };
+  return { scheduled, skipped: 0, rateLimited, errors };
 }
 
 /**
@@ -887,7 +887,7 @@ function buildRotationCaption(platform, contentType, payload) {
  *   Sat          → "Did you know?" furniture care tip
  *   Sun          → Weekend promo / store hours
  *
- * @returns {Promise<{success: boolean, contentType: string, scheduled: number, rateLimited: number, errors: string[]}>}
+ * @returns {Promise<{success: boolean, contentType: string, scheduled: number, skipped: number, rateLimited: number, errors: string[]}>}
  */
 export const runDailyContentRotation = webMethod(
   Permissions.Admin,
@@ -906,14 +906,14 @@ export const runDailyContentRotation = webMethod(
         if (!product) {
           const msg = 'featured_product: no products found in catalog';
           console.warn('[socialStoryScheduler] runDailyContentRotation:', msg);
-          return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [msg] };
+          return { success: false, contentType, scheduled: 0, skipped: 0, rateLimited: 0, errors: [msg] };
         }
         rotationPayload = {
           productId: product._id || product.slug || '',
-          productName: product.name,
+          productName: sanitize(product.name, 200),
           price: product.price,
           imageUrl: (product.images && product.images[0]) || '',
-          title: product.name,
+          title: sanitize(product.name, 200),
         };
 
       } else if (contentType === 'review_highlight') {
@@ -927,9 +927,9 @@ export const runDailyContentRotation = webMethod(
         if (review) {
           rotationPayload = {
             reviewText: sanitize(review.content || review.text || review.review || 'Wonderful quality and craftsmanship!', 280),
-            reviewerName: review.authorName || review.memberName || '',
+            reviewerName: sanitize(review.authorName || review.memberName || '', 100),
             rating: review.rating || 5,
-            productName: review.productName || '',
+            productName: sanitize(review.productName || '', 200),
             productId: review.productId || `review-${todayStr}`,
             title: 'Customer Review',
           };
@@ -962,7 +962,7 @@ export const runDailyContentRotation = webMethod(
       }
 
       if (!rotationPayload) {
-        return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [`No payload for contentType: ${contentType}`] };
+        return { success: false, contentType, scheduled: 0, skipped: 0, rateLimited: 0, errors: [`No payload for contentType: ${contentType}`] };
       }
 
       const result = await scheduleRotationContentInternal(contentType, rotationPayload, contentType, todayStr);
@@ -974,7 +974,7 @@ export const runDailyContentRotation = webMethod(
 
     } catch (err) {
       logError('socialStoryScheduler.runDailyContentRotation', err);
-      return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [err.message] };
+      return { success: false, contentType, scheduled: 0, skipped: 0, rateLimited: 0, errors: [err.message] };
     }
   }
 );

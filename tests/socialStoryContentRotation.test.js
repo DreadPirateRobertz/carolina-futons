@@ -214,9 +214,13 @@ describe('_buildRotationCaption — weekend_promo', () => {
     expect(caption).toContain(_WEEKEND_PROMO.url);
   });
 
-  it('includes store hours', () => {
+  it('includes store hours matching site footer (Wed–Fri/Sat)', () => {
     const caption = _buildRotationCaption('facebook', 'weekend_promo', _WEEKEND_PROMO);
     expect(caption).toContain(_WEEKEND_PROMO.hours);
+    // Verify hours match the site footer, not the old Mon–Sat/Sun schedule
+    expect(_WEEKEND_PROMO.hours).toContain('Wed');
+    expect(_WEEKEND_PROMO.hours).toContain('Sat');
+    expect(_WEEKEND_PROMO.hours).not.toContain('Mon');
   });
 });
 
@@ -551,6 +555,7 @@ describe('runDailyContentRotation — error handling', () => {
     expect(result).toHaveProperty('success');
     expect(result).toHaveProperty('contentType');
     expect(result).toHaveProperty('scheduled');
+    expect(result).toHaveProperty('skipped');
     expect(result).toHaveProperty('rateLimited');
     expect(result).toHaveProperty('errors');
     expect(Array.isArray(result.errors)).toBe(true);
