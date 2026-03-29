@@ -7,8 +7,9 @@
  *  1. Customer purchases SKU: SWATCH-KIT-001 via standard Wix checkout.
  *  2. wixEcom_onOrderCreated fires → recordSwatchKitPurchase() issues $5 credit
  *     (expires 90 days) via storeCreditService.
- *  3. At checkout, applySwatchKitCredit() auto-applies the credit on qualifying
- *     orders ($200+) via storeCreditService.applyStoreCredit.
+ *  3. At qualifying checkout ($200+), markCreditApplied() is called after
+ *     storeCreditService.applyStoreCredit succeeds to mark the credit as used.
+ *     TODO: wire markCreditApplied() at checkout — pending storeCreditService hook.
  *
  * @setup
  * Wix Stores product:
@@ -69,7 +70,9 @@ export function isQualifyingOrder(orderTotal) {
  * the existing creditId without issuing a duplicate credit.
  *
  * @param {string} orderId
- * @param {string} memberId — may be empty for guest orders (credit keyed to email)
+ * @param {string} memberId — may be empty for guest orders; email is used as proxy
+ *   memberId in that case. Note: getSwatchKitCreditStatus queries by memberId only,
+ *   so guests cannot retrieve their credit status until they are associated with a member.
  * @param {string} email
  * @param {string[]} [swatchIds] — selected swatch IDs from the order metadata
  * @returns {{ success: boolean, creditId?: string, error?: string }}

@@ -47,7 +47,8 @@ export async function initPage($w) {
     } else {
       $w('#creditStatusBanner').hide();
     }
-  } catch (_) {
+  } catch (err) {
+    console.error('[swatchKit] Failed to load member credit status:', err);
     $w('#creditStatusBanner').hide();
   }
 
@@ -83,7 +84,11 @@ function _updateUI($w) {
   $w('#selectedCount').text = formatSelectionCount(_selectedIds);
   const cartState = buildAddToCartState(_selectedIds);
   $w('#addToCartBtn').label = cartState.label;
-  $w('#addToCartBtn').disable = cartState.disabled;
+  if (cartState.disabled) {
+    $w('#addToCartBtn').disable();
+  } else {
+    $w('#addToCartBtn').enable();
+  }
   const err = buildSelectionError(_selectedIds);
   if (err && _selectedIds.length > 0) {
     $w('#selectionError').text = err;
