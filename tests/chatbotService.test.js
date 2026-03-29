@@ -268,7 +268,7 @@ describe('daily stats', () => {
 describe('Claude API errors', () => {
   it('returns { error: assistant_unavailable } on non-ok response', async () => {
     __seed('ChatSessions', [makeSession()]);
-    __setHandler(() => ({ ok: false, status: 500, json: async () => ({}) }));
+    __setHandler(() => ({ ok: false, status: 500, json: async () => ({}), text: async () => 'internal error' }));
     const result = await sendMessage(SESSION_ID, USER_MSG);
     expect(result).toEqual({ error: 'assistant_unavailable' });
   });
@@ -277,6 +277,20 @@ describe('Claude API errors', () => {
     __seed('ChatSessions', [makeSession()]);
     __setHandler(() => { throw new Error('network error'); });
     const result = await sendMessage(SESSION_ID, USER_MSG);
+    expect(result).toEqual({ error: 'assistant_unavailable' });
+  });
+
+  it('returns { error: assistant_unavailable } when Claude call times out after 30s', async () => {
+    __seed('ChatSessions', [makeSession()]);
+    // Fetch never resolves — timeout fires, AbortController cancels it
+    __setHandler(() => new Promise(() => {}));
+    // Catch immediately before advancing timers to prevent unhandled rejection
+    // in fake-timer environments (feedback_vitest_fake_timer_rejection)
+    let result;
+    const pending = sendMessage(SESSION_ID, USER_MSG).then(r => { result = r; });
+    void pending.catch(() => {});
+    await vi.advanceTimersByTimeAsync(30_001);
+    await pending;
     expect(result).toEqual({ error: 'assistant_unavailable' });
   });
 });

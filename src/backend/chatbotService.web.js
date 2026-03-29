@@ -53,28 +53,50 @@ export function _getTodayUTC() {
   return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 }
 
+const CLAUDE_TIMEOUT_MS = 30_000;
+
 /**
  * Call the Claude API and return parsed JSON, or null on non-ok response.
+ * Enforces a 30s hard timeout via AbortController + Promise.race to prevent
+ * Velo serverless runtime exhaustion on slow or stalled API responses.
  * Logs the HTTP status and error body on non-ok so operators can diagnose
  * API key issues and rate limits.
  * @internal
  */
 export async function _callClaude(messages, systemPrompt, apiKey) {
   const { fetch } = await import('wix-fetch');
-  const response = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
-      max_tokens: CLAUDE_MAX_TOKENS,
-      system: systemPrompt,
-      messages,
-    }),
+  const controller = new AbortController();
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+      reject(new Error('claude_timeout'));
+    }, CLAUDE_TIMEOUT_MS);
   });
+  // Mark the timeout rejection as handled so fake-timer environments don't
+  // report an unhandled rejection before Promise.race links its handler.
+  // The rejection still propagates through Promise.race — it is NOT suppressed.
+  void timeoutPromise.catch(() => {});
+
+  const response = await Promise.race([
+    fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_MODEL,
+        max_tokens: CLAUDE_MAX_TOKENS,
+        system: systemPrompt,
+        messages,
+      }),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId)),
+    timeoutPromise,
+  ]);
+
   if (!response.ok) {
     let errBody = '';
     try { errBody = await response.text(); } catch (_) { /* ignore */ }
