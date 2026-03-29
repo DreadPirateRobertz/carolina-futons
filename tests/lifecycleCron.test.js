@@ -304,7 +304,7 @@ describe('nothing due', () => {
       orderAt(15),  // between Day 7 and Month 1
       orderAt(60),  // between Month 1 and Year 1
       orderAt(200), // past Month 1, before Year 1
-      orderAt(400), // past Year 1
+      orderAt(360), // past Year 1 window, within MAX_LOOKBACK_DAYS
     ]);
     const result = await scanLifecycleMilestones();
     expect(result.success).toBe(true);

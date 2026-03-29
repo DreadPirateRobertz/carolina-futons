@@ -80,6 +80,21 @@ function getField(item, field) {
   return field.split('.').reduce((obj, key) => obj?.[key], item);
 }
 
+/**
+ * Normalize comparison pair for range operators (gt/ge/lt/le).
+ * If either operand is a Date, convert both sides to ms timestamps so that
+ * ISO-string field values compare correctly against Date query values.
+ * All other comparisons (string vs string, number vs number) are unchanged.
+ */
+function toCmp(v, value) {
+  if (v instanceof Date || value instanceof Date) {
+    const tv = v instanceof Date ? v.getTime() : new Date(v).getTime();
+    const tval = value instanceof Date ? value.getTime() : new Date(value).getTime();
+    return [tv, tval];
+  }
+  return [v, value];
+}
+
 function createQueryBuilder(collection) {
   let filters = [];
   let sortField = null;
@@ -90,10 +105,10 @@ function createQueryBuilder(collection) {
   const builder = {
     eq(field, value) { filters.push(item => getField(item, field) === value); return builder; },
     ne(field, value) { filters.push(item => getField(item, field) !== value); return builder; },
-    gt(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v > value; }); return builder; },
-    ge(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v >= value; }); return builder; },
-    lt(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v < value; }); return builder; },
-    le(field, value) { filters.push(item => { const v = getField(item, field); return v != null && v <= value; }); return builder; },
+    gt(field, value) { filters.push(item => { const v = getField(item, field); if (v == null) return false; const [a, b] = toCmp(v, value); return a > b; }); return builder; },
+    ge(field, value) { filters.push(item => { const v = getField(item, field); if (v == null) return false; const [a, b] = toCmp(v, value); return a >= b; }); return builder; },
+    lt(field, value) { filters.push(item => { const v = getField(item, field); if (v == null) return false; const [a, b] = toCmp(v, value); return a < b; }); return builder; },
+    le(field, value) { filters.push(item => { const v = getField(item, field); if (v == null) return false; const [a, b] = toCmp(v, value); return a <= b; }); return builder; },
     hasSome(field, values) {
       filters.push(item => {
         const v = getField(item, field);
