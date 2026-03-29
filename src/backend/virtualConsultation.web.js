@@ -34,11 +34,42 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
+import { triggerConsultationFollowup } from 'backend/emailAutomation.web';
 
 const VALID_TYPES = ['video', 'phone'];
 const VALID_TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 const BOOKING_WINDOW_DAYS = 14;
 const MAX_PHOTOS = 10;
+
+// Pre-consultation intake form allowed values (cf-osnt)
+const INTAKE_ENUMS = {
+  roomType: ['living-room', 'guest-room', 'studio', 'bedroom', 'office', 'other'],
+  roomSize: ['small', 'medium', 'large'],
+  primaryUse: ['daily-sleeping', 'occasional-guest', 'both'],
+  stylePreference: ['modern', 'traditional', 'rustic', 'eclectic'],
+  budget: ['under-500', '500-1000', '1000-2000', '2000-plus'],
+  timeline: ['within-week', 'within-month', 'browsing'],
+  painPoint: ['price', 'space', 'comfort', 'style', 'assembly'],
+};
+const REQUIRED_INTAKE_FIELDS = Object.keys(INTAKE_ENUMS).filter(k => k !== 'painPoint');
+
+/**
+ * Validate consultationId and verify booking ownership.
+ * Returns { cleanId, memberId } on success, or { error } on failure.
+ */
+async function resolveOwnedBooking(consultationId) {
+  const memberId = await requireMember();
+  const cleanId = validateId(consultationId);
+  if (!cleanId) {
+    return { error: 'Consultation ID is required.' };
+  }
+  const booking = await wixData.get('ConsultationBookings', cleanId);
+  if (!booking || booking.memberId !== memberId) {
+    return { error: 'Consultation not found.' };
+  }
+  return { cleanId, memberId, booking };
+}
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -487,6 +518,191 @@ export const getConsultationDetails = webMethod(
       }
       console.error('[virtualConsultation] Error getting consultation details:', err);
       return { success: false, error: 'Failed to load consultation details.' };
+    }
+  }
+);
+
+/**
+ * Submit a pre-consultation intake form linked to a booking.
+ *
+ * Saves the customer's space details, preferences, and budget to the
+ * ConsultationIntake collection so the designer is prepared before the call.
+ *
+ * @param {string} consultationId - ConsultationBookings _id
+ * @param {Object} data
+ * @param {string} data.roomType - 'living-room'|'guest-room'|'studio'|'bedroom'|'office'|'other'
+ * @param {string} data.roomSize - 'small'|'medium'|'large'
+ * @param {string} data.primaryUse - 'daily-sleeping'|'occasional-guest'|'both'
+ * @param {string} data.stylePreference - 'modern'|'traditional'|'rustic'|'eclectic'
+ * @param {string} data.budget - 'under-500'|'500-1000'|'1000-2000'|'2000-plus'
+ * @param {string} data.timeline - 'within-week'|'within-month'|'browsing'
+ * @param {string} [data.description] - What the customer is looking for (max 200 chars)
+ * @param {string} [data.painPoint] - 'price'|'space'|'comfort'|'style'|'assembly'
+ * @returns {Promise<{success: boolean, intakeId?: string, error?: string}>}
+ */
+export const submitConsultationIntake = webMethod(
+  Permissions.SiteMember,
+  async (consultationId, data) => {
+    try {
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
+      }
+      const { cleanId, memberId, booking } = resolved;
+
+      if (booking.status === 'cancelled' || booking.status === 'completed') {
+        return { success: false, error: 'Cannot submit intake for a cancelled or completed consultation.' };
+      }
+
+      if (!data || typeof data !== 'object') {
+        return { success: false, error: 'Intake data is required.' };
+      }
+
+      // Validate required enum fields
+      for (const field of REQUIRED_INTAKE_FIELDS) {
+        const value = data?.[field];
+        if (!value || !INTAKE_ENUMS[field].includes(value)) {
+          return { success: false, error: `Invalid or missing ${field}.` };
+        }
+      }
+
+      // Validate optional description (max 200 chars)
+      if (data.description && data.description.length > 200) {
+        return { success: false, error: 'description must be 200 characters or fewer.' };
+      }
+
+      // Validate optional painPoint
+      if (data.painPoint && !INTAKE_ENUMS.painPoint.includes(data.painPoint)) {
+        return { success: false, error: 'Invalid painPoint.' };
+      }
+
+      const record = {
+        consultationId: cleanId,
+        memberId,
+        ...Object.fromEntries(REQUIRED_INTAKE_FIELDS.map(f => [f, data[f]])),
+        description: sanitize(data.description || '', 200),
+        painPoint: data.painPoint || null,
+        createdAt: new Date(),
+      };
+
+      const existing = await wixData.query('ConsultationIntake')
+        .eq('consultationId', cleanId)
+        .find();
+
+      if (existing.items.length > 0) {
+        const saved = await wixData.update('ConsultationIntake', { ...existing.items[0], ...record });
+        return { success: true, intakeId: saved._id };
+      }
+
+      const inserted = await wixData.insert('ConsultationIntake', record);
+      return { success: true, intakeId: inserted._id };
+    } catch (err) {
+      if (err.message === 'Authentication required') {
+        return { success: false, error: 'Authentication required.' };
+      }
+      console.error('[virtualConsultation] Error submitting intake:', err);
+      return { success: false, error: 'Failed to submit intake form.' };
+    }
+  }
+);
+
+/**
+ * Get the pre-consultation intake form response for a booking.
+ *
+ * @param {string} consultationId - ConsultationBookings _id
+ * @returns {Promise<{success: boolean, intake: Object|null, error?: string}>}
+ */
+export const getConsultationIntake = webMethod(
+  Permissions.SiteMember,
+  async (consultationId) => {
+    try {
+      const resolved = await resolveOwnedBooking(consultationId);
+      if (resolved.error) {
+        return { success: false, error: resolved.error };
+      }
+
+      const { cleanId, memberId } = resolved;
+
+      const result = await wixData.query('ConsultationIntake')
+        .eq('consultationId', cleanId)
+        .eq('memberId', memberId)
+        .find();
+
+      return { success: true, intake: result.items[0] ?? null };
+    } catch (err) {
+      if (err.message === 'Authentication required') {
+        return { success: false, error: 'Authentication required.' };
+      }
+      console.error('[virtualConsultation] Error getting intake:', err);
+      return { success: false, error: 'Failed to load intake form.' };
+    }
+  }
+);
+
+/**
+ * Record post-consultation notes and product recommendations, then trigger follow-up email.
+ * Called by staff after each consultation via admin panel.
+ *
+ * @param {string}   bookingId - ConsultationBookings CMS _id
+ * @param {string[]} productIds - up to 5 product IDs to feature in follow-up email
+ * @param {string}   [notes] - optional internal notes from the designer
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const addConsultationNotes = webMethod(
+  Permissions.Admin,
+  async (bookingId, productIds, notes) => {
+    try {
+      const cleanId = validateId(bookingId);
+      if (!cleanId) return { success: false, error: 'bookingId is required' };
+
+      const booking = await wixData.get('ConsultationBookings', cleanId);
+      if (!booking) return { success: false, error: 'Consultation booking not found' };
+
+      const cleanProductIds = (Array.isArray(productIds) ? productIds : [])
+        .slice(0, 5)
+        .map(id => sanitize(String(id), 100).trim())
+        .filter(Boolean);
+      const cleanNotes = sanitize(String(notes || ''), 2000);
+
+      // Update booking: mark completed + save product recommendations
+      await wixData.update('ConsultationBookings', {
+        ...booking,
+        status: 'completed',
+        recommendedProductIds: JSON.stringify(cleanProductIds),
+        staffNotes: cleanNotes,
+        completedAt: new Date(),
+      });
+
+      // Resolve designer name for email
+      let designerName = '';
+      if (booking.designerId) {
+        const designer = await wixData.get('Designers', booking.designerId);
+        designerName = designer?.name || '';
+      }
+
+      // Parse quiz answers for email personalization
+      let quizAnswers = null;
+      try {
+        quizAnswers = booking.quizAnswers ? JSON.parse(booking.quizAnswers) : null;
+      } catch (_) { /* ignore malformed quiz answers */ }
+
+      // Fire-and-forget: queue follow-up email
+      // NOTE: ConsultationBookings stores memberId (Wix member._id), not CRM contactId.
+      // These are different namespaces — never pass memberId as contactId (cf-lwkt P1 bug).
+      // Pass '' until a future improvement adds CRM lookup via contacts.queryContacts.
+      const nameParts = (booking.contactName || '').split(' ');
+      const firstName = nameParts[0] || '';
+      triggerConsultationFollowup(
+        '',
+        booking.recipientEmail || '',
+        firstName,
+        { designerName, productIds: cleanProductIds, notes: cleanNotes, quizAnswers },
+      ).catch(err => logError('virtualConsultation:addConsultationNotes:followup', err));
+
+      return { success: true };
+    } catch (err) {
+      logError('virtualConsultation:addConsultationNotes', err);
+      return { success: false, error: err.message || 'Failed to save consultation notes.' };
     }
   }
 );

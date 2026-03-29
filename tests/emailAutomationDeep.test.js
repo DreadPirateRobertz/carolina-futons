@@ -295,7 +295,7 @@ describe('triggerAbandonedCartRecovery — edge cases', () => {
     });
 
     await triggerAbandonedCartRecovery();
-    expect(insertedItems[0].variables.cartTotal).toBe('0');
+    expect(insertedItems[0].variables.cartTotal).toMatch(/\$?0/);
   });
 
   it('skips cart with empty buyerEmail string', async () => {

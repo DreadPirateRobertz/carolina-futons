@@ -4,6 +4,9 @@
  * (NEW, BESTSELLER, LOW_STOCK, SALE, CF_PLUS_EXCLUSIVE). CMS entries take priority;
  * computed fallbacks apply when no CMS override exists.
  *
+ * Also provides getWhiteGloveBadge() for the supplemental 'White Glove Available'
+ * pill shown on eligible product cards and PDPs (futon frames, murphy beds, platform beds).
+ *
  * Badge priority order (highest first): CF_PLUS_EXCLUSIVE, BESTSELLER, NEW, SALE, LOW_STOCK.
  *
  * @setup
@@ -23,6 +26,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { colors } from 'public/sharedTokens.js';
+import { _WHITE_GLOVE_CATEGORIES } from 'backend/deliveryOptions.web';
 
 const BADGES_COLLECTION = 'ProductBadges';
 const LOW_STOCK_THRESHOLD = 5;
@@ -37,11 +41,12 @@ const MAX_PRODUCT_IDS = 50;
  * but it does not gate access to product data. Enforcement happens at checkout.
  */
 const BADGE_CONFIG = {
-  NEW:              { label: 'New',          bgColor: colors.mountainBlue, textColor: colors.white },
-  BESTSELLER:       { label: 'Bestseller',   bgColor: colors.espresso,     textColor: colors.white },
-  LOW_STOCK:        { label: 'Low Stock',    bgColor: colors.sunsetCoral,  textColor: colors.white },
-  SALE:             { label: 'Sale',         bgColor: colors.sunsetCoral,  textColor: colors.white },
-  CF_PLUS_EXCLUSIVE:{ label: 'CF+ Exclusive',bgColor: colors.mountainBlueDark, textColor: colors.white },
+  NEW:              { label: 'New',                  bgColor: colors.mountainBlue,     textColor: colors.white },
+  BESTSELLER:       { label: 'Bestseller',           bgColor: colors.espresso,         textColor: colors.white },
+  LOW_STOCK:        { label: 'Low Stock',            bgColor: colors.sunsetCoral,      textColor: colors.white },
+  SALE:             { label: 'Sale',                 bgColor: colors.sunsetCoral,      textColor: colors.white },
+  CF_PLUS_EXCLUSIVE:{ label: 'CF+ Exclusive',        bgColor: colors.mountainBlueDark, textColor: colors.white },
+  WHITE_GLOVE:      { label: 'White Glove Available',bgColor: colors.success,          textColor: colors.white },
 };
 
 /** Priority order — lower index = higher priority. */
@@ -215,6 +220,47 @@ export const getBatchProductBadges = webMethod(
     } catch (err) {
       console.error('getBatchProductBadges error:', err);
       return { success: false, error: 'Unable to fetch product badges' };
+    }
+  }
+);
+
+// ── getWhiteGloveBadge (supplemental badge for eligible product cards/PDPs) ──
+
+/**
+ * Return the White Glove Available badge config for a product category, or null
+ * if the category does not qualify for white-glove delivery.
+ *
+ * This badge is supplemental — it appears alongside (not instead of) the normal
+ * priority badge (NEW, BESTSELLER, etc.). Eligible categories are futon frames,
+ * murphy cabinet beds, platform beds, and other items requiring in-home assembly.
+ *
+ * The badge links to /getting-it-home on the storefront.
+ *
+ * @param {string} productCategory - Wix Stores product category slug (e.g. 'futon-frames')
+ * @returns {{
+ *   success: boolean,
+ *   badge: { type: string, label: string, bgColor: string, textColor: string, linkUrl: string } | null,
+ * }}
+ */
+export const getWhiteGloveBadge = webMethod(
+  Permissions.Anyone,
+  (productCategory) => {
+    try {
+      const category = sanitize(productCategory || '', 100).toLowerCase();
+      if (!category || !_WHITE_GLOVE_CATEGORIES.includes(category)) {
+        return { success: true, badge: null };
+      }
+      return {
+        success: true,
+        badge: {
+          ...BADGE_CONFIG.WHITE_GLOVE,
+          type: 'WHITE_GLOVE',
+          linkUrl: '/getting-it-home',
+        },
+      };
+    } catch (err) {
+      console.error('getWhiteGloveBadge error:', err);
+      return { success: false, error: 'Unable to determine white glove eligibility' };
     }
   }
 );

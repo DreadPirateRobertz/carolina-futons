@@ -3,13 +3,63 @@
  * @description Social sharing deep links for referral codes — generates
  * platform-specific share URLs with embedded referral codes and UTM params.
  *
- * Supports: Facebook, Twitter/X, SMS, Email, WhatsApp, Pinterest, Copy Link.
+ * Supports: Facebook, Twitter/X, SMS, Email, WhatsApp, Pinterest, Copy Link,
+ * Instagram (clipboard), and mobile app deep links.
  *
- * CF-ctzo
+ * CF-ctzo, CF-73zw
  */
 
 const SITE_URL = 'https://www.carolinafutons.com';
+const APP_SCHEME = 'carolinafutons';
 const UTM_CAMPAIGN = 'referral';
+
+/**
+ * Build the canonical referral URL for the /referral page.
+ * This is the shareable URL used in OG tags and direct sharing.
+ * Format: https://www.carolinafutons.com/referral?ref=CODE
+ *
+ * @param {string} referralCode
+ * @returns {string} Canonical referral page URL, or base URL if code is empty
+ */
+export function getCanonicalReferralUrl(referralCode) {
+  if (!referralCode) return `${SITE_URL}/referral`;
+  const cleanCode = referralCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!cleanCode) return `${SITE_URL}/referral`;
+  return `${SITE_URL}/referral?ref=${cleanCode}`;
+}
+
+/**
+ * Build a mobile app deep link for the CF mobile app.
+ * If the app is installed, this opens it and applies the referral code.
+ * If not installed, the OS falls back to the canonical web URL.
+ *
+ * Deep link format: carolinafutons://referral?code=CODE
+ * Cross-rig contract: dallas defines the deep link scheme.
+ *
+ * @param {string} referralCode
+ * @returns {string} App deep link URI, or empty string if code is empty
+ */
+export function getAppDeepLink(referralCode) {
+  if (!referralCode) return '';
+  const cleanCode = referralCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!cleanCode) return '';
+  return `${APP_SCHEME}://referral?code=${cleanCode}`;
+}
+
+/**
+ * Get the Instagram share content — just the canonical URL for clipboard copy.
+ * Instagram has no web share API; users copy to bio or stories manually.
+ *
+ * @param {string} referralCode
+ * @returns {{ url: string, message: string }} URL and pre-written caption
+ */
+export function getInstagramShareContent(referralCode) {
+  const url = getCanonicalReferralUrl(referralCode);
+  return {
+    url,
+    message: `Check out Carolina Futons — handcrafted mountain furniture! Use my referral link in bio: ${url}`,
+  };
+}
 
 /**
  * Build a referral landing URL with UTM parameters.
@@ -133,21 +183,24 @@ export function getPinterestShareUrl(referralCode, imageUrl, description, path) 
  *
  * @param {string} referralCode
  * @param {Object} [options]
- * @param {string} [options.path] - Landing page path
+ * @param {string} [options.path] - Landing page path (default: /shop)
  * @param {string} [options.productImage] - For Pinterest
  * @param {string} [options.message] - Custom share message
- * @returns {Object} Map of platform → share URL
+ * @returns {Object} Map of platform → share URL or content
  */
 export function getAllShareLinks(referralCode, options = {}) {
   const { path, productImage, message } = options;
 
   return {
     copyLink: buildReferralUrl(referralCode, 'copy', path),
+    canonical: getCanonicalReferralUrl(referralCode),
+    deepLink: getAppDeepLink(referralCode),
     facebook: getFacebookShareUrl(referralCode, path),
     twitter: getTwitterShareUrl(referralCode, message, path),
     sms: getSmsShareUrl(referralCode, message, path),
     email: getEmailShareUrl(referralCode, undefined, undefined, path),
     whatsapp: getWhatsAppShareUrl(referralCode, message, path),
     pinterest: getPinterestShareUrl(referralCode, productImage, undefined, path),
+    instagram: getInstagramShareContent(referralCode).url,
   };
 }

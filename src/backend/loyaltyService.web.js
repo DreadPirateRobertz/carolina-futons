@@ -15,7 +15,6 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
-import { rewards } from 'wix-loyalty.v2';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';

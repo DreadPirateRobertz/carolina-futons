@@ -16,10 +16,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-<<<<<<< HEAD
   "include": ["src", "tests"],
-=======
-  "include": ["src"],
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   "references": [{ "path": "./tsconfig.node.json" }]
 }

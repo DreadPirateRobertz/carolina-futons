@@ -4,12 +4,8 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-<<<<<<< HEAD
     "allowSyntheticDefaultImports": true,
     "strict": true
-=======
-    "allowSyntheticDefaultImports": true
->>>>>>> origin/polecat/chrome/CF-3avw@mmvdgu2t
   },
   "include": ["vite.config.ts"]
 }

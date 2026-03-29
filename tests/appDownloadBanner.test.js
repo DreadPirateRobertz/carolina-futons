@@ -134,6 +134,14 @@ describe('recordDismissal', () => {
 // ── isNativeAppInstalled ──────────────────────────────────────────────────────
 
 describe('isNativeAppInstalled', () => {
+  // navigator is not a global in Node.js 20 (added in Node.js 21.1.0).
+  // Ensure it exists as a plain object so Object.defineProperty works.
+  beforeEach(() => {
+    if (typeof globalThis.navigator === 'undefined') {
+      globalThis.navigator = {};
+    }
+  });
+
   it('returns true when localStorage flag is set', async () => {
     localStorage.setItem(INSTALLED_KEY, '1');
     expect(await isNativeAppInstalled()).toBe(true);
@@ -144,30 +152,30 @@ describe('isNativeAppInstalled', () => {
   });
 
   it('returns true when getInstalledRelatedApps returns apps', async () => {
-    Object.defineProperty(navigator, 'getInstalledRelatedApps', {
+    Object.defineProperty(globalThis.navigator, 'getInstalledRelatedApps', {
       value: vi.fn().mockResolvedValue([{ platform: 'play', url: 'https://play.google.com/...' }]),
       configurable: true,
     });
     expect(await isNativeAppInstalled()).toBe(true);
-    delete navigator.getInstalledRelatedApps;
+    delete globalThis.navigator.getInstalledRelatedApps;
   });
 
   it('returns false when getInstalledRelatedApps returns empty array', async () => {
-    Object.defineProperty(navigator, 'getInstalledRelatedApps', {
+    Object.defineProperty(globalThis.navigator, 'getInstalledRelatedApps', {
       value: vi.fn().mockResolvedValue([]),
       configurable: true,
     });
     expect(await isNativeAppInstalled()).toBe(false);
-    delete navigator.getInstalledRelatedApps;
+    delete globalThis.navigator.getInstalledRelatedApps;
   });
 
   it('returns false when getInstalledRelatedApps throws', async () => {
-    Object.defineProperty(navigator, 'getInstalledRelatedApps', {
+    Object.defineProperty(globalThis.navigator, 'getInstalledRelatedApps', {
       value: vi.fn().mockRejectedValue(new Error('not supported')),
       configurable: true,
     });
     expect(await isNativeAppInstalled()).toBe(false);
-    delete navigator.getInstalledRelatedApps;
+    delete globalThis.navigator.getInstalledRelatedApps;
   });
 });
 
@@ -333,5 +341,36 @@ describe('initAppDownloadBanner', () => {
       initAppDownloadBanner($w, CURRENT_URL, { navigateTo, userAgent: UA_ANDROID })
     ).resolves.toBeUndefined();
     expect(navigateTo).not.toHaveBeenCalled();
+  });
+
+  it('iOS: catches error thrown by setMetaTags and logs it', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const setMetaTags = vi.fn(() => { throw new Error('meta tag inject failed'); });
+    await initAppDownloadBanner(create$w({}), CURRENT_URL, { setMetaTags, userAgent: UA_IPHONE });
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[AppDownloadBanner] initAppDownloadBanner failed:',
+      'meta tag inject failed',
+    );
+  });
+
+  it('iOS: falls back to dynamic wix-seo-frontend import when setMetaTags is not provided', async () => {
+    // No setMetaTags opt — code path calls import('wix-seo-frontend') and continues
+    await expect(
+      initAppDownloadBanner(create$w({}), CURRENT_URL, { userAgent: UA_IPHONE }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('Android: uses dynamic wix-location-frontend import when navigateTo is not provided', async () => {
+    let btnClickHandler;
+    const btn = { onClick: (fn) => { btnClickHandler = fn; } };
+    const $w = create$w({
+      '#appDownloadBanner': createMockElement(),
+      '#appDownloadBannerText': createMockElement(),
+      '#appDownloadBannerBtn': btn,
+      '#appDownloadBannerDismiss': createMockElement(),
+    });
+    await initAppDownloadBanner($w, CURRENT_URL, { userAgent: UA_ANDROID });
+    // Trigger the button click — falls back to dynamic import('wix-location-frontend')
+    if (typeof btnClickHandler === 'function') btnClickHandler();
   });
 });

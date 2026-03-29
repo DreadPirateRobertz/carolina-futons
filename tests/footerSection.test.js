@@ -19,7 +19,6 @@ import {
   initFooterLogo,
   buildFooterMountainSVG,
   initMountainDivider,
-  buildFooterMountainSVG,
   initMountainDividerWithSkyWiring,
   applyFooterStyles,
   fixFooterContactFallback,
