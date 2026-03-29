@@ -27,7 +27,7 @@ import { sanitize, validateId } from 'backend/utils/sanitize';
 const COLLECTION = 'StoreCredits';
 const EXPIRATION_DAYS = 365;
 const MAX_CREDIT_AMOUNT = 10000;
-const VALID_REASONS = ['return', 'refund', 'promotion', 'admin_gift', 'goodwill', 'gift_received'];
+const VALID_REASONS = ['return', 'refund', 'promotion', 'admin_gift', 'goodwill', 'gift_received', 'trade_in'];
 
 // ── Public API ─────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ const VALID_REASONS = ['return', 'refund', 'promotion', 'admin_gift', 'goodwill'
  * @param {Object} data
  * @param {string} data.memberId - Target member ID
  * @param {number} data.amount - Credit amount to issue
- * @param {string} data.reason - Reason: 'return'|'refund'|'promotion'|'admin_gift'|'goodwill'
+ * @param {string} data.reason - Reason: 'return'|'refund'|'promotion'|'admin_gift'|'goodwill'|'trade_in'
  * @param {string} [data.orderReference] - Related order ID
  * @returns {Promise<{success: boolean, creditId?: string, balance?: number, expirationDate?: string}>}
  * @permission Admin

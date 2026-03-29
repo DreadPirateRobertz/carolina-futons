@@ -49,6 +49,7 @@ const MAX_PHOTOS        = 5;
 const MAX_PHOTO_URL_LEN = 500;
 const MAX_AGE_YEARS     = 50;
 const MAX_STAFF_NOTES   = 1000;
+const MSG_MATTRESS_HYGIENE = 'Mattresses in poor condition are not eligible for trade-in due to hygiene requirements.';
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE     = 50;
 
@@ -112,7 +113,7 @@ export const getTradeInValuation = webMethod(
           success: true,
           eligible: false,
           message: type === 'mattress' && cond === 'poor'
-            ? 'Mattresses in poor condition are not eligible for trade-in due to hygiene requirements.'
+            ? MSG_MATTRESS_HYGIENE
             : 'This item is not eligible for trade-in.',
         };
       }
@@ -181,7 +182,7 @@ export const submitTradeInRequest = webMethod(
           success: false,
           eligible: false,
           message: itemType === 'mattress' && condition === 'poor'
-            ? 'Mattresses in poor condition are not eligible for trade-in due to hygiene requirements.'
+            ? MSG_MATTRESS_HYGIENE
             : 'This item is not eligible for trade-in.',
         };
       }
@@ -195,16 +196,13 @@ export const submitTradeInRequest = webMethod(
         .map(url => sanitize(String(url || ''), MAX_PHOTO_URL_LEN).trim())
         .filter(url => url.length > 0);
 
-      // Attach member ID if logged in (best-effort — no auth failure on guest)
-      let memberId = null;
-      try {
-        const member = await getMember();
-        if (member) memberId = member._id;
-      } catch { /* guest checkout — OK */ }
+      // Attach member ID if logged in (best-effort — getMember returns null for guests)
+      const sessionMember = await getMember();
+      const memberId = sessionMember ? sessionMember._id : null;
 
       const now = new Date();
       const record = await wixData.insert(COLLECTION, {
-        memberId: memberId || null,
+        memberId,
         firstName,
         lastName,
         email,
@@ -390,7 +388,7 @@ export const confirmTradeIn = webMethod(
         status: 'credited',
         confirmedCondition: cond,
         issuedCreditAmount: creditAmount,
-        storeCreditId: storeCreditId || null,
+        storeCreditId,
         staffNotes: sanitize(options.staffNotes || '', MAX_STAFF_NOTES),
         confirmedAt: new Date(),
       });

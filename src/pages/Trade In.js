@@ -56,33 +56,26 @@ $w.onReady(async function () {
 // ── Step navigation ───────────────────────────────────────────────
 
 function _showStep(step) {
-  try { $w('#tradeInStep1')[step === 1 ? 'show' : 'hide'](); } catch (_) { /* */ }
-  try { $w('#tradeInStep2')[step === 2 ? 'show' : 'hide'](); } catch (_) { /* */ }
-  try { $w('#tradeInStep3')[step === 3 ? 'show' : 'hide'](); } catch (_) { /* */ }
-
+  [1, 2, 3].forEach(n => {
+    try { $w(`#tradeInStep${n}`)[step === n ? 'show' : 'hide'](); } catch (_) { /* */ }
+  });
   // Reset errors on step change
-  try { $w('#validationError').text = ''; $w('#validationError').hide(); } catch (_) { /* */ }
-  try { $w('#eligibilityError').text = ''; $w('#eligibilityError').hide(); } catch (_) { /* */ }
+  ['#validationError', '#eligibilityError'].forEach(id => {
+    try { $w(id).text = ''; $w(id).hide(); } catch (_) { /* */ }
+  });
 }
 
 // ── Dropdown bindings ─────────────────────────────────────────────
 
-function _bindDropdowns() {
-  try {
-    $w('#itemTypeDropdown').onChange(() => {
-      _itemType  = $w('#itemTypeDropdown').value;
-      _condition = $w('#conditionDropdown').value;
-      _refreshEstimate();
-    });
-  } catch (_) { /* */ }
+function _readDropdowns() {
+  try { _itemType  = $w('#itemTypeDropdown').value; } catch (_) { /* */ }
+  try { _condition = $w('#conditionDropdown').value; } catch (_) { /* */ }
+}
 
-  try {
-    $w('#conditionDropdown').onChange(() => {
-      _itemType  = $w('#itemTypeDropdown').value;
-      _condition = $w('#conditionDropdown').value;
-      _refreshEstimate();
-    });
-  } catch (_) { /* */ }
+function _bindDropdowns() {
+  ['#itemTypeDropdown', '#conditionDropdown'].forEach(id => {
+    try { $w(id).onChange(() => { _readDropdowns(); _refreshEstimate(); }); } catch (_) { /* */ }
+  });
 }
 
 async function _refreshEstimate() {
@@ -209,8 +202,5 @@ function _showError(msg) {
 function _setLoading(on) {
   _loading = on;
   try { on ? $w('#loadingIndicator').show() : $w('#loadingIndicator').hide(); } catch (_) { /* */ }
-  try { $w('#submitBtn').disable(); } catch (_) { /* */ }
-  if (!on) {
-    try { $w('#submitBtn').enable(); } catch (_) { /* */ }
-  }
+  try { on ? $w('#submitBtn').disable() : $w('#submitBtn').enable(); } catch (_) { /* */ }
 }
