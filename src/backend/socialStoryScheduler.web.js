@@ -43,7 +43,7 @@ const FURNITURE_CARE_TIPS = [
 const WEEKEND_PROMO = {
   title: 'Weekend at Carolina Futons',
   message: 'Stop in this weekend and browse our full showroom in Hendersonville, NC. Our craftspeople are here to help you find the perfect piece.',
-  hours: 'Wed–Fri 10am–5pm · Sat 10am–4pm',
+  hours: 'Wed–Sat 10am–5pm (in store or by appt)',
   url: 'carolinafutons.com',
 };
 

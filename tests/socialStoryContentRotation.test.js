@@ -218,8 +218,9 @@ describe('_buildRotationCaption — weekend_promo', () => {
     const caption = _buildRotationCaption('facebook', 'weekend_promo', _WEEKEND_PROMO);
     expect(caption).toContain(_WEEKEND_PROMO.hours);
     // Verify hours match the site footer, not the old Mon–Sat/Sun schedule
-    expect(_WEEKEND_PROMO.hours).toContain('Wed');
-    expect(_WEEKEND_PROMO.hours).toContain('Sat');
+    // Correct hours per site: Wed–Sat 10am–5pm (in store or by appt)
+    expect(_WEEKEND_PROMO.hours).toContain('Wed–Sat');
+    expect(_WEEKEND_PROMO.hours).toContain('10am–5pm');
     expect(_WEEKEND_PROMO.hours).not.toContain('Mon');
   });
 });
