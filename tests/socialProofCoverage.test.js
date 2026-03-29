@@ -10,7 +10,7 @@
  * Also covers edge-cases in helper functions and combined notification paths.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import wixData from './__mocks__/wix-data.js';
+import wixData, { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { logError } from 'backend/utils/errorHandler';
 
 vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));

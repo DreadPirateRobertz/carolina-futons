@@ -182,6 +182,9 @@ vi.mock('backend/loyaltyService.web', () => ({
   getMyLoyaltyAccount: vi.fn().mockResolvedValue({ success: true, data: { points: 0, tier: 'Bronze' } }),
   redeemReward: vi.fn(),
   getMyStreakData: vi.fn().mockResolvedValue({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null }),
+  getAvailableRewards: vi.fn().mockResolvedValue({ rewards: [] }),
+  getMyAchievements: vi.fn().mockResolvedValue({ achievements: [] }),
+  getMyDailyQuests: vi.fn().mockResolvedValue({ quests: [] }),
 }));
 
 vi.mock('backend/errorMonitoring.web', () => ({
