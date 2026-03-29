@@ -47,6 +47,8 @@ const loyaltyMocks = vi.hoisted(() => ({
   getAvailableRewards: vi.fn().mockResolvedValue([]),
   getLoyaltyTiers: vi.fn().mockResolvedValue([]),
   redeemReward: vi.fn().mockResolvedValue({ success: true }),
+  getMyAchievements: vi.fn().mockResolvedValue({ achievements: [] }),
+  getMyDailyQuests: vi.fn().mockResolvedValue({ quests: [] }),
 }));
 
 // ── All vi.mock calls ──────────────────────────────────────────────
@@ -57,6 +59,8 @@ vi.mock('backend/loyaltyService.web', () => ({
   getLoyaltyTiers: loyaltyMocks.getLoyaltyTiers,
   redeemReward: loyaltyMocks.redeemReward,
   getMyStreakData: vi.fn().mockResolvedValue({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null }),
+  getMyAchievements: loyaltyMocks.getMyAchievements,
+  getMyDailyQuests: loyaltyMocks.getMyDailyQuests,
 }));
 
 vi.mock('backend/accountDashboard.web', () => ({
