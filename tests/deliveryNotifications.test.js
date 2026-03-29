@@ -70,12 +70,38 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     const result = await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-1',
       customerPhone: '(828) 555-1234',
+      smsOptIn: true,
       orderId: 'order-A',
       date: '2026-05-15',
       timeWindow: 'morning',
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it('returns no_opt_in when smsOptIn is false', async () => {
+    const result = await sendDeliveryBookingConfirmationSms({
+      scheduleId: 'sched-noopt',
+      customerPhone: '(828) 555-1234',
+      smsOptIn: false,
+      orderId: 'order-noopt',
+      date: '2026-05-15',
+      timeWindow: 'morning',
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_opt_in');
+  });
+
+  it('returns no_opt_in when smsOptIn is missing', async () => {
+    const result = await sendDeliveryBookingConfirmationSms({
+      scheduleId: 'sched-noopt2',
+      customerPhone: '(828) 555-1234',
+      orderId: 'order-noopt2',
+      date: '2026-05-15',
+      timeWindow: 'morning',
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('no_opt_in');
   });
 
   it('logs SMS to SMSLog collection', async () => {
@@ -86,6 +112,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-2',
       customerPhone: '8285551234',
+      smsOptIn: true,
       orderId: 'order-B',
       date: '2026-05-16',
       timeWindow: 'afternoon',
@@ -111,6 +138,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-3',
       customerPhone: '8285551234',
+      smsOptIn: true,
       orderId: 'order-C',
       date: '2026-05-17',
       timeWindow: 'morning',
@@ -128,6 +156,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-4',
       customerPhone: '8285551234',
+      smsOptIn: true,
       orderId: 'order-D',
       date: '2026-05-18',
       timeWindow: 'morning',
@@ -141,6 +170,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     const result = await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-5',
       customerPhone: '',
+      smsOptIn: true,
       orderId: 'order-E',
       date: '2026-05-19',
       timeWindow: 'morning',
@@ -153,6 +183,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     const result = await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-6',
       customerPhone: 'notaphone',
+      smsOptIn: true,
       orderId: 'order-F',
       date: '2026-05-20',
       timeWindow: 'morning',
@@ -171,6 +202,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     const result = await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-7',
       customerPhone: '8285551234',
+      smsOptIn: true,
       orderId: 'order-G',
       date: '2026-05-21',
       timeWindow: 'afternoon',
@@ -194,6 +226,7 @@ describe('sendDeliveryBookingConfirmationSms', () => {
     await sendDeliveryBookingConfirmationSms({
       scheduleId: 'sched-8',
       customerPhone: '8285551234',
+      smsOptIn: true,
       orderId: 'order-H',
       date: '2026-05-22',
       timeWindow: 'afternoon',

@@ -94,15 +94,20 @@ async function logSms(logData) {
  * Called by scheduleDelivery() in deliveryScheduling.web.js — not a webMethod.
  *
  * @param {Object} params
- * @param {string} params.scheduleId   - DeliverySchedule record _id (for dedup flag)
- * @param {string} params.customerPhone - Customer phone (any US format)
- * @param {string} params.orderId       - Order ID (for SMS log)
- * @param {string} params.date          - Delivery date (YYYY-MM-DD)
- * @param {string} params.timeWindow    - 'morning' | 'afternoon'
+ * @param {string}  params.scheduleId    - DeliverySchedule record _id (for dedup flag)
+ * @param {string}  params.customerPhone - Customer phone (any US format)
+ * @param {boolean} params.smsOptIn      - TCPA consent flag (must be true to send)
+ * @param {string}  params.orderId       - Order ID (for SMS log)
+ * @param {string}  params.date          - Delivery date (YYYY-MM-DD)
+ * @param {string}  params.timeWindow    - 'morning' | 'afternoon'
  * @returns {Promise<{success: boolean, reason?: string}>}
  */
-export async function sendDeliveryBookingConfirmationSms({ scheduleId, customerPhone, orderId, date, timeWindow }) {
+export async function sendDeliveryBookingConfirmationSms({ scheduleId, customerPhone, smsOptIn, orderId, date, timeWindow }) {
   try {
+    if (!smsOptIn) {
+      return { success: false, reason: 'no_opt_in' };
+    }
+
     if (!customerPhone || !validatePhone(customerPhone)) {
       return { success: false, reason: 'invalid_phone' };
     }

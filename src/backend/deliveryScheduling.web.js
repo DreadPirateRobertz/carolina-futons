@@ -398,11 +398,13 @@ export const scheduleDelivery = webMethod(
       schedule.status = 'scheduled';
       await wixData.update('DeliverySchedule', schedule);
 
-      // Fire SMS booking confirmation if customer opted in (non-blocking)
-      if (smsOptIn && data.customerPhone) {
+      // Fire SMS booking confirmation (non-blocking).
+      // sendDeliveryBookingConfirmationSms checks smsOptIn as a defence-in-depth TCPA guard.
+      if (data.customerPhone) {
         sendDeliveryBookingConfirmationSms({
           scheduleId: schedule._id,
           customerPhone: data.customerPhone,
+          smsOptIn,
           orderId,
           date,
           timeWindow,
