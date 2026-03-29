@@ -188,6 +188,12 @@ describe('initPageSeo — buyingGuide type', () => {
     expect(ogType?.content).toBe('article');
   });
 
+  it('sets article:section for blogPost when category is provided', async () => {
+    await initPageSeo('blogPost', { name: 'Test Post', slug: 'test', category: 'News' });
+    const articleSection = findTag('property', 'article:section');
+    expect(articleSection?.content).toBe('News');
+  });
+
   it('product type still uses "product" og:type', async () => {
     await initPageSeo('product', { name: 'Test Product', slug: 'test' });
     const ogType = findTag('property', 'og:type');
