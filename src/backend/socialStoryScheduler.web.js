@@ -776,7 +776,7 @@ async function pickRecentReview() {
  * @param {Object} payload - content data for the post
  * @param {string} eventType - CMS eventType field value
  */
-async function scheduleRotationContentInternal(contentType, payload, eventType) {
+async function scheduleRotationContentInternal(contentType, payload, eventType, dateStr) {
   let scheduled = 0;
   let rateLimited = 0;
   const errors = [];
@@ -808,7 +808,7 @@ async function scheduleRotationContentInternal(contentType, payload, eventType) 
         status: 'pending',
         scheduledAt,
         payload: JSON.stringify({ ...content, caption }),
-        createdBy: `rotation-${eventType}-${new Date().toISOString().slice(0, 10)}`,
+        createdBy: `rotation-${eventType}-${dateStr || new Date().toISOString().slice(0, 10)}`,
         processedAt: null,
         error: '',
       });
@@ -873,8 +873,9 @@ function buildRotationCaption(platform, contentType, payload) {
 export const runDailyContentRotation = webMethod(
   Permissions.Admin,
   async () => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const dayOfWeek = now.getDay();
     const contentType = getDayRotationContent(dayOfWeek);
 
     let rotationPayload = null;
@@ -904,7 +905,7 @@ export const runDailyContentRotation = webMethod(
             reviewerName: review.authorName || review.memberName || '',
             rating: review.rating || 5,
             productName: review.productName || '',
-            productId: review.productId || `review-${new Date().toISOString().slice(0, 10)}`,
+            productId: review.productId || `review-${todayStr}`,
             title: 'Customer Review',
           };
         } else {
@@ -914,7 +915,7 @@ export const runDailyContentRotation = webMethod(
             reviewerName: 'Happy Customer',
             rating: 5,
             productName: '',
-            productId: `review-fallback-${new Date().toISOString().slice(0, 10)}`,
+            productId: `review-fallback-${todayStr}`,
             title: 'Customer Review',
           };
         }
@@ -930,7 +931,7 @@ export const runDailyContentRotation = webMethod(
       } else if (contentType === 'weekend_promo') {
         rotationPayload = {
           ...WEEKEND_PROMO,
-          productId: `promo-${new Date().toISOString().slice(0, 10)}`,
+          productId: `promo-${todayStr}`,
         };
       }
 
@@ -938,10 +939,10 @@ export const runDailyContentRotation = webMethod(
         return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [`No payload for contentType: ${contentType}`] };
       }
 
-      const result = await scheduleRotationContentInternal(contentType, rotationPayload, contentType);
+      const result = await scheduleRotationContentInternal(contentType, rotationPayload, contentType, todayStr);
       errors.push(...result.errors);
 
-      const summary = { success: result.errors.length === 0, contentType, ...result, errors };
+      const summary = { success: result.scheduled > 0, contentType, ...result, errors };
       console.log('[socialStoryScheduler] runDailyContentRotation complete:', JSON.stringify(summary));
       return summary;
 

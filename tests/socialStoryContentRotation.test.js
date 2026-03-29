@@ -430,6 +430,8 @@ describe('runDailyContentRotation — rate limits', () => {
 
     const result = await runDailyContentRotation();
     expect(result.rateLimited).toBeGreaterThanOrEqual(1);
+    // success = true because 2 platforms still posted (facebook + pinterest)
+    expect(result.success).toBe(true);
     expect(result.scheduled).toBe(2); // facebook + pinterest only
   });
 });
