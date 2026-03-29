@@ -265,6 +265,23 @@ export async function wixEcom_onOrderCreated(event) {
       console.error('[events] Error checking swatch attribution:', err);
     }
   }
+
+  // cf-hcp4: swatch kit credit issuance — issue $5 store credit when SWATCH-KIT-001 is purchased
+  try {
+    const { orderContainsSwatchKit, recordSwatchKitPurchase } = await import('backend/swatchKitService.web');
+    const rawLineItems = (event.entity || event).lineItems || [];
+    if (orderContainsSwatchKit(rawLineItems)) {
+      const swatchIds = [];
+      await recordSwatchKitPurchase(
+        (event.entity || event).number || '',
+        memberId,
+        email,
+        swatchIds,
+      );
+    }
+  } catch (err) {
+    console.error('[events] Swatch kit credit issuance failed:', err);
+  }
 }
 
 /**
