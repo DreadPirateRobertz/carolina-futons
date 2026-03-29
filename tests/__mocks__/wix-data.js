@@ -151,6 +151,7 @@ function createQueryBuilder(collection) {
       }
       return builder;
     },
+    include(..._fields) { return builder; },
     ascending(field) { sortField = field; sortDir = 'asc'; return builder; },
     descending(field) { sortField = field; sortDir = 'desc'; return builder; },
     skip(n) { skipVal = n; return builder; },

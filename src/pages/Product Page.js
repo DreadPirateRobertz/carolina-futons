@@ -4,12 +4,12 @@
 // dynamic import() for below-fold components to reduce initial bundle
 import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
-import { cacheProduct } from 'public/productCache';
+import { cacheProduct, getCachedProduct } from 'public/productCache';
 // engagementTracker and ga4Tracking are dynamically imported in deferred sections
 // to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
-import { renderSimplePrice } from 'public/productCardHelpers.js';
+import { renderSimplePrice, setCardImage } from 'public/productCardHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
