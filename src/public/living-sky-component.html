@@ -566,9 +566,10 @@
   }
 
   window.addEventListener('message', function (event) {
-    // In Wix HtmlComponent the parent origin is the site domain — no strict
-    // origin check here since the component is sandboxed by the HtmlComponent
-    // iframe itself. Validate structure instead.
+    // Only accept messages from HTTPS origins (blocks null/file:// origins).
+    // The component runs as a Wix HtmlComponent iframe; messages always come
+    // from the parent page over HTTPS.
+    if (!event.origin || !event.origin.startsWith('https://')) return;
     try {
       applyState(event.data);
     } catch (e) {
