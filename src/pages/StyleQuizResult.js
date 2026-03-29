@@ -1,26 +1,46 @@
 /**
  * StyleQuizResult.js — Style Quiz result page controller.
  * Loads quiz recommendations and personalized copy from stored quiz answers,
- * then populates the result page elements.
+ * then populates the result page elements. Also runs the Futon Sommelier
+ * recommendation engine if lifestyle answers are present, and shows the
+ * registration gate for non-members.
  *
- * Elements:
+ * Elements (style quiz):
  *   #quizPersonalizedCopy   — Text element for the personalized recommendation blurb
  *   #quizRepeater          — Repeater displaying top product recommendations
  *   #quizResultsSection    — Container section (collapsed until results load)
  *   #quizLoadingIndicator  — Shown while fetching results
  *   #quizErrorMsg          — Shown on fetch failure
  *
+ * Elements (sommelier):
+ *   #sommelierSection          — Container for sommelier results (collapsed if no answers)
+ *   #sommelierPersonalizedCopy — Text element for sommelier reasoning
+ *   #sommelierRecommendations  — Repeater for sommelier product cards
+ *
+ * Elements (registration gate):
+ *   #quizRegistrationGate — Container (collapsed by default, expanded for visitors)
+ *   #quizRegCta           — "Create Free Account" button
+ *   #quizRegDismiss       — "No thanks" dismiss link
+ *
  * Quiz answers are stored by the quiz page via storeQuizAnswers() and retrieved
  * here from session storage (key: 'styleQuizAnswers').
+ * Sommelier answers are stored via storeSommelierAnswers() (key: 'sommelierAnswers').
  */
 import { getQuizRecommendations, getPersonalizedCopy } from 'backend/styleQuiz.web';
+import { getRecommendation } from 'backend/futonSommelier.web';
+import { initStyleQuizRegistrationGate } from 'public/StyleQuizRegistrationGate';
 import { session } from 'wix-storage';
 import { safeCall, safeCollapse, safeExpand, safeText } from 'public/safeInit';
 
 const ANSWERS_KEY = 'styleQuizAnswers';
+const SOMMELIER_ANSWERS_KEY = 'sommelierAnswers';
+const SOMMELIER_SESSION_KEY = 'sommelierSessionKey';
 
 $w.onReady(async function () {
+  // Start registration gate check concurrently — does not block result loading
+  initStyleQuizRegistrationGate({ $w });
   await initStyleQuizResult($w);
+  await initSommelierSection($w);
 });
 
 /**
@@ -119,6 +139,82 @@ export function storeQuizAnswers(answers) {
  */
 export function clearQuizAnswers() {
   session.removeItem(ANSWERS_KEY);
+}
+
+/**
+ * Store sommelier lifestyle answers in session storage.
+ * Call this from the sommelier intake page when the user completes the questionnaire.
+ *
+ * @param {Object} answers - Lifestyle factor answers keyed by factor ID
+ */
+export function storeSommelierAnswers(answers) {
+  session.setItem(SOMMELIER_ANSWERS_KEY, JSON.stringify(answers));
+}
+
+/**
+ * Clear stored sommelier answers (e.g. when starting a new questionnaire).
+ */
+export function clearSommelierAnswers() {
+  session.removeItem(SOMMELIER_ANSWERS_KEY);
+  session.removeItem(SOMMELIER_SESSION_KEY);
+}
+
+/**
+ * Initialize the Futon Sommelier section of the result page.
+ * Reads stored lifestyle answers, calls the sommelier backend, and populates
+ * the sommelier recommendation elements. Silently skips if no answers are stored.
+ *
+ * @param {Function} $w - Wix selector function
+ */
+export async function initSommelierSection($w) {
+  const rawAnswers = session.getItem(SOMMELIER_ANSWERS_KEY);
+  if (!rawAnswers) return; // No sommelier answers — section stays hidden
+
+  let answers;
+  try {
+    answers = JSON.parse(rawAnswers);
+  } catch (e) {
+    console.error('[StyleQuizResult] Failed to parse sommelier answers:', e);
+    return;
+  }
+
+  const sessionKey = session.getItem(SOMMELIER_SESSION_KEY) || '';
+
+  let result;
+  try {
+    result = await getRecommendation(answers, sessionKey);
+  } catch (e) {
+    console.error('[StyleQuizResult] getRecommendation failed:', e);
+    return;
+  }
+
+  if (!result.success || !result.recommendations?.length) {
+    console.warn('[StyleQuizResult] Sommelier returned no recommendations:', result.error);
+    return;
+  }
+
+  // Cache the session key so repeat loads use the cached result
+  if (result.sessionKey) {
+    session.setItem(SOMMELIER_SESSION_KEY, result.sessionKey);
+  }
+
+  safeText($w, '#sommelierPersonalizedCopy', result.reasoning || '');
+
+  try {
+    $w('#sommelierRecommendations').data = result.recommendations.map(r => ({
+      _id: r.productId,
+      name: r.name,
+      price: r.price != null ? `$${r.price}` : '',
+      image: r.image || '',
+      slug: r.slug || '',
+      matchReasons: (r.matchReasons || []).join(', '),
+    }));
+  } catch (e) {
+    console.error('[StyleQuizResult] Failed to populate sommelier repeater:', e);
+    return;
+  }
+
+  safeExpand($w, '#sommelierSection');
 }
 
 function _showError($w, message) {
