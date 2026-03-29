@@ -72,7 +72,10 @@ export async function initBadgeDisplayWidget(memberId, opts = {}) {
 
   try {
     $w('#badgeRepeater').onItemReady(($item, itemData) => {
-      try { $item('#badgeIcon').src = getBadgeIcon(itemData.badgeId); } catch (e) {}
+      try {
+        const raw = getBadgeIcon(itemData.badgeId);
+        $item('#badgeIcon').src = raw.startsWith('<svg') ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(raw)}` : '';
+      } catch (e) {}
       try { $item('#badgeName').text = itemData.label; } catch (e) {}
       try { $item('#badgeDate').text = formatBadgeDate(itemData.awardedAt); } catch (e) {}
 

@@ -141,13 +141,23 @@ describe('badges present', () => {
 });
 
 describe('repeater item rendering', () => {
-  it('sets #badgeIcon src from getBadgeIcon() inline SVG', async () => {
+  it('sets #badgeIcon src as data URI wrapping getBadgeIcon() SVG', async () => {
     const $w = make$w();
-    const badge = makeBadge({ badgeId: 'streak_7' });
+    const badge = makeBadge({ badgeId: 'first_step' }); // first_step is in BADGE_REGISTRY
     await initBadgeDisplayWidget(MEMBER_ID, makeOpts($w, [badge]));
     const $item = fireItemReady($w, badge);
-    expect($item._els['#badgeIcon'].src).toBe(getBadgeIcon('streak_7'));
-    expect($item._els['#badgeIcon'].src).not.toContain('/images/badges/');
+    const src = $item._els['#badgeIcon'].src;
+    expect(src).toMatch(/^data:image\/svg\+xml;charset=utf-8,/);
+    expect(src).not.toContain('/images/badges/');
+  });
+
+  it('sets #badgeIcon src to empty string when getBadgeIcon returns non-SVG', async () => {
+    // badge ID not in registry → getBadgeIcon returns '' (no <svg prefix)
+    const $w = make$w();
+    const badge = makeBadge({ badgeId: 'unknown_badge_xyz' });
+    await initBadgeDisplayWidget(MEMBER_ID, makeOpts($w, [badge]));
+    const $item = fireItemReady($w, badge);
+    expect($item._els['#badgeIcon'].src).toBe('');
   });
 
   it('sets #badgeName text from badge label', async () => {
