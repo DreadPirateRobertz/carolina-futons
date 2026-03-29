@@ -10,7 +10,6 @@ import { cacheProduct } from 'public/productCache';
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { renderSimplePrice } from 'public/productCardHelpers.js';
-import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
@@ -23,7 +22,6 @@ import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliver
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
-import { setCardImage } from 'public/productCardHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
 import { getProductVideos } from 'backend/productVideos.web';

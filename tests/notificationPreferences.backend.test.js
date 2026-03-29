@@ -17,7 +17,6 @@ import {
   saveNotificationPreferences,
   unsubscribeAll,
 } from '../src/backend/notificationPreferences.web.js';
-import { __getInserted, __getUpdated } from './__mocks__/wix-data.js';
 
 const COLLECTION = 'MemberNotificationPrefs';
 const MEMBER_ID = 'member-abc123';
