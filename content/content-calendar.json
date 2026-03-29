@@ -2,7 +2,6 @@
   "_meta": {
     "version": "1.0",
     "generatedAt": "2026-03-28",
-    "generatedBy": "cfutons/crew/rennala",
     "bead": "cf-6ika",
     "description": "12-week editorial content calendar for Carolina Futons blog. Covers April 6 – June 26, 2026.",
     "pillars": [
@@ -27,7 +26,7 @@
       "wordCount": 1600,
       "linkedProducts": ["/futon-frames", "/covers"],
       "linkedCategory": "futon-frames",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Anchor lifestyle piece. Use product photos from media manager. Include 3 room vignettes: living room sofa-style, guest room, home office daybed."
     },
@@ -42,7 +41,7 @@
       "wordCount": 2000,
       "linkedProducts": ["/futon-frames", "/mattresses"],
       "linkedCategory": "futon-frames",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "High-intent comparison article. Comparison table: price, setup ease, comfort, longevity. Link to top futon frames."
     },
@@ -57,7 +56,7 @@
       "wordCount": 1500,
       "linkedProducts": ["/mattresses", "/covers"],
       "linkedCategory": "mattresses",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Evergreen how-to. Cover cotton, foam, and innerspring mattress types. Pro tip: futon covers prevent most deep cleaning needs — link to covers collection."
     },
@@ -72,7 +71,7 @@
       "wordCount": 1800,
       "linkedProducts": ["/futon-frames", "/outdoor-furniture", "/casegoods-accessories"],
       "linkedCategory": "outdoor-furniture",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Local SEO anchor piece. Target 'furniture store Hendersonville NC' and surrounding WNC cities. Mention humidity, temp swings, outdoor-to-indoor transition. Include store address and hours."
     },
@@ -87,7 +86,7 @@
       "wordCount": 2200,
       "linkedProducts": ["/murphy-cabinet-beds"],
       "linkedCategory": "murphy-cabinet-beds",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "CF's premium category. Cover mechanism types, weight limits, installation, best use cases (small apartments, home offices). Feature 2-3 top models."
     },
@@ -102,7 +101,7 @@
       "wordCount": 1400,
       "linkedProducts": ["/futon-frames", "/mattresses"],
       "linkedCategory": "futon-frames",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Ask Brenda for 2-3 real customer stories with before/after photos. If no customer stories yet, use hypothetical room scenarios with product photos. Great social share potential."
     },
@@ -117,7 +116,7 @@
       "wordCount": 1800,
       "linkedProducts": ["/platform-beds", "/mattresses"],
       "linkedCategory": "platform-beds",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "High-intent SEO. Many people searching 'do I need a box spring' land here. Answer: no, with platform bed. Highlight CF's platform bed selection."
     },
@@ -132,7 +131,7 @@
       "wordCount": 1600,
       "linkedProducts": ["/outdoor-furniture"],
       "linkedCategory": "outdoor-furniture",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Seasonal timing: publish late May ahead of summer. Cover material types (teak, resin wicker, powder coat). WNC-specific tips: UV + humidity + frost cycles."
     },
@@ -147,7 +146,7 @@
       "wordCount": 1700,
       "linkedProducts": ["/covers"],
       "linkedCategory": "covers",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Link to swatch kit product page (cf-hcp4 when live). Cover microfiber vs cotton vs twill vs suede. Color matching with room palettes."
     },
@@ -162,7 +161,7 @@
       "wordCount": 1800,
       "linkedProducts": ["/futon-frames", "/platform-beds", "/casegoods-accessories"],
       "linkedCategory": "futon-frames",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Targets younger demographic + college move-in season. Futon as sofa + bed in studio. Budget-friendly angle. Include price anchoring (futon vs couch + separate bed cost)."
     },
@@ -177,7 +176,7 @@
       "wordCount": 2000,
       "linkedProducts": ["/mattresses"],
       "linkedCategory": "mattresses",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "High-purchase-intent. Cover: foam vs innerspring vs cotton fill, thickness (6\" vs 8\" vs full support), weight rating, fire compliance. Link to CF's top 3 mattresses."
     },
@@ -192,7 +191,7 @@
       "wordCount": 1600,
       "linkedProducts": ["/outdoor-furniture", "/casegoods-accessories"],
       "linkedCategory": "outdoor-furniture",
-      "owner": "rennala",
+      "owner": "TBD",
       "status": "idea",
       "notes": "Summer seasonal anchor. Ties local (WNC mountain living) + seasonal (summer) + product (outdoor furniture). Include store hours, virtual consultation CTA."
     }
