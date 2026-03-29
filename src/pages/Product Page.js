@@ -212,6 +212,11 @@ async function initProductPage() {
       { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
       { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
+      // CF-ou66.3: Customer video review grid — horizontal thumbnail row, inline overlay player
+      // Requires: #videoReviewSection (Box) + #videoReviewTitle (Text) + #videoReviewRepeater (Repeater)
+      //           #vrThumbnail (Image) + #vrPlayIcon (Image) + #vrReviewerName (Text) per repeater item
+      //           #videoPlayerOverlay (Box) + #videoPlayerEmbed (HtmlComponent) + #closeVideoOverlay (Button)
+      { name: 'videoReviewGrid', init: async () => { const m = await import('public/VideoReviewGrid.js'); m.initVideoReviewGrid($w, state); }, critical: false },
       // CF-m55f: Direct YouTube embed from product.videoUrl CMS field
       // Requires: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent) in Studio
       { name: 'productYouTubeVideo', init: () => initProductYouTubeVideo($w, state), critical: false },
