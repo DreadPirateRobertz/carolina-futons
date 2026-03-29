@@ -34,6 +34,11 @@ import wixData from 'wix-data';
 const ORDERS_COLLECTION = 'Stores/Orders';
 const PAGE_SIZE = 100;
 
+// Maximum lookback needed: Year 1 window maxDays (366) + 1 day buffer = 367 days.
+// Orders older than this can never qualify for any milestone, so we filter them
+// out at query time to avoid O(N²) offset pagination over the full order history.
+const MAX_LOOKBACK_DAYS = 367;
+
 // ── Milestone windows (minDays and maxDays inclusive) ─────────────────────────
 
 /** Day 7 window: orders placed 6–8 days ago. */
@@ -78,7 +83,10 @@ export const scanLifecycleMilestones = webMethod(
         // Skip orders without a contact email or valid date
         if (!email || !orderDate) continue;
 
-        const daysSince = (now - new Date(orderDate).getTime()) / (24 * 60 * 60 * 1000);
+        // Math.floor: avoids floating-point boundary failures where e.g. an order
+        // placed exactly 31 days ago measures as 31.000001 days (few ms elapsed
+        // between test setup and cron execution), causing a spurious window miss.
+        const daysSince = Math.floor((now - new Date(orderDate).getTime()) / (24 * 60 * 60 * 1000));
 
         for (const milestone of MILESTONES) {
           if (daysSince < milestone.minDays || daysSince > milestone.maxDays) continue;
@@ -113,10 +121,13 @@ export const scanLifecycleMilestones = webMethod(
 // ── Private helpers ────────────────────────────────────────────────────────────
 
 /**
- * Fetch all orders from the Wix Stores collection, paginating until exhausted.
+ * Fetch orders from the Wix Stores collection placed within the last MAX_LOOKBACK_DAYS days,
+ * paginating until exhausted. Orders older than the maximum milestone window (366 days + 1 buffer)
+ * are excluded at query time, avoiding O(N²) offset pagination over the full order history.
  * @returns {Promise<Array>}
  */
 async function fetchAllOrders() {
+  const cutoff = new Date(Date.now() - MAX_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
   const results = [];
   let offset = 0;
 
@@ -124,6 +135,7 @@ async function fetchAllOrders() {
   while (true) {
     const batch = await wixData
       .query(ORDERS_COLLECTION)
+      .ge('_createdDate', cutoff)
       .limit(PAGE_SIZE)
       .skip(offset)
       .find({ suppressAuth: true });
