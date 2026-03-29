@@ -304,14 +304,25 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
  * @returns {Promise<number>}   — Count of emails queued this run.
  */
 async function emailPriceAlertSubscribers(productId, productName, productSlug, oldPrice, newPrice, pctDrop) {
-  const subResult = await wixData
-    .query(PRICE_ALERTS_COLLECTION)
-    .eq('productId', productId)
-    .eq('active', true)
-    .limit(500)
-    .find({ suppressAuth: true });
+  // Paginate subscribers to avoid the 500-item hard cap
+  const subs = [];
+  let subOffset = 0;
+  const SUB_PAGE = 500;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const page = await wixData
+      .query(PRICE_ALERTS_COLLECTION)
+      .eq('productId', productId)
+      .eq('active', true)
+      .limit(SUB_PAGE)
+      .skip(subOffset)
+      .find({ suppressAuth: true });
+    subs.push(...page.items);
+    if (page.items.length < SUB_PAGE) break;
+    subOffset += SUB_PAGE;
+  }
 
-  if (subResult.items.length === 0) return 0;
+  if (subs.length === 0) return 0;
 
   const windowStart = new Date(Date.now() - DEDUP_WINDOW_MS);
   const savings = oldPrice - newPrice;
@@ -320,22 +331,20 @@ async function emailPriceAlertSubscribers(productId, productName, productSlug, o
     ? `/product-page/${productSlug}`
     : `/product-page/${productId}`;
 
+  // Bulk-fetch already-queued emails for this product within 24h to avoid N+1 dedup queries
+  const dedupResult = await wixData
+    .query(EMAIL_QUEUE_COLLECTION)
+    .eq('sequenceType', 'price_drop_alert')
+    .eq('checkoutId', productId)
+    .ge('createdAt', windowStart)
+    .limit(500)
+    .find({ suppressAuth: true });
+  const alreadySent = new Set(dedupResult.items.map(e => e.recipientEmail));
+
   let queued = 0;
 
-  for (const sub of subResult.items) {
-    if (!sub.email) continue;
-
-    // Dedup: skip if already queued for this (email, productId) within 24h
-    const existing = await wixData
-      .query(EMAIL_QUEUE_COLLECTION)
-      .eq('sequenceType', 'price_drop_alert')
-      .eq('recipientEmail', sub.email)
-      .eq('checkoutId', productId)
-      .ge('createdAt', windowStart)
-      .limit(1)
-      .find({ suppressAuth: true });
-
-    if (existing.items.length > 0) continue;
+  for (const sub of subs) {
+    if (!sub.email || alreadySent.has(sub.email)) continue;
 
     try {
       await wixData.insert(
