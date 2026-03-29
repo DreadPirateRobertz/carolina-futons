@@ -20,7 +20,7 @@ vi.mock('backend/gamificationCore.web', () => ({
 }));
 
 import { sendRecoveryEmail } from '../src/backend/cartRecovery.web.js';
-import wixData from './__mocks__/wix-data.js';
+import wixData, { __reset, __seed, __onUpdate } from './__mocks__/wix-data.js';
 import { __reset as crmReset, __getEmailLog, __failNextEmail, __seedContacts } from './__mocks__/wix-crm-backend.js';
 
 const CART_ID = 'cart-doc-abc';
