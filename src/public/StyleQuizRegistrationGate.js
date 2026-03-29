@@ -31,24 +31,27 @@ export async function initStyleQuizRegistrationGate(opts = {}) {
   // Check login state
   let member = null;
   if (opts.getMember) {
-    try { member = await opts.getMember(); } catch (_) {}
+    try { member = await opts.getMember(); } catch (e) { console.warn('[StyleQuizRegistrationGate] getMember failed:', e); }
   } else {
     try {
       const { currentMember } = await import('wix-members-frontend');
       member = await currentMember.getMember();
-    } catch (_) {}
+    } catch (e) { console.warn('[StyleQuizRegistrationGate] currentMember.getMember failed:', e); }
   }
 
   // Already logged in — skip gate
   if (member?._id) return;
 
   // Show registration gate
-  try { $w('#quizRegistrationGate').expand(); } catch (_) { return; }
+  try { $w('#quizRegistrationGate').expand(); } catch (e) {
+    console.warn('[StyleQuizRegistrationGate] #quizRegistrationGate not found — gate skipped:', e);
+    return;
+  }
 
   try {
     $w('#quizRegistrationGate').text =
       `Save your style profile \u2014 create a free account to unlock personalized recommendations + ${BONUS_POINTS} bonus points.`;
-  } catch (_) {}
+  } catch (e) { console.warn('[StyleQuizRegistrationGate] failed to set gate text:', e); }
 
   // Wire CTA button
   try {
@@ -59,33 +62,33 @@ export async function initStyleQuizRegistrationGate(opts = {}) {
         try {
           const { authentication } = await import('wix-members-frontend');
           await authentication.promptLogin();
-        } catch (_) {}
+        } catch (e) { console.warn('[StyleQuizRegistrationGate] promptLogin failed:', e); }
       }
 
       // After login attempt, check if user is now logged in
       let newMember = null;
       if (opts.getMember) {
-        try { newMember = await opts.getMember(); } catch (_) {}
+        try { newMember = await opts.getMember(); } catch (e) { console.warn('[StyleQuizRegistrationGate] getMember (post-login) failed:', e); }
       } else {
         try {
           const { currentMember } = await import('wix-members-frontend');
           newMember = await currentMember.getMember();
-        } catch (_) {}
+        } catch (e) { console.warn('[StyleQuizRegistrationGate] currentMember.getMember (post-login) failed:', e); }
       }
 
       if (newMember?._id) {
-        try { $w('#quizRegistrationGate').collapse(); } catch (_) {}
+        try { $w('#quizRegistrationGate').collapse(); } catch (e) { console.warn('[StyleQuizRegistrationGate] collapse after login failed:', e); }
         if (opts.onRegistered) {
-          try { await opts.onRegistered(newMember._id); } catch (_) {}
+          try { await opts.onRegistered(newMember._id); } catch (e) { console.error('[StyleQuizRegistrationGate] onRegistered callback failed:', e); }
         }
       }
     });
-  } catch (_) {}
+  } catch (e) { console.warn('[StyleQuizRegistrationGate] #quizRegCta not found — CTA not wired:', e); }
 
   // Wire dismiss
   try {
     $w('#quizRegDismiss').onClick(() => {
-      try { $w('#quizRegistrationGate').collapse(); } catch (_) {}
+      try { $w('#quizRegistrationGate').collapse(); } catch (e) { console.warn('[StyleQuizRegistrationGate] collapse on dismiss failed:', e); }
     });
-  } catch (_) {}
+  } catch (e) { console.warn('[StyleQuizRegistrationGate] #quizRegDismiss not found — dismiss not wired:', e); }
 }
