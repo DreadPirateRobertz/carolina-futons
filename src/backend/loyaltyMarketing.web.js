@@ -7,8 +7,10 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const TIER_THRESHOLDS = {
   Bronze: { minSpend: 0, next: 'Silver', nextMin: 500 },
@@ -263,6 +265,122 @@ export const generateMonthlyStatement = webMethod(
   }
 );
 
+// ── Monthly Statement Batch Send (CF-zo4k) ───────────────────────────
+
+const LOYALTY_STATEMENTS_SENT_COLLECTION = 'LoyaltyStatementsSent';
+
+/**
+ * Send monthly points statement email to all members with balance > 0 or recent activity.
+ * Idempotent — uses LoyaltyStatementsSent dedup keyed on memberId + YYYY-MM.
+ *
+ * @returns {Promise<{success: boolean, sent: number, errors: number}>}
+ * @permission Admin
+ */
+export const sendMonthlyLoyaltyStatements = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const monthKey = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const now = new Date();
+
+      // Get all accounts with balance > 0
+      const accounts = await wixData.query('LoyaltyAccounts')
+        .gt('totalPoints', 0)
+        .limit(1000)
+        .find();
+
+      let sent = 0;
+      let errors = 0;
+
+      for (const account of accounts.items) {
+        const memberId = account.memberId;
+        if (!memberId || !account.email) continue;
+
+        // Dedup — skip if already sent this month
+        const dedupId = `${memberId}_${monthKey}`;
+        let alreadySent = false;
+        try {
+          const existing = await wixData.get(LOYALTY_STATEMENTS_SENT_COLLECTION, dedupId);
+          if (existing) alreadySent = true;
+        } catch (_) { /* not found = not sent yet */ }
+
+        if (alreadySent) continue;
+
+        // Check for recent activity (last 30 days)
+        const activity = await wixData.query('PointsHistory')
+          .eq('memberId', memberId)
+          .ge('timestamp', since)
+          .limit(1000)
+          .find();
+
+        let monthlyEarned = 0;
+        let monthlyRedeemed = 0;
+        for (const entry of activity.items) {
+          const pts = entry.points || 0;
+          if (pts > 0) monthlyEarned += pts;
+          else monthlyRedeemed += Math.abs(pts);
+        }
+
+        // Skip members with no balance and no activity
+        if ((account.totalPoints || 0) <= 0 && monthlyEarned === 0) continue;
+
+        const tier = account.currentTier || 'Bronze';
+        const tierInfo = TIER_THRESHOLDS[tier] || {};
+
+        try {
+          await wixData.insert('EmailQueue', {
+            templateId: 'loyalty_statement_monthly',
+            recipientEmail: account.email,
+            recipientContactId: memberId,
+            variables: {
+              firstName: account.firstName || '',
+              currentTier: tier,
+              totalPoints: account.totalPoints || 0,
+              monthlyEarned,
+              monthlyRedeemed,
+              netChange: monthlyEarned - monthlyRedeemed,
+              nextTier: tierInfo.next || null,
+              spendToNextTier: tierInfo.nextMin
+                ? Math.max(0, tierInfo.nextMin - (account.totalSpend || 0))
+                : null,
+              monthKey,
+            },
+            sequenceType: 'loyalty_statement',
+            sequenceStep: 1,
+            status: 'pending',
+            scheduledFor: now,
+            sentAt: null,
+            attempt: 0,
+            lastError: '',
+            abVariant: null,
+            createdAt: now,
+          });
+
+          // Record dedup
+          await wixData.insert(LOYALTY_STATEMENTS_SENT_COLLECTION, {
+            _id: dedupId,
+            memberId,
+            monthKey,
+            sentAt: now,
+          });
+
+          sent++;
+        } catch (err) {
+          logError(`sendMonthlyLoyaltyStatements:${memberId}`, err);
+          errors++;
+        }
+      }
+
+      logAuditEvent('LoyaltyMarketing', 'monthly_statement_batch', 'system', { sent, errors, monthKey });
+      return { success: true, sent, errors };
+    } catch (err) {
+      logError('sendMonthlyLoyaltyStatements', err);
+      return { success: false, sent: 0, errors: 0 };
+    }
+  }
+);
+
 // ── Points Calculator ────────────────────────────────────────────────
 
 /**
@@ -370,6 +488,22 @@ const BIRTHDAY_BONUS_POINTS = 50;
 const POINTS_PER_DOLLAR = 1;
 
 /**
+ * Parse and validate a birthday from a YYYY-MM-DD string.
+ * Returns { month, day } or null if invalid.
+ * Cross-validates day against month using Date overflow detection.
+ * @param {string} birthday - YYYY-MM-DD
+ * @returns {{ month: number, day: number } | null}
+ */
+function _parseBirthday(birthday) {
+  if (!birthday || !/^\d{4}-\d{2}-\d{2}$/.test(birthday)) return null;
+  const [, m, d] = birthday.split('-').map(Number);
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  // Detect calendar overflow (e.g. Feb 30): year 2000 = leap year so Feb 29 passes
+  if (new Date(2000, m - 1, d).getMonth() !== m - 1) return null;
+  return { month: m, day: d };
+}
+
+/**
  * Enroll a new member in the loyalty program.
  *
  * @param {Object} params
@@ -399,23 +533,21 @@ export const enrollMember = webMethod(
         return { success: false, welcomePoints: 0, account: existing.items[0], error: 'Already enrolled' };
       }
 
-      let totalWelcome = WELCOME_POINTS;
-      const birthday = params.birthday && /^\d{4}-\d{2}-\d{2}$/.test(params.birthday)
-        ? params.birthday : null;
-      if (birthday) totalWelcome += BIRTHDAY_BONUS_POINTS;
+      const bday = _parseBirthday(params.birthday);
+      const totalWelcome = WELCOME_POINTS + (bday ? BIRTHDAY_BONUS_POINTS : 0);
 
       const account = await wixData.insert('LoyaltyAccounts', {
         memberId,
         email,
         firstName: sanitize(params.firstName || '', 200),
-        birthday,
+        birthday: bday ? params.birthday : null,
         currentTier: 'Bronze',
         totalPoints: totalWelcome,
         totalSpend: 0,
         enrolledAt: new Date(),
       });
 
-      // Log welcome points
+      // Log points: balance already in LoyaltyAccounts — PointsHistory is the audit trail
       await wixData.insert('PointsHistory', {
         memberId,
         points: WELCOME_POINTS,
@@ -424,7 +556,7 @@ export const enrollMember = webMethod(
         timestamp: new Date(),
       });
 
-      if (birthday) {
+      if (bday) {
         await wixData.insert('PointsHistory', {
           memberId,
           points: BIRTHDAY_BONUS_POINTS,
@@ -432,6 +564,20 @@ export const enrollMember = webMethod(
           description: 'Birthday bonus for sharing DOB',
           timestamp: new Date(),
         });
+
+        // Also write to MemberProfiles so annual checkBirthdayReward fires correctly
+        const profileResult = await wixData.query('MemberProfiles')
+          .eq('memberId', memberId)
+          .limit(1)
+          .find();
+        const existingProfile = profileResult.items[0];
+        if (existingProfile) {
+          if (existingProfile.birthdayMonth == null) {
+            await wixData.update('MemberProfiles', { ...existingProfile, birthdayMonth: bday.month, birthdayDay: bday.day });
+          }
+        } else {
+          await wixData.insert('MemberProfiles', { memberId, birthdayMonth: bday.month, birthdayDay: bday.day });
+        }
       }
 
       logAuditEvent('LoyaltyAccounts', 'enroll', memberId, { email, welcomePoints: totalWelcome });
@@ -462,6 +608,125 @@ export const calculatePointsForOrder = webMethod(
 
     const points = Math.round(total * POINTS_PER_DOLLAR * mult);
     return { points, multiplier: `${mult}x`, tier };
+  }
+);
+
+// ── Birthday capture (CF-c5z6) ───────────────────────────────────────────────
+
+/**
+ * Save a member's birthday and award the one-time 50-point enrollment bonus.
+ *
+ * Writes birthdayMonth/birthdayDay to MemberProfiles so the annual birthday
+ * reward (checkBirthdayReward in loyaltyBonusPoints.web.js) can fire.
+ * Idempotent: points are only awarded once (guarded by PointsHistory source).
+ *
+ * @param {string} memberId
+ * @param {number} month - 1–12
+ * @param {number} day   - 1–31
+ * @returns {Promise<{success: boolean, pointsAwarded: number, message?: string, reason?: string}>}
+ * @permission SiteMember
+ */
+export const saveBirthday = webMethod(
+  Permissions.SiteMember,
+  async (month, day) => {
+    try {
+      const member = await currentMember.getMember();
+      const mid = member?._id;
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
+      if (!mid) return { success: false, reason: 'invalid_member' };
+      if (!Number.isInteger(m) || m < 1 || m > 12) return { success: false, reason: 'invalid_month' };
+      if (!Number.isInteger(d) || d < 1 || d > 31) return { success: false, reason: 'invalid_day' };
+      // Cross-field calendar validation (year 2000 = leap year so Feb 29 is valid)
+      if (new Date(2000, m - 1, d).getMonth() !== m - 1) return { success: false, reason: 'invalid_day' };
+
+      // Check if birthday already on file — check BEFORE any writes
+      const profileResult = await wixData.query('MemberProfiles')
+        .eq('memberId', mid)
+        .limit(1)
+        .find();
+      const existingProfile = profileResult.items[0];
+      if (existingProfile?.birthdayMonth != null) {
+        return { success: false, reason: 'already_set' };
+      }
+
+      // Fetch loyalty account and idempotency guard before any writes
+      const accountResult = await wixData.query('LoyaltyAccounts')
+        .eq('memberId', mid)
+        .limit(1)
+        .find();
+      const account = accountResult.items[0];
+
+      let alreadyAwarded = false;
+      if (account) {
+        const priorAward = await wixData.query('PointsHistory')
+          .eq('memberId', mid)
+          .eq('source', 'birthday_enrollment')
+          .limit(1)
+          .find();
+        alreadyAwarded = priorAward.items.length > 0;
+      }
+
+      // Upsert MemberProfiles
+      if (existingProfile) {
+        await wixData.update('MemberProfiles', { ...existingProfile, birthdayMonth: m, birthdayDay: d });
+      } else {
+        await wixData.insert('MemberProfiles', { memberId: mid, birthdayMonth: m, birthdayDay: d });
+      }
+
+      if (!account) {
+        return { success: true, pointsAwarded: 0, message: 'Birthday saved' };
+      }
+      if (alreadyAwarded) {
+        return { success: true, pointsAwarded: 0, message: 'Birthday saved (points already credited)' };
+      }
+
+      // Award points: update balance first, then append audit trail
+      // (if PointsHistory insert fails, balance is updated but no audit entry — retryable)
+      await wixData.update('LoyaltyAccounts', {
+        ...account,
+        totalPoints: (account.totalPoints || 0) + BIRTHDAY_BONUS_POINTS,
+      });
+      await wixData.insert('PointsHistory', {
+        memberId: mid,
+        points: BIRTHDAY_BONUS_POINTS,
+        source: 'birthday_enrollment',
+        description: 'Birthday bonus for sharing DOB',
+        timestamp: new Date(),
+      });
+      logAuditEvent('LoyaltyAccounts', 'birthday_bonus', mid, { pointsAwarded: BIRTHDAY_BONUS_POINTS });
+
+      return { success: true, pointsAwarded: BIRTHDAY_BONUS_POINTS, message: 'Birthday saved! 50 bonus points added' };
+    } catch (err) {
+      logError(`[loyaltyMarketing] saveBirthday — member: ${mid}`, err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
+/**
+ * Check whether a member has a birthday on file in MemberProfiles.
+ * Used by initBirthdayCapture to avoid showing the prompt unnecessarily.
+ *
+ * @returns {Promise<{hasBirthday: boolean}>}
+ * @permission SiteMember
+ */
+export const getBirthdayStatus = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      const member = await currentMember.getMember();
+      const mid = member?._id;
+      if (!mid) return { hasBirthday: false };
+      const result = await wixData.query('MemberProfiles')
+        .eq('memberId', mid)
+        .limit(1)
+        .find();
+      const profile = result.items[0];
+      return { hasBirthday: profile?.birthdayMonth != null };
+    } catch {
+      return { hasBirthday: false };
+    }
   }
 );
 

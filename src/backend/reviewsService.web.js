@@ -26,7 +26,9 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logAuditEvent } from 'backend/utils/auditLog';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { recordEmailEvent } from 'backend/emailAutomation.web'; // CF-fzsd: conversion tracking
 
 const COLLECTION = 'Reviews';
 const MAX_PHOTOS = 3;
@@ -219,6 +221,14 @@ export const submitReview = webMethod(
         memberId,
       ).catch(err => console.warn('[reviewsService] gamification event failed:', err));
 
+      // CF-fzsd: record email conversion when review came from a review-request email
+      const emailQueueId = data.emailQueueId ? sanitize(data.emailQueueId, 50) : '';
+      if (emailQueueId) {
+        recordEmailEvent({ emailQueueId, eventType: 'conversion' })
+          .then(res => { if (!res?.success) console.warn('[reviewsService] email conversion not recorded for queue', emailQueueId); })
+          .catch(err => console.warn('[reviewsService] email conversion record failed:', err));
+      }
+
       return { success: true, reviewId: saved._id };
     } catch (err) {
       console.error('[reviewsService] Submit error:', err);
@@ -229,7 +239,7 @@ export const submitReview = webMethod(
 
 /**
  * Mark a review as helpful. Increments the helpful counter.
- * Anyone can vote (rate-limited by client to prevent abuse).
+ * Site members can vote (rate-limited by client to prevent abuse).
  *
  * @param {string} reviewId
  * @returns {Promise<{success: boolean, helpful?: number}>}
@@ -375,6 +385,7 @@ export const moderateReview = webMethod(
       review.moderatedAt = new Date();
       await wixData.update(COLLECTION, review);
 
+      logAuditEvent(COLLECTION, `moderate_${action}`, rid, { previousStatus, newStatus });
       return { success: true, previousStatus, newStatus };
     } catch (err) {
       console.error('[reviewsService] moderateReview error:', err);

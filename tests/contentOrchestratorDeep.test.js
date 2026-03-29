@@ -35,10 +35,10 @@ const baseProduct = {
 // ── Invalid event types ──────────────────────────────────────────────
 
 describe('triggerManualOrchestration — invalid event types', () => {
-  it('rejects event type with whitespace padding', async () => {
+  it('accepts event type with whitespace padding (sanitize trims)', async () => {
     const result = await triggerManualOrchestration('  new_arrival  ', baseProduct);
-    // sanitize trims, so this might pass or fail depending on trim behavior
-    expect(result).toHaveProperty('success');
+    expect(result.success).toBe(true);
+    expect(result.scheduled.length).toBe(3);
   });
 
   it('rejects event type with HTML injection', async () => {
@@ -91,13 +91,13 @@ describe('triggerManualOrchestration — missing product data', () => {
     expect(result.error).toMatch(/product/i);
   });
 
-  it('rejects productData with numeric productId', async () => {
+  it('rejects productData with numeric productId (validateId requires string)', async () => {
     const result = await triggerManualOrchestration('new_arrival', {
       ...baseProduct,
       productId: 12345,
     });
-    // validateId may or may not accept numbers — verify behavior
-    expect(result).toHaveProperty('success');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/product/i);
   });
 
   it('handles missing productName gracefully', async () => {

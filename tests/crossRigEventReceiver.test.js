@@ -468,3 +468,38 @@ describe('crossRigEvent — analytics write failure', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── New events: cf-l8xt (badge_earned, tier_changed, sommelier_completed, price_drop_watching, wishlist_synced) ──
+
+describe('crossRigEvent — new mobile events (cf-l8xt)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-5' }); });
+
+  it.each([
+    ['badge_earned',         { badgeId: 'badge-001' }],
+    ['tier_changed',         { newTier: 'gold', prevTier: 'silver' }],
+    ['sommelier_completed',  { resultId: 'res-abc', style: 'contemporary' }],
+    ['price_drop_watching',  { productId: 'prod-999', targetPrice: 399 }],
+    ['wishlist_synced',      { itemCount: 5 }],
+  ])('%s returns success and logs to analytics', async (eventType, extras) => {
+    const result = await crossRigEvent({
+      eventId: `ev-new-${eventType}`,
+      schemaVersion: '1.0',
+      event: eventType,
+      ...extras,
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted(ANALYTICS_EVENTS_COLLECTION);
+    expect(inserted[0].eventType).toBe(eventType);
+    expect(inserted[0].memberId).toBe('mem-5');
+  });
+
+  it('unknown event is still rejected with 400', async () => {
+    const result = await crossRigEvent({
+      eventId: 'ev-reject',
+      schemaVersion: '1.0',
+      event: 'not_a_real_event',
+    });
+    expect(result.success).toBe(false);
+    expect(result.status).toBe(400);
+  });
+});

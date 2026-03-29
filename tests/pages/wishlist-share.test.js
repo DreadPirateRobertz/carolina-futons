@@ -1,15 +1,11 @@
-/**
- * Wishlist Share — pure helper unit tests (CF-y24r S1, CF-4qll S2, CF-muzy S5)
- * Tests: token parsing, invalid message builder, S2 card population, SEO helpers
- */
 import { describe, it, expect, vi } from 'vitest';
 import {
   parseShareToken,
   buildInvalidMessage,
+  populateShareCard,
   buildWishlistTitle,
   buildWishlistDescription,
   buildWishlistOgTags,
-  populateShareCard,
 } from '../../src/public/wishlistShareHelpers.js';
 
 // ── parseShareToken ────────────────────────────────────────────────────────────

@@ -195,6 +195,7 @@ export async function wixEcom_onOrderCreated(event) {
     name: item.productName?.original || item.name || '',
     quantity: item.quantity || 1,
     price: item.price?.amount || item.price || 0,
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '',
   }));
 
   if (!email) return;
@@ -220,7 +221,19 @@ export async function wixEcom_onOrderCreated(event) {
 
       // Award points for purchase — web customers earn points on every order.
       // CF-tf1: this call was missing, leaving web-only customers with zero points.
-      await receiveGamificationEvent('gamification_order_complete', { orderTotal: Number(total) }, memberId);
+      const gamResult = await receiveGamificationEvent('gamification_order_complete', { orderTotal: Number(total) }, memberId);
+
+      // cf-8onx: tier milestone notifications — fire when award crosses a threshold
+      if (gamResult.success && email) {
+        const newTotal = gamResult.newTotal || 0;
+        const oldTotal = newTotal - (gamResult.pointsEarned || 0);
+        try {
+          const { checkAndTriggerTierMilestone } = await import('backend/emailAutomation.web');
+          await checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal);
+        } catch (err) {
+          console.error('[events] Error checking tier milestone:', err);
+        }
+      }
 
       const challengeQuery = await wixData
         .query('Challenges')
@@ -240,6 +253,16 @@ export async function wixEcom_onOrderCreated(event) {
       await _processReferralOnOrderCreated(memberId, orderNumber);
     } catch (err) {
       console.error('[events] Error processing referral on order:', err);
+    }
+  }
+
+  // cf-yno3: swatch → purchase attribution
+  if (email) {
+    try {
+      const { checkSwatchAttribution } = await import('backend/swatchAttribution.web');
+      await checkSwatchAttribution(email, orderNumber, Number(total));
+    } catch (err) {
+      console.error('[events] Error checking swatch attribution:', err);
     }
   }
 }

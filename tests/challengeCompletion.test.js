@@ -357,4 +357,27 @@ describe('backfillChallengeLedger', () => {
 
     await expect(backfillChallengeLedger()).rejects.toThrow('Write timeout');
   });
+
+  it('cursor gt(_id) excludes rows with null/undefined _id rather than coercing to 0', async () => {
+    // Regression: old mock used || 0 fallback, so a row with _id=undefined was treated as
+    // 0 for the gt('_id', afterId) cursor filter — silently passing/failing pagination.
+    // With the fix, null/undefined _id rows are excluded (return false) as production does.
+    const rows = Array.from({ length: 101 }, (_, i) => ({
+      _id: `r-${String(i).padStart(3, '0')}`,
+      memberId: `mem-${i}`,
+      challengeId: `ch-${i}`,
+      type: 'challenge_completion',
+    }));
+    // Inject one row with a missing _id in the middle of the set
+    rows.splice(50, 0, { memberId: 'mem-x', challengeId: 'ch-x', type: 'challenge_completion' });
+    __seed('PointsLedger', rows);
+
+    // Should process all rows that have valid _id — the row without _id
+    // is excluded by the cursor filter (gt returns false for null) and never updated.
+    const result = await backfillChallengeLedger();
+
+    // 101 rows with valid _id should be checked and updated; the _id-less row is invisible
+    // to cursor pagination and thus not counted in the result.
+    expect(result.checked).toBeGreaterThanOrEqual(101);
+  });
 });

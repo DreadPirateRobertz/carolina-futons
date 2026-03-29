@@ -8,10 +8,15 @@
  *  - sendWebhook logs audit events on success and failure
  *  - handleOrderStatusChange skips orders with no customerId
  *  - Graceful degradation when push endpoint not configured
+ *  - sendWebhook retry exhaustion returns { success: false, attempts: MAX_RETRIES, lastError }
+ *  - sendWebhook empty-string pushEndpoint returns early with no fetch calls
+ *  - sendWebhook recovers on subsequent attempt after HTTP failure
+ *  - sendWebhook captures network error message (and fallback) as lastError
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { __reset, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as __resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -19,6 +24,7 @@ globalThis.fetch = mockFetch;
 
 beforeEach(() => {
   __reset();
+  __resetSecrets();
   vi.clearAllMocks();
   mockFetch.mockReset();
 });
@@ -158,5 +164,93 @@ describe('status labels', () => {
   it('uses raw status when not in STATUS_LABELS', () => {
     const payload = buildWebhookPayload({ _id: 'o1', buyerInfo: {} }, 'unknown_status');
     expect(payload.statusLabel).toBe('unknown_status');
+  });
+});
+
+// ── sendWebhook: retry and error paths (CF-qe31.1) ─────────────────
+
+describe('sendWebhook: retry and error paths', () => {
+  const ENDPOINT = 'https://push.carolinafutons.app/api/push/order-status';
+  const PAYLOAD = { orderId: 'o1', status: 'confirmed', customerId: 'mbr-1' };
+
+  let sendWebhook;
+  let MAX_RETRIES;
+
+  beforeEach(async () => {
+    __setSecrets({ MOBILE_PUSH_ENDPOINT: ENDPOINT, MOBILE_PUSH_SECRET: 'test-secret' });
+    ({ sendWebhook, MAX_RETRIES } = await import('../src/backend/orderStatusWebhook.web.js'));
+  });
+
+  // Guard: if an assertion inside a fake-timer test throws, useRealTimers still runs.
+  afterEach(() => vi.useRealTimers());
+
+  it('returns failure when pushEndpoint is empty string', async () => {
+    // __setSecrets merges into the existing map — the key is present (returns '')
+    // rather than absent (would throw). Tests the !pushEndpoint early-return branch.
+    __setSecrets({ MOBILE_PUSH_ENDPOINT: '' });
+    const result = await sendWebhook(PAYLOAD);
+    expect(result.success).toBe(false);
+    expect(result.attempts).toBe(0);
+    expect(result.lastError).toMatch(/not configured/i);
+  });
+
+  it('returns failure with lastError after all retries exhausted (HTTP 500)', async () => {
+    vi.useFakeTimers();
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(false);
+    expect(result.attempts).toBe(MAX_RETRIES);
+    expect(result.lastError).toBe('HTTP 500');
+  });
+
+  it('returns success with attempts=2 when first attempt fails then recovers', async () => {
+    vi.useFakeTimers();
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({ ok: true });
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(true);
+    expect(result.attempts).toBe(2);
+  });
+
+  it('captures network error message as lastError', async () => {
+    vi.useFakeTimers();
+    mockFetch.mockRejectedValue(new Error('ECONNREFUSED'));
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(false);
+    expect(result.attempts).toBe(MAX_RETRIES);
+    expect(result.lastError).toBe('ECONNREFUSED');
+  });
+
+  it('captures err.message fallback when error has no message', async () => {
+    vi.useFakeTimers();
+    // Exercises the `err.message || 'Network error'` fallback branch in the catch block
+    mockFetch.mockRejectedValue(new Error(''));
+
+    const promise = sendWebhook(PAYLOAD);
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    expect(result.success).toBe(false);
+    expect(result.lastError).toBe('Network error');
+  });
+
+  it('returns success on first attempt', async () => {
+    mockFetch.mockResolvedValue({ ok: true });
+    const result = await sendWebhook(PAYLOAD);
+    expect(result.success).toBe(true);
+    expect(result.attempts).toBe(1);
   });
 });

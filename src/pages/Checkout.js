@@ -43,11 +43,13 @@ let _currentCart = null;
 let _addressValid = false;
 let _selectedShippingMethod = 'standard';
 let _sessionId = null;
+let _guestEmail = ''; // set when anonymous user submits email — CF-2zr3
 
 $w.onReady(async function () {
   initPageSeo('checkout');
   const sections = [
     { name: 'checkoutProgress', init: initCheckoutProgress },
+    { name: 'guestEmail', init: initGuestEmailCapture }, // CF-2zr3: must run before other sections
     { name: 'trustSignals', init: initTrustSignals },
     { name: 'orderNotes', init: initOrderNotes },
     { name: 'checkoutSummary', init: initCheckoutSummary },
@@ -139,6 +141,81 @@ function initCheckoutProgress() {
       } catch (e) {}
     });
   } catch (e) {}
+}
+
+// ── Guest Email Capture (CF-2zr3) ───────────────────────────────────
+// When anonymous user arrives, show a soft email prompt so we can
+// save the guest order and offer account creation post-purchase.
+// If user is logged in, hide the section entirely.
+
+async function initGuestEmailCapture() {
+  try {
+    const { currentMember } = await import('wix-members-frontend');
+    const member = await currentMember.getMember();
+
+    if (member && member._id) {
+      // Logged-in user: hide guest section and proceed normally
+      try { $w('#guestEmailSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    // Anonymous user: show email capture section
+    try { $w('#guestEmailSection').expand(); } catch (e) {}
+    try {
+      $w('#guestEmailInput').accessibility.ariaLabel = 'Your email address';
+      $w('#guestEmailInput').accessibility.ariaRequired = true;
+    } catch (e) {}
+    try { $w('#guestEmailError').hide(); } catch (e) {}
+
+    // Show soft login suggestion (non-blocking)
+    try {
+      $w('#guestLoginLink').onClick(() => {
+        import('wix-members-frontend').then(({ authentication }) => {
+          authentication.promptLogin({ modal: true });
+        });
+      });
+    } catch (e) {}
+
+    // Wire the "Continue as Guest" button
+    try {
+      $w('#guestContinueBtn').onClick(async () => {
+        const rawEmail = $w('#guestEmailInput').value || '';
+        const email = rawEmail.trim().toLowerCase();
+
+        if (!email || !email.includes('@')) {
+          try {
+            $w('#guestEmailError').text = 'Please enter a valid email address';
+            $w('#guestEmailError').show();
+            $w('#guestEmailInput').accessibility.ariaInvalid = 'true';
+          } catch (e) {}
+          return;
+        }
+
+        try { $w('#guestEmailError').hide(); } catch (e) {}
+        try { $w('#guestEmailInput').accessibility.ariaInvalid = 'false'; } catch (e) {}
+        _guestEmail = email;
+
+        // Save guest session for post-purchase merge
+        try {
+          const { saveGuestSession } = await import('backend/guestCheckout.web');
+          await saveGuestSession({ sessionId: _sessionId || `guest-${Date.now()}`, email });
+        } catch (e) {
+          // Non-blocking — don't prevent checkout if session save fails
+          console.warn('[Checkout] Guest session save failed:', e?.message);
+        }
+
+        // Collapse the email section and let checkout proceed
+        try { $w('#guestEmailSection').collapse(); } catch (e) {}
+        try { $w('#checkoutMainSection').expand(); } catch (e) {}
+      });
+
+      try { $w('#guestContinueBtn').accessibility.ariaLabel = 'Continue as guest'; } catch (e) {}
+    } catch (e) {}
+  } catch (err) {
+    // If auth check fails, default to showing guest section (don't block checkout)
+    console.warn('[Checkout] initGuestEmailCapture error:', err?.message);
+    try { $w('#guestEmailSection').collapse(); } catch (e) {}
+  }
 }
 
 // ── Trust Signals ───────────────────────────────────────────────────

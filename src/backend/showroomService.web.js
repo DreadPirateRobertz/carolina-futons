@@ -26,8 +26,7 @@ export const SHOWROOM_INFO = {
   phone: '(828) 252-9449',
   email: 'carolinafutons@gmail.com',
   hours: [
-    { days: 'Wednesday – Friday', hours: '10:00 AM – 5:00 PM' },
-    { days: 'Saturday', hours: '10:00 AM – 4:00 PM' },
+    { days: 'Wednesday – Saturday', hours: '10:00 AM – 5:00 PM (in store or by appt)' },
     { days: 'Sunday – Tuesday', hours: 'Closed' },
   ],
   mapEmbedQuery: '824+Locust+St+Hendersonville+NC+28792',

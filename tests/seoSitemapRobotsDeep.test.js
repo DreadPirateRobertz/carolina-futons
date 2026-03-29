@@ -1,7 +1,7 @@
 // seoSitemapRobotsDeep.test.js — CF-xr0u: Deep edge-case coverage for
 // getSitemapData, buildSitemapXml, getRobotsTxtContent in seoHelpers.web.js
-// Edge cases: empty categories, malformed URLs, large sitemaps, XSS in slugs,
-// special characters, boundary product data.
+// Edge cases: malformed product data, large sitemaps, XSS in slugs/URLs,
+// special characters, date boundaries, page ordering, robots.txt structure.
 import { describe, it, expect } from 'vitest';
 import {
   getSitemapData,
@@ -200,7 +200,7 @@ describe('buildSitemapXml — edge cases', () => {
     const openTags = (xml.match(/<url>/g) || []).length;
     const closeTags = (xml.match(/<\/url>/g) || []).length;
     expect(openTags).toBe(closeTags);
-    expect(openTags).toBe(9 + 11 + 500 + 14); // static + category + products + blog
+    expect(openTags).toBe(9 + 11 + 500 + 17); // static + category + products + blog
 
     // Starts and ends correctly
     expect(xml).toMatch(/^<\?xml/);
@@ -318,7 +318,7 @@ describe('sitemap+robots integration — complete pipeline', () => {
     expect(xml).toContain('</urlset>');
 
     const urlCount = (xml.match(/<url>/g) || []).length;
-    expect(urlCount).toBe(34); // 9 static + 11 category + 14 blog
+    expect(urlCount).toBe(37); // 9 static + 11 category + 17 blog
   });
 
   it('getSitemapData result directly usable by buildSitemapXml', () => {

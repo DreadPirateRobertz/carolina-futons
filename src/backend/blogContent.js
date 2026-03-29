@@ -467,6 +467,108 @@ const BLOG_POSTS = {
       },
     ],
   },
+
+  'futon-for-guest-room': {
+    slug: 'futon-for-guest-room',
+    title: 'How We Transformed a Spare Room Into the Perfect Guest Suite With a Futon',
+    metaDescription: 'A futon can turn any spare room into a comfortable guest suite — without sacrificing the room\'s everyday usefulness. Here\'s exactly how to do it.',
+    keywords: ['futon for guest room', 'futon guest room ideas', 'best futon for guest room', 'spare room futon', 'guest room futon ideas'],
+    excerpt: 'The right futon turns a spare room into a guest suite that actually feels like a bedroom — not a folding cot pushed against a wall. Here\'s the full guide.',
+    category: 'Buying Guides',
+    tags: ['futon frames', 'guest room', 'buying guide', 'Night & Day'],
+    publishDate: '2026-04-07',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-for-guest-room.jpg',
+    faqs: [
+      {
+        question: 'What size futon is best for a guest room?',
+        answer: 'Full size works for single guests or couples who don\'t mind close quarters. Queen is the better choice if you regularly host couples or guests who prefer more sleeping space. Most spare rooms fit a queen futon comfortably — they\'re narrower than a traditional queen bed frame because there\'s no headboard and minimal frame width.',
+      },
+      {
+        question: 'Can guests sleep on a futon comfortably for several nights?',
+        answer: 'Yes, with the right mattress. An 8-inch or thicker foam or innerspring futon mattress provides the same support as a standard guest mattress. Thin futon mattresses (6 inches or under) aren\'t suitable for multi-night stays. Our Otis Bed 8-inch Harmony or 10-inch Spring Coil are designed for nightly use.',
+      },
+      {
+        question: 'Do I need special sheets for a futon?',
+        answer: 'Standard fitted sheets work on futon mattresses. Full-size futon mattresses use full-size sheets. Queen futon mattresses use queen sheets. The mattress depth is similar to a standard mattress, so deep-pocket sheets aren\'t necessary unless your mattress is unusually thick.',
+      },
+      {
+        question: 'How do I keep the futon mattress from sliding during conversion?',
+        answer: 'Use a non-slip mattress pad between the mattress and the frame. Most futon frames also have small lip edges on the slats that hold the mattress in position during conversion. If the mattress slides in your specific frame, a rubberized pad under the mattress solves it in seconds.',
+      },
+      {
+        question: 'Is a futon or a daybed better for a guest room?',
+        answer: 'For a single guest, both work. For couples or for guests who prefer more space, a full or queen futon is better — daybeds are typically twin-sized. Futons also convert to sofa mode more flexibly than daybeds, which maintain a single fixed profile.',
+      },
+    ],
+  },
+
+  'how-to-clean-futon-mattress': {
+    slug: 'how-to-clean-futon-mattress',
+    title: 'How to Clean Your Futon Mattress (Without Ruining It)',
+    metaDescription: 'How to clean a futon mattress safely — spot cleaning spills, removing stains, and deodorizing without damaging foam or fabric.',
+    keywords: ['how to clean futon mattress', 'clean futon mattress', 'futon mattress cleaning', 'remove stains futon mattress', 'futon mattress stain removal'],
+    excerpt: 'Futon mattresses can be damaged by the wrong cleaning methods. Here\'s exactly how to clean yours — from spill response to deep deodorizing — without ruining the foam or fabric.',
+    category: 'Care & Maintenance',
+    tags: ['futon mattresses', 'cleaning', 'care guide', 'maintenance'],
+    publishDate: '2026-04-14',
+    coverImage: 'https://www.carolinafutons.com/blog-og/how-to-clean-futon-mattress.jpg',
+    faqs: [
+      {
+        question: 'Can I put a futon mattress in the washing machine?',
+        answer: 'No. A full futon mattress cannot be machine washed — the foam or spring interior will be destroyed by the spin cycle and won\'t dry properly. Futon slipcovers (the removable fabric cover) are machine washable on cold. Always check the cover\'s care tag first.',
+      },
+      {
+        question: 'How do I get the smell out of a futon mattress?',
+        answer: 'Baking soda is the most effective deodorizer. Sprinkle it generously, let sit for 30 minutes to several hours, then vacuum thoroughly. For urine or organic odors, use an enzymatic cleaner first, then follow with baking soda. Regular airing out prevents odor buildup.',
+      },
+      {
+        question: 'How do I clean a futon mattress that got rained on or wet?',
+        answer: 'Act fast. Blot as much water as possible with dry towels. Stand the mattress upright in a warm, well-ventilated area with a fan running. Check for complete dryness after 24-48 hours before using. If the mattress smells musty after drying, it has mold inside and should be replaced.',
+      },
+      {
+        question: 'How often should I clean my futon mattress?',
+        answer: 'Vacuum weekly or bi-weekly. Air out monthly. Spot clean immediately after any spill. Deep deodorize with baking soda every 3-6 months or whenever you notice odor buildup. Following this schedule, a quality futon mattress stays fresh for a decade or more.',
+      },
+      {
+        question: 'Can I use fabric freshener spray on a futon mattress?',
+        answer: 'Fabric fresheners like Febreze mask odor temporarily but don\'t remove the source. For light freshness maintenance between deeper cleanings, they\'re fine. For actual odor issues — body oils, spills, pet accidents — use baking soda or an enzymatic cleaner instead.',
+      },
+    ],
+  },
+
+  'mountain-living-furniture': {
+    slug: 'mountain-living-furniture',
+    title: 'Best Furniture for Mountain Living: What Holds Up in the NC Highlands',
+    metaDescription: 'Mountain homes in western NC need furniture that holds up through humidity and temperature swings. What works — from a Hendersonville furniture store.',
+    keywords: ['furniture store hendersonville nc', 'furniture hendersonville nc', 'mountain living furniture', 'blue ridge furniture store', 'nc mountain cabin furniture'],
+    excerpt: 'Western NC mountain homes are tough on furniture — humidity swings, temperature cycling, and rugged use demand solid construction. Here\'s what actually holds up.',
+    category: 'Lifestyle',
+    tags: ['Hendersonville NC', 'mountain living', 'solid wood', 'buying guide'],
+    publishDate: '2026-04-21',
+    coverImage: 'https://www.carolinafutons.com/blog-og/mountain-living-furniture.jpg',
+    faqs: [
+      {
+        question: 'What kind of furniture is best for a mountain cabin?',
+        answer: 'Solid hardwood furniture — frames, platforms, cabinets — holds up best in mountain climates. Wood expands and contracts with humidity, but solid hardwood does this without losing structural integrity. Avoid particleboard and MDF, which absorb moisture and delaminate. For sleeping surfaces, innerspring mattresses allow better airflow than foam in cabins without year-round climate control.',
+      },
+      {
+        question: 'Is there a furniture store in Hendersonville, NC?',
+        answer: 'Yes — Carolina Futons is located at 824 Locust St Suite 200 in Hendersonville. We carry Night & Day Furniture frames, KD Frames platform beds, Otis Bed mattresses, and accessories. Open Monday through Saturday 10am–6pm and Sunday 12pm–5pm.',
+      },
+      {
+        question: 'How do I protect wood furniture in a humid mountain environment?',
+        answer: 'Keep furniture away from exterior walls and vents that bring in outdoor air in winter. Use furniture wax or paste polish on wood surfaces once a year — it fills the grain and slows moisture absorption. In vacation properties, leaving a dehumidifier running in summer protects wood furniture significantly.',
+      },
+      {
+        question: 'What furniture works well for mountain vacation rentals?',
+        answer: 'For rental properties, prioritize durability and easy cleaning. Solid hardwood frames with removable, washable covers. Otis Bed mattresses with washable covers rather than bare foam. Avoid white fabrics and light wood finishes that show wear. Dark finishes (chocolate, espresso) and medium-tone upholstery hold up visually through heavy rental use.',
+      },
+      {
+        question: 'Do you deliver to mountain areas in NC?',
+        answer: 'Contact us for delivery availability to your specific location. We serve Henderson County and surrounding areas. For remote properties with challenging access, flat-pack furniture options (KD Frames, Strata) allow easier transport in personal vehicles.',
+      },
+    ],
+  },
 };
 
 // ── Category Buying Guides ──────────────────────────────────────────

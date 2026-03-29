@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-28 (v2.5 — Added Comfort Timeline (CF-256r, PR #875) and Futon Sommelier (CF-ofc0, PR #876). Both backend-only modules requiring CMS collections + wiring.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v2.8 — Session 30: White Glove Delivery scheduling (CF-y7lp) — White Glove Delivery page (10 elements), Admin Delivery Calendar page (15 elements), Thank You Page white-glove prompt section (4 elements). Previous: v2.7 — Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy).)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -323,6 +323,8 @@ These 4 footer elements are already correctly named — skip them:
 | Members | ws9sh | /members |
 | Thank You | msuhj | /thank-you |
 | Thank You Page | dk9x8 | /thank-you-page |
+| White Glove Delivery | *(create)* | /white-glove-delivery |
+| Admin Delivery Calendar | *(create)* | /admin-delivery-calendar |
 | Plans & Pricing | aggpq | /plans-pricing |
 | Paywall | w6yh4 | /paywall |
 | Privacy Policy | pcvmd | /privacy-policy |
@@ -384,7 +386,9 @@ For each section below:
 | **Contact** | ~40 | 4 + children | 30 min | P2 — support |
 | **About** | ~25 | 5 + children | 20 min | P2 — brand |
 | **FAQ** | ~15 | 2 + children | 15 min | P2 — support |
-| **Thank You** | ~40 | 2 + children | 30 min | P2 — post-purchase |
+| **Thank You** | ~44 | 3 + children | 30 min | P2 — post-purchase |
+| **White Glove Delivery** | ~20 | 5 + children | 25 min | P2 — scheduling (NEW CF-y7lp) |
+| **Admin Delivery Calendar** | ~15 | 2 + children | 20 min | P2 — admin (NEW CF-y7lp) |
 | **Shipping Policy** | ~20 | 4 + children | 20 min | P3 — info |
 | **Fullscreen/Videos** | ~15 | 2 + children | 15 min | P3 — content |
 | **Privacy Policy** | ~15 | 2 + children | 10 min | P3 — legal |
@@ -585,6 +589,16 @@ For each section below:
 | `newsletterSubmit` | Button | Subscribe button |
 | `newsletterSuccess` | Text | Hidden, shown on success |
 | `newsletterError` | Text | Hidden, shown on error |
+
+### Gift Card Section (PR #533 — CF-mwpw)
+Add to **Home page**:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `giftCardSection` | Section/Box | Hero CTA section for gift cards — collapsed if gift cards disabled |
+| `giftCardHeading` | Text | "Give the gift of great furniture" |
+| `giftCardDesc` | Text | Description text |
+| `giftCardBtn` | Button | "Shop Gift Cards" → links to /gift-cards |
 
 ### SEO / Decorative
 | Element ID | Wix Element | Notes |
@@ -1185,6 +1199,46 @@ Added to product page via `initProduct360Viewer`. Elements live on **Product Pag
 
 **Accessibility:** `qnaQuestion` button gets `aria-expanded` + `aria-controls` pointing to `qnaAnswer` panel. `qnaAnswer` must have matching `id` attribute — both set automatically by `ProductQnA.js`.
 
+### Gift as a Gift CTA (PR #529 — CF-9fv2)
+Add to **Product Page**:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `giftProductBtn` | Button | "Give as a Gift" CTA — links to Wix Stores gift card flow with product context |
+
+### Price Lock Widget (NEW — CF-tjf0, PR #935)
+*Source: `src/public/PriceLockWidget.js` — `initPriceLockWidget($w, state)`*
+*Backend: `src/backend/priceLock.web.js`*
+
+CF+ members can lock today's price with a $25 refundable deposit for 30/60/90 days. **All elements must be collapsed/hidden by default.**
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `priceLockSection` | Section | Container — collapsed by default; expands for CF+ members |
+| `priceLockBtn` | Button | "Lock This Price — $25 Deposit" CTA |
+| `priceLockBadge` | Box | Active lock badge container |
+| `priceLockBadgeText` | Text | "Price locked at $X.XX" |
+| `priceLockExpiry` | Text | "Expires in X days • $25 deposit applied at checkout" |
+| `priceLockModal` | Box | Tier selector modal overlay |
+| `priceLockModalContent` | Box | Modal content box |
+| `priceLockClose` | Button | Modal close button |
+| `priceLock30` | Button | 30-day tier |
+| `priceLock60` | Button | 60-day tier |
+| `priceLock90` | Button | 90-day tier |
+| `priceLockDeposit` | Text | "$25 refundable deposit" label |
+| `priceLockSuccess` | Text | Success message — auto-collapses after 3s |
+
+### Stamped.io Reviews (NEW — CF-gxn1)
+*Source: `src/public/ProductReviews.js` + `src/backend/stampedIoService.web.js`*
+
+**Stamped.io is now the PRIMARY review source.** CMS reviews are fallback. Existing `#reviewsSection` element IDs unchanged — see Reviews & Ratings section. One new element needed:
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `productReviewWidget` | Box | Stamped.io native embed container — place below review form |
+
+**Stilgar TODO (dashboard only):** Install Stamped.io from Wix App Market + add secrets: `STAMPED_API_KEY`, `STAMPED_API_SECRET`, `STAMPED_STORE_HASH`.
+
 ---
 
 ## CATEGORY PAGE (`Category Page.u0gn0.js`)
@@ -1736,6 +1790,41 @@ Add these elements to the **Member Page** in the editor:
 ### Care / Assembly / Review
 `careSequenceInfo` (Section), `careSequenceText` (Text), `assemblyGuideSection` (Section), `assemblyGuideTitle` (Text), `assemblyGuideText` (Text), `assemblyGuideBtn` (Button), `testimonialSection` (Section), `testimonialTitle` (Text), `testimonialPrompt` (Text), `testimonialNameInput` (Input), `testimonialStoryInput` (TextBox), `testimonialSubmitBtn` (Button), `testimonialError` (Text), `testimonialSuccess` (Text), `reviewSection` (Section), `reviewTitle` (Text), `reviewPrompt` (Text), `reviewStar1`–`reviewStar5` (Button), `reviewRating` (Text), `reviewBodyInput` (TextBox), `reviewSubmitBtn` (Button), `reviewSuccess` (Text), `reviewError` (Text)
 
+### White Glove Prompt (NEW — CF-y7lp)
+`whiteGlovePromptSection` (Section — collapsed by default), `whiteGlovePromptTitle` (Text), `whiteGlovePromptBody` (Text), `whiteGloveScheduleBtn` (Button → /white-glove-delivery?orderId=)
+
+---
+
+## WHITE GLOVE DELIVERY (`White Glove Delivery.js`) — NEW CF-y7lp
+
+### State Sections (mutually exclusive — one shown at a time)
+`wgLoadingSection` (Section), `wgExistingSection` (Section), `wgCalendarSection` (Section), `wgConfirmSection` (Section), `wgErrorSection` (Section), `wgErrorText` (Text)
+
+### Existing Appointment
+`existingDateText` (Text), `existingWindowText` (Text), `existingStatusText` (Text), `rescheduleBtn` (Button), `rescheduleNote` (Text — collapsed by default)
+
+### Calendar (Date Picker) ⚠️ REPEATER
+`calendarNoSlots` (Text — collapsed by default), `calendarDateRepeater` (Repeater), `calendarBackBtn` (Button)
+**↳ Inside:** `calendarDayLabel` (Text), `calendarSelectDayBtn` (Button — disabled when full)
+
+### Window Selector ⚠️ REPEATER
+`windowSelectorSection` (Section — collapsed by default), `windowDateLabel` (Text), `windowRepeater` (Repeater), `windowBackBtn` (Button)
+**↳ Inside:** `windowLabel` (Text), `windowSpotsText` (Text), `windowSelectBtn` (Button — disabled when full)
+
+### Confirmation
+`confirmHeadline` (Text), `confirmSubtext` (Text), `confirmDateText` (Text), `confirmWindowText` (Text), `confirmOrdersBtn` (Button)
+
+---
+
+## ADMIN DELIVERY CALENDAR (`Admin Delivery Calendar.js`) — NEW CF-y7lp
+
+### Appointment Calendar ⚠️ REPEATER
+`calendarRangeLabel` (Text), `calendarApptCount` (Text), `calendarEmpty` (Section — collapsed by default), `calendarRepeater` (Repeater), `calendarFromDate` (DatePicker), `calendarToDate` (DatePicker), `calendarFilterBtn` (Button), `calendarFilterError` (Text — collapsed by default)
+**↳ Inside:** `apptDate` (Text), `apptWindow` (Text), `apptStatus` (Text), `apptEmail` (Text), `apptPhone` (Text), `apptAddress` (Text), `apptNotes` (Text), `apptOrderId` (Text)
+
+### Block Date Form
+`blockDateInput` (DatePicker), `blockReasonInput` (Input), `blockDateSubmitBtn` (Button), `blockFormError` (Text — collapsed by default), `blockFormSuccess` (Text — collapsed by default), `blockedDatesSection` (Section)
+
 ---
 
 ## SHIPPING POLICY (`Shipping Policy.ype8c.js`)
@@ -2032,28 +2121,6 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
-## LOCAL SEO PAGE (`Local SEO Page.js`)
-
-### Hero
-`cityTitle` (Text), `cityHeadline` (Text), `homeCityBadge` (Text), `localPageContent` (Box), `notFoundMessage` (Text)
-
-### Store Info
-`directionsText` (Text), `directionsBtn` (Button), `mapEmbed` (HtmlComponent)
-
-### Nearby Areas ⚠️ REPEATER
-`nearbyAreasRepeater` (Repeater)
-**↳ Inside:** `nearbyAreaLabel` (Text), `nearbyAreaLink` (Button)
-
-### Featured Products ⚠️ REPEATER
-`featuredProductsRepeater` (Repeater)
-**↳ Inside:** `productName` (Text), `productPrice` (Text), `productImage` (Image), `viewProductBtn` (Button)
-
-### Cross-Links ⚠️ REPEATER
-`crossLinksSection` (Box), `crossLinksHeading` (Text), `crossLinksRepeater` (Repeater)
-**↳ Inside:** `crossLinkLabel` (Text), `crossLinkBtn` (Button)
-
----
-
 ## COMMUNITY GALLERY (`Community Gallery.js`)
 
 ### Gallery Grid ⚠️ REPEATER
@@ -2195,6 +2262,89 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
+## LOCAL SEO CITY PAGE (`Near City Page.js`)
+
+**Route**: `/near/[city-slug]` (dynamic, router-based)
+**Source**: `src/pages/Near City Page.js`
+**PR**: #522 (CF-kj47), #531 (CF-kljz), #530 (CF-4poq), #528 (CF-gjy4), #536 (CF-54s6)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `routerData` | HtmlComponent | Hidden — receives router data via postMessage |
+| `localPageContent` | Box/Section | Main content container — hidden if city not found |
+| `notFoundMessage` | Text | "City page not found" fallback |
+| `cityTitle` | Text | `{city}, {state}` heading |
+| `cityHeadline` | Text | SEO headline for the city |
+| `directionsText` | Text | Directions description text |
+| `directionsBtn` | Button | "Get Directions" → Google Maps link |
+| `mapEmbed` | Iframe/Image | Google Maps static embed |
+| `homeCityBadge` | Box/Text | "Serving the {city} area" badge — show/hide based on city proximity |
+
+**`featuredProductsRepeater`** ⚠️ REPEATER — city-relevant products:
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `productImage` | Image | Product image |
+| `productName` | Text | Product name |
+| `productPrice` | Text | Price display |
+| `viewProductBtn` | Button | "View Product" CTA |
+
+**`nearbyAreasRepeater`** ⚠️ REPEATER — cross-links to nearby city pages (PR #536):
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `nearbyAreaLink` | Button/Link | Link to nearby city page |
+| `nearbyAreaLabel` | Text | City name label |
+
+**JSON-LD**: Injected via backend — no editor element needed (uses `wix-seo` module).
+
+---
+
+## REFERRAL SHARE PAGE (`Referral Share.js`)
+
+**Route**: `/referral` (static page)
+**Source**: `src/pages/Referral Share.js` (or `public/referralUI.js`)
+**PR**: #524 (CF-ld8w)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `referralWidget` | Box | Main referral widget container |
+| `loadingState` | Box | Spinner/loading state — shown while fetching referral data |
+| `errorState` | Box | Error message container |
+| `dashboardError` | Text | Error message text |
+| `referralLink` | Text/Input | Displays the referral URL for copying |
+| `copyBtn` | Button | "Copy Link" — copies referralLink to clipboard |
+| `shareButtons` | Box | Social share buttons container |
+| `totalReferrals` | Text | "X friends referred" count |
+| `earnedRewards` | Text | "You've earned $X" |
+| `pendingRewards` | Text | "Pending: $X" |
+
+**Clone candidate**: Member Page (has similar dashboard layout).
+
+---
+
+## SUBMIT PHOTO REVIEW PAGE (`Submit Photo Review.js`)
+
+**Route**: `/submit-review` (static page)
+**Source**: `src/pages/Submit Photo Review.js`
+**PR**: #532 (CF-zkdy-ui-submit)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `submitFormSection` | Box | Main form container — expand/collapse |
+| `productNameDisplay` | Text | Pre-filled product name (from query param) |
+| `photoUploadButton` | UploadButton | Wix UploadButton for photo selection |
+| `photoPreview` | Image | Preview of selected photo — collapsed until file chosen |
+| `ratingInput` | StarRating/Slider | Rating (1-5 stars) |
+| `reviewTextInput` | TextArea | Review body text |
+| `captionInput` | TextInput | Short photo caption |
+| `validationMessage` | Text | Inline validation error — expanded on error |
+| `submitBtn` | Button | "Submit Photo" — disabled during upload |
+| `successSection` | Box | Success state container — collapsed by default |
+| `successMessage` | Text | "Thanks! Your photo is in review." |
+
+---
+
 ## PAGES THAT NEED CREATING (no frontend code yet)
 
 All major pages now have both backend and frontend code. The following are in development or planned:
@@ -2247,6 +2397,43 @@ All major pages now have both backend and frontend code. The following are in de
 > **Tier routing:** total weight < 150 lbs AND no pallet flag → UPS parcel. Over 150 lbs OR `requiresPallet` → WWEX SpeedFreight 2.0 LTL.
 
 > **Element IDs:** See **Product Page → Shipping Intelligence Layer** and **Bundle Builder → Bundle Builder Shipping** sections above.
+
+---
+
+## GIFT REGISTRY (`Gift Registry.js`) — NEW CF-easy
+
+*Source: `src/pages/Gift Registry.js` — three modes: list, manage, public view*
+*Backend: `src/backend/giftRegistry.web.js`*
+
+Members can create, manage, and share gift registries. A shareable public URL shows registry contents to guests. **All form elements and repeaters must be collapsed by default.**
+
+### Registry List & Create Form
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `registryCount` | Text | "X registr(y\|ies)" summary label |
+| `registryEmptyState` | Box | Empty state — expand when no registries |
+| `registryRepeater` | Repeater | One item per registry |
+| `registryCreateBtn` | Button | "Create Registry" CTA |
+| `registryCreateForm` | Box | Create form container — collapsed by default |
+| `registryTitleInput` | TextInput | Registry name field |
+| `registryOccasionDropdown` | Dropdown | Occasion selector |
+| `registryDatePicker` | DatePicker | Event date |
+| `registryMessageInput` | TextBox | Optional message/description |
+| `registryPublicToggle` | Toggle | Public/private visibility |
+| `registrySubmitBtn` | Button | Submit new registry |
+| `registryCancelBtn` | Button | Cancel / collapse form |
+| `registryFormError` | Text | Inline error — collapsed by default |
+
+**↳ Inside `registryRepeater`:**
+
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `registryItemTitle` | Text | Registry name |
+| `registryItemOccasion` | Text | Formatted occasion |
+| `registryItemDate` | Text | Event date "MMM D, YYYY" |
+| `registryItemCount` | Text | "X item(s)" |
+| `registryManageBtn` | Button | Navigate to manage view |
 
 ---
 
@@ -2370,4 +2557,9 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Comfort Timeline Widget | 🔲 Backend merged (PR #875) — Member Dashboard section TBD | CF-256r — break-in tracker |
 | Futon Sommelier Widget | 🔲 Backend merged (PR #876) — Style Quiz handoff or standalone page TBD | CF-ofc0 — lifestyle recommendation engine |
+| Personalized Hero | 🔲 Backend merged (commit f0fbb9fd) — Home page hero wiring TBD | CF-tj6f — blocked on Home page hookup |
+| Futon Fit Score | 🔲 Backend merged (commit 92ed82b2) — Product card wiring TBD | CF-hx8m — "94% match" badge on product cards |
+| AI Room Staging | 🔲 Backend merged (commit 17a72f85) — PDP "See It In Your Room" button TBD | CF-s22f — photo upload + AI composite |
+| Live Showroom Camera | 🔲 Backend merged (commit f72ddb7e) — PDP "See It Live" toggle TBD | CF-gt99 — webcam feed + reserve button |
+| App Download Banner | 🔲 Backend merged (PR #884) — Android elements need editor wiring | CF-e2ib — iOS auto via meta tag; Android needs #appDownloadBanner |
 | Charcoal | `#2C2C2C` | Body text |

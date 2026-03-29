@@ -5,9 +5,13 @@ import {
   createBirthdayCoupon,
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
-import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
-import { __setMember } from './__mocks__/wix-members-backend.js';
+import { coupons } from './__mocks__/wix-marketing-backend.js';
+import { __setMember, __resetMember } from './__mocks__/wix-members-backend.js';
 import { __seed, __reset as resetWixData, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
+
+// Module-level test constants (used across multiple describe blocks)
+const TEST_EMAIL = 'test@example.com';
+const OTHER_EMAIL = 'other@example.com';
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -22,9 +26,7 @@ describe('createWelcomeCoupon', () => {
 
   it('generates 6-char alphanumeric code after prefix', async () => {
     const result = await createWelcomeCoupon('code@test.com');
-    // Format: WELCOME-XXXXXX (prefix + dash + 6 chars)
     expect(result.code).toMatch(/^WELCOME-[A-Z2-9]{6}$/);
-    // Should not contain ambiguous chars I, O, 0, 1
     const suffix = result.code.split('-')[1];
     expect(suffix).not.toMatch(/[IO01]/);
   });
@@ -48,7 +50,6 @@ describe('createWelcomeCoupon', () => {
 
   it('passes correct parameters to coupons API', async () => {
     await createWelcomeCoupon('api@test.com');
-
     expect(coupons.createCoupon).toHaveBeenCalledWith(
       expect.objectContaining({
         percentOffRate: 10,
@@ -62,25 +63,21 @@ describe('createWelcomeCoupon', () => {
   it('sets 30-day expiration on welcome coupon', async () => {
     const before = Date.now();
     await createWelcomeCoupon('expiry@test.com');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     const expirationTime = new Date(call.expirationTime).getTime();
     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-
     expect(expirationTime).toBeGreaterThanOrEqual(before + thirtyDays - 1000);
     expect(expirationTime).toBeLessThan(before + thirtyDays + 5000);
   });
 
   it('lowercases email in coupon name', async () => {
     await createWelcomeCoupon('MiXeD@TeSt.CoM');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     expect(call.name).toContain('mixed@test.com');
   });
 
   it('returns failure message when API throws', async () => {
     coupons.createCoupon.mockRejectedValueOnce(new Error('API down'));
-
     const result = await createWelcomeCoupon('fail@test.com');
     expect(result.success).toBe(false);
     expect(result.message).toBe('Failed to create coupon');
@@ -100,14 +97,12 @@ describe('createBirthdayCoupon', () => {
 
   it('uses default name when not provided', async () => {
     await createBirthdayCoupon('birthday@example.com');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     expect(call.name).toContain('Valued Customer');
   });
 
   it('sanitizes XSS in member name', async () => {
     await createBirthdayCoupon('xss@test.com', '<script>alert("xss")</script>');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     expect(call.name).not.toContain('<script>');
   });
@@ -127,11 +122,9 @@ describe('createBirthdayCoupon', () => {
   it('sets 7-day expiration', async () => {
     const before = Date.now();
     await createBirthdayCoupon('expiry@test.com', 'Test');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     const expirationTime = new Date(call.expirationTime).getTime();
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
-
     expect(expirationTime).toBeGreaterThanOrEqual(before + sevenDays - 1000);
   });
 });
@@ -172,17 +165,14 @@ describe('createTierUpgradeCoupon', () => {
   it('sets 14-day expiration', async () => {
     const before = Date.now();
     await createTierUpgradeCoupon('expiry@test.com', 'Silver');
-
     const call = coupons.createCoupon.mock.calls[0][0];
     const expirationTime = new Date(call.expirationTime).getTime();
     const fourteenDays = 14 * 24 * 60 * 60 * 1000;
-
     expect(expirationTime).toBeGreaterThanOrEqual(before + fourteenDays - 1000);
   });
 
   it('returns failure on API error', async () => {
     coupons.createCoupon.mockRejectedValueOnce(new Error('API down'));
-
     const result = await createTierUpgradeCoupon('fail@test.com', 'Gold');
     expect(result.success).toBe(false);
     expect(result.message).toBe('Failed to create coupon');
@@ -192,9 +182,6 @@ describe('createTierUpgradeCoupon', () => {
 // ── getActiveCoupons ─────────────────────────────────────────────────
 
 describe('getActiveCoupons', () => {
-  const TEST_EMAIL = 'test@example.com';
-  const OTHER_EMAIL = 'other@example.com';
-
   beforeEach(() => {
     resetWixData();
     coupons.queryAllCoupons.mockClear();
@@ -208,7 +195,7 @@ describe('getActiveCoupons', () => {
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
     expect(result[0].code).toBe('WELCOME-ABC123');
-    expect(result[0].discount).toBe('10% off');
+    expect(result[0].discount).toBe('10%');
   });
 
   it('formats money-off coupons correctly', async () => {
@@ -224,7 +211,7 @@ describe('getActiveCoupons', () => {
       { _id: 'mc-3', memberEmail: TEST_EMAIL, code: 'NOAMT', displayName: 'No Amount Coupon', active: true },
     ]);
     const result = await getActiveCoupons();
-    expect(result[0].discount).toBe('$0 off');
+    expect(result[0].discount).toBe('0%');
   });
 
   it('returns only specified fields (no internal data leak)', async () => {
@@ -257,8 +244,6 @@ describe('getActiveCoupons', () => {
     expect(result).toEqual([]);
   });
 
-  // ── IDOR security gates ──────────────────────────────────────────────
-
   it('IDOR gate: returns empty array when no member session', async () => {
     __setMember(null);
     __seed('MemberCoupons', [
@@ -268,7 +253,7 @@ describe('getActiveCoupons', () => {
     expect(result).toEqual([]);
   });
 
-  it('IDOR gate: wrong member gets empty array (cannot see other members coupons)', async () => {
+  it('IDOR gate: wrong member gets empty array', async () => {
     __seed('MemberCoupons', [
       { _id: 'mc-6', memberEmail: OTHER_EMAIL, code: 'NOT-YOURS', displayName: 'Not Your Coupon', percentOffRate: 15, active: true },
     ]);
@@ -294,6 +279,22 @@ describe('getActiveCoupons', () => {
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });
+});
+
+// ── IDOR ownership enforcement (CF-fug9 P0) ──────────────────────────
+
+describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
+  beforeEach(() => {
+    __resetMember();
+  });
+
+  it('getActiveCoupons returns empty when session has no member', async () => {
+    __seed('MemberCoupons', [
+      { _id: 'c-1', memberEmail: 'other@example.com', code: 'WELCOME-XYZ', displayName: 'Welcome 10%', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toEqual([]);
+  });
 
   it('does not call queryAllCoupons — confirms DB-level member scoping', async () => {
     __seed('MemberCoupons', []);
@@ -302,6 +303,7 @@ describe('getActiveCoupons', () => {
   });
 
   it('returns displayName not raw coupon name (no PII in name field)', async () => {
+    __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
     __seed('MemberCoupons', [{
       _id: 'mc-10',
       memberEmail: TEST_EMAIL,

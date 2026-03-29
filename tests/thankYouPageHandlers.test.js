@@ -114,6 +114,13 @@ vi.mock('backend/dataService.web', () => ({
   scheduleReviewRequest: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('backend/guestCheckout.web', () => ({
+  getSoftPromptConfig: vi.fn().mockReturnValue({ title: 'Save your order history', description: '', ctaLabel: 'Create Account', skipLabel: 'No thanks' }),
+}));
+vi.mock('backend/whiteGloveScheduling.web', () => ({
+  getWhiteGloveSlots: vi.fn().mockResolvedValue([]),
+}));
+
 /* ------------------------------------------------------------------ */
 /*  $w mock                                                           */
 /* ------------------------------------------------------------------ */

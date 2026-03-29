@@ -32,6 +32,15 @@
  * - sampleStack (Text) - Representative stack trace
  * - resolvedBy (Text) - Who resolved it
  * - resolvedDate (DateTime) - When it was resolved
+ *
+ * Create CMS collection "AlertRules" with fields:
+ * - name (Text) - Alert rule name
+ * - contextPattern (Text) - Optional context filter (substring match)
+ * - messagePattern (Text) - Optional message filter (case-insensitive substring)
+ * - severityFilter (Text) - Optional severity filter: "error" | "warning" | "critical" | ""
+ * - thresholdCount (Number) - Error count threshold to trigger alert (min 1)
+ * - windowMinutes (Number) - Time window in minutes to check (1-1440)
+ * - enabled (Boolean) - Whether the rule is active
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -447,6 +456,20 @@ export const getErrorFrequency = webMethod(
 
 // ── configureAlert ──────────────────────────────────────────────────
 
+/**
+ * Create a new alert rule in the AlertRules collection.
+ * Normalizes severity to lowercase and clamps numeric ranges.
+ *
+ * @param {Object} alertConfig
+ * @param {string} alertConfig.name - Alert name (sanitized, max 200 chars)
+ * @param {string} [alertConfig.contextPattern] - Context substring filter
+ * @param {string} [alertConfig.messagePattern] - Message substring filter (case-insensitive)
+ * @param {string} [alertConfig.severityFilter] - "error"|"warning"|"critical" (case-insensitive)
+ * @param {number} alertConfig.thresholdCount - Error count to trigger (min 1)
+ * @param {number} alertConfig.windowMinutes - Time window in minutes (1-1440)
+ * @param {boolean} [alertConfig.enabled=true] - Whether rule is active
+ * @returns {Promise<{success: boolean, rule?: Object, error?: string}>}
+ */
 export const configureAlert = webMethod(
   Permissions.SiteMember,
   async (alertConfig = {}) => {
@@ -474,12 +497,15 @@ export const configureAlert = webMethod(
         return { success: false, error: 'windowMinutes is required and must be a number' };
       }
 
+      const normalizedSeverity = typeof severityFilter === 'string'
+        ? severityFilter.toLowerCase() : '';
+
       const rule = {
         name: cleanName,
         contextPattern: sanitize(contextPattern, 200) || '',
         messagePattern: sanitize(messagePattern, 200) || '',
-        severityFilter: ['error', 'warning', 'critical'].includes(severityFilter)
-          ? severityFilter : '',
+        severityFilter: ['error', 'warning', 'critical'].includes(normalizedSeverity)
+          ? normalizedSeverity : '',
         thresholdCount: Math.max(1, Math.round(thresholdCount)),
         windowMinutes: Math.min(1440, Math.max(1, Math.round(windowMinutes))),
         enabled: enabled !== false,
@@ -497,6 +523,10 @@ export const configureAlert = webMethod(
 
 // ── getAlertRules ──────────────────────────────────────────────────
 
+/**
+ * Retrieve all configured alert rules (max 100). Admin only.
+ * @returns {Promise<{success: boolean, rules?: Array<Object>, error?: string}>}
+ */
 export const getAlertRules = webMethod(
   Permissions.SiteMember,
   async () => {
@@ -529,6 +559,13 @@ export const getAlertRules = webMethod(
 
 // ── checkAlertConditions ───────────────────────────────────────────
 
+/**
+ * Evaluate all enabled alert rules against recent ErrorLogs.
+ * Fail-closed: if a rule's query fails, it reports triggered=true with
+ * evaluationFailed=true so callers never miss a potential incident.
+ *
+ * @returns {Promise<{success: boolean, alerts?: Array<{rule: string, ruleId: string, triggered: boolean, evaluationFailed?: boolean, currentCount: number|null, threshold: number, window: string}>, error?: string}>}
+ */
 export const checkAlertConditions = webMethod(
   Permissions.SiteMember,
   async () => {
@@ -583,7 +620,7 @@ export const checkAlertConditions = webMethod(
             triggered: true,
             evaluationFailed: true,
             error: 'Rule evaluation failed',
-            currentCount: 0,
+            currentCount: null,
             threshold: rule.thresholdCount,
             window: `${rule.windowMinutes} minutes`,
           });
@@ -602,6 +639,14 @@ export const checkAlertConditions = webMethod(
 
 const CRITICAL_CONTEXTS = ['checkout', 'payment'];
 
+/**
+ * Factory: creates a logger function for use in error boundaries.
+ * Auto-assigns "critical" severity for checkout/payment contexts.
+ * Never throws — safe to call from error handlers.
+ *
+ * @param {string} context - Component context (e.g. "checkout", "cart", "product")
+ * @returns {(error: Error|string|null, metadata?: Object) => Promise<{success: boolean}>}
+ */
 export function createErrorBoundaryLogger(context) {
   const safeContext = typeof context === 'string' ? context : String(context || 'unknown');
   return async (error, metadata = {}) => {

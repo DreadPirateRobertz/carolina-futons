@@ -1,6 +1,6 @@
 // blogNewsletterDeep.test.js — CF-xr0u: Deep coverage for blogNewsletter.web.js
-// Edge cases: blog with no excerpt, missing featured image, duplicate notification
-// prevention, subscriber pagination, unsubscribe combinations, email validation.
+// Edge cases: slug validation, duplicate notification prevention, email validation,
+// unsubscribe combinations, subscriber filtering, queue item structure, batch behavior.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __onInsert } from 'wix-data';
 
@@ -515,9 +515,8 @@ describe('getBlogNewsletterStatus — edge cases', () => {
 
     const result = await getBlogNewsletterStatus();
     const sleeping = result.posts.find(p => p.slug === 'best-futons-for-everyday-sleeping');
-    if (sleeping) {
-      expect(sleeping.notified).toBe(false);
-    }
+    expect(sleeping).toBeDefined();
+    expect(sleeping.notified).toBe(false);
   });
 
   it('ignores EmailQueue items with different sequenceStep', async () => {
@@ -532,8 +531,7 @@ describe('getBlogNewsletterStatus — edge cases', () => {
 
     const result = await getBlogNewsletterStatus();
     const sleeping = result.posts.find(p => p.slug === 'best-futons-for-everyday-sleeping');
-    if (sleeping) {
-      expect(sleeping.notified).toBe(false);
-    }
+    expect(sleeping).toBeDefined();
+    expect(sleeping.notified).toBe(false);
   });
 });

@@ -10,7 +10,6 @@ import { cacheProduct } from 'public/productCache';
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { renderSimplePrice } from 'public/productCardHelpers.js';
-import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
@@ -23,7 +22,6 @@ import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliver
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
-import { setCardImage } from 'public/productCardHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
 import { getProductVideos } from 'backend/productVideos.web';
@@ -151,6 +149,7 @@ async function initProductPage() {
       { name: 'recentlyViewed', init: loadRecentlyViewed, critical: false },
       { name: 'recentlyViewedWidget', init: async () => { const { renderWidget } = await import('public/RecentlyViewedWidget.js'); return renderWidget($w, { excludeCurrentId: state.product?._id }); }, critical: false },
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
+      { name: 'recommendations', init: async () => { const m = await import('public/ProductRecommendations.js'); m.initRecommendationsCarousel($w, state); }, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
@@ -451,7 +450,6 @@ async function loadRecentlyViewed() {
       $w('#recentlyViewedSection').accessibility.ariaLabel = 'Recently viewed products';
       $w('#recentlyViewedSection').accessibility.role = 'region';
     } catch (e) {}
-    repeater.data = recent;
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#recentName').text = itemData.name; } catch (e) {}
@@ -482,7 +480,8 @@ async function loadRecentlyViewed() {
         }
       } catch (e) {}
     });
-  } catch (e) {}
+    repeater.data = recent;
+  } catch (e) { console.error('[RecentlyViewedWidget] loadRecentlyViewed error', e); }
 }
 
 async function loadAlsoBought() {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset } from './__mocks__/wix-data.js';
-import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 import {
   issueStoreCredit,
   getMyStoreCredit,
@@ -156,8 +156,9 @@ describe('issueStoreCredit', () => {
 
 describe('getMyStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
+    __resetMember();
+    __setMember({ _id: 'member-123' });
     __seed('StoreCredits', [
       {
         _id: 'sc-1',
@@ -281,8 +282,9 @@ describe('getMyStoreCredit', () => {
 
 describe('applyStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
+    __resetMember();
+    __setMember({ _id: 'member-123' });
     __seed('StoreCredits', [
       {
         _id: 'sc-1',
@@ -442,8 +444,9 @@ describe('applyStoreCredit', () => {
 
 describe('getStoreCreditHistory', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
+    __resetMember();
+    __setMember({ _id: 'member-123' });
     __seed('StoreCredits', [
       {
         _id: 'sc-1',
@@ -511,8 +514,9 @@ describe('getStoreCreditHistory', () => {
 
 describe('giftStoreCredit', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
+    __resetMember();
+    __setMember({ _id: 'member-giver' });
     __seed('StoreCredits', [
       {
         _id: 'sc-gift-source',
@@ -531,7 +535,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('transfers credit from giver to recipient', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -544,7 +547,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('deducts from giver balance', async () => {
-    __setMember({ _id: 'member-giver' });
     await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -555,7 +557,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gift exceeding available balance', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -566,7 +567,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gifting to self', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-giver',
@@ -611,7 +611,6 @@ describe('giftStoreCredit', () => {
   });
 
   it('sanitizes message input', async () => {
-    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -631,8 +630,9 @@ describe('giftStoreCredit', () => {
 
 describe('getExpiringCredits', () => {
   beforeEach(() => {
-    __setMember({ _id: 'member-123' });
     __reset();
+    __resetMember();
+    __setMember({ _id: 'member-123' });
     __seed('StoreCredits', [
       {
         _id: 'sc-soon',
@@ -686,5 +686,86 @@ describe('getExpiringCredits', () => {
   it('includes expiration amount in response', async () => {
     const result = await getExpiringCredits('member-123', 30);
     expect(result.expiringTotal).toBe(50);
+  });
+});
+
+// ── IDOR regression tests (CF-zamz P0) ────────────────────────────────
+// Verifies ownership checks block cross-member access on all SiteMember functions.
+
+describe('IDOR ownership enforcement (CF-zamz P0)', () => {
+  beforeEach(() => {
+    __reset();
+    __resetMember();
+    __setMember({ _id: 'attacker-id' });
+    __seed('StoreCredits', [
+      {
+        _id: 'sc-victim',
+        memberId: 'victim-id',
+        balance: 500,
+        initialAmount: 500,
+        reason: 'return',
+        status: 'active',
+        createdDate: new Date(Date.now() - DAY * 5).toISOString(),
+        expirationDate: new Date(Date.now() + DAY * 360).toISOString(),
+        transactions: JSON.stringify([]),
+      },
+      {
+        _id: 'sc-attacker',
+        memberId: 'attacker-id',
+        balance: 10,
+        initialAmount: 10,
+        reason: 'promotion',
+        status: 'active',
+        createdDate: new Date(Date.now() - DAY * 1).toISOString(),
+        expirationDate: new Date(Date.now() + DAY * 360).toISOString(),
+        transactions: JSON.stringify([]),
+      },
+    ]);
+  });
+
+  it('getMyStoreCredit rejects attacker reading victim balance', async () => {
+    const result = await getMyStoreCredit('victim-id');
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Unauthorized');
+  });
+
+  it('applyStoreCredit rejects attacker draining victim credits', async () => {
+    const result = await applyStoreCredit('victim-id', 500);
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Unauthorized');
+  });
+
+  it('getStoreCreditHistory rejects attacker reading victim history', async () => {
+    const result = await getStoreCreditHistory('victim-id');
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Unauthorized');
+  });
+
+  it('giftStoreCredit rejects attacker gifting from victim account', async () => {
+    const result = await giftStoreCredit({
+      fromMemberId: 'victim-id',
+      toMemberId: 'attacker-id',
+      amount: 500,
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Unauthorized');
+  });
+
+  it('getExpiringCredits rejects attacker reading victim expiring credits', async () => {
+    const result = await getExpiringCredits('victim-id', 30);
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Unauthorized');
+  });
+
+  it('each function allows access to own data', async () => {
+    const balance = await getMyStoreCredit('attacker-id');
+    expect(balance.success).toBe(true);
+    expect(balance.totalBalance).toBe(10);
+
+    const history = await getStoreCreditHistory('attacker-id');
+    expect(history.success).toBe(true);
+
+    const expiring = await getExpiringCredits('attacker-id', 30);
+    expect(expiring.success).toBe(true);
   });
 });

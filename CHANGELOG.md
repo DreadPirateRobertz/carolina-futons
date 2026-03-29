@@ -4,6 +4,77 @@ All notable changes to the Carolina Futons Wix Velo codebase.
 
 ---
 
+## [v1.3.0] — 2026-03-28
+
+36,434 tests | 982 test files | Waves 30–33 — 57 PRs merged ([#863](https://github.com/DreadPirateRobertz/carolina-futons/pull/863)–[#922](https://github.com/DreadPirateRobertz/carolina-futons/pull/922))
+
+### Email Automation
+
+- **Post-purchase care sequence**: Day 3/7/30 personalized follow-up with delivery info, care tips, and reorder CTAs ([#897](https://github.com/DreadPirateRobertz/carolina-futons/pull/897))
+- **Welcome series**: Day 0/2/5 emails — best-seller recommendations and buying guide ([#900](https://github.com/DreadPirateRobertz/carolina-futons/pull/900))
+- **Cart abandonment sequence**: Personalized cartItems, urgency copy, free-shipping threshold, 5% coupon ([#899](https://github.com/DreadPirateRobertz/carolina-futons/pull/899))
+- **Referral email Day 14**: Post-purchase referral prompt in care sequence ([#879](https://github.com/DreadPirateRobertz/carolina-futons/pull/879))
+- **Swatch follow-up email**: Day 3 + Day 10 post-ship sequence with conversion tracking ([#905](https://github.com/DreadPirateRobertz/carolina-futons/pull/905))
+- **Post-consultation follow-up**: Personalized product picks after showroom consultation ([#907](https://github.com/DreadPirateRobertz/carolina-futons/pull/907))
+- **Weekly blog digest**: Automated weekly newsletter of recent blog posts ([#915](https://github.com/DreadPirateRobertz/carolina-futons/pull/915))
+- **Tier milestone notifications**: Mountain Guide / Summit Master achievement emails ([#910](https://github.com/DreadPirateRobertz/carolina-futons/pull/910))
+- **Monthly loyalty statement**: Points summary + tier status batch email + cron endpoint ([#913](https://github.com/DreadPirateRobertz/carolina-futons/pull/913))
+- **Review request email**: Post-purchase Day 7 deep-link + conversion tracking ([#885](https://github.com/DreadPirateRobertz/carolina-futons/pull/885))
+
+### Commerce & Checkout
+
+- **Guest checkout flow**: Remove login wall, save guest sessions, soft account prompt post-purchase ([#902](https://github.com/DreadPirateRobertz/carolina-futons/pull/902))
+- **P0 IDOR fix on guest checkout**: Security guard on `linkGuestOrdersToMember` + contactId false-positive fix ([#912](https://github.com/DreadPirateRobertz/carolina-futons/pull/912))
+- **Bundle/coupon validation**: Mobile checkout endpoint for applying bundles and coupons ([#873](https://github.com/DreadPirateRobertz/carolina-futons/pull/873))
+- **Consultation intake**: Pre-consultation form backend — `submitConsultationIntake` + `getConsultationIntake` webMethods ([#901](https://github.com/DreadPirateRobertz/carolina-futons/pull/901))
+- **Swatch attribution tracking**: Wire swatch→purchase events + module hardening ([#910](https://github.com/DreadPirateRobertz/carolina-futons/pull/910))
+
+### Gamification & Engagement
+
+- **Futon Sommelier**: Conversational AI decision engine — preference quiz → curated product picks ([#876](https://github.com/DreadPirateRobertz/carolina-futons/pull/876))
+- **Comfort Timeline**: Mattress break-in tracker with Day 3/7/30/90 milestone notifications ([#875](https://github.com/DreadPirateRobertz/carolina-futons/pull/875))
+- **A/B testing framework**: 5 initial experiments + mobile API — hero CTA, urgency badge, product description, social proof timing, cart upsell ([#874](https://github.com/DreadPirateRobertz/carolina-futons/pull/874))
+- **Assembly difficulty badge**: Easy/Medium/Expert badges on product cards and PDPs ([#863 area](https://github.com/DreadPirateRobertz/carolina-futons/pull/863))
+- **White Glove Available badge**: Eligible product cards and PDPs get delivery-tier badge ([#911](https://github.com/DreadPirateRobertz/carolina-futons/pull/911))
+- **Loyalty DOB collection**: `saveBirthday` webMethod + MemberProfiles sync for birthday rewards ([#891](https://github.com/DreadPirateRobertz/carolina-futons/pull/891))
+- **Review moderation admin queue**: Admin UI for approving/rejecting submitted reviews ([#892](https://github.com/DreadPirateRobertz/carolina-futons/pull/892))
+- **Referral deep links**: Canonical URL, app deep link, Instagram share, OG tags ([#898](https://github.com/DreadPirateRobertz/carolina-futons/pull/898))
+- **Smart app download banner**: iOS Smart App Banner + Android sticky Play Store prompt ([#884](https://github.com/DreadPirateRobertz/carolina-futons/pull/884), [#886](https://github.com/DreadPirateRobertz/carolina-futons/pull/886))
+- **Browse abandonment tracking**: Client-side product view events for recovery campaigns ([#863 area](https://github.com/DreadPirateRobertz/carolina-futons/pull/863))
+
+### Analytics & Observability
+
+- **GA4 custom event taxonomy**: Full funnel event set — `product_view`, `add_to_cart`, `checkout_*`, `purchase` with PII hashing ([#881](https://github.com/DreadPirateRobertz/carolina-futons/pull/881), [#883](https://github.com/DreadPirateRobertz/carolina-futons/pull/883))
+- **Weekly analytics digest**: Cron job + data aggregation report for site performance KPIs ([#918](https://github.com/DreadPirateRobertz/carolina-futons/pull/918))
+- **Cross-rig event expansion**: 5 new inbound events from mobile — `badge_earned`, `tier_changed`, `sommelier_completed`, `consultation_submitted`, `comfort_milestone` ([#889](https://github.com/DreadPirateRobertz/carolina-futons/pull/889), [#896](https://github.com/DreadPirateRobertz/carolina-futons/pull/896))
+- **busEvent error contract + CartSessions audit**: Error handling hardening + E2E smoke coverage ([#882](https://github.com/DreadPirateRobertz/carolina-futons/pull/882))
+- **Order tracking webhook**: Wix fulfillment → mobile push notification ([#872](https://github.com/DreadPirateRobertz/carolina-futons/pull/872))
+
+### SEO & Content
+
+- **Visual search batch export**: API for mobile ML image-embedding catalog generation ([#871](https://github.com/DreadPirateRobertz/carolina-futons/pull/871))
+
+### Infrastructure & Security
+
+- **Rate limiting**: `checkRateLimit` wired into 30 `Permissions.Anyone` mutation endpoints ([#868](https://github.com/DreadPirateRobertz/carolina-futons/pull/868))
+- **Centralized audit logging**: All `Permissions.Anyone` write endpoints now emit structured audit events ([#869](https://github.com/DreadPirateRobertz/carolina-futons/pull/869))
+- **Schema validation layer**: Input validation on 5 highest-risk endpoints ([#870](https://github.com/DreadPirateRobertz/carolina-futons/pull/870))
+- **Pre-commit conflict-marker guard**: CI check prevents merging files with unresolved merge conflict markers ([#895](https://github.com/DreadPirateRobertz/carolina-futons/pull/895))
+
+### Bug Fixes
+
+- **P0 IDOR — guest checkout**: `linkGuestOrdersToMember` lacked membership verification, allowing cross-account order linkage ([#912](https://github.com/DreadPirateRobertz/carolina-futons/pull/912))
+- **P1 — referral email contactId/memberId mismatch**: Wrong ID namespace caused referral emails to target wrong member ([#880](https://github.com/DreadPirateRobertz/carolina-futons/pull/880))
+- **couponPercent correction**: Cart abandonment coupon used 5% instead of 10% per `createCartRecoveryCoupon` contract ([#899](https://github.com/DreadPirateRobertz/carolina-futons/pull/899))
+- **deliveryOptions test**: Updated VA zip 24060 assertion — prefix 240 was added to `localZones` in `sharedTokens.js` ([#922](https://github.com/DreadPirateRobertz/carolina-futons/pull/922))
+- **StyleQuizRegistrationGate observability**: Missing `logError` in catch blocks — silent failures now surface ([#922](https://github.com/DreadPirateRobertz/carolina-futons/pull/922))
+- **Footer duplicate import**: Duplicate `buildFooterMountainSVG` import causing CI lint failure ([#903](https://github.com/DreadPirateRobertz/carolina-futons/pull/903))
+- **Consultation memberId≠contactId**: Fixed namespace confusion causing incorrect data writes in consultation followup ([#909](https://github.com/DreadPirateRobertz/carolina-futons/pull/909))
+- **LocalSEO FurnitureStore JSON-LD schema**: Fixed schema validation error in structured data output ([#895](https://github.com/DreadPirateRobertz/carolina-futons/pull/895))
+- **Hookup guide merge conflicts**: Resolved 3 conflict blocks in `EDITOR_HOOKUP_GUIDE.html` from cf-ld8w merge
+
+---
+
 ## [v1.2.0] — 2026-03-24
 
 34,000+ tests | 900+ test files | Wave 26-29 — 21 PRs merged ([#841](https://github.com/DreadPirateRobertz/carolina-futons/pull/841)–[#862](https://github.com/DreadPirateRobertz/carolina-futons/pull/862))

@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -53,6 +53,18 @@ jobs:
             echo "::error::Found external repo import paths in tests. Use vitest aliases or ../src/ relative paths instead."
             exit 1
           fi
+
+      - name: Check for merge conflict markers (cf-i6xe)
+        run: |
+          # Fail if any JS/TS source file contains unresolved git conflict markers.
+          # Catches the class of CI breakage caused by committed merge conflicts (e.g. 82a55a7d).
+          node scripts/check-conflict-markers.mjs
+
+      - name: Check for duplicate imports (CF-id8p)
+        run: |
+          # Fail if any JS/TS file has the same module imported twice.
+          # Incident CF-2fs8: duplicate import blocked CI after a bad merge.
+          node scripts/check-duplicate-imports.mjs
 
       - name: Check mock coverage (ratchet)
         run: node scripts/check-mock-coverage.mjs
@@ -82,7 +94,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -111,7 +123,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -201,7 +213,7 @@ jobs:
       # not mask the real test failure reported by the step below.
       - name: Send email alert on nightly failure
         if: steps.integration.outcome == 'failure'
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v16
         with:
           server_address: smtp.gmail.com
           server_port: 587
@@ -240,7 +252,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -273,7 +285,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -297,7 +309,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm

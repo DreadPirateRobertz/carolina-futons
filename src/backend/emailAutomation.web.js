@@ -34,10 +34,11 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -47,8 +48,8 @@ const SEQUENCES = {
   welcome: {
     steps: [
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
-      { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
+      { step: 2, templateId: 'welcome_series_2', delayHours: 48, description: 'Best sellers showcase (Day 2 — CF-o63p)' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 120, description: 'Buying guide + purchase nudge (Day 5 — CF-o63p)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -58,9 +59,9 @@ const SEQUENCES = {
   },
   cart_recovery: {
     steps: [
-      { step: 1, templateId: 'cart_recovery_1', delayHours: 1, description: 'Reminder with cart preview' },
-      { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Social proof + reviews' },
-      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Discount incentive' },
+      { step: 1, templateId: 'cart_recovery_1', delayHours: 1, description: 'You left something behind — cart contents with images + prices (CF-ji7j)' },
+      { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Still thinking? — urgency (limited stock) + free shipping if threshold met (CF-ji7j)' },
+      { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Last chance — 10% recovery coupon, unique per cart, single-use (CF-ji7j)' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -70,9 +71,9 @@ const SEQUENCES = {
   },
   post_purchase: {
     steps: [
-      { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Assembly follow-up — How\'s setup going?' },
-      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
-      { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
+      { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Day 3 care guide — assembly tips, fabric care, warranty info (CF-nkau)' },
+      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Day 7 review request — How\'s your new [Product]? Earn 50 pts (CF-nkau)' },
+      { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Day 30 cross-sell — Complete your room, recommendations based on purchase (CF-nkau)' },
       { step: 4, templateId: 'post_purchase_review_reward', delayHours: 336, description: 'Day-14 review prompt — earn 100 pts (CF-qy79)' },
       { step: 5, templateId: 'post_purchase_referral', delayHours: 360, description: 'Day-15 referral invite — share the love, earn $25 (CF-6p0o)' },
     ],
@@ -92,14 +93,58 @@ const SEQUENCES = {
       { step: 1, templateId: 'review_thank_you', delayHours: 0, description: 'Thank you for your review + 10% discount' },
     ],
   },
+  swatch_followup: {
+    steps: [
+      { step: 1, templateId: 'swatch_followup_arrived', delayHours: 72, description: 'Day 3 post-ship: Did your swatches arrive? Fabric preference + $5 credit (CF-jm5t)' },
+      { step: 2, templateId: 'swatch_followup_decide', delayHours: 240, description: 'Day 10 post-ship: Still deciding? Consultation offer + credit expiry (CF-jm5t)' },
+    ],
+  },
+  consultation_followup: {
+    steps: [
+      { step: 1, templateId: 'consultation_followup', delayHours: 2, description: 'Post-consultation follow-up: personalized product picks + CONSULT10 discount (CF-tcj5)' },
+    ],
+  },
+  tier_milestone: {
+    steps: [
+      { step: 1, templateId: 'tier_mountain_guide_approach', delayHours: 0, description: 'Almost Mountain Guide — 100 pts away from tier upgrade (CF-8onx)' },
+      { step: 2, templateId: 'tier_mountain_guide_achieved', delayHours: 0, description: 'Mountain Guide achieved! Welcome to the next tier (CF-8onx)' },
+      { step: 3, templateId: 'tier_summit_master_approach', delayHours: 0, description: 'Almost Summit Master — 100 pts away from tier upgrade (CF-8onx)' },
+      { step: 4, templateId: 'tier_summit_master_achieved', delayHours: 0, description: 'Summit Master achieved! Welcome to the next tier (CF-8onx)' },
+    ],
+  },
 };
 
 // Maximum retry attempts for failed emails
 const MAX_RETRY_ATTEMPTS = 3;
 
+const SITE_URL_BASE = 'https://www.carolinafutons.com';
+
+// CF-nkau: Post-purchase care guide URLs (Day 3 step)
+const FABRIC_CARE_URL = `${SITE_URL_BASE}/fabric-care-guide`;
+const WARRANTY_URL = `${SITE_URL_BASE}/warranty`;
+
+/**
+ * Determine the best cross-sell category for Day 30 recommendations.
+ * Inspects the primary item's slug to suggest a complementary collection.
+ *
+ * @param {Array} lineItems
+ * @returns {{ label: string, url: string }}
+ */
+function _getCrossSell(lineItems) {
+  const primarySlug = (lineItems || []).map(i => i.slug || '').find(Boolean) || '';
+  let label = 'accessories';
+  if (/frame/.test(primarySlug)) label = 'futon-mattresses';
+  else if (/mattress/.test(primarySlug)) label = 'futon-covers';
+  return { label, url: `${SITE_URL_BASE}/collections/${label}` };
+}
+
 // Send window: only deliver emails between these hours (America/New_York).
 // Emails scheduled outside this window are deferred to the next window open.
 const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
+
+// CF-ji7j: Bronze-tier free shipping minimum (default for guest/unknown tier buyers).
+// Carts at or above this total qualify for the free shipping note in step 2.
+const CART_FREE_SHIPPING_THRESHOLD = 150;
 
 // ── Event Handlers (auto-register in backend/) ───────────────────────
 
@@ -134,27 +179,26 @@ export function wixEcom_onOrderCreated(event) {
     name: item.name || item.productName?.original || '',
     quantity: item.quantity || 1,
     price: item.price || item.price?.amount || 0,
+    slug: item.url?.relativePath?.replace('/product-page/', '') || '',
   }));
 
   if (!email) return;
 
-  return Promise.all([
-    // Send customer-facing order confirmation
-    import('backend/emailService.web')
-      .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
-        contactId,
-        email,
-        firstName,
-        orderNumber: String(orderNumber),
-        total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-        itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-      }))
-      .catch(err => console.error('Error sending order confirmation:', err)),
+  import('backend/emailService.web')
+    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    }))
+    .catch(err => console.error('Error sending order confirmation:', err));
 
-    // Queue post-purchase care sequence
-    triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
-      .catch(err => console.error('Error triggering post-purchase sequence:', err)),
-  ]);
+  // CF-fzsd: Queue post-purchase care sequence at order creation so slug
+  // extraction from lineItems is available (Day 7 review URL uses product slug).
+  return triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
+    .catch(err => console.error('[CF-fzsd] Error queuing post-purchase sequence on order created:', err));
 }
 
 /**
@@ -172,22 +216,46 @@ export function wixEcom_onFulfillmentCreated(event) {
 
   if (!email) return;
 
-  import('backend/emailService.web')
-    .then(({ sendShippingNotification }) => sendShippingNotification({
-      contactId,
-      email,
-      firstName,
-      orderNumber: String(orderNumber),
-      trackingNumber: tracking.trackingNumber || '',
-      trackingUrl: tracking.trackingLink || '',
-      carrier: tracking.shippingProvider || '',
-    }))
-    .catch(err => console.error('Error sending shipping notification:', err));
+  // Detect LTL freight carriers (XPO, Estes, WWEX) and route to freight email.
+  // Parcel carriers (UPS, USPS, FedEx) use the standard shipping notification.
+  import('backend/freightTracking.web')
+    .then(({ buildFreightTrackingPayload }) => {
+      const payload = buildFreightTrackingPayload({
+        carrierName: tracking.shippingProvider || '',
+        proNumber: tracking.trackingNumber || '',
+      });
+
+      if (payload.isLTL) {
+        return import('backend/emailService.web')
+          .then(({ sendFreightShippingNotification }) => sendFreightShippingNotification({
+            contactId,
+            email,
+            firstName,
+            orderNumber: String(orderNumber),
+            proNumber: payload.proNumber,
+            trackingUrl: payload.trackingUrl || '',
+            carrier: payload.displayCarrier,
+          }));
+      }
+
+      return import('backend/emailService.web')
+        .then(({ sendShippingNotification }) => sendShippingNotification({
+          contactId,
+          email,
+          firstName,
+          orderNumber: String(orderNumber),
+          trackingNumber: tracking.trackingNumber || '',
+          trackingUrl: tracking.trackingLink || '',
+          carrier: tracking.shippingProvider || '',
+        }));
+    })
+    .catch(err => console.error('Error sending fulfillment notification:', err));
 }
 
 /**
  * Triggered when an order is marked as delivered.
- * Sends a delivery confirmation email to the buyer.
+ * Sends a delivery confirmation email and queues the post-purchase care sequence.
+ * Trigger for CF-nkau Day 3/7/30 drip: starts countdown from actual delivery date.
  */
 export function wixEcom_onOrderDelivered(event) {
   const order = event.entity || event;
@@ -196,6 +264,7 @@ export function wixEcom_onOrderDelivered(event) {
   const contactId = order.buyerInfo?.contactId || '';
   const orderNumber = order.number || '';
   const lineItems = order.lineItems || [];
+  const total = order.priceSummary?.total?.amount || order.totals?.total || 0;
 
   if (!email) return;
 
@@ -206,15 +275,21 @@ export function wixEcom_onOrderDelivered(event) {
       firstName,
       orderNumber: String(orderNumber),
     }))
-    .catch(err => console.error('Error sending delivery confirmation:', err));
+    .catch(err => logError('wixEcom_onOrderDelivered:confirmation', err));
+
+  // CF-nkau: Queue post-purchase care sequence starting from delivery date
+  // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
+  triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
+    .catch(err => logError('wixEcom_onOrderDelivered:postPurchaseCare', err));
 
   // CF-qy79: Queue Day-14 review prompt with points reward
   const productNames = lineItems
     .map(i => i.name || i.productName || '')
     .filter(Boolean)
     .join(', ');
-  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames)
-    .catch(err => console.error('[CF-qy79] Error queuing review reward prompt on delivery:', err));
+  const primarySlug = extractPrimarySlug(lineItems);
+  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
+    .catch(err => logError('wixEcom_onOrderDelivered:reviewReward', err));
 }
 
 /**
@@ -246,7 +321,7 @@ export function wixEcom_onOrderCanceled(event) {
  */
 export const triggerWelcomeSequence = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName) => {
+  async (contactId, email, firstName, opts = {}) => {
     try {
       if (!email) return { success: false, queued: 0 };
 
@@ -284,14 +359,34 @@ export const triggerWelcomeSequence = webMethod(
       const now = new Date();
       let queued = 0;
 
+      const bestSellersUrl = `${SITE_URL_BASE}/best-sellers`;
+      // CF-o63p: category-specific buying guide URL for step 3.
+      // Restrict to slug-safe chars ([a-z0-9-]) to prevent path injection in email links.
+      const rawCategory = sanitize(opts?.quizCategory || '', 50);
+      const quizCategory = rawCategory.replace(/[^a-z0-9-]/gi, '');
+      const buyingGuideUrl = quizCategory
+        ? `${SITE_URL_BASE}/buying-guide/${quizCategory}`
+        : `${SITE_URL_BASE}/buying-guide`;
+
       for (const step of SEQUENCES.welcome.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
         const variables = {
           firstName: cleanName,
-          discountCode,
-          discountAvailable,
           email: cleanEmail,
         };
+
+        // Step-specific variables (CF-o63p)
+        if (step.step === 1) {
+          variables.discountCode = discountCode;
+          variables.discountAvailable = discountAvailable;
+          if (discountAvailable) variables.discountPercent = '10';
+        }
+        if (step.step === 2) {
+          variables.bestSellersUrl = bestSellersUrl;
+        }
+        if (step.step === 3) {
+          variables.buyingGuideUrl = buyingGuideUrl;
+        }
 
         // Add A/B subject line for step 1
         if (step.step === SEQUENCES.welcome.abTestStep) {
@@ -410,6 +505,21 @@ export const triggerWelcomeSeries = webMethod(
  * @returns {Promise<{success: boolean, queued: number}>}
  * @permission Admin
  */
+/**
+ * Extract the primary product slug from order line items.
+ * Prefers items with a pre-parsed .slug field; falls back to parsing url.relativePath.
+ *
+ * @param {Array} lineItems
+ * @returns {string} Validated slug, or '' if none found
+ */
+function extractPrimarySlug(lineItems) {
+  const items = lineItems || [];
+  const fromSlug = items.find(i => i.slug)?.slug || '';
+  if (fromSlug) return validateSlug(fromSlug);
+  const fromUrl = items.find(i => i.url?.relativePath)?.url?.relativePath?.replace('/product-page/', '') || '';
+  return validateSlug(fromUrl);
+}
+
 export const triggerPostPurchaseSequence = webMethod(
   Permissions.Admin,
   async (contactId, email, firstName, orderNumber, total, lineItems, opts = {}) => {
@@ -432,9 +542,13 @@ export const triggerPostPurchaseSequence = webMethod(
         .filter(Boolean)
         .join(', ');
 
-      const SITE_URL = 'https://www.carolinafutons.com';
-      const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
-      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      const assemblyGuideUrl = `${SITE_URL_BASE}/getting-it-home#assembly`;
+      // Deep-link to product review form: use slug from first line item that has one
+      const primarySlug = extractPrimarySlug(lineItems);
+      if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
+      const reviewUrl = primarySlug
+        ? `${SITE_URL_BASE}/product-page/${primarySlug}#reviews`
+        : `${SITE_URL_BASE}/member-page#reviews`;
 
       const now = new Date();
       let queued = 0;
@@ -452,13 +566,26 @@ export const triggerPostPurchaseSequence = webMethod(
           reviewUrl,
         };
 
+        // Step 1 (Day 3 care guide): fabric care guide and warranty URLs (CF-nkau)
+        if (step.step === 1) {
+          variables.fabricCareUrl = FABRIC_CARE_URL;
+          variables.warrantyUrl = WARRANTY_URL;
+        }
+
         // Step 2 (Day 7 review request): include loyalty points incentive (CF-i64b)
         if (step.step === 2) {
           variables.pointsReward = '50';
           variables.photoBonusPoints = '25';
         }
 
-        // Step 5 (Day 14 referral invite): generate personalized referral link (CF-6p0o)
+        // Step 3 (Day 30 cross-sell): recommend complementary products (CF-nkau)
+        if (step.step === 3) {
+          const crossSell = _getCrossSell(lineItems);
+          variables.crossSellUrl = crossSell.url;
+          variables.crossSellLabel = crossSell.label;
+        }
+
+        // Step 5 (Day 15 referral invite): generate personalized referral link (CF-6p0o)
         // CF-lwkt fix: use memberId (not contactId) — different Wix namespaces.
         // Skip referral enrichment for guest checkouts (no memberId).
         if (step.step === 5) {
@@ -476,7 +603,7 @@ export const triggerPostPurchaseSequence = webMethod(
             }
           }
           // Sentinel defaults — template should handle gracefully
-          if (!variables.referralUrl) variables.referralUrl = 'https://www.carolinafutons.com/referral';
+          if (!variables.referralUrl) variables.referralUrl = `${SITE_URL_BASE}/referral`;
           if (!variables.referralCode) variables.referralCode = '';
         }
 
@@ -514,12 +641,13 @@ export const triggerPostPurchaseSequence = webMethod(
  * @param {string} firstName
  * @param {string} orderNumber
  * @param {string} productNames - Comma-separated product names
+ * @param {string} [slug=''] - Product slug for deep-linked review URL; falls back to /member-page#reviews
  * @returns {Promise<{success: boolean}>}
  * @permission Admin
  */
 export const triggerReviewRewardPrompt = webMethod(
   Permissions.Admin,
-  async (contactId, email, firstName, orderNumber, productNames) => {
+  async (contactId, email, firstName, orderNumber, productNames, slug = '') => {
     try {
       if (!email) return { success: false };
 
@@ -546,7 +674,11 @@ export const triggerReviewRewardPrompt = webMethod(
       if (existing.items.length > 0) return { success: false };
 
       const SITE_URL = 'https://www.carolinafutons.com';
-      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+      const cleanSlug = validateSlug(slug);
+      if (!cleanSlug) console.warn('[emailAutomation] No product slug for review reward prompt, order', cleanOrderNumber, '— falling back to member-page');
+      const reviewUrl = cleanSlug
+        ? `${SITE_URL}/product-page/${cleanSlug}#reviews`
+        : `${SITE_URL}/member-page#reviews`;
       const scheduledFor = new Date(Date.now() + 336 * 60 * 60 * 1000); // 14 days
 
       await queueEmail({
@@ -572,6 +704,168 @@ export const triggerReviewRewardPrompt = webMethod(
     } catch (err) {
       console.error('[CF-qy79] Error queuing review reward prompt:', err);
       return { success: false };
+    }
+  }
+);
+
+// CF-tcj5: Consultation discount code (7-day expiry on each follow-up)
+const CONSULT_DISCOUNT_CODE = 'CONSULT10';
+
+/**
+ * Queue post-consultation follow-up email with personalized product picks.
+ * Triggered 2h after consultation end by addConsultationNotes in virtualConsultation.web.js.
+ *
+ * @param {string} contactId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {Object} opts
+ * @param {string}   opts.designerName - name of the designer who ran the consultation
+ * @param {string[]} opts.productIds - product IDs to feature in email (up to 5)
+ * @param {string}   [opts.notes] - optional consultation notes
+ * @param {Object}   [opts.quizAnswers] - intake form answers { roomType, budget }
+ * @returns {Promise<{success: boolean, queued: number}>}
+ */
+export const triggerConsultationFollowup = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, opts) => {
+    try {
+      const cleanContactId = sanitize(String(contactId || ''), 100).trim();
+      const cleanEmail = (email || '').toLowerCase().trim();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanName = sanitize(firstName || '', 100).trim();
+      const safeOpts = (opts && typeof opts === 'object') ? opts : {};
+      const designerName = sanitize(safeOpts.designerName || '', 100).trim();
+      const productIds = (Array.isArray(safeOpts.productIds) ? safeOpts.productIds : [])
+        .slice(0, 5)
+        .map(id => sanitize(String(id), 100).trim())
+        .filter(Boolean);
+      const quizAnswers = (safeOpts.quizAnswers && typeof safeOpts.quizAnswers === 'object')
+        ? safeOpts.quizAnswers : null;
+
+      const now = new Date();
+      const variables = {
+        firstName: cleanName,
+        email: cleanEmail,
+        designerName,
+        productIds,
+        discountCode: CONSULT_DISCOUNT_CODE,
+      };
+
+      if (quizAnswers) {
+        if (quizAnswers.roomType) variables.roomType = sanitize(String(quizAnswers.roomType), 50);
+        if (quizAnswers.budget) variables.budget = sanitize(String(quizAnswers.budget), 50);
+      }
+
+      const step = SEQUENCES.consultation_followup.steps[0];
+      const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+
+      await wixData.insert('EmailQueue', {
+        templateId: step.templateId,
+        recipientEmail: cleanEmail,
+        recipientContactId: cleanContactId,
+        variables,
+        sequenceType: 'consultation_followup',
+        sequenceStep: 1,
+        status: 'pending',
+        scheduledFor,
+        sentAt: null,
+        attempt: 0,
+        lastError: '',
+        abVariant: null,
+        createdAt: now,
+      });
+
+      return { success: true, queued: 1 };
+    } catch (err) {
+      logError('triggerConsultationFollowup', err);
+      return { success: false, queued: 0 };
+    }
+  }
+);
+
+// CF-jm5t: Swatch credit expiry window
+const SWATCH_CREDIT_EXPIRY_DAYS = 30;
+const CONSULTATION_URL = `${SITE_URL_BASE}/book-consultation`;
+
+/**
+ * Queue swatch follow-up emails after swatch shipment (Day 3 + Day 10).
+ * Called by markSwatchShipped in swatchRequest.web.js.
+ *
+ * @param {string} contactId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {string[]} fabricNames - selected swatch fabric names
+ * @returns {Promise<{success: boolean, queued: number}>}
+ */
+export const triggerSwatchFollowupSequence = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, fabricNames) => {
+    try {
+      const cleanEmail = (email || '').toLowerCase().trim();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanContactId = sanitize(String(contactId || ''), 100).trim();
+      const cleanName = sanitize(firstName || '', 100).trim();
+      const cleanFabricNames = (Array.isArray(fabricNames) ? fabricNames : [])
+        .map(n => sanitize(String(n), 100).trim())
+        .filter(Boolean);
+
+      const now = new Date();
+      const creditExpiry = new Date(now.getTime() + SWATCH_CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+      // Derive a fabric shop URL from the first fabric name (slug-ify for URL)
+      const primaryFabric = cleanFabricNames[0] || '';
+      const fabricSlug = primaryFabric.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const fabricShopUrl = fabricSlug
+        ? `${SITE_URL_BASE}/shop?fabric=${fabricSlug}`
+        : `${SITE_URL_BASE}/collections/all`;
+
+      const baseVars = {
+        firstName: cleanName,
+        email: cleanEmail,
+        fabricNames: cleanFabricNames,
+        creditAmount: '5',
+        creditExpiry: creditExpiry.toISOString(),
+      };
+
+      let queued = 0;
+      for (const step of SEQUENCES.swatch_followup.steps) {
+        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        const variables = { ...baseVars };
+
+        // Step 1 (CF-jm5t): fabric preference + shop link
+        if (step.step === 1) {
+          variables.fabricShopUrl = fabricShopUrl;
+        }
+
+        // Step 2 (CF-jm5t): consultation offer
+        if (step.step === 2) {
+          variables.consultationUrl = CONSULTATION_URL;
+        }
+
+        await wixData.insert('EmailQueue', {
+          templateId: step.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: cleanContactId,
+          variables,
+          sequenceType: 'swatch_followup',
+          sequenceStep: step.step,
+          status: 'pending',
+          scheduledFor,
+          sentAt: null,
+          attempt: 0,
+          lastError: '',
+          abVariant: null,
+          createdAt: now,
+        });
+        queued++;
+      }
+
+      return { success: true, queued };
+    } catch (err) {
+      logError('triggerSwatchFollowupSequence', err);
+      return { success: false, queued: 0 };
     }
   }
 );
@@ -640,6 +934,17 @@ export const triggerAbandonedCartRecovery = webMethod(
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
+        // CF-ji7j: structured cart items for step 1 template (name + price + image per item)
+        const cartItems = parsedItems.map(i => ({
+          name: sanitize(i.name || '', 200),
+          price: String(i.price ?? 0),
+          imageUrl: sanitize(i.imageUrl || '', 500),
+          quantity: i.quantity || 1,
+        }));
+
+        const cartTotalNum = Number(cart.cartTotal) || 0;
+        const qualifiesForFreeShipping = cartTotalNum >= CART_FREE_SHIPPING_THRESHOLD;
+
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
 
@@ -659,19 +964,40 @@ export const triggerAbandonedCartRecovery = webMethod(
             }
           }
 
+          const variables = {
+            buyerName: cart.buyerName || '',
+            cartTotal: `$${cartTotalNum.toFixed(2)}`,
+            itemSummary,
+            discountCode,
+            discountAvailable,
+            checkoutId: cart.checkoutId,
+            email: cartEmail,
+          };
+
+          // Step 1 (CF-ji7j): cart contents with structured item data for template images+prices
+          if (step.step === 1) {
+            variables.cartItems = cartItems;
+          }
+
+          // Step 2 (CF-ji7j): urgency + free shipping eligibility
+          if (step.step === 2) {
+            variables.stockWarning = true;
+            variables.qualifiesForFreeShipping = qualifiesForFreeShipping;
+            if (qualifiesForFreeShipping) {
+              variables.freeShippingNote = 'Your order qualifies for free shipping!';
+            }
+          }
+
+          // Step 3 (CF-ji7j): 10% coupon label matching createCartRecoveryCoupon (percentOffRate: 10)
+          if (step.step === 3) {
+            variables.couponPercent = '10';
+          }
+
           await queueEmail({
             templateId: step.templateId,
             recipientEmail: cartEmail,
             recipientContactId: '',
-            variables: {
-              buyerName: cart.buyerName || '',
-              cartTotal: String(cart.cartTotal || 0),
-              itemSummary,
-              discountCode,
-              discountAvailable,
-              checkoutId: cart.checkoutId,
-              email: cartEmail,
-            },
+            variables,
             sequenceType: 'cart_recovery',
             sequenceStep: step.step,
             scheduledFor,
@@ -973,12 +1299,12 @@ export const getEmailAutomationStats = webMethod(
 );
 
 /**
- * Record an email open or click event for tracking.
+ * Record an email open, click, or conversion event for tracking.
  *
  * @function recordEmailEvent
  * @param {Object} params
  * @param {string} params.emailQueueId - ID of the EmailQueue record
- * @param {string} params.eventType - 'open' or 'click'
+ * @param {string} params.eventType - 'open', 'click', or 'conversion'
  * @param {string} [params.linkUrl] - Clicked link URL (for click events)
  * @returns {Promise<{success: boolean}>}
  * @permission Anyone — tracking pixels/links fire without auth
@@ -990,7 +1316,8 @@ export const recordEmailEvent = webMethod(
       const { emailQueueId, eventType, linkUrl } = params;
 
       if (!emailQueueId || !eventType) return { success: false };
-      if (eventType !== 'open' && eventType !== 'click') return { success: false };
+      const VALID_EVENT_TYPES = new Set(['open', 'click', 'conversion']);
+      if (!VALID_EVENT_TYPES.has(eventType)) return { success: false };
 
       const cleanId = sanitize(emailQueueId, 50);
       const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
@@ -1044,12 +1371,17 @@ export const getEmailEvents = webMethod(
         events = events.filter(e => queueIds.has(e.emailQueueId));
       }
 
-      const opens = events.filter(e => e.eventType === 'open').length;
-      const clicks = events.filter(e => e.eventType === 'click').length;
+      let opens = 0, clicks = 0, conversions = 0;
+      for (const e of events) {
+        if (e.eventType === 'open') opens++;
+        else if (e.eventType === 'click') clicks++;
+        else if (e.eventType === 'conversion') conversions++;
+      }
 
       return {
         opens,
         clicks,
+        conversions,
         events: events.map(e => ({
           _id: e._id,
           emailQueueId: e.emailQueueId,
@@ -1060,7 +1392,7 @@ export const getEmailEvents = webMethod(
       };
     } catch (err) {
       console.error('Error fetching email events:', err);
-      return { opens: 0, clicks: 0, events: [] };
+      return { opens: 0, clicks: 0, conversions: 0, events: [] };
     }
   }
 );
@@ -1547,14 +1879,15 @@ export const getCampaignAnalytics = webMethod(
         .find();
       const events = eventsResult.items || [];
 
-      // Build event lookup: emailQueueId → { opens, clicks }
+      // Build event lookup: emailQueueId → { opens, clicks, conversions }
       const eventsByEmail = {};
       for (const evt of events) {
         if (!eventsByEmail[evt.emailQueueId]) {
-          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0 };
+          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0, conversions: 0 };
         }
         if (evt.eventType === 'open') eventsByEmail[evt.emailQueueId].opens++;
-        if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+        else if (evt.eventType === 'conversion') eventsByEmail[evt.emailQueueId].conversions++;
       }
 
       // 3. Build per-campaign stats
@@ -1562,7 +1895,7 @@ export const getCampaignAnalytics = webMethod(
       for (const email of emails) {
         const seq = email.sequenceType || 'unknown';
         if (!campaigns[seq]) {
-          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0 };
+          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0, conversions: 0 };
         }
         campaigns[seq][email.status] = (campaigns[seq][email.status] || 0) + 1;
 
@@ -1570,6 +1903,7 @@ export const getCampaignAnalytics = webMethod(
         if (emailEvents) {
           campaigns[seq].opens += emailEvents.opens;
           campaigns[seq].clicks += emailEvents.clicks;
+          campaigns[seq].conversions += emailEvents.conversions;
         }
       }
 
@@ -1578,6 +1912,7 @@ export const getCampaignAnalytics = webMethod(
         const c = campaigns[seq];
         c.openRate = c.sent > 0 ? c.opens / c.sent : 0;
         c.clickRate = c.sent > 0 ? c.clicks / c.sent : 0;
+        c.conversionRate = c.sent > 0 ? c.conversions / c.sent : 0;
       }
 
       // 4. Sequence completion rates
@@ -1664,6 +1999,93 @@ export const getCampaignAnalytics = webMethod(
     }
   }
 );
+
+// ── CF-8onx: Tier milestone notification emails ───────────────────────
+
+/**
+ * Tier milestone definitions — threshold is the point value that triggers the notification.
+ * Approach milestones fire 100 pts before the tier; achieved milestones fire on crossing.
+ * milestoneKey is used as a dedup key: `{memberId}_{milestoneKey}`.
+ */
+export const TIER_MILESTONES = [
+  { threshold: 400,  milestoneKey: 'mountain_guide_approach', templateId: 'tier_mountain_guide_approach', nextTier: 'Mountain Guide', pointsToNext: 100 },
+  { threshold: 500,  milestoneKey: 'mountain_guide_achieved', templateId: 'tier_mountain_guide_achieved', nextTier: 'Summit Master',  pointsToNext: 1500 },
+  { threshold: 1900, milestoneKey: 'summit_master_approach',  templateId: 'tier_summit_master_approach',  nextTier: 'Summit Master',  pointsToNext: 100 },
+  { threshold: 2000, milestoneKey: 'summit_master_achieved',  templateId: 'tier_summit_master_achieved',  nextTier: 'Blue Ridge Legend', pointsToNext: 3000 },
+];
+
+const TIER_MILESTONE_COLLECTION = 'TierMilestoneNotifications';
+
+/**
+ * Check whether a point award just crossed any tier milestone threshold, and if so,
+ * queue the appropriate notification email. Idempotent — uses TierMilestoneNotifications
+ * for dedup so each member only receives each milestone email once.
+ *
+ * @param {string} memberId
+ * @param {string} email
+ * @param {string} firstName
+ * @param {number} newTotal - Points total after the award
+ * @param {number} oldTotal - Points total before the award
+ * @returns {Promise<void>}
+ */
+export async function checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal) {
+  const cleanMemberId = sanitize(String(memberId || ''), 100).trim();
+  const cleanEmail = (email || '').toLowerCase().trim();
+  if (!cleanMemberId || !cleanEmail) return;
+
+  const cleanName = sanitize(firstName || '', 100).trim();
+  const now = new Date();
+
+  for (const milestone of TIER_MILESTONES) {
+    // Threshold crossed = oldTotal was below threshold AND newTotal is at or above it
+    if (oldTotal < milestone.threshold && newTotal >= milestone.threshold) {
+      const dedupId = `${cleanMemberId}_${milestone.milestoneKey}`;
+
+      // Dedup check — skip if already sent
+      let alreadySent = false;
+      try {
+        const existing = await wixData.get(TIER_MILESTONE_COLLECTION, dedupId);
+        if (existing) alreadySent = true;
+      } catch (_) { /* record not found = not sent yet */ }
+
+      if (alreadySent) continue;
+
+      // Queue email
+      try {
+        await wixData.insert('EmailQueue', {
+          templateId: milestone.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: '',
+          variables: {
+            firstName: cleanName,
+            currentPoints: newTotal,
+            pointsToNext: milestone.pointsToNext,
+            nextTier: milestone.nextTier,
+          },
+          sequenceType: 'tier_milestone',
+          sequenceStep: TIER_MILESTONES.indexOf(milestone) + 1,
+          status: 'pending',
+          scheduledFor: now,
+          sentAt: null,
+          attempt: 0,
+          lastError: '',
+          abVariant: null,
+          createdAt: now,
+        });
+
+        // Record dedup
+        await wixData.insert(TIER_MILESTONE_COLLECTION, {
+          _id: dedupId,
+          memberId: cleanMemberId,
+          milestoneKey: milestone.milestoneKey,
+          sentAt: now,
+        });
+      } catch (err) {
+        logError(`checkAndTriggerTierMilestone:${milestone.milestoneKey}`, err);
+      }
+    }
+  }
+}
 
 // Export sequence definitions for testing
 export const _SEQUENCES = SEQUENCES;

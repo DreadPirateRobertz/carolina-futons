@@ -28,7 +28,7 @@ vi.mock('wix-members-backend', () => ({
 
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
-    createCoupon: vi.fn().mockResolvedValue({ code: 'TEST-ABCDEF', _id: 'coupon-id-1' }),
+    createCoupon: vi.fn().mockResolvedValue({ code: 'TEST-ABCDEF' }),
     queryV2: vi.fn(() => ({
       eq: () => ({ limit: () => ({ find: async () => ({ items: [] }) }) }),
     })),
@@ -64,11 +64,10 @@ function seedCoupons(email, records) {
   __seed('MemberCoupons', records.map((r, i) => ({
     _id: `coupon-${i}`,
     memberEmail: email,
-    code: r.code,
-    displayName: r.displayName || r.type,
-    percentOffRate: r.percentOffRate || 0,
-    moneyOffAmount: r.moneyOffAmount || 0,
-    expirationTime: r.expirationTime || r.expiresAt || '2099-01-01T00:00:00.000Z',
+    couponCode: r.code,
+    couponType: r.type,
+    discount: r.discount,
+    expiresAt: r.expiresAt || '2099-01-01T00:00:00.000Z',
     active: true,
     ...r,
   })));
@@ -86,7 +85,7 @@ beforeEach(async () => {
 
   const mktMod = await import('wix-marketing-backend');
   mockCreateCoupon = mktMod.coupons.createCoupon;
-  mockCreateCoupon.mockResolvedValue({ code: 'TEST-ABCDEF', _id: 'coupon-id-1' });
+  mockCreateCoupon.mockResolvedValue({ code: 'TEST-ABCDEF' });
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -117,8 +116,8 @@ describe('getActiveCoupons — IDOR gate', () => {
     mockGetMember.mockResolvedValue(makeMember('alice@example.com'));
     // Seed both members' coupons together — DB query must filter by memberEmail
     __seed('MemberCoupons', [
-      { _id: 'coupon-alice', memberEmail: 'alice@example.com', code: 'WELCOME-ALICE', displayName: 'Welcome 10% Off', percentOffRate: 10, moneyOffAmount: 0, active: true, expirationTime: '2099-01-01T00:00:00.000Z' },
-      { _id: 'coupon-bob', memberEmail: 'bob@example.com', code: 'WELCOME-BOB', displayName: 'Welcome 10% Off', percentOffRate: 10, moneyOffAmount: 0, active: true, expirationTime: '2099-01-01T00:00:00.000Z' },
+      { _id: 'coupon-alice', memberEmail: 'alice@example.com', couponCode: 'WELCOME-ALICE', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      { _id: 'coupon-bob', memberEmail: 'bob@example.com', couponCode: 'WELCOME-BOB', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
     ]);
 
     const result = await getActiveCoupons();
@@ -128,16 +127,16 @@ describe('getActiveCoupons — IDOR gate', () => {
     expect(codes).not.toContain('WELCOME-BOB');
   });
 
-  it('maps CMS fields correctly (code → code, displayName → name, percentOffRate → discount)', async () => {
+  it('maps CMS fields correctly (couponCode → code, couponType → name)', async () => {
     mockGetMember.mockResolvedValue(makeMember('alice@example.com'));
     seedCoupons('alice@example.com', [
-      { code: 'BDAY-XYZ', displayName: 'Birthday 15% Off', percentOffRate: 15, expirationTime: '2099-06-01T00:00:00.000Z' },
+      { code: 'BDAY-XYZ', type: 'Birthday', discount: '15%', expiresAt: '2099-06-01T00:00:00.000Z' },
     ]);
 
     const result = await getActiveCoupons();
     expect(result[0].code).toBe('BDAY-XYZ');
-    expect(result[0].name).toBe('Birthday 15% Off');
-    expect(result[0].discount).toBe('15% off');
+    expect(result[0].name).toBe('Birthday');
+    expect(result[0].discount).toBe('15%');
     expect(result[0].expirationTime).toBe('2099-06-01T00:00:00.000Z');
     expect(result[0].active).toBe(true);
   });
@@ -164,9 +163,9 @@ describe('createWelcomeCoupon — writes MemberCoupons record', () => {
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('welcome@example.com');
-    expect(cms[0].item.code).toBe('TEST-ABCDEF');
-    expect(cms[0].item.displayName).toBe('Welcome 10% Off');
-    expect(cms[0].item.percentOffRate).toBe(10);
+    expect(cms[0].item.couponCode).toBe('TEST-ABCDEF');
+    expect(cms[0].item.couponType).toBe('Welcome');
+    expect(cms[0].item.discount).toBe('10%');
     expect(cms[0].item.active).toBe(true);
   });
 });
@@ -181,8 +180,8 @@ describe('createBirthdayCoupon — writes MemberCoupons record', () => {
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('bday@example.com');
-    expect(cms[0].item.displayName).toBe('Happy Birthday Alice! 15% Off');
-    expect(cms[0].item.percentOffRate).toBe(15);
+    expect(cms[0].item.couponType).toBe('Birthday');
+    expect(cms[0].item.discount).toBe('15%');
   });
 });
 
@@ -195,8 +194,8 @@ describe('createTierUpgradeCoupon — writes MemberCoupons record', () => {
 
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
-    expect(cms[0].item.displayName).toBe('Silver Tier Welcome - 10% Off');
-    expect(cms[0].item.percentOffRate).toBe(10);
+    expect(cms[0].item.couponType).toBe('Silver Tier');
+    expect(cms[0].item.discount).toBe('10%');
   });
 
   it('inserts a MemberCoupons record for Gold tier with 20% discount', async () => {
@@ -207,8 +206,8 @@ describe('createTierUpgradeCoupon — writes MemberCoupons record', () => {
 
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
-    expect(cms[0].item.displayName).toBe('Gold Tier Welcome - 20% Off');
-    expect(cms[0].item.percentOffRate).toBe(20);
+    expect(cms[0].item.couponType).toBe('Gold Tier');
+    expect(cms[0].item.discount).toBe('20%');
   });
 });
 
@@ -222,8 +221,8 @@ describe('generateRecoveryCoupon — writes MemberCoupons record', () => {
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('recover@example.com');
-    expect(cms[0].item.displayName).toBe('Cart Recovery 10% Off');
-    expect(cms[0].item.percentOffRate).toBe(10);
+    expect(cms[0].item.couponType).toBe('Cart Recovery');
+    expect(cms[0].item.discount).toBe('10%');
   });
 });
 
@@ -237,12 +236,12 @@ describe('createCartRecoveryCoupon — writes MemberCoupons record', () => {
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('cartrec@example.com');
-    expect(cms[0].item.displayName).toBe('Cart Recovery 10% Off');
+    expect(cms[0].item.couponType).toBe('Cart Recovery');
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// MemberCoupons insert failure is non-blocking
+// _insertMemberCouponRecord failure is non-blocking
 // ─────────────────────────────────────────────────────────────────────
 
 describe('MemberCoupons insert failure is non-blocking', () => {
@@ -251,16 +250,18 @@ describe('MemberCoupons insert failure is non-blocking', () => {
       if (col === 'MemberCoupons') throw new Error('DB down');
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await createWelcomeCoupon('fail@example.com');
 
     expect(result.success).toBe(true);
     expect(result.code).toBe('TEST-ABCDEF');
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('MemberCoupons insert failed'),
+      expect.anything(),
+      expect.stringContaining(':'),
       expect.stringContaining('DB down'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
 
@@ -330,7 +331,7 @@ describe('createTierUpgradeCoupon — edge cases', () => {
     const result = await createTierUpgradeCoupon('test@example.com', 'Platinum');
     expect(result.success).toBe(true);
     const cms = inserted.filter(i => i.col === 'MemberCoupons');
-    expect(cms[0].item.percentOffRate).toBe(10);
+    expect(cms[0].item.discount).toBe('10%');
   });
 });
 
@@ -347,12 +348,11 @@ describe('getActiveCoupons — email fallback', () => {
     __seed('MemberCoupons', [{
       _id: 'c-contact',
       memberEmail: 'contact@example.com',
-      code: 'BDAY-CONTACT',
-      displayName: 'Birthday 15% Off',
-      percentOffRate: 15,
-      moneyOffAmount: 0,
+      couponCode: 'BDAY-CONTACT',
+      couponType: 'Birthday',
+      discount: '15%',
       active: true,
-      expirationTime: '2099-01-01T00:00:00.000Z',
+      expiresAt: '2099-01-01T00:00:00.000Z',
     }]);
 
     const result = await getActiveCoupons();

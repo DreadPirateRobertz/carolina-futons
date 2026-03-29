@@ -26,6 +26,11 @@ export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
  * Used in LocalBusiness JSON-LD `geo` to signal proximity to the city served.
  * Falls back to STORE_GEO for any slug not listed here.
  */
+/**
+ * Approximate city-center geo coordinates for each /near/[city] page.
+ * Used in LocalBusiness JSON-LD `geo` to signal proximity to the city served.
+ * Falls back to STORE_GEO for any slug not listed here.
+ */
 export const CITY_GEO = {
   'hendersonville-nc': STORE_GEO, // home city — same as store coordinates
   'asheville-nc':      { latitude: 35.5951, longitude: -82.5515 },
@@ -37,6 +42,23 @@ export const CITY_GEO = {
 // Static Google Maps directions URL — store is always the destination.
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
+
+/**
+ * Catalog of specific featured products per category for city landing pages.
+ * productId values correspond to Wix Stores product _id fields.
+ */
+export const FEATURED_PRODUCT_CATALOG = {
+  'futon-frames':  { productId: 'cf-seo-frame-001' },
+  'mattresses':    { productId: 'cf-seo-mattress-001' },
+  'covers':        { productId: 'cf-seo-cover-001' },
+  'accessories':   { productId: 'cf-seo-accessory-001' },
+};
+
+/** Categories shown on the home city (Hendersonville) landing page — 4 categories. */
+export const HOME_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses', 'covers', 'accessories'];
+
+/** Categories shown on nearby city landing pages — 2 categories. */
+export const NEARBY_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses'];
 
 export const LOCAL_PAGES = {
   'hendersonville-nc': {
@@ -58,7 +80,7 @@ export const LOCAL_PAGES = {
       { category: 'covers', label: 'Futon Covers', reason: 'Hundreds of fabrics and colors — custom orders welcome' },
     ],
     faqs: [
-      { question: 'Where is Carolina Futons located in Hendersonville?', answer: 'Our showroom is on Main Street in downtown Hendersonville, NC 28792. Open Wednesday–Friday 10am–5pm and Saturday 10am–4pm.' },
+      { question: 'Where is Carolina Futons located in Hendersonville?', answer: 'Our showroom is on Main Street in downtown Hendersonville, NC 28792. Open Wednesday–Saturday 10am–5pm (in store or by appointment).' },
       { question: 'Do you offer delivery to Hendersonville addresses?', answer: 'Yes — we deliver within the Hendersonville area. Delivery fees vary by distance and item size. Call us to schedule.' },
       { question: 'Can I try futon mattresses before buying?', answer: 'Absolutely. All mattress grades are on the showroom floor. We encourage you to come in and test comfort levels in person.' },
       { question: 'Do you carry murphy beds and wall beds?', answer: 'Yes, we carry a selection of murphy beds alongside our futon frames. Visit the showroom or browse online for current inventory.' },
@@ -87,7 +109,7 @@ export const LOCAL_PAGES = {
       { question: 'How far is Carolina Futons from Asheville?', answer: 'We\'re about 20 miles south of Asheville on I-26 in Hendersonville, NC — roughly a 25-minute drive.' },
       { question: 'Do you deliver futons to Asheville?', answer: 'Yes, we deliver to Asheville. Delivery fees apply based on distance and item size. Contact us to schedule.' },
       { question: 'Do you have bundle deals for furnishing rental properties?', answer: 'Yes — we offer bundle deals combining frames, mattresses, and covers at a discount. Great for short-term rental setups.' },
-      { question: 'What are your store hours?', answer: 'We\'re open Wednesday–Friday 10am–5pm and Saturday 10am–4pm. Closed Sunday–Tuesday.' },
+      { question: 'What are your store hours?', answer: 'We\'re open Wednesday–Saturday 10am–5pm (in store or by appointment). Closed Sunday–Tuesday.' },
     ],
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3293!2d-82.554!3d35.595!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zAsheville+NC!5e0!3m2!1sen!2sus!4v1',
     directions: 'From Asheville, take I-26 South to Hendersonville — about 20 miles.',

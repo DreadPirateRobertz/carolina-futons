@@ -51,16 +51,20 @@ export const createWelcomeCoupon = webMethod(
         await wixData.insert('MemberCoupons', {
           memberEmail: cleanEmail,
           code: coupon.code,
+          couponCode: coupon.code,
           couponId: coupon._id,
           displayName: 'Welcome 10% Off',
+          couponType: 'Welcome',
+          discount: '10%',
           percentOffRate: 10,
           moneyOffAmount: 0,
           minimumSubtotal: 0,
           expirationTime,
+          expiresAt: expirationTime,
           active: true,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] MemberCoupons insert failed for welcome coupon:', insertErr.message);
+        console.error('[couponsService] MemberCoupons insert failed for welcome coupon:', cleanEmail, ':', insertErr.message);
       }
 
       return {
@@ -109,11 +113,14 @@ export const getActiveCoupons = webMethod(
 
       return (result.items || []).map(c => ({
         _id: c._id,
-        code: c.code,
-        name: c.displayName,
-        discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
+        code: c.couponCode || c.code,
+        name: c.couponType || c.displayName,
+        discount: c.discount !== undefined ? c.discount
+          : c.percentOffRate ? `${c.percentOffRate}%`
+          : c.moneyOffAmount ? `$${c.moneyOffAmount} off`
+          : '0%',
         minimumSubtotal: c.minimumSubtotal || 0,
-        expirationTime: c.expirationTime,
+        expirationTime: c.expiresAt || c.expirationTime,
         active: c.active,
       }));
     } catch (err) {
@@ -163,12 +170,16 @@ export const createBirthdayCoupon = webMethod(
         await wixData.insert('MemberCoupons', {
           memberEmail: cleanEmail,
           code: coupon.code,
+          couponCode: coupon.code,
           couponId: coupon._id,
           displayName: `Happy Birthday ${name}! 15% Off`,
+          couponType: 'Birthday',
+          discount: '15%',
           percentOffRate: 15,
           moneyOffAmount: 0,
           minimumSubtotal: 0,
           expirationTime,
+          expiresAt: expirationTime,
           active: true,
         });
       } catch (insertErr) {
@@ -225,12 +236,16 @@ export const createTierUpgradeCoupon = webMethod(
         await wixData.insert('MemberCoupons', {
           memberEmail: cleanEmail,
           code: coupon.code,
+          couponCode: coupon.code,
           couponId: coupon._id,
           displayName: `${tier} Tier Welcome - ${discount}% Off`,
+          couponType: `${tier} Tier`,
+          discount: `${discount}%`,
           percentOffRate: discount,
           moneyOffAmount: 0,
           minimumSubtotal: 0,
           expirationTime,
+          expiresAt: expirationTime,
           active: true,
         });
       } catch (insertErr) {
@@ -328,12 +343,16 @@ export const generateRecoveryCoupon = webMethod(
         await wixData.insert('MemberCoupons', {
           memberEmail: cleanEmail,
           code: coupon.code,
+          couponCode: coupon.code,
           couponId: coupon._id,
           displayName: 'Cart Recovery 10% Off',
+          couponType: 'Cart Recovery',
+          discount: '10%',
           percentOffRate: 10,
           moneyOffAmount: 0,
           minimumSubtotal: 0,
           expirationTime: expiresAt,
+          expiresAt,
           active: true,
         });
       } catch (insertErr) {
@@ -392,12 +411,16 @@ export const createCartRecoveryCoupon = webMethod(
         await wixData.insert('MemberCoupons', {
           memberEmail: cleanEmail,
           code: coupon.code,
+          couponCode: coupon.code,
           couponId: coupon._id,
           displayName: 'Cart Recovery 10% Off',
+          couponType: 'Cart Recovery',
+          discount: '10%',
           percentOffRate: 10,
           moneyOffAmount: 0,
           minimumSubtotal: 0,
           expirationTime,
+          expiresAt: expirationTime,
           active: true,
         });
       } catch (insertErr) {

@@ -3,8 +3,8 @@
  * Tests for _processReferralOnOrderCreated (cf-bu2).
  *
  * Backend-callable function invoked from wixEcom_onOrderCreated when a member
- * places an order. Looks up any signed_up referral for the member and issues
- * credits — closing the loop that previously only worked on mobile.
+ * places an order. Looks up any signed_up (or processing) referral for the
+ * member and issues credits — closing the loop that previously only worked on mobile.
  *
  * Not a webMethod — no session context available in event handlers.
  */
@@ -24,6 +24,8 @@ vi.mock('backend/gamificationEventReceiver.web', () => ({
 }));
 
 const NOW = new Date('2026-03-24T12:00:00Z').getTime();
+const REFERRER_CREDIT = 50;
+const REFEREE_CREDIT = 25;
 
 beforeEach(() => {
   __reset();
@@ -47,12 +49,11 @@ describe('_processReferralOnOrderCreated — input validation', () => {
 
 describe('_processReferralOnOrderCreated — no referral', () => {
   it('returns { skipped: true } when member has no signed_up referral', async () => {
-    // No Referrals records for this member
     const result = await _processReferralOnOrderCreated('mem-1', 'ORD-001');
     expect(result.skipped).toBe(true);
   });
 
-  it('skips referrals with status other than signed_up', async () => {
+  it('skips referrals with status credited (already done)', async () => {
     __seed('Referrals', [
       { _id: 'ref-1', refereeMemberId: 'mem-1', referrerMemberId: 'mem-r', status: 'credited', referralCode: 'ABC' },
     ]);
@@ -82,20 +83,28 @@ describe('_processReferralOnOrderCreated — credit issuance', () => {
     expect(result.success).toBe(true);
   });
 
-  it('inserts referrer credit into ReferralCredits', async () => {
+  it('inserts referrer credit with exact REFERRER_CREDIT_AMOUNT ($50)', async () => {
     await _processReferralOnOrderCreated('mem-1', 'ORD-001');
     const credits = __getInserted('ReferralCredits');
     const referrerCredit = credits.find(c => c.source === 'referrer_bonus');
     expect(referrerCredit).toBeDefined();
     expect(referrerCredit.memberId).toBe('mem-r');
+    expect(referrerCredit.amount).toBe(REFERRER_CREDIT);
   });
 
-  it('inserts referee credit into ReferralCredits', async () => {
+  it('inserts referee credit with exact REFEREE_CREDIT_AMOUNT ($25)', async () => {
     await _processReferralOnOrderCreated('mem-1', 'ORD-001');
     const credits = __getInserted('ReferralCredits');
     const refereeCredit = credits.find(c => c.source === 'referee_bonus');
     expect(refereeCredit).toBeDefined();
     expect(refereeCredit.memberId).toBe('mem-1');
+    expect(refereeCredit.amount).toBe(REFEREE_CREDIT);
+  });
+
+  it('returns referrerCredit = 50 and refereeCredit = 25 in result', async () => {
+    const result = await _processReferralOnOrderCreated('mem-1', 'ORD-001');
+    expect(result.referrerCredit).toBe(REFERRER_CREDIT);
+    expect(result.refereeCredit).toBe(REFEREE_CREDIT);
   });
 
   it('updates referral status to credited', async () => {
@@ -104,18 +113,31 @@ describe('_processReferralOnOrderCreated — credit issuance', () => {
     expect(updated[updated.length - 1].status).toBe('credited');
   });
 
-  it('sets orderNumber on the referral record', async () => {
+  it('sets orderNumber on the intermediate processing update', async () => {
     await _processReferralOnOrderCreated('mem-1', 'ORD-001');
     const updated = __getUpdated('Referrals');
-    expect(updated[updated.length - 1].orderNumber).toBe('ORD-001');
+    // First update sets status='processing' with orderNumber
+    expect(updated[0].status).toBe('processing');
+    expect(updated[0].orderNumber).toBe('ORD-001');
   });
+});
 
-  it('returns referrerCredit and refereeCredit amounts', async () => {
+// ── Recovery from processing state ───────────────────────────────────────────
+
+describe('_processReferralOnOrderCreated — processing state recovery', () => {
+  it('processes a referral already at status=processing (orphan recovery)', async () => {
+    __seed('Referrals', [
+      {
+        _id: 'ref-1',
+        refereeMemberId: 'mem-1',
+        referrerMemberId: 'mem-r',
+        referralCode: 'ABCD1234',
+        status: 'processing', // left in this state by a previous failed execution
+        orderNumber: 'ORD-001',
+      },
+    ]);
     const result = await _processReferralOnOrderCreated('mem-1', 'ORD-001');
-    expect(typeof result.referrerCredit).toBe('number');
-    expect(typeof result.refereeCredit).toBe('number');
-    expect(result.referrerCredit).toBeGreaterThan(0);
-    expect(result.refereeCredit).toBeGreaterThan(0);
+    expect(result.success).toBe(true);
   });
 });
 
@@ -127,13 +149,26 @@ describe('_processReferralOnOrderCreated — idempotency', () => {
       { _id: 'ref-1', refereeMemberId: 'mem-1', referrerMemberId: 'mem-r', referralCode: 'ABCD1234', status: 'signed_up' },
     ]);
     __seed('ReferralCredits', [
-      { _id: 'rc-1', referralId: 'ref-1', memberId: 'mem-r', source: 'referrer_bonus', amount: 50, status: 'available' },
+      { _id: 'rc-1', referralId: 'ref-1', memberId: 'mem-r', source: 'referrer_bonus', amount: REFERRER_CREDIT, status: 'available' },
     ]);
     await _processReferralOnOrderCreated('mem-1', 'ORD-001');
     const credits = __getInserted('ReferralCredits');
     const referrerCredits = credits.filter(c => c.source === 'referrer_bonus' && c.memberId === 'mem-r');
-    // Only the already-seeded one — no new insert added
+    // Only the already-seeded one — no new insert
     expect(referrerCredits).toHaveLength(1);
+  });
+
+  it('does not double-issue referee credit when credit already exists', async () => {
+    __seed('Referrals', [
+      { _id: 'ref-1', refereeMemberId: 'mem-1', referrerMemberId: 'mem-r', referralCode: 'ABCD1234', status: 'signed_up' },
+    ]);
+    __seed('ReferralCredits', [
+      { _id: 'rc-2', referralId: 'ref-1', memberId: 'mem-1', source: 'referee_bonus', amount: REFEREE_CREDIT, status: 'available' },
+    ]);
+    await _processReferralOnOrderCreated('mem-1', 'ORD-001');
+    const credits = __getInserted('ReferralCredits');
+    const refereeCredits = credits.filter(c => c.source === 'referee_bonus' && c.memberId === 'mem-1');
+    expect(refereeCredits).toHaveLength(1);
   });
 });
 

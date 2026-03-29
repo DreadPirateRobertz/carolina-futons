@@ -14,6 +14,12 @@ export function __reset() {
   currentMember.getRoles.mockImplementation(() => Promise.resolve(_roles));
 }
 
+// Alias — resets member to null (no authenticated session)
+export function __resetMember() {
+  _currentMember = null;
+  currentMember.getMember.mockImplementation(() => Promise.resolve(null));
+}
+
 // Set the mock member for testing authenticated endpoints
 export function __setMember(member) {
   _currentMember = member;

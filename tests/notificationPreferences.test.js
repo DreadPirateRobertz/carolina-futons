@@ -528,6 +528,34 @@ describe('initNotificationPreferences — getNotificationPreferences error', () 
     getNotificationPreferences.mockRejectedValue(new Error('network error'));
     await expect(initNotificationPreferences($w, MEMBER_ID)).resolves.not.toThrow();
   });
+
+  it('shows notifSaveError when load fails (success: false)', async () => {
+    const { $w } = standardSetup();
+    getNotificationPreferences.mockResolvedValue({ success: false, error: 'DB error' });
+    await initNotificationPreferences($w, MEMBER_ID);
+    expect($w('#notifSaveError').show).toHaveBeenCalled();
+  });
+
+  it('disables notifSaveBtn when load fails (success: false)', async () => {
+    const { $w } = standardSetup();
+    getNotificationPreferences.mockResolvedValue({ success: false, error: 'DB error' });
+    await initNotificationPreferences($w, MEMBER_ID);
+    expect($w('#notifSaveBtn').disable).toHaveBeenCalled();
+  });
+
+  it('shows notifSaveError when load throws', async () => {
+    const { $w } = standardSetup();
+    getNotificationPreferences.mockRejectedValue(new Error('network error'));
+    await initNotificationPreferences($w, MEMBER_ID);
+    expect($w('#notifSaveError').show).toHaveBeenCalled();
+  });
+
+  it('disables notifSaveBtn when load throws', async () => {
+    const { $w } = standardSetup();
+    getNotificationPreferences.mockRejectedValue(new Error('network error'));
+    await initNotificationPreferences($w, MEMBER_ID);
+    expect($w('#notifSaveBtn').disable).toHaveBeenCalled();
+  });
 });
 
 // ── element nicknames ─────────────────────────────────────────────────

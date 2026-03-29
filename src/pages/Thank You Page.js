@@ -21,6 +21,9 @@ import { initPostPurchaseReveal } from 'public/PostPurchaseReveal.js';
 import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 import { getEnrollmentPrompt, enrollMember, calculatePointsForOrder } from 'backend/loyaltyMarketing.web';
+import { getSoftPromptConfig } from 'backend/guestCheckout.web';
+import { getWhiteGloveSlots } from 'backend/whiteGloveScheduling.web';
+import wixLocationFrontend from 'wix-location-frontend';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -49,6 +52,7 @@ $w.onReady(async function () {
     { name: 'orderSummary', init: initOrderSummary },
     { name: 'brendaMessage', init: initBrendaMessage },
     { name: 'deliveryTimeline', init: initDeliveryTimeline },
+    { name: 'freightTracking', init: () => initFreightTracking(orderCtx) },
     { name: 'socialSharing', init: () => initSocialSharing(orderCtx) },
     { name: 'newsletterSignup', init: initNewsletterSignup },
     { name: 'referralSection', init: initReferralSection },
@@ -59,6 +63,8 @@ $w.onReady(async function () {
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
     { name: 'loyaltyEnrollment', init: () => initLoyaltyEnrollment(orderCtx) },
+    { name: 'guestAccountPrompt', init: () => initGuestAccountPrompt(orderCtx) }, // CF-2zr3
+    { name: 'whiteGloveScheduling', init: () => initWhiteGlovePrompt(orderCtx) }, // CF-y7lp
     { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
       orderTotal: orderCtx?.total || 0,
       getLoyaltyAccount: getMyLoyaltyAccount,
@@ -224,6 +230,56 @@ function initDeliveryTimeline() {
 
     timeline.expand();
   } catch (e) {}
+}
+
+// ── Freight Tracking ───────────────────────────────────────────────
+// Shown when the order contains an LTL freight item (murphy beds, heavy frames).
+// At Thank You time the order has just been placed — no tracking number yet.
+// Shows a static freight scheduling message; tracking link appears via email later.
+
+/**
+ * If the order was shipped via LTL freight, show a freight-specific section
+ * explaining the delivery scheduling process and that tracking will arrive by email.
+ *
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+function initFreightTracking(orderCtx) {
+  try {
+    const section = $w('#freightTrackingSection');
+    if (!section) return;
+
+    // Detect freight from selected shipping option code/title
+    const shippingOption = orderCtx?.selectedShippingOption || orderCtx?.shippingOption || {};
+    const code = shippingOption.code || shippingOption.id || '';
+    const title = shippingOption.title || shippingOption.label || shippingOption.name || '';
+
+    const isFreight = code.includes('ltl') || code.includes('wwex') || code.includes('freight') ||
+                      title.toLowerCase().includes('ltl') || title.toLowerCase().includes('freight') ||
+                      title.toLowerCase().includes('wwex');
+
+    if (!isFreight) return; // parcel order — hide section, no-op
+
+    try {
+      $w('#freightTrackingTitle').text = '🚛 Freight Delivery Information';
+    } catch (e) {}
+
+    try {
+      $w('#freightTrackingMessage').text =
+        'Your order contains large items that ship via LTL freight. ' +
+        'A freight carrier will contact you to schedule a delivery appointment. ' +
+        'You\'ll receive a separate email with your PRO tracking number once your shipment is picked up.';
+    } catch (e) {}
+
+    try {
+      $w('#freightScheduleNote').text =
+        'Freight deliveries typically arrive within 5–10 business days. ' +
+        'Please ensure someone 18+ is home to accept the delivery.';
+    } catch (e) {}
+
+    try { section.expand(); } catch (e) {}
+  } catch (e) {
+    // Freight section is optional
+  }
 }
 
 // ── Social Sharing ─────────────────────────────────────────────────
@@ -734,6 +790,7 @@ async function initLoyaltyEnrollment(orderCtx) {
     try { $w('#loyaltyEnrollTitle').text = 'Join Carolina Futons Rewards'; } catch (e) {}
     try { $w('#loyaltyEnrollPoints').text = `You just earned ${earnedPoints} points!`; } catch (e) {}
     try { $w('#loyaltyEnrollDescription').text = 'Earn points on every purchase. Unlock discounts, free shipping, and exclusive perks.'; } catch (e) {}
+    try { $w('#loyaltyBirthdayLabel').text = 'Birthday (optional) — +50 bonus points'; } catch (e) {}
     try { $w('#loyaltyEnrollSection').expand(); } catch (e) {}
 
     try {
@@ -751,8 +808,7 @@ async function initLoyaltyEnrollment(orderCtx) {
           try { $w('#loyaltyJoinButton').collapse(); } catch (e) {}
           try { $w('#loyaltySkipButton').collapse(); } catch (e) {}
           try { $w('#loyaltyBirthdayInput').collapse(); } catch (e) {}
-          trackEvent('loyalty_enroll', { source: 'thank_you', points: result.welcomePoints });
-          fireCustomEvent('loyalty_enrolled', { source: 'thank_you_page' });
+          fireCustomEvent('loyalty_enrolled', { source: 'thank_you_page', points: result.welcomePoints });
           announce(`Enrolled in rewards! ${result.welcomePoints} points added to your account.`);
         } else {
           try { $w('#loyaltyEnrollTitle').text = result.error || 'Enrollment failed. Try again later.'; } catch (e) {}
@@ -764,12 +820,113 @@ async function initLoyaltyEnrollment(orderCtx) {
     try {
       $w('#loyaltySkipButton').onClick(() => {
         try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
-        trackEvent('loyalty_skip', { source: 'thank_you' });
+        fireCustomEvent('loyalty_skip', { source: 'thank_you' });
       });
     } catch (e) {}
   } catch (err) {
     console.error('[ThankYou] Loyalty enrollment error:', err);
     try { $w('#loyaltyEnrollSection').collapse(); } catch (e) {}
+  }
+}
+
+// ── Guest Account Creation Prompt (CF-2zr3) ─────────────────────────
+// Post-purchase soft prompt for anonymous buyers: 'Save your order history
+// — create a free account'. Not shown to existing members.
+
+async function initGuestAccountPrompt(orderCtx) {
+  try {
+    // Only show to anonymous buyers (no memberId on the order).
+    // contactId is set for ALL visitors (guests too), so use memberId only.
+    const memberId = orderCtx?.memberId || '';
+    if (memberId) {
+      try { $w('#guestAccountSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const config = await getSoftPromptConfig();
+
+    try { $w('#guestAccountTitle').text = config.title; } catch (e) {}
+    try { $w('#guestAccountDescription').text = config.description; } catch (e) {}
+    try { $w('#guestCreateAccountBtn').label = config.ctaLabel; } catch (e) {}
+    try { $w('#guestSkipAccountBtn').label = config.skipLabel; } catch (e) {}
+    try { $w('#guestAccountSection').expand(); } catch (e) {}
+
+    try {
+      $w('#guestCreateAccountBtn').onClick(() => {
+        import('wix-members-frontend').then(({ authentication }) => {
+          authentication.register({
+            email: orderCtx?.email || '',
+            // pre-fill name if available from order
+          }).catch(() => {});
+        });
+        fireCustomEvent('guest_create_account_click', { source: 'thank_you_page' });
+      });
+    } catch (e) {}
+
+    try {
+      $w('#guestSkipAccountBtn').onClick(() => {
+        try { $w('#guestAccountSection').collapse(); } catch (e) {}
+        fireCustomEvent('guest_skip_account', { source: 'thank_you_page' });
+      });
+    } catch (e) {}
+  } catch (err) {
+    console.error('[ThankYou] Guest account prompt error:', err?.message);
+    try { $w('#guestAccountSection').collapse(); } catch (e) {}
+  }
+}
+
+// ── White-Glove Scheduling Prompt (CF-y7lp) ──────────────────────────
+
+/**
+ * If the order contains a white-glove shipping option, show a scheduling prompt
+ * that links to /white-glove-delivery?orderId=<id>.
+ * Only shown once — collapses itself if slots are unavailable.
+ *
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+export async function initWhiteGlovePrompt(orderCtx) {
+  try {
+    const section = $w('#whiteGlovePromptSection');
+
+    const shippingOption = orderCtx?.selectedShippingOption || orderCtx?.shippingOption || {};
+    const code  = (shippingOption.code  || shippingOption.id    || '').toLowerCase();
+    const title = (shippingOption.title || shippingOption.label || shippingOption.name || '').toLowerCase();
+
+    const isWhiteGlove =
+      code.includes('white') || code.includes('wg') ||
+      title.includes('white-glove') || title.includes('white glove') ||
+      title.includes('assembly') || title.includes('setup');
+
+    if (!isWhiteGlove) return; // not a white-glove order
+
+    // Pre-check there are available slots before showing the prompt
+    const slotsResult = await getWhiteGloveSlots(null);
+    if (!slotsResult.success || !slotsResult.slots.some(s => s.available)) return;
+
+    const orderId = orderCtx?.orderId || orderCtx?.id || '';
+
+    try {
+      $w('#whiteGlovePromptTitle').text = 'Schedule Your White-Glove Delivery';
+    } catch (e) {}
+    try {
+      $w('#whiteGlovePromptBody').text =
+        'Your order includes white-glove delivery and setup. Choose a date and 2-hour arrival window that works for you.';
+    } catch (e) {}
+    try {
+      $w('#whiteGloveScheduleBtn').onClick(() => {
+        try {
+          const url = orderId
+            ? `/white-glove-delivery?orderId=${orderId}`
+            : '/white-glove-delivery';
+          wixLocationFrontend.to(url);
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    try { section.expand(); } catch (e) {}
+  } catch (err) {
+    console.error('[ThankYou] White-glove prompt error:', err?.message);
+    try { $w('#whiteGlovePromptSection').collapse(); } catch (e) {}
   }
 }
 

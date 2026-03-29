@@ -46,8 +46,9 @@ function _checkRateLimit() {
 // Private/loopback IP ranges that must never be forwarded to Vision API.
 // Prevents SSRF attacks where a crafted URL could reach internal services.
 // Covers: localhost, 127.x.x.x, 0.x.x.x, 10.x.x.x, 169.254.x.x (link-local/AWS metadata),
-//         172.16-31.x.x, 192.168.x.x, ::1, fc/fd IPv6.
-const PRIVATE_IP_RE = /^https:\/\/(localhost|127(?:\.\d{1,3}){3}|0(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|169\.254(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|\[?(?:::1|fc[\da-f]{2}:|fd[\da-f]{2}:))(?::\d+)?(?:\/|$)/i;
+//         172.16-31.x.x, 192.168.x.x, ::1/[::1], fc/fd IPv6.
+// Note: decimal (2130706433) and hex (0x7f000001) IPs are blocked separately in isValidImageUrl.
+const PRIVATE_IP_RE = /^https:\/\/(localhost|127(?:\.\d{1,3}){3}|0(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|169\.254(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|\[?(?:::1|fc[\da-f]{2}:|fd[\da-f]{2}:)\]?)(?::\d+)?(?:\/|$)/i;
 
 // Style tags we extract and surface to the frontend
 export const STYLE_TAGS = ['modern', 'rustic', 'industrial', 'mid-century', 'coastal', 'traditional', 'minimalist', 'bohemian'];
@@ -124,7 +125,8 @@ async function loadVisionKey() {
 
 /**
  * Validate that a string is a plausible image URL.
- * Requires https://. Rejects private/loopback IP ranges to prevent SSRF.
+ * Requires https://. Rejects private/loopback IP ranges to prevent SSRF,
+ * including decimal (2130706433 = 127.0.0.1) and hex (0x7f000001) IP forms.
  * @param {string} url
  * @returns {boolean}
  */
@@ -133,7 +135,20 @@ export function isValidImageUrl(url) {
   const cleaned = url.trim();
   if (!cleaned.startsWith('https://')) return false; // https only — no cleartext http://
   if (cleaned.length > 2000) return false;
-  if (PRIVATE_IP_RE.test(cleaned)) return false; // block SSRF via private/loopback IPs
+
+  // Parse the URL so Node.js normalizes alternative IP forms (decimal, hex, octal)
+  // to dotted-decimal before the private-IP check runs.
+  // e.g. https://2130706433/ → hostname 127.0.0.1, https://0x7f000001/ → 127.0.0.1
+  let hostname;
+  try {
+    hostname = new URL(cleaned).hostname;
+  } catch {
+    return false; // malformed URL
+  }
+
+  // Test against the normalized hostname, not the raw URL, so decimal/hex IPs
+  // are caught by the dotted-decimal patterns in PRIVATE_IP_RE.
+  if (PRIVATE_IP_RE.test(`https://${hostname}/`)) return false;
   return true;
 }
 

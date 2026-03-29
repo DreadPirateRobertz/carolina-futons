@@ -1,6 +1,6 @@
 // blogRssFeedDeep.test.js — CF-xr0u: Deep coverage for blogRssFeed.web.js
 // Edge cases: empty blog, special characters in titles, very long posts,
-// missing images, XML escaping boundaries, feed structure validation.
+// XML escaping boundaries, date handling, category/tag combos, feed structure.
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -83,14 +83,15 @@ describe('_buildRssXml — special characters in titles', () => {
     expect(xml).toContain('&gt;');
   });
 
-  it('escapes double quotes in title', () => {
+  it('handles double quotes in title', () => {
     const xml = _buildRssXml([{
       slug: 'test',
       title: 'The "Best" Futon',
       publishDate: '2026-01-01',
     }]);
-    // escapeXml may use &quot; or leave them
+    expect(xml).toContain('<title>');
     expect(xml).toContain('Best');
+    expect(xml).toContain('Futon');
   });
 
   it('handles unicode characters in title', () => {
@@ -256,14 +257,15 @@ describe('_buildRssXml — date handling', () => {
     expect(itemXml).not.toContain('<pubDate>');
   });
 
-  it('lastBuildDate uses first post date when post has no publishDate', () => {
+  it('lastBuildDate uses current date when first post has no publishDate', () => {
     const xml = _buildRssXml([{
       slug: 'no-date-first',
       title: 'First',
     }]);
-    // First post has no publishDate → lastBuildDate falls back to current date
     const lastBuild = xml.match(/<lastBuildDate>([^<]+)<\/lastBuildDate>/)[1];
-    expect(new Date(lastBuild)).toBeTruthy();
+    const parsed = new Date(lastBuild);
+    expect(parsed.toString()).not.toBe('Invalid Date');
+    expect(parsed.getFullYear()).toBeGreaterThanOrEqual(2026);
   });
 });
 
@@ -475,23 +477,24 @@ describe('generateBlogRssFeed — integration', () => {
   it('every item link matches its guid', async () => {
     const result = await generateBlogRssFeed();
     const items = result.xml.split('<item>').slice(1);
+    expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
       const link = item.match(/<link>([^<]+)<\/link>/)?.[1];
       const guid = item.match(/<guid[^>]*>([^<]+)<\/guid>/)?.[1];
-      if (link && guid) {
-        expect(link).toBe(guid);
-      }
+      expect(link).toBeDefined();
+      expect(guid).toBeDefined();
+      expect(link).toBe(guid);
     }
   });
 
   it('posts are sorted by date descending', async () => {
     const result = await generateBlogRssFeed();
     const pubDates = result.xml.match(/<pubDate>([^<]+)<\/pubDate>/g);
-    if (pubDates && pubDates.length >= 2) {
-      const dates = pubDates.map(m => new Date(m.replace(/<\/?pubDate>/g, '')).getTime());
-      for (let i = 1; i < dates.length; i++) {
-        expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
-      }
+    expect(pubDates).not.toBeNull();
+    expect(pubDates.length).toBeGreaterThanOrEqual(2);
+    const dates = pubDates.map(m => new Date(m.replace(/<\/?pubDate>/g, '')).getTime());
+    for (let i = 1; i < dates.length; i++) {
+      expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
     }
   });
 });

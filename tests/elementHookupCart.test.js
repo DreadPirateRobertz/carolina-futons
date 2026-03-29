@@ -60,8 +60,8 @@ vi.mock('backend/financingCalc.web', () => ({
   getCartFinancing: vi.fn(() => Promise.resolve({ success: false })),
 }));
 
-vi.mock('public/galleryHelpers', () => ({
-  getRecentlyViewed: vi.fn(() => []),
+vi.mock('public/RecentlyViewedWidget.js', () => ({
+  renderWidget: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('public/cartService', () => ({
@@ -527,33 +527,18 @@ describe('Cart Page — #shippingProgressBar / #shippingProgressText hookup', ()
   });
 });
 
-// ── Recently Viewed Repeater Tests ──────────────────────────────────
+// ── Recently Viewed Widget Tests ─────────────────────────────────────
 
-describe('Cart Page — #cartRecentRepeater child elements', () => {
+describe('Cart Page — recently viewed widget', () => {
   beforeEach(() => {
     elements.clear();
     vi.clearAllMocks();
   });
 
-  it('collapses recent section when no recently viewed products', async () => {
+  it('calls renderWidget from RecentlyViewedWidget on page load', async () => {
     await loadPage();
-    expect(getEl('#cartRecentSection').collapse).toHaveBeenCalled();
-  });
-
-  it('expands recent section and populates repeater when products exist', async () => {
-    // Mock must be set up inside loadPage override to survive vi.resetModules()
-    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
-      getRecentlyViewed: vi.fn(() => [
-        { _id: 'rv1', name: 'Vienna Frame', mainMedia: 'vienna.jpg', price: '$399', slug: 'vienna-frame' },
-      ]),
-    }));
-
-    await loadPage();
-
-    expect(getEl('#cartRecentSection').expand).toHaveBeenCalled();
-    const repeater = getEl('#cartRecentRepeater');
-    expect(repeater.data.length).toBeGreaterThan(0);
-    expect(repeater.onItemReady).toHaveBeenCalled();
+    const { renderWidget } = await import('public/RecentlyViewedWidget.js');
+    expect(renderWidget).toHaveBeenCalledWith($w);
   });
 });
 

@@ -10,6 +10,7 @@ import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationS
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
+import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
@@ -975,6 +976,78 @@ function detectProductType(product) {
   if (collections.some(c => c.includes('platform'))) return 'Bedroom > Platform Beds';
   if (collections.some(c => c.includes('casegood'))) return 'Bedroom > Casegoods & Accessories';
   return 'Bedroom > Futon Frames';
+}
+
+
+// ── Stamped.io Review Webhook ─────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/stampedWebhook
+// Configure in Stamped.io > Settings > Webhooks with STAMPED_WEBHOOK_SECRET.
+// Ingests new reviews into the ProductReviews moderation queue.
+// Reviews with 4+ stars and no profanity are auto-approved.
+
+/**
+ * @function post_stampedWebhook
+ * @param {Object} request - Wix HTTP request object.
+ * @returns {Promise<Object>} HTTP response.
+ */
+export async function post_stampedWebhook(request) {
+  try {
+    let webhookSecret;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      webhookSecret = await getSecret('STAMPED_WEBHOOK_SECRET');
+    } catch (err) { console.error('[http-functions] stampedWebhook: failed to fetch STAMPED_WEBHOOK_SECRET:', err); }
+
+    const requestSecret = request.headers['x-stamped-secret'] || request.headers['x-stamped-webhook-secret'];
+    if (!webhookSecret || !requestSecret || !timingSafeEqual(requestSecret, webhookSecret)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    let payload;
+    try {
+      const bodyText = await request.body.text();
+      payload = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const reviewData = payload.review || payload;
+    const event = payload.event || 'review.created';
+
+    if (!reviewData || !reviewData.productId) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Missing required fields: productId' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { ingestStampedReview } = await import('backend/reviewModeration.web');
+    const result = await ingestStampedReview(reviewData);
+
+    if (!result.success) {
+      return serverError({
+        body: JSON.stringify({ error: result.error || 'Review ingestion failed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return ok({
+      body: JSON.stringify({ success: true, reviewId: result.reviewId, status: result.status, event }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('[http-functions] stampedWebhook error:', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 // ── Klaviyo Webhook Endpoint ──────────────────────────────────────────
@@ -2173,6 +2246,18 @@ export async function get_badges(request) {
 // Rate-limited per userId (BusEventRateLimit collection): 30 req/min.
 //
 // Schema: { eventId, schemaVersion: '1.0', traceId, event, userId, source, ts, ...extras }
+//
+// ── Error contract (mobile retry policy) ──────────────────────────────────────
+// 400 Bad Request  — Permanent failure: schema invalid or unknown event.
+//                   Mobile MUST NOT retry. Fix the payload before re-sending.
+// 401 Unauthorized — Session expired or missing.
+//                   Mobile SHOULD refresh the Wix session token and retry.
+// 429 Too Many Req — Rate limited (30 req/min per member).
+//                   Mobile SHOULD retry after 60 seconds.
+// 5xx Server Error — Transient failure (DB write, runtime error).
+//                   Mobile SHOULD retry with exponential backoff.
+// 200 OK           — Event accepted (not necessarily processed yet).
+//                   Check EventTraceLog by eventId to confirm processing.
 
 /**
  * @function post_busEvent
@@ -2267,6 +2352,87 @@ export async function get_cmsGarbageCollect(request) {
     });
   } catch (err) {
     console.error('HTTP function error (cmsGarbageCollect):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+
+// ── Monthly Loyalty Statement Batch Send (CF-zo4k) ───────────────────
+// URL: GET https://www.carolinafutons.com/_functions/sendMonthlyLoyaltyStatements
+// Schedule 1st of each month via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_sendMonthlyLoyaltyStatements(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const { sendMonthlyLoyaltyStatements } = await import('backend/loyaltyMarketing.web');
+    const result = await sendMonthlyLoyaltyStatements();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        sent: result.sent,
+        errors: result.errors,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (sendMonthlyLoyaltyStatements):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+// ── Weekly Blog Digest Cron ───────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/weeklyBlogDigestCron
+// Schedule every Friday at 9am MT via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// CF-e3yo
+export async function get_weeklyBlogDigestCron(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const result = await sendWeeklyBlogDigest();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        queued: result.queued,
+        skipped: result.skipped,
+        postCount: result.postCount,
+        error: result.error || null,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (weeklyBlogDigestCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,

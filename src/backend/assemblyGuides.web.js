@@ -205,6 +205,13 @@ const ASSEMBLY_DATA = {
     tools: ['Phillips screwdriver', 'Wrench (included)'],
     notes: 'Weather-resistant hardware included. Place on level surface.',
   },
+  'front-loading-nesting': {
+    difficulty: 'Medium',
+    estimatedMinutes: 45,
+    stepCount: 8,
+    tools: ['Phillips screwdriver', 'Allen key (included)', 'Rubber mallet (optional)'],
+    notes: 'Front-loading mechanism requires careful bolt alignment. Two people recommended.',
+  },
 };
 
 /**

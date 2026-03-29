@@ -232,3 +232,45 @@ describe('post_busEvent — rate limiting', () => {
     expect(result.status).toBe(200);
   });
 });
+
+// ── E2E smoke — full busEvent→EventTraceLog flow ──────────────────────────────
+
+describe('post_busEvent — E2E smoke: busEvent→EventTraceLog', () => {
+  beforeEach(() => { __setMember(VALID_MEMBER); });
+
+  it('returns 200 for a valid event', async () => {
+    const result = await post_busEvent(makeRequest(validBody()));
+    expect(result.status).toBe(200);
+    expect(JSON.parse(result.body)).toMatchObject({ received: true });
+  });
+
+  it('writes one entry to EventTraceLog with correct fields', async () => {
+    const body = validBody({ eventId: 'smoke-evt-1', event: 'challenge_started', traceId: 'trace-smoke' });
+    await post_busEvent(makeRequest(body));
+
+    const logs = __getInserted('EventTraceLog');
+    expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatchObject({
+      eventId: 'smoke-evt-1',
+      event: 'challenge_started',
+      userId: VALID_MEMBER._id,
+      status: 'received',
+    });
+  });
+
+  it('checks BusEventRateLimit before writing to EventTraceLog', async () => {
+    // Seed a rate-limit record that blocks the request
+    __seed('BusEventRateLimit', [{
+      _id: 'rl-smoke',
+      key: VALID_MEMBER._id,
+      count: 30,
+      windowStart: new Date(Date.now() - 1000),
+    }]);
+
+    const result = await post_busEvent(makeRequest(validBody({ eventId: 'smoke-blocked' })));
+    expect(result.status).toBe(429);
+    // EventTraceLog should not have been written (rate limit fires before log step)
+    const logs = __getInserted('EventTraceLog');
+    expect(logs).toHaveLength(0);
+  });
+});

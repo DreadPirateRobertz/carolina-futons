@@ -103,19 +103,20 @@ const STAR_POSITIONS = [
 
 /**
  * Apply LivingSkyState overlay to a showroom SVG string.
- * Night mode (starOpacity > 0) injects stars, moon, and window lantern glow.
+ * Night mode (starOpacity > 0.4) injects stars, moon, and window lantern glow.
  * Day mode injects a sky color tint overlay.
  * Intentionally unexported — use through initContactShowroomScene.
  * @param {string} svg - Base SVG markup
- * @param {Object} state - LivingSkyState { skyColors, starOpacity }
+ * @param {Object} state - LivingSkyState from useLivingSky() —
+ *   expects { skyColors: string[], starOpacity: number, ... }
  * @returns {string} Modified SVG, or the original svg when no overlay applies
  */
 function applyLivingSkyState(svg, state) {
-  const isNight = Number(state.starOpacity) > 0;
-  // Validate skyColors[0] to prevent XSS via postMessage injection
-  const skyColor = state.skyColors && state.skyColors[0];
-  const safeGradient = typeof skyColor === 'string' && SAFE_HEX_RE.test(skyColor)
-    ? skyColor : null;
+  const isNight = Number(state.starOpacity) > 0.4;
+  // skyColors[0] is the top-of-sky hex. Validate to prevent XSS via postMessage injection.
+  const rawColor = Array.isArray(state.skyColors) ? state.skyColors[0] : undefined;
+  const safeGradient = typeof rawColor === 'string' && SAFE_HEX_RE.test(rawColor)
+    ? rawColor : null;
   let overlay = '';
 
   if (safeGradient) {
@@ -137,7 +138,11 @@ function applyLivingSkyState(svg, state) {
   }
 
   if (!overlay) return svg;
-  return svg.replace('</svg>', overlay + '</svg>');
+  // Use lastIndexOf to target the outermost </svg> closing tag only,
+  // avoiding incorrect injection if the SVG contains nested <svg> elements.
+  const closeIdx = svg.lastIndexOf('</svg>');
+  if (closeIdx === -1) return svg + overlay;
+  return svg.slice(0, closeIdx) + overlay + '</svg>';
 }
 
 /**

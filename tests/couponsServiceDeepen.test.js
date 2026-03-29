@@ -19,7 +19,6 @@ vi.mock('backend/utils/sanitize', () => ({
 let _queryV2Items = [];
 let _queryV2Error = null;
 let _createdCoupons = [];
-let _activeCoupons = [];
 
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
@@ -30,10 +29,7 @@ vi.mock('wix-marketing-backend', () => ({
     }),
     queryAllCoupons: () => ({
       eq: () => ({
-        find: async () => {
-          if (_activeCoupons === 'ERROR') throw new Error('API down');
-          return { items: Array.isArray(_activeCoupons) ? _activeCoupons : [] };
-        },
+        find: async () => ({ items: [] }),
       }),
     }),
     queryV2: () => ({
@@ -84,15 +80,16 @@ vi.mock('wix-data', () => {
 });
 
 let mod;
+let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
-  _activeCoupons = [];
   _queryV2Items = [];
   _queryV2Error = null;
   _wixDataStore = {};
   _wixDataQueryError = null;
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
+  wixDataMock = await import('wix-data');
 });
 
 // ── generateCode collision retry ────────────────────────────────────
@@ -205,9 +202,9 @@ describe('getActiveCoupons error handling', () => {
     ];
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(3);
-    expect(r[0].discount).toBe('10% off');
+    expect(r[0].discount).toBe('10%');
     expect(r[1].discount).toBe('$25 off');
-    expect(r[2].discount).toBe('20% off');
+    expect(r[2].discount).toBe('20%');
   });
 
   it('defaults moneyOffAmount to 0 when neither percentOff nor moneyOff', async () => {
@@ -215,7 +212,7 @@ describe('getActiveCoupons error handling', () => {
       { _id: 'mc4', memberEmail: 'test@example.com', code: 'NONE', displayName: 'No Discount', active: true },
     ];
     const r = await mod.getActiveCoupons();
-    expect(r[0].discount).toBe('$0 off');
+    expect(r[0].discount).toBe('0%');
   });
 
   it('includes minimumSubtotal defaulting to 0', async () => {

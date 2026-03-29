@@ -4,7 +4,8 @@
  * Dallas mobile app receives POST webhooks to trigger push notifications
  * to customer devices via expo-notifications.
  *
- * Fires on: order confirmed (created), shipped (fulfilled), delivered, cancelled.
+ * Fires on: order confirmed (created), shipped (fulfilled), cancelled.
+ * Note: delivered status can be triggered manually via triggerOrderWebhook.
  * Retry: 3 attempts with exponential backoff (1s, 4s, 16s).
  * Graceful degradation: never blocks order flow — logs failures to AuditLog.
  *
@@ -15,6 +16,7 @@
  * 1. Add to Wix Secrets Manager:
  *      MOBILE_PUSH_ENDPOINT — URL of dallas mobile push service
  *        (e.g. https://push.carolinafutons.app/api/push/order-status)
+ *      MOBILE_PUSH_SECRET — Bearer token for authenticating webhook POSTs
  *
  * 2. Create CMS collection `WebhookAttempts` (optional, for debugging):
  *      orderId (Text), status (Text), attempt (Number),
@@ -26,8 +28,8 @@ import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
 import { sanitize } from 'backend/utils/sanitize';
 
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000; // 1s, 4s, 16s (exponential)
+export const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000; // delays between attempts: 1s, 4s (16s would fire after last retry but is gated out)
 
 /**
  * Status labels for the mobile push notification.
@@ -88,9 +90,11 @@ export function buildWebhookPayload(order, status) {
  */
 export async function sendWebhook(payload) {
   let pushEndpoint;
+  let pushSecret;
   try {
     const { getSecret } = await import('wix-secrets-backend');
     pushEndpoint = await getSecret('MOBILE_PUSH_ENDPOINT');
+    pushSecret = await getSecret('MOBILE_PUSH_SECRET');
   } catch (err) {
     logError('orderStatusWebhook.sendWebhook.getSecret', err);
     logAuditEvent('OrderStatusWebhook', 'secret_error', payload.orderId, { error: err.message });
@@ -105,9 +109,12 @@ export async function sendWebhook(payload) {
   let lastError = '';
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (pushSecret) headers['Authorization'] = `Bearer ${pushSecret}`;
+
       const response = await fetch(pushEndpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -121,11 +128,13 @@ export async function sendWebhook(payload) {
       }
 
       lastError = `HTTP ${response.status}`;
+      // Don't retry on client errors (4xx) — they won't succeed on retry
+      if (response.status >= 400 && response.status < 500) break;
     } catch (err) {
       lastError = err.message || 'Network error';
     }
 
-    // Exponential backoff: 1s, 4s, 16s
+    // Exponential backoff: 1s before retry 2, 4s before retry 3
     if (attempt < MAX_RETRIES) {
       const delay = BASE_DELAY_MS * Math.pow(4, attempt - 1);
       await new Promise(r => setTimeout(r, delay));

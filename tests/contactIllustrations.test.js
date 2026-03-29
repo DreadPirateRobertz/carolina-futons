@@ -483,17 +483,6 @@ describe('Contact Illustrations', () => {
       return { mock$w, containerEl, trigger };
     }
 
-    // Canonical LivingSkyState fixture (living-sky.js:280-298)
-    function makeState({ sky0 = '#5B8FA8', starOpacity = 0, weather = 'clear' } = {}) {
-      return {
-        skyColors: [sky0, '#4A7D94', '#3D6B80', '#2C5A6A'],
-        ridgeColors: { r1: '#3A2518', r2: '#5B8FA8', r3: '#667788', r4: '#5B8FA8', tree: '#334455' },
-        starOpacity,
-        cloudOpacity: 0,
-        weather,
-      };
-    }
-
     it('subscribes to #livingSkyFrame onMessage on init', () => {
       const onMessageSpy = vi.fn();
       const containerEl = { html: '' };
@@ -536,7 +525,7 @@ describe('Contact Illustrations', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const before = containerEl.html;
-      trigger(makeState({ sky0: '#5B8FA8' }));
+      trigger({ skyColors: ['#5B8FA8', '#3A5F7A'], starOpacity: 0.0 });
       expect(containerEl.html).not.toBe(before);
       expect(containerEl.html).toContain('id="sky-overlay"');
     });
@@ -545,14 +534,14 @@ describe('Contact Illustrations', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const base = containerEl.html;
-      trigger({ starOpacity: 0, weather: 'clear' }); // no skyColors
+      trigger({ starOpacity: 0.0 }); // no skyColors → safeGradient is null, no overlay
       expect(containerEl.html).toBe(base);
     });
 
     it('night mode injects stars even when skyColors is absent', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger({ starOpacity: 0.5, weather: 'clear' }); // no skyColors, starOpacity > 0 = night
+      trigger({ starOpacity: 0.9 }); // night, no skyColors
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
@@ -560,66 +549,77 @@ describe('Contact Illustrations', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
       const base = containerEl.html;
-      trigger({ ...makeState(), skyColors: ['linear-gradient(red, blue)', '#4A7D94', '#3D6B80', '#2C5A6A'] });
+      trigger({ skyColors: ['linear-gradient(red, blue)'], starOpacity: 0.0 });
       expect(containerEl.html).toBe(base);
     });
 
-    it('night mode (starOpacity > 0) injects star elements', () => {
+    it('night mode (starOpacity > 0.4) injects star elements', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.8 }));
+      trigger({ skyColors: ['#0A0F2C', '#0A0820'], starOpacity: 0.9 });
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
     it('night mode injects a moon element', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 1.0 }));
+      trigger({ skyColors: ['#0A0F2C', '#0A0820'], starOpacity: 1.0 });
       expect(containerEl.html).toMatch(/id="moon"/);
     });
 
     it('night mode injects window lantern glow', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#0A0F2C', starOpacity: 0.9 }));
+      trigger({ skyColors: ['#0A0F2C', '#0A0820'], starOpacity: 0.85 });
       expect(containerEl.html).toMatch(/id="window-glow"/);
     });
 
     it('day mode does not inject star or moon elements', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#B8D4E3', starOpacity: 0 }));
+      trigger({ skyColors: ['#B8D4E3', '#C8E4F3'], starOpacity: 0.0 });
       expect(containerEl.html).not.toMatch(/id="stars"/);
       expect(containerEl.html).not.toMatch(/id="moon"/);
     });
 
-    it('night boundary: starOpacity = 0 is day (no stars)', () => {
+    it('night boundary: starOpacity = 0.4 is day (no stars)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#4A5568', starOpacity: 0 }));
+      trigger({ skyColors: ['#4A5568', '#3A4558'], starOpacity: 0.4 });
       expect(containerEl.html).not.toMatch(/id="stars"/);
     });
 
-    it('night boundary: starOpacity > 0 is night (has stars)', () => {
+    it('night boundary: starOpacity = 0.41 is night (has stars)', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#1A1F3E', starOpacity: 0.1 }));
+      trigger({ skyColors: ['#1A1F3E', '#0A0F2C'], starOpacity: 0.41 });
       expect(containerEl.html).toMatch(/id="stars"/);
     });
 
     it('sky color appears in updated SVG', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#A0B0C8', weather: 'cloudy' }));
+      trigger({ skyColors: ['#A0B0C8', '#B0C0D8'], starOpacity: 0.0 });
       expect(containerEl.html).toContain('#A0B0C8');
     });
 
     it('updated SVG remains a valid SVG', () => {
       const { mock$w, containerEl, trigger } = makeWix();
       initContactShowroomScene(mock$w);
-      trigger(makeState({ sky0: '#B8D4E3' }));
+      trigger({ skyColors: ['#B8D4E3', '#C8E4F3'], starOpacity: 0.0 });
       expect(containerEl.html.trimStart()).toMatch(/^<svg[\s>]/);
       expect(containerEl.html.trimEnd()).toMatch(/<\/svg>$/);
+    });
+
+    it('does not throw when $w("#livingSkyFrame") selector throws', () => {
+      const containerEl = { html: '' };
+      const mock$w = (sel) => {
+        if (sel === '#contactShowroomScene') return containerEl;
+        if (sel === '#livingSkyFrame') throw new Error('element not found');
+        return null;
+      };
+      expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+      expect(typeof containerEl.html).toBe('string'); // initial render still set
     });
   });
 

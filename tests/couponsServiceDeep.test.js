@@ -27,7 +27,7 @@ vi.mock('wix-marketing-backend', () => ({
     }),
     queryAllCoupons: () => ({
       eq: () => ({
-        find: async () => ({ items: _activeCoupons }),
+        find: async () => ({ items: [] }),
       }),
     }),
     queryV2: () => ({
@@ -73,12 +73,14 @@ vi.mock('wix-data', () => {
 });
 
 let mod;
+let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
   _activeCoupons = [];
   _wixDataStore = {};
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
+  wixDataMock = await import('wix-data');
 });
 
 // ── createWelcomeCoupon ──────────────────────────────────────────
@@ -161,8 +163,8 @@ describe('getActiveCoupons', () => {
     ];
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(2);
-    expect(r[0].discount).toBe('10% off');
-    expect(r[1].discount).toBe('15% off');
+    expect(r[0].discount).toBe('10%');
+    expect(r[1].discount).toBe('15%');
   });
 
   it('formats money-off coupons', async () => {

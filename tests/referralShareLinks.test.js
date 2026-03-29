@@ -1,11 +1,14 @@
 /**
  * @file referralShareLinks.test.js
- * @description Tests for referral social sharing deep links (cf-ctzo).
+ * @description Tests for referral social sharing deep links (cf-ctzo, cf-73zw).
  */
 
 import { describe, it, expect } from 'vitest';
 import {
   buildReferralUrl,
+  getCanonicalReferralUrl,
+  getAppDeepLink,
+  getInstagramShareContent,
   getFacebookShareUrl,
   getTwitterShareUrl,
   getSmsShareUrl,
@@ -128,10 +131,10 @@ describe('getPinterestShareUrl', () => {
 // ── getAllShareLinks ────────────────────────────────────────────────
 
 describe('getAllShareLinks', () => {
-  it('returns all 7 platform links', () => {
+  it('returns all 10 platform links', () => {
     const links = getAllShareLinks(CODE);
     expect(Object.keys(links)).toEqual([
-      'copyLink', 'facebook', 'twitter', 'sms', 'email', 'whatsapp', 'pinterest',
+      'copyLink', 'canonical', 'deepLink', 'facebook', 'twitter', 'sms', 'email', 'whatsapp', 'pinterest', 'instagram',
     ]);
   });
 
@@ -145,5 +148,93 @@ describe('getAllShareLinks', () => {
   it('passes options through', () => {
     const links = getAllShareLinks(CODE, { path: '/mattresses' });
     expect(links.copyLink).toContain('/mattresses');
+  });
+
+  it('canonical uses /referral path not /shop', () => {
+    const links = getAllShareLinks(CODE);
+    expect(links.canonical).toContain('/referral');
+    expect(links.canonical).not.toContain('/shop');
+  });
+
+  it('deepLink uses app scheme', () => {
+    const links = getAllShareLinks(CODE);
+    expect(links.deepLink).toMatch(/^carolinafutons:\/\//);
+  });
+
+  it('instagram is the canonical URL', () => {
+    const links = getAllShareLinks(CODE);
+    expect(links.instagram).toContain('/referral');
+    expect(links.instagram).toContain('ABC123');
+  });
+});
+
+// ── getCanonicalReferralUrl ────────────────────────────────────────
+
+describe('getCanonicalReferralUrl', () => {
+  it('returns /referral?ref=CODE', () => {
+    const url = getCanonicalReferralUrl(CODE);
+    expect(url).toBe('https://www.carolinafutons.com/referral?ref=ABC123');
+  });
+
+  it('sanitizes code to uppercase alphanumeric', () => {
+    const url = getCanonicalReferralUrl('ab-c1!2');
+    expect(url).toContain('ref=ABC12');
+  });
+
+  it('returns base referral URL for empty code', () => {
+    const url = getCanonicalReferralUrl('');
+    expect(url).toBe('https://www.carolinafutons.com/referral');
+  });
+
+  it('returns base referral URL for null', () => {
+    const url = getCanonicalReferralUrl(null);
+    expect(url).toBe('https://www.carolinafutons.com/referral');
+  });
+});
+
+// ── getAppDeepLink ─────────────────────────────────────────────────
+
+describe('getAppDeepLink', () => {
+  it('returns carolinafutons:// scheme', () => {
+    const link = getAppDeepLink(CODE);
+    expect(link).toBe('carolinafutons://referral?code=ABC123');
+  });
+
+  it('sanitizes code', () => {
+    const link = getAppDeepLink('ab-c1!2');
+    expect(link).toContain('code=ABC12');
+  });
+
+  it('returns empty string for empty code', () => {
+    expect(getAppDeepLink('')).toBe('');
+  });
+
+  it('returns empty string for null', () => {
+    expect(getAppDeepLink(null)).toBe('');
+  });
+});
+
+// ── getInstagramShareContent ───────────────────────────────────────
+
+describe('getInstagramShareContent', () => {
+  it('returns url and message', () => {
+    const content = getInstagramShareContent(CODE);
+    expect(content).toHaveProperty('url');
+    expect(content).toHaveProperty('message');
+  });
+
+  it('url is the canonical referral URL', () => {
+    const content = getInstagramShareContent(CODE);
+    expect(content.url).toBe('https://www.carolinafutons.com/referral?ref=ABC123');
+  });
+
+  it('message contains the url', () => {
+    const content = getInstagramShareContent(CODE);
+    expect(content.message).toContain(content.url);
+  });
+
+  it('handles empty code gracefully', () => {
+    const content = getInstagramShareContent('');
+    expect(content.url).toBe('https://www.carolinafutons.com/referral');
   });
 });

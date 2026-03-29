@@ -15,6 +15,9 @@ import {
   LOCAL_PAGES,
   SITE_URL,
   STORE_DIRECTIONS_URL,
+  FEATURED_PRODUCT_CATALOG,
+  HOME_CITY_FEATURED_CATEGORIES,
+  NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
@@ -199,17 +202,8 @@ function _buildMetaDescription(cityData) {
  *   non-numeric values fall back to 4.
  * @returns {Promise<Array>} Mapped product objects.
  */
-async function _fetchProductsByCity(cityData, limit = 4) {
-  const safeLimit = Math.max(1, Math.min(Number.isNaN(Number(limit)) ? 4 : Number(limit), 20));
-  let query = wixData.query('Stores/Products').ascending('salesRank').limit(safeLimit);
-
-  if (Array.isArray(cityData.preferredCategories) && cityData.preferredCategories.length > 0) {
-    query = query.hasSome('categories', cityData.preferredCategories);
-  }
-
-  const result = await query.find();
-  const items = Array.isArray(result?.items) ? result.items : [];
-  return items.map(p => ({
+function _mapProduct(p) {
+  return {
     productId: p._id,
     name: p.name,
     price: p.price,
@@ -218,7 +212,42 @@ async function _fetchProductsByCity(cityData, limit = 4) {
     productPageUrl: `${SITE_URL}/product-page/${p.slug}`,
     salesRank: p.salesRank,
     categories: Array.isArray(p.categories) ? p.categories : [],
-  }));
+  };
+}
+
+async function _fetchProductsByCity(cityData, limit = 4) {
+  const safeLimit = (typeof limit === 'number' && Number.isFinite(limit)) ? Math.max(1, Math.min(limit, 20)) : 4;
+  const baseCategories = cityData.isHomeCity
+    ? HOME_CITY_FEATURED_CATEGORIES
+    : NEARBY_CITY_FEATURED_CATEGORIES;
+
+  // Catalog-first: fetch each category's designated product by explicit ID.
+  // This is the preferred path when FEATURED_PRODUCT_CATALOG entries exist.
+  const catalogProducts = (await Promise.all(
+    baseCategories.map(async cat => {
+      const entry = FEATURED_PRODUCT_CATALOG[cat];
+      if (!entry?.productId) return null;
+      try { return await wixData.get('Stores/Products', entry.productId); } catch { return null; }
+    })
+  )).filter(Boolean);
+
+  if (catalogProducts.length > 0) {
+    return catalogProducts.slice(0, safeLimit).map(_mapProduct);
+  }
+
+  // Query fallback: category-based query, applying preferredCategories filter when set.
+  const categories = cityData.preferredCategories?.length
+    ? baseCategories.filter(c => cityData.preferredCategories.includes(c))
+    : baseCategories;
+
+  const result = await wixData
+    .query('Stores/Products')
+    .hasSome('categories', categories)
+    .ascending('salesRank')
+    .limit(safeLimit)
+    .find();
+
+  return (result?.items || []).map(_mapProduct);
 }
 
 // ── getFeaturedProductsForCity ────────────────────────────────────────

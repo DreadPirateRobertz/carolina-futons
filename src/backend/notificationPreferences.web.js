@@ -15,6 +15,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
+import { logError } from 'backend/errorMonitoring.web.js';
 
 const COLLECTION = 'MemberNotificationPrefs';
 
@@ -33,6 +34,7 @@ const DEFAULT_PREFS = {
  * Load notification preferences for a member.
  * Returns defaults if no record exists.
  *
+ * @param {string} memberId
  * @returns {Promise<{success: boolean, prefs: Object, error?: string}>}
  *   prefs: { restock, orderUpdate, promo, cfPlus, sms }
  */
@@ -65,7 +67,8 @@ export const getNotificationPreferences = webMethod(
         },
       };
     } catch (e) {
-      console.error('[notificationPreferences] getNotificationPreferences failed:', e);
+      console.error('[notificationPreferences] getNotificationPreferences failed:', e?.message, e?.stack);
+      await logError({ context: 'notificationPreferences.getNotificationPreferences', message: e?.message, stack: e?.stack, severity: 'error' });
       return { success: false, error: 'Failed to load preferences' };
     }
   }
@@ -76,6 +79,7 @@ export const getNotificationPreferences = webMethod(
 /**
  * Save notification preferences for a member (upsert).
  *
+ * @param {string} memberId
  * @param {Object} prefs - { restock, orderUpdate, promo, cfPlus, sms }
  * @returns {Promise<{success: boolean, error?: string}>}
  */
@@ -111,7 +115,8 @@ export const saveNotificationPreferences = webMethod(
 
       return { success: true };
     } catch (e) {
-      console.error('[notificationPreferences] saveNotificationPreferences failed:', e);
+      console.error('[notificationPreferences] saveNotificationPreferences failed:', e?.message, e?.stack);
+      await logError({ context: 'notificationPreferences.saveNotificationPreferences', message: e?.message, stack: e?.stack, severity: 'error' });
       return { success: false, error: 'Failed to save preferences' };
     }
   }
@@ -122,6 +127,7 @@ export const saveNotificationPreferences = webMethod(
 /**
  * Opt a member out of all notification types at once.
  *
+ * @param {string} memberId
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const unsubscribeAll = webMethod(
@@ -159,7 +165,8 @@ export const unsubscribeAll = webMethod(
 
       return { success: true };
     } catch (e) {
-      console.error('[notificationPreferences] unsubscribeAll failed:', e);
+      console.error('[notificationPreferences] unsubscribeAll failed:', e?.message, e?.stack);
+      await logError({ context: 'notificationPreferences.unsubscribeAll', message: e?.message, stack: e?.stack, severity: 'error' });
       return { success: false, error: 'Failed to unsubscribe' };
     }
   }

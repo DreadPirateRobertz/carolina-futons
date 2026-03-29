@@ -202,7 +202,6 @@ export const getUpsellRecommendations = webMethod(
       let query = wixData.query('PostPurchaseUpsells')
         .eq('sourceCategory', category)
         .eq('active', true)
-        .le('delayDays', days)
         .ascending('priority')
         .limit(10);
 
@@ -213,25 +212,30 @@ export const getUpsellRecommendations = webMethod(
           const specificResult = await wixData.query('PostPurchaseUpsells')
             .eq('sourceProductId', cleanId)
             .eq('active', true)
-            .le('delayDays', days)
             .ascending('priority')
             .limit(10)
             .find();
 
-          if (specificResult.items.length > 0) {
+          const specificFiltered = specificResult.items.filter(
+            item => item.delayDays == null || item.delayDays <= days
+          );
+          if (specificFiltered.length > 0) {
             return {
               success: true,
-              recommendations: specificResult.items.map(formatRecommendation),
+              recommendations: specificFiltered.map(formatRecommendation),
             };
           }
         }
       }
 
       const result = await query.find();
+      const filtered = result.items.filter(
+        item => item.delayDays == null || item.delayDays <= days
+      );
 
       return {
         success: true,
-        recommendations: result.items.map(formatRecommendation),
+        recommendations: filtered.map(formatRecommendation),
       };
     } catch (err) {
       console.error('[postPurchaseCare] Error getting upsell recommendations:', err);

@@ -58,7 +58,7 @@ describe('post_purchase_referral email template', () => {
     const referralStep = steps.find(s => s.templateId === 'post_purchase_referral');
     expect(referralStep).toBeDefined();
     expect(referralStep.step).toBe(5);
-    expect(referralStep.delayHours).toBe(336); // Day 14
+    expect(referralStep.delayHours).toBe(360); // Day 15
   });
 
   it('post_purchase sequence has 5 steps total', async () => {

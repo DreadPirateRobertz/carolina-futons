@@ -20,6 +20,7 @@
  *   $w.onReady(() => initLoyaltyDashboard());
  */
 import { getMyLoyaltyAccount, getMyBurnRate } from 'backend/loyaltyService.web';
+import { saveBirthday, getBirthdayStatus } from 'backend/loyaltyMarketing.web';
 import {
   formatProgressText,
   getProgressPercent,
@@ -280,5 +281,67 @@ export async function initLoyaltyDashboard(opts = {}) {
     // silent — burn rate is ambient info, not critical path
   }
 
+  // Birthday capture — show prompt if member hasn't added DOB yet
+  if (account?.memberId) {
+    initBirthdayCapture($wFn, account.memberId).catch(() => {});
+  }
+
   return account;
+}
+
+// ── Birthday capture (CF-c5z6) ────────────────────────────────────────────────
+
+/**
+ * Show the birthday capture section if member has no DOB on file.
+ * Wires #birthdaySaveButton to saveBirthday() and shows/hides the section.
+ *
+ * Required Wix Editor elements:
+ *   #birthdayCaptureSection — container (collapsed by default)
+ *   #birthdayMonthInput     — number input (1–12)
+ *   #birthdayDayInput       — number input (1–31)
+ *   #birthdaySaveButton     — button
+ *   #birthdayCaptureMessage — text element for feedback
+ *
+ * @param {Function} $wFn - Wix element selector
+ * @param {string} memberId
+ * @returns {Promise<void>}
+ */
+export async function initBirthdayCapture($wFn, memberId) {
+  try {
+    // Skip if member already has a birthday on file
+    const status = await getBirthdayStatus(memberId);
+    if (status.hasBirthday) return;
+
+    try { $wFn('#birthdayCaptureSection').expand(); } catch (_) { return; }
+    try { $wFn('#birthdayCaptureMessage').text = 'Add your birthday for +50 bonus points!'; } catch (_) {}
+
+    $wFn('#birthdaySaveButton').onClick(async () => {
+      try { $wFn('#birthdaySaveButton').disable(); } catch (_) {}
+
+      const month = parseInt($wFn('#birthdayMonthInput').value, 10);
+      const day = parseInt($wFn('#birthdayDayInput').value, 10);
+
+      const result = await saveBirthday(memberId, month, day);
+
+      if (result.success && result.pointsAwarded > 0) {
+        try { $wFn('#birthdayCaptureMessage').text = result.message; } catch (_) {}
+        try { $wFn('#birthdaySaveButton').collapse(); } catch (_) {}
+        try { $wFn('#birthdayMonthInput').disable(); } catch (_) {}
+        try { $wFn('#birthdayDayInput').disable(); } catch (_) {}
+      } else if (result.reason === 'already_set') {
+        try { $wFn('#birthdayCaptureSection').collapse(); } catch (_) {}
+      } else if (result.reason === 'invalid_month' || result.reason === 'invalid_day') {
+        try { $wFn('#birthdayCaptureMessage').text = 'Please enter a valid birthday (month 1–12, day 1–31).'; } catch (_) {}
+        try { $wFn('#birthdaySaveButton').enable(); } catch (_) {}
+      } else if (!result.success && result.reason === 'error') {
+        try { $wFn('#birthdayCaptureMessage').text = 'Something went wrong. Please try again.'; } catch (_) {}
+        try { $wFn('#birthdaySaveButton').enable(); } catch (_) {}
+      } else {
+        try { $wFn('#birthdayCaptureMessage').text = result.message || 'Birthday saved!'; } catch (_) {}
+        try { $wFn('#birthdaySaveButton').collapse(); } catch (_) {}
+      }
+    });
+  } catch (err) {
+    console.error('[LoyaltyDashboard] initBirthdayCapture failed:', err?.message);
+  }
 }

@@ -14,8 +14,9 @@ import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
 import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
+import { initAppDownloadBanner } from 'public/AppDownloadBanner';
 import { reportMetrics } from 'backend/coreWebVitals.web';
-import { initFooter } from 'public/FooterSection';
+import { initFooter, initMountainDividerWithSkyWiring } from 'public/FooterSection';
 import { initCartUpsell } from 'public/CartUpsell';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
@@ -59,10 +60,18 @@ $w.onReady(async function () {
   initMiniCartAutoOpen();
   initCartUpsell($w);
   initFooter($w);
+  // Wire footer mountain divider to LivingSkyState — re-render on every sky tick.
+  // e.data is the raw LivingSkyState object; ridgeColors extraction happens inside initMountainDividerWithSkyWiring.
+  try {
+    $w('#livingSkyFrame').onMessage((e) => {
+      initMountainDividerWithSkyWiring($w, e.data);
+    });
+  } catch (_) {}
   initMountainSkylineHeader();
   initHeaderShippingProgress();
   initNewsletterModal();
   initInstallBanner();
+  initAppDownloadBanner($w, wixLocationFrontend.url).catch(err => console.error('[AppDownloadBanner]', err?.message));
   injectCanonicalUrl();
   initScrollDepthTracking();
   initConsentGate();
