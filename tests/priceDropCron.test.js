@@ -35,6 +35,8 @@ import {
   queuePriceDropNotifications,
   _MIN_DROP_FRACTION,
   _DEDUP_WINDOW_MS,
+  _PRICE_DROP_EMAIL_TEMPLATE,
+  _emailPriceAlertSubscribers,
 } from '../src/backend/priceDropCron.web.js';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -485,5 +487,224 @@ describe('queuePriceDropNotifications — error resilience', () => {
 
     const result = await queuePriceDropNotifications('prod-x', 500, 450);
     expect(result.success).toBe(false);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// emailPriceAlertSubscribers (CF-hwr1.3)
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+
+const alertSub = (email, productId = 'prod-a', active = true) => ({
+  _id: `pa-${email}`,
+  productId,
+  email,
+  active,
+  subscribedAt: new Date(Date.now() - 60_000),
+});
+
+const emailQueueEntry = (email, productId, msAgo = 0) => ({
+  _id: `eq-${email}-${productId}`,
+  sequenceType: 'price_drop_alert',
+  recipientEmail: email,
+  checkoutId: productId,
+  createdAt: new Date(Date.now() - msAgo),
+});
+
+describe('emailPriceAlertSubscribers — no subscribers', () => {
+  it('returns 0 when no active subscribers exist', async () => {
+    __seed('PriceAlerts', []);
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(0);
+  });
+
+  it('returns 0 when all subscribers are inactive', async () => {
+    __seed('PriceAlerts', [alertSub('a@example.com', 'prod-a', false)]);
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(0);
+  });
+});
+
+describe('emailPriceAlertSubscribers — queues emails', () => {
+  it('inserts one EmailQueue entry per active subscriber', async () => {
+    __seed('PriceAlerts', [
+      alertSub('alice@example.com'),
+      alertSub('bob@example.com'),
+    ]);
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(2);
+  });
+
+  it('sets correct templateId and sequenceType', async () => {
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+
+    expect(captured).toHaveLength(1);
+    expect(captured[0].templateId).toBe(_PRICE_DROP_EMAIL_TEMPLATE);
+    expect(captured[0].sequenceType).toBe('price_drop_alert');
+    expect(captured[0].sequenceStep).toBe(1);
+    expect(captured[0].status).toBe('pending');
+  });
+
+  it('sets correct email variables: newPrice, oldPrice, savings, savingsPct, pdpUrl', async () => {
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 500, 450, 0.10);
+
+    expect(captured[0].variables.oldPrice).toBe('500.00');
+    expect(captured[0].variables.newPrice).toBe('450.00');
+    expect(captured[0].variables.savings).toBe('50.00');
+    expect(captured[0].variables.savingsPct).toBe('10');
+    expect(captured[0].variables.productName).toBe('Monterey Futon');
+    expect(captured[0].variables.pdpUrl).toBe('/product-page/monterey-futon');
+  });
+
+  it('falls back to productId in pdpUrl when slug is empty', async () => {
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', '', 500, 450, 0.10);
+
+    expect(captured[0].variables.pdpUrl).toBe('/product-page/prod-a');
+  });
+
+  it('uses productId as checkoutId dedup key', async () => {
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+
+    expect(captured[0].checkoutId).toBe('prod-a');
+  });
+
+  it('falls back to generic product name when name is empty', async () => {
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', '', 'monterey-futon', 499, 449, 0.10);
+
+    expect(captured[0].variables.productName).toBe('A product you saved');
+  });
+});
+
+describe('emailPriceAlertSubscribers — deduplication', () => {
+  it('skips subscriber already emailed within 24h window', async () => {
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]); // 1 min ago
+
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(0);
+    expect(captured).toHaveLength(0);
+  });
+
+  it('allows email outside 24h window', async () => {
+    const beyond24h = _DEDUP_WINDOW_MS + 60_000; // 1 min past window
+    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', beyond24h)]);
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(1);
+  });
+
+  it('sends to non-deduped subscriber when another is deduped', async () => {
+    __seed('PriceAlerts', [
+      alertSub('alice@example.com'),
+      alertSub('bob@example.com'),
+    ]);
+    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]);
+
+    const captured = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(1);
+
+    expect(captured[0].recipientEmail).toBe('bob@example.com');
+  });
+
+  it('dedup is scoped to productId — different product not suppressed', async () => {
+    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-b')]);
+    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]); // different productId
+
+    const count = await _emailPriceAlertSubscribers('prod-b', 'Eureka Futon', 'eureka-futon', 699, 629, 0.10);
+    expect(count).toBe(1);
+  });
+});
+
+describe('emailPriceAlertSubscribers — skips invalid entries', () => {
+  it('skips subscriber with missing email field', async () => {
+    __seed('PriceAlerts', [{ _id: 'pa-1', productId: 'prod-a', active: true, email: '' }]);
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(0);
+  });
+});
+
+describe('emailPriceAlertSubscribers — error resilience', () => {
+  it('continues processing other subscribers if one insert fails', async () => {
+    __seed('PriceAlerts', [
+      alertSub('fail@example.com'),
+      alertSub('success@example.com'),
+    ]);
+
+    let callCount = 0;
+    __onInsert((collection, item) => {
+      if (collection === 'EmailQueue') {
+        callCount++;
+        if (callCount === 1) throw new Error('insert failed');
+      }
+    });
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(1);
+  });
+});
+
+describe('detectPriceDrops — emailsQueued integration', () => {
+  it('increments emailsQueued when subscribers exist for a dropped product', async () => {
+    __seed('Stores/Products', [product({ price: 449, slug: 'monterey-futon' })]);
+    __seed('ProductPriceHistory', [priceRecord('prod-a', 499, 25 * 60 * 60 * 1000)]);
+    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-a')]);
+
+    const result = await detectPriceDrops();
+    expect(result.success).toBe(true);
+    expect(result.emailsQueued).toBe(1);
+  });
+
+  it('emailsQueued is 0 when no subscribers exist', async () => {
+    __seed('Stores/Products', [product({ slug: 'monterey-futon' })]);
+    __seed('ProductPriceHistory', [priceRecord('prod-a', 499, 25 * 60 * 60 * 1000)]);
+    __seed('PriceAlerts', []);
+
+    const result = await detectPriceDrops();
+    expect(result.emailsQueued).toBe(0);
+  });
+
+  it('emailsQueued is 0 when no price drop detected', async () => {
+    __seed('Stores/Products', [product({ price: 499 })]);
+    __seed('ProductPriceHistory', [priceRecord('prod-a', 449, 25 * 60 * 60 * 1000)]); // price went UP
+    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-a')]);
+
+    const result = await detectPriceDrops();
+    expect(result.emailsQueued).toBe(0);
+  });
+
+  it('result includes emailsQueued:0 on total failure', async () => {
+    __setQueryError('Stores/Products', new Error('boom'));
+    const result = await detectPriceDrops();
+    expect(result.emailsQueued).toBe(0);
   });
 });
