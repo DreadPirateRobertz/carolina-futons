@@ -6,7 +6,7 @@
 <title>Carolina Futons - Editor Hookup Guide</title>
 <style>
 /* ══════════════════════════════════════════════════════════════
-   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.4
+   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.5
    Design tokens match sharedTokens.js + designTokens.js exactly
    ══════════════════════════════════════════════════════════════ */
 :root {
@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.6 · Updated 2026-03-28 — Session 28/29: Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib, Android needs editor wiring), Day-7 Review Email (CF-fzsd), A/B Testing (CF-blhq), GA4 Funnel Events (CF-zqz2), Cross-rig Event Bus (CF-qe31). All backend-only — element wiring pending Stilgar hookup. Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.7 · Updated 2026-03-28 — Session 29: Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy). Previous: Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib), Day-7 Review Email (CF-fzsd), A/B Testing (CF-blhq), GA4 Funnel Events (CF-zqz2), Cross-rig Event Bus (CF-qe31). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1677,6 +1677,51 @@ Right column:
   <li>Collapses automatically in normal customer UX (no qr param).</li>
 </ul>`, elements: [
         ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
+      ]},
+      { name: "Price Lock Widget (NEW — CF-tjf0)", impl: `<h4>🔒 Implementation — Price Lock Guarantee Widget (NEW — PR #935 / CF-tjf0)</h4>
+<p><em>Frontend: <code>src/public/PriceLockWidget.js</code> — <code>initPriceLockWidget($w, state)</code></em><br>
+<em>Backend: <code>src/backend/priceLock.web.js</code> — <code>createPriceLock</code>, <code>checkPriceLock</code>, <code>redeemPriceLock</code></em></p>
+<p>CF+ members can lock today's price with a <strong>$25 refundable deposit</strong> for 30, 60, or 90 days. <span class="impl-warn">All elements must be collapsed/hidden by default. Widget expands #priceLockSection on init for eligible members.</span></p>
+<ul>
+  <li><strong>#priceLockSection</strong>: Container section. Collapsed for non-members. Code expands it for logged-in CF+ members.</li>
+  <li><strong>#priceLockBtn</strong>: "Lock This Price — $25 Deposit" CTA button. Collapses when lock is already active.</li>
+  <li><strong>#priceLockBadge</strong>: "Price locked at $X" badge container. Expands when member has active lock on this product.</li>
+  <li><strong>#priceLockBadgeText</strong>: Text inside badge — "Price locked at $X.XX".</li>
+  <li><strong>#priceLockExpiry</strong>: "Expires in X days • $25 deposit applied at checkout" text.</li>
+  <li><strong>#priceLockModal</strong>: Full-overlay modal for tier selection. Hidden by default.</li>
+  <li><strong>#priceLockModalContent</strong>: Modal content box inside overlay.</li>
+  <li><strong>#priceLockClose</strong>: Modal close button (X).</li>
+  <li><strong>#priceLock30</strong>: "30-day lock" tier button.</li>
+  <li><strong>#priceLock60</strong>: "60-day lock" tier button.</li>
+  <li><strong>#priceLock90</strong>: "90-day lock" tier button.</li>
+  <li><strong>#priceLockDeposit</strong>: "$25 refundable deposit" text element.</li>
+  <li><strong>#priceLockSuccess</strong>: Success message shown after lock creation. Collapses after 3 seconds.</li>
+</ul>`, elements: [
+        ["priceLockSection","Section","Container — collapsed by default; expands for CF+ members"],
+        ["priceLockBtn","Button","'Lock This Price — $25 Deposit' CTA"],
+        ["priceLockBadge","Box","Active lock badge container"],
+        ["priceLockBadgeText","Text","'Price locked at $X.XX' badge text"],
+        ["priceLockExpiry","Text","Expiry + deposit applied text"],
+        ["priceLockModal","Box","Tier selector modal overlay"],
+        ["priceLockModalContent","Box","Modal content box"],
+        ["priceLockClose","Button","Modal close button"],
+        ["priceLock30","Button","30-day tier button"],
+        ["priceLock60","Button","60-day tier button"],
+        ["priceLock90","Button","90-day tier button"],
+        ["priceLockDeposit","Text","'$25 refundable deposit' text"],
+        ["priceLockSuccess","Text","Success message after lock creation"]
+      ]},
+      { name: "Stamped.io Reviews (NEW — CF-gxn1)", impl: `<h4>⭐ Implementation — Stamped.io Review Widget (NEW — CF-gxn1)</h4>
+<p><em>Frontend: <code>src/public/ProductReviews.js</code> — <code>initProductReviews($w, state)</code> (updated)</em><br>
+<em>Backend: <code>src/backend/stampedIoService.web.js</code> — <code>getStampedRating</code>, <code>getStampedReviews</code>, <code>getBatchStampedRatings</code></em></p>
+<p><strong>Stamped.io is now the PRIMARY review source</strong> for both aggregate ratings and review lists. CMS-based reviews are the fallback when Stamped.io is unavailable.</p>
+<p><span class="impl-warn">Stilgar TODO (dashboard only): Install Stamped.io from Wix App Market + add secrets STAMPED_API_KEY, STAMPED_API_SECRET, STAMPED_STORE_HASH.</span></p>
+<p>The existing <code>#reviewsSection</code> elements remain unchanged (see Reviews &amp; Ratings section above). The Stamped.io widget embed requires one new container:</p>
+<ul>
+  <li><strong>#productReviewWidget</strong>: Box element — Stamped.io native embed container. Place on Product Page below the review form. Code injects the Stamped.io widget script into this container when <code>getStampedWidgetConfig()</code> succeeds.</li>
+</ul>
+<p>Category cards use <code>getBatchStampedRatings</code> → same <code>#gridReviewStars</code> / <code>#gridReviewCount</code> elements as before (no new editor elements).</p>`, elements: [
+        ["productReviewWidget","Box","Stamped.io native embed container — place below review form"]
       ]}
     ]
   },
@@ -5022,6 +5067,58 @@ SHARING:
   },
 
   {
+    name: "Gift Registry (NEW — CF-easy)", file: "Gift Registry.js", priority: "P2", est: "30 min",
+    sections: [
+      { name: "Registry List & Create Form", impl: `<h4>🎁 Implementation — Gift Registry (NEW — CF-easy)</h4>
+<p><em>Page: <code>src/pages/Gift Registry.js</code> — three modes: list, manage, public view</em><br>
+<em>Backend: <code>src/backend/giftRegistry.web.js</code> — CRUD operations for registry management</em></p>
+<p>Members can create, manage, and share gift registries. A shareable public URL shows registry contents to guests. <span class="impl-warn">All form elements and repeaters must be collapsed by default.</span></p>
+<ul>
+  <li><strong>#registryCount</strong>: Text — "X registr(y|ies)" summary label.</li>
+  <li><strong>#registryEmptyState</strong>: Box — empty state shown when no registries. Expands when list is empty.</li>
+  <li><strong>#registryRepeater</strong>: Repeater — one item per registry. Each item contains:
+    <ul>
+      <li><strong>#registryItemTitle</strong>: Text — registry name.</li>
+      <li><strong>#registryItemOccasion</strong>: Text — formatted occasion (Wedding, Baby Shower, etc.).</li>
+      <li><strong>#registryItemDate</strong>: Text — event date formatted as "MMM D, YYYY".</li>
+      <li><strong>#registryItemCount</strong>: Text — "X item(s)".</li>
+      <li><strong>#registryManageBtn</strong>: Button — navigates to registry manage view.</li>
+    </ul>
+  </li>
+  <li><strong>#registryCreateBtn</strong>: Button — "Create Registry" CTA. Expands the create form.</li>
+  <li><strong>#registryCreateForm</strong>: Box — create form container. Collapsed by default.</li>
+  <li><strong>#registryTitleInput</strong>: TextInput — registry name field.</li>
+  <li><strong>#registryOccasionDropdown</strong>: Dropdown — occasion selector (wedding, baby-shower, birthday, housewarming, other).</li>
+  <li><strong>#registryDatePicker</strong>: DatePicker — event date field.</li>
+  <li><strong>#registryMessageInput</strong>: TextBox — optional message/description.</li>
+  <li><strong>#registryPublicToggle</strong>: Toggle — public/private visibility.</li>
+  <li><strong>#registrySubmitBtn</strong>: Button — submit new registry. Disabled during submit.</li>
+  <li><strong>#registryCancelBtn</strong>: Button — cancel create, collapses form.</li>
+  <li><strong>#registryFormError</strong>: Text — inline error message. Collapsed by default.</li>
+</ul>`, elements: [
+        ["registryCount","Text","Registry count summary label"],
+        ["registryEmptyState","Box","Empty state — expand when no registries"],
+        ["registryRepeater","Repeater","Registry list — one item per registry"],
+        ["registryItemTitle","Text","Registry name (repeater item)"],
+        ["registryItemOccasion","Text","Occasion label (repeater item)"],
+        ["registryItemDate","Text","Event date (repeater item)"],
+        ["registryItemCount","Text","Item count (repeater item)"],
+        ["registryManageBtn","Button","Manage registry button (repeater item)"],
+        ["registryCreateBtn","Button","Create Registry CTA"],
+        ["registryCreateForm","Box","Create form container — collapsed by default"],
+        ["registryTitleInput","TextInput","Registry name input"],
+        ["registryOccasionDropdown","Dropdown","Occasion selector"],
+        ["registryDatePicker","DatePicker","Event date picker"],
+        ["registryMessageInput","TextBox","Optional message/description"],
+        ["registryPublicToggle","Toggle","Public/private toggle"],
+        ["registrySubmitBtn","Button","Submit create form"],
+        ["registryCancelBtn","Button","Cancel / collapse form"],
+        ["registryFormError","Text","Inline error message — collapsed by default"]
+      ]}
+    ]
+  },
+
+  {
     name: "Bundle Builder", file: "Bundle.js (/bundle page) ✅ PR #677 merged", priority: "P1", est: "60 min",
     sections: [
       { name: "Main Layout", impl: `<h4>🛒 Implementation — Bundle Builder Main Layout (/bundle)</h4>
@@ -5337,7 +5434,7 @@ function render() {
   hookupSteps.className = 'howto';
   hookupSteps.innerHTML = [
     '<h2>\u{1F4CB} Editor Hookup Steps \u2014 Per-Page Coordination Flow</h2>',
-    '<p style="color:#555;font-size:0.9em;margin-bottom:12px;">Updated 2026-03-22. Exact sequence Stilgar and melania follow to wire each page. Repeat for every page.</p>',
+    '<p style="color:#555;font-size:0.9em;margin-bottom:12px;">Updated 2026-03-28. Exact sequence Stilgar and melania follow to wire each page. Repeat for every page.</p>',
     '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.88em;">',
     '<tr style="background:#e8d5b7;"><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Role</th><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Responsibility</th></tr>',
     '<tr><td style="padding:6px 10px;border:1px solid #ddd;"><strong>Stilgar</strong></td><td style="padding:6px 10px;border:1px solid #ddd;">Builds frontend elements in Wix Studio editor (sections, buttons, galleries, text boxes, etc.)</td></tr>',
