@@ -60,34 +60,51 @@ const COLLECTION = 'TradeInRequests';
 // ── getTradeInValuation ────────────────────────────────────────────
 
 describe('getTradeInValuation', () => {
-  it('returns eligible valuation for frame in good condition', async () => {
+  // Exact values: offset = round(baseCredit * 0.1 / 5) * 5
+  // frame/good: base=75, offset=round(7.5/5)*5=round(1.5)*5=10 → min=65, max=85
+  // frame/fair: base=50, offset=round(5/5)*5=round(1)*5=5   → min=45, max=55
+  // frame/poor: base=25, offset=round(2.5/5)*5=round(0.5)*5=5 → min=20, max=30
+  // mattress/good: base=40, offset=round(4/5)*5=round(0.8)*5=5 → min=35, max=45
+  // mattress/fair: base=25, offset=5 → min=20, max=30
+
+  it('returns exact valuation range for frame/good', async () => {
     const result = await getTradeInValuation('frame', 'good');
     expect(result.success).toBe(true);
     expect(result.eligible).toBe(true);
-    expect(result.creditMin).toBeGreaterThan(0);
-    expect(result.creditMax).toBeGreaterThanOrEqual(result.creditMin);
-    expect(result.creditMax).toBeLessThanOrEqual(85); // $75 + ~10%
+    expect(result.creditMin).toBe(65);
+    expect(result.creditMax).toBe(85);
   });
 
-  it('returns eligible valuation for frame in fair condition', async () => {
+  it('returns exact valuation range for frame/fair', async () => {
     const result = await getTradeInValuation('frame', 'fair');
     expect(result.success).toBe(true);
     expect(result.eligible).toBe(true);
-    expect(result.creditMax).toBeLessThan(75); // less than good-condition max
+    expect(result.creditMin).toBe(45);
+    expect(result.creditMax).toBe(55);
   });
 
-  it('returns eligible valuation for frame in poor condition', async () => {
+  it('returns exact valuation range for frame/poor', async () => {
     const result = await getTradeInValuation('frame', 'poor');
     expect(result.success).toBe(true);
     expect(result.eligible).toBe(true);
-    expect(result.creditMax).toBeLessThan(50);
+    expect(result.creditMin).toBe(20);
+    expect(result.creditMax).toBe(30);
   });
 
-  it('returns eligible valuation for mattress in good condition', async () => {
+  it('returns exact valuation range for mattress/good', async () => {
     const result = await getTradeInValuation('mattress', 'good');
     expect(result.success).toBe(true);
     expect(result.eligible).toBe(true);
-    expect(result.creditMax).toBeLessThanOrEqual(50); // $40 + ~10%
+    expect(result.creditMin).toBe(35);
+    expect(result.creditMax).toBe(45);
+  });
+
+  it('returns exact valuation range for mattress/fair', async () => {
+    const result = await getTradeInValuation('mattress', 'fair');
+    expect(result.success).toBe(true);
+    expect(result.eligible).toBe(true);
+    expect(result.creditMin).toBe(20);
+    expect(result.creditMax).toBe(30);
   });
 
   it('returns ineligible for mattress in poor condition (hygiene)', async () => {
@@ -218,6 +235,21 @@ describe('submitTradeInRequest', () => {
     expect(JSON.parse(inserted[0].photoUrls)).toEqual([]);
   });
 
+  it('filters out non-https photo URLs to prevent stored XSS', async () => {
+    const mixed = [
+      'https://cdn.example.com/safe.jpg',
+      'javascript:alert(1)',
+      'data:image/png;base64,abc',
+      'http://insecure.example.com/img.jpg',
+      'https://cdn.example.com/also-safe.jpg',
+    ];
+    await submitTradeInRequest({ ...validData, photoUrls: mixed });
+    const inserted = __getInserted(COLLECTION);
+    const urls = JSON.parse(inserted[0].photoUrls);
+    expect(urls).toHaveLength(2);
+    expect(urls.every(u => u.startsWith('https://'))).toBe(true);
+  });
+
   it('clamps itemAge to 0–50', async () => {
     await submitTradeInRequest({ ...validData, itemAge: 999 });
     const inserted = __getInserted(COLLECTION);
@@ -332,9 +364,10 @@ describe('confirmTradeIn', () => {
     __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'pending' })]);
     await confirmTradeIn('req-1', 'good');
     const updated = __getUpdated(COLLECTION);
-    expect(updated[0].status).toBe('credited');
-    expect(updated[0].issuedCreditAmount).toBe(75);
-    expect(updated[0].confirmedCondition).toBe('good');
+    const creditedUpdate = updated.find(u => u.status === 'credited');
+    expect(creditedUpdate).toBeDefined();
+    expect(creditedUpdate.issuedCreditAmount).toBe(75);
+    expect(creditedUpdate.confirmedCondition).toBe('good');
   });
 
   it('stores staffNotes in the record', async () => {
@@ -361,6 +394,14 @@ describe('confirmTradeIn', () => {
     );
   });
 
+  it('passes orderReference with trade-in: prefix for dedup', async () => {
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'pending' })]);
+    await confirmTradeIn('req-1', 'good');
+    expect(issueStoreCredit).toHaveBeenCalledWith(
+      expect.objectContaining({ orderReference: 'trade-in:req-1' })
+    );
+  });
+
   it('skips credit issuance for guest (no memberId)', async () => {
     __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: null, status: 'pending' })]);
     const result = await confirmTradeIn('req-1', 'good');
@@ -381,6 +422,34 @@ describe('confirmTradeIn', () => {
     __seed(COLLECTION, [makeRequest({ _id: 'req-1', status: 'rejected' })]);
     const result = await confirmTradeIn('req-1', 'good');
     expect(result.success).toBe(false);
+  });
+
+  it('allows retry from confirmed status (idempotency)', async () => {
+    // Record is 'confirmed' from a previous partial run — should proceed to issue credit
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'confirmed', confirmedCondition: 'good' })]);
+    const result = await confirmTradeIn('req-1', 'good');
+    expect(result.success).toBe(true);
+    expect(issueStoreCredit).toHaveBeenCalledOnce();
+  });
+
+  it('sets status to confirmed before issuing credit (idempotency staging)', async () => {
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'pending' })]);
+    await confirmTradeIn('req-1', 'good');
+    const updated = __getUpdated(COLLECTION);
+    // First update is 'confirmed', second is 'credited'
+    expect(updated.some(u => u.status === 'confirmed')).toBe(true);
+    expect(updated.some(u => u.status === 'credited')).toBe(true);
+  });
+
+  it('leaves record as confirmed (not pending) when credit issuance fails', async () => {
+    issueStoreCredit.mockResolvedValueOnce({ success: false, message: 'Credit limit exceeded.' });
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'pending' })]);
+    const result = await confirmTradeIn('req-1', 'good');
+    expect(result.success).toBe(false);
+    const updated = __getUpdated(COLLECTION);
+    // Record was staged to 'confirmed' before the failed credit issuance
+    expect(updated.some(u => u.status === 'confirmed')).toBe(true);
+    expect(updated.every(u => u.status !== 'pending')).toBe(true);
   });
 
   it('returns error when request not found', async () => {
