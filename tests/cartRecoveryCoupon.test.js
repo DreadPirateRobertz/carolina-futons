@@ -8,7 +8,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { generateRecoveryCoupon } from '../src/backend/couponsService.web.js';
 import { coupons } from './__mocks__/wix-marketing-backend.js';
 import wixData from './__mocks__/wix-data.js';
-import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
 
 beforeEach(() => {
   __reset();
