@@ -24,9 +24,10 @@ export async function initPageSeo(pageType, data = {}) {
     const description = await getPageMetaDescription(pageType, data);
     const url = await getCanonicalUrl(pageType, data.slug);
     const image = data.image || DEFAULT_IMAGE;
+    const OG_TYPE = { product: 'product', blogPost: 'article', buyingGuide: 'article' };
     const isArticle = pageType === 'blogPost' || pageType === 'buyingGuide';
     const useLargeImage = pageType === 'product' || pageType === 'buyingGuide' || (pageType === 'blogPost' && data.image);
-    const ogType = pageType === 'product' ? 'product' : isArticle ? 'article' : 'website';
+    const ogType = OG_TYPE[pageType] || 'website';
 
     head.setTitle(title);
 
@@ -39,8 +40,6 @@ export async function initPageSeo(pageType, data = {}) {
       { property: 'og:url', content: url },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:image', content: image },
-      { property: 'og:image:width', content: '1200' },
-      { property: 'og:image:height', content: '630' },
       // Twitter Card
       { name: 'twitter:card', content: useLargeImage ? 'summary_large_image' : 'summary' },
       { name: 'twitter:site', content: TWITTER_HANDLE },
@@ -48,6 +47,13 @@ export async function initPageSeo(pageType, data = {}) {
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: image },
     ];
+
+    if (useLargeImage && data.image) {
+      metaTags.push(
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+      );
+    }
 
     if (isArticle && data.category) {
       metaTags.push({ property: 'article:section', content: data.category });
