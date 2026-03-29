@@ -6,7 +6,7 @@
 <title>Carolina Futons - Editor Hookup Guide</title>
 <style>
 /* ══════════════════════════════════════════════════════════════
-   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.5
+   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.8
    Design tokens match sharedTokens.js + designTokens.js exactly
    ══════════════════════════════════════════════════════════════ */
 :root {
@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.7 · Updated 2026-03-28 — Session 29: Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy). Previous: Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib), Day-7 Review Email (CF-fzsd), A/B Testing (CF-blhq), GA4 Funnel Events (CF-zqz2), Cross-rig Event Bus (CF-qe31). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.8 · Updated 2026-03-29 — Session 30: White Glove Delivery scheduling (CF-y7lp) — adds White Glove Delivery page, Admin Delivery Calendar page, Thank You Page white-glove prompt section. Previous: Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -3251,6 +3251,20 @@ Action buttons (right):
         ["reviewRating","Text","Rating display"],["reviewBodyInput","TextBox","Review body"],
         ["reviewSubmitBtn","Button","Submit"],["reviewSuccess","Text","Success"],
         ["reviewError","Text","Error"]
+      ]},
+      { name: "White Glove Prompt (NEW — CF-y7lp)", impl: `<h4>🧤 Implementation — White Glove Delivery Prompt (CF-y7lp)</h4>
+<p><strong>Layout: Collapsed section — only shown for white-glove orders with available slots</strong></p>
+<ul>
+  <li><strong>#whiteGlovePromptSection</strong>: Section — <span class="impl-warn">collapsed by default</span>. Expanded only when: (1) order shipping code contains 'white'/'wg' or title contains 'white-glove'/'assembly'/'setup', AND (2) backend confirms available slots.</li>
+  <li><strong>#whiteGlovePromptTitle</strong>: Text — "Schedule Your White-Glove Delivery".</li>
+  <li><strong>#whiteGlovePromptBody</strong>: Text — scheduling invite copy.</li>
+  <li><strong>#whiteGloveScheduleBtn</strong>: Button — navigates to <code>/white-glove-delivery?orderId=&lt;id&gt;</code>.</li>
+  <li>Error path: section collapses silently. Missing elements are all try/catch guarded.</li>
+</ul>`, elements: [
+        ["whiteGlovePromptSection","Section","Prompt container — collapsed by default"],
+        ["whiteGlovePromptTitle","Text","Title"],
+        ["whiteGlovePromptBody","Text","Body copy"],
+        ["whiteGloveScheduleBtn","Button","Schedule CTA — links to /white-glove-delivery"]
       ]}
     ]
   },
@@ -3321,6 +3335,140 @@ Action buttons (right):
 <ul>
   <li><strong>#shippingSchemaHtml</strong>: HtmlComponent injected with JSON-LD structured data for shipping policy SEO. Content set entirely at runtime.</li>
 </ul>`, elements: [["shippingSchemaHtml","HtmlComponent","Schema"]]}
+    ]
+  },
+  {
+    name: "White Glove Delivery", file: "White Glove Delivery.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "State Sections", impl: `<h4>🧤 Implementation — White Glove Delivery State Machine (CF-y7lp)</h4>
+<p><strong>Layout: Mutually exclusive state sections — only one visible at a time</strong></p>
+<ul>
+  <li><strong>#wgLoadingSection</strong>: Shown while fetching order/slots. Start expanded, all others collapsed.</li>
+  <li><strong>#wgExistingSection</strong>: Shown when customer already has an appointment. Shows date, window, status, reschedule option.</li>
+  <li><strong>#wgCalendarSection</strong>: Date picker — shown after loading. Contains date repeater + window sub-panel.</li>
+  <li><strong>#wgConfirmSection</strong>: Shown after successful booking. Confirms date, window, order.</li>
+  <li><strong>#wgErrorSection</strong>: Error fallback. Shows message text + retry option.</li>
+  <li>All section transitions are try/catch guarded — missing elements fail silently.</li>
+</ul>`, elements: [
+        ["wgLoadingSection","Section","Loading state"],
+        ["wgExistingSection","Section","Existing appointment state"],
+        ["wgCalendarSection","Section","Calendar/date picker state"],
+        ["wgConfirmSection","Section","Booking confirmation state"],
+        ["wgErrorSection","Section","Error fallback state"],
+        ["wgErrorText","Text","Error message"]
+      ]},
+      { name: "Existing Appointment", impl: `<h4>📅 Implementation — Existing Appointment View</h4>
+<ul>
+  <li><strong>#existingDateText</strong>: Text — formatted appointment date.</li>
+  <li><strong>#existingWindowText</strong>: Text — window label (e.g. "Morning 10am–12pm").</li>
+  <li><strong>#existingStatusText</strong>: Text — "confirmed" | "cancelled" | "completed".</li>
+  <li><strong>#rescheduleBtn</strong>: Button — triggers reschedule flow. Disabled if <code>rescheduleCount >= 1</code>.</li>
+  <li><strong>#rescheduleNote</strong>: Text — <span class="impl-warn">collapsed by default</span>. Expanded with "You have already rescheduled" when max reached.</li>
+</ul>`, elements: [
+        ["existingDateText","Text","Appointment date"],
+        ["existingWindowText","Text","Time window"],
+        ["existingStatusText","Text","Status"],
+        ["rescheduleBtn","Button","Reschedule trigger"],
+        ["rescheduleNote","Text","Max reschedule note — collapsed by default"]
+      ]},
+      { name: "Calendar (Date Picker)", impl: `<h4>🗓️ Implementation — Calendar Date Picker</h4>
+<p><strong>Layout: No-slots fallback + date card repeater</strong></p>
+<ul>
+  <li><strong>#calendarNoSlots</strong>: Text/Box — <span class="impl-warn">collapsed by default</span>. Expanded when no slots available in next 14 days.</li>
+  <li><strong>#calendarDateRepeater</strong>: Repeater — one card per available date. Each card: <code>#calendarDayLabel</code> (formatted date) + <code>#calendarSelectDayBtn</code> (disabled + label 'Full' when no windows available).</li>
+  <li><strong>#calendarBackBtn</strong>: Button — shown when window selector is open; returns to date list.</li>
+</ul>`, repeater: "calendarDateRepeater", elements: [
+        ["calendarNoSlots","Text","No availability fallback — collapsed by default"],
+        ["calendarDateRepeater","Repeater","Date cards"],
+        ["calendarBackBtn","Button","Back to dates"]
+      ], children: [
+        ["calendarDayLabel","Text","Formatted date"],
+        ["calendarSelectDayBtn","Button","Select this date (disabled when full)"]
+      ]},
+      { name: "Window Selector", impl: `<h4>⏰ Implementation — Time Window Selector</h4>
+<p><strong>Layout: Sub-panel within calendar section</strong></p>
+<ul>
+  <li><strong>#windowSelectorSection</strong>: Section — <span class="impl-warn">collapsed by default</span>. Expanded when user selects a date from the calendar.</li>
+  <li><strong>#windowDateLabel</strong>: Text — formatted selected date.</li>
+  <li><strong>#windowRepeater</strong>: Repeater — morning / midday / afternoon cards.</li>
+  <li><strong>#windowLabel</strong>: Text — window name per card.</li>
+  <li><strong>#windowSpotsText</strong>: Text — "X spots left" or "Full".</li>
+  <li><strong>#windowSelectBtn</strong>: Button — disabled when 0 spots. Triggers booking confirmation.</li>
+  <li><strong>#windowBackBtn</strong>: Button — collapses window selector, returns to calendar.</li>
+</ul>`, repeater: "windowRepeater", elements: [
+        ["windowSelectorSection","Section","Window picker — collapsed by default"],
+        ["windowDateLabel","Text","Selected date label"],
+        ["windowRepeater","Repeater","Window cards"],
+        ["windowBackBtn","Button","Back to calendar"]
+      ], children: [
+        ["windowLabel","Text","Window name (morning/midday/afternoon)"],
+        ["windowSpotsText","Text","Spots remaining"],
+        ["windowSelectBtn","Button","Select window — disabled when full"]
+      ]},
+      { name: "Confirmation", impl: `<h4>✅ Implementation — Booking Confirmation</h4>
+<ul>
+  <li><strong>#confirmHeadline</strong>: Text — "Appointment Scheduled!" or "Appointment Rescheduled!" based on flow.</li>
+  <li><strong>#confirmSubtext</strong>: Text — "We'll send you a confirmation email with all the details."</li>
+  <li><strong>#confirmDateText</strong>: Text — formatted appointment date.</li>
+  <li><strong>#confirmWindowText</strong>: Text — window label.</li>
+  <li><strong>#confirmOrdersBtn</strong>: Button — navigates to Member Page order history.</li>
+</ul>`, elements: [
+        ["confirmHeadline","Text","Confirmation headline"],
+        ["confirmSubtext","Text","Confirmation subtext"],
+        ["confirmDateText","Text","Confirmed date"],
+        ["confirmWindowText","Text","Confirmed window"],
+        ["confirmOrdersBtn","Button","View orders CTA"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin Delivery Calendar", file: "Admin Delivery Calendar.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Appointment Calendar", impl: `<h4>📅 Implementation — Admin Appointment Calendar (CF-y7lp)</h4>
+<p><strong>Requires: Admin login. Data from <code>getAdminCalendar(from, to)</code>.</strong></p>
+<ul>
+  <li><strong>#calendarRangeLabel</strong>: Text — "Mar 29 – Apr 12" range label.</li>
+  <li><strong>#calendarApptCount</strong>: Text — "X appointments" summary.</li>
+  <li><strong>#calendarEmpty</strong>: Section/Text — <span class="impl-warn">collapsed by default</span>. Expanded when no appointments in range.</li>
+  <li><strong>#calendarRepeater</strong>: Repeater — one card per appointment. Shows date, window, status, customer info, notes.</li>
+  <li><strong>#calendarFromDate / #calendarToDate</strong>: Date pickers for range filter.</li>
+  <li><strong>#calendarFilterBtn</strong>: Button — triggers range fetch. Disabled during load.</li>
+  <li><strong>#calendarFilterError</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on invalid range or API error.</li>
+</ul>`, repeater: "calendarRepeater", elements: [
+        ["calendarRangeLabel","Text","Date range label"],
+        ["calendarApptCount","Text","Appointment count"],
+        ["calendarEmpty","Section","Empty state — collapsed by default"],
+        ["calendarRepeater","Repeater","Appointment cards"],
+        ["calendarFromDate","DatePicker","Range start"],
+        ["calendarToDate","DatePicker","Range end"],
+        ["calendarFilterBtn","Button","Apply range filter"],
+        ["calendarFilterError","Text","Filter error — collapsed by default"]
+      ], children: [
+        ["apptDate","Text","Appointment date"],
+        ["apptWindow","Text","Time window"],
+        ["apptStatus","Text","Status"],
+        ["apptEmail","Text","Customer email"],
+        ["apptPhone","Text","Customer phone"],
+        ["apptAddress","Text","Delivery address"],
+        ["apptNotes","Text","Special notes"],
+        ["apptOrderId","Text","Order ID"]
+      ]},
+      { name: "Block Date Form", impl: `<h4>🚫 Implementation — Block Delivery Date</h4>
+<ul>
+  <li><strong>#blockDateInput</strong>: DatePicker — select date to block.</li>
+  <li><strong>#blockReasonInput</strong>: Input — optional reason text.</li>
+  <li><strong>#blockDateSubmitBtn</strong>: Button — "Block Date" → "Blocking...". Disabled during request.</li>
+  <li><strong>#blockFormError</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on validation failure or API error.</li>
+  <li><strong>#blockFormSuccess</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on success.</li>
+  <li><strong>#blockedDatesSection</strong>: Section — expanded after successful block to show updated blocked dates list.</li>
+</ul>`, elements: [
+        ["blockDateInput","DatePicker","Date to block"],
+        ["blockReasonInput","Input","Block reason (optional)"],
+        ["blockDateSubmitBtn","Button","Submit block"],
+        ["blockFormError","Text","Error — collapsed by default"],
+        ["blockFormSuccess","Text","Success — collapsed by default"],
+        ["blockedDatesSection","Section","Blocked dates list"]
+      ]}
     ]
   },
   {
