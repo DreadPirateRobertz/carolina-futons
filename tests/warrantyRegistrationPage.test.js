@@ -108,7 +108,7 @@ describe('initWarrantyRegistrationPage', () => {
   });
 
   it('pre-fills product name from query param', async () => {
-    mockWixLocation.query = { productName: encodeURIComponent('Murphy Cabinet Bed') };
+    mockWixLocation.query = { productName: 'Murphy Cabinet Bed' };
     const productNameEl = makeInput('');
     const $wWith = make$w({ '#warrantyProductName': productNameEl });
     await initWarrantyRegistrationPage($wWith);

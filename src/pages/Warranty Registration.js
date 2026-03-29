@@ -42,9 +42,9 @@ export async function initWarrantyRegistrationPage($w) {
   const { orderId = '', productId = '', productName = '' } = query;
 
   // Pre-populate fields from URL params
-  if (productName) safeCall(() => { $w('#warrantyProductName').value = decodeURIComponent(productName); });
-  if (productId)   safeCall(() => { $w('#warrantyProductId').value = decodeURIComponent(productId); });
-  if (orderId)     safeCall(() => { $w('#warrantyOrderId').value = decodeURIComponent(orderId); });
+  if (productName) safeCall(() => { $w('#warrantyProductName').value = productName; });
+  if (productId)   safeCall(() => { $w('#warrantyProductId').value = productId; });
+  if (orderId)     safeCall(() => { $w('#warrantyOrderId').value = orderId; });
 
   // Wire submit button
   safeCall(() => {

@@ -39,7 +39,7 @@ export function initWarrantyCta(opts = {}) {
   const params = new URLSearchParams();
   if (opts.orderId)     params.set('orderId',     opts.orderId);
   if (opts.productId)   params.set('productId',   opts.productId);
-  if (opts.productName) params.set('productName', encodeURIComponent(opts.productName));
+  if (opts.productName) params.set('productName', opts.productName);
 
   const registrationUrl = params.toString()
     ? `${WARRANTY_REGISTRATION_URL}?${params.toString()}`
@@ -91,8 +91,16 @@ export async function initWarrantyList(opts = {}) {
 
   safeExpand($w, '#warrantyListSection');
 
-  // Populate repeater
+  // Populate repeater — onItemReady must be registered before setting .data
   safeCall(() => {
+    $w('#warrantyRepeater').onItemReady(($item, itemData) => {
+      safeCall(() => $item('#warrantyItemPlan').text = itemData.planName);
+      safeCall(() => $item('#warrantyItemProduct').text = itemData.productName);
+      safeCall(() => $item('#warrantyItemStatus').text = _formatStatus(itemData.status));
+      safeCall(() => $item('#warrantyItemExpires').text = `Expires: ${itemData.expiresAt}`);
+      safeCall(() => $item('#warrantyItemRegistered').text = `Registered: ${itemData.registeredAt}`);
+    });
+
     $w('#warrantyRepeater').data = warranties.map(w => ({
       _id: w._id,
       planName: w.planName || 'Standard Warranty',
@@ -101,14 +109,6 @@ export async function initWarrantyList(opts = {}) {
       expiresAt: w.expiresAt ? _formatDate(w.expiresAt) : 'N/A',
       registeredAt: w.registeredAt ? _formatDate(w.registeredAt) : 'Not yet registered',
     }));
-
-    $w('#warrantyRepeater').onItemReady(($item, itemData) => {
-      safeCall(() => $item('#warrantyItemPlan').text = itemData.planName);
-      safeCall(() => $item('#warrantyItemProduct').text = itemData.productName);
-      safeCall(() => $item('#warrantyItemStatus').text = _formatStatus(itemData.status));
-      safeCall(() => $item('#warrantyItemExpires').text = `Expires: ${itemData.expiresAt}`);
-      safeCall(() => $item('#warrantyItemRegistered').text = `Registered: ${itemData.registeredAt}`);
-    });
   });
 }
 
