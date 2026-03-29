@@ -24,26 +24,36 @@ export async function initPageSeo(pageType, data = {}) {
     const description = await getPageMetaDescription(pageType, data);
     const url = await getCanonicalUrl(pageType, data.slug);
     const image = data.image || DEFAULT_IMAGE;
-    const useLargeImage = pageType === 'product' || (pageType === 'blogPost' && data.image);
+    const isArticle = pageType === 'blogPost' || pageType === 'buyingGuide';
+    const useLargeImage = pageType === 'product' || pageType === 'buyingGuide' || (pageType === 'blogPost' && data.image);
+    const ogType = pageType === 'product' ? 'product' : isArticle ? 'article' : 'website';
 
     head.setTitle(title);
 
-    head.setMetaTags([
+    const metaTags = [
       { name: 'description', content: description },
       // Open Graph
-      { property: 'og:type', content: pageType === 'product' ? 'product' : pageType === 'blogPost' ? 'article' : 'website' },
+      { property: 'og:type', content: ogType },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:url', content: url },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:image', content: image },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
       // Twitter Card
       { name: 'twitter:card', content: useLargeImage ? 'summary_large_image' : 'summary' },
       { name: 'twitter:site', content: TWITTER_HANDLE },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: image },
-    ]);
+    ];
+
+    if (isArticle && data.category) {
+      metaTags.push({ property: 'article:section', content: data.category });
+    }
+
+    head.setMetaTags(metaTags);
   } catch (e) {
     // SEO injection is non-critical — page still renders
   }

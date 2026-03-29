@@ -317,10 +317,10 @@ describe('Buying Guide page handler', () => {
   describe('SEO and schema', () => {
     it('calls initPageSeo with buyingGuide context', async () => {
       await runOnReady();
-      expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', {
+      expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
         name: 'Futon Mattress Guide',
         slug: 'futon-mattress-guide',
-      });
+      }));
     });
 
     it('posts schema JSON to guideSeoSchema element', async () => {

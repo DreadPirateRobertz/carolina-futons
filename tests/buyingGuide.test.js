@@ -187,7 +187,10 @@ describe('page initialization', () => {
   it('calls initPageSeo with guide name and slug', async () => {
     await loadPage();
     const { initPageSeo } = await import('public/pageSeo.js');
-    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', { name: mockGuide.title, slug: 'futon-frames' });
+    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
+      name: mockGuide.title,
+      slug: 'futon-frames',
+    }));
   });
 
   it('fetches all guide data in parallel', async () => {
