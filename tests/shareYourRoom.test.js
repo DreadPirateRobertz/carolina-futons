@@ -395,11 +395,64 @@ describe('ShareYourRoom', () => {
     );
   });
 
+  // ── room type onChange → refreshSubmitState ─────────────────────────────────
+
+  it('room type onChange triggers refreshSubmitState (enables submit when url + type present)', async () => {
+    const roomTypeEl = mockEl({ value: 'bedroom' });
+    const submitEl = mockEl();
+    const local$w = (sel) => {
+      if (sel === '#shareYourRoomRoomType') return roomTypeEl;
+      if (sel === '#shareYourRoomSubmitBtn') return submitEl;
+      return get(sel);
+    };
+    initShareYourRoomCTA(local$w, MEMBER_STATE);
+    _setUploadedUrl('wix:image://v1/abc.jpg'); // pre-set upload URL
+
+    // Trigger the arrow function registered to room type onChange
+    const onChangeFn = roomTypeEl.onChange.mock.calls[0][0];
+    onChangeFn();
+
+    expect(submitEl.enable).toHaveBeenCalled();
+  });
+
+  // ── getRoomType catch branch ──────────────────────────────────────────────
+
+  it('handles getRoomType when $w throws for roomType selector', async () => {
+    const local$w = (sel) => {
+      if (sel === '#shareYourRoomRoomType') throw new Error('element not found');
+      return get(sel);
+    };
+    initShareYourRoomCTA(local$w, MEMBER_STATE);
+    _setUploadedUrl('wix:image://v1/abc.jpg');
+
+    const submitHandler = get('#shareYourRoomSubmitBtn').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    // getRoomType returns null via catch → showValidation fires
+    expect(get('#shareYourRoomValidation').text).toBe('Please select a room type.');
+  });
+
   // ── exports ─────────────────────────────────────────────────────────────────
 
   it('exports _VALID_ROOM_TYPES with 5 entries', () => {
     expect(_VALID_ROOM_TYPES).toHaveLength(5);
     expect(_VALID_ROOM_TYPES.map(r => r.value)).toContain('living-room');
     expect(_VALID_ROOM_TYPES.map(r => r.value)).toContain('porch');
+  });
+
+  it('_getUploadedUrl returns the current upload URL', () => {
+    _setUploadedUrl('wix:image://v1/test.jpg');
+    expect(_getUploadedUrl()).toBe('wix:image://v1/test.jpg');
+    _setUploadedUrl(null);
+    expect(_getUploadedUrl()).toBeNull();
+  });
+
+  it('_isModalOpen reflects open/closed state', () => {
+    initShareYourRoomCTA($w, MEMBER_STATE);
+    expect(_isModalOpen()).toBe(false);
+    _openModal($w, MEMBER_STATE);
+    expect(_isModalOpen()).toBe(true);
+    _closeModal($w);
+    expect(_isModalOpen()).toBe(false);
   });
 });
