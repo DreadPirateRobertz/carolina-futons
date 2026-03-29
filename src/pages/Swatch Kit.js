@@ -36,7 +36,7 @@ export async function initPage($w) {
     const member = await currentMember.getMember().catch(() => null);
     if (member?._id) {
       const { getSwatchKitCreditStatus } = await import('backend/swatchKitService.web');
-      const creditStatus = await getSwatchKitCreditStatus(member._id);
+      const creditStatus = await getSwatchKitCreditStatus();
       const statusText = buildCreditStatusText(creditStatus);
       if (statusText) {
         $w('#creditStatusBanner').text = statusText;

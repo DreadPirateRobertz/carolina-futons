@@ -26,6 +26,11 @@ vi.mock('backend/storeCreditService.web', () => ({
   issueStoreCredit: (...args) => mockIssueStoreCredit(...args),
 }));
 
+const mockGetMember = vi.fn();
+vi.mock('wix-members-backend', () => ({
+  currentMember: { getMember: () => mockGetMember() },
+}));
+
 import {
   orderContainsSwatchKit,
   isQualifyingOrder,
@@ -44,6 +49,8 @@ beforeEach(() => {
   resetData();
   mockIssueStoreCredit.mockClear();
   mockIssueStoreCredit.mockResolvedValue({ success: true, creditId: 'cred-swatch-001' });
+  mockGetMember.mockClear();
+  mockGetMember.mockResolvedValue({ _id: 'mem-1' });
 });
 
 afterEach(() => {
@@ -243,18 +250,19 @@ function makeSwatchOrder(overrides = {}) {
 
 describe('getSwatchKitCreditStatus', () => {
   it('returns hasPendingCredit: false when no records', async () => {
-    const result = await getSwatchKitCreditStatus('mem-1');
+    const result = await getSwatchKitCreditStatus();
     expect(result).toEqual({ hasPendingCredit: false });
   });
 
-  it('returns hasPendingCredit: false for empty memberId', async () => {
-    const result = await getSwatchKitCreditStatus('');
+  it('returns hasPendingCredit: false when getMember returns no id', async () => {
+    mockGetMember.mockResolvedValue(null);
+    const result = await getSwatchKitCreditStatus();
     expect(result).toEqual({ hasPendingCredit: false });
   });
 
   it('returns pending credit details when found', async () => {
     __seed('SwatchKitOrders', [makeSwatchOrder()]);
-    const result = await getSwatchKitCreditStatus('mem-1');
+    const result = await getSwatchKitCreditStatus();
     expect(result.hasPendingCredit).toBe(true);
     expect(result.creditId).toBe('cred-001');
     expect(result.amount).toBe(SWATCH_KIT_CREDIT_AMOUNT);
@@ -264,14 +272,23 @@ describe('getSwatchKitCreditStatus', () => {
     __seed('SwatchKitOrders', [makeSwatchOrder({
       creditExpiresAt: new Date('2026-01-01T00:00:00Z'), // past
     })]);
-    const result = await getSwatchKitCreditStatus('mem-1');
+    const result = await getSwatchKitCreditStatus();
     expect(result).toMatchObject({ hasPendingCredit: false, expired: true });
   });
 
   it('returns lookup_failed on query error', async () => {
     __setQueryError('SwatchKitOrders', new Error('db error'));
-    const result = await getSwatchKitCreditStatus('mem-1');
+    const result = await getSwatchKitCreditStatus();
     expect(result).toMatchObject({ hasPendingCredit: false, error: 'lookup_failed' });
+  });
+
+  it('queries by the session memberId, not a caller-supplied id', async () => {
+    __seed('SwatchKitOrders', [makeSwatchOrder({ memberId: 'mem-1' })]);
+    mockGetMember.mockResolvedValue({ _id: 'mem-1' });
+    const result = await getSwatchKitCreditStatus();
+    expect(result.hasPendingCredit).toBe(true);
+    // Verifies the session memberId (mem-1) was used, not any caller-provided value
+    expect(mockGetMember).toHaveBeenCalled();
   });
 });
 

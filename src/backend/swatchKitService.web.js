@@ -29,6 +29,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 
 export const SWATCH_KIT_SKU = 'SWATCH-KIT-001';
@@ -146,15 +147,16 @@ export const recordSwatchKitPurchase = webMethod(
 );
 
 /**
- * Get the active swatch kit credit for a member (for checkout display).
+ * Get the active swatch kit credit for the currently authenticated member.
+ * memberId is derived from the session — callers cannot supply a foreign ID.
  *
- * @param {string} memberId
  * @returns {{ hasPendingCredit: boolean, creditId?: string, expiresAt?: Date }}
  */
 export const getSwatchKitCreditStatus = webMethod(
   Permissions.Member,
-  async (memberId) => {
-    const cleanId = sanitize(memberId || '', 64);
+  async () => {
+    const member = await currentMember.getMember();
+    const cleanId = sanitize(member?._id || '', 64);
     if (!cleanId) return { hasPendingCredit: false };
 
     try {
