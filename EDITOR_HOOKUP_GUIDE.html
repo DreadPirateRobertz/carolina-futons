@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.8 · Updated 2026-03-29 — Session 30: White Glove Delivery scheduling (CF-y7lp) — adds White Glove Delivery page, Admin Delivery Calendar page, Thank You Page white-glove prompt section. Previous: Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.9 · Updated 2026-03-29 — Session 31: Admin A/B Tests dashboard (CF-0jk5) — 3 sections, 14 elements, auto-stop cron wiring. Previous: White Glove Delivery scheduling (CF-y7lp), Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -3847,6 +3847,54 @@ FCP  (First Contentful Paint)   — target < 1.8s</div>
         ["errorFlow","Text","Checkout/Cart/Product"],
         ["errorMessage","Text","Error summary"],
         ["errorCount","Text","Occurrence count"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin A/B Tests", file: "Admin A-B Tests.js (abTestDashboard.web.js)", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Summary Stats", impl: `<h4>🧪 Implementation — A/B Testing Dashboard (CF-0jk5)</h4>
+<p><strong>Layout: 4 stat chips + optional badge + filter bar + results repeater + detail panel</strong></p>
+<p>Backend: <code>abTestDashboard.web.js</code> — <code>getDashboardSummary()</code>, <code>getExperimentsForDashboard(filter)</code>, <code>autoStopSignificantExperiments()</code>.</p>
+<ul>
+  <li><strong>#txtActiveCount</strong>: Text — number of active experiments.</li>
+  <li><strong>#txtConcludedCount</strong>: Text — number of concluded experiments.</li>
+  <li><strong>#txtTotalEvents</strong>: Text — total conversion events tracked.</li>
+  <li><strong>#txtReadyToConclude</strong>: Text — count of tests that reached significance.</li>
+  <li><strong>#badgeReadyToConclude</strong>: Badge — <span class="impl-warn">hidden when count is 0</span>. Label set to "X ready" when visible. Shown when readyToConclude &gt; 0.</li>
+</ul>`, elements: [
+        ["txtActiveCount","Text","Active experiments count"],
+        ["txtConcludedCount","Text","Concluded experiments count"],
+        ["txtTotalEvents","Text","Total events (formatted number)"],
+        ["txtReadyToConclude","Text","Tests ready to conclude"],
+        ["badgeReadyToConclude","Box/Badge","Ready-to-conclude badge — hidden when 0"]
+      ]},
+      { name: "Experiments Repeater", repeater: "repeaterExperiments", impl: `<h4>📋 Implementation — Experiments List</h4>
+<ul>
+  <li><strong>#txtEmpty</strong>: Text — <span class="impl-warn">hidden by default</span>. Shown when no experiments match the active filter ("No active experiments yet" or similar).</li>
+  <li><strong>#repeaterExperiments</strong>: Repeater — one row per experiment.</li>
+  <li>Per-card children: <code>#barVariant1</code> / <code>#barVariant2</code> (progress bar, traffic split) + <code>#lblVariant1</code> / <code>#lblVariant2</code> (text label with variant name + conversion rate).</li>
+  <li>Clicking a row populates and shows <code>#panelDetail</code>.</li>
+</ul>`, elements: [
+        ["txtEmpty","Text","Empty state — hidden when experiments exist"],
+        ["repeaterExperiments","Repeater","Experiment rows"]
+      ], children: [
+        ["barVariant1","ProgressBar","Traffic split bar — variant A"],
+        ["barVariant2","ProgressBar","Traffic split bar — variant B"],
+        ["lblVariant1","Text","Variant A name + conversion rate"],
+        ["lblVariant2","Text","Variant B name + conversion rate"]
+      ]},
+      { name: "Detail Panel + Actions", impl: `<h4>🔍 Implementation — Detail Panel</h4>
+<ul>
+  <li><strong>#panelDetail</strong>: Box — <span class="impl-warn">hidden by default</span>. Shown on row click. Contains per-variant stats, daily trend, recommendation text, and action buttons.</li>
+  <li><strong>#btnCloseDetail</strong>: Button — hides <code>#panelDetail</code>.</li>
+  <li><strong>#btnConclude</strong>: Button — manually concludes selected experiment. Calls <code>concludeTest(id, winnerVariant)</code>.</li>
+  <li><strong>#btnRunAutoStop</strong>: Button — triggers <code>autoStopSignificantExperiments()</code> on demand. Shows toast on completion.</li>
+</ul>`, elements: [
+        ["panelDetail","Box","Detail panel — hidden by default"],
+        ["btnCloseDetail","Button","Close detail panel"],
+        ["btnConclude","Button","Conclude selected test"],
+        ["btnRunAutoStop","Button","Run auto-stop check on demand"]
       ]}
     ]
   },
