@@ -63,12 +63,15 @@ function namedOrder(id, daysAgo, overrides = {}) {
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-01-15T12:00:00.000Z'));
   __reset();
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
