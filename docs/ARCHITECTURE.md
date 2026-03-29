@@ -186,6 +186,10 @@ Required secrets (set in Wix Dashboard > Developer Tools > Secrets Manager):
 | `UPS_ACCOUNT_NUMBER` | UPS shipper account number |
 | `UPS_SANDBOX` | Set to `"true"` for test environment |
 | `SITE_OWNER_CONTACT_ID` | Wix contact ID for email notifications |
+| `STAMPED_API_KEY` | Stamped.io public API key |
+| `STAMPED_API_SECRET` | Stamped.io private API secret |
+| `STAMPED_STORE_HASH` | Stamped.io store identifier slug |
+| `STAMPED_WEBHOOK_SECRET` | Shared secret for Stamped.io webhook signature verification |
 
 ### Business Constants
 
