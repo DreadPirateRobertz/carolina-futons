@@ -9,23 +9,25 @@
  * @setup (manual steps required)
  * CMS collections:
  *   TradeInRequests (
- *     requestId Text indexed, email Text, name Text, phone Text,
+ *     requestId Text — ADD UNIQUE INDEX on this field in the CMS editor,
+ *     email Text, name Text, phone Text,
  *     productType Text, condition Text, description Text,
  *     photoUrls Text (JSON array), estimatedCredit Number,
  *     estimatedMin Number, estimatedMax Number,
- *     status Text: 'pending'|'confirmed'|'declined'|'expired',
+ *     status Text: 'pending'|'processing'|'confirmed'|'declined'|'expired',
  *     staffNotes Text, actualCondition Text, creditId Text,
  *     createdAt Date, updatedAt Date, expiresAt Date
  *   )
- *   TradeInRateLimit (email Text, count Number, windowStart Date)
- * Secrets: none required — uses existing ANTHROPIC_API_KEY indirectly via storeCreditService
+ *   TradeInRateLimit (email Text — ADD UNIQUE INDEX on email, count Number, windowStart Date)
+ * Secrets: none required — uses existing credit system via storeCreditService
  *
- * @note Condition credit values are starting points — Stilgar to confirm final numbers.
+ * @note TODO: confirm final credit values before go-live.
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
+import { randomUUID } from 'crypto';
 
 const TRADE_IN_REQUESTS = 'TradeInRequests';
 const RATE_LIMIT_COLLECTION = 'TradeInRateLimit';
@@ -40,7 +42,7 @@ const REQUEST_EXPIRY_DAYS = 30;
 // Credit ranges by product type and condition.
 // Each value is the BASE credit amount. A ±15% range is shown to customers
 // to reflect that final assessment happens in-store.
-// Values in dollars — Stilgar to confirm before go-live.
+// Values in dollars — TODO: confirm final credit values before go-live.
 export const CONDITION_MATRIX = {
   'futon-frame':   { good: 75,  fair: 50,  poor: 25 },
   'futon-mattress':{ good: 40,  fair: 25,  poor: 0  }, // poor = hygiene, no credit
@@ -63,6 +65,13 @@ export function creditRange(base) {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Rate-limit check for trade-in submissions.
+ * Uses a retry pattern to handle concurrent inserts: if two requests arrive
+ * simultaneously and both see no existing record, the second insert will
+ * fail (unique email constraint). We catch that and re-query to enforce
+ * the limit correctly rather than failing open with a bad count.
+ */
 async function checkRateLimit(email, nowMs = Date.now()) {
   try {
     const res = await wixData.query(RATE_LIMIT_COLLECTION)
@@ -72,12 +81,36 @@ async function checkRateLimit(email, nowMs = Date.now()) {
     const record = res.items[0] || null;
 
     if (!record) {
-      await wixData.insert(RATE_LIMIT_COLLECTION, {
-        email,
-        count: 1,
-        windowStart: new Date(nowMs),
-      });
-      return { allowed: true };
+      try {
+        await wixData.insert(RATE_LIMIT_COLLECTION, {
+          email,
+          count: 1,
+          windowStart: new Date(nowMs),
+        });
+        return { allowed: true };
+      } catch (_insertErr) {
+        // Concurrent request inserted first — re-fetch and apply limit check
+        try {
+          const retryRes = await wixData.query(RATE_LIMIT_COLLECTION)
+            .eq('email', email)
+            .limit(1)
+            .find();
+          const retryRecord = retryRes.items[0];
+          if (!retryRecord) return { allowed: true };
+          if (retryRecord.count >= RATE_LIMIT_MAX) {
+            return { allowed: false, reason: 'rate_limited' };
+          }
+          await wixData.update(RATE_LIMIT_COLLECTION, {
+            ...retryRecord,
+            count: retryRecord.count + 1,
+          });
+          return { allowed: true };
+        } catch (_retryErr) {
+          // Fail open — better to allow than silently block on a DB hiccup
+          console.error('[tradeInService] rate limit retry failed:', _retryErr);
+          return { allowed: true };
+        }
+      }
     }
 
     const windowAge = nowMs - new Date(record.windowStart).getTime();
@@ -186,8 +219,8 @@ export const submitTradeInRequest = webMethod(
     const now = new Date();
     const expiresAt = new Date(now.getTime() + REQUEST_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-    // Generate a short human-readable request ID (TI-XXXXXXXX)
-    const requestId = 'TI-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+    // Use UUID for collision-safe request IDs
+    const requestId = 'TI-' + randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
 
     try {
       await wixData.insert(TRADE_IN_REQUESTS, {
@@ -269,18 +302,27 @@ export const getTradeInRequest = webMethod(
 /**
  * Staff confirmation: verify item in-store, set actual condition, issue store credit.
  *
+ * IDOR note: requires both requestId AND customer email so staff cannot accidentally
+ * confirm the wrong person's trade-in from a bare ID.
+ *
+ * Double-issue protection: sets status to 'processing' before calling issueStoreCredit.
+ * A concurrent or retry call will see status !== 'pending' and abort cleanly.
+ *
  * @param {string} requestId
+ * @param {string} customerEmail — must match the email on the original request
  * @param {string} actualCondition — 'good' | 'fair' | 'poor' | 'declined'
  * @param {string} [staffNotes]
  */
 export const confirmTradeIn = webMethod(
   Permissions.Admin,
-  async (requestId, actualCondition, staffNotes = '') => {
+  async (requestId, customerEmail, actualCondition, staffNotes = '') => {
     const cleanId = sanitize(requestId || '', 20);
+    const cleanEmail = sanitize(customerEmail || '', 254).toLowerCase();
     const cond = sanitize(actualCondition || '', 20).toLowerCase();
     const notes = sanitize(staffNotes || '', 500);
 
     if (!cleanId) return { success: false, error: 'invalid_request_id' };
+    if (!validateEmail(cleanEmail)) return { success: false, error: 'invalid_email' };
 
     const declined = cond === 'declined';
     if (!declined && !VALID_CONDITIONS.includes(cond)) {
@@ -291,6 +333,7 @@ export const confirmTradeIn = webMethod(
     try {
       const res = await wixData.query(TRADE_IN_REQUESTS)
         .eq('requestId', cleanId)
+        .eq('email', cleanEmail)
         .limit(1)
         .find();
       record = res.items[0];
@@ -342,6 +385,20 @@ export const confirmTradeIn = webMethod(
       return { success: true, status: 'confirmed', creditAmount: 0 };
     }
 
+    // Mark as 'processing' BEFORE issuing credit to prevent double-issue on retry.
+    // If a concurrent confirmTradeIn call arrives, it will see status='processing'
+    // (not 'pending') and return already_processed.
+    try {
+      await wixData.update(TRADE_IN_REQUESTS, {
+        ...record,
+        status: 'processing',
+        updatedAt: now,
+      });
+    } catch (err) {
+      console.error('[tradeInService] confirmTradeIn processing-lock failed:', err?.message);
+      return { success: false, error: 'update_failed' };
+    }
+
     let creditId = '';
     try {
       const { issueStoreCredit } = await import('backend/storeCreditService.web');
@@ -369,7 +426,7 @@ export const confirmTradeIn = webMethod(
     } catch (err) {
       // Credit was already issued — log prominently for manual reconciliation.
       // Do NOT return an error to the caller (credit is real), but flag for ops.
-      console.error('[tradeInService] confirmTradeIn CMS update failed after credit issued — MANUAL RECONCILIATION REQUIRED:', { requestId: cleanId, creditId, err: err?.message });
+      console.error('[tradeInService] CMS update failed after credit issued — MANUAL RECONCILIATION REQUIRED:', { requestId: cleanId, creditId, err: err?.message });
     }
 
     return { success: true, status: 'confirmed', creditAmount: base, creditId };

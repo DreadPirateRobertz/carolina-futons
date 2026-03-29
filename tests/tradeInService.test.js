@@ -205,10 +205,10 @@ describe('submitTradeInRequest — happy path', () => {
     expect(inserted[0].status).toBe('pending');
   });
 
-  it('returns success with requestId starting TI-', async () => {
+  it('returns success with collision-safe UUID-based requestId', async () => {
     const result = await submitTradeInRequest(validRequest);
     expect(result.success).toBe(true);
-    expect(result.requestId).toMatch(/^TI-[A-Z0-9]+$/);
+    expect(result.requestId).toMatch(/^TI-[A-F0-9]{12}$/);
   });
 
   it('returns estimatedCredit matching the condition matrix', async () => {
@@ -323,21 +323,45 @@ describe('getTradeInRequest', () => {
 // confirmTradeIn
 // ---------------------------------------------------------------------------
 
+const ADMIN_EMAIL = 'alice@example.com'; // matches makeTradeInRecord default
+
 describe('confirmTradeIn', () => {
+  it('returns invalid_request_id for empty requestId', async () => {
+    const result = await confirmTradeIn('', ADMIN_EMAIL, 'good');
+    expect(result).toEqual({ success: false, error: 'invalid_request_id' });
+  });
+
+  it('returns invalid_email for missing customerEmail', async () => {
+    const result = await confirmTradeIn('TI-ABCD1234', '', 'good');
+    expect(result).toEqual({ success: false, error: 'invalid_email' });
+  });
+
   it('returns not_found when requestId does not exist', async () => {
-    const result = await confirmTradeIn('TI-NONEXIST', 'good');
+    const result = await confirmTradeIn('TI-NONEXIST', ADMIN_EMAIL, 'good');
+    expect(result).toEqual({ success: false, error: 'not_found' });
+  });
+
+  it('returns not_found when email does not match (IDOR prevention)', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord()]);
+    const result = await confirmTradeIn('TI-ABCD1234', 'staff-typo@example.com', 'good');
     expect(result).toEqual({ success: false, error: 'not_found' });
   });
 
   it('returns already_processed for non-pending request', async () => {
     __seed('TradeInRequests', [makeTradeInRecord({ status: 'confirmed' })]);
-    const result = await confirmTradeIn('TI-ABCD1234', 'good');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good');
     expect(result).toMatchObject({ success: false, error: 'already_processed', status: 'confirmed' });
+  });
+
+  it('returns already_processed for processing status (concurrent retry blocked)', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord({ status: 'processing' })]);
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good');
+    expect(result).toMatchObject({ success: false, error: 'already_processed', status: 'processing' });
   });
 
   it('returns invalid_condition for unknown condition', async () => {
     __seed('TradeInRequests', [makeTradeInRecord()]);
-    const result = await confirmTradeIn('TI-ABCD1234', 'excellent');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'excellent');
     expect(result).toEqual({ success: false, error: 'invalid_condition' });
   });
 
@@ -345,7 +369,7 @@ describe('confirmTradeIn', () => {
     __seed('TradeInRequests', [makeTradeInRecord()]);
     const updated = [];
     __onUpdate((col, r) => { if (col === 'TradeInRequests') updated.push(r); });
-    const result = await confirmTradeIn('TI-ABCD1234', 'declined', 'Poor structural condition');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'declined', 'Poor structural condition');
     expect(result).toEqual({ success: true, status: 'declined' });
     expect(updated[0].status).toBe('declined');
     expect(updated[0].staffNotes).toBe('Poor structural condition');
@@ -353,13 +377,8 @@ describe('confirmTradeIn', () => {
 
   it('returns creditAmount: 0 for poor-condition mattress (no credit)', async () => {
     __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-mattress', condition: 'poor' })]);
-    const result = await confirmTradeIn('TI-ABCD1234', 'poor');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'poor');
     expect(result).toMatchObject({ success: true, status: 'confirmed', creditAmount: 0 });
-  });
-
-  it('returns invalid_request_id for empty requestId', async () => {
-    const result = await confirmTradeIn('', 'good');
-    expect(result).toEqual({ success: false, error: 'invalid_request_id' });
   });
 
   it('issues store credit and updates CMS on happy path', async () => {
@@ -367,7 +386,7 @@ describe('confirmTradeIn', () => {
     const updated = [];
     __onUpdate((col, r) => { if (col === 'TradeInRequests') updated.push(r); });
 
-    const result = await confirmTradeIn('TI-ABCD1234', 'good', 'Looks great');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good', 'Looks great');
 
     expect(result).toMatchObject({ success: true, status: 'confirmed', creditAmount: 75, creditId: 'cred-test-123' });
     expect(mockIssueStoreCredit).toHaveBeenCalledWith(expect.objectContaining({
@@ -375,35 +394,44 @@ describe('confirmTradeIn', () => {
       reason: 'promotion',
       orderReference: 'TI-ABCD1234',
     }));
-    expect(updated[0].status).toBe('confirmed');
-    expect(updated[0].creditId).toBe('cred-test-123');
-    expect(updated[0].staffNotes).toBe('Looks great');
+    // First update: processing lock. Second update: confirmed with creditId.
+    const confirmUpdate = updated.find(r => r.status === 'confirmed');
+    expect(confirmUpdate.creditId).toBe('cred-test-123');
+    expect(confirmUpdate.staffNotes).toBe('Looks great');
+  });
+
+  it('sets processing status before credit issuance (double-issue lock)', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
+    const updated = [];
+    __onUpdate((col, r) => { if (col === 'TradeInRequests') updated.push(r); });
+
+    await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good');
+
+    expect(updated[0].status).toBe('processing'); // processing lock first
+    expect(updated[1].status).toBe('confirmed');  // then confirmed
   });
 
   it('returns credit_issuance_failed when issueStoreCredit throws', async () => {
     __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
     mockIssueStoreCredit.mockRejectedValue(new Error('credit service down'));
 
-    const result = await confirmTradeIn('TI-ABCD1234', 'good');
-
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good');
     expect(result).toEqual({ success: false, error: 'credit_issuance_failed' });
   });
 
-  it('returns success even when post-credit CMS update fails (credit already issued)', async () => {
+  it('returns update_failed when processing-lock CMS update throws', async () => {
     __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
-    __setUpdateError('TradeInRequests', new Error('db write failed'));
+    __setUpdateError('TradeInRequests', new Error('db error'));
 
-    const result = await confirmTradeIn('TI-ABCD1234', 'good');
-
-    // Credit was issued — return success despite CMS failure
-    expect(result).toMatchObject({ success: true, status: 'confirmed', creditAmount: 75 });
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'good');
+    expect(result).toEqual({ success: false, error: 'update_failed' });
   });
 
   it('returns update_failed when declined CMS update throws', async () => {
     __seed('TradeInRequests', [makeTradeInRecord()]);
     __setUpdateError('TradeInRequests', new Error('db error'));
 
-    const result = await confirmTradeIn('TI-ABCD1234', 'declined');
+    const result = await confirmTradeIn('TI-ABCD1234', ADMIN_EMAIL, 'declined');
     expect(result).toEqual({ success: false, error: 'update_failed' });
   });
 });
