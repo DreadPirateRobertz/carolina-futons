@@ -84,7 +84,14 @@ async function _refreshEstimate() {
   try { $w('#estimateBox').hide(); } catch (_) { /* */ }
   try { $w('#eligibilityError').hide(); } catch (_) { /* */ }
 
-  const result = await getTradeInValuation(_itemType, _condition);
+  let result;
+  try {
+    result = await getTradeInValuation(_itemType, _condition);
+  } catch (err) {
+    console.error('[tradeInPage] Valuation error:', err);
+    _valuation = null;
+    return;
+  }
 
   if (!result.success) {
     try { $w('#eligibilityError').text = result.message || 'Unable to calculate estimate.'; $w('#eligibilityError').show(); } catch (_) { /* */ }

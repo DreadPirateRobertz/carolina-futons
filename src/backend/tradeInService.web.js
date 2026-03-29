@@ -189,12 +189,12 @@ export const submitTradeInRequest = webMethod(
 
       const itemAge = Math.max(0, Math.min(MAX_AGE_YEARS, Math.round(Number(data.itemAge) || 0)));
 
-      // Validate and sanitize photo URLs
+      // Validate and sanitize photo URLs — reject non-https schemes to prevent stored XSS
       const rawPhotos = Array.isArray(data.photoUrls) ? data.photoUrls : [];
       const photoUrls = rawPhotos
         .slice(0, MAX_PHOTOS)
         .map(url => sanitize(String(url || ''), MAX_PHOTO_URL_LEN).trim())
-        .filter(url => url.length > 0);
+        .filter(url => url.startsWith('https://'));
 
       // Attach member ID if logged in (best-effort — getMember returns null for guests)
       const sessionMember = await getMember();
@@ -343,19 +343,20 @@ export const confirmTradeIn = webMethod(
       const request = await wixData.get(COLLECTION, cleanId);
       if (!request) return { success: false, message: 'Trade-in request not found.' };
 
-      if (request.status !== 'pending') {
-        return { success: false, message: `Request is already ${request.status}. Only pending requests can be confirmed.` };
+      if (request.status !== 'pending' && request.status !== 'confirmed') {
+        return { success: false, message: `Request is already ${request.status}.` };
       }
 
       // Calculate credit based on confirmed (in-store) condition
       const val = getValuation(request.itemType, cond);
+      const staffNotes = sanitize(options.staffNotes || '', MAX_STAFF_NOTES);
       if (!val.eligible) {
         // Item failed inspection — reject it
         await wixData.update(COLLECTION, {
           ...request,
           status: 'rejected',
           confirmedCondition: cond,
-          staffNotes: sanitize(options.staffNotes || '', MAX_STAFF_NOTES),
+          staffNotes,
           confirmedAt: new Date(),
         });
         return {
@@ -366,7 +367,21 @@ export const confirmTradeIn = webMethod(
 
       const creditAmount = val.baseCredit;
 
-      // Issue store credit if we have a member ID
+      // Stage 1: Write 'confirmed' before issuing credit.
+      // If credit issuance or the final update fails on retry, this status
+      // prevents double-issuance (idempotency guard).
+      if (request.status === 'pending') {
+        await wixData.update(COLLECTION, {
+          ...request,
+          status: 'confirmed',
+          confirmedCondition: cond,
+          issuedCreditAmount: creditAmount,
+          staffNotes,
+          confirmedAt: new Date(),
+        });
+      }
+
+      // Stage 2: Issue store credit if we have a member ID
       let storeCreditId = null;
       if (request.memberId) {
         const creditResult = await issueStoreCredit({
@@ -378,18 +393,21 @@ export const confirmTradeIn = webMethod(
 
         if (!creditResult.success) {
           console.error('[tradeInService] Failed to issue store credit:', creditResult.message);
+          // Record remains 'confirmed' — staff can see the confirmation happened
+          // and manually issue credit if needed
           return { success: false, message: 'Trade-in confirmed but store credit issuance failed. Contact admin.' };
         }
         storeCreditId = creditResult.creditId;
       }
 
+      // Stage 3: Mark as fully credited with credit ID
       await wixData.update(COLLECTION, {
         ...request,
         status: 'credited',
         confirmedCondition: cond,
         issuedCreditAmount: creditAmount,
         storeCreditId,
-        staffNotes: sanitize(options.staffNotes || '', MAX_STAFF_NOTES),
+        staffNotes,
         confirmedAt: new Date(),
       });
 
