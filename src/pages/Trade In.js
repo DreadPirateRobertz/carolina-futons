@@ -89,6 +89,7 @@ async function _refreshEstimate() {
     result = await getTradeInValuation(_itemType, _condition);
   } catch (err) {
     console.error('[tradeInPage] Valuation error:', err);
+    try { $w('#eligibilityError').text = 'Unable to calculate estimate. Please try again.'; $w('#eligibilityError').show(); } catch (_) { /* */ }
     _valuation = null;
     return;
   }

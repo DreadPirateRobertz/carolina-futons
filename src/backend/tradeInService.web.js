@@ -350,15 +350,12 @@ export const confirmTradeIn = webMethod(
       // Calculate credit based on confirmed (in-store) condition
       const val = getValuation(request.itemType, cond);
       const staffNotes = sanitize(options.staffNotes || '', MAX_STAFF_NOTES);
+      const confirmedAt = new Date();
+      const baseUpdate = { ...request, confirmedCondition: cond, staffNotes, confirmedAt };
+
       if (!val.eligible) {
         // Item failed inspection — reject it
-        await wixData.update(COLLECTION, {
-          ...request,
-          status: 'rejected',
-          confirmedCondition: cond,
-          staffNotes,
-          confirmedAt: new Date(),
-        });
+        await wixData.update(COLLECTION, { ...baseUpdate, status: 'rejected' });
         return {
           success: false,
           message: `Item not eligible for trade-in at confirmed condition '${cond}'.`,
@@ -371,14 +368,7 @@ export const confirmTradeIn = webMethod(
       // If credit issuance or the final update fails on retry, this status
       // prevents double-issuance (idempotency guard).
       if (request.status === 'pending') {
-        await wixData.update(COLLECTION, {
-          ...request,
-          status: 'confirmed',
-          confirmedCondition: cond,
-          issuedCreditAmount: creditAmount,
-          staffNotes,
-          confirmedAt: new Date(),
-        });
+        await wixData.update(COLLECTION, { ...baseUpdate, status: 'confirmed', issuedCreditAmount: creditAmount });
       }
 
       // Stage 2: Issue store credit if we have a member ID
@@ -401,15 +391,7 @@ export const confirmTradeIn = webMethod(
       }
 
       // Stage 3: Mark as fully credited with credit ID
-      await wixData.update(COLLECTION, {
-        ...request,
-        status: 'credited',
-        confirmedCondition: cond,
-        issuedCreditAmount: creditAmount,
-        storeCreditId,
-        staffNotes,
-        confirmedAt: new Date(),
-      });
+      await wixData.update(COLLECTION, { ...baseUpdate, status: 'credited', issuedCreditAmount: creditAmount, storeCreditId });
 
       return {
         success: true,
