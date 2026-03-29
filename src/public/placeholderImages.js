@@ -230,8 +230,11 @@ export function getGalleryThumbnail(imageUrl) {
  */
 function resizeWixImage(url, w, h) {
   if (!url) return FALLBACK_IMAGE;
-  // Handle wixstatic.com URLs — replace w_/h_ params in transform path
-  if (url.includes('static.wixstatic.com')) {
+  // Handle wixstatic.com URLs — replace w_/h_ params in transform path.
+  // Use hostname check to prevent bypass via attacker.com/static.wixstatic.com/...
+  var isWixStatic = false;
+  try { isWixStatic = /^https?:\/\/[^/]*\.wixstatic\.com\//i.test(url); } catch (e) {}
+  if (isWixStatic) {
     return url.replace(/w_\d+/, `w_${w}`).replace(/h_\d+/, `h_${h}`);
   }
   // Fallback for Unsplash-style URLs
