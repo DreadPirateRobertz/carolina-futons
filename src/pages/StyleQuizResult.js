@@ -150,7 +150,11 @@ export function clearQuizAnswers() {
  * @param {Object} answers - Lifestyle factor answers keyed by factor ID
  */
 export function storeSommelierAnswers(answers) {
-  session.setItem(SOMMELIER_ANSWERS_KEY, JSON.stringify(answers));
+  try {
+    session.setItem(SOMMELIER_ANSWERS_KEY, JSON.stringify(answers));
+  } catch (e) {
+    console.error('[StyleQuizResult] Failed to store sommelier answers:', e);
+  }
 }
 
 /**
@@ -176,7 +180,7 @@ export async function initSommelierSection($w) {
   try {
     answers = JSON.parse(rawAnswers);
   } catch (e) {
-    console.error('[StyleQuizResult] Failed to parse sommelier answers:', e);
+    console.error('[StyleQuizResult] Failed to parse sommelier answers:', e, '| Raw value length:', rawAnswers?.length);
     return;
   }
 
@@ -186,12 +190,17 @@ export async function initSommelierSection($w) {
   try {
     result = await getRecommendation(answers, sessionKey);
   } catch (e) {
-    console.error('[StyleQuizResult] getRecommendation failed:', e);
+    console.error('[StyleQuizResult] getRecommendation failed:', e, '| sessionKey:', sessionKey);
     return;
   }
 
-  if (!result.success || !result.recommendations?.length) {
-    console.warn('[StyleQuizResult] Sommelier returned no recommendations:', result.error);
+  if (!result.success) {
+    console.error('[StyleQuizResult] Sommelier backend error:', result.error);
+    return;
+  }
+
+  if (!result.recommendations?.length) {
+    console.warn('[StyleQuizResult] Sommelier returned empty recommendations | answerKeys:', Object.keys(answers));
     return;
   }
 
@@ -212,7 +221,8 @@ export async function initSommelierSection($w) {
       matchReasons: (r.matchReasons || []).join(', '),
     }));
   } catch (e) {
-    console.error('[StyleQuizResult] Failed to populate sommelier repeater:', e);
+    console.error('[StyleQuizResult] Failed to populate sommelier repeater:', e,
+      '| First rec shape:', result.recommendations[0] ? Object.keys(result.recommendations[0]) : 'empty');
     return;
   }
 

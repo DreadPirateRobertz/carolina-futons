@@ -295,6 +295,12 @@ describe('storeSommelierAnswers', () => {
     const stored = globalThis.sessionStorage.getItem(SOMMELIER_ANSWERS_KEY);
     expect(JSON.parse(stored)).toEqual(SOMMELIER_ANSWERS);
   });
+
+  it('does not throw when JSON.stringify fails (circular ref)', () => {
+    const circular = {};
+    circular.self = circular;
+    expect(() => storeSommelierAnswers(circular)).not.toThrow();
+  });
 });
 
 describe('clearSommelierAnswers', () => {
@@ -418,6 +424,13 @@ describe('initSommelierSection — backend failure', () => {
     });
     await initSommelierSection($w);
     expect(mocks.safeExpand).not.toHaveBeenCalledWith($w, '#sommelierSection');
+  });
+
+  it('success:false and empty recommendations are handled as separate conditions', async () => {
+    // success:false → does not reach the empty-check; session key NOT cached
+    mocks.getRecommendation.mockResolvedValueOnce({ success: false, error: 'Rate limited' });
+    await initSommelierSection($w);
+    expect(globalThis.sessionStorage.getItem(SOMMELIER_SESSION_KEY)).toBeNull();
   });
 });
 
