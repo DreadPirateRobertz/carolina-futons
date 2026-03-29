@@ -365,8 +365,8 @@ export const confirmTradeIn = webMethod(
       const creditAmount = val.baseCredit;
 
       // Stage 1: Write 'confirmed' before issuing credit.
-      // If credit issuance or the final update fails on retry, this status
-      // prevents double-issuance (idempotency guard).
+      // Skipped on retry (status already 'confirmed'). Stage 2 checks
+      // request.storeCreditId to prevent double-issuance on Stage 3 failure.
       if (request.status === 'pending') {
         await wixData.update(COLLECTION, { ...baseUpdate, status: 'confirmed', issuedCreditAmount: creditAmount });
       }
