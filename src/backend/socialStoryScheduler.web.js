@@ -14,6 +14,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const PLATFORMS = ['instagram', 'facebook', 'pinterest'];
@@ -728,45 +729,67 @@ async function schedulePriceDropStoriesInternal(product) {
 
 /**
  * Pick the rotation content type for a given day of week.
+ * Falls back to 'featured_product' for any unmapped day value.
  * @param {number} dayOfWeek - 0=Sun...6=Sat
  * @returns {string}
  */
 function getDayRotationContent(dayOfWeek) {
-  return CONTENT_ROTATION[dayOfWeek] || 'featured_product';
+  const type = CONTENT_ROTATION[dayOfWeek];
+  if (!type) {
+    console.warn(`[socialStoryScheduler] getDayRotationContent: unmapped day ${dayOfWeek}, defaulting to featured_product`);
+  }
+  return type || 'featured_product';
 }
 
 /**
- * Pick a featured product: prefer ribbon-tagged products, fall back to newest.
+ * Pick a featured product: prefer ribbon-tagged products, fall back to most recently updated.
  * Returns null if catalog is empty.
+ * Throws with descriptive message if both CMS queries fail.
  */
 async function pickFeaturedProduct() {
   // Try ribbon-tagged products first
-  const featured = await wixData.query('Stores/Products')
-    .isNotEmpty('ribbon')
-    .descending('_updatedDate')
-    .limit(1)
-    .find();
+  let featured;
+  try {
+    featured = await wixData.query('Stores/Products')
+      .isNotEmpty('ribbon')
+      .descending('_updatedDate')
+      .limit(1)
+      .find();
+  } catch (err) {
+    throw new Error(`pickFeaturedProduct (ribbon query): ${err.message}`);
+  }
 
   if (featured.items.length > 0) return featured.items[0];
 
   // Fall back to most recently updated product
-  const fallback = await wixData.query('Stores/Products')
-    .descending('_updatedDate')
-    .limit(1)
-    .find();
+  let fallback;
+  try {
+    fallback = await wixData.query('Stores/Products')
+      .descending('_updatedDate')
+      .limit(1)
+      .find();
+  } catch (err) {
+    throw new Error(`pickFeaturedProduct (fallback query): ${err.message}`);
+  }
 
   return fallback.items.length > 0 ? fallback.items[0] : null;
 }
 
 /**
- * Pick a recent high-rated review. Returns null if none found.
+ * Pick a recent review with rating >= 4. Returns null if no qualifying reviews exist.
+ * Throws with descriptive message on CMS failure so the caller can decide whether to fall back.
  */
 async function pickRecentReview() {
-  const result = await wixData.query('ProductReviews')
-    .ge('rating', 4)
-    .descending('_createdDate')
-    .limit(1)
-    .find();
+  let result;
+  try {
+    result = await wixData.query('ProductReviews')
+      .ge('rating', 4)
+      .descending('_createdDate')
+      .limit(1)
+      .find();
+  } catch (err) {
+    throw new Error(`pickRecentReview: ${err.message}`);
+  }
   return result.items.length > 0 ? result.items[0] : null;
 }
 
@@ -788,12 +811,6 @@ async function scheduleRotationContentInternal(contentType, payload, eventType, 
       continue;
     }
 
-    const content = {
-      contentType,
-      platform,
-      payload,
-    };
-
     const caption = buildRotationCaption(platform, contentType, payload);
     const scheduledAt = getNextEngagementWindow(platform) || new Date();
 
@@ -801,20 +818,22 @@ async function scheduleRotationContentInternal(contentType, payload, eventType, 
       await wixData.insert('ContentSchedule', {
         contentType: 'social_story',
         platform,
-        productId: payload.productId || `rotation-${eventType}-${new Date().toISOString().slice(0, 10)}`,
+        productId: payload.productId || `rotation-${eventType}-${dateStr || new Date().toISOString().slice(0, 10)}`,
         productName: sanitize(payload.title || payload.productName || contentType, 200),
         eventType,
         priority: 3,
         status: 'pending',
         scheduledAt,
-        payload: JSON.stringify({ ...content, caption }),
+        payload: JSON.stringify({ ...payload, contentType, platform, caption }),
         createdBy: `rotation-${eventType}-${dateStr || new Date().toISOString().slice(0, 10)}`,
         processedAt: null,
         error: '',
       });
       scheduled++;
     } catch (insertErr) {
-      errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+      const msg = `${platform}: failed to queue — ${insertErr.message}`;
+      logError('socialStoryScheduler.scheduleRotationContentInternal', insertErr);
+      errors.push(msg);
     }
   }
   return { scheduled, rateLimited, errors };
@@ -898,7 +917,13 @@ export const runDailyContentRotation = webMethod(
         };
 
       } else if (contentType === 'review_highlight') {
-        const review = await pickRecentReview();
+        let review = null;
+        try {
+          review = await pickRecentReview();
+        } catch (reviewErr) {
+          // Query failure — fall through to brand testimonial so posting continues
+          console.warn('[socialStoryScheduler] pickRecentReview failed, using fallback testimonial:', reviewErr.message);
+        }
         if (review) {
           rotationPayload = {
             reviewText: sanitize(review.content || review.text || review.review || 'Wonderful quality and craftsmanship!', 280),
@@ -909,7 +934,8 @@ export const runDailyContentRotation = webMethod(
             title: 'Customer Review',
           };
         } else {
-          // Fallback: brand testimonial when no reviews in DB
+          // Fallback: brand testimonial when no qualifying reviews exist
+          console.warn('[socialStoryScheduler] runDailyContentRotation: no qualifying reviews found, using brand testimonial');
           rotationPayload = {
             reviewText: 'Wonderful quality and craftsmanship — exactly what we needed for our home.',
             reviewerName: 'Happy Customer',
@@ -947,7 +973,7 @@ export const runDailyContentRotation = webMethod(
       return summary;
 
     } catch (err) {
-      console.error('[socialStoryScheduler] runDailyContentRotation error:', err);
+      logError('socialStoryScheduler.runDailyContentRotation', err);
       return { success: false, contentType, scheduled: 0, rateLimited: 0, errors: [err.message] };
     }
   }

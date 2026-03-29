@@ -13,6 +13,7 @@ import {
   _CONTENT_ROTATION,
   _FURNITURE_CARE_TIPS,
   _WEEKEND_PROMO,
+  _PLATFORMS,
   _getDayRotationContent,
   _buildRotationCaption,
 } from '../src/backend/socialStoryScheduler.web.js';
@@ -183,6 +184,29 @@ describe('_buildRotationCaption — furniture_tip', () => {
   });
 });
 
+describe('_buildRotationCaption — pinterest shop-link suppression', () => {
+  it('omits shop link from Pinterest featured_product captions', () => {
+    const caption = _buildRotationCaption('pinterest', 'featured_product', { productName: 'Fuji Frame', price: 699 });
+    expect(caption).not.toContain('carolinafutons.com');
+  });
+
+  it('omits shop link from Pinterest review_highlight captions', () => {
+    const caption = _buildRotationCaption('pinterest', 'review_highlight', {
+      reviewText: 'Great!',
+      reviewerName: 'Jane D.',
+    });
+    expect(caption).not.toContain('carolinafutons.com');
+  });
+
+  it('omits shop link from Pinterest furniture_tip captions', () => {
+    const caption = _buildRotationCaption('pinterest', 'furniture_tip', {
+      title: 'Rotate monthly',
+      tip: 'Flip it.',
+    });
+    expect(caption).not.toContain('carolinafutons.com');
+  });
+});
+
 describe('_buildRotationCaption — weekend_promo', () => {
   it('includes promo title and URL', () => {
     const caption = _buildRotationCaption('facebook', 'weekend_promo', _WEEKEND_PROMO);
@@ -243,6 +267,19 @@ describe('runDailyContentRotation — featured_product (Mon/Wed/Fri)', () => {
     await runDailyContentRotation();
     // ribbon-tagged product should be picked (isNotEmpty filter)
     expect(inserts[0].productName).toContain('Featured Frame');
+  });
+
+  it('falls back to most-recently-updated product when no ribbon-tagged products exist', async () => {
+    // Only un-ribboned product — should still succeed via fallback query
+    __seed('Stores/Products', [mockProduct({ _id: 'prod-plain', name: 'Plain Frame', ribbon: null })]);
+
+    const inserts = [];
+    __onInsert((_col, item) => { if (_col === 'ContentSchedule') inserts.push(item); });
+
+    const result = await runDailyContentRotation();
+    expect(result.success).toBe(true);
+    expect(result.scheduled).toBe(3);
+    expect(inserts[0].productName).toBe('Plain Frame');
   });
 
   it('returns failure when catalog is empty', async () => {
@@ -314,6 +351,37 @@ describe('runDailyContentRotation — review_highlight (Tue/Thu)', () => {
 
     await runDailyContentRotation();
     expect(inserts.every(i => i.eventType === 'review_highlight')).toBe(true);
+  });
+
+  it('does NOT post 3-star reviews — skips to fallback brand testimonial', async () => {
+    // Seed only a low-rated review (below the >= 4 threshold)
+    __seed('ProductReviews', [mockReview({ rating: 3 })]);
+
+    const inserts = [];
+    __onInsert((_col, item) => { if (_col === 'ContentSchedule') inserts.push(item); });
+
+    const result = await runDailyContentRotation();
+    expect(result.success).toBe(true);
+    expect(result.scheduled).toBe(3); // fallback brand testimonial still posts
+    // Payload should contain the fallback text, not the low-rated review
+    const payload = JSON.parse(inserts[0].payload);
+    expect(payload.reviewText).toContain('Wonderful quality and craftsmanship');
+  });
+
+  it('continues to fallback brand testimonial when ProductReviews query fails', async () => {
+    __setQueryError('ProductReviews', new Error('Collection unavailable'));
+
+    const inserts = [];
+    __onInsert((_col, item) => { if (_col === 'ContentSchedule') inserts.push(item); });
+
+    const result = await runDailyContentRotation();
+    // Must still post using the fallback — not return an error
+    expect(result.success).toBe(true);
+    expect(result.scheduled).toBe(3);
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('pickRecentReview failed'),
+      expect.any(String),
+    );
   });
 });
 
@@ -430,9 +498,9 @@ describe('runDailyContentRotation — rate limits', () => {
 
     const result = await runDailyContentRotation();
     expect(result.rateLimited).toBeGreaterThanOrEqual(1);
-    // success = true because 2 platforms still posted (facebook + pinterest)
+    // success = true because remaining platforms still posted
     expect(result.success).toBe(true);
-    expect(result.scheduled).toBe(2); // facebook + pinterest only
+    expect(result.scheduled).toBe(_PLATFORMS.length - 1); // all but rate-limited instagram
   });
 });
 
@@ -441,13 +509,30 @@ describe('runDailyContentRotation — rate limits', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('runDailyContentRotation — error handling', () => {
-  it('returns success: false and logs error when insert throws', async () => {
+  it('returns success: false when all inserts throw', async () => {
     vi.spyOn(Date.prototype, 'getDay').mockReturnValue(0); // Sunday
     __onInsert(() => { throw new Error('DB unavailable'); });
 
     const result = await runDailyContentRotation();
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it('continues scheduling remaining platforms when one insert fails', async () => {
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(0); // Sunday
+    let callCount = 0;
+    __onInsert((_col) => {
+      if (_col !== 'ContentSchedule') return;
+      callCount++;
+      if (callCount === 1) throw new Error('First platform failed');
+      // Others succeed
+    });
+
+    const result = await runDailyContentRotation();
+    // 1 failed, 2 succeeded → success: true (scheduled > 0)
+    expect(result.scheduled).toBe(2);
+    expect(result.errors).toHaveLength(1);
+    expect(result.success).toBe(true);
   });
 
   it('handles product query failure on featured_product day', async () => {
@@ -489,14 +574,16 @@ describe('jobs.config — dailyContentRotation cron registration', () => {
     expect(jobs.dailyContentRotation.functionLocation).toBe('/socialStoryScheduler.web.js');
   });
 
-  it('fires once daily (cron not more frequent than daily)', async () => {
+  it('fires once daily at the correct UTC time (17:05)', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
     const cron = jobs.dailyContentRotation.executionConfig.cronExpression;
     expect(cron).not.toMatch(/^\*/);
     const parts = cron.split(' ');
-    expect(parts[2]).toBe('*');
-    expect(parts[3]).toBe('*');
+    expect(parts[0]).toBe('5');   // minute
+    expect(parts[1]).toBe('17');  // hour (17:05 UTC = 10:05 AM MST)
+    expect(parts[2]).toBe('*');   // day-of-month wildcard
+    expect(parts[3]).toBe('*');   // month wildcard
   });
 
   it('dailySocialStories cron is set to 10 AM MT (17:00 UTC)', async () => {
