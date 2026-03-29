@@ -12,9 +12,10 @@
  *     requestId Text indexed, email Text, name Text, phone Text,
  *     productType Text, condition Text, description Text,
  *     photoUrls Text (JSON array), estimatedCredit Number,
+ *     estimatedMin Number, estimatedMax Number,
  *     status Text: 'pending'|'confirmed'|'declined'|'expired',
  *     staffNotes Text, actualCondition Text, creditId Text,
- *     createdAt Date, updatedAt Date
+ *     createdAt Date, updatedAt Date, expiresAt Date
  *   )
  *   TradeInRateLimit (email Text, count Number, windowStart Date)
  * Secrets: none required — uses existing ANTHROPIC_API_KEY indirectly via storeCreditService
@@ -24,7 +25,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 
 const TRADE_IN_REQUESTS = 'TradeInRequests';
 const RATE_LIMIT_COLLECTION = 'TradeInRateLimit';
@@ -96,7 +97,7 @@ async function checkRateLimit(email, nowMs = Date.now()) {
     await wixData.update(RATE_LIMIT_COLLECTION, { ...record, count: record.count + 1 });
     return { allowed: true };
   } catch (err) {
-    console.warn('[tradeInService] rate limit check failed, allowing request:', err?.message);
+    console.error('[tradeInService] rate limit check failed, allowing request:', err);
     return { allowed: true }; // Fail open
   }
 }
@@ -109,7 +110,7 @@ async function checkRateLimit(email, nowMs = Date.now()) {
  * Get the estimated store credit range for a given product type and condition.
  * Returns { eligible: false } for unsupported product types.
  * Returns { eligible: true, min, max, base } when credit is available.
- * Returns { eligible: true, min: 0, max: 0, ineligible: true } for poor-condition mattresses.
+ * Returns { eligible: true, min: 0, max: 0, base: 0 } for zero-value conditions (e.g., poor mattress).
  *
  * @param {string} productType
  * @param {string} condition — 'good' | 'fair' | 'poor'
@@ -164,7 +165,6 @@ export const submitTradeInRequest = webMethod(
     // Validate photo URLs — accept only Wix media URLs or empty
     let photoUrls = [];
     if (Array.isArray(data.photoUrls)) {
-      const { isWixMediaUrl } = await import('backend/utils/sanitize');
       photoUrls = data.photoUrls
         .slice(0, 5) // max 5 photos
         .filter(u => typeof u === 'string' && isWixMediaUrl(u));
@@ -307,13 +307,18 @@ export const confirmTradeIn = webMethod(
     const now = new Date();
 
     if (declined) {
-      await wixData.update(TRADE_IN_REQUESTS, {
-        ...record,
-        status: 'declined',
-        actualCondition: 'declined',
-        staffNotes: notes,
-        updatedAt: now,
-      });
+      try {
+        await wixData.update(TRADE_IN_REQUESTS, {
+          ...record,
+          status: 'declined',
+          actualCondition: 'declined',
+          staffNotes: notes,
+          updatedAt: now,
+        });
+      } catch (err) {
+        console.error('[tradeInService] confirmTradeIn declined-update failed:', err?.message);
+        return { success: false, error: 'update_failed' };
+      }
       return { success: true, status: 'declined' };
     }
 
@@ -322,13 +327,18 @@ export const confirmTradeIn = webMethod(
 
     if (base <= 0) {
       // No credit (e.g., poor-condition mattress)
-      await wixData.update(TRADE_IN_REQUESTS, {
-        ...record,
-        status: 'confirmed',
-        actualCondition: cond,
-        staffNotes: notes,
-        updatedAt: now,
-      });
+      try {
+        await wixData.update(TRADE_IN_REQUESTS, {
+          ...record,
+          status: 'confirmed',
+          actualCondition: cond,
+          staffNotes: notes,
+          updatedAt: now,
+        });
+      } catch (err) {
+        console.error('[tradeInService] confirmTradeIn zero-credit-update failed:', err?.message);
+        return { success: false, error: 'update_failed' };
+      }
       return { success: true, status: 'confirmed', creditAmount: 0 };
     }
 
@@ -347,14 +357,20 @@ export const confirmTradeIn = webMethod(
       return { success: false, error: 'credit_issuance_failed' };
     }
 
-    await wixData.update(TRADE_IN_REQUESTS, {
-      ...record,
-      status: 'confirmed',
-      actualCondition: cond,
-      staffNotes: notes,
-      creditId,
-      updatedAt: now,
-    });
+    try {
+      await wixData.update(TRADE_IN_REQUESTS, {
+        ...record,
+        status: 'confirmed',
+        actualCondition: cond,
+        staffNotes: notes,
+        creditId,
+        updatedAt: now,
+      });
+    } catch (err) {
+      // Credit was already issued — log prominently for manual reconciliation.
+      // Do NOT return an error to the caller (credit is real), but flag for ops.
+      console.error('[tradeInService] confirmTradeIn CMS update failed after credit issued — MANUAL RECONCILIATION REQUIRED:', { requestId: cleanId, creditId, err: err?.message });
+    }
 
     return { success: true, status: 'confirmed', creditAmount: base, creditId };
   }

@@ -19,7 +19,14 @@ import {
   __onUpdate,
   __setInsertError,
   __setQueryError,
+  __setUpdateError,
 } from './__mocks__/wix-data.js';
+
+// Mock storeCreditService so confirmTradeIn can be tested without a live credit system.
+const mockIssueStoreCredit = vi.fn();
+vi.mock('backend/storeCreditService.web', () => ({
+  issueStoreCredit: (...args) => mockIssueStoreCredit(...args),
+}));
 import {
   estimateTradeIn,
   submitTradeInRequest,
@@ -35,6 +42,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-03-28T15:00:00Z'));
   resetData();
+  mockIssueStoreCredit.mockResolvedValue({ creditId: 'cred-test-123' });
 });
 
 afterEach(() => {
@@ -352,5 +360,108 @@ describe('confirmTradeIn', () => {
   it('returns invalid_request_id for empty requestId', async () => {
     const result = await confirmTradeIn('', 'good');
     expect(result).toEqual({ success: false, error: 'invalid_request_id' });
+  });
+
+  it('issues store credit and updates CMS on happy path', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
+    const updated = [];
+    __onUpdate((col, r) => { if (col === 'TradeInRequests') updated.push(r); });
+
+    const result = await confirmTradeIn('TI-ABCD1234', 'good', 'Looks great');
+
+    expect(result).toMatchObject({ success: true, status: 'confirmed', creditAmount: 75, creditId: 'cred-test-123' });
+    expect(mockIssueStoreCredit).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 75,
+      reason: 'promotion',
+      orderReference: 'TI-ABCD1234',
+    }));
+    expect(updated[0].status).toBe('confirmed');
+    expect(updated[0].creditId).toBe('cred-test-123');
+    expect(updated[0].staffNotes).toBe('Looks great');
+  });
+
+  it('returns credit_issuance_failed when issueStoreCredit throws', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
+    mockIssueStoreCredit.mockRejectedValue(new Error('credit service down'));
+
+    const result = await confirmTradeIn('TI-ABCD1234', 'good');
+
+    expect(result).toEqual({ success: false, error: 'credit_issuance_failed' });
+  });
+
+  it('returns success even when post-credit CMS update fails (credit already issued)', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord({ productType: 'futon-frame', condition: 'good' })]);
+    __setUpdateError('TradeInRequests', new Error('db write failed'));
+
+    const result = await confirmTradeIn('TI-ABCD1234', 'good');
+
+    // Credit was issued — return success despite CMS failure
+    expect(result).toMatchObject({ success: true, status: 'confirmed', creditAmount: 75 });
+  });
+
+  it('returns update_failed when declined CMS update throws', async () => {
+    __seed('TradeInRequests', [makeTradeInRecord()]);
+    __setUpdateError('TradeInRequests', new Error('db error'));
+
+    const result = await confirmTradeIn('TI-ABCD1234', 'declined');
+    expect(result).toEqual({ success: false, error: 'update_failed' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getTradeInRequest — error path
+// ---------------------------------------------------------------------------
+
+describe('getTradeInRequest — error path', () => {
+  it('returns lookup_failed when wixData query throws', async () => {
+    __setQueryError('TradeInRequests', new Error('db error'));
+    const result = await getTradeInRequest('TI-ABCD1234', 'alice@example.com');
+    expect(result).toEqual({ success: false, error: 'lookup_failed' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// submitTradeInRequest — photo URL filtering
+// ---------------------------------------------------------------------------
+
+describe('submitTradeInRequest — photo URL filtering', () => {
+  it('filters out non-Wix media URLs', async () => {
+    const inserted = [];
+    __onInsert((col, r) => { if (col === 'TradeInRequests') inserted.push(r); });
+
+    await submitTradeInRequest({
+      ...validRequest,
+      photoUrls: [
+        'wix:image://v1/abc123.jpg/img.jpg', // valid Wix media
+        'https://evil.com/bad.jpg',           // invalid
+        'javascript:alert(1)',                // invalid
+        'wix:image://v1/def456.png/img.png', // valid
+      ],
+    });
+
+    const stored = JSON.parse(inserted[0].photoUrls);
+    expect(stored).toHaveLength(2);
+    expect(stored.every(u => u.startsWith('wix:'))).toBe(true);
+  });
+
+  it('allows an empty photoUrls array', async () => {
+    const result = await submitTradeInRequest({ ...validRequest, photoUrls: [] });
+    expect(result.success).toBe(true);
+  });
+
+  it('handles missing photoUrls field gracefully', async () => {
+    const result = await submitTradeInRequest(validRequest); // no photoUrls
+    expect(result.success).toBe(true);
+  });
+
+  it('caps photo list at 5', async () => {
+    const inserted = [];
+    __onInsert((col, r) => { if (col === 'TradeInRequests') inserted.push(r); });
+
+    const sixPhotos = Array.from({ length: 6 }, (_, i) => `wix:image://v1/img${i}.jpg/img.jpg`);
+    await submitTradeInRequest({ ...validRequest, photoUrls: sixPhotos });
+
+    const stored = JSON.parse(inserted[0].photoUrls);
+    expect(stored).toHaveLength(5);
   });
 });

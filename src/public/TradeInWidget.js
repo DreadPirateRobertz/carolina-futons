@@ -21,6 +21,15 @@ export const ELIGIBLE_PRODUCT_TYPES = [
   'sofa',
 ];
 
+/** Display labels for each trade-in product type (used in banner copy). */
+const TYPE_LABELS = {
+  'futon-frame':    'futon frame',
+  'futon-mattress': 'futon mattress',
+  'murphy-bed':     'murphy bed',
+  'platform-bed':   'platform bed',
+  'sofa':           'sofa',
+};
+
 /** Map from Wix product category slug to trade-in product type. */
 const CATEGORY_TO_TRADE_IN_TYPE = {
   'futon-frames':    'futon-frame',
@@ -49,7 +58,7 @@ export function getTradeInType(categorySlug) {
  * @returns {boolean}
  */
 export function isEligible(tradeInType) {
-  return ELIGIBLE_PRODUCT_TYPES.includes(tradeInType ?? '');
+  return ELIGIBLE_PRODUCT_TYPES.includes(tradeInType);
 }
 
 /**
@@ -61,14 +70,7 @@ export function isEligible(tradeInType) {
  */
 export function buildBannerText(tradeInType) {
   if (!isEligible(tradeInType)) return '';
-  const typeLabels = {
-    'futon-frame':    'futon frame',
-    'futon-mattress': 'futon mattress',
-    'murphy-bed':     'murphy bed',
-    'platform-bed':   'platform bed',
-    'sofa':           'sofa',
-  };
-  const label = typeLabels[tradeInType] || 'furniture';
+  const label = TYPE_LABELS[tradeInType] || 'furniture';
   return `Trade in your old ${label} for store credit toward this purchase.`;
 }
 
