@@ -2082,28 +2082,6 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
-## LOCAL SEO PAGE (`Local SEO Page.js`)
-
-### Hero
-`cityTitle` (Text), `cityHeadline` (Text), `homeCityBadge` (Text), `localPageContent` (Box), `notFoundMessage` (Text)
-
-### Store Info
-`directionsText` (Text), `directionsBtn` (Button), `mapEmbed` (HtmlComponent)
-
-### Nearby Areas ⚠️ REPEATER
-`nearbyAreasRepeater` (Repeater)
-**↳ Inside:** `nearbyAreaLabel` (Text), `nearbyAreaLink` (Button)
-
-### Featured Products ⚠️ REPEATER
-`featuredProductsRepeater` (Repeater)
-**↳ Inside:** `productName` (Text), `productPrice` (Text), `productImage` (Image), `viewProductBtn` (Button)
-
-### Cross-Links ⚠️ REPEATER
-`crossLinksSection` (Box), `crossLinksHeading` (Text), `crossLinksRepeater` (Repeater)
-**↳ Inside:** `crossLinkLabel` (Text), `crossLinkBtn` (Button)
-
----
-
 ## COMMUNITY GALLERY (`Community Gallery.js`)
 
 ### Gallery Grid ⚠️ REPEATER
