@@ -6,9 +6,11 @@
  * When a product price drops >=5% compared to the last recorded price in
  * ProductPriceHistory, a PriceDropQueue entry is inserted for mobile
  * consumption. Wishlisted members also receive an in-app loyalty notification.
+ * Email subscribers (via PriceAlerts) receive a price_drop_alert email via EmailQueue.
  *
  * @requires wix-web-module
  * @requires wix-data
+ * @requires backend/priceAlertService.web
  *
  * @setup CMS collections required:
  * 1. ProductPriceHistory — productId (text, indexed), price (number),
@@ -20,16 +22,31 @@
  *    — Deduped per product per 24-hour window.
  *    — Mobile polls or queries this collection for push notifications.
  *
+ * 3. SentPriceDropAlerts — productId (text), email (text), sentAt (dateTime)
+ *    — Dedup guard: prevents sending duplicate subscriber emails within 24h.
+ *
+ * 4. EmailQueue — templateId, recipientEmail, variables, status, etc.
+ *    — Consumed by processEmailQueue cron (emailAutomation.web.js).
+ *    — Template: 'price_drop_alert' with variables:
+ *        productName, oldPrice, newPrice, savings, pctDrop, pdpUrl
+ *
  * @cron Defined in jobs.config as detectPriceDrops (daily at 08:00 UTC).
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { getSubscribers } from 'backend/priceAlertService.web';
 
 const PRICE_HISTORY_COLLECTION = 'ProductPriceHistory';
 const PRICE_DROP_QUEUE_COLLECTION = 'PriceDropQueue';
 const PRODUCTS_COLLECTION = 'Stores/Products';
 const WISHLIST_COLLECTION = 'Wishlist';
 const NOTIFICATIONS_COLLECTION = 'Notifications';
+const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
+const SENT_PRICE_DROP_ALERTS_COLLECTION = 'SentPriceDropAlerts';
+const PRICE_DROP_EMAIL_TEMPLATE = 'price_drop_alert';
+
+/** Base URL for PDP links in subscriber emails. */
+const PDP_BASE_URL = 'https://www.carolinafutons.com/product-page';
 
 /** Minimum percent drop (as a fraction) to trigger a queue entry. */
 const MIN_DROP_FRACTION = 0.05; // 5%
@@ -74,6 +91,7 @@ export const detectPriceDrops = webMethod(
               if (queued) {
                 dropsDetected++;
                 notificationsSent += await notifyWishlistedMembers(productId, oldPrice, currentPrice, pctDrop);
+                await emailSubscribers(productId, product.name || '', oldPrice, currentPrice, pctDrop);
               }
             }
           }
@@ -268,6 +286,82 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
   return sent;
 }
 
+// ── Subscriber email helpers ──────────────────────────────────────────────
+
+/**
+ * Email all active PriceAlerts subscribers for a product on a >=5% drop.
+ * Deduplicates via SentPriceDropAlerts: skips subscribers already emailed
+ * for this product within the last 24 hours.
+ *
+ * Inserts into EmailQueue (consumed by emailAutomation processEmailQueue cron).
+ * Template 'price_drop_alert' variables: productName, oldPrice, newPrice, savings, pctDrop, pdpUrl.
+ *
+ * @param {string} productId
+ * @param {string} productName
+ * @param {number} oldPrice
+ * @param {number} newPrice
+ * @param {number} pctDrop - fractional drop (e.g. 0.10 for 10%)
+ * @returns {Promise<number>} count of emails queued
+ */
+async function emailSubscribers(productId, productName, oldPrice, newPrice, pctDrop) {
+  try {
+    const subResult = await getSubscribers(productId);
+    if (!subResult.success || !subResult.subscribers?.length) return 0;
+
+    const windowStart = new Date(Date.now() - DEDUP_WINDOW_MS);
+    const savings = Math.round((oldPrice - newPrice) * 100) / 100;
+    const pctDropRounded = Math.round(pctDrop * 100);
+    const pdpUrl = `${PDP_BASE_URL}/${productId}`;
+
+    let queued = 0;
+    for (const sub of subResult.subscribers) {
+      try {
+        // Dedup check: was this email already notified for this product in the window?
+        const alreadySent = await wixData.query(SENT_PRICE_DROP_ALERTS_COLLECTION)
+          .eq('productId', productId)
+          .eq('email', sub.email)
+          .ge('sentAt', windowStart)
+          .limit(1)
+          .find();
+
+        if (alreadySent.items.length > 0) continue;
+
+        await wixData.insert(EMAIL_QUEUE_COLLECTION, {
+          templateId: PRICE_DROP_EMAIL_TEMPLATE,
+          recipientEmail: sub.email,
+          recipientContactId: null,
+          variables: {
+            productName,
+            oldPrice: oldPrice.toFixed(2),
+            newPrice: newPrice.toFixed(2),
+            savings: savings.toFixed(2),
+            pctDrop: String(pctDropRounded),
+            pdpUrl,
+          },
+          status: 'pending',
+          scheduledFor: new Date(),
+          attempt: 0,
+          createdAt: new Date(),
+        });
+
+        await wixData.insert(SENT_PRICE_DROP_ALERTS_COLLECTION, {
+          productId,
+          email: sub.email,
+          sentAt: new Date(),
+        });
+
+        queued++;
+      } catch (err) {
+        console.error('[priceDropCron] Failed to queue email for subscriber:', sub.email, err?.message);
+      }
+    }
+    return queued;
+  } catch (err) {
+    console.error('[priceDropCron] emailSubscribers failed:', err?.message);
+    return 0;
+  }
+}
+
 // ── Test helpers ──────────────────────────────────────────────────────────
 
 /** Exposed for unit tests only — not part of the public API. */
@@ -278,3 +372,6 @@ export { getLastPriceRecord as _getLastPriceRecord };
 export { upsertPriceRecord as _upsertPriceRecord };
 export { fetchAllProducts as _fetchAllProducts };
 export { notifyWishlistedMembers as _notifyWishlistedMembers };
+export { emailSubscribers as _emailSubscribers };
+export const _PRICE_DROP_EMAIL_TEMPLATE = PRICE_DROP_EMAIL_TEMPLATE;
+export const _SENT_PRICE_DROP_ALERTS_COLLECTION = SENT_PRICE_DROP_ALERTS_COLLECTION;
