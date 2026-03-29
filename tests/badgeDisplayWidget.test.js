@@ -6,7 +6,7 @@
  *  - no badges: shows #noBadgesMsg, hides #badgeRepeater
  *  - badges present: hides #noBadgesMsg, shows #badgeRepeater
  *  - repeater data set to badges array
- *  - #badgeIcon src set to /images/badges/${badgeId}.png
+ *  - #badgeIcon src set from getBadgeIcon() inline SVG (not broken PNG path)
  *  - #badgeName text set from label
  *  - #badgeDate formatted as "Earned MM/DD/YYYY"
  *  - new badge (notified:false) gets "badge-new" class on item container
@@ -19,6 +19,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { initBadgeDisplayWidget } from '../src/public/BadgeDisplayWidget.js';
+import { getBadgeIcon } from '../src/public/badgeIcons.js';
 
 // ── $w mock helpers ───────────────────────────────────────────────────────────
 
@@ -140,12 +141,13 @@ describe('badges present', () => {
 });
 
 describe('repeater item rendering', () => {
-  it('sets #badgeIcon src to /images/badges/${badgeId}.png', async () => {
+  it('sets #badgeIcon src from getBadgeIcon() inline SVG', async () => {
     const $w = make$w();
     const badge = makeBadge({ badgeId: 'streak_7' });
     await initBadgeDisplayWidget(MEMBER_ID, makeOpts($w, [badge]));
     const $item = fireItemReady($w, badge);
-    expect($item._els['#badgeIcon'].src).toBe('/images/badges/streak_7.png');
+    expect($item._els['#badgeIcon'].src).toBe(getBadgeIcon('streak_7'));
+    expect($item._els['#badgeIcon'].src).not.toContain('/images/badges/');
   });
 
   it('sets #badgeName text from badge label', async () => {

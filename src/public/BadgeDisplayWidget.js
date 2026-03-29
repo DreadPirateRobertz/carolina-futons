@@ -9,7 +9,7 @@
  *   #noBadgesMsg    — Message shown when member has no badges
  *
  * Repeater item elements:
- *   #badgeIcon   — Image element (src = /images/badges/${badgeId}.png)
+ *   #badgeIcon   — Image element (src = getBadgeIcon(badgeId) inline SVG data URI)
  *   #badgeName   — Text element (badge label)
  *   #badgeDate   — Text element ("Earned MM/DD/YYYY" from awardedAt)
  *
@@ -20,6 +20,7 @@ import {
   getMemberBadges as _defaultGetMemberBadges,
   markBadgeNotified as _defaultMarkBadgeNotified,
 } from 'backend/achievementBadgeService.web';
+import { getBadgeIcon } from 'public/badgeIcons.js';
 
 /**
  * Format a Date (or ISO string) as "Earned MM/DD/YYYY".
@@ -71,7 +72,7 @@ export async function initBadgeDisplayWidget(memberId, opts = {}) {
 
   try {
     $w('#badgeRepeater').onItemReady(($item, itemData) => {
-      try { $item('#badgeIcon').src = `/images/badges/${itemData.badgeId}.png`; } catch (e) {}
+      try { $item('#badgeIcon').src = getBadgeIcon(itemData.badgeId); } catch (e) {}
       try { $item('#badgeName').text = itemData.label; } catch (e) {}
       try { $item('#badgeDate').text = formatBadgeDate(itemData.awardedAt); } catch (e) {}
 
