@@ -19,7 +19,7 @@ import { getImageDimensions } from 'public/galleryConfig.js';
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
-import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
+import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton, initPriceDropNotify } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
@@ -113,6 +113,7 @@ async function initProductPage() {
       { name: 'stockUrgency', init: () => initStockUrgency($w, state), critical: false },
       { name: 'bundleSection', init: () => initBundleSection($w, state), critical: false },
       { name: 'backInStock', init: () => initBackInStockNotification($w, state), critical: false },
+      { name: 'priceDropNotify', init: () => initPriceDropNotify($w, state), critical: false },
       { name: 'wishlistButton', init: () => initWishlistButton($w, state), critical: false },
       { name: 'designTokens', init: () => applyProductPageTokens($w), critical: true },
       // JSON-LD structured data via wix-seo-frontend (SSR-compatible, must be critical for crawlers)

@@ -1602,6 +1602,25 @@ Right column:
         ["notifyMeSuccess","Text","Confirmation message"],
         ["notifyMeError","Text","Error message"]
       ]},
+      { name: "Price Drop Notify (CF-hwr1.2)", impl: `<h4>🔔 Implementation — Price Drop Notify Button (Product Page)</h4>
+<p><strong>CF-hwr1.2</strong>: "Notify me when price drops" button — always visible on PDP. Click expands an email capture popover. No account required. Backend: <code>priceAlertService.web.js → subscribe(productId, email)</code>. Public helper: <code>AddToCart.js → initPriceDropNotify($w, state)</code>.</p>
+<ul>
+  <li><strong>#priceDropNotifyBtn</strong>: Button — "Notify me when price drops". Always visible. Clicking expands the popover and disables itself to prevent double-open.</li>
+  <li><strong>#priceDropNotifyPopover</strong>: Box — collapsed by default. Contains email input + submit + cancel. Expand on button click.</li>
+  <li><strong>#priceDropNotifyEmail</strong>: Input — email address. Placeholder "Your email address".</li>
+  <li><strong>#priceDropNotifySubmit</strong>: Button — "Notify me". Triggers subscribe call.</li>
+  <li><strong>#priceDropNotifyClose</strong>: Button — "Cancel". Collapses popover, re-enables the main button, clears email field.</li>
+  <li><strong>#priceDropNotifySuccess</strong>: Text — hidden by default; shown after successful subscribe. "Done! We'll email you if the price drops."</li>
+  <li><strong>#priceDropNotifyError</strong>: Text — hidden by default; shown on validation or API error.</li>
+</ul>`, elements: [
+        ["priceDropNotifyBtn","Button","Notify me when price drops — always visible"],
+        ["priceDropNotifyPopover","Box","Email capture popover — collapsed by default"],
+        ["priceDropNotifyEmail","Input","Email address input"],
+        ["priceDropNotifySubmit","Button","Submit subscribe"],
+        ["priceDropNotifyClose","Button","Cancel / close popover"],
+        ["priceDropNotifySuccess","Text","Success confirmation — hidden by default"],
+        ["priceDropNotifyError","Text","Inline error message — hidden by default"]
+      ]},
       { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
 <p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
 <div class="layer-diagram">LAYOUT:
