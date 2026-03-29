@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-28 (v2.7 — Session 29 wave: Price Lock Widget (CF-tjf0, 13 PDP elements), Stamped.io reviews (CF-gxn1, #productReviewWidget + primary source update), Gift Registry page (CF-easy, 18 elements), White Glove badge (CF-rdlk, backend-only). Also resolved 3 merge conflicts from cf-ld8w-referral-ui branch. Previous: v2.6 — Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib), Day-7 Review Email (CF-fzsd), A/B Testing (CF-blhq), GA4 Funnel Events (CF-zqz2), Cross-rig Event Bus (CF-qe31).)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v2.8 — Session 30: White Glove Delivery scheduling (CF-y7lp) — White Glove Delivery page (10 elements), Admin Delivery Calendar page (15 elements), Thank You Page white-glove prompt section (4 elements). Previous: v2.7 — Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy).)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -323,6 +323,8 @@ These 4 footer elements are already correctly named — skip them:
 | Members | ws9sh | /members |
 | Thank You | msuhj | /thank-you |
 | Thank You Page | dk9x8 | /thank-you-page |
+| White Glove Delivery | *(create)* | /white-glove-delivery |
+| Admin Delivery Calendar | *(create)* | /admin-delivery-calendar |
 | Plans & Pricing | aggpq | /plans-pricing |
 | Paywall | w6yh4 | /paywall |
 | Privacy Policy | pcvmd | /privacy-policy |
@@ -384,7 +386,9 @@ For each section below:
 | **Contact** | ~40 | 4 + children | 30 min | P2 — support |
 | **About** | ~25 | 5 + children | 20 min | P2 — brand |
 | **FAQ** | ~15 | 2 + children | 15 min | P2 — support |
-| **Thank You** | ~40 | 2 + children | 30 min | P2 — post-purchase |
+| **Thank You** | ~44 | 3 + children | 30 min | P2 — post-purchase |
+| **White Glove Delivery** | ~20 | 5 + children | 25 min | P2 — scheduling (NEW CF-y7lp) |
+| **Admin Delivery Calendar** | ~15 | 2 + children | 20 min | P2 — admin (NEW CF-y7lp) |
 | **Shipping Policy** | ~20 | 4 + children | 20 min | P3 — info |
 | **Fullscreen/Videos** | ~15 | 2 + children | 15 min | P3 — content |
 | **Privacy Policy** | ~15 | 2 + children | 10 min | P3 — legal |
@@ -1785,6 +1789,41 @@ Add these elements to the **Member Page** in the editor:
 
 ### Care / Assembly / Review
 `careSequenceInfo` (Section), `careSequenceText` (Text), `assemblyGuideSection` (Section), `assemblyGuideTitle` (Text), `assemblyGuideText` (Text), `assemblyGuideBtn` (Button), `testimonialSection` (Section), `testimonialTitle` (Text), `testimonialPrompt` (Text), `testimonialNameInput` (Input), `testimonialStoryInput` (TextBox), `testimonialSubmitBtn` (Button), `testimonialError` (Text), `testimonialSuccess` (Text), `reviewSection` (Section), `reviewTitle` (Text), `reviewPrompt` (Text), `reviewStar1`–`reviewStar5` (Button), `reviewRating` (Text), `reviewBodyInput` (TextBox), `reviewSubmitBtn` (Button), `reviewSuccess` (Text), `reviewError` (Text)
+
+### White Glove Prompt (NEW — CF-y7lp)
+`whiteGlovePromptSection` (Section — collapsed by default), `whiteGlovePromptTitle` (Text), `whiteGlovePromptBody` (Text), `whiteGloveScheduleBtn` (Button → /white-glove-delivery?orderId=)
+
+---
+
+## WHITE GLOVE DELIVERY (`White Glove Delivery.js`) — NEW CF-y7lp
+
+### State Sections (mutually exclusive — one shown at a time)
+`wgLoadingSection` (Section), `wgExistingSection` (Section), `wgCalendarSection` (Section), `wgConfirmSection` (Section), `wgErrorSection` (Section), `wgErrorText` (Text)
+
+### Existing Appointment
+`existingDateText` (Text), `existingWindowText` (Text), `existingStatusText` (Text), `rescheduleBtn` (Button), `rescheduleNote` (Text — collapsed by default)
+
+### Calendar (Date Picker) ⚠️ REPEATER
+`calendarNoSlots` (Text — collapsed by default), `calendarDateRepeater` (Repeater), `calendarBackBtn` (Button)
+**↳ Inside:** `calendarDayLabel` (Text), `calendarSelectDayBtn` (Button — disabled when full)
+
+### Window Selector ⚠️ REPEATER
+`windowSelectorSection` (Section — collapsed by default), `windowDateLabel` (Text), `windowRepeater` (Repeater), `windowBackBtn` (Button)
+**↳ Inside:** `windowLabel` (Text), `windowSpotsText` (Text), `windowSelectBtn` (Button — disabled when full)
+
+### Confirmation
+`confirmHeadline` (Text), `confirmSubtext` (Text), `confirmDateText` (Text), `confirmWindowText` (Text), `confirmOrdersBtn` (Button)
+
+---
+
+## ADMIN DELIVERY CALENDAR (`Admin Delivery Calendar.js`) — NEW CF-y7lp
+
+### Appointment Calendar ⚠️ REPEATER
+`calendarRangeLabel` (Text), `calendarApptCount` (Text), `calendarEmpty` (Section — collapsed by default), `calendarRepeater` (Repeater), `calendarFromDate` (DatePicker), `calendarToDate` (DatePicker), `calendarFilterBtn` (Button), `calendarFilterError` (Text — collapsed by default)
+**↳ Inside:** `apptDate` (Text), `apptWindow` (Text), `apptStatus` (Text), `apptEmail` (Text), `apptPhone` (Text), `apptAddress` (Text), `apptNotes` (Text), `apptOrderId` (Text)
+
+### Block Date Form
+`blockDateInput` (DatePicker), `blockReasonInput` (Input), `blockDateSubmitBtn` (Button), `blockFormError` (Text — collapsed by default), `blockFormSuccess` (Text — collapsed by default), `blockedDatesSection` (Section)
 
 ---
 
