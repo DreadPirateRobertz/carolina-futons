@@ -251,6 +251,14 @@ describe('daily stats', () => {
     expect(updated.length).toBe(0);
     expect(inserted.length).toBe(0);
   });
+
+  it('allows new session when daily stats DB query fails (fail-open)', async () => {
+    const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setQueryError('ChatbotDailyStats', new Error('db error'));
+    const result = await sendMessage(SESSION_ID, USER_MSG);
+    // Fail-open: session allowed despite stats DB error
+    expect(result).toHaveProperty('reply');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -358,6 +366,27 @@ describe('successful response', () => {
     // wix-stores-backend is not seeded — _fetchProductCatalog will return []
     const result = await sendMessage(SESSION_ID, USER_MSG);
     expect(result.suggestedProducts).toEqual([]);
+  });
+
+  it('returns reply as empty string when Claude returns empty content array', async () => {
+    __seed('ChatSessions', [makeSession()]);
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ content: [], usage: { input_tokens: 10, output_tokens: 0 } }),
+    }));
+    const result = await sendMessage(SESSION_ID, USER_MSG);
+    expect(result).toHaveProperty('reply', '');
+    expect(result).toHaveProperty('suggestedProducts');
+    expect(result).toHaveProperty('messagesRemaining');
+  });
+
+  it('updates lastMessageAt on session record write', async () => {
+    __seed('ChatSessions', [makeSession({ messageCount: 2 })]);
+    const updated = [];
+    __onUpdate((col, r) => { if (col === 'ChatSessions') updated.push(r); });
+    await sendMessage(SESSION_ID, USER_MSG);
+    expect(updated[0].lastMessageAt).toBeInstanceOf(Date);
   });
 });
 

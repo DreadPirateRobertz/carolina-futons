@@ -12,7 +12,7 @@
  *   ChatSessions (sessionId, sessionHistory, messageCount, createdAt, lastMessageAt)
  *   ChatbotDailyStats (date, sessionCount)
  * Secrets:
- *   CHATBOT_ENABLED ('true' to enable)
+ *   CHATBOT_ENABLED — must be exactly the string 'true' to enable; any other value disables
  *   ANTHROPIC_API_KEY (shared with gamificationChatbot)
  */
 
@@ -53,7 +53,12 @@ export function _getTodayUTC() {
   return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 }
 
-/** @internal */
+/**
+ * Call the Claude API and return parsed JSON, or null on non-ok response.
+ * Logs the HTTP status and error body on non-ok so operators can diagnose
+ * API key issues and rate limits.
+ * @internal
+ */
 export async function _callClaude(messages, systemPrompt, apiKey) {
   const { fetch } = await import('wix-fetch');
   const response = await fetch(CLAUDE_API_URL, {
@@ -70,7 +75,12 @@ export async function _callClaude(messages, systemPrompt, apiKey) {
       messages,
     }),
   });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    let errBody = '';
+    try { errBody = await response.text(); } catch (_) { /* ignore */ }
+    console.error(`[chatbotService] Claude API error ${response.status}:`, errBody);
+    return null;
+  }
   return response.json();
 }
 
@@ -87,7 +97,8 @@ export async function _fetchProductCatalog() {
       description: p.description || '',
       slug: p.slug || '',
     }));
-  } catch (_) {
+  } catch (err) {
+    console.warn('[chatbotService] product catalog fetch failed — chatbot will respond without product context:', err?.message);
     return [];
   }
 }
@@ -111,13 +122,19 @@ export async function _fetchProductCatalog() {
 export const sendMessage = webMethod(
   Permissions.Anyone,
   async (sessionId, userMessage) => {
-    // 1. Feature flag
+    // 1. Fetch feature flag and API key in parallel; fail fast if either is absent
     let flagEnabled = false;
+    let apiKey;
     try {
       const { getSecret } = await import('wix-secrets-backend');
-      const flag = await getSecret('CHATBOT_ENABLED');
+      const [flag, key] = await Promise.all([
+        getSecret('CHATBOT_ENABLED'),
+        getSecret('ANTHROPIC_API_KEY'),
+      ]);
       flagEnabled = flag === 'true';
-    } catch (_) {
+      apiKey = key;
+    } catch (err) {
+      console.warn('[chatbotService] secrets fetch failed:', err?.message);
       flagEnabled = false;
     }
     if (!flagEnabled) return { enabled: false };
@@ -138,7 +155,8 @@ export const sendMessage = webMethod(
         .limit(1)
         .find();
       sessionRecord = res.items[0] || null;
-    } catch (_) {
+    } catch (err) {
+      console.error('[chatbotService] session query failed:', err?.message);
       return { error: 'assistant_unavailable' };
     }
 
@@ -150,30 +168,27 @@ export const sendMessage = webMethod(
       return { limitReached: true };
     }
 
-    // 6. Daily session cap — only checked when creating a brand-new session
+    // 6. Daily session cap — only checked when creating a brand-new session.
+    //    Single query for both the cap check and the increment (avoids race window).
     if (!sessionRecord) {
-      let dailyCount = 0;
+      let statsRecord = null;
       try {
         const statsRes = await wixData.query(DAILY_STATS)
           .eq('date', todayUTC)
           .limit(1)
           .find();
-        dailyCount = statsRes.items[0]?.sessionCount ?? 0;
-      } catch (_) {
+        statsRecord = statsRes.items[0] || null;
+      } catch (err) {
         // Fail open — don't block visitors on DB errors
-        dailyCount = 0;
+        console.warn('[chatbotService] daily stats query failed, allowing session:', err?.message);
       }
-      if (dailyCount >= MAX_SESSIONS_PER_DAY) {
+
+      if ((statsRecord?.sessionCount ?? 0) >= MAX_SESSIONS_PER_DAY) {
         return { limitReached: true };
       }
 
-      // Record the new session in daily stats
+      // Increment the stats record we already loaded
       try {
-        const statsRes = await wixData.query(DAILY_STATS)
-          .eq('date', todayUTC)
-          .limit(1)
-          .find();
-        const statsRecord = statsRes.items[0];
         if (statsRecord) {
           await wixData.update(DAILY_STATS, {
             ...statsRecord,
@@ -200,38 +215,29 @@ export const sendMessage = webMethod(
     const catalogSummary = buildCatalogSummary(catalogProducts);
     const systemPrompt = buildSystemPrompt(catalogSummary);
 
-    // 8. Build conversation history
+    // 8. Parse stored history and append new user message
     let history = [];
     try {
       history = JSON.parse(sessionRecord.sessionHistory || '[]');
     } catch (_) {
       history = [];
     }
-    history = _trimHistory(history);
     history.push({ role: 'user', content: sanitized });
     const messagesToSend = _trimHistory(history);
 
-    // 9. Fetch API key
-    let apiKey;
-    try {
-      const { getSecret } = await import('wix-secrets-backend');
-      apiKey = await getSecret('ANTHROPIC_API_KEY');
-    } catch (_) {
-      return { error: 'assistant_unavailable' };
-    }
-
-    // 10. Call Claude
+    // 9. Call Claude
     let claudeData = null;
     try {
       claudeData = await _callClaude(messagesToSend, systemPrompt, apiKey);
-    } catch (_) {
+    } catch (err) {
+      console.error('[chatbotService] Claude call threw unexpectedly:', err?.message);
       return { error: 'assistant_unavailable' };
     }
     if (!claudeData) return { error: 'assistant_unavailable' };
 
     const reply = claudeData.content?.[0]?.text || '';
 
-    // 11. Update history
+    // 10. Update history and persist session
     history.push({ role: 'assistant', content: reply });
     const finalHistory = _trimHistory(history);
     const newMessageCount = (sessionRecord.messageCount || 0) + 1;
@@ -243,7 +249,7 @@ export const sendMessage = webMethod(
       lastMessageAt: now,
     };
 
-    // 12. CMS write (non-fatal)
+    // 11. CMS write (non-fatal — reply is returned even on failure)
     try {
       if (sessionRecord._id) {
         await wixData.update(CHAT_SESSIONS, updatedRecord);
@@ -251,10 +257,10 @@ export const sendMessage = webMethod(
         await wixData.insert(CHAT_SESSIONS, updatedRecord);
       }
     } catch (err) {
-      console.error('[chatbotService] session write failed:', err);
+      console.error('[chatbotService] session write failed:', err?.message);
     }
 
-    // 13. Product suggestions
+    // 12. Product suggestions based on user query
     const suggestedProducts = findSuggestedProducts(catalogProducts, sanitized);
 
     return {
