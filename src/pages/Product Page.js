@@ -153,6 +153,8 @@ async function initProductPage() {
       { name: 'recommendations', init: async () => { const m = await import('public/ProductRecommendations.js'); m.initRecommendationsCarousel($w, state); }, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
+      // CF-rw9i.2: Real Rooms UGC gallery — horizontal scroll of customer photos for this product
+      { name: 'pdpUGCGallery', init: async () => { const m = await import('public/ProductUGCGallery.js'); await m.initProductUGCGallery($w, state); }, critical: false },
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
       { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); await m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
