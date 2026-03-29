@@ -432,6 +432,18 @@ describe('confirmTradeIn', () => {
     expect(issueStoreCredit).toHaveBeenCalledOnce();
   });
 
+  it('skips credit re-issuance on retry when storeCreditId already set', async () => {
+    // Stage 3 failed after Stage 2 succeeded — record is confirmed with storeCreditId populated
+    __seed(COLLECTION, [makeRequest({
+      _id: 'req-1', memberId: 'member-1', status: 'confirmed',
+      confirmedCondition: 'good', storeCreditId: 'credit-already-issued',
+    })]);
+    const result = await confirmTradeIn('req-1', 'good');
+    expect(result.success).toBe(true);
+    expect(issueStoreCredit).not.toHaveBeenCalled();
+    expect(result.storeCreditId).toBe('credit-already-issued');
+  });
+
   it('sets status to confirmed before issuing credit (idempotency staging)', async () => {
     __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'pending' })]);
     await confirmTradeIn('req-1', 'good');

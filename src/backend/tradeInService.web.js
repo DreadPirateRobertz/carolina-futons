@@ -371,9 +371,11 @@ export const confirmTradeIn = webMethod(
         await wixData.update(COLLECTION, { ...baseUpdate, status: 'confirmed', issuedCreditAmount: creditAmount });
       }
 
-      // Stage 2: Issue store credit if we have a member ID
-      let storeCreditId = null;
-      if (request.memberId) {
+      // Stage 2: Issue store credit if we have a member ID and haven't already.
+      // On retry (status=confirmed), request.storeCreditId may already be set from
+      // a prior successful Stage 2 whose Stage 3 write failed — skip re-issuance.
+      let storeCreditId = request.storeCreditId || null;
+      if (!storeCreditId && request.memberId) {
         const creditResult = await issueStoreCredit({
           memberId: request.memberId,
           amount: creditAmount,
