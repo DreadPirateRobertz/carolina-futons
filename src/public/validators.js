@@ -31,6 +31,8 @@ export function validateDimension(value, min = 1, max = 600) {
  */
 export function sanitizeText(str, maxLen = 1000) {
   if (typeof str !== 'string') return '';
-  // Strip complete HTML tags, then unclosed tags (e.g. <img src=x onerror=...)
-  return str.replace(/<[^>]*>/g, '').replace(/<[^>]*$/g, '').trim().slice(0, maxLen);
+  // Strip complete HTML tags until stable (guards against nested-tag bypass), then unclosed tags
+  let s = str;
+  while (s !== (s = s.replace(/<[^>]*>/g, ''))) {}
+  return s.replace(/<[^>]*$/g, '').trim().slice(0, maxLen);
 }

@@ -315,7 +315,9 @@ export function scrollToElement($w, selector) {
  */
 export function formatDescription(html, maxLength = 200) {
   if (!html) return '';
-  const text = html.replace(/<[^>]*>/g, '').trim();
+  let text = html;
+  while (text !== (text = text.replace(/<[^>]*>/g, ''))) {}
+  text = text.trim();
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
 }
