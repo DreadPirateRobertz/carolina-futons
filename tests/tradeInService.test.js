@@ -15,6 +15,11 @@ vi.mock('backend/storeCreditService.web', () => ({
   issueStoreCredit: vi.fn().mockResolvedValue({ success: true, creditId: 'credit-abc', balance: 75 }),
 }));
 
+// Mock rateLimit utility — default allow; individual tests override as needed
+vi.mock('backend/utils/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
+}));
+
 import {
   getTradeInValuation,
   submitTradeInRequest,
@@ -24,6 +29,7 @@ import {
   rejectTradeIn,
 } from '../src/backend/tradeInService.web.js';
 import { issueStoreCredit } from '../src/backend/storeCreditService.web.js';
+import { checkRateLimit } from '../src/backend/utils/rateLimit.js';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -267,6 +273,29 @@ describe('submitTradeInRequest', () => {
     const result = await submitTradeInRequest(validData);
     expect(result.success).toBe(false);
   });
+
+  it('blocks submission when rate limit is exceeded', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: false, reason: 'rate_limited' });
+    const result = await submitTradeInRequest(validData);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too many/i);
+    expect(__getInserted(COLLECTION)).toHaveLength(0);
+  });
+
+  it('calls checkRateLimit with normalized email and correct options', async () => {
+    await submitTradeInRequest(validData);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'TradeInRateLimit',
+      'jane@example.com',
+      expect.objectContaining({ max: 3, windowMs: 86400000 })
+    );
+  });
+
+  it('allows submission when rate limit check passes', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: true });
+    const result = await submitTradeInRequest(validData);
+    expect(result.success).toBe(true);
+  });
 });
 
 // ── getMyTradeInRequests ───────────────────────────────────────────
@@ -431,6 +460,22 @@ describe('confirmTradeIn', () => {
     const result = await confirmTradeIn('req-1', 'good');
     expect(result.success).toBe(true);
     expect(issueStoreCredit).toHaveBeenCalledOnce();
+  });
+
+  it('issues credit at the re-supplied condition amount on confirmed-status retry', async () => {
+    // Documents current behavior: credit amount on retry comes from the new `cond`
+    // parameter, not the stored issuedCreditAmount. This catches future regressions
+    // if Stage 1 locking is added to preserve the originally-staged amount.
+    __seed(COLLECTION, [makeRequest({
+      _id: 'req-1', memberId: 'member-1', status: 'confirmed',
+      confirmedCondition: 'good', issuedCreditAmount: 75,
+    })]);
+    const result = await confirmTradeIn('req-1', 'fair'); // different condition from stored
+    expect(result.success).toBe(true);
+    expect(result.issuedCreditAmount).toBe(50);
+    expect(issueStoreCredit).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: 50 })
+    );
   });
 
   it('skips credit re-issuance on retry when storeCreditId already set', async () => {

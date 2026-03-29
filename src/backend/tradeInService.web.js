@@ -22,12 +22,17 @@
  *   confirmedCondition (Text), issuedCreditAmount (Number),
  *   storeCreditId (Text), staffNotes (Text),
  *   submittedAt (Date), confirmedAt (Date)
+ *
+ * Create 'TradeInRateLimit' CMS collection with fields:
+ *   key (Text, unique index — prevents double-insert under concurrent load),
+ *   count (Number), windowStart (Date)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { issueStoreCredit } from 'backend/storeCreditService.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -52,6 +57,9 @@ const MAX_STAFF_NOTES   = 1000;
 const MSG_MATTRESS_HYGIENE = 'Mattresses in poor condition are not eligible for trade-in due to hygiene requirements.';
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE     = 50;
+const RL_COLLECTION     = 'TradeInRateLimit';
+const RL_MAX            = 3;
+const RL_WINDOW_MS      = 24 * 60 * 60 * 1000; // 24 hours
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -165,6 +173,16 @@ export const submitTradeInRequest = webMethod(
       if (!firstName) return { success: false, message: 'First name is required.' };
       if (!lastName)  return { success: false, message: 'Last name is required.' };
       if (!validateEmail(email)) return { success: false, message: 'Valid email address is required.' };
+
+      // Rate limit: 3 submissions per email per 24h.
+      // Uses a read-then-insert pattern; a unique index on `key` in TradeInRateLimit
+      // (see @setup) causes a second concurrent insert to throw — checkRateLimit
+      // fails open on any DB error, so the race results in a missed increment
+      // rather than a false block.
+      const rl = await checkRateLimit(RL_COLLECTION, email, { max: RL_MAX, windowMs: RL_WINDOW_MS });
+      if (!rl.allowed) {
+        return { success: false, message: 'You have submitted too many trade-in requests. Please try again tomorrow.' };
+      }
 
       const itemType = sanitize(data.itemType || '', 20).toLowerCase();
       const condition = sanitize(data.submittedCondition || '', 10).toLowerCase();
