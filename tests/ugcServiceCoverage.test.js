@@ -14,7 +14,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __setRoles, __reset as resetMember } from './__mocks__/wix-members-backend.js';
-import wixData from './__mocks__/wix-data.js';
 
 import { moderatePhoto, getUGCStats } from '../src/backend/ugcService.web.js';
 

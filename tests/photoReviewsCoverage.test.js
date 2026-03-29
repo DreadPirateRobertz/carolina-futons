@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
-import wixData from './__mocks__/wix-data.js';
 
 vi.mock('wix-web-module', () => ({
   Permissions: { Admin: 'Admin', SiteMember: 'SiteMember', Anyone: 'Anyone' },

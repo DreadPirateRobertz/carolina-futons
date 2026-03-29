@@ -22,6 +22,8 @@ import { getMyLoyaltyAccount } from 'backend/loyaltyService.web';
 import { getZipLeaderboard } from 'backend/zipLeaderboard.web';
 import { getEnrollmentPrompt, enrollMember, calculatePointsForOrder } from 'backend/loyaltyMarketing.web';
 import { getSoftPromptConfig } from 'backend/guestCheckout.web';
+import { getWhiteGloveSlots } from 'backend/whiteGloveScheduling.web';
+import wixLocationFrontend from 'wix-location-frontend';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -62,6 +64,7 @@ $w.onReady(async function () {
     { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
     { name: 'loyaltyEnrollment', init: () => initLoyaltyEnrollment(orderCtx) },
     { name: 'guestAccountPrompt', init: () => initGuestAccountPrompt(orderCtx) }, // CF-2zr3
+    { name: 'whiteGloveScheduling', init: () => initWhiteGlovePrompt(orderCtx) }, // CF-y7lp
     { name: 'postPurchaseReveal', init: () => initPostPurchaseReveal($w, {
       orderTotal: orderCtx?.total || 0,
       getLoyaltyAccount: getMyLoyaltyAccount,
@@ -869,6 +872,61 @@ async function initGuestAccountPrompt(orderCtx) {
   } catch (err) {
     console.error('[ThankYou] Guest account prompt error:', err?.message);
     try { $w('#guestAccountSection').collapse(); } catch (e) {}
+  }
+}
+
+// ── White-Glove Scheduling Prompt (CF-y7lp) ──────────────────────────
+
+/**
+ * If the order contains a white-glove shipping option, show a scheduling prompt
+ * that links to /white-glove-delivery?orderId=<id>.
+ * Only shown once — collapses itself if slots are unavailable.
+ *
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+export async function initWhiteGlovePrompt(orderCtx) {
+  try {
+    const section = $w('#whiteGlovePromptSection');
+
+    const shippingOption = orderCtx?.selectedShippingOption || orderCtx?.shippingOption || {};
+    const code  = (shippingOption.code  || shippingOption.id    || '').toLowerCase();
+    const title = (shippingOption.title || shippingOption.label || shippingOption.name || '').toLowerCase();
+
+    const isWhiteGlove =
+      code.includes('white') || code.includes('wg') ||
+      title.includes('white-glove') || title.includes('white glove') ||
+      title.includes('assembly') || title.includes('setup');
+
+    if (!isWhiteGlove) return; // not a white-glove order
+
+    // Pre-check there are available slots before showing the prompt
+    const slotsResult = await getWhiteGloveSlots(null);
+    if (!slotsResult.success || !slotsResult.slots.some(s => s.available)) return;
+
+    const orderId = orderCtx?.orderId || orderCtx?.id || '';
+
+    try {
+      $w('#whiteGlovePromptTitle').text = 'Schedule Your White-Glove Delivery';
+    } catch (e) {}
+    try {
+      $w('#whiteGlovePromptBody').text =
+        'Your order includes white-glove delivery and setup. Choose a date and 2-hour arrival window that works for you.';
+    } catch (e) {}
+    try {
+      $w('#whiteGloveScheduleBtn').onClick(() => {
+        try {
+          const url = orderId
+            ? `/white-glove-delivery?orderId=${orderId}`
+            : '/white-glove-delivery';
+          wixLocationFrontend.to(url);
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    try { section.expand(); } catch (e) {}
+  } catch (err) {
+    console.error('[ThankYou] White-glove prompt error:', err?.message);
+    try { $w('#whiteGlovePromptSection').collapse(); } catch (e) {}
   }
 }
 

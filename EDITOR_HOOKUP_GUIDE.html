@@ -6,7 +6,7 @@
 <title>Carolina Futons - Editor Hookup Guide</title>
 <style>
 /* ══════════════════════════════════════════════════════════════
-   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.4
+   CAROLINA FUTONS — EDITOR HOOKUP GUIDE v2.8
    Design tokens match sharedTokens.js + designTokens.js exactly
    ══════════════════════════════════════════════════════════════ */
 :root {
@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.6 · Updated 2026-03-28 — Session 28/29: Personalized Hero (CF-tj6f), Futon Fit Score (CF-hx8m), AI Room Staging (CF-s22f), Live Showroom Camera (CF-gt99), App Download Banner (CF-e2ib, Android needs editor wiring), Day-7 Review Email (CF-fzsd), A/B Testing (CF-blhq), GA4 Funnel Events (CF-zqz2), Cross-rig Event Bus (CF-qe31). All backend-only — element wiring pending Stilgar hookup. Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.8 · Updated 2026-03-29 — Session 30: White Glove Delivery scheduling (CF-y7lp) — adds White Glove Delivery page, Admin Delivery Calendar page, Thank You Page white-glove prompt section. Previous: Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1677,6 +1677,51 @@ Right column:
   <li>Collapses automatically in normal customer UX (no qr param).</li>
 </ul>`, elements: [
         ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
+      ]},
+      { name: "Price Lock Widget (NEW — CF-tjf0)", impl: `<h4>🔒 Implementation — Price Lock Guarantee Widget (NEW — PR #935 / CF-tjf0)</h4>
+<p><em>Frontend: <code>src/public/PriceLockWidget.js</code> — <code>initPriceLockWidget($w, state)</code></em><br>
+<em>Backend: <code>src/backend/priceLock.web.js</code> — <code>createPriceLock</code>, <code>checkPriceLock</code>, <code>redeemPriceLock</code></em></p>
+<p>CF+ members can lock today's price with a <strong>$25 refundable deposit</strong> for 30, 60, or 90 days. <span class="impl-warn">All elements must be collapsed/hidden by default. Widget expands #priceLockSection on init for eligible members.</span></p>
+<ul>
+  <li><strong>#priceLockSection</strong>: Container section. Collapsed for non-members. Code expands it for logged-in CF+ members.</li>
+  <li><strong>#priceLockBtn</strong>: "Lock This Price — $25 Deposit" CTA button. Collapses when lock is already active.</li>
+  <li><strong>#priceLockBadge</strong>: "Price locked at $X" badge container. Expands when member has active lock on this product.</li>
+  <li><strong>#priceLockBadgeText</strong>: Text inside badge — "Price locked at $X.XX".</li>
+  <li><strong>#priceLockExpiry</strong>: "Expires in X days • $25 deposit applied at checkout" text.</li>
+  <li><strong>#priceLockModal</strong>: Full-overlay modal for tier selection. Hidden by default.</li>
+  <li><strong>#priceLockModalContent</strong>: Modal content box inside overlay.</li>
+  <li><strong>#priceLockClose</strong>: Modal close button (X).</li>
+  <li><strong>#priceLock30</strong>: "30-day lock" tier button.</li>
+  <li><strong>#priceLock60</strong>: "60-day lock" tier button.</li>
+  <li><strong>#priceLock90</strong>: "90-day lock" tier button.</li>
+  <li><strong>#priceLockDeposit</strong>: "$25 refundable deposit" text element.</li>
+  <li><strong>#priceLockSuccess</strong>: Success message shown after lock creation. Collapses after 3 seconds.</li>
+</ul>`, elements: [
+        ["priceLockSection","Section","Container — collapsed by default; expands for CF+ members"],
+        ["priceLockBtn","Button","'Lock This Price — $25 Deposit' CTA"],
+        ["priceLockBadge","Box","Active lock badge container"],
+        ["priceLockBadgeText","Text","'Price locked at $X.XX' badge text"],
+        ["priceLockExpiry","Text","Expiry + deposit applied text"],
+        ["priceLockModal","Box","Tier selector modal overlay"],
+        ["priceLockModalContent","Box","Modal content box"],
+        ["priceLockClose","Button","Modal close button"],
+        ["priceLock30","Button","30-day tier button"],
+        ["priceLock60","Button","60-day tier button"],
+        ["priceLock90","Button","90-day tier button"],
+        ["priceLockDeposit","Text","'$25 refundable deposit' text"],
+        ["priceLockSuccess","Text","Success message after lock creation"]
+      ]},
+      { name: "Stamped.io Reviews (NEW — CF-gxn1)", impl: `<h4>⭐ Implementation — Stamped.io Review Widget (NEW — CF-gxn1)</h4>
+<p><em>Frontend: <code>src/public/ProductReviews.js</code> — <code>initProductReviews($w, state)</code> (updated)</em><br>
+<em>Backend: <code>src/backend/stampedIoService.web.js</code> — <code>getStampedRating</code>, <code>getStampedReviews</code>, <code>getBatchStampedRatings</code></em></p>
+<p><strong>Stamped.io is now the PRIMARY review source</strong> for both aggregate ratings and review lists. CMS-based reviews are the fallback when Stamped.io is unavailable.</p>
+<p><span class="impl-warn">Stilgar TODO (dashboard only): Install Stamped.io from Wix App Market + add secrets STAMPED_API_KEY, STAMPED_API_SECRET, STAMPED_STORE_HASH.</span></p>
+<p>The existing <code>#reviewsSection</code> elements remain unchanged (see Reviews &amp; Ratings section above). The Stamped.io widget embed requires one new container:</p>
+<ul>
+  <li><strong>#productReviewWidget</strong>: Box element — Stamped.io native embed container. Place on Product Page below the review form. Code injects the Stamped.io widget script into this container when <code>getStampedWidgetConfig()</code> succeeds.</li>
+</ul>
+<p>Category cards use <code>getBatchStampedRatings</code> → same <code>#gridReviewStars</code> / <code>#gridReviewCount</code> elements as before (no new editor elements).</p>`, elements: [
+        ["productReviewWidget","Box","Stamped.io native embed container — place below review form"]
       ]}
     ]
   },
@@ -3206,6 +3251,20 @@ Action buttons (right):
         ["reviewRating","Text","Rating display"],["reviewBodyInput","TextBox","Review body"],
         ["reviewSubmitBtn","Button","Submit"],["reviewSuccess","Text","Success"],
         ["reviewError","Text","Error"]
+      ]},
+      { name: "White Glove Prompt (NEW — CF-y7lp)", impl: `<h4>🧤 Implementation — White Glove Delivery Prompt (CF-y7lp)</h4>
+<p><strong>Layout: Collapsed section — only shown for white-glove orders with available slots</strong></p>
+<ul>
+  <li><strong>#whiteGlovePromptSection</strong>: Section — <span class="impl-warn">collapsed by default</span>. Expanded only when: (1) order shipping code contains 'white'/'wg' or title contains 'white-glove'/'assembly'/'setup', AND (2) backend confirms available slots.</li>
+  <li><strong>#whiteGlovePromptTitle</strong>: Text — "Schedule Your White-Glove Delivery".</li>
+  <li><strong>#whiteGlovePromptBody</strong>: Text — scheduling invite copy.</li>
+  <li><strong>#whiteGloveScheduleBtn</strong>: Button — navigates to <code>/white-glove-delivery?orderId=&lt;id&gt;</code>.</li>
+  <li>Error path: section collapses silently. Missing elements are all try/catch guarded.</li>
+</ul>`, elements: [
+        ["whiteGlovePromptSection","Section","Prompt container — collapsed by default"],
+        ["whiteGlovePromptTitle","Text","Title"],
+        ["whiteGlovePromptBody","Text","Body copy"],
+        ["whiteGloveScheduleBtn","Button","Schedule CTA — links to /white-glove-delivery"]
       ]}
     ]
   },
@@ -3276,6 +3335,140 @@ Action buttons (right):
 <ul>
   <li><strong>#shippingSchemaHtml</strong>: HtmlComponent injected with JSON-LD structured data for shipping policy SEO. Content set entirely at runtime.</li>
 </ul>`, elements: [["shippingSchemaHtml","HtmlComponent","Schema"]]}
+    ]
+  },
+  {
+    name: "White Glove Delivery", file: "White Glove Delivery.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "State Sections", impl: `<h4>🧤 Implementation — White Glove Delivery State Machine (CF-y7lp)</h4>
+<p><strong>Layout: Mutually exclusive state sections — only one visible at a time</strong></p>
+<ul>
+  <li><strong>#wgLoadingSection</strong>: Shown while fetching order/slots. Start expanded, all others collapsed.</li>
+  <li><strong>#wgExistingSection</strong>: Shown when customer already has an appointment. Shows date, window, status, reschedule option.</li>
+  <li><strong>#wgCalendarSection</strong>: Date picker — shown after loading. Contains date repeater + window sub-panel.</li>
+  <li><strong>#wgConfirmSection</strong>: Shown after successful booking. Confirms date, window, order.</li>
+  <li><strong>#wgErrorSection</strong>: Error fallback. Shows message text + retry option.</li>
+  <li>All section transitions are try/catch guarded — missing elements fail silently.</li>
+</ul>`, elements: [
+        ["wgLoadingSection","Section","Loading state"],
+        ["wgExistingSection","Section","Existing appointment state"],
+        ["wgCalendarSection","Section","Calendar/date picker state"],
+        ["wgConfirmSection","Section","Booking confirmation state"],
+        ["wgErrorSection","Section","Error fallback state"],
+        ["wgErrorText","Text","Error message"]
+      ]},
+      { name: "Existing Appointment", impl: `<h4>📅 Implementation — Existing Appointment View</h4>
+<ul>
+  <li><strong>#existingDateText</strong>: Text — formatted appointment date.</li>
+  <li><strong>#existingWindowText</strong>: Text — window label (e.g. "Morning 10am–12pm").</li>
+  <li><strong>#existingStatusText</strong>: Text — "confirmed" | "cancelled" | "completed".</li>
+  <li><strong>#rescheduleBtn</strong>: Button — triggers reschedule flow. Disabled if <code>rescheduleCount >= 1</code>.</li>
+  <li><strong>#rescheduleNote</strong>: Text — <span class="impl-warn">collapsed by default</span>. Expanded with "You have already rescheduled" when max reached.</li>
+</ul>`, elements: [
+        ["existingDateText","Text","Appointment date"],
+        ["existingWindowText","Text","Time window"],
+        ["existingStatusText","Text","Status"],
+        ["rescheduleBtn","Button","Reschedule trigger"],
+        ["rescheduleNote","Text","Max reschedule note — collapsed by default"]
+      ]},
+      { name: "Calendar (Date Picker)", impl: `<h4>🗓️ Implementation — Calendar Date Picker</h4>
+<p><strong>Layout: No-slots fallback + date card repeater</strong></p>
+<ul>
+  <li><strong>#calendarNoSlots</strong>: Text/Box — <span class="impl-warn">collapsed by default</span>. Expanded when no slots available in next 14 days.</li>
+  <li><strong>#calendarDateRepeater</strong>: Repeater — one card per available date. Each card: <code>#calendarDayLabel</code> (formatted date) + <code>#calendarSelectDayBtn</code> (disabled + label 'Full' when no windows available).</li>
+  <li><strong>#calendarBackBtn</strong>: Button — shown when window selector is open; returns to date list.</li>
+</ul>`, repeater: "calendarDateRepeater", elements: [
+        ["calendarNoSlots","Text","No availability fallback — collapsed by default"],
+        ["calendarDateRepeater","Repeater","Date cards"],
+        ["calendarBackBtn","Button","Back to dates"]
+      ], children: [
+        ["calendarDayLabel","Text","Formatted date"],
+        ["calendarSelectDayBtn","Button","Select this date (disabled when full)"]
+      ]},
+      { name: "Window Selector", impl: `<h4>⏰ Implementation — Time Window Selector</h4>
+<p><strong>Layout: Sub-panel within calendar section</strong></p>
+<ul>
+  <li><strong>#windowSelectorSection</strong>: Section — <span class="impl-warn">collapsed by default</span>. Expanded when user selects a date from the calendar.</li>
+  <li><strong>#windowDateLabel</strong>: Text — formatted selected date.</li>
+  <li><strong>#windowRepeater</strong>: Repeater — morning / midday / afternoon cards.</li>
+  <li><strong>#windowLabel</strong>: Text — window name per card.</li>
+  <li><strong>#windowSpotsText</strong>: Text — "X spots left" or "Full".</li>
+  <li><strong>#windowSelectBtn</strong>: Button — disabled when 0 spots. Triggers booking confirmation.</li>
+  <li><strong>#windowBackBtn</strong>: Button — collapses window selector, returns to calendar.</li>
+</ul>`, repeater: "windowRepeater", elements: [
+        ["windowSelectorSection","Section","Window picker — collapsed by default"],
+        ["windowDateLabel","Text","Selected date label"],
+        ["windowRepeater","Repeater","Window cards"],
+        ["windowBackBtn","Button","Back to calendar"]
+      ], children: [
+        ["windowLabel","Text","Window name (morning/midday/afternoon)"],
+        ["windowSpotsText","Text","Spots remaining"],
+        ["windowSelectBtn","Button","Select window — disabled when full"]
+      ]},
+      { name: "Confirmation", impl: `<h4>✅ Implementation — Booking Confirmation</h4>
+<ul>
+  <li><strong>#confirmHeadline</strong>: Text — "Appointment Scheduled!" or "Appointment Rescheduled!" based on flow.</li>
+  <li><strong>#confirmSubtext</strong>: Text — "We'll send you a confirmation email with all the details."</li>
+  <li><strong>#confirmDateText</strong>: Text — formatted appointment date.</li>
+  <li><strong>#confirmWindowText</strong>: Text — window label.</li>
+  <li><strong>#confirmOrdersBtn</strong>: Button — navigates to Member Page order history.</li>
+</ul>`, elements: [
+        ["confirmHeadline","Text","Confirmation headline"],
+        ["confirmSubtext","Text","Confirmation subtext"],
+        ["confirmDateText","Text","Confirmed date"],
+        ["confirmWindowText","Text","Confirmed window"],
+        ["confirmOrdersBtn","Button","View orders CTA"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin Delivery Calendar", file: "Admin Delivery Calendar.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Appointment Calendar", impl: `<h4>📅 Implementation — Admin Appointment Calendar (CF-y7lp)</h4>
+<p><strong>Requires: Admin login. Data from <code>getAdminCalendar(from, to)</code>.</strong></p>
+<ul>
+  <li><strong>#calendarRangeLabel</strong>: Text — "Mar 29 – Apr 12" range label.</li>
+  <li><strong>#calendarApptCount</strong>: Text — "X appointments" summary.</li>
+  <li><strong>#calendarEmpty</strong>: Section/Text — <span class="impl-warn">collapsed by default</span>. Expanded when no appointments in range.</li>
+  <li><strong>#calendarRepeater</strong>: Repeater — one card per appointment. Shows date, window, status, customer info, notes.</li>
+  <li><strong>#calendarFromDate / #calendarToDate</strong>: Date pickers for range filter.</li>
+  <li><strong>#calendarFilterBtn</strong>: Button — triggers range fetch. Disabled during load.</li>
+  <li><strong>#calendarFilterError</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on invalid range or API error.</li>
+</ul>`, repeater: "calendarRepeater", elements: [
+        ["calendarRangeLabel","Text","Date range label"],
+        ["calendarApptCount","Text","Appointment count"],
+        ["calendarEmpty","Section","Empty state — collapsed by default"],
+        ["calendarRepeater","Repeater","Appointment cards"],
+        ["calendarFromDate","DatePicker","Range start"],
+        ["calendarToDate","DatePicker","Range end"],
+        ["calendarFilterBtn","Button","Apply range filter"],
+        ["calendarFilterError","Text","Filter error — collapsed by default"]
+      ], children: [
+        ["apptDate","Text","Appointment date"],
+        ["apptWindow","Text","Time window"],
+        ["apptStatus","Text","Status"],
+        ["apptEmail","Text","Customer email"],
+        ["apptPhone","Text","Customer phone"],
+        ["apptAddress","Text","Delivery address"],
+        ["apptNotes","Text","Special notes"],
+        ["apptOrderId","Text","Order ID"]
+      ]},
+      { name: "Block Date Form", impl: `<h4>🚫 Implementation — Block Delivery Date</h4>
+<ul>
+  <li><strong>#blockDateInput</strong>: DatePicker — select date to block.</li>
+  <li><strong>#blockReasonInput</strong>: Input — optional reason text.</li>
+  <li><strong>#blockDateSubmitBtn</strong>: Button — "Block Date" → "Blocking...". Disabled during request.</li>
+  <li><strong>#blockFormError</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on validation failure or API error.</li>
+  <li><strong>#blockFormSuccess</strong>: Text — <span class="impl-warn">collapsed by default</span>. Shown on success.</li>
+  <li><strong>#blockedDatesSection</strong>: Section — expanded after successful block to show updated blocked dates list.</li>
+</ul>`, elements: [
+        ["blockDateInput","DatePicker","Date to block"],
+        ["blockReasonInput","Input","Block reason (optional)"],
+        ["blockDateSubmitBtn","Button","Submit block"],
+        ["blockFormError","Text","Error — collapsed by default"],
+        ["blockFormSuccess","Text","Success — collapsed by default"],
+        ["blockedDatesSection","Section","Blocked dates list"]
+      ]}
     ]
   },
   {
@@ -4302,7 +4495,6 @@ SHARING:
     ]
   },
   {
-<<<<<<< HEAD
     name: "Style Quiz", file: "Style Quiz.js", priority: "P1", est: "30 min",
     sections: [
       { name: "Quiz Steps", impl: `<h4>🎯 Implementation — Quiz Steps (Style Quiz)</h4>
@@ -4522,70 +4714,6 @@ SHARING:
     ]
   },
   {
-    name: "Local SEO Page", file: "Local SEO Page.js", priority: "P2", est: "35 min",
-    sections: [
-      { name: "Hero", impl: `<h4>📍 Implementation — Hero (Local SEO Page)</h4>
-<ul>
-  <li><strong>#cityTitle</strong>: Text — city name heading (e.g. "Futons in Asheville, NC").</li>
-  <li><strong>#cityHeadline</strong>: Text — subheadline.</li>
-  <li><strong>#homeCityBadge</strong>: Text — "Home City" badge for Hendersonville.</li>
-  <li><strong>#localPageContent</strong>: Box — main content container (shown on valid city).</li>
-  <li><strong>#notFoundMessage</strong>: Text — shown when city not found in dataset.</li>
-</ul>`, elements: [
-        ["cityTitle","Text","City name heading"],
-        ["cityHeadline","Text","Sub-headline"],
-        ["homeCityBadge","Text","Home City badge (Hendersonville only)"],
-        ["localPageContent","Box","Main content container"],
-        ["notFoundMessage","Text","City not found fallback"]
-      ]},
-      { name: "Store Info", impl: `<h4>🏪 Implementation — Store Info (Local SEO Page)</h4>
-<ul>
-  <li><strong>#directionsText</strong>: Text — driving directions summary.</li>
-  <li><strong>#directionsBtn</strong>: Button — opens Google Maps directions.</li>
-  <li><strong>#mapEmbed</strong>: HtmlComponent — embedded Google Maps iframe via postMessage.</li>
-</ul>`, elements: [
-        ["directionsText","Text","Driving directions"],
-        ["directionsBtn","Button","Open Google Maps"],
-        ["mapEmbed","HtmlComponent","Google Maps embed"]
-      ]},
-      { name: "Nearby Areas", repeater: "nearbyAreasRepeater", impl: `<h4>🗺️ Implementation — Nearby Areas (Local SEO Page)</h4>
-<ul>
-  <li><strong>#nearbyAreasRepeater</strong>: Repeater — links to nearby city SEO pages.</li>
-  <li><strong>#nearbyAreaLabel</strong>: Text — nearby city name.</li>
-  <li><strong>#nearbyAreaLink</strong>: Button — navigates to /near/[city-slug].</li>
-</ul>`, elements: [
-        ["nearbyAreasRepeater","Repeater","Nearby city links"]
-      ], children: [
-        ["nearbyAreaLabel","Text","City name"],
-        ["nearbyAreaLink","Button","Link to /near/[city]"]
-      ]},
-      { name: "Featured Products", repeater: "featuredProductsRepeater", impl: `<h4>🛋️ Implementation — Featured Products (Local SEO Page)</h4>
-<ul>
-  <li><strong>#featuredProductsRepeater</strong>: Repeater — products relevant to city/region.</li>
-  <li>Children: #productName, #productPrice, #productImage, #viewProductBtn.</li>
-</ul>`, elements: [
-        ["featuredProductsRepeater","Repeater","Featured products for city"]
-      ], children: [
-        ["productName","Text","Product name"],
-        ["productPrice","Text","Product price"],
-        ["productImage","Image","Product image"],
-        ["viewProductBtn","Button","View product"]
-      ]},
-      { name: "Cross-Links", repeater: "crossLinksRepeater", impl: `<h4>🔗 Implementation — Cross-Links (Local SEO Page)</h4>
-<ul>
-  <li><strong>#crossLinksSection</strong>: Box — container for cross-link section.</li>
-  <li><strong>#crossLinksHeading</strong>: Text — section heading.</li>
-  <li><strong>#crossLinksRepeater</strong>: Repeater — internal cross-links to related pages.</li>
-  <li><strong>#crossLinkLabel</strong>: Text — link text.</li>
-  <li><strong>#crossLinkBtn</strong>: Button — navigates to target page.</li>
-</ul>`, elements: [
-        ["crossLinksSection","Box","Cross-links container"],
-        ["crossLinksHeading","Text","Section heading"],
-        ["crossLinksRepeater","Repeater","Cross-links"]
-      ], children: [
-        ["crossLinkLabel","Text","Link text"],
-        ["crossLinkBtn","Button","Target page link"]
-=======
     name: "Local SEO City Page", file: "Near City Page.js", priority: "P2", est: "40 min",
     sections: [
       { name: "City Content (PRs #522, #528, #530, #531, #536)", impl: `<h4>📍 Implementation — Local SEO City Page</h4>
@@ -4622,12 +4750,10 @@ SHARING:
         ["viewProductBtn","Button","View Product CTA"],
         ["nearbyAreaLink","Button","Link to nearby city page (nearbyAreasRepeater)"],
         ["nearbyAreaLabel","Text","City name label"]
->>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   },
   {
-<<<<<<< HEAD
     name: "Community Gallery", file: "Community Gallery.js", priority: "P2", est: "40 min",
     sections: [
       { name: "Gallery Grid", repeater: "galleryMasonryRepeater", impl: `<h4>📷 Implementation — Gallery Grid (Community Gallery)</h4>
@@ -4691,7 +4817,10 @@ SHARING:
         ["galleryLightboxCaption","Text","Caption/room type"],
         ["galleryLightboxCustomer","Text","Customer name"],
         ["galleryLightboxProductLink","Button","Shop This Product"]
-=======
+      ]}
+    ]
+  },
+  {
     name: "Referral Share Page", file: "Referral Share.js", priority: "P2", est: "25 min",
     sections: [
       { name: "Referral Dashboard (PR #524 — CF-ld8w)", impl: `<h4>🔗 Implementation — Referral Share Page</h4>
@@ -4719,12 +4848,10 @@ SHARING:
         ["totalReferrals","Text","X friends referred"],
         ["earnedRewards","Text","You've earned $X"],
         ["pendingRewards","Text","Pending: $X"]
->>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   },
   {
-<<<<<<< HEAD
     name: "Referral Page", file: "Referral Page.js", priority: "P2", est: "35 min",
     sections: [
       { name: "Auth State", impl: `<h4>🔐 Implementation — Auth State (Referral Page)</h4>
@@ -5022,6 +5149,58 @@ SHARING:
   },
 
   {
+    name: "Gift Registry (NEW — CF-easy)", file: "Gift Registry.js", priority: "P2", est: "30 min",
+    sections: [
+      { name: "Registry List & Create Form", impl: `<h4>🎁 Implementation — Gift Registry (NEW — CF-easy)</h4>
+<p><em>Page: <code>src/pages/Gift Registry.js</code> — three modes: list, manage, public view</em><br>
+<em>Backend: <code>src/backend/giftRegistry.web.js</code> — CRUD operations for registry management</em></p>
+<p>Members can create, manage, and share gift registries. A shareable public URL shows registry contents to guests. <span class="impl-warn">All form elements and repeaters must be collapsed by default.</span></p>
+<ul>
+  <li><strong>#registryCount</strong>: Text — "X registr(y|ies)" summary label.</li>
+  <li><strong>#registryEmptyState</strong>: Box — empty state shown when no registries. Expands when list is empty.</li>
+  <li><strong>#registryRepeater</strong>: Repeater — one item per registry. Each item contains:
+    <ul>
+      <li><strong>#registryItemTitle</strong>: Text — registry name.</li>
+      <li><strong>#registryItemOccasion</strong>: Text — formatted occasion (Wedding, Baby Shower, etc.).</li>
+      <li><strong>#registryItemDate</strong>: Text — event date formatted as "MMM D, YYYY".</li>
+      <li><strong>#registryItemCount</strong>: Text — "X item(s)".</li>
+      <li><strong>#registryManageBtn</strong>: Button — navigates to registry manage view.</li>
+    </ul>
+  </li>
+  <li><strong>#registryCreateBtn</strong>: Button — "Create Registry" CTA. Expands the create form.</li>
+  <li><strong>#registryCreateForm</strong>: Box — create form container. Collapsed by default.</li>
+  <li><strong>#registryTitleInput</strong>: TextInput — registry name field.</li>
+  <li><strong>#registryOccasionDropdown</strong>: Dropdown — occasion selector (wedding, baby-shower, birthday, housewarming, other).</li>
+  <li><strong>#registryDatePicker</strong>: DatePicker — event date field.</li>
+  <li><strong>#registryMessageInput</strong>: TextBox — optional message/description.</li>
+  <li><strong>#registryPublicToggle</strong>: Toggle — public/private visibility.</li>
+  <li><strong>#registrySubmitBtn</strong>: Button — submit new registry. Disabled during submit.</li>
+  <li><strong>#registryCancelBtn</strong>: Button — cancel create, collapses form.</li>
+  <li><strong>#registryFormError</strong>: Text — inline error message. Collapsed by default.</li>
+</ul>`, elements: [
+        ["registryCount","Text","Registry count summary label"],
+        ["registryEmptyState","Box","Empty state — expand when no registries"],
+        ["registryRepeater","Repeater","Registry list — one item per registry"],
+        ["registryItemTitle","Text","Registry name (repeater item)"],
+        ["registryItemOccasion","Text","Occasion label (repeater item)"],
+        ["registryItemDate","Text","Event date (repeater item)"],
+        ["registryItemCount","Text","Item count (repeater item)"],
+        ["registryManageBtn","Button","Manage registry button (repeater item)"],
+        ["registryCreateBtn","Button","Create Registry CTA"],
+        ["registryCreateForm","Box","Create form container — collapsed by default"],
+        ["registryTitleInput","TextInput","Registry name input"],
+        ["registryOccasionDropdown","Dropdown","Occasion selector"],
+        ["registryDatePicker","DatePicker","Event date picker"],
+        ["registryMessageInput","TextBox","Optional message/description"],
+        ["registryPublicToggle","Toggle","Public/private toggle"],
+        ["registrySubmitBtn","Button","Submit create form"],
+        ["registryCancelBtn","Button","Cancel / collapse form"],
+        ["registryFormError","Text","Inline error message — collapsed by default"]
+      ]}
+    ]
+  },
+
+  {
     name: "Bundle Builder", file: "Bundle.js (/bundle page) ✅ PR #677 merged", priority: "P1", est: "60 min",
     sections: [
       { name: "Main Layout", impl: `<h4>🛒 Implementation — Bundle Builder Main Layout (/bundle)</h4>
@@ -5174,7 +5353,10 @@ SHARING:
         ["roomCaptionInput","Input","Caption input"],
         ["roomRoomTypeDropdown","Dropdown","Room type selector"],
         ["roomSubmitStatus","Text","Status/error message"]
-=======
+      ]}
+    ]
+  },
+  {
     name: "Submit Photo Review Page", file: "Submit Photo Review.js", priority: "P2", est: "30 min",
     sections: [
       { name: "UGC Upload Form (PR #532 — CF-zkdy)", impl: `<h4>📸 Implementation — Submit Photo Review Page</h4>
@@ -5203,7 +5385,6 @@ SHARING:
         ["submitBtn","Button","Submit Photo — disabled during upload"],
         ["successSection","Box","Success state — collapsed by default"],
         ["successMessage","Text","'Thanks! Your photo is in review.'"]
->>>>>>> origin/cf-ld8w-referral-ui
       ]}
     ]
   }
@@ -5337,7 +5518,7 @@ function render() {
   hookupSteps.className = 'howto';
   hookupSteps.innerHTML = [
     '<h2>\u{1F4CB} Editor Hookup Steps \u2014 Per-Page Coordination Flow</h2>',
-    '<p style="color:#555;font-size:0.9em;margin-bottom:12px;">Updated 2026-03-22. Exact sequence Stilgar and melania follow to wire each page. Repeat for every page.</p>',
+    '<p style="color:#555;font-size:0.9em;margin-bottom:12px;">Updated 2026-03-28. Exact sequence Stilgar and melania follow to wire each page. Repeat for every page.</p>',
     '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:0.88em;">',
     '<tr style="background:#e8d5b7;"><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Role</th><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Responsibility</th></tr>',
     '<tr><td style="padding:6px 10px;border:1px solid #ddd;"><strong>Stilgar</strong></td><td style="padding:6px 10px;border:1px solid #ddd;">Builds frontend elements in Wix Studio editor (sections, buttons, galleries, text boxes, etc.)</td></tr>',

@@ -90,8 +90,8 @@ const DEFAULT_CANNED_RESPONSES = [
     trigger: 'hours',
     title: 'Store Hours',
     response: 'Our Hendersonville, NC showroom is open:\n' +
-      'Mon-Thu: 10am - 6pm\nFri: 10am - 5pm\nSat: 10am - 4pm\nSun: Closed\n' +
-      'Located at the historic district — come see and try our furniture in person!',
+      'Wed–Sat: 10am–5pm (in store or by appointment)\nSun–Tue: Closed\n' +
+      'Located at 824 Locust St — come see and try our furniture in person!',
   },
   {
     id: 'warranty',

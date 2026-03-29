@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
-import { __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import {
   submitTestimonial,
   getFeaturedTestimonials,

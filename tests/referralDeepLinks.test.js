@@ -18,7 +18,6 @@ vi.mock('wix-members-backend', () => ({
   currentMember: { getMember: vi.fn().mockResolvedValue(null) },
 }));
 
-import { vi } from 'vitest';
 
 import {
   getReferralLinkOwnerName,

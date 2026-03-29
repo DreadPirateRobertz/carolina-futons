@@ -648,7 +648,7 @@ Secrets are passwords/API keys that your code needs but shouldn't be visible in 
 2. Click **+ New Secret**
 3. Name it exactly as shown, paste the value
 
-### Required Secrets (8)
+### Required Secrets (12)
 
 | Secret Name | What It Is | Where to Get It |
 |-------------|-----------|-----------------|
@@ -660,6 +660,10 @@ Secrets are passwords/API keys that your code needs but shouldn't be visible in 
 | `WIX_BACKEND_KEY` | Backend API authentication key | Dashboard > Settings > API Keys |
 | `WELCOME_DISCOUNT_CODE` | 10% welcome email discount code (e.g., "WELCOME10") | You create in Dashboard > Marketing > Coupons |
 | `RECOVERY_DISCOUNT_CODE` | Cart recovery incentive code (e.g., "COMEBACK15") | You create in Dashboard > Marketing > Coupons |
+| `STAMPED_API_KEY` | Stamped.io public API key | Stamped.io Dashboard > Settings > API Keys |
+| `STAMPED_API_SECRET` | Stamped.io private API secret | Stamped.io Dashboard > Settings > API Keys |
+| `STAMPED_STORE_HASH` | Stamped.io store identifier slug | Stamped.io Dashboard > Settings > General (shown as "Store Hash") |
+| `STAMPED_WEBHOOK_SECRET` | Shared secret for webhook signature verification | Create any random string (e.g., 32-char hex) — paste same value in Stamped.io > Settings > Webhooks |
 
 ---
 
@@ -688,6 +692,19 @@ Secrets are passwords/API keys that your code needs but shouldn't be visible in 
 |--------|---------------|-------------|
 | **Klaviyo** | App Market > search "Klaviyo" > Add to Site > connect account | Advanced email/SMS marketing, replaces basic emails. Free up to 250 contacts |
 | **Stamped.io** | App Market > search "Stamped" > Add to Site | Visual product reviews with photo upload. Free tier available |
+
+**Stamped.io activation (after App Market install):**
+
+1. In the Stamped.io dashboard, go to **Settings > API Keys** — copy your **Public Key** and **Private Key**
+2. In the Stamped.io dashboard, go to **Settings > General** — copy your **Store Hash**
+3. Add all three to Wix Secrets Manager (see Step 5): `STAMPED_API_KEY`, `STAMPED_API_SECRET`, `STAMPED_STORE_HASH`
+4. Configure the review webhook so new reviews flow into the moderation queue:
+   - In Stamped.io: **Settings > Webhooks > + Add Webhook**
+   - URL: `https://www.carolinafutons.com/_functions/stampedWebhook`
+   - Events: `review.created`, `review.updated`
+   - Secret header: generate a random 32-char string, paste it as the webhook secret
+   - Add that same string to Wix Secrets Manager as `STAMPED_WEBHOOK_SECRET`
+5. In Stamped.io: **Settings > Display** — set the widget theme to match site colors (`#2C2C2C` text, `#E8855A` stars)
 
 ### Connect Product Feeds
 
