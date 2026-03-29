@@ -79,28 +79,20 @@ export const scheduleSurvey = webMethod(
       return { success: false, error: 'Invalid memberId or orderId' };
     }
 
-    // Idempotency — don't send twice for the same order
-    try {
-      const existing = await wixData.query(SURVEY_COLLECTION)
-        .eq('memberId', memberId)
-        .eq('orderId', orderId)
-        .count();
-
-      if (existing > 0) {
-        return { success: true, scheduled: false };
-      }
-    } catch (err) {
-      logError('surveyService:scheduleSurvey:check', err);
-      return { success: false, error: 'Duplicate check failed' };
-    }
+    const email = data.email ? sanitize(String(data.email), 254) : '';
 
     const deliveredAt = data.deliveredAt ? new Date(data.deliveredAt) : new Date();
     const sendAt = new Date(deliveredAt);
     sendAt.setDate(sendAt.getDate() + 7);
 
-    // Create pending survey record
+    // Idempotency: use a deterministic _id to make the insert atomic.
+    // If a concurrent request races through, the second insert will throw a
+    // duplicate-ID error and we return success: false without double-scheduling.
+    const surveyId = `survey_${memberId}_${orderId}`;
+
     try {
       await wixData.insert(SURVEY_COLLECTION, {
+        _id: surveyId,
         memberId,
         orderId,
         npsScore: null,
@@ -109,6 +101,10 @@ export const scheduleSurvey = webMethod(
         completedAt: null,
       });
     } catch (err) {
+      const msg = err?.message ?? '';
+      if (msg.includes('duplicate') || msg.includes('already exists') || msg.includes('WD_DUPLICATE')) {
+        return { success: true, scheduled: false };
+      }
       logError('surveyService:scheduleSurvey:insert', err);
       return { success: false, error: 'Failed to create survey record' };
     }
@@ -117,7 +113,7 @@ export const scheduleSurvey = webMethod(
     try {
       await wixData.insert('EmailQueue', {
         templateId: 'nps_survey',
-        recipientEmail: data.email || '',
+        recipientEmail: email,
         recipientContactId: memberId,
         variables: JSON.stringify({ orderId }),
         sequenceType: 'survey',

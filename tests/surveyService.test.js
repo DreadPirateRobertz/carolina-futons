@@ -116,12 +116,11 @@ describe('scheduleSurvey', () => {
     expect(result.success).toBe(false);
   });
 
-  it('is idempotent — skips if survey already exists', async () => {
-    mockCount.mockResolvedValue(1);
+  it('is idempotent — skips if survey already exists (duplicate ID)', async () => {
+    mockInsert.mockRejectedValueOnce(new Error('WD_DUPLICATE: item already exists'));
     const result = await scheduleSurvey({ memberId: MEMBER_ID, orderId: ORDER_ID });
     expect(result.success).toBe(true);
     expect(result.scheduled).toBe(false);
-    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it('schedules email for 7 days after deliveredAt', async () => {
