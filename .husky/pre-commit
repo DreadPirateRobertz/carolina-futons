@@ -16,6 +16,20 @@ if [ -n "$STAGED" ]; then
   fi
 fi
 
+# ── Duplicate-import guard (CF-id8p) ─────────────────────────────────────────
+# Fail fast if any staged JS/TS file has duplicate import declarations.
+# Incident CF-2fs8: duplicate buildFooterMountainSVG import blocked CI post-merge.
+
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs node scripts/check-duplicate-imports.mjs
+  DUPIMPORT_EXIT=$?
+  if [ $DUPIMPORT_EXIT -ne 0 ]; then
+    echo ""
+    echo "Pre-commit blocked: remove duplicate import declarations before committing."
+    exit 1
+  fi
+fi
+
 # ── Vitest on changed src files ──────────────────────────────────────────────
 # Run vitest only on source files that have corresponding test files.
 
