@@ -103,6 +103,13 @@ describe('getDeliveryOptions', () => {
     const freight = result.options.find(o => o.code === 'freight');
     expect(freight).toBeDefined();
   });
+
+  it('returns local zone for VA zip with prefix 240 (Blacksburg area)', () => {
+    // 24060 = Blacksburg VA — prefix 240 was added to localZones VA prefixes in sharedTokens
+    const result = getDeliveryOptions('24060', 'futon-frames');
+    expect(result.success).toBe(true);
+    expect(result.zone.type).toBe('local');
+  });
 });
 
 // ── isWhiteGloveCategory ────────────────────────────────────────────

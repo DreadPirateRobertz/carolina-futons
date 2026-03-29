@@ -27,6 +27,8 @@ import {
   getSelectedShippingCode,
 } from '../src/public/CheckoutShippingIntelligence.js';
 
+import { ZIP_KEY } from '../src/public/shippingPrefs.js';
+
 import {
   getShippingEstimate,
   calculateBundleQuote,
@@ -203,7 +205,7 @@ describe('initCheckoutShippingIntelligence', () => {
 
   it('pre-populates ZIP from storage when available', async () => {
     const $w = makeWixEnv();
-    const storage = makeStorage({ cf_zip: '28701' });
+    const storage = makeStorage({ [ZIP_KEY]: '28701' });
     await initCheckoutShippingIntelligence($w, [], { storage });
     expect($w.__els['#checkoutShippingZip'].value).toBe('28701');
   });
@@ -269,7 +271,7 @@ describe('initCheckoutShippingIntelligence', () => {
 
     await triggerClick($w.__els['#checkoutShippingCalcBtn']);
 
-    expect(storage.setItem).toHaveBeenCalledWith('cf_zip', '28701');
+    expect(storage.setItem).toHaveBeenCalledWith(ZIP_KEY, '28701');
   });
 
   it('shows fallback contact message when API returns no options', async () => {

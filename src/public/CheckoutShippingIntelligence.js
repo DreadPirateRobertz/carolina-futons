@@ -23,8 +23,8 @@
  *   #checkoutShippingOptionRadio    — Button / Radio trigger for option selection
  */
 import { getShippingEstimate, calculateBundleQuote } from 'backend/shippingIntelligence.web';
+import { getStoredZip, setStoredZip } from './shippingPrefs.js';
 
-const STORAGE_KEY = 'cf_zip';
 const ORIGIN_TEXT = 'Ships from Hendersonville, NC';
 const CONTACT_PHONE = '(828) 252-9449';
 const FREIGHT_BANNER_TEXT =
@@ -101,9 +101,6 @@ function safeCall($wFn, sel, fn) {
  * @param {Function} [opts.onSelect] - Called with (code, option) when customer selects a rate.
  */
 export async function initCheckoutShippingIntelligence($wFn, cartItems, opts = {}) {
-  const storage = opts.storage ??
-    (await import('wix-storage-frontend').then(m => m.local));
-
   _selectedShippingCode = null;
   _onShippingSelect = opts.onSelect || null;
 
@@ -111,7 +108,7 @@ export async function initCheckoutShippingIntelligence($wFn, cartItems, opts = {
   safeCall($wFn, '#checkoutShippingOrigin', el => { el.text = ORIGIN_TEXT; });
 
   // Pre-populate ZIP from saved storage (may come from product page or previous checkout)
-  const savedZip = storage.getItem(STORAGE_KEY);
+  const savedZip = await getStoredZip(opts.storage);
   safeCall($wFn, '#checkoutShippingZip', el => {
     if (savedZip) el.value = savedZip;
   });
@@ -124,7 +121,7 @@ export async function initCheckoutShippingIntelligence($wFn, cartItems, opts = {
 
   // Wire calculate button
   safeCall($wFn, '#checkoutShippingCalcBtn', el => {
-    el.onClick(() => _handleCalculate($wFn, cartItems, storage));
+    el.onClick(() => _handleCalculate($wFn, cartItems, opts.storage));
   });
 }
 
@@ -157,7 +154,7 @@ async function _handleCalculate($wFn, cartItems, storage) {
       return;
     }
 
-    storage.setItem(STORAGE_KEY, zip);
+    await setStoredZip(zip, storage);
     renderCheckoutShippingOptions($wFn, result.options);
   } catch (_) {
     _showFallback($wFn);
