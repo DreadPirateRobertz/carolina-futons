@@ -393,7 +393,24 @@ export const confirmTradeIn = webMethod(
       }
 
       // Stage 3: Mark as fully credited with credit ID
-      await wixData.update(COLLECTION, { ...baseUpdate, status: 'credited', issuedCreditAmount: creditAmount, storeCreditId });
+      try {
+        await wixData.update(COLLECTION, { ...baseUpdate, status: 'credited', issuedCreditAmount: creditAmount, storeCreditId });
+      } catch (stage3Err) {
+        // Credit was already issued — log for manual reconciliation and return success.
+        // Staff can retry; the storeCreditId guard in Stage 2 prevents double-issuance.
+        console.error('[tradeInService] MANUAL RECONCILIATION REQUIRED: store credit issued but status update failed', {
+          requestId: cleanId,
+          storeCreditId,
+          creditAmount,
+          error: stage3Err.message,
+        });
+        return {
+          success: true,
+          issuedCreditAmount: creditAmount,
+          storeCreditId,
+          message: `Store credit issued but record update failed. Contact admin to confirm request ${cleanId}.`,
+        };
+      }
 
       return {
         success: true,

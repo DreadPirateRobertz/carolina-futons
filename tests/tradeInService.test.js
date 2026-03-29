@@ -5,6 +5,7 @@ import {
   __getInserted,
   __getUpdated,
   __setInsertError,
+  __setUpdateError,
   __onInsert,
 } from './__mocks__/wix-data.js';
 import { __reset as resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
@@ -442,6 +443,17 @@ describe('confirmTradeIn', () => {
     expect(result.success).toBe(true);
     expect(issueStoreCredit).not.toHaveBeenCalled();
     expect(result.storeCreditId).toBe('credit-already-issued');
+  });
+
+  it('returns success with reconciliation message when Stage 3 update fails', async () => {
+    // Stage 1 already ran (status=confirmed), Stage 2 will succeed, Stage 3 will fail.
+    // Credit was issued — must return success so staff know the credit went out.
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'confirmed' })]);
+    __setUpdateError(COLLECTION, new Error('CMS timeout'));
+    const result = await confirmTradeIn('req-1', 'good');
+    expect(result.success).toBe(true);
+    expect(result.storeCreditId).toBeDefined();
+    expect(result.message).toMatch(/RECONCILIATION|contact admin/i);
   });
 
   it('sets status to confirmed before issuing credit (idempotency staging)', async () => {
