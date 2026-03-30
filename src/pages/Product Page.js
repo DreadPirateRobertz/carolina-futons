@@ -4,12 +4,12 @@
 // dynamic import() for below-fold components to reduce initial bundle
 import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
-import { cacheProduct } from 'public/productCache';
+import { cacheProduct, getCachedProduct } from 'public/productCache';
 // engagementTracker and ga4Tracking are dynamically imported in deferred sections
 // to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
-import { renderSimplePrice } from 'public/productCardHelpers.js';
+import { renderSimplePrice, setCardImage } from 'public/productCardHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixData from 'wix-data';
 import { prioritizeSections } from 'public/performanceHelpers.js';
@@ -19,7 +19,7 @@ import { getImageDimensions } from 'public/galleryConfig.js';
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
-import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
+import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton, initPriceDropNotify } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
@@ -113,6 +113,7 @@ async function initProductPage() {
       { name: 'stockUrgency', init: () => initStockUrgency($w, state), critical: false },
       { name: 'bundleSection', init: () => initBundleSection($w, state), critical: false },
       { name: 'backInStock', init: () => initBackInStockNotification($w, state), critical: false },
+      { name: 'priceDropNotify', init: () => initPriceDropNotify($w, state), critical: false },
       { name: 'wishlistButton', init: () => initWishlistButton($w, state), critical: false },
       { name: 'designTokens', init: () => applyProductPageTokens($w), critical: true },
       // JSON-LD structured data via wix-seo-frontend (SSR-compatible, must be critical for crawlers)
@@ -152,6 +153,8 @@ async function initProductPage() {
       { name: 'recommendations', init: async () => { const m = await import('public/ProductRecommendations.js'); m.initRecommendationsCarousel($w, state); }, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
+      // CF-rw9i.2: Real Rooms UGC gallery — horizontal scroll of customer photos for this product
+      { name: 'pdpUGCGallery', init: async () => { const m = await import('public/ProductUGCGallery.js'); await m.initProductUGCGallery($w, state); }, critical: false },
       { name: 'financingBadge', init: () => initFinancingBadge($w, state.product), critical: false },
       { name: 'heroFinancingBadge', init: async () => { const m = await import('public/ProductFinancing.js'); await m.renderHeroPricingBadge($w, state.product?.price); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
@@ -236,6 +239,8 @@ async function initProductPage() {
       { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
       // CF-uits: Room Planner CTA — links to /room-planner with product preloaded
       { name: 'roomPlannerCTA', init: async () => { const m = await import('public/roomPlannerCTA.js'); m.initRoomPlannerCTA($w, state); }, critical: false },
+      // CF-rw9i.1: 'Share your room' UGC photo submit CTA
+      { name: 'shareYourRoom', init: async () => { const m = await import('public/ShareYourRoom.js'); m.initShareYourRoomCTA($w, state); }, critical: false },
       // CF-ac80 (S1) / CF-1792 (S3): Showroom CTA + QR mode banner
       { name: 'showroomCTA', init: async () => { const m = await import('backend/showroomService.web.js'); await initShowroomCTA($w, state, m); }, critical: false },
       // CF-9fv2: Gift product button — adds gift card to cart for current product

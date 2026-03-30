@@ -135,6 +135,7 @@ vi.mock('public/AddToCart.js', () => ({
   initStockUrgency: vi.fn(),
   initBackInStockNotification: vi.fn(),
   initWishlistButton: vi.fn(),
+  initPriceDropNotify: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('public/BrowseReminder.js', () => ({
