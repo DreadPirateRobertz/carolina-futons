@@ -27,6 +27,8 @@ function createMockElement() {
     postMessage: vi.fn(),
     onClick: vi.fn(),
     onChange: vi.fn(),
+    onMouseIn: vi.fn(),
+    onMouseOut: vi.fn(),
     onItemReady: vi.fn(),
     onItemClicked: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),
@@ -92,6 +94,7 @@ vi.mock('backend/productRecommendations.web', () => ({
   getRelatedProducts: vi.fn().mockResolvedValue(mockRelated),
   getSameCollection: vi.fn().mockResolvedValue(mockCollection),
   getBundleSuggestion: vi.fn().mockResolvedValue(null),
+  getCustomersAlsoBought: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('public/ProductFinancing.js', () => ({

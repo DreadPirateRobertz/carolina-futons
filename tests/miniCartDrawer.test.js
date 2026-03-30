@@ -640,7 +640,7 @@ describe('checkout navigation', () => {
     viewHandler();
 
     expect(isMiniCartOpen()).toBe(false);
-    expect(mockWixTo).toHaveBeenCalledWith('/cart');
+    expect(mockWixTo).toHaveBeenCalledWith('/cart-page');
   });
 });
 

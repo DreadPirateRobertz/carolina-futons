@@ -64,6 +64,7 @@ const { getRelatedProducts, getSameCollection, getBundleSuggestion } =
   await import('backend/productRecommendations.web');
 const { addToCart } = await import('public/cartService');
 const { makeClickable } = await import('public/a11yHelpers.js');
+const { to: wixTo } = await import('wix-location-frontend');
 
 const { loadRelatedProducts, loadCollectionProducts, initBundleSection } =
   await import('../src/public/product/crossSell.js');
@@ -263,6 +264,99 @@ describe('initBundleSection', () => {
     expect(addToCart).toHaveBeenCalledWith('p1', 1);
     expect(addToCart).toHaveBeenCalledWith('b1', 1);
     expect(firstCallCount).toBe(2);
+  });
+});
+
+describe('loadCollectionProducts — onItemReady coverage', () => {
+  beforeEach(() => { elements.clear(); vi.clearAllMocks(); });
+
+  it('onItemReady sets image src/alt, name, and price', async () => {
+    const products = [{ _id: 'c1', name: 'Coll Prod', mainMedia: 'c.jpg', formattedPrice: '$75', slug: 'cp' }];
+    getSameCollection.mockResolvedValue(products);
+    await loadCollectionProducts($w, { _id: 'p1', collections: ['futons'] });
+
+    const callback = getEl('#collectionRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, products[0]);
+
+    expect($item('#collectionImage').src).toBe('c.jpg');
+    expect($item('#collectionName').text).toBe('Coll Prod');
+  });
+
+  it('navigateToProduct onClick calls wix-location-frontend to()', async () => {
+    const products = [{ _id: 'c1', name: 'C', mainMedia: 'c.jpg', formattedPrice: '$50', slug: 'coll-slug' }];
+    getSameCollection.mockResolvedValue(products);
+    await loadCollectionProducts($w, { _id: 'p1', collections: ['futons'] });
+
+    const callback = getEl('#collectionRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, products[0]);
+
+    // Trigger the onClick registered on the image
+    const onClickFn = $item('#collectionImage').onClick.mock.calls[0][0];
+    onClickFn();
+    await new Promise(r => setTimeout(r, 0)); // flush dynamic import chain
+
+    expect(wixTo).toHaveBeenCalledWith('/product-page/coll-slug');
+  });
+});
+
+describe('loadRelatedProducts — navigation coverage', () => {
+  beforeEach(() => { elements.clear(); vi.clearAllMocks(); });
+
+  it('navigateToProduct passed to makeClickable calls wix-location-frontend to()', async () => {
+    const products = [{ _id: 'r1', name: 'R', mainMedia: 'i.jpg', formattedPrice: '$50', slug: 'rel-slug' }];
+    getRelatedProducts.mockResolvedValue(products);
+    await loadRelatedProducts($w, { _id: 'p1', collections: ['c1'] });
+
+    const callback = getEl('#relatedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, products[0]);
+
+    // makeClickable receives navigateToProduct as its second arg
+    const navigateFn = makeClickable.mock.calls[0][1];
+    navigateFn();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(wixTo).toHaveBeenCalledWith('/product-page/rel-slug');
+  });
+});
+
+describe('initBundleSection — navigation and error coverage', () => {
+  beforeEach(() => { elements.clear(); vi.clearAllMocks(); });
+
+  it('navigateToBundle onClick calls wix-location-frontend to()', async () => {
+    getBundleSuggestion.mockResolvedValue({
+      product: { _id: 'b1', name: 'B', mainMedia: 'b.jpg', slug: 'bundle-slug' },
+      bundlePrice: 100, savings: 20,
+    });
+    await initBundleSection($w, { _id: 'p1' });
+
+    const navigateFn = getEl('#bundleImage').onClick.mock.calls[0][0];
+    navigateFn();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(wixTo).toHaveBeenCalledWith('/product-page/bundle-slug');
+  });
+
+  it('logs error when getBundleSuggestion throws (outer catch)', async () => {
+    getBundleSuggestion.mockRejectedValue(new Error('fetch failed'));
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await initBundleSection($w, { _id: 'p1' });
+    expect(spy).toHaveBeenCalledWith('Error loading bundle section:', expect.any(Error));
+    spy.mockRestore();
   });
 });
 

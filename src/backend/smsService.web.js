@@ -540,6 +540,159 @@ export const getSMSPreferences = webMethod(
   }
 );
 
+// ── CF-rjxq: White-glove delivery SMS ────────────────────────────────────────
+
+const WG_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Format YYYY-MM-DD as "April 2, 2026".
+ * @param {string} dateStr
+ * @returns {string}
+ */
+function formatDateLong(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/**
+ * Send booking confirmation SMS for a white-glove delivery appointment.
+ * Phone is taken directly from the booking form (opt-in captured there).
+ *
+ * @param {Object} params
+ * @param {string} params.phone - Customer phone (any US format).
+ * @param {string} params.appointmentDate - YYYY-MM-DD
+ * @param {string} params.windowLabel - e.g. '10:00 AM – 12:00 PM'
+ * @param {string} [params.address] - Delivery address.
+ * @param {string} [params.appointmentId] - For dedup logging.
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendWhiteGloveConfirmationSMS = webMethod(
+  Permissions.Admin,
+  async ({ phone, appointmentDate, windowLabel, address, appointmentId } = {}) => {
+    try {
+      if (!phone || !appointmentDate || !windowLabel) {
+        return { success: false, reason: 'invalid_input' };
+      }
+
+      if (!validatePhone(phone)) return { success: false, reason: 'invalid_phone' };
+      const to = formatPhoneE164(phone);
+
+      const dateLong = formatDateLong(sanitize(String(appointmentDate), 10));
+      const cleanWindow = sanitize(String(windowLabel), 40);
+      const cleanAddress = address ? sanitize(String(address), 200) : '';
+
+      let body = `Your Carolina Futons white-glove delivery is scheduled for ${dateLong} between ${cleanWindow}.`;
+      if (cleanAddress) body += ` Address: ${cleanAddress}.`;
+      body += ` Questions? Call (828) 252-9449`;
+
+      const result = await sendViaTwilio(to, body);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId: '',
+        phone: to,
+        messageType: 'white_glove_confirmation',
+        messageBody: body,
+        twilioSid: result.sid || '',
+        productId: sanitize(String(appointmentId || ''), 50),
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendWhiteGloveConfirmationSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
+/**
+ * Send 48-hour reminder SMS for a white-glove delivery appointment.
+ *
+ * @param {Object} params
+ * @param {string} params.phone - Customer phone (E.164 or US format).
+ * @param {string} params.appointmentDate - YYYY-MM-DD (used to derive day name).
+ * @param {string} params.windowLabel - e.g. '10:00 AM – 12:00 PM'
+ * @param {string} [params.appointmentId] - For dedup logging.
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendWhiteGloveReminderSMS = webMethod(
+  Permissions.Admin,
+  async ({ phone, appointmentDate, windowLabel, appointmentId } = {}) => {
+    try {
+      if (!phone || !appointmentDate || !windowLabel) {
+        return { success: false, reason: 'invalid_input' };
+      }
+
+      if (!validatePhone(phone)) return { success: false, reason: 'invalid_phone' };
+      const to = formatPhoneE164(phone);
+
+      const dayName = WG_DAY_NAMES[new Date(sanitize(String(appointmentDate), 10) + 'T12:00:00').getDay()];
+      const cleanWindow = sanitize(String(windowLabel), 40);
+
+      const body = `Reminder: Carolina Futons white-glove delivery THIS ${dayName} between ${cleanWindow}. Please ensure someone 18+ is home. Reply STOP to opt out.`;
+
+      const result = await sendViaTwilio(to, body);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId: '',
+        phone: to,
+        messageType: 'white_glove_48h_reminder',
+        messageBody: body,
+        twilioSid: result.sid || '',
+        productId: sanitize(String(appointmentId || ''), 50),
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendWhiteGloveReminderSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
+/**
+ * Send day-of delivery SMS for a white-glove appointment (8 AM ET).
+ *
+ * @param {Object} params
+ * @param {string} params.phone - Customer phone (E.164 or US format).
+ * @param {string} params.windowLabel - e.g. '10:00 AM – 12:00 PM'
+ * @param {string} [params.appointmentId] - For dedup logging.
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendWhiteGloveDayOfSMS = webMethod(
+  Permissions.Admin,
+  async ({ phone, windowLabel, appointmentId } = {}) => {
+    try {
+      if (!phone || !windowLabel) return { success: false, reason: 'invalid_input' };
+
+      if (!validatePhone(phone)) return { success: false, reason: 'invalid_phone' };
+      const to = formatPhoneE164(phone);
+
+      const cleanWindow = sanitize(String(windowLabel), 40);
+
+      const body = `Good morning! Your Carolina Futons delivery is TODAY between ${cleanWindow}. Our team will call 30 min before arrival. (828) 252-9449`;
+
+      const result = await sendViaTwilio(to, body);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId: '',
+        phone: to,
+        messageType: 'white_glove_day_of',
+        messageBody: body,
+        twilioSid: result.sid || '',
+        productId: sanitize(String(appointmentId || ''), 50),
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendWhiteGloveDayOfSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
 // ── CF-qhdo: Challenge alert SMS ──────────────────────────────────────────────
 
 /**

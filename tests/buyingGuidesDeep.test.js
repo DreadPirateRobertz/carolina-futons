@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
+import { __reset as __resetStores, __setProducts as __setStoreProducts } from './__mocks__/wix-stores-backend.js';
 import {
   getBuyingGuide,
   getAllBuyingGuides,
@@ -17,6 +18,7 @@ import {
 
 beforeEach(() => {
   __seed('Stores/Products', []);
+  __resetStores();
 });
 
 // ── Slug validation edge cases ──────────────────────────────────────
@@ -334,34 +336,29 @@ describe('relatedProducts — edge cases', () => {
     expect(result.guide.relatedProducts).toHaveLength(0);
   });
 
-  it('exactly 6 products are returned when 6 match', async () => {
-    const products = Array.from({ length: 6 }, (_, i) => ({
-      _id: `a0b1c2d3-e4f5-6789-abcd-ef012345678${i}`,
-      name: `Cover ${i}`,
-      slug: `cover-${i}`,
-      price: 50 + i,
-      formattedPrice: `$${50 + i}.00`,
-      mainMedia: `img-${i}.jpg`,
-      ribbon: '',
-      collections: ['covers'],
-    }));
-    __seed('Stores/Products', products);
+  it('returns all curated products when all relatedProductIds resolve', async () => {
+    // covers has 3 relatedProductIds — seed all 3 so every ID resolves
+    __setStoreProducts([
+      { _id: 'cov-twill-navy-full', name: 'Twill Navy Full', slug: 'twill-navy-full', price: 59, formattedPrice: '$59.00', mainMedia: 'a.jpg', ribbon: '' },
+      { _id: 'cov-microfiber-chocolate-queen', name: 'Microfiber Chocolate Queen', slug: 'microfiber-chocolate-queen', price: 69, formattedPrice: '$69.00', mainMedia: 'b.jpg', ribbon: '' },
+      { _id: 'cov-canvas-natural-full', name: 'Canvas Natural Full', slug: 'canvas-natural-full', price: 79, formattedPrice: '$79.00', mainMedia: 'c.jpg', ribbon: '' },
+    ]);
 
     const result = await getBuyingGuide('covers');
-    expect(result.guide.relatedProducts).toHaveLength(6);
+    expect(result.guide.relatedProducts).toHaveLength(3);
   });
 
   it('relatedProducts do not leak extra product fields', async () => {
-    __seed('Stores/Products', [
+    // pillows has relatedProductIds — seed via store mock with extra internal fields
+    __setStoreProducts([
       {
-        _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-        name: 'Test Pillow',
-        slug: 'test-pillow',
+        _id: 'pil-standard-cotton-2pk',
+        name: 'Standard Cotton 2pk',
+        slug: 'standard-cotton-2pk',
         price: 30,
         formattedPrice: '$30.00',
         mainMedia: 'img.jpg',
         ribbon: 'Sale',
-        collections: ['pillows'],
         secretField: 'should-not-appear',
         internalNotes: 'private',
         costPrice: 10,
@@ -373,7 +370,6 @@ describe('relatedProducts — edge cases', () => {
     expect(product).not.toHaveProperty('secretField');
     expect(product).not.toHaveProperty('internalNotes');
     expect(product).not.toHaveProperty('costPrice');
-    expect(product).not.toHaveProperty('collections');
   });
 
   it('relatedProducts maps all expected fields', async () => {
