@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __seed } from './__mocks__/wix-data.js';
+import wixData, { __seed } from './__mocks__/wix-data.js';
 import { getFlashSales } from '../src/backend/promotions.web.js';
 
 const now = new Date();

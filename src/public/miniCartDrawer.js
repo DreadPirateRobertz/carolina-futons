@@ -128,7 +128,7 @@ export function initMiniCartDrawer($w) {
   try {
     $w('#miniCartViewBtn').onClick(() => {
       closeMiniCart($w);
-      try { wixLocationFrontend.to('/cart'); } catch (e) {}
+      try { wixLocationFrontend.to('/cart-page'); } catch (e) {}
     });
   } catch (e) {}
 

@@ -25,7 +25,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 import { recordEmailEvent } from 'backend/emailAutomation.web'; // CF-fzsd: conversion tracking
@@ -604,3 +604,143 @@ function formatReview(review) {
       : '',
   };
 }
+
+// ── Video Review Methods (CF-ou66.1) ──────────────────────────────────────
+
+const VIDEO_REVIEWS_COLLECTION = 'VideoReviews';
+const MAX_CAPTION_LEN = 200;
+
+/**
+ * Submit a video review for a product.
+ * Called after the member has uploaded the video via Wix UploadButton.
+ * The videoFileId is a Wix Media Manager reference returned by the upload element.
+ *
+ * @function submitVideoReview
+ * @param {string} productId - Product being reviewed.
+ * @param {string} videoFileId - Wix Media Manager fileId (e.g., "video:wix:video://v1/...").
+ * @param {string} [caption] - Optional caption (max 200 chars).
+ * @returns {Promise<{success: boolean, reviewId?: string, error?: string}>}
+ * @permission SiteMember
+ *
+ * @setup VideoReviews CMS collection fields:
+ *   productId (text, indexed), memberId (text, indexed), videoFileId (text),
+ *   caption (text), status (text: pending|approved|rejected), submittedAt (dateTime)
+ */
+export const submitVideoReview = webMethod(
+  Permissions.SiteMember,
+  async (productId, videoFileId, caption) => {
+    try {
+      const cleanProductId = validateId(productId);
+      if (!cleanProductId) return { success: false, error: 'Valid product ID is required.' };
+
+      if (!videoFileId || typeof videoFileId !== 'string') {
+        return { success: false, error: 'Video file ID is required.' };
+      }
+      const cleanFileId = sanitize(videoFileId, 500);
+      if (!cleanFileId || !isWixMediaUrl(cleanFileId)) {
+        return { success: false, error: 'Invalid video file reference.' };
+      }
+
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Member not found.' };
+
+      const cleanCaption = sanitize(caption || '', MAX_CAPTION_LEN);
+
+      const inserted = await wixData.insert(VIDEO_REVIEWS_COLLECTION, {
+        productId: cleanProductId,
+        memberId: member._id,
+        videoFileId: cleanFileId,
+        caption: cleanCaption,
+        status: 'pending',
+        submittedAt: new Date(),
+      });
+
+      return { success: true, reviewId: inserted._id };
+    } catch (err) {
+      console.error('[reviewsService] submitVideoReview error:', err);
+      return { success: false, error: 'Failed to submit video review.' };
+    }
+  }
+);
+
+/**
+ * Get approved video reviews for a product.
+ *
+ * @function getVideoReviews
+ * @param {string} productId
+ * @param {Object} [opts]
+ * @param {number} [opts.limit=12] - Max results (1–50).
+ * @returns {Promise<{success: boolean, reviews: Array, totalCount?: number}>}
+ * @permission Anyone
+ */
+export const getVideoReviews = webMethod(
+  Permissions.Anyone,
+  async (productId, opts = {}) => {
+    try {
+      const cleanId = validateId(productId);
+      if (!cleanId) return { success: false, error: 'Valid product ID is required.', reviews: [] };
+
+      const limit = Math.max(1, Math.min(50, Math.round(Number((opts || {}).limit) || 12)));
+
+      const result = await wixData.query(VIDEO_REVIEWS_COLLECTION)
+        .eq('productId', cleanId)
+        .eq('status', 'approved')
+        .descending('submittedAt')
+        .limit(limit)
+        .find();
+
+      const reviews = result.items.map(r => ({
+        _id: r._id,
+        productId: r.productId,
+        videoFileId: r.videoFileId,
+        caption: r.caption || '',
+        submittedAt: r.submittedAt,
+      }));
+
+      return { success: true, reviews, totalCount: result.totalCount };
+    } catch (err) {
+      console.error('[reviewsService] getVideoReviews error:', err);
+      return { success: false, error: 'Failed to load video reviews.', reviews: [] };
+    }
+  }
+);
+
+/**
+ * Approve or reject a video review. On approval, triggers badge award via gamification.
+ *
+ * @function moderateVideoReview
+ * @param {string} reviewId - VideoReviews record ID.
+ * @param {'approved'|'rejected'} action
+ * @returns {Promise<{success: boolean, error?: string}>}
+ * @permission Admin
+ */
+export const moderateVideoReview = webMethod(
+  Permissions.Admin,
+  async (reviewId, action) => {
+    try {
+      const cleanId = validateId(reviewId);
+      if (!cleanId) return { success: false, error: 'Valid review ID is required.' };
+      if (action !== 'approved' && action !== 'rejected') {
+        return { success: false, error: "Action must be 'approved' or 'rejected'." };
+      }
+
+      const review = await wixData.get(VIDEO_REVIEWS_COLLECTION, cleanId);
+      if (!review) return { success: false, error: 'Video review not found.' };
+
+      await wixData.update(VIDEO_REVIEWS_COLLECTION, { ...review, status: action });
+
+      if (action === 'approved' && review.memberId) {
+        try {
+          await receiveGamificationEvent('video_review_approved', { memberId: review.memberId });
+        } catch (e) {
+          console.error('[reviewsService] moderateVideoReview gamification trigger failed:', e?.message);
+        }
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('[reviewsService] moderateVideoReview error:', err);
+      return { success: false, error: 'Failed to moderate video review.' };
+    }
+  }
+);

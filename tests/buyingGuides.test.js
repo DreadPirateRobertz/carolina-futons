@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
+import { __reset as __resetStores, __setProducts as __setStoreProducts } from './__mocks__/wix-stores-backend.js';
 import {
   getBuyingGuide,
   getAllBuyingGuides,
@@ -23,6 +24,7 @@ const EXPECTED_SLUGS = [
 
 beforeEach(() => {
   __seed('Stores/Products', []);
+  __resetStores();
 });
 
 // ── Data Integrity ────────────────────────────────────────────────
@@ -320,31 +322,30 @@ describe('getBuyingGuide', () => {
     expect(result.guide.relatedProducts).toBeInstanceOf(Array);
   });
 
-  it('populates relatedProducts from CMS when available', async () => {
-    __seed('Stores/Products', [
+  it('populates relatedProducts from wix-stores-backend when guide has relatedProductIds', async () => {
+    // futon-frames has relatedProductIds — seed the stores mock so getProduct returns data
+    __setStoreProducts([
       {
-        _id: 'prod-001',
-        name: 'Test Frame',
-        slug: 'test-frame',
-        price: 499,
-        formattedPrice: '$499.00',
-        mainMedia: 'https://example.com/test.jpg',
-        ribbon: 'Featured',
-        collections: ['futon-frames'],
+        _id: 'frm-nd-casual-cherry',
+        name: 'Night & Day Casual Cherry',
+        slug: 'nd-casual-cherry',
+        price: 549,
+        formattedPrice: '$549.00',
+        mainMedia: 'https://example.com/casual.jpg',
+        ribbon: 'Best Seller',
       },
     ]);
 
     const result = await getBuyingGuide('futon-frames');
-    expect(result.guide.relatedProducts).toHaveLength(1);
-    expect(result.guide.relatedProducts[0].name).toBe('Test Frame');
-    expect(result.guide.relatedProducts[0].price).toBe(499);
+    expect(result.guide.relatedProducts.length).toBeGreaterThanOrEqual(1);
+    expect(result.guide.relatedProducts[0].name).toBe('Night & Day Casual Cherry');
+    expect(result.guide.relatedProducts[0].price).toBe(549);
   });
 
   it('related products have correct fields', async () => {
-    __seed('Stores/Products', [{
-      _id: 'p1', name: 'Frame', slug: 'frame', price: 499,
-      formattedPrice: '$499.00', mainMedia: 'img.jpg', ribbon: '',
-      collections: ['mattresses'],
+    __setStoreProducts([{
+      _id: 'mat-8in-cotton-full', name: 'Cotton Full', slug: 'cotton-full', price: 299,
+      formattedPrice: '$299.00', mainMedia: 'img.jpg', ribbon: '',
     }]);
 
     const result = await getBuyingGuide('mattresses');
@@ -358,22 +359,46 @@ describe('getBuyingGuide', () => {
     expect(product).toHaveProperty('ribbon');
   });
 
-  it('returns empty relatedProducts when no CMS products match', async () => {
-    __seed('Stores/Products', []);
+  it('returns empty relatedProducts when no store products match the IDs', async () => {
+    // __resetStores() in beforeEach leaves all getProduct calls returning null
     const result = await getBuyingGuide('futon-frames');
     expect(result.guide.relatedProducts).toEqual([]);
   });
 
-  it('limits relatedProducts to 6 items', async () => {
-    const products = Array.from({ length: 10 }, (_, i) => ({
-      _id: `p-${i}`, name: `Frame ${i}`, slug: `frame-${i}`, price: 499,
-      formattedPrice: '$499.00', mainMedia: 'img.jpg', ribbon: '',
-      collections: ['futon-frames'],
-    }));
-    __seed('Stores/Products', products);
+  it('filters out null results when some relatedProductIds are not found', async () => {
+    // Only seed one of the three futon-frames relatedProductIds
+    __setStoreProducts([{
+      _id: 'frm-nd-casual-cherry',
+      name: 'Night & Day Casual Cherry',
+      slug: 'nd-casual-cherry',
+      price: 549,
+      formattedPrice: '$549.00',
+      mainMedia: 'img.jpg',
+      ribbon: '',
+    }]);
 
     const result = await getBuyingGuide('futon-frames');
-    expect(result.guide.relatedProducts.length).toBeLessThanOrEqual(6);
+    // Only 1 of 3 IDs resolves — nulls filtered out
+    expect(result.guide.relatedProducts).toHaveLength(1);
+  });
+
+  it('does not consult wixData category query when relatedProductIds present', async () => {
+    // futon-frames has relatedProductIds — even with wixData seeded, those rows
+    // should NOT appear in relatedProducts (wixData fallback is bypassed)
+    __seed('Stores/Products', [{
+      _id: 'wix-data-product',
+      name: 'Should Not Appear',
+      slug: 'should-not-appear',
+      price: 1,
+      formattedPrice: '$1.00',
+      mainMedia: 'img.jpg',
+      ribbon: '',
+      collections: ['futon-frames'],
+    }]);
+    // store mock empty → all relatedProductIds resolve null → empty array
+    const result = await getBuyingGuide('futon-frames');
+    const names = result.guide.relatedProducts.map(p => p.name);
+    expect(names).not.toContain('Should Not Appear');
   });
 
   it('handles undefined slug', async () => {

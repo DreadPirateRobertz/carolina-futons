@@ -46,12 +46,13 @@ export function decodeHtmlEntities(str) {
  */
 export function stripHtmlSafe(html) {
   if (!html) return '';
-  // First pass: strip visible tags
-  let text = html.replace(/<[^>]*>/g, '');
+  // First pass: strip tags until stable (guards against nested-tag bypass e.g. <scr<script>ipt>)
+  let text = html;
+  while (text !== (text = text.replace(/<[^>]*>/g, ''))) {}
   // Decode entities that may contain hidden markup
   text = decodeHtmlEntities(text);
-  // Second pass: strip any tags that were entity-encoded
-  text = text.replace(/<[^>]*>/g, '');
+  // Second pass: strip any tags that were entity-encoded, until stable
+  while (text !== (text = text.replace(/<[^>]*>/g, ''))) {}
   return text;
 }
 

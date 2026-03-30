@@ -6,7 +6,9 @@ import { checkWebARSupport, isProductAREnabled } from 'public/arSupport.js';
 
 /** Strip HTML tags from a string for safe postMessage payload */
 function safeText(str) {
-  return String(str || '').replace(/<[^>]*>/g, '').trim().slice(0, 200);
+  let s = String(str || '');
+  while (s !== (s = s.replace(/<[^>]*>/g, ''))) {}
+  return s.trim().slice(0, 200);
 }
 
 /**

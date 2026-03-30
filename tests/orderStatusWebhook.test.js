@@ -181,8 +181,15 @@ describe('sendWebhook: retry and error paths', () => {
     ({ sendWebhook, MAX_RETRIES } = await import('../src/backend/orderStatusWebhook.web.js'));
   });
 
-  // Guard: if an assertion inside a fake-timer test throws, useRealTimers still runs.
-  afterEach(() => vi.useRealTimers());
+  // Guard: drain any pending backoff timers before restoring, so a mid-test assertion
+  // failure can't leave a dangling fake-timer setTimeout in subsequent tests.
+  // Only runs when fake timers are active — not every test in this describe uses them.
+  afterEach(async () => {
+    if (vi.isFakeTimers()) {
+      await vi.runAllTimersAsync();
+      vi.useRealTimers();
+    }
+  });
 
   it('returns failure when pushEndpoint is empty string', async () => {
     // __setSecrets merges into the existing map — the key is present (returns '')
@@ -244,6 +251,7 @@ describe('sendWebhook: retry and error paths', () => {
     const result = await promise;
 
     expect(result.success).toBe(false);
+    expect(result.attempts).toBe(MAX_RETRIES);
     expect(result.lastError).toBe('Network error');
   });
 

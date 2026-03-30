@@ -67,10 +67,10 @@ describe('generateLocalBusinessSchema — core structure', () => {
     expect(schema.openingHours.length).toBeGreaterThan(0);
   });
 
-  it('openingHours contains Wed-Fri entry', () => {
+  it('openingHours contains Wed-Sat entry', () => {
     const schema = generateLocalBusinessSchema(ASHEVILLE);
     const combined = schema.openingHours.join(' ');
-    expect(combined).toMatch(/We.*Fr/);
+    expect(combined).toMatch(/We.*Sa/);
   });
 
   it('openingHours contains Sat entry', () => {

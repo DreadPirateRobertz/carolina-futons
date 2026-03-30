@@ -405,6 +405,52 @@ export const moderatePhoto = webMethod(
 );
 
 /**
+ * Get approved/featured UGC photos for a specific product — used by the PDP gallery widget.
+ *
+ * @param {string} productId - Product ID to filter by (required).
+ * @param {Object} [opts] - Query options.
+ * @param {number} [opts.limit=20] - Max results (clamped 1-50).
+ * @param {string} [opts.sort='recent'] - Sort order: 'recent' or 'votes'.
+ * @returns {Promise<{success: boolean, photos: Array, totalCount: number, error?: string}>}
+ */
+export const getProductUGCPhotos = webMethod(
+  Permissions.Anyone,
+  async (productId, opts = {}) => {
+    try {
+      const cleanId = validateId(productId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid product ID is required.', photos: [], totalCount: 0 };
+      }
+
+      const options = opts || {};
+      const limit = Math.max(1, Math.min(50, Math.round(Number(options.limit) || 20)));
+      const sortType = sanitize(options.sort || 'recent', 20);
+
+      let query = wixData.query('UGCPhotos')
+        .hasSome('status', ['approved', 'featured'])
+        .eq('productId', cleanId);
+
+      if (sortType === 'votes') {
+        query = query.descending('voteCount');
+      } else {
+        query = query.descending('submittedAt');
+      }
+
+      const result = await query.limit(limit).find();
+
+      return {
+        success: true,
+        photos: result.items,
+        totalCount: result.totalCount,
+      };
+    } catch (err) {
+      console.error('[ugcService] Error getting product UGC photos:', err);
+      return { success: false, error: 'Failed to load photos.', photos: [], totalCount: 0 };
+    }
+  }
+);
+
+/**
  * Get UGC gallery statistics — total approved/featured count, featured count,
  * and breakdown by room type.
  *

@@ -163,7 +163,7 @@ vi.mock('public/galleryConfig.js', () => ({ getImageDimensions: vi.fn(() => ({ w
 vi.mock('public/ProductGallery.js', () => ({ initImageGallery: vi.fn(), initProductBadge: vi.fn(), initProductVideo: vi.fn() }));
 vi.mock('public/ProductOptions.js', () => ({ initVariantSelector: vi.fn(), initSwatchSelector: vi.fn() }));
 vi.mock('public/ProductDetails.js', () => ({ initBreadcrumbs: vi.fn(), initProductInfoAccordion: vi.fn(), initSocialShare: vi.fn(), initDeliveryEstimate: vi.fn(), injectProductSchema: vi.fn(), initSwatchRequest: vi.fn(), initSwatchCTA: vi.fn() }));
-vi.mock('public/AddToCart.js', () => ({ initQuantitySelector: vi.fn(), initAddToCartEnhancements: vi.fn(), initStickyCartBar: vi.fn(), initBundleSection: vi.fn(), initStockUrgency: vi.fn(), initBackInStockNotification: vi.fn(), initWishlistButton: vi.fn() }));
+vi.mock('public/AddToCart.js', () => ({ initQuantitySelector: vi.fn(), initAddToCartEnhancements: vi.fn(), initStickyCartBar: vi.fn(), initBundleSection: vi.fn(), initStockUrgency: vi.fn(), initBackInStockNotification: vi.fn(), initWishlistButton: vi.fn(), initPriceDropNotify: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('public/BrowseReminder.js', () => ({ initBrowseTracking: vi.fn(), _createBrowseState: vi.fn(() => ({})) }));
 vi.mock('public/a11yHelpers.js', () => ({ makeClickable: vi.fn(), announce: vi.fn() }));
 vi.mock('public/productCardHelpers.js', () => ({
@@ -188,6 +188,7 @@ vi.mock('backend/socialProofBadge.web', () => ({ getNeighborCount: vi.fn().mockR
 vi.mock('backend/errorMonitoring.web', () => ({ logError: vi.fn() }));
 vi.mock('backend/productVideos.web', () => ({ getProductVideos: vi.fn().mockResolvedValue([]) }));
 vi.mock('public/productStructuredData.js', () => ({ initProductStructuredData: vi.fn() }));
+vi.mock('public/ProductUGCGallery.js', () => ({ initProductUGCGallery: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('wix-members-frontend', () => ({ authentication: authMocks, currentMember: { getMember: vi.fn() } }));
 
 beforeAll(async () => {
