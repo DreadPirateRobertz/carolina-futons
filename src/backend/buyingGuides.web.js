@@ -28,6 +28,7 @@ const GUIDES = {
     categoryLabel: 'Futon Frames',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['frm-nd-casual-cherry', 'frm-kd-olympia-natural', 'frm-strata-dillon'],
     sections: [
       {
         heading: 'Why the Frame Matters More Than You Think',
@@ -102,6 +103,7 @@ const GUIDES = {
     categoryLabel: 'Futon Mattresses',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['mat-8in-cotton-full', 'mat-8in-innerspring-queen', 'mat-lounger-full'],
     sections: [
       {
         heading: 'Why Your Mattress Choice Matters Most',
@@ -176,6 +178,7 @@ const GUIDES = {
     categoryLabel: 'Futon Covers',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['cov-twill-navy-full', 'cov-microfiber-chocolate-queen', 'cov-canvas-natural-full'],
     sections: [
       {
         heading: 'Why Every Futon Needs a Cover',
@@ -250,6 +253,7 @@ const GUIDES = {
     categoryLabel: 'Pillows & Cushions',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['pil-standard-cotton-2pk', 'pil-lumbar-support', 'pil-bolster-round'],
     sections: [
       {
         heading: 'Pillows Transform Your Futon Experience',
@@ -324,6 +328,7 @@ const GUIDES = {
     categoryLabel: 'Storage & Accessories',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['sto-drawer-set-natural', 'sto-bookcase-headboard', 'sto-under-frame-drawers'],
     sections: [
       {
         heading: 'Storage Is Essential for Futon Living',
@@ -397,6 +402,7 @@ const GUIDES = {
     categoryLabel: 'Outdoor Furniture',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['out-patio-sofa-teak', 'out-porch-swing-natural', 'out-adirondack-set'],
     sections: [
       {
         heading: 'Futons Are Perfect for Outdoor Living Spaces',
@@ -467,6 +473,7 @@ const GUIDES = {
     categoryLabel: 'Accessories',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['acc-cup-holder-arm', 'acc-tray-table-maple', 'acc-frame-touch-up-kit'],
     sections: [
       {
         heading: 'Small Accessories Make a Big Difference',
@@ -537,6 +544,7 @@ const GUIDES = {
     categoryLabel: 'Bundle Deals',
     publishDate: '2026-02-20',
     updatedDate: '2026-02-20',
+    relatedProductIds: ['bun-frame-mat-cover-full', 'bun-queen-complete-set', 'bun-twin-starter-pkg'],
     sections: [
       {
         heading: 'Why Bundles Are the Smartest Way to Buy',
@@ -642,21 +650,41 @@ export const getBuyingGuide = webMethod(
       // Fetch related products for sidebar
       let relatedProducts = [];
       try {
-        const products = await wixData.query('Stores/Products')
-          .hasSome('collections', [guide.category])
-          .limit(6)
-          .find();
-        relatedProducts = products.items.map(p => ({
-          _id: p._id,
-          name: p.name,
-          slug: p.slug,
-          price: p.price,
-          formattedPrice: p.formattedPrice,
-          mainMedia: p.mainMedia,
-          ribbon: p.ribbon,
-        }));
+        if (guide.relatedProductIds && guide.relatedProductIds.length > 0) {
+          // Primary: fetch curated products by ID via wix-stores-backend
+          const { products: storeProducts } = await import('wix-stores-backend');
+          const fetched = await Promise.all(
+            guide.relatedProductIds.map(id => storeProducts.getProduct(id).catch(() => null))
+          );
+          relatedProducts = fetched
+            .filter(Boolean)
+            .map(p => ({
+              _id: p._id,
+              name: p.name,
+              slug: p.slug,
+              price: p.price,
+              formattedPrice: p.formattedPrice,
+              mainMedia: p.mainMedia,
+              ribbon: p.ribbon,
+            }));
+        } else {
+          // Fallback: top 3 products from the guide's category
+          const result = await wixData.query('Stores/Products')
+            .hasSome('collections', [guide.category])
+            .limit(3)
+            .find();
+          relatedProducts = result.items.map(p => ({
+            _id: p._id,
+            name: p.name,
+            slug: p.slug,
+            price: p.price,
+            formattedPrice: p.formattedPrice,
+            mainMedia: p.mainMedia,
+            ribbon: p.ribbon,
+          }));
+        }
       } catch (e) {
-        console.error('getBuyingGuide: CMS product query failed:', e);
+        console.error('getBuyingGuide: related products fetch failed:', e);
       }
 
       return {

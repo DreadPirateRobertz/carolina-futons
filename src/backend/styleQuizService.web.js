@@ -218,3 +218,200 @@ function parseAnswers(raw) {
     return {};
   }
 }
+
+// ── Quiz questions ────────────────────────────────────────────────────────────
+
+const QUIZ_QUESTIONS = [
+  {
+    id: 'q1',
+    text: 'How would you describe your room size?',
+    options: [
+      { value: 'small',  label: 'Small — studio, dorm, or compact room' },
+      { value: 'medium', label: 'Medium — standard bedroom or living room' },
+      { value: 'large',  label: 'Large — open floor plan or great room' },
+    ],
+  },
+  {
+    id: 'q2',
+    text: 'What is your budget for this purchase?',
+    options: [
+      { value: 'budget',    label: 'Under $500' },
+      { value: 'mid-range', label: '$500 – $1,000' },
+      { value: 'premium',   label: '$1,000 – $2,000' },
+      { value: 'luxury',    label: 'Over $2,000' },
+    ],
+  },
+  {
+    id: 'q3',
+    text: 'How will you primarily use this piece?',
+    options: [
+      { value: 'sleep',  label: 'Mostly sleeping — it\'s my main or guest bed' },
+      { value: 'lounge', label: 'Mostly lounging — sitting, relaxing, watching TV' },
+      { value: 'both',   label: 'Both equally — I need it to do it all' },
+    ],
+  },
+  {
+    id: 'q4',
+    text: 'Which aesthetic best describes your style?',
+    options: [
+      { value: 'modern',   label: 'Modern — clean lines, contemporary feel' },
+      { value: 'rustic',   label: 'Rustic — natural wood, earthy character' },
+      { value: 'classic',  label: 'Classic — timeless, traditional elegance' },
+      { value: 'eclectic', label: 'Eclectic — mix of styles, bold personality' },
+    ],
+  },
+  {
+    id: 'q5',
+    text: 'What mattress feel do you prefer?',
+    options: [
+      { value: 'soft',   label: 'Soft — plush, sink-in comfort' },
+      { value: 'medium', label: 'Medium — balanced support and cushion' },
+      { value: 'firm',   label: 'Firm — solid, supportive feel' },
+    ],
+  },
+];
+
+// ── Product scoring catalogue ─────────────────────────────────────────────────
+
+const QUIZ_PRODUCTS = [
+  {
+    productId: 'essential-futon-twin',
+    productName: 'Essential Twin Futon Frame',
+    reason: 'Ideal for small spaces on a tight budget — compact, functional, and easy to move.',
+    scores: {
+      q1: { small: 5, medium: 2, large: 0 },
+      q2: { budget: 5, 'mid-range': 2, premium: 0, luxury: 0 },
+      q3: { sleep: 2, lounge: 3, both: 4 },
+      q4: { modern: 2, rustic: 3, classic: 3, eclectic: 2 },
+      q5: { soft: 3, medium: 3, firm: 1 },
+    },
+  },
+  {
+    productId: 'classic-full-futon',
+    productName: 'Classic Full Futon Frame',
+    reason: 'The everyday workhorse — comfortable for lounging and reliable for overnight guests.',
+    scores: {
+      q1: { small: 2, medium: 4, large: 2 },
+      q2: { budget: 2, 'mid-range': 5, premium: 2, luxury: 0 },
+      q3: { sleep: 2, lounge: 4, both: 5 },
+      q4: { modern: 1, rustic: 3, classic: 5, eclectic: 3 },
+      q5: { soft: 4, medium: 5, firm: 2 },
+    },
+  },
+  {
+    productId: 'wall-hugger-queen',
+    productName: 'Wall Hugger Queen Frame',
+    reason: 'Space-saving design that reclines without stealing floor space — modern style, everyday comfort.',
+    scores: {
+      q1: { small: 4, medium: 4, large: 1 },
+      q2: { budget: 0, 'mid-range': 5, premium: 3, luxury: 1 },
+      q3: { sleep: 1, lounge: 5, both: 4 },
+      q4: { modern: 5, rustic: 1, classic: 2, eclectic: 3 },
+      q5: { soft: 2, medium: 4, firm: 3 },
+    },
+  },
+  {
+    productId: 'murphy-cabinet-bed-queen',
+    productName: 'Murphy Cabinet Bed Queen',
+    reason: 'Maximum space efficiency — folds completely away when not in use, ideal for dedicated sleep in small rooms.',
+    scores: {
+      q1: { small: 5, medium: 3, large: 0 },
+      q2: { budget: 0, 'mid-range': 1, premium: 5, luxury: 4 },
+      q3: { sleep: 5, lounge: 0, both: 2 },
+      q4: { modern: 5, rustic: 1, classic: 2, eclectic: 3 },
+      q5: { soft: 1, medium: 3, firm: 5 },
+    },
+  },
+  {
+    productId: 'luxury-queen-futon',
+    productName: 'Luxury Queen Futon',
+    reason: 'Premium comfort with high-end upholstery — the best of both worlds for lounging and sleeping.',
+    scores: {
+      q1: { small: 1, medium: 4, large: 5 },
+      q2: { budget: 0, 'mid-range': 2, premium: 4, luxury: 5 },
+      q3: { sleep: 3, lounge: 4, both: 5 },
+      q4: { modern: 3, rustic: 2, classic: 4, eclectic: 5 },
+      q5: { soft: 5, medium: 4, firm: 2 },
+    },
+  },
+  {
+    productId: 'platform-bed-queen',
+    productName: 'Platform Bed Queen',
+    reason: 'A dedicated sleep solution built to last — solid platform base with natural wood character.',
+    scores: {
+      q1: { small: 0, medium: 3, large: 5 },
+      q2: { budget: 0, 'mid-range': 2, premium: 4, luxury: 5 },
+      q3: { sleep: 5, lounge: 0, both: 1 },
+      q4: { modern: 2, rustic: 5, classic: 3, eclectic: 2 },
+      q5: { soft: 1, medium: 3, firm: 5 },
+    },
+  },
+];
+
+const ANSWER_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5'];
+
+function scoreProduct(product, answers) {
+  return ANSWER_KEYS.reduce((total, key) => {
+    const answerValue = answers[key];
+    const dimensionScores = product.scores[key] || {};
+    return total + (dimensionScores[answerValue] || 0);
+  }, 0);
+}
+
+// ── getQuizQuestions ──────────────────────────────────────────────────────────
+
+/**
+ * Return the 5 sleep/lifestyle quiz questions with their answer options.
+ *
+ * @function getQuizQuestions
+ * @returns {Array<{id: string, text: string, options: Array<{value: string, label: string}>}>}
+ * @permission Anyone
+ */
+export const getQuizQuestions = webMethod(
+  Permissions.Anyone,
+  () => QUIZ_QUESTIONS,
+);
+
+// ── getRecommendation ─────────────────────────────────────────────────────────
+
+/**
+ * Score all products against the supplied quiz answers and return the best match.
+ * Ties are broken by catalogue order (first product wins).
+ *
+ * @function getRecommendation
+ * @param {{ q1: string, q2: string, q3: string, q4: string, q5: string }} answers
+ * @returns {{ productId: string, productName: string, reason: string, score: number }
+ *           | { error: 'missing_answers' }}
+ * @permission Anyone
+ */
+export const getRecommendation = webMethod(
+  Permissions.Anyone,
+  (answers) => {
+    if (
+      !answers ||
+      typeof answers !== 'object' ||
+      Array.isArray(answers) ||
+      !ANSWER_KEYS.every(k => k in answers)
+    ) {
+      return { error: 'missing_answers' };
+    }
+
+    let best = null;
+    let bestScore = -1;
+
+    for (const product of QUIZ_PRODUCTS) {
+      const score = scoreProduct(product, answers);
+      if (score > bestScore) {
+        bestScore = score;
+        best = product;
+      }
+    }
+
+    return {
+      productId:   best.productId,
+      productName: best.productName,
+      reason:      best.reason,
+      score:       bestScore,
+    };
+  },
+);

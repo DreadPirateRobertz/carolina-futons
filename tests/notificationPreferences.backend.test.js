@@ -7,7 +7,7 @@
  * See CF-n3px for original specification.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __seed, __reset as resetData, __setQueryError, __setInsertError, __setUpdateError } from './__mocks__/wix-data.js';
+import wixData, { __seed, __getInserted, __getUpdated, __reset as resetData, __setQueryError, __setInsertError, __setUpdateError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 
 vi.mock('backend/errorMonitoring.web.js', () => ({ logError: vi.fn().mockResolvedValue(undefined) }));

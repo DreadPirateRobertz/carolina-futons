@@ -11,6 +11,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __setQueryError, __reset } from './__mocks__/wix-data.js';
+import { __reset as __resetStores, __setProducts as __setStoreProducts } from './__mocks__/wix-stores-backend.js';
 import {
   getBuyingGuide,
   getAllBuyingGuides,
@@ -29,6 +30,7 @@ const ALL_SLUGS = [
 beforeEach(() => {
   __reset();
   __seed('Stores/Products', []);
+  __resetStores();
 });
 
 // ── getBuyingGuide: CMS query error graceful degradation ──────────
@@ -55,25 +57,28 @@ describe('getBuyingGuide — CMS query failure', () => {
 
 // ── getBuyingGuide: CMS data overlay with multiple collections ────
 
-describe('getBuyingGuide — CMS product filtering', () => {
-  it('only returns products matching the guide category', async () => {
-    __seed('Stores/Products', [
-      { _id: 'p1', name: 'Frame A', slug: 'frame-a', price: 400, formattedPrice: '$400.00', mainMedia: 'a.jpg', ribbon: '', collections: ['futon-frames'] },
-      { _id: 'p2', name: 'Mattress B', slug: 'mattress-b', price: 300, formattedPrice: '$300.00', mainMedia: 'b.jpg', ribbon: '', collections: ['mattresses'] },
-      { _id: 'p3', name: 'Frame C', slug: 'frame-c', price: 500, formattedPrice: '$500.00', mainMedia: 'c.jpg', ribbon: 'Sale', collections: ['futon-frames'] },
+describe('getBuyingGuide — curated product ID fetching', () => {
+  it('only returns products whose IDs are in the guide relatedProductIds', async () => {
+    // futon-frames has 3 relatedProductIds; seed 2 of them + 1 unrelated product
+    __setStoreProducts([
+      { _id: 'frm-nd-casual-cherry', name: 'Casual Cherry', slug: 'casual-cherry', price: 549, formattedPrice: '$549.00', mainMedia: 'a.jpg', ribbon: '' },
+      { _id: 'frm-kd-olympia-natural', name: 'KD Olympia Natural', slug: 'kd-olympia-natural', price: 399, formattedPrice: '$399.00', mainMedia: 'b.jpg', ribbon: '' },
+      { _id: 'unrelated-product', name: 'Unrelated', slug: 'unrelated', price: 100, formattedPrice: '$100.00', mainMedia: 'c.jpg', ribbon: '' },
     ]);
     const result = await getBuyingGuide('futon-frames');
+    // Only the 2 matching IDs should appear; unrelated-product filtered by getProduct lookup
     expect(result.guide.relatedProducts).toHaveLength(2);
-    expect(result.guide.relatedProducts.every(p => p.name.includes('Frame'))).toBe(true);
+    expect(result.guide.relatedProducts.every(p => p.name !== 'Unrelated')).toBe(true);
   });
 
-  it('product with multiple collections matches if guide category is one of them', async () => {
-    __seed('Stores/Products', [
-      { _id: 'p1', name: 'Combo Item', slug: 'combo', price: 250, formattedPrice: '$250.00', mainMedia: 'combo.jpg', ribbon: '', collections: ['covers', 'accessories'] },
+  it('returns only products that resolve from the store for a guide', async () => {
+    // covers has 3 relatedProductIds — seed just 1
+    __setStoreProducts([
+      { _id: 'cov-twill-navy-full', name: 'Twill Navy Full', slug: 'twill-navy-full', price: 59, formattedPrice: '$59.00', mainMedia: 'combo.jpg', ribbon: '' },
     ]);
     const result = await getBuyingGuide('covers');
     expect(result.guide.relatedProducts).toHaveLength(1);
-    expect(result.guide.relatedProducts[0].name).toBe('Combo Item');
+    expect(result.guide.relatedProducts[0].name).toBe('Twill Navy Full');
   });
 
   it('product with empty collections array is excluded', async () => {
