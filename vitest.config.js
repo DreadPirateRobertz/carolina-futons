@@ -52,10 +52,18 @@ export default defineConfig({
       include: ['src/**/*.js'],
       exclude: [
         'src/**/__mocks__/**',
-        // New Sprint 4 page controller files — UI-only, covered by e2e/smoke tests
+        // Page controller files — UI-only $w wiring, covered by e2e/smoke tests
         'src/pages/Community Gallery.js',
         'src/pages/Local SEO Page.js',
         'src/pages/Topic Cluster.js',
+        'src/pages/Admin A-B Tests.js',
+        'src/pages/Loyalty.js',
+        'src/pages/Rooms.js',
+        'src/pages/Admin Delivery Calendar.js',
+        'src/pages/Admin Review Moderation.js',
+        'src/pages/UGC Gallery.js',
+        // Wix widget component files — $w UI-only, no unit test path
+        'src/public/PriceLockWidget.js',
       ],
       thresholds: {
         statements: 90,

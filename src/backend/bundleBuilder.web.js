@@ -676,6 +676,178 @@ export const addBundleToCart = webMethod(
   }
 );
 
+// ── Futon Studio Compatibility API (CF-eqc5.1) ───────────────────────
+
+/**
+ * Get mattresses compatible with the given frame.
+ * Compatibility is size-based: `options.size` must match, or either product has no size set.
+ *
+ * @param {string} frameId - Wix product ID of the futon frame
+ * @returns {Promise<{success: boolean, mattresses: Array, error?: string}>}
+ */
+export const getCompatibleMattresses = webMethod(
+  Permissions.Anyone,
+  async (frameId) => {
+    try {
+      const cleanId = validateId(frameId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid frame ID is required.', mattresses: [] };
+      }
+
+      const frame = await wixData.get('Stores/Products', cleanId);
+      if (!frame) {
+        return { success: false, error: 'Frame not found.', mattresses: [] };
+      }
+
+      const frameSize = frame.options?.size || null;
+
+      const result = await wixData.query('Stores/Products')
+        .hasSome('collections', ['mattresses'])
+        .ascending('price')
+        .limit(50)
+        .find();
+
+      let mattresses = result.items;
+      if (frameSize) {
+        mattresses = mattresses.filter(m => {
+          const mSize = m.options?.size || null;
+          return !mSize || mSize === frameSize;
+        });
+      }
+
+      return {
+        success: true,
+        mattresses: mattresses.map(m => ({
+          _id: m._id,
+          name: m.name || '',
+          price: m.price || 0,
+          formattedPrice: m.formattedPrice || `$${(m.price || 0).toFixed(2)}`,
+          mainMedia: m.mainMedia || null,
+          size: m.options?.size || '',
+        })),
+      };
+    } catch (err) {
+      console.error('[bundleBuilder] getCompatibleMattresses failed:', err);
+      return { success: false, error: 'Failed to load mattresses.', mattresses: [] };
+    }
+  }
+);
+
+/**
+ * Get covers compatible with the given mattress.
+ * Compatibility is size-based: `options.size` must match, or either product has no size set.
+ *
+ * @param {string} mattressId - Wix product ID of the futon mattress
+ * @returns {Promise<{success: boolean, covers: Array, error?: string}>}
+ */
+export const getCompatibleCovers = webMethod(
+  Permissions.Anyone,
+  async (mattressId) => {
+    try {
+      const cleanId = validateId(mattressId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid mattress ID is required.', covers: [] };
+      }
+
+      const mattress = await wixData.get('Stores/Products', cleanId);
+      if (!mattress) {
+        return { success: false, error: 'Mattress not found.', covers: [] };
+      }
+
+      const mattressSize = mattress.options?.size || null;
+
+      const result = await wixData.query('Stores/Products')
+        .hasSome('collections', ['futon-covers'])
+        .ascending('price')
+        .limit(50)
+        .find();
+
+      let covers = result.items;
+      if (mattressSize) {
+        covers = covers.filter(c => {
+          const cSize = c.options?.size || null;
+          return !cSize || cSize === mattressSize;
+        });
+      }
+
+      return {
+        success: true,
+        covers: covers.map(c => ({
+          _id: c._id,
+          name: c.name || '',
+          price: c.price || 0,
+          formattedPrice: c.formattedPrice || `$${(c.price || 0).toFixed(2)}`,
+          mainMedia: c.mainMedia || null,
+          size: c.options?.size || '',
+        })),
+      };
+    } catch (err) {
+      console.error('[bundleBuilder] getCompatibleCovers failed:', err);
+      return { success: false, error: 'Failed to load covers.', covers: [] };
+    }
+  }
+);
+
+/**
+ * Calculate bundle price for a Futon Studio selection.
+ * Discount: 10% for frame + mattress, 12% for frame + mattress + cover.
+ *
+ * @param {string} frameId - Wix product ID of the futon frame
+ * @param {string} mattressId - Wix product ID of the mattress
+ * @param {string|null} [coverId] - Wix product ID of the cover (optional)
+ * @returns {Promise<{success: boolean, basePrice: number, bundlePrice: number, savings: number, discountPercent: number, error?: string}>}
+ */
+export const getBundlePrice = webMethod(
+  Permissions.Anyone,
+  async (frameId, mattressId, coverId) => {
+    try {
+      const cleanFrameId = validateId(frameId);
+      const cleanMattressId = validateId(mattressId);
+      if (!cleanFrameId || !cleanMattressId) {
+        return { success: false, error: 'Frame and mattress IDs are required.', basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0 };
+      }
+
+      const [frame, mattress] = await Promise.all([
+        wixData.get('Stores/Products', cleanFrameId),
+        wixData.get('Stores/Products', cleanMattressId),
+      ]);
+
+      if (!frame) {
+        return { success: false, error: 'Frame not found.', basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0 };
+      }
+      if (!mattress) {
+        return { success: false, error: 'Mattress not found.', basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0 };
+      }
+
+      let basePrice = (frame.price || 0) + (mattress.price || 0);
+      let discountPercent = 10;
+
+      const cleanCoverId = validateId(coverId);
+      if (cleanCoverId) {
+        const cover = await wixData.get('Stores/Products', cleanCoverId);
+        if (cover) {
+          basePrice += cover.price || 0;
+          discountPercent = 12;
+        }
+      }
+
+      const bundlePrice = Math.round(basePrice * (1 - discountPercent / 100) * 100) / 100;
+      const savings = Math.round((basePrice - bundlePrice) * 100) / 100;
+
+      return {
+        success: true,
+        basePrice: Math.round(basePrice * 100) / 100,
+        bundlePrice,
+        savings,
+        discountPercent,
+      };
+    } catch (err) {
+      console.error('[bundleBuilder] getBundlePrice failed:', err);
+      return { success: false, error: 'Failed to calculate bundle price.', basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0 };
+    }
+  }
+);
+
 // Export for testing
 export const _BUNDLE_RULES = BUNDLE_RULES;
 export const _TIERS = TIERS;

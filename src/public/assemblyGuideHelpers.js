@@ -206,7 +206,7 @@ function parseSteps(stepsHtml) {
     steps.push({
       '@type': 'HowToStep',
       position,
-      text: match[1].replace(/<[^>]*>/g, '').trim(),
+      text: (() => { let s = match[1]; while (s !== (s = s.replace(/<[^>]*>/g, ''))) {} return s.trim(); })(),
     });
     position++;
   }

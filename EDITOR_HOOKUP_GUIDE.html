@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.8 · Updated 2026-03-29 — Session 30: White Glove Delivery scheduling (CF-y7lp) — adds White Glove Delivery page, Admin Delivery Calendar page, Thank You Page white-glove prompt section. Previous: Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.9 · Updated 2026-03-29 — Session 31: Admin A/B Tests dashboard (CF-0jk5) — 3 sections, 14 elements, auto-stop cron wiring. Previous: White Glove Delivery scheduling (CF-y7lp), Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1601,6 +1601,71 @@ Right column:
         ["notifyMeBtn","Button","Notify Me When Available"],
         ["notifyMeSuccess","Text","Confirmation message"],
         ["notifyMeError","Text","Error message"]
+      ]},
+      { name: "Price Drop Notify (CF-hwr1.2)", impl: `<h4>🔔 Implementation — Price Drop Notify Button (Product Page)</h4>
+<p><strong>CF-hwr1.2</strong>: "Notify me when price drops" button — always visible on PDP. Click expands an email capture popover. No account required. Backend: <code>priceAlertService.web.js → subscribe(productId, email)</code>. Public helper: <code>AddToCart.js → initPriceDropNotify($w, state)</code>.</p>
+<ul>
+  <li><strong>#priceDropNotifyBtn</strong>: Button — "Notify me when price drops". Always visible. Clicking expands the popover and disables itself to prevent double-open.</li>
+  <li><strong>#priceDropNotifyPopover</strong>: Box — collapsed by default. Contains email input + submit + cancel. Expand on button click.</li>
+  <li><strong>#priceDropNotifyEmail</strong>: Input — email address. Placeholder "Your email address".</li>
+  <li><strong>#priceDropNotifySubmit</strong>: Button — "Notify me". Triggers subscribe call.</li>
+  <li><strong>#priceDropNotifyClose</strong>: Button — "Cancel". Collapses popover, re-enables the main button, clears email field.</li>
+  <li><strong>#priceDropNotifySuccess</strong>: Text — hidden by default; shown after successful subscribe. "Done! We'll email you if the price drops."</li>
+  <li><strong>#priceDropNotifyError</strong>: Text — hidden by default; shown on validation or API error.</li>
+</ul>`, elements: [
+        ["priceDropNotifyBtn","Button","Notify me when price drops — always visible"],
+        ["priceDropNotifyPopover","Box","Email capture popover — collapsed by default"],
+        ["priceDropNotifyEmail","Input","Email address input"],
+        ["priceDropNotifySubmit","Button","Submit subscribe"],
+        ["priceDropNotifyClose","Button","Cancel / close popover"],
+        ["priceDropNotifySuccess","Text","Success confirmation — hidden by default"],
+        ["priceDropNotifyError","Text","Inline error message — hidden by default"]
+      ]},
+      { name: "Share Your Room CTA", impl: `<h4>📸 Implementation — "Share Your Room" UGC Submit CTA (Product Page)</h4>
+<p><strong>CF-rw9i.1</strong>: Adds a "Share your room" button on the PDP that opens an inline photo-submission modal. Members upload a photo, choose a room type, optionally add a caption, then submit for moderation. Calls <code>submitUGCPhoto</code> from <code>ugcService.web.js</code>. Non-members see a sign-in prompt instead of the upload form.</p>
+<div class="layer-diagram">LAYOUT:
+  #shareYourRoomBtn        (Button — "Share your room" CTA, always visible)
+  #shareYourRoomOverlay    (Box — full-screen dimmed overlay, collapsed by default)
+  #shareYourRoomModal      (Box — modal container, collapsed by default)
+    ├─ #shareYourRoomClose   (Button — "×" close, top-right)
+    ├─ #shareYourRoomLoginPrompt (Box — sign-in message, collapsed for members)
+    ├─ #shareYourRoomForm    (Section — form controls, hides on success)
+    │    ├─ #shareYourRoomUpload   (UploadButton — fileType=Image)
+    │    ├─ #shareYourRoomPreview  (Image — collapsed until file chosen)
+    │    ├─ #shareYourRoomRoomType (Dropdown — 5 room types)
+    │    ├─ #shareYourRoomCaption  (TextInput — optional, max 300 chars)
+    │    ├─ #shareYourRoomValidation (Text — error messages, collapsed by default)
+    │    └─ #shareYourRoomSubmitBtn (Button — "Submit photo", disabled until upload+roomType set)
+    └─ #shareYourRoomSuccess (Section — "Thanks! Your photo will appear after review.", collapsed by default)
+</div>
+<ul>
+  <li><strong>#shareYourRoomBtn</strong>: Button — "Share your room". Visible to all visitors. Opens modal on click.</li>
+  <li><strong>#shareYourRoomOverlay</strong>: Box — dimmed background overlay. Click closes modal. Collapsed by default.</li>
+  <li><strong>#shareYourRoomModal</strong>: Box — modal wrapper. Collapsed by default. Expand on CTA click.</li>
+  <li><strong>#shareYourRoomClose</strong>: Button — "×". Collapses modal + overlay.</li>
+  <li><strong>#shareYourRoomLoginPrompt</strong>: Box — "Please sign in to share your room." Shown to guests, collapsed for members.</li>
+  <li><strong>#shareYourRoomForm</strong>: Section — contains upload + form. Collapses on successful submit.</li>
+  <li><strong>#shareYourRoomUpload</strong>: UploadButton — fileType must be "Image". Required.</li>
+  <li><strong>#shareYourRoomPreview</strong>: Image — collapsed until upload succeeds. Src set to uploaded URL.</li>
+  <li><strong>#shareYourRoomRoomType</strong>: Dropdown — options auto-populated (Living Room, Bedroom, Office, Dorm, Porch).</li>
+  <li><strong>#shareYourRoomCaption</strong>: TextInput — optional caption, max 300 chars.</li>
+  <li><strong>#shareYourRoomValidation</strong>: Text — inline validation errors. Collapsed by default.</li>
+  <li><strong>#shareYourRoomSubmitBtn</strong>: Button — "Submit photo". Disabled until both upload URL and room type are present.</li>
+  <li><strong>#shareYourRoomSuccess</strong>: Section — success confirmation. Collapsed by default; expanded after submit.</li>
+</ul>`, elements: [
+        ["shareYourRoomBtn","Button","Share your room CTA — always visible"],
+        ["shareYourRoomOverlay","Box","Dimmed overlay — collapsed by default; click closes modal"],
+        ["shareYourRoomModal","Box","Modal container — collapsed by default"],
+        ["shareYourRoomClose","Button","Close × button inside modal"],
+        ["shareYourRoomLoginPrompt","Box","Sign-in prompt for guests — collapsed for members"],
+        ["shareYourRoomForm","Section","Form controls wrapper — collapses on success"],
+        ["shareYourRoomUpload","UploadButton","Photo upload — fileType=Image"],
+        ["shareYourRoomPreview","Image","Preview of uploaded photo — collapsed until upload done"],
+        ["shareYourRoomRoomType","Dropdown","Room type selector — 5 options auto-populated"],
+        ["shareYourRoomCaption","TextInput","Optional caption — max 300 chars"],
+        ["shareYourRoomValidation","Text","Inline validation/error — collapsed by default"],
+        ["shareYourRoomSubmitBtn","Button","Submit photo — disabled until upload+roomType set"],
+        ["shareYourRoomSuccess","Section","Success message — collapsed by default"]
       ]},
       { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
 <p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
@@ -3828,6 +3893,54 @@ FCP  (First Contentful Paint)   — target < 1.8s</div>
         ["errorFlow","Text","Checkout/Cart/Product"],
         ["errorMessage","Text","Error summary"],
         ["errorCount","Text","Occurrence count"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin A/B Tests", file: "Admin A-B Tests.js (abTestDashboard.web.js)", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Summary Stats", impl: `<h4>🧪 Implementation — A/B Testing Dashboard (CF-0jk5)</h4>
+<p><strong>Layout: 4 stat chips + optional badge + filter bar + results repeater + detail panel</strong></p>
+<p>Backend: <code>abTestDashboard.web.js</code> — <code>getDashboardSummary()</code>, <code>getExperimentsForDashboard(filter)</code>, <code>autoStopSignificantExperiments()</code>.</p>
+<ul>
+  <li><strong>#txtActiveCount</strong>: Text — number of active experiments.</li>
+  <li><strong>#txtConcludedCount</strong>: Text — number of concluded experiments.</li>
+  <li><strong>#txtTotalEvents</strong>: Text — total conversion events tracked.</li>
+  <li><strong>#txtReadyToConclude</strong>: Text — count of tests that reached significance.</li>
+  <li><strong>#badgeReadyToConclude</strong>: Badge — <span class="impl-warn">hidden when count is 0</span>. Label set to "X ready" when visible. Shown when readyToConclude &gt; 0.</li>
+</ul>`, elements: [
+        ["txtActiveCount","Text","Active experiments count"],
+        ["txtConcludedCount","Text","Concluded experiments count"],
+        ["txtTotalEvents","Text","Total events (formatted number)"],
+        ["txtReadyToConclude","Text","Tests ready to conclude"],
+        ["badgeReadyToConclude","Box/Badge","Ready-to-conclude badge — hidden when 0"]
+      ]},
+      { name: "Experiments Repeater", repeater: "repeaterExperiments", impl: `<h4>📋 Implementation — Experiments List</h4>
+<ul>
+  <li><strong>#txtEmpty</strong>: Text — <span class="impl-warn">hidden by default</span>. Shown when no experiments match the active filter ("No active experiments yet" or similar).</li>
+  <li><strong>#repeaterExperiments</strong>: Repeater — one row per experiment.</li>
+  <li>Per-card children: <code>#barVariant1</code> / <code>#barVariant2</code> (progress bar, traffic split) + <code>#lblVariant1</code> / <code>#lblVariant2</code> (text label with variant name + conversion rate).</li>
+  <li>Clicking a row populates and shows <code>#panelDetail</code>.</li>
+</ul>`, elements: [
+        ["txtEmpty","Text","Empty state — hidden when experiments exist"],
+        ["repeaterExperiments","Repeater","Experiment rows"]
+      ], children: [
+        ["barVariant1","ProgressBar","Traffic split bar — variant A"],
+        ["barVariant2","ProgressBar","Traffic split bar — variant B"],
+        ["lblVariant1","Text","Variant A name + conversion rate"],
+        ["lblVariant2","Text","Variant B name + conversion rate"]
+      ]},
+      { name: "Detail Panel + Actions", impl: `<h4>🔍 Implementation — Detail Panel</h4>
+<ul>
+  <li><strong>#panelDetail</strong>: Box — <span class="impl-warn">hidden by default</span>. Shown on row click. Contains per-variant stats, daily trend, recommendation text, and action buttons.</li>
+  <li><strong>#btnCloseDetail</strong>: Button — hides <code>#panelDetail</code>.</li>
+  <li><strong>#btnConclude</strong>: Button — manually concludes selected experiment. Calls <code>concludeTest(id, winnerVariant)</code>.</li>
+  <li><strong>#btnRunAutoStop</strong>: Button — triggers <code>autoStopSignificantExperiments()</code> on demand. Shows toast on completion.</li>
+</ul>`, elements: [
+        ["panelDetail","Box","Detail panel — hidden by default"],
+        ["btnCloseDetail","Button","Close detail panel"],
+        ["btnConclude","Button","Conclude selected test"],
+        ["btnRunAutoStop","Button","Run auto-stop check on demand"]
       ]}
     ]
   },
