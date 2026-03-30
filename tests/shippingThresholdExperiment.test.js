@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed } from './__mocks__/wix-data.js';
+import { __reset, __seed, __setQueryError } from './__mocks__/wix-data.js';
 import { _reset as resetAbExperiments } from '../src/public/abExperiments.js';
 import {
   EXPERIMENT_NAME,
@@ -14,6 +14,7 @@ import {
   qualifiesForFreeShipping,
   getShippingProgress,
   getThresholdDisplayText,
+  trackShippingConversion,
 } from '../src/public/shippingThresholdExperiment.js';
 
 beforeEach(() => {
@@ -149,5 +150,29 @@ describe('getThresholdDisplayText', () => {
     await initShippingThresholdTest('Cart');
     const text = getThresholdDisplayText();
     expect(text).toMatch(/^\$\d+\+$/);
+  });
+});
+
+// ── initShippingThresholdTest catch branch ──────────────────────────
+
+describe('initShippingThresholdTest error handling', () => {
+  it('returns default threshold when backend throws (catch branch, line 51)', async () => {
+    __setQueryError('AbTests', new Error('DB unavailable'));
+    const result = await initShippingThresholdTest('Cart');
+    expect(result.experimentActive).toBe(false);
+    expect(result.variantId).toBeNull();
+    expect(typeof result.threshold).toBe('number');
+  });
+});
+
+// ── trackShippingConversion ─────────────────────────────────────────
+
+describe('trackShippingConversion', () => {
+  it('does not throw when called with page arg', async () => {
+    await expect(trackShippingConversion('ThankYou')).resolves.not.toThrow();
+  });
+
+  it('uses default page when no arg provided (line 120 — page || ThankYou branch)', async () => {
+    await expect(trackShippingConversion()).resolves.not.toThrow();
   });
 });

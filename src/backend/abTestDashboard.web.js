@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const TESTS_COLLECTION = 'AbTests';
 const EVENTS_COLLECTION = 'AbEvents';
@@ -207,7 +208,12 @@ export const getDashboardSummary = webMethod(
 function parseVariants(variantsField) {
   if (!variantsField) return [];
   if (Array.isArray(variantsField)) return variantsField;
-  try { return JSON.parse(variantsField); } catch (e) { return []; }
+  try {
+    return JSON.parse(variantsField);
+  } catch (e) {
+    logError('abTestDashboard.parseVariants', e);
+    return [];
+  }
 }
 
 async function getVariantStats(testName, variants) {
@@ -240,6 +246,7 @@ async function getVariantStats(testName, variants) {
 
 async function getDailyTrend(testName, days) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  // Hard cap at 1000 events — high-traffic experiments may under-count daily totals
   const events = await wixData.query(EVENTS_COLLECTION)
     .eq('testName', testName)
     .ge('_createdDate', since)
@@ -320,5 +327,78 @@ function getRecommendation(significance, variantStats) {
     ? variantStats[0] : variantStats[1];
   return `Winner: ${winner.name} (${winner.conversionRate}% conversion). Safe to conclude at ${significance.confidence}% confidence.`;
 }
+
+// ── Auto-Stop Significant Experiments (Cron) ────────────────────────
+
+/**
+ * Check up to 50 active experiments per run and stop any that have reached
+ * statistical significance (p < 0.05). Sets the winner variant.
+ * Designed to run as a daily cron job.
+ *
+ * Note: significance is evaluated between the first two variants only.
+ * Experiments with 3+ variants are skipped — auto-stop requires exactly 2 variants.
+ * On partial failure, successfully stopped experiments are preserved in the
+ * return value even if later experiments error.
+ *
+ * @returns {Promise<{success: boolean, stopped: Array<{testName: string, winner: string}>}>}
+ * @permission Admin
+ */
+export const autoStopSignificantExperiments = webMethod(
+  Permissions.Admin,
+  async () => {
+    const stopped = [];
+    try {
+      const active = await wixData.query(TESTS_COLLECTION)
+        .eq('active', true)
+        .limit(50)
+        .find();
+
+      for (const test of active.items) {
+        const variants = parseVariants(test.variants);
+        if (variants.length < 2) continue;
+
+        // Multi-variant experiments: auto-stop only supports 2-variant significance testing
+        if (variants.length > 2) {
+          console.warn(`[abTestDashboard] autoStop: "${test.testName}" has ${variants.length} variants — skipping (only 2-variant tests supported)`);
+          continue;
+        }
+
+        try {
+          const cleanName = sanitize(test.testName, 100);
+          const stats = await getVariantStats(cleanName, variants);
+          const sig = calculateSignificance(
+            stats[0].impressions, stats[0].conversions,
+            stats[1].impressions, stats[1].conversions,
+          );
+
+          if (!sig.significant) continue;
+
+          // Skip if rates are exactly equal — no meaningful winner to declare
+          if (stats[0].conversionRate === stats[1].conversionRate) continue;
+
+          const winner = stats[0].conversionRate > stats[1].conversionRate
+            ? stats[0].id
+            : stats[1].id;
+
+          await wixData.update(TESTS_COLLECTION, {
+            ...test,
+            active: false,
+            winnerVariant: winner,
+          });
+
+          stopped.push({ testName: cleanName, winner });
+          console.log(`[abTestDashboard] Auto-stopped "${cleanName}" — winner: ${winner} (${sig.confidence}% confidence)`);
+        } catch (itemErr) {
+          logError('abTestDashboard.autoStopSignificantExperiments', itemErr);
+        }
+      }
+
+      return { success: true, stopped };
+    } catch (err) {
+      logError('abTestDashboard.autoStopSignificantExperiments', err);
+      return { success: false, stopped };
+    }
+  }
+);
 
 export { calculateSignificance as _calculateSignificance };

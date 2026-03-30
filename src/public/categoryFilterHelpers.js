@@ -15,9 +15,9 @@ export function sanitizeFilterInput(str, maxLen = 200) {
   if (typeof str !== 'string') return '';
   // Strip script/style tags and their contents first
   let result = str.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '');
-  result = result.replace(/<[^>]*>/g, '');
+  while (result !== (result = result.replace(/<[^>]*>/g, ''))) {}
   result = result.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-  result = result.replace(/<[^>]*>/g, '');
+  while (result !== (result = result.replace(/<[^>]*>/g, ''))) {}
   return result.trim().slice(0, maxLen);
 }
 

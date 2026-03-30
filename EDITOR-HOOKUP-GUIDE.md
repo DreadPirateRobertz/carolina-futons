@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v2.8 — Session 30: White Glove Delivery scheduling (CF-y7lp) — White Glove Delivery page (10 elements), Admin Delivery Calendar page (15 elements), Thank You Page white-glove prompt section (4 elements). Previous: v2.7 — Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy).)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v2.9 — Session 31: Admin A/B Tests dashboard (CF-0jk5) — 3 sections, 14 elements, auto-stop cron wiring. Previous: v2.8 — White Glove Delivery scheduling (CF-y7lp).)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -389,6 +389,7 @@ For each section below:
 | **Thank You** | ~44 | 3 + children | 30 min | P2 — post-purchase |
 | **White Glove Delivery** | ~20 | 5 + children | 25 min | P2 — scheduling (NEW CF-y7lp) |
 | **Admin Delivery Calendar** | ~15 | 2 + children | 20 min | P2 — admin (NEW CF-y7lp) |
+| **Admin A/B Tests** | ~14 | 3 + children | 20 min | P2 — admin (NEW CF-0jk5) |
 | **Shipping Policy** | ~20 | 4 + children | 20 min | P3 — info |
 | **Fullscreen/Videos** | ~15 | 2 + children | 15 min | P3 — content |
 | **Privacy Policy** | ~15 | 2 + children | 10 min | P3 — legal |
@@ -1824,6 +1825,20 @@ Add these elements to the **Member Page** in the editor:
 
 ### Block Date Form
 `blockDateInput` (DatePicker), `blockReasonInput` (Input), `blockDateSubmitBtn` (Button), `blockFormError` (Text — collapsed by default), `blockFormSuccess` (Text — collapsed by default), `blockedDatesSection` (Section)
+
+---
+
+## ADMIN A/B TESTS (`Admin A-B Tests.js` / `abTestDashboard.web.js`) — NEW CF-0jk5
+
+### Summary Stats
+`txtActiveCount` (Text), `txtConcludedCount` (Text), `txtTotalEvents` (Text), `txtReadyToConclude` (Text), `badgeReadyToConclude` (Box/Badge), `txtEmpty` (Text — shown when no experiments exist)
+
+### Experiments ⚠️ REPEATER
+`repeaterExperiments` (Repeater)
+**↳ Inside:** `barVariant1` (ProgressBar), `barVariant2` (ProgressBar), `lblVariant1` (Text), `lblVariant2` (Text)
+
+### Detail Panel
+`panelDetail` (Box/Section — collapsed by default), `btnCloseDetail` (Button), `btnConclude` (Button), `btnRunAutoStop` (Button)
 
 ---
 
