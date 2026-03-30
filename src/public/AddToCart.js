@@ -373,6 +373,101 @@ export async function initWishlistButton($w, state) {
   } catch (e) { console.error('[AddToCart] Wishlist operation failed:', e.message); try { $w('#wishlistBtn').hide(); } catch (e2) {} }
 }
 
+// --- Price Drop Notify ---
+
+/**
+ * Wire up the "Notify me when price drops" button on PDP.
+ * Click → expand popover with email input. Submit → call priceAlertService.subscribe().
+ * No account required. On success shows confirmation; on error shows inline error.
+ *
+ * Elements expected on PDP:
+ *   #priceDropNotifyBtn    Button  — "Notify me when price drops" (always visible)
+ *   #priceDropNotifyPopover Box    — collapsed by default; expands on button click
+ *   #priceDropNotifyEmail  Input  — email address field
+ *   #priceDropNotifySubmit Button — "Notify me" submit inside popover
+ *   #priceDropNotifyClose  Button — "Cancel" / close inside popover
+ *   #priceDropNotifySuccess Text  — hidden by default; shown after subscribe
+ *   #priceDropNotifyError  Text  — hidden by default; shown on validation/API error
+ *
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
+export async function initPriceDropNotify($w, state) {
+  try {
+    const btn = $w('#priceDropNotifyBtn');
+    const popover = $w('#priceDropNotifyPopover');
+    const emailInput = $w('#priceDropNotifyEmail');
+    const submitBtn = $w('#priceDropNotifySubmit');
+    if (!btn || !popover || !emailInput || !submitBtn) return;
+
+    popover.collapse();
+    try { $w('#priceDropNotifySuccess').hide(); } catch (e) {}
+    try { $w('#priceDropNotifyError').hide(); } catch (e) {}
+
+    btn.onClick(() => {
+      try { popover.expand(); } catch (e) {}
+      try { emailInput.focus(); } catch (e) {}
+      try { btn.disable(); } catch (e) {}
+    });
+
+    try {
+      $w('#priceDropNotifyClose').onClick(() => {
+        try { popover.collapse(); } catch (e) {}
+        try { btn.enable(); } catch (e) {}
+        try { $w('#priceDropNotifyError').hide(); } catch (e) {}
+        emailInput.value = '';
+      });
+    } catch (e) {}
+
+    submitBtn.onClick(async () => {
+      const email = emailInput.value?.trim();
+      const errEl = (() => { try { return $w('#priceDropNotifyError'); } catch (e) { return null; } })();
+
+      const showErr = (msg) => {
+        if (!errEl) return;
+        errEl.text = msg;
+        try { errEl.show('fade', { duration: 200 }); } catch (e) { errEl.show(); }
+      };
+
+      if (!email || !validateEmail(email)) {
+        showErr('Please enter a valid email address.');
+        return;
+      }
+
+      try {
+        submitBtn.disable();
+        submitBtn.label = 'Subscribing...';
+
+        const { subscribe } = await import('backend/priceAlertService.web');
+        const result = await subscribe(state.product?._id || '', email);
+
+        if (result.success || result.reason === 'already_subscribed') {
+          try { emailInput.hide(); } catch (e) {}
+          try { submitBtn.hide(); } catch (e) {}
+          try { $w('#priceDropNotifyClose').hide(); } catch (e) {}
+          const successEl = (() => { try { return $w('#priceDropNotifySuccess'); } catch (e) { return null; } })();
+          if (successEl) {
+            successEl.text = result.reason === 'already_subscribed'
+              ? "You're already on the list! We'll email you when the price drops."
+              : "Done! We'll email you if the price drops.";
+            try { successEl.show('fade', { duration: 300 }); } catch (e) { successEl.show(); }
+          }
+        } else {
+          showErr('Something went wrong. Please try again.');
+          submitBtn.enable();
+          submitBtn.label = 'Notify me';
+        }
+      } catch (err) {
+        console.error('[AddToCart] priceDropNotify submit error:', err);
+        showErr('Something went wrong. Please try again.');
+        try { submitBtn.enable(); submitBtn.label = 'Notify me'; } catch (e) {}
+      }
+    });
+  } catch (e) {}
+}
+
 /**
  * Swap the wishlist icon between filled/outline and update ARIA label.
  * @param {Function} $w - Wix Velo selector function for querying page elements

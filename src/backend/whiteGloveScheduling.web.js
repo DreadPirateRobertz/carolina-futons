@@ -24,6 +24,7 @@
  *   address (Text)
  *   notes (Text)
  *   rescheduleCount (Number) - Max 1 reschedule allowed
+ *   smsOptIn (Boolean) - TCPA consent for SMS delivery notifications
  *   _createdDate (Date)
  *
  * Create CMS collection `BlockedDeliveryDates` with fields:
@@ -35,10 +36,15 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, validatePhone } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { validateSchema } from 'backend/utils/validateSchema';
+import {
+  sendWhiteGloveConfirmationSMS,
+  sendWhiteGloveReminderSMS,
+  sendWhiteGloveDayOfSMS,
+} from 'backend/smsService.web';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -160,6 +166,7 @@ export const getWhiteGloveSlots = webMethod(Permissions.Anyone, async (_orderId)
  * @param {string} [data.customerPhone]
  * @param {string} [data.address]
  * @param {string} [data.notes]
+ * @param {boolean} [data.smsOptIn] - TCPA consent: customer agrees to SMS delivery updates.
  */
 export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (data) => {
   try {
@@ -168,13 +175,14 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
     }
 
     const schemaErrors = validateSchema(data, {
-      orderId:         { type: 'string', required: true, maxLength: 50,  label: 'Order ID' },
-      appointmentDate: { type: 'string', required: true, maxLength: 10,  label: 'Date' },
-      window:          { type: 'string', required: true, maxLength: 20,  label: 'Window' },
-      customerEmail:   { type: 'string', required: false, maxLength: 254, label: 'Email' },
-      customerPhone:   { type: 'string', required: false, maxLength: 20,  label: 'Phone' },
-      address:         { type: 'string', required: false, maxLength: 500, label: 'Address' },
-      notes:           { type: 'string', required: false, maxLength: 500, label: 'Notes' },
+      orderId:         { type: 'string',  required: true,  maxLength: 50,  label: 'Order ID' },
+      appointmentDate: { type: 'string',  required: true,  maxLength: 10,  label: 'Date' },
+      window:          { type: 'string',  required: true,  maxLength: 20,  label: 'Window' },
+      customerEmail:   { type: 'string',  required: false, maxLength: 254, label: 'Email' },
+      customerPhone:   { type: 'string',  required: false, maxLength: 20,  label: 'Phone' },
+      address:         { type: 'string',  required: false, maxLength: 500, label: 'Address' },
+      notes:           { type: 'string',  required: false, maxLength: 500, label: 'Notes' },
+      smsOptIn:        { type: 'boolean', required: false,                 label: 'SMS opt-in' },
     });
     if (schemaErrors.length > 0) return { success: false, error: schemaErrors[0] };
 
@@ -231,6 +239,9 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
       return { success: false, error: 'Too many booking attempts. Please try again later.' };
     }
 
+    const smsOptIn = data.smsOptIn === true;
+    const customerPhone = sanitize(data.customerPhone || '', 20);
+
     // Optimistic insert with 'pending' status, then check capacity
     const appointment = await wixData.insert('WhiteGloveAppointments', {
       orderId,
@@ -239,10 +250,11 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
       window: windowKey,
       status: 'pending',
       customerEmail: sanitize(data.customerEmail || '', 254),
-      customerPhone: sanitize(data.customerPhone || '', 20),
+      customerPhone,
       address: sanitize(data.address || '', 500),
       notes: sanitize(data.notes || '', 500),
       rescheduleCount: 0,
+      smsOptIn,
     });
 
     const booked = await countBookedSlots(dateStr, windowKey);
@@ -254,6 +266,17 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
     await wixData.update('WhiteGloveAppointments', { ...appointment, status: 'confirmed' });
 
     logAuditEvent('WhiteGloveAppointments', 'book', appointment._id, { orderId, dateStr, windowKey });
+
+    // Send booking confirmation SMS — fire-and-forget (don't fail the booking on SMS error)
+    if (smsOptIn && customerPhone) {
+      sendWhiteGloveConfirmationSMS({
+        phone: customerPhone,
+        appointmentDate: dateStr,
+        windowLabel: DELIVERY_WINDOWS[windowKey].label,
+        address: sanitize(data.address || '', 200),
+        appointmentId: appointment._id,
+      }).catch(err => console.error('[whiteGloveScheduling] SMS confirmation error:', err));
+    }
 
     return {
       success: true,
@@ -548,3 +571,125 @@ export const getWindowLabels = webMethod(Permissions.Anyone, () => {
     label: meta.label,
   }));
 });
+
+// ── CF-rjxq: Cron-triggered SMS reminder dispatchers ─────────────────────────
+
+/**
+ * Check whether an SMS of the given type was already sent for this appointment.
+ * Uses SMSLog.productId to store the appointmentId for dedup.
+ *
+ * @param {string} appointmentId
+ * @param {string} messageType
+ * @returns {Promise<boolean>} true if already sent
+ */
+async function wasSmsSent(appointmentId, messageType) {
+  const result = await wixData.query('SMSLog')
+    .eq('messageType', messageType)
+    .eq('productId', appointmentId)
+    .limit(1)
+    .find();
+  return result.items.length > 0;
+}
+
+/**
+ * Send 48-hour reminder SMS to all confirmed appointments 2 days from today.
+ * Called by jobs.config cron. Skips appointments without smsOptIn or phone.
+ * Deduplicates via SMSLog.
+ *
+ * CF-rjxq
+ *
+ * @returns {Promise<{success: boolean, sent: number, skipped: number}>}
+ */
+export const runWhiteGlove48hReminders = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 2);
+      const targetDateStr = toDateStr(targetDate);
+
+      const result = await wixData.query('WhiteGloveAppointments')
+        .eq('appointmentDate', targetDateStr)
+        .eq('status', 'confirmed')
+        .limit(50)
+        .find();
+
+      let sent = 0;
+      let skipped = 0;
+
+      for (const appt of result.items) {
+        if (!appt.smsOptIn || !appt.customerPhone) { skipped++; continue; }
+        if (await wasSmsSent(appt._id, 'white_glove_48h_reminder')) { skipped++; continue; }
+
+        const smsResult = await sendWhiteGloveReminderSMS({
+          phone: appt.customerPhone,
+          appointmentDate: appt.appointmentDate,
+          windowLabel: DELIVERY_WINDOWS[appt.window]?.label || appt.window,
+          appointmentId: appt._id,
+        });
+
+        if (smsResult.success) {
+          sent++;
+        } else {
+          skipped++;
+          console.error('[whiteGloveScheduling] 48h SMS failed for appt', appt._id, smsResult.reason);
+        }
+      }
+
+      return { success: true, sent, skipped };
+    } catch (err) {
+      console.error('[whiteGloveScheduling] runWhiteGlove48hReminders error:', err);
+      return { success: false, sent: 0, skipped: 0 };
+    }
+  }
+);
+
+/**
+ * Send day-of delivery SMS to all confirmed appointments scheduled for today.
+ * Called by jobs.config cron at 8 AM ET. Skips appointments without smsOptIn or phone.
+ * Deduplicates via SMSLog.
+ *
+ * CF-rjxq
+ *
+ * @returns {Promise<{success: boolean, sent: number, skipped: number}>}
+ */
+export const runWhiteGloveDayOfReminders = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const todayStr = toDateStr(new Date());
+
+      const result = await wixData.query('WhiteGloveAppointments')
+        .eq('appointmentDate', todayStr)
+        .eq('status', 'confirmed')
+        .limit(50)
+        .find();
+
+      let sent = 0;
+      let skipped = 0;
+
+      for (const appt of result.items) {
+        if (!appt.smsOptIn || !appt.customerPhone) { skipped++; continue; }
+        if (await wasSmsSent(appt._id, 'white_glove_day_of')) { skipped++; continue; }
+
+        const smsResult = await sendWhiteGloveDayOfSMS({
+          phone: appt.customerPhone,
+          windowLabel: DELIVERY_WINDOWS[appt.window]?.label || appt.window,
+          appointmentId: appt._id,
+        });
+
+        if (smsResult.success) {
+          sent++;
+        } else {
+          skipped++;
+          console.error('[whiteGloveScheduling] day-of SMS failed for appt', appt._id, smsResult.reason);
+        }
+      }
+
+      return { success: true, sent, skipped };
+    } catch (err) {
+      console.error('[whiteGloveScheduling] runWhiteGloveDayOfReminders error:', err);
+      return { success: false, sent: 0, skipped: 0 };
+    }
+  }
+);

@@ -46,12 +46,16 @@ export function validatePriceMatchFields(fields) {
 
   const errors = [];
 
-  const productName = (fields.productName || '').toString().replace(/<[^>]*>/g, '').trim();
+  let productName = (fields.productName || '').toString();
+  while (productName !== (productName = productName.replace(/<[^>]*>/g, ''))) {}
+  productName = productName.trim();
   if (!productName) {
     errors.push({ field: 'productName', message: 'Please select a product' });
   }
 
-  const competitorName = (fields.competitorName || '').toString().replace(/<[^>]*>/g, '').trim();
+  let competitorName = (fields.competitorName || '').toString();
+  while (competitorName !== (competitorName = competitorName.replace(/<[^>]*>/g, ''))) {}
+  competitorName = competitorName.trim();
   if (!competitorName) {
     errors.push({ field: 'competitorName', message: 'Please select a competitor' });
   }

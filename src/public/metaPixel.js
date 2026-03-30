@@ -36,7 +36,9 @@ async function getWixWindow() {
  */
 function sanitizeParam(str) {
   if (!str || typeof str !== 'string') return '';
-  return str.replace(/<[^>]*>/g, '').trim();
+  let s = str;
+  while (s !== (s = s.replace(/<[^>]*>/g, ''))) {}
+  return s.trim();
 }
 
 /**

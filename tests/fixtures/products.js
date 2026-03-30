@@ -334,6 +334,31 @@ export const callForPriceCasegoods = {
   featureTags: [],
 };
 
+// Futon cover — for Futon Studio compatibility tests (CF-eqc5.1)
+export const futonCover = {
+  _id: 'prod-cover-001',
+  name: 'Natural Twill Futon Cover',
+  slug: 'natural-twill-futon-cover',
+  price: 89,
+  formattedPrice: '$89.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/natural-twill.jpg',
+  sku: 'NT-COV-001',
+  ribbon: '',
+  collections: ['futon-covers'],
+  description: 'Natural cotton twill futon cover, machine washable.',
+  inStock: true,
+  _createdDate: new Date('2025-01-15'),
+  discount: 0,
+  dimensions: { width: 54, depth: 75, height: 0 },
+  material: 'cotton',
+  color: 'natural',
+  featureTags: [],
+  brand: 'Prestige Decor',
+  options: { size: 'Full' },
+};
+
 // All products for seeding collections (includes call-for-price items)
 export const allProducts = [
   futonFrame,
@@ -350,6 +375,7 @@ export const allProducts = [
   arizonaFrame,
   callForPriceProduct,
   callForPriceCasegoods,
+  futonCover,
 ];
 
 // Sample analytics records

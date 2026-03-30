@@ -33,7 +33,7 @@ fi
 # ── Vitest on changed src files ──────────────────────────────────────────────
 # Run vitest only on source files that have corresponding test files.
 
-SRC_CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^src/')
+SRC_CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^src/' || true)
 
 if [ -n "$SRC_CHANGED" ]; then
   # Derive test file paths: src/backend/foo.web.js -> tests/foo.test.js etc.

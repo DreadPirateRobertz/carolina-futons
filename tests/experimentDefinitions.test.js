@@ -4,7 +4,7 @@
  * quiz gate, spin wheel gate, gamification tour.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed } from './__mocks__/wix-data.js';
+import { __reset, __seed, __setQueryError } from './__mocks__/wix-data.js';
 import { _reset as resetAbExperiments } from '../src/public/abExperiments.js';
 
 // ── Quiz Gate Experiment ─────────────────────────────────────────────
@@ -92,6 +92,25 @@ describe('quizGateExperiment', () => {
   it('trackQuizSkip does not throw', async () => {
     await expect(trackQuizSkip()).resolves.not.toThrow();
   });
+
+  it('initQuizGateTest returns default when backend throws (catch branch)', async () => {
+    __setQueryError('AbTests', new Error('DB error'));
+    const result = await initQuizGateTest();
+    expect(result.gateRequired).toBe(true);
+    expect(result.experimentActive).toBe(false);
+    expect(result.variantId).toBeNull();
+  });
+
+  it('isQuizGateRequired returns true when active variant id is unknown', async () => {
+    __seed('AbTests', [{
+      _id: 'quiz-test', testName: 'quiz_gate_test', active: true,
+      variants: JSON.stringify([{ id: 'X', name: 'Unknown' }]),
+      trafficPercent: 100,
+    }]);
+    await initQuizGateTest();
+    // variant 'X' not in VARIANTS map — ?? true fallback
+    expect(isQuizGateRequired()).toBe(true);
+  });
 });
 
 // ── Spin Wheel Gate ──────────────────────────────────────────────────
@@ -140,6 +159,24 @@ describe('spinWheelGateExperiment', () => {
   it('trackPrizeRedemption does not throw', async () => {
     await expect(trackPrizeRedemption()).resolves.not.toThrow();
   });
+
+  it('initSpinWheelGateTest returns default when backend throws (catch branch)', async () => {
+    __setQueryError('AbTests', new Error('DB error'));
+    const result = await initSpinWheelGateTest();
+    expect(result.requireEmail).toBe(true);
+    expect(result.experimentActive).toBe(false);
+    expect(result.variantId).toBeNull();
+  });
+
+  it('isEmailRequiredForSpin returns true when active variant id is unknown', async () => {
+    __seed('AbTests', [{
+      _id: 'spin-test', testName: 'spin_wheel_gate_test', active: true,
+      variants: JSON.stringify([{ id: 'X', name: 'Unknown' }]),
+      trafficPercent: 100,
+    }]);
+    await initSpinWheelGateTest();
+    expect(isEmailRequiredForSpin()).toBe(true);
+  });
 });
 
 // ── Gamification Tour ────────────────────────────────────────────────
@@ -187,6 +224,24 @@ describe('gamificationTourExperiment', () => {
 
   it('trackTourOptIn does not throw', async () => {
     await expect(trackTourOptIn()).resolves.not.toThrow();
+  });
+
+  it('initGamificationTourTest returns default when backend throws (catch branch)', async () => {
+    __setQueryError('AbTests', new Error('DB error'));
+    const result = await initGamificationTourTest();
+    expect(result.autoShow).toBe(true);
+    expect(result.experimentActive).toBe(false);
+    expect(result.variantId).toBeNull();
+  });
+
+  it('shouldAutoShowTour returns true when active variant id is unknown', async () => {
+    __seed('AbTests', [{
+      _id: 'tour-test', testName: 'gamification_tour_test', active: true,
+      variants: JSON.stringify([{ id: 'X', name: 'Unknown' }]),
+      trafficPercent: 100,
+    }]);
+    await initGamificationTourTest();
+    expect(shouldAutoShowTour()).toBe(true);
   });
 });
 

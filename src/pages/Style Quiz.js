@@ -11,6 +11,7 @@ import { colors } from 'public/designTokens.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
 import { renderSimplePrice } from 'public/productCardHelpers.js';
+import { addToCart } from 'public/cartService';
 
 // Email gate shown after this step index (0-based). Step 2 = Q3 stylePreference.
 const EMAIL_GATE_AFTER_STEP = 2;
@@ -415,6 +416,30 @@ function renderResults(results) {
           });
         } catch (e) {}
 
+        // Add to cart
+        try {
+          $item('#resultAddToCartBtn').onClick(async () => {
+            try { $item('#resultAddToCartBtn').disable(); } catch (e) {}
+            try {
+              await addToCart(product._id, 1);
+              trackEvent('add_to_cart', { source: 'quiz_results', productId: product._id, productName: product.name, score });
+              try { $item('#resultAddToCartConfirm').expand(); } catch (e) {}
+            } catch (err) {
+              console.error('[StyleQuiz] addToCart failed:', err);
+            } finally {
+              try { $item('#resultAddToCartBtn').enable(); } catch (e) {}
+            }
+          });
+        } catch (e) {}
+
+        // See it in the Studio
+        try {
+          $item('#resultStudioBtn').onClick(() => {
+            trackEvent('quiz_studio_click', { productId: product._id, productName: product.name, score });
+            import('wix-location-frontend').then(loc => loc.to(`/studio?productId=${product._id}`));
+          });
+        } catch (e) {}
+
         // ARIA
         try { $item('#resultProductName').accessibility.role = 'heading'; } catch (e) {}
       });
@@ -454,6 +479,30 @@ function renderResults(results) {
             trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
             const slug = product.slug || product._id;
             import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
+          });
+        } catch (e) {}
+
+        // Add to cart
+        try {
+          $item('#resultAddToCartBtn').onClick(async () => {
+            try { $item('#resultAddToCartBtn').disable(); } catch (e) {}
+            try {
+              await addToCart(product._id, 1);
+              trackEvent('add_to_cart', { source: 'quiz_results', productId: product._id, productName: product.name, score });
+              try { $item('#resultAddToCartConfirm').expand(); } catch (e) {}
+            } catch (err) {
+              console.error('[StyleQuiz] addToCart failed:', err);
+            } finally {
+              try { $item('#resultAddToCartBtn').enable(); } catch (e) {}
+            }
+          });
+        } catch (e) {}
+
+        // See it in the Studio
+        try {
+          $item('#resultStudioBtn').onClick(() => {
+            trackEvent('quiz_studio_click', { productId: product._id, productName: product.name, score });
+            import('wix-location-frontend').then(loc => loc.to(`/studio?productId=${product._id}`));
           });
         } catch (e) {}
 
