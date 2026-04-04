@@ -29,6 +29,10 @@ export const POINT_VALUES = {
   AR_USED: 10,           // gamification_ar_used event
   WISHLIST_ADD: 25,      // gamification_wishlist_add event (1/month cap enforced in receiver)
   VIDEO_REVIEW: 500,     // video_review_approved event (exclusive badge + 500 pts)
+  // Mobile-unique actions (cross-rig spec with dallas, 2026-04-04)
+  VISUAL_SEARCH_USE: 15, // camera snap to find products (mobile only)
+  SHARE_PRODUCT: 10,     // native share sheet (mobile only)
+  PUSH_NOTIFICATION_ENABLED: 50, // one-time bonus for enabling push (mobile only)
 };
 
 /** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */
