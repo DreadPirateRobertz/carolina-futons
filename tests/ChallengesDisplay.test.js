@@ -35,7 +35,7 @@ function makeChallenge(overrides = {}) {
     targetCount: 3,
     rewardPoints: 50,
     rewardBadgeId: null,
-    expiresAt: '2026-04-01T00:00:00Z',
+    expiresAt: '2099-04-01T00:00:00Z',
     progressValue: 1,
     completedAt: null,
     ...overrides,
@@ -90,7 +90,8 @@ describe('renderChallengeCard', () => {
 
   it('sets expires label from expiresAt ISO string', () => {
     const $expiresLabel = makeText();
-    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel, $completedBadge: makeImage() }, makeChallenge({ expiresAt: '2026-04-01T00:00:00Z' }));
+    const frozenNow = new Date('2026-03-15T12:00:00Z').getTime();
+    renderChallengeCard({ $title: makeText(), $description: makeText(), $progressBar: makeProgressBar(), $progressLabel: makeText(), $rewardLabel: makeText(), $expiresLabel, $completedBadge: makeImage() }, makeChallenge({ expiresAt: '2026-04-01T00:00:00Z' }), frozenNow);
     expect($expiresLabel.text).toMatch(/Apr/);
   });
 });
