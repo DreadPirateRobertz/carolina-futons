@@ -11,6 +11,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { getNewPerksOnPromotion, PERK_TYPES } from 'public/gamificationTokens.js';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
@@ -48,6 +49,7 @@ async function generateUniqueCouponCode() {
       .find({ suppressAuth: true });
     if (existing.items.length === 0) return code;
   }
+  logError('generateUniqueCouponCode — exhausted 5 retries, returning unchecked code');
   return generateCouponCode();
 }
 
@@ -56,17 +58,17 @@ async function generateUniqueCouponCode() {
  * TierPerkDeliveries for prior delivery of each perk type to the member.
  *
  * @param {string} memberId
- * @param {string} prevTier - tier before promotion
+ * @param {string|null} prevTier - tier before promotion (null if new member)
  * @param {string} newTier - tier after promotion
- * @returns {Promise<{ delivered: Array<{type: string, couponCode?: string, bookingUrl?: string}>, skipped: string[] }>}
+ * @returns {Promise<{ delivered: Array<{type: string, label: string, couponCode?: string, bookingUrl?: string}>, skipped: string[], failed: string[] }>}
  */
 export const deliverTierPerks = webMethod(
   Permissions.Admin,
   async (memberId, prevTier, newTier) => {
-    if (!memberId || !newTier) return { delivered: [], skipped: [] };
+    if (!memberId || !newTier) return { delivered: [], skipped: [], failed: [] };
 
     const newPerks = getNewPerksOnPromotion(prevTier, newTier);
-    if (!newPerks.length) return { delivered: [], skipped: [] };
+    if (!newPerks.length) return { delivered: [], skipped: [], failed: [] };
 
     // Check which perks have already been delivered (dedup)
     const existingResult = await wixData
@@ -77,6 +79,7 @@ export const deliverTierPerks = webMethod(
 
     const delivered = [];
     const skipped = [];
+    const failed = [];
 
     for (const perk of newPerks) {
       if (deliveredTypes.has(perk.type)) {
@@ -114,6 +117,7 @@ export const deliverTierPerks = webMethod(
           continue;
         }
         logError(`insert failed for ${memberId} perk ${perk.type}`, err);
+        failed.push(perk.type);
         continue;
       }
 
@@ -129,7 +133,7 @@ export const deliverTierPerks = webMethod(
       }
     }
 
-    return { delivered, skipped };
+    return { delivered, skipped, failed };
   }
 );
 
@@ -171,21 +175,28 @@ async function sendTierPerkEmail(memberId, newTier, deliveredPerks) {
 }
 
 /**
- * Look up all perks delivered to a member (for member page display).
+ * Look up all perks delivered to the calling member.
  *
  * @param {string} memberId
- * @returns {Promise<Array<{perkType: string, tier: string, couponCode?: string, bookingUrl?: string, deliveredAt: string}>>}
+ * @returns {Promise<Array<{perkType: string, tier: string, couponCode?: string, bookingUrl?: string, deliveredAt: string}> | {error: string}>}
  */
 export const getMemberDeliveredPerks = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) return [];
-    const result = await wixData
-      .query(DELIVERIES_COLLECTION)
-      .eq('memberId', memberId)
-      .find({ suppressAuth: true });
-    return result.items.map(({ perkType, tier, couponCode, bookingUrl, deliveredAt }) => ({
-      perkType, tier, couponCode, bookingUrl, deliveredAt,
-    }));
+    try {
+      const caller = await currentMember.getMember();
+      if (!caller || caller._id !== memberId) return { error: 'forbidden' };
+      const result = await wixData
+        .query(DELIVERIES_COLLECTION)
+        .eq('memberId', memberId)
+        .find({ suppressAuth: true });
+      return result.items.map(({ perkType, tier, couponCode, bookingUrl, deliveredAt }) => ({
+        perkType, tier, couponCode, bookingUrl, deliveredAt,
+      }));
+    } catch (err) {
+      logError(`getMemberDeliveredPerks failed for ${memberId}`, err);
+      return [];
+    }
   }
 );
