@@ -315,12 +315,14 @@ describe('Buying Guide page handler', () => {
   // ── SEO / Schema ───────────────────────────────────────────────
 
   describe('SEO and schema', () => {
-    it('calls initPageSeo with buyingGuide context', async () => {
+    it('calls initPageSeo with buyingGuide context including image and category', async () => {
       await runOnReady();
-      expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', {
+      expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
         name: 'Futon Mattress Guide',
         slug: 'futon-mattress-guide',
-      });
+        image: 'hero.jpg',
+        category: 'Mattresses',
+      }));
     });
 
     it('posts schema JSON to guideSeoSchema element', async () => {

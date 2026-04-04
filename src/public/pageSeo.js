@@ -13,8 +13,9 @@ const TWITTER_HANDLE = '@CarolinaFutons';
 
 /**
  * Initialize SEO meta tags for a page.
- * @param {string} pageType - Page type: 'home', 'product', 'category', 'blog', 'blogPost', 'faq', 'contact', 'about', etc.
- * @param {Object} [data] - Page-specific data (name, slug, description, image, etc.)
+ * @param {string} pageType - Page type: 'home', 'product', 'category', 'blog', 'blogPost', 'buyingGuide', 'faq', 'contact', 'about', etc.
+ *   'buyingGuide' sets og:type=article, twitter:card=summary_large_image, og:image:width/height when image is provided, and article:section when category is provided.
+ * @param {Object} [data] - Page-specific data (name, slug, description, image, category, etc.)
  */
 export async function initPageSeo(pageType, data = {}) {
   try {
@@ -24,14 +25,17 @@ export async function initPageSeo(pageType, data = {}) {
     const description = await getPageMetaDescription(pageType, data);
     const url = await getCanonicalUrl(pageType, data.slug);
     const image = data.image || DEFAULT_IMAGE;
-    const useLargeImage = pageType === 'product' || (pageType === 'blogPost' && data.image);
+    const OG_TYPE = { product: 'product', blogPost: 'article', buyingGuide: 'article' };
+    const isArticle = pageType === 'blogPost' || pageType === 'buyingGuide';
+    const useLargeImage = pageType === 'product' || pageType === 'buyingGuide' || (pageType === 'blogPost' && data.image);
+    const ogType = OG_TYPE[pageType] || 'website';
 
     head.setTitle(title);
 
-    head.setMetaTags([
+    const metaTags = [
       { name: 'description', content: description },
       // Open Graph
-      { property: 'og:type', content: pageType === 'product' ? 'product' : pageType === 'blogPost' ? 'article' : 'website' },
+      { property: 'og:type', content: ogType },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:url', content: url },
@@ -43,8 +47,21 @@ export async function initPageSeo(pageType, data = {}) {
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: image },
-    ]);
+    ];
+
+    if (useLargeImage && data.image) {
+      metaTags.push(
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+      );
+    }
+
+    if (isArticle && data.category) {
+      metaTags.push({ property: 'article:section', content: data.category });
+    }
+
+    head.setMetaTags(metaTags);
   } catch (e) {
-    // SEO injection is non-critical — page still renders
+    console.error('[pageSeo] Failed to set SEO meta tags:', e);
   }
 }

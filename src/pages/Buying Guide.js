@@ -86,7 +86,12 @@ $w.onReady(async function () {
     initRelatedGuides(pillar);
     initGuideSchema(schemas);
     initGuideMeta(slug, guide.title);
-    initPageSeo('buyingGuide', { name: guide.title, slug });
+    initPageSeo('buyingGuide', {
+      name: guide.title,
+      slug,
+      image: guide.ogImage || guide.heroImage,
+      category: guide.categoryLabel,
+    });
   } catch (err) {
     console.error('Buying Guide page init error:', err);
   }
