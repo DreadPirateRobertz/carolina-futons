@@ -317,4 +317,14 @@ describe('jobs.config cron registration', () => {
     expect(parts[3]).toBe('*'); // month wildcard
     expect(parts[4]).toBe('*'); // day-of-week wildcard
   });
+
+  it('dailySocialStories alias export is callable and returns the same result shape', async () => {
+    __seed('Stores/Products', []);
+    const { dailySocialStories } = await import('../src/backend/socialStoryScheduler.web.js');
+    const result = await dailySocialStories();
+    expect(result).toHaveProperty('success');
+    expect(result).toHaveProperty('newArrivals');
+    expect(result).toHaveProperty('priceDrops');
+    expect(result).toHaveProperty('errors');
+  });
 });
