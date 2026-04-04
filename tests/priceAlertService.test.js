@@ -15,12 +15,15 @@ import {
 
 // ── Test Data ──────────────────────────────────────────────────────────────
 
+const DEVICE_TOKEN = 'fcm-token-abc123xyz';
+
 const ACTIVE_SUB = {
   _id: 'sub-001',
   productId: 'prod-001',
   email: 'alice@example.com',
   subscribedAt: new Date('2026-01-01'),
   active: true,
+  subscriberDeviceToken: DEVICE_TOKEN,
 };
 
 const INACTIVE_SUB = {
@@ -29,6 +32,7 @@ const INACTIVE_SUB = {
   email: 'bob@example.com',
   subscribedAt: new Date('2026-01-01'),
   active: false,
+  subscriberDeviceToken: null,
 };
 
 const OTHER_PRODUCT_SUB = {
@@ -37,6 +41,7 @@ const OTHER_PRODUCT_SUB = {
   email: 'carol@example.com',
   subscribedAt: new Date('2026-01-01'),
   active: true,
+  subscriberDeviceToken: null,
 };
 
 beforeEach(() => {
@@ -135,6 +140,64 @@ describe('subscribe', () => {
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe('already_subscribed');
+  });
+
+  it('stores subscriberDeviceToken when provided on a new subscription', async () => {
+    await subscribe('prod-001', 'newuser@example.com', 'fcm-token-newdevice');
+
+    const stored = __getInserted('PriceAlerts');
+    const newSub = stored.find(i => i.email === 'newuser@example.com');
+    expect(newSub.subscriberDeviceToken).toBe('fcm-token-newdevice');
+  });
+
+  it('stores null subscriberDeviceToken when deviceToken is not provided', async () => {
+    await subscribe('prod-001', 'newuser@example.com');
+
+    const stored = __getInserted('PriceAlerts');
+    const newSub = stored.find(i => i.email === 'newuser@example.com');
+    expect(newSub.subscriberDeviceToken).toBeNull();
+  });
+
+  it('stores null subscriberDeviceToken when deviceToken is explicitly null', async () => {
+    await subscribe('prod-001', 'newuser@example.com', null);
+
+    const stored = __getInserted('PriceAlerts');
+    const newSub = stored.find(i => i.email === 'newuser@example.com');
+    expect(newSub.subscriberDeviceToken).toBeNull();
+  });
+
+  it('updates subscriberDeviceToken on reactivation', async () => {
+    // bob@example.com is inactive with null token
+    await subscribe('prod-001', 'bob@example.com', 'fcm-token-bob-new');
+
+    const updated = __getUpdated('PriceAlerts');
+    const reactivated = updated.find(i => i._id === 'sub-002');
+    expect(reactivated.subscriberDeviceToken).toBe('fcm-token-bob-new');
+  });
+
+  it('stores null subscriberDeviceToken on reactivation when no token provided', async () => {
+    await subscribe('prod-001', 'bob@example.com');
+
+    const updated = __getUpdated('PriceAlerts');
+    const reactivated = updated.find(i => i._id === 'sub-002');
+    expect(reactivated.subscriberDeviceToken).toBeNull();
+  });
+
+  it('trims and truncates overlong deviceToken to 500 chars', async () => {
+    const longToken = 'x'.repeat(600);
+    await subscribe('prod-001', 'newuser@example.com', longToken);
+
+    const stored = __getInserted('PriceAlerts');
+    const newSub = stored.find(i => i.email === 'newuser@example.com');
+    expect(newSub.subscriberDeviceToken).toHaveLength(500);
+  });
+
+  it('stores null when deviceToken is an empty string after trimming', async () => {
+    await subscribe('prod-001', 'newuser@example.com', '   ');
+
+    const stored = __getInserted('PriceAlerts');
+    const newSub = stored.find(i => i.email === 'newuser@example.com');
+    expect(newSub.subscriberDeviceToken).toBeNull();
   });
 });
 
@@ -265,5 +328,19 @@ describe('getSubscribers', () => {
     const result = await getSubscribers('prod-001');
 
     expect(result.subscribers[0].subscribedAt).toBeInstanceOf(Date);
+  });
+
+  it('includes subscriberDeviceToken in each subscriber record', async () => {
+    const result = await getSubscribers('prod-001');
+
+    // alice@example.com has DEVICE_TOKEN in seed data
+    expect(result.subscribers[0].subscriberDeviceToken).toBe(DEVICE_TOKEN);
+  });
+
+  it('returns null subscriberDeviceToken when field is absent from record', async () => {
+    // prod-002 subscriber (carol) has null token
+    const result = await getSubscribers('prod-002');
+
+    expect(result.subscribers[0].subscriberDeviceToken).toBeNull();
   });
 });
