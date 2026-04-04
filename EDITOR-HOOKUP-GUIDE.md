@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v3.0 — Session 32: Share Your Room UGC modal (CF-rw9i.1) — 12 elements on Product Page; BNPL Widget (CF-nqb5.1) — 3 elements on Product Page. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5).)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.1 — Warranty Registration (CF-46ct, PR #923) — 9 elements; NPS Survey (CF-1mlj, PR #924) — 8 elements; Video Review Grid on PDP (CF-ou66.3, PR #941) — 6 elements + 3 repeater children; Style Quiz Result / Futon Sommelier hookup (cf-p1c9, PR #919) — 11 elements + 8 children. Also merged: Video Review Badge backend (CF-ou66.2), Trail Perk Unlock backend (CF-mcyh.2), Content Calendar/Buying Guides (cf-6ika/cf-vyvy), Delivery SMS backend (CF-rjxq). Previous: v3.0 — BNPL Widget + Share Your Room.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -144,12 +144,83 @@ This is the exact sequence Stilgar and melania follow to wire each page. Repeat 
 
 **S0 Recon confirmed**: `documentServices` is directly accessible from the Wix Studio `preview-frame`. No Hookup Assistant needed — rename everything from the browser console right now.
 
-### ⚠️ IMPORTANT: Two Types of Elements
+### ⚠️ IMPORTANT: Three Types of Elements (updated 2026-03-30)
 
-Most elements have **no nickname yet** — `getNickname()` returns `""`. The RENAME_MAP script only works for elements that *already have* an old auto-generated nickname (like `text19`, `box30`).
+Wix Studio has **two separate component systems** that store nicknames differently:
 
-**For unnamed elements** (the majority): use the **ID-based workflow** (Step 2 below).
-**For already-named elements**: use the **RENAME_MAP workflow** (Step 3 below).
+#### 1. Classic Components (masterPage flat tree)
+These are returned by `ds.components.getAllComponents({ id: 'masterPage', type: 'Page' })`.
+- `getNickname()` / `setNickname()` / `validateNickname()` all work.
+- Includes: mobile drawer elements, breadcrumbs, HtmlComponents, backToTop, announcementBar (the classic Box), and Wix-native widgets (Menu, HamburgerMenuRoot, etc.).
+- **Console rename scripts (Steps 2 & 3 below) work for these.**
+
+#### 2. Responsive Components (header/section children placed in Studio editor)
+These are placed via the Wix Studio visual editor inside responsive sections (HeaderSection, Section, FooterSection). They are **NOT** returned by `getAllComponents` or `generatePageComponentsModel`.
+- `getNickname({ id })` returns `""` even when nicknamed.
+- `setNickname({ id }, name)` silently fails (writes to classic store, not responsive store).
+- `validateNickname(anyRef, name)` **CAN** detect them — returns `ALREADY_EXISTS` if the responsive nickname is taken.
+- They ARE visible in the DOM with `[id^="comp-"]` selectors.
+- Nicknames are set via the **Properties & Events panel** (click element → `</>` tab → Element ID field) or by setting the layer name in the layers panel — in Wix Studio, the **layer display name IS the Velo nickname** for responsive components.
+
+**Examples of responsive components**: `headerSkyline`, `headerStrip`, `desktopNavBar`, `skipToContent`, `siteLogo`, `cartIcon`, `cartBadge`, `headerSearchInput`, `sideCartPanel`, all `nav*` links, `headerShippingBar`, `headerShippingText`, `megaMenuPanel`, `mobileMenuButton`, `productTitle`, `justAddedHighlight`.
+
+#### 3. How to Identify Which Type an Element Is
+- Run the DOM discovery script (Step 1b below) — if `getNickname({ id })` returns a name, it's classic.
+- If it returns `(none)` but the element has a name in the Layers panel, it's responsive and already nicknamed.
+- Use `validateNickname` to verify: `ALREADY_EXISTS` = nicknamed (either system), `VALID` = not yet nicknamed.
+
+#### Rename Workflow by Type
+| Element Type | How to Nickname | Console Script Works? |
+|---|---|---|
+| Classic, unnamed | Step 2 (COMP_ID_MAP) | Yes |
+| Classic, auto-named | Step 3 (RENAME_MAP) | Yes |
+| Responsive | Set layer name in Layers panel OR Properties panel Element ID | **No** — must use editor UI |
+
+#### Verification Script (works for BOTH types)
+To check if a target nickname exists regardless of type:
+```javascript
+// Returns 'ALREADY_EXISTS' if nicknamed (either system), 'VALID' if not yet set
+ds.components.code.validateNickname({ id: 'SITE_HEADER' }, 'targetNickname');
+```
+
+#### DOM Discovery Script (Step 1b) — finds responsive elements invisible to classic API
+```javascript
+(async () => {
+  const ds = window.documentServices;
+  const allEls = document.querySelectorAll('[id^="comp-"]');
+  const results = [];
+  for (const el of allEls) {
+    if (el.id.includes('_r_') || el.id.includes('-pinned')) continue;
+    let nick = '';
+    try { nick = ds.components.code.getNickname({ id: el.id }) || ''; } catch(e) {}
+    const text = el.textContent?.trim().substring(0, 50) || '';
+    const parent = el.parentElement?.id?.substring(0, 30) || '';
+    const children = el.querySelectorAll('[id^="comp-"]').length;
+    results.push({ compId: el.id, nick: nick || '(responsive)', tag: el.tagName, text, children, parent });
+  }
+  console.log(`📋 DOM SCAN | Total: ${results.length}`);
+  console.log('=== Elements with responsive nicknames (set via Layers panel):');
+  console.table(results.filter(r => r.nick === '(responsive)'));
+  console.log('=== Elements with classic nicknames:');
+  console.table(results.filter(r => r.nick !== '(responsive)'));
+})();
+```
+
+#### Bulk Verification Script — check all target nicknames at once
+```javascript
+(async () => {
+  const ds = window.documentServices;
+  const targets = [/* paste your target nickname array here */];
+  const testRef = { id: 'SITE_HEADER' };
+  const results = targets.map(name => ({
+    name,
+    status: ds.components.code.validateNickname(testRef, name) === 'ALREADY_EXISTS' ? '✅' : '❌ MISSING'
+  }));
+  console.table(results);
+  const missing = results.filter(r => r.status !== '✅');
+  console.log(`${results.length - missing.length}/${results.length} nicknamed. Missing: ${missing.map(r => r.name).join(', ') || 'none'}`);
+})();
+```
 
 ---
 
@@ -1276,6 +1347,32 @@ Members upload a room photo, select a room type, optionally add a caption, then 
 | `shareYourRoomSuccess` | Section | "Thanks! Your photo will appear after review." — collapsed by default |
 
 **CMS collection required:** `CustomerRoomPhotos` (photoUrl, caption, productId, roomType, memberEmail, status: pending/approved/rejected, submittedAt, approvedAt, moderatorNotes, likes).
+
+### Video Review Grid (CF-ou66.3 — PR #941 ✅ MERGED 2026-04-04)
+*Source: `src/public/VideoReviewGrid.js` — `initVideoReviewGrid($w, state)`*
+*Backend: `src/backend/reviewsService.web.js` — `getVideoReviews(productId, { limit: 12 })`*
+
+TikTok-style horizontal row of up to 12 approved customer video reviews on the Product Detail Page. Section stays collapsed if no approved videos exist for the product. Clicking a thumbnail opens an inline full-screen overlay player using a sandboxed HtmlComponent.
+
+**Placement:** `#videoReviewSection` goes below the star-rating/reviews section and above Q&A. The overlay group (`#videoPlayerOverlay`, `#videoPlayerEmbed`, `#closeVideoOverlay`) must be at **page level** (not inside the section box) so the overlay covers the full viewport.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `videoReviewSection` | Box | Outer wrapper — **collapsed by default**; expanded by code when ≥1 approved video exists |
+| `videoReviewTitle` | Text | "Customer Videos" — text set by code |
+| `videoReviewRepeater` | **Repeater** | One item per approved video (up to 12) — `onItemReady` must be registered before `.data` |
+| `videoPlayerOverlay` | Box | Full-screen overlay — **collapsed by default**; place at page level |
+| `videoPlayerEmbed` | **HtmlComponent** | Sandboxed `<video>` player — code injects HTML string with `wix:` video URI |
+| `closeVideoOverlay` | Button | "×" close — collapses overlay and resets player to `about:blank` |
+
+**↳ Inside `videoReviewRepeater`:**
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `vrThumbnail` | Image | Poster frame — `src` set to `thumbnailUrl`; click opens overlay |
+| `vrPlayIcon` | Image | Play button overlay on thumbnail — ARIA "Play video review"; click opens overlay |
+| `vrReviewerName` | Text | Reviewer display name (truncated to 30 chars by code) |
+
+**Note:** `#videoPlayerEmbed` **must be HtmlComponent** (not a Wix Video element) because Wix Media `wix:` URIs require the custom HTML embed pattern. Code generates a minimal `<!DOCTYPE html>` page with `<video autoplay controls src="wix:...">` and sets it as the component's `src`.
 
 ---
 
@@ -2593,6 +2690,101 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 
 ---
 
+## WARRANTY REGISTRATION PAGE (`Warranty Registration.js` — CF-46ct, PR #923 ✅ MERGED 2026-04-04)
+
+*Source: `src/pages/Warranty Registration.js` — `initWarrantyRegistrationPage($w)`*
+*Backend: `src/backend/warrantyService.web.js` — `registerWarranty()`*
+
+Members register products for warranty coverage. URL query params auto-populate the form — post-purchase emails deep-link to a pre-filled form. On success, the form collapses and a confirmation with Registration ID appears.
+
+**Deep-link pattern:** `/warranty-registration?orderId=XXX&productId=YYY&productName=Blue+Ridge+Futon+Frame`
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `warrantyRegForm` | Box | Form container — **collapses on success** |
+| `warrantyProductName` | TextInput | Product name — pre-filled from `?productName=`; required |
+| `warrantyProductId` | TextInput | Hidden product ID — pre-filled from `?productId=`; can be visually hidden |
+| `warrantyOrderId` | TextInput | Order ID — pre-filled from `?orderId=`; optional |
+| `warrantyPurchaseDate` | DatePicker | Purchase date — optional; code reads `.value` → ISO string |
+| `warrantySerialNumber` | TextInput | Optional serial/model number |
+| `warrantySubmitBtn` | Button | "Register Warranty" — disabled during call, re-enabled on failure |
+| `warrantyLoadingIndicator` | Box | Loading spinner — **hidden by default** (`hide()` on init) |
+| `warrantySuccessMsg` | Box | Success container — **collapsed by default**; expanded after registration |
+| `warrantyRegistrationId` | Text | "Registration ID: xxx" — lives inside `#warrantySuccessMsg` |
+| `warrantyErrorMsg` | Text | Inline error — **collapsed by default**; expanded on validation or backend failure |
+
+---
+
+## SURVEY PAGE (NPS) (`Survey.js` — CF-1mlj, PR #924 ✅ MERGED 2026-04-04)
+
+*Source: `src/pages/Survey.js` — `initSurveyPage($w)`*
+*Backend: `src/backend/surveyService.web.js` — `submitSurveyResponse()`, `getSurveyForOrder()`*
+
+Post-purchase NPS survey. Order ID read from `?orderId=` URL param. On load the backend checks if the survey was already completed — if so, shows `#surveyAlreadyDone` instead. Slider (0–10) captures the NPS score; optional textarea for open-ended comment.
+
+**No orderId = hard fail.** Code immediately shows an error and returns — form is non-interactive.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `surveyLoadingIndicator` | Box | Spinner — shown during order status check, hidden on result |
+| `surveyNpsSlider` | Slider | NPS score 0–10 — `onChange` wired by code; disabled after success |
+| `surveyNpsScore` | Text | Displays selected score (e.g. "7") — set by code on each slider change |
+| `surveyComment` | TextArea | Optional open-ended comment |
+| `surveySubmitBtn` | Button | "Submit" — disabled during call; hidden after success |
+| `surveySuccessMsg` | Box | Thank-you container — **collapsed by default** |
+| `surveyErrorMsg` | Text | Inline error — **collapsed by default** |
+| `surveyAlreadyDone` | Box | "Already completed" state — **collapsed by default**; shown if order survey done |
+
+---
+
+## STYLE QUIZ RESULT PAGE (`StyleQuizResult.js` — cf-p1c9, PR #919 ✅ MERGED 2026-04-04)
+
+*Source: `src/pages/StyleQuizResult.js` — `initStyleQuizResult($w)` + `initSommelierSection($w)`*
+*Backends: `src/backend/styleQuiz.web.js` (recommendations + copy), `src/backend/futonSommelier.web.js` (sommelier)*
+
+Renders Style Quiz results (top product recommendations + AI personalized copy) and — if the visitor also completed the Futon Sommelier questionnaire — a second recommendation block powered by the sommelier engine. Session storage keys: `'styleQuizAnswers'` (set by quiz page) and `'sommelierAnswers'` (set by sommelier intake).
+
+Recommendations and personalized copy fetched in parallel via `Promise.allSettled` — copy failure degrades gracefully without blocking the product list. Registration gate (`initStyleQuizRegistrationGate`) runs concurrently and shows a sign-up prompt for non-members.
+
+### Quiz Result Elements
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `quizLoadingIndicator` | Box | Spinner — shown while fetching, hidden when both promises settle |
+| `quizResultsSection` | Section | Results container — **collapsed by default**; expanded on success |
+| `quizPersonalizedCopy` | Text | AI-generated recommendation blurb — empty if copy fetch fails |
+| `quizRepeater` | **Repeater** | Top product recommendations — `onItemReady` must be registered before `.data` |
+| `quizErrorMsg` | Text | Error — hidden by default; shown via `.show()` on failure or empty results |
+| `quizRegistrationGate` | Box | Sign-up prompt for guests — **collapsed by default** |
+| `quizRegCta` | Button | "Create Free Account" — inside gate; wired by `StyleQuizRegistrationGate.js` |
+| `quizRegDismiss` | Button | Dismiss link — inside gate; collapses gate on click |
+
+**↳ Inside `quizRepeater`:**
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `quizProductName` | Text | Product name |
+| `quizProductPrice` | Text | Formatted price |
+| `quizProductImage` | Image | Product main media |
+| `quizViewBtn` | Button | "View Product" → navigates to `/product-page/{slug}` |
+
+### Futon Sommelier Elements (shown only if `'sommelierAnswers'` present in session storage)
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `sommelierSection` | Box | Wrapper — **collapsed by default**; expanded only when sommelier answers present AND backend returns results |
+| `sommelierPersonalizedCopy` | Text | Sommelier reasoning narrative (e.g. "Based on your active household with pets…") |
+| `sommelierRecommendations` | **Repeater** | Sommelier-matched product cards |
+
+**↳ Inside `sommelierRecommendations`:**
+| Child ID | Wix Element | Notes |
+|---|---|---|
+| `sommelierProductName` | Text | Product name |
+| `sommelierProductPrice` | Text | Formatted price "$X.XX" |
+| `sommelierProductImage` | Image | Product image |
+| `sommelierMatchReasons` | Text | Comma-joined match reasons (e.g. "pet-friendly, high density") |
+
+---
+
 ## PAGES THAT NEED CREATING (updated Sprint 5)
 
 | Page | Status | Notes |
@@ -2608,10 +2800,13 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Customer Room Gallery | 🔄 In review PR #673 — onItemReady fix pending | `/rooms` — Sprint 5 |
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Comfort Timeline Widget | 🔲 Backend merged (PR #875) — Member Dashboard section TBD | CF-256r — break-in tracker |
-| Futon Sommelier Widget | 🔲 Backend merged (PR #876) — Style Quiz handoff or standalone page TBD | CF-ofc0 — lifestyle recommendation engine |
+| Warranty Registration | ✅ Frontend + backend complete | CF-46ct — PR #923 merged 2026-04-04 |
+| NPS Survey | ✅ Frontend + backend complete | CF-1mlj — PR #924 merged 2026-04-04 |
+| Style Quiz Result + Sommelier | ✅ Frontend + backend complete | cf-p1c9 — PR #919 merged 2026-04-04 |
+| Video Review Grid (PDP) | ✅ Frontend + backend complete | CF-ou66.3 — PR #941 merged 2026-04-04 |
+| Futon Sommelier Widget | ✅ Frontend wired to StyleQuizResult page (cf-p1c9) | CF-ofc0 — sommelier section on quiz result page |
 | Personalized Hero | 🔲 Backend merged (commit f0fbb9fd) — Home page hero wiring TBD | CF-tj6f — blocked on Home page hookup |
 | Futon Fit Score | 🔲 Backend merged (commit 92ed82b2) — Product card wiring TBD | CF-hx8m — "94% match" badge on product cards |
 | AI Room Staging | 🔲 Backend merged (commit 17a72f85) — PDP "See It In Your Room" button TBD | CF-s22f — photo upload + AI composite |
 | Live Showroom Camera | 🔲 Backend merged (commit f72ddb7e) — PDP "See It Live" toggle TBD | CF-gt99 — webcam feed + reserve button |
 | App Download Banner | 🔲 Backend merged (PR #884) — Android elements need editor wiring | CF-e2ib — iOS auto via meta tag; Android needs #appDownloadBanner |
-| Charcoal | `#2C2C2C` | Body text |

@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.0 · Updated 2026-03-29 — Session 32: BNPL Widget (CF-nqb5.1) — 3 elements; Share Your Room UGC modal (CF-rw9i.1) — 12 elements. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v3.1 · Updated 2026-04-04 — Warranty Registration (CF-46ct, PR #923) — 9 elements; NPS Survey (CF-1mlj, PR #924) — 8 elements; Video Review Grid on PDP (CF-ou66.3, PR #941) — 6 elements + 3 repeater children; Style Quiz Result / Futon Sommelier hookup (cf-p1c9, PR #919) — 11 elements + 6 repeater children; Room Planner Canvas update (CF-eqc5.3, PR #949). Also merged: Video Review Badge backend (CF-ou66.2, PR #940), Trail Perk Unlock backend (CF-mcyh.2, PR #942), Content Calendar/Buying Guides (cf-6ika/cf-vyvy, PR #921), Delivery SMS backend (CF-rjxq, PR #916), Flaky test fix (CF-0ypu, PR #946). Previous: v3.0 — BNPL Widget + Share Your Room. Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1800,6 +1800,44 @@ Right column:
         ["bnplContainer","Box","Wrapper — hidden by default; shown when estimates available"],
         ["bnplAffirm","Text","'As low as $X/mo with Affirm' (price ÷ 12)"],
         ["bnplKlarna","Text","'4 payments of $X with Klarna' (price ÷ 4)"]
+      ]},
+      { name: "Video Review Grid (CF-ou66.3 — PR #941 ✅ MERGED 2026-04-04)", impl: `<h4>🎬 Implementation — Customer Video Review Grid (CF-ou66.3)</h4>
+<p><em>Source: <code>src/public/VideoReviewGrid.js</code> — <code>initVideoReviewGrid($w, state)</code></em></p>
+<p>TikTok-style horizontal row of customer video reviews on the Product Detail Page. Fetches up to 12 approved video reviews for the current product from <code>backend/reviewsService.web.js → getVideoReviews(productId, { limit: 12 })</code>. If no approved videos exist for the product, <code>#videoReviewSection</code> stays collapsed and the section is invisible. Clicking any thumbnail or play icon opens an inline full-screen overlay player using a sandboxed HtmlComponent (no raw script injection).</p>
+<div class="layer-diagram">LAYOUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#videoReviewSection        — Box: outer wrapper (collapsed by default; expanded when videos exist)
+  #videoReviewTitle        — Text: "Customer Videos" heading
+  #videoReviewRepeater     — Repeater: one item per approved video review (up to 12)
+    #vrThumbnail           — Image (child): poster frame / placeholder thumbnail
+    #vrPlayIcon            — Image (child): play button overlay on top of thumbnail
+    #vrReviewerName        — Text (child): reviewer display name (truncated to 30 chars)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#videoPlayerOverlay        — Box: full-screen overlay (collapsed by default)
+  #videoPlayerEmbed        — HtmlComponent: sandboxed iframe video player
+  #closeVideoOverlay       — Button: "×" closes overlay</div>
+<ul>
+  <li><strong>#videoReviewSection</strong>: Box — <span class="impl-warn">Collapsed by default</span>. Code calls <code>.expand()</code> only after successfully loading ≥ 1 approved video review. ARIA region role + ariaLabel "Customer video reviews" are set by code.</li>
+  <li><strong>#videoReviewTitle</strong>: Text — code sets <code>.text = 'Customer Videos'</code>.</li>
+  <li><strong>#videoReviewRepeater</strong>: Repeater — <span class="impl-warn">⚠️ onItemReady MUST be registered before setting .data.</span> Each item binds click handlers on both the thumbnail and the play icon to open the overlay player. Up to 12 items.</li>
+  <li><strong>#vrThumbnail</strong>: Image (repeater child) — set to <code>thumbnailUrl</code> from the review record. Alt text set to reviewer name. Clicking opens overlay.</li>
+  <li><strong>#vrPlayIcon</strong>: Image (repeater child) — play button graphic overlaid on the thumbnail. ARIA label "Play video review". Clicking opens overlay same as thumbnail.</li>
+  <li><strong>#vrReviewerName</strong>: Text (repeater child) — reviewer display name, truncated to 30 chars by code.</li>
+  <li><strong>#videoPlayerOverlay</strong>: Box — <span class="impl-warn">Collapsed by default</span>. Full-screen overlay. Expanded when a thumbnail is clicked. Code calls <code>.scrollTo()</code> after expanding so the player is immediately visible.</li>
+  <li><strong>#videoPlayerEmbed</strong>: HtmlComponent — sandboxed video player. Code injects a minimal HTML page with a <code>&lt;video autoplay controls&gt;</code> tag pointing to the <code>wix:</code> video URI. <span class="impl-warn">Must be HtmlComponent — not a Video element — because Wix Media wix: URIs require the custom embed pattern.</span> Code sets <code>.src</code> to the generated HTML string; sets <code>.src = 'about:blank'</code> on close.</li>
+  <li><strong>#closeVideoOverlay</strong>: Button — "×". Collapses the overlay and resets the player to <code>about:blank</code>.</li>
+</ul>
+<p><strong>Placement on PDP:</strong> Place <code>#videoReviewSection</code> below the reviews/star-rating section and above the Q&A section. The overlay elements (<code>#videoPlayerOverlay</code>, <code>#videoPlayerEmbed</code>, <code>#closeVideoOverlay</code>) must be placed at the page level (not inside the section) so the overlay can cover the full viewport.</p>`, elements: [
+        ["videoReviewSection","Box","Video grid wrapper — collapsed by default; expanded when approved videos exist"],
+        ["videoReviewTitle","Text","'Customer Videos' heading — text set by code"],
+        ["videoReviewRepeater","Repeater","One item per approved video review (up to 12)"],
+        ["videoPlayerOverlay","Box","Full-screen overlay — collapsed by default; at page level (not inside section)"],
+        ["videoPlayerEmbed","HtmlComponent","Sandboxed iframe player — src set to HTML string by code"],
+        ["closeVideoOverlay","Button","'×' close button — collapses overlay and resets player"]
+      ], children: [
+        ["vrThumbnail","Image","Poster frame — src set to thumbnailUrl; click opens overlay"],
+        ["vrPlayIcon","Image","Play button overlay — ARIA 'Play video review'; click opens overlay"],
+        ["vrReviewerName","Text","Reviewer display name (truncated to 30 chars)"]
       ]}
     ]
   },
@@ -5511,6 +5549,157 @@ SHARING:
         ["submitBtn","Button","Submit Photo — disabled during upload"],
         ["successSection","Box","Success state — collapsed by default"],
         ["successMessage","Text","'Thanks! Your photo is in review.'"]
+      ]}
+    ]
+  },
+  {
+    name: "Warranty Registration", file: "Warranty Registration.js", priority: "P1", est: "25 min",
+    sections: [
+      { name: "Registration Form (CF-46ct — PR #923 ✅ MERGED 2026-04-04)", impl: `<h4>🛡️ Implementation — Warranty Registration (CF-46ct)</h4>
+<p><em>Source: <code>src/pages/Warranty Registration.js</code> — <code>initWarrantyRegistrationPage($w)</code></em></p>
+<p>Members register products for warranty coverage. URL query params (<code>orderId</code>, <code>productId</code>, <code>productName</code>) auto-populate the form — so a post-purchase email can deep-link customers straight to a pre-filled form. Submits to <code>backend/warrantyService.web.js → registerWarranty()</code>. On success, collapses the form and shows a confirmation with the assigned Registration ID.</p>
+<div class="layer-diagram">LAYOUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#warrantyRegForm           — Section/Box: the form container (collapses on success)
+  #warrantyProductName     — TextInput: product name (pre-filled from ?productName=)
+  #warrantyProductId       — TextInput: hidden product ID (pre-filled from ?productId=)
+  #warrantyOrderId         — TextInput: order ID (pre-filled from ?orderId=)
+  #warrantyPurchaseDate    — DatePicker: purchase date
+  #warrantySerialNumber    — TextInput: optional serial number
+  #warrantySubmitBtn       — Button: "Register Warranty"
+  #warrantyLoadingIndicator — Image/Box: spinner (hidden by default)
+#warrantySuccessMsg        — Box/Section: shown after success (collapsed by default)
+  #warrantyRegistrationId  — Text: "Registration ID: xxxxxxxx"
+#warrantyErrorMsg          — Text: inline error (collapsed by default)</div>
+<ul>
+  <li><strong>#warrantyRegForm</strong>: Section or Box — the form container. Code calls <code>safeCollapse()</code> on this after successful registration, then expands <code>#warrantySuccessMsg</code>.</li>
+  <li><strong>#warrantyProductName</strong>: TextInput — pre-filled from <code>?productName=</code> query param. Required; validation blocks submit if empty.</li>
+  <li><strong>#warrantyProductId</strong>: TextInput — hidden product ID, pre-filled from <code>?productId=</code>. Can be visually hidden in editor (opacity 0 or collapsed) — code still reads <code>.value</code>.</li>
+  <li><strong>#warrantyOrderId</strong>: TextInput — order ID, pre-filled from <code>?orderId=</code>. Optional for direct-entry cases.</li>
+  <li><strong>#warrantyPurchaseDate</strong>: DatePicker — code reads <code>.value</code> and converts to ISO string. Optional.</li>
+  <li><strong>#warrantySerialNumber</strong>: TextInput — optional serial/model number.</li>
+  <li><strong>#warrantySubmitBtn</strong>: Button — "Register Warranty". Disabled during the async call, re-enabled on failure.</li>
+  <li><strong>#warrantyLoadingIndicator</strong>: Image or Box — loading spinner. Hidden by default (<code>.hide()</code> on init). Shown during backend call, hidden on result.</li>
+  <li><strong>#warrantySuccessMsg</strong>: Box or Section — <span class="impl-warn">Collapsed by default</span>. Expanded on success. Should contain a thank-you message and <code>#warrantyRegistrationId</code>.</li>
+  <li><strong>#warrantyRegistrationId</strong>: Text — code sets to "Registration ID: &lt;uuid&gt;". Lives inside <code>#warrantySuccessMsg</code>.</li>
+  <li><strong>#warrantyErrorMsg</strong>: Text — inline error message. <span class="impl-warn">Collapsed by default</span>. Code sets its text and expands it on validation failure or backend error.</li>
+</ul>
+<p><strong>Deep-link pattern:</strong> Link customers from order confirmation email to <code>/warranty-registration?orderId=XXX&amp;productId=YYY&amp;productName=Blue+Ridge+Futon+Frame</code> — form arrives pre-filled.</p>`, elements: [
+        ["warrantyRegForm","Box","Form container — collapses on success"],
+        ["warrantyProductName","TextInput","Product name — pre-filled from ?productName= URL param"],
+        ["warrantyProductId","TextInput","Hidden product ID — pre-filled from ?productId= URL param"],
+        ["warrantyOrderId","TextInput","Order ID — pre-filled from ?orderId= URL param"],
+        ["warrantyPurchaseDate","DatePicker","Purchase date picker"],
+        ["warrantySerialNumber","TextInput","Optional serial/model number"],
+        ["warrantySubmitBtn","Button","'Register Warranty' — disabled during submit"],
+        ["warrantyLoadingIndicator","Box","Loading spinner — hidden by default"],
+        ["warrantySuccessMsg","Box","Success container — collapsed by default; expanded after registration"],
+        ["warrantyRegistrationId","Text","'Registration ID: xxx' — inside warrantySuccessMsg"],
+        ["warrantyErrorMsg","Text","Inline error — collapsed by default; expanded on validation/backend failure"]
+      ]}
+    ]
+  },
+  {
+    name: "Survey (NPS)", file: "Survey.js", priority: "P1", est: "20 min",
+    sections: [
+      { name: "NPS Survey Form (CF-1mlj — PR #924 ✅ MERGED 2026-04-04)", impl: `<h4>📊 Implementation — NPS/CSAT Post-Purchase Survey (CF-1mlj)</h4>
+<p><em>Source: <code>src/pages/Survey.js</code> + <code>src/backend/surveyService.web.js</code> — <code>initSurveyPage($w)</code></em></p>
+<p>Post-purchase NPS survey page. Order ID is read from the <code>?orderId=</code> URL param (injected into the order confirmation email link). On load, the backend checks whether the survey was already completed for this order — if so, shows <code>#surveyAlreadyDone</code> instead. The NPS slider (0–10) captures the score, an optional comment textarea captures open-ended feedback, and both are submitted to <code>surveyService.web.js → submitSurveyResponse()</code>.</p>
+<div class="layer-diagram">LAYOUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#surveyLoadingIndicator    — Box/Image: spinner (hidden after init check)
+#surveyNpsSlider           — Slider (0–10): NPS score picker
+#surveyNpsScore            — Text: displays selected score (e.g. "7")
+#surveyComment             — TextArea: optional open-ended comment
+#surveySubmitBtn           — Button: "Submit"
+#surveySuccessMsg          — Section/Box: thank-you message (collapsed by default)
+#surveyErrorMsg            — Text: inline error (collapsed by default)
+#surveyAlreadyDone         — Box: "You already completed this survey" (collapsed by default)</div>
+<ul>
+  <li><strong>#surveyLoadingIndicator</strong>: Box or Image — shown while the page checks order survey status with the backend. Hidden once the check completes (success or failure).</li>
+  <li><strong>#surveyNpsSlider</strong>: Slider element — range 0–10. Code wires <code>.onChange()</code> to capture the numeric score. Disabled after successful submission.</li>
+  <li><strong>#surveyNpsScore</strong>: Text — displays the currently selected score. Code sets <code>.text</code> via <code>safeText()</code> on each slider change.</li>
+  <li><strong>#surveyComment</strong>: TextArea — optional free-text comment field. Code reads <code>.value</code> on submit.</li>
+  <li><strong>#surveySubmitBtn</strong>: Button — "Submit". Disabled during the async call. Hidden after successful submission (page shows success state instead).</li>
+  <li><strong>#surveySuccessMsg</strong>: Section or Box — <span class="impl-warn">Collapsed by default</span>. Expanded after successful submission.</li>
+  <li><strong>#surveyErrorMsg</strong>: Text — <span class="impl-warn">Collapsed by default</span>. Expanded on backend failure, with error text set by code.</li>
+  <li><strong>#surveyAlreadyDone</strong>: Box — <span class="impl-warn">Collapsed by default</span>. Expanded (and rest of form left collapsed) when the backend reports the survey was already completed for this order.</li>
+</ul>
+<p><strong>No orderId = hard fail.</strong> If the URL has no <code>?orderId=</code> param, code immediately shows an error message in <code>#surveyErrorMsg</code> and returns — the form is not interactive.</p>`, elements: [
+        ["surveyLoadingIndicator","Box","Spinner — shown during order status check, hidden on result"],
+        ["surveyNpsSlider","Slider","NPS score 0–10 — disabled after submit"],
+        ["surveyNpsScore","Text","Displays currently selected score (e.g. '7')"],
+        ["surveyComment","TextArea","Optional open-ended comment"],
+        ["surveySubmitBtn","Button","Submit — disabled during call; hidden after success"],
+        ["surveySuccessMsg","Box","Thank-you container — collapsed by default"],
+        ["surveyErrorMsg","Text","Inline error — collapsed by default"],
+        ["surveyAlreadyDone","Box","'Already completed' state — collapsed by default"]
+      ]}
+    ]
+  },
+  {
+    name: "Style Quiz Result", file: "StyleQuizResult.js", priority: "P1", est: "30 min",
+    sections: [
+      { name: "Quiz Result + Futon Sommelier (cf-p1c9 — PR #919 ✅ MERGED 2026-04-04)", impl: `<h4>✨ Implementation — Style Quiz Result + Futon Sommelier (cf-p1c9)</h4>
+<p><em>Source: <code>src/pages/StyleQuizResult.js</code> — <code>initStyleQuizResult($w)</code> + <code>initSommelierSection($w)</code></em></p>
+<p>This page does double-duty: it renders the Style Quiz result (top product recommendations + AI-generated personalized copy) AND — if the visitor also completed the Futon Sommelier lifestyle questionnaire — surfaces a second recommendation block powered by the sommelier engine. Both sets of answers are read from session storage (set by the quiz/sommelier intake pages). Recommendations and personalized copy are fetched in parallel via <code>Promise.allSettled</code> so a copy failure degrades gracefully without blocking the product list. A registration gate (<code>initStyleQuizRegistrationGate</code>) runs concurrently and shows a sign-up prompt for non-members.</p>
+<div class="layer-diagram">LAYOUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#quizLoadingIndicator      — Box/Image: shown while fetching results
+#quizResultsSection        — Section: collapsed until results load
+  #quizPersonalizedCopy    — Text: AI-generated recommendation blurb
+  #quizRepeater            — Repeater: top product recommendations
+    #quizProductName       — Text (child): product name
+    #quizProductPrice      — Text (child): formatted price
+    #quizProductImage      — Image (child): product main media
+    #quizViewBtn           — Button (child): "View Product" — navigates to /product-page/{slug}
+#quizErrorMsg              — Text: shown on fetch failure (hidden by default)
+#quizRegistrationGate      — Box: sign-up prompt for visitors (collapsed by default)
+  #quizRegCta              — Button (inside gate): "Create Free Account"
+  #quizRegDismiss          — Text/Button (inside gate): "No thanks"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SOMMELIER SECTION (shown only if lifestyle answers present in session storage):
+#sommelierSection          — Box: wrapper (collapsed if no sommelier answers)
+  #sommelierPersonalizedCopy — Text: sommelier reasoning/narrative
+  #sommelierRecommendations — Repeater: sommelier-matched product cards
+    #sommelierProductName  — Text (child): product name
+    #sommelierProductPrice — Text (child): formatted price "$X.XX"
+    #sommelierProductImage — Image (child): product image
+    #sommelierMatchReasons — Text (child): comma-joined match reasons</div>
+<ul>
+  <li><strong>#quizLoadingIndicator</strong>: Box or Image — shown while <code>getQuizRecommendations</code> + <code>getPersonalizedCopy</code> are in flight. Hidden after both settle.</li>
+  <li><strong>#quizResultsSection</strong>: Section — <span class="impl-warn">Collapsed by default</span>. Expanded after recommendations load successfully.</li>
+  <li><strong>#quizPersonalizedCopy</strong>: Text — AI-generated blurb. Code uses <code>safeText()</code> to set it. If personalized copy fails (network error), this element is left empty — recommendations still show.</li>
+  <li><strong>#quizRepeater</strong>: Repeater — each item is one recommended product. Data includes <code>_id, name, price, image, slug, reason, score</code>. <span class="impl-warn">⚠️ Register <code>onItemReady</code> before setting <code>.data</code> (Wix requirement).</span></li>
+  <li><strong>#quizErrorMsg</strong>: Text — hidden by default. Shown (via <code>.show()</code>) on fetch failure or empty results, with descriptive message set by code.</li>
+  <li><strong>#quizRegistrationGate</strong>: Box — collapsed by default. <code>initStyleQuizRegistrationGate</code> checks membership status and expands this for non-members.</li>
+  <li><strong>#quizRegCta</strong>: Button inside gate — "Create Free Account". Wired by <code>StyleQuizRegistrationGate.js</code>.</li>
+  <li><strong>#quizRegDismiss</strong>: Text or Button inside gate — dismiss link. Collapses the gate on click.</li>
+  <li><strong>#sommelierSection</strong>: Box — <span class="impl-warn">Collapsed by default</span>. Expanded only when session storage contains sommelier lifestyle answers AND the backend returns recommendations. If neither condition is met, stays hidden — so this section is invisible for visitors who only took the style quiz.</li>
+  <li><strong>#sommelierPersonalizedCopy</strong>: Text — sommelier reasoning narrative set via <code>safeText()</code>. E.g. "Based on your active household with pets and back concerns, we recommend a higher-density foam mattress…"</li>
+  <li><strong>#sommelierRecommendations</strong>: Repeater — sommelier-matched products. Data fields: <code>_id, name, price (formatted $X.XX), image, slug, matchReasons (comma-joined)</code>.</li>
+</ul>
+<p><strong>Session storage keys:</strong> <code>'styleQuizAnswers'</code> (set by Style Quiz page) and <code>'sommelierAnswers'</code> (set by sommelier intake). Both are cleared by utility functions exported from this page (<code>clearQuizAnswers()</code>, <code>clearSommelierAnswers()</code>).</p>`, elements: [
+        ["quizLoadingIndicator","Box","Spinner — shown while fetching, hidden when settled"],
+        ["quizResultsSection","Section","Results container — collapsed by default, expanded on success"],
+        ["quizPersonalizedCopy","Text","AI-generated recommendation blurb"],
+        ["quizRepeater","Repeater","Top product recommendations"],
+        ["quizErrorMsg","Text","Error message — hidden by default, shown on failure"],
+        ["quizRegistrationGate","Box","Sign-up prompt for guests — collapsed by default"],
+        ["quizRegCta","Button","'Create Free Account' CTA inside gate"],
+        ["quizRegDismiss","Button","Dismiss link inside gate"],
+        ["sommelierSection","Box","Sommelier results wrapper — collapsed if no lifestyle answers in session"],
+        ["sommelierPersonalizedCopy","Text","Sommelier reasoning narrative"],
+        ["sommelierRecommendations","Repeater","Sommelier-matched product cards"]
+      ], children: [
+        ["quizProductName","Text","(#quizRepeater) product name"],
+        ["quizProductPrice","Text","(#quizRepeater) formatted price"],
+        ["quizProductImage","Image","(#quizRepeater) product main media"],
+        ["quizViewBtn","Button","(#quizRepeater) 'View Product' — navigates to /product-page/{slug}"],
+        ["sommelierProductName","Text","(#sommelierRecommendations) product name"],
+        ["sommelierProductPrice","Text","(#sommelierRecommendations) formatted price '$X.XX'"],
+        ["sommelierProductImage","Image","(#sommelierRecommendations) product image"],
+        ["sommelierMatchReasons","Text","(#sommelierRecommendations) comma-joined match reasons"]
       ]}
     ]
   }
