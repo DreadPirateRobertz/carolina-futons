@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.2 · Updated 2026-04-04 — 20 PRs merged session 33. v3.2 adds: Virtual Consultation booking page (CF-ym1x) 19 elements; Swatch Kit micro-product (cf-hcp4); OG images for buying guides (cf-jdgq); BadgeDisplayWidget SVG fix (CF-jnk3); cross-platform loyalty spec locked with dallas. Previous: v3.1 — Warranty, Survey, VideoReviewGrid + 7 features.</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v3.3 · Updated 2026-04-04 — v3.3 adds: BundleBuilder PDP module (CF-eqc5.2) 14 elements on Product Page; Loyalty Perks Widget (CF-c6el.3) 7 elements on Loyalty page; weekly analytics digest (CF-u30i); mobile nav fix (CF-3zs3); bear Lottie tests. Previous: v3.2 — Virtual Consultation, Swatch Kit, OG images, Badge SVG fix.</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -5712,6 +5712,51 @@ LAYOUT (WarrantyWidget — Member Page):
         ["confirmationSummary","Text","Confirmed: date at time — type"],
         ["videoCallSection","Box","Video-only — contains meeting link"],
         ["videoCallLinkText","Text","Video call URL"]
+      ]}
+    ]
+  },
+  {
+    name: "BundleBuilder PDP Module",
+    id: "bundle-builder-pdp",
+    note: "CF-eqc5.2, PR #955 — PDP step picker: loads bundles for current frame, renders options, live price on selection, add to cart. All $w guarded via safeGet.",
+    source: "src/public/BundleBuilder.js",
+    backend: "bundleBuilder.web.js",
+    sections: [
+      { title: "Page Elements (Product Page)", elements: [
+        ["bundleBuilderSection","Box","Outer container — hidden until bundles load"],
+        ["bundleOptionRepeater","Repeater","One card per available bundle — onItemReady BEFORE .data"],
+        ["bundleSelectedSummary","Box","Live-update area — shown after selection"],
+        ["bundleSelectedName","Text","Selected bundle display name"],
+        ["bundleSelectedPrice","Text","Live bundle price"],
+        ["bundleSelectedSavings","Text","Live savings display"],
+        ["addBundleBtn","Button","Add Bundle to Cart"],
+        ["bundleBuilderLoading","Box","Loading indicator — hidden by default"],
+        ["bundleBuilderError","Text","Error message display"],
+        ["bundleAddedConfirmation","Box","Success message — shown after add to cart"],
+        ["noBundlesMessage","Box","Shown when no bundles available for this frame"]
+      ], children: [
+        ["bundleOptionName","Text","Repeater child — bundle display name"],
+        ["bundleOptionPrice","Text","Repeater child — formatted bundle price"],
+        ["bundleOptionSavings","Text","Repeater child — savings badge (Save $N)"],
+        ["selectBundleBtn","Button","Repeater child — Select — triggers bundle selection"]
+      ]}
+    ]
+  },
+  {
+    name: "Loyalty Perks Widget",
+    id: "loyalty-perks-widget",
+    note: "CF-c6el.3 — Tier perk display on Loyalty page with next-tier teaser. Shows unlocked perks + what's at the next level.",
+    source: "src/public/LoyaltyPerksWidget.js",
+    backend: "rewardEngine.web.js",
+    sections: [
+      { title: "Page Elements (Loyalty Page)", elements: [
+        ["perksSection","Box","Container for perks display — hidden on error"],
+        ["perksError","Text","Error message — hidden by default"],
+        ["perksRepeater","Repeater","One item per unlocked perk"],
+        ["perkNextTierTeaser","Box","Next-tier teaser section — hidden if max tier"],
+        ["perkNextTierName","Text","Name of the next tier"],
+        ["perkNextTierPoints","Text","Points needed to reach next tier"],
+        ["perkNextTierList","Text","Comma-separated perk names unlocked at next tier"]
       ]}
     ]
   }

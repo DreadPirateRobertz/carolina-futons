@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.2 — 20 PRs merged session 33. v3.2 adds: Virtual Consultation booking page (CF-ym1x) 19 elements; Swatch Kit (cf-hcp4); OG images (cf-jdgq); Badge SVG fix (CF-jnk3); cross-platform loyalty spec locked with dallas. Previous: v3.1 — Warranty, Survey, VideoReviewGrid + 7 features.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.3 — Loyalty Perks Widget (CF-c6el.3) 7 elements on Loyalty page; BundleBuilder PDP module (CF-eqc5.2) 14 elements on Product Page; weekly analytics digest (CF-u30i); mobile nav fix (CF-3zs3); bear Lottie tests (CF-tgsn.3). Previous: v3.2 — Virtual Consultation, Swatch Kit, OG images, Badge SVG fix.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2622,6 +2622,9 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Delivery SMS Notifications | ✅ Backend complete (PR #916, CF-rjxq) | White-glove SMS — no editor elements |
 | Content Calendar + Buying Guides | ✅ Backend + CMS (PR #921, cf-6ika) | 12-week calendar + 8 guides — CMS-driven |
 | Room Planner Canvas | ✅ HtmlComponent (PR #949, CF-eqc5.3) | Self-contained HTML — drag-and-drop layout |
+| BundleBuilder PDP Module | ✅ Frontend complete (PR #955, CF-eqc5.2) | Product Page — 14 elements (11 page + 3 repeater children) |
+| Loyalty Perks Widget | ✅ Frontend complete (CF-c6el.3) | Loyalty Page — 7 elements |
+| Weekly Analytics Digest | ✅ Backend complete (PR #956, CF-u30i) | Email-only — no editor elements |
 | Virtual Consultation | ✅ Frontend + backend complete (PR #917, CF-ym1x) | /virtual-consultation — 19 elements |
 | Swatch Kit | ✅ Frontend + backend complete (PR #927, cf-hcp4) | $5 refundable micro-product |
 | OG Images | ✅ Complete (PR #928, cf-jdgq) | OG images for 8 buying guides |
@@ -2735,4 +2738,57 @@ TikTok-style horizontal thumbnail row of approved customer video reviews. Clicki
 | `#confirmationSummary` | Text | "Confirmed: date at time — type" |
 | `#videoCallSection` | Box | Video-only — contains meeting link |
 | `#videoCallLinkText` | Text | Video call URL |
+
+---
+
+## BundleBuilder PDP Module (NEW — CF-eqc5.2, PR #955)
+
+**Source**: `src/public/BundleBuilder.js` | **Backend**: `bundleBuilder.web.js`
+
+PDP step picker: loads Frame+Mattress+Cover bundles for the current product, renders options in a repeater, shows live price/savings on selection, and adds chosen bundle to cart. All `$w` access guarded via `safeGet`.
+
+### Page Elements (Product Page)
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#bundleBuilderSection` | Box | Outer container — hidden until bundles load |
+| `#bundleOptionRepeater` | Repeater | One card per available bundle — `onItemReady` BEFORE `.data` |
+| `#bundleSelectedSummary` | Box | Live-update area — shown after selection |
+| `#bundleSelectedName` | Text | Selected bundle display name |
+| `#bundleSelectedPrice` | Text | Live bundle price |
+| `#bundleSelectedSavings` | Text | Live savings display |
+| `#addBundleBtn` | Button | "Add Bundle to Cart" |
+| `#bundleBuilderLoading` | Box | Loading indicator — hidden by default |
+| `#bundleBuilderError` | Text | Error message display |
+| `#bundleAddedConfirmation` | Box | Success message — shown after add to cart |
+| `#noBundlesMessage` | Box | Shown when no bundles available for this frame |
+
+**↳ Inside `bundleOptionRepeater`:**
+
+| Child ID | Type | Purpose |
+|---|---|---|
+| `#bundleOptionName` | Text | Bundle display name |
+| `#bundleOptionPrice` | Text | Formatted bundle price |
+| `#bundleOptionSavings` | Text | Savings badge ("Save $N") |
+| `#selectBundleBtn` | Button | "Select" — triggers bundle selection |
+
+---
+
+## Loyalty Perks Widget (NEW — CF-c6el.3)
+
+**Source**: `src/public/LoyaltyPerksWidget.js` | **Backend**: `rewardEngine.web.js`
+
+Displays tier perks on the Loyalty page with a repeater of current perks and a next-tier teaser showing what they'll unlock at the next level.
+
+### Page Elements (Loyalty Page)
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#perksSection` | Box | Container for the perks display — hidden on error |
+| `#perksError` | Text | Error message — hidden by default |
+| `#perksRepeater` | Repeater | One item per unlocked perk |
+| `#perkNextTierTeaser` | Box | Next-tier teaser section — hidden if already max tier |
+| `#perkNextTierName` | Text | Name of the next tier |
+| `#perkNextTierPoints` | Text | Points needed to reach next tier |
+| `#perkNextTierList` | Text | Comma-separated names of perks unlocked at next tier |
 | `#bookAnotherBtn` | Button | Reset form to step 1 |
