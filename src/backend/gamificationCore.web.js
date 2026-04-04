@@ -238,6 +238,11 @@ export const receiveGamificationEvent = webMethod(
       }
       if (tierChanged) {
         try { await dispatchBusEvent({ event: 'tier_upgraded', userId: memberId, newTier, previousTier: oldTier }); } catch (_) {}
+        // CF-c6el.2: Auto-deliver tier perks (coupon codes, emails, booking links)
+        try {
+          const { deliverTierPerks } = await import('backend/rewardEngine.web');
+          await deliverTierPerks(memberId, oldTier, newTier);
+        } catch (e) { logError(`gamificationEventReceiver — deliverTierPerks failed for ${memberId}`, e); }
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)

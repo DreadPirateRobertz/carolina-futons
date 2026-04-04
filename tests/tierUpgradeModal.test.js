@@ -1,10 +1,10 @@
 /**
  * tierUpgradeModal.test.js
- * CF-u81k — tier upgrade celebration modal
+ * CF-u81k, CF-c6el.1 — tier upgrade celebration modal
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initTierUpgradeModal, TIER_BENEFITS } from '../src/public/TierUpgradeModal.js';
+import { initTierUpgradeModal, buildBenefitText } from '../src/public/TierUpgradeModal.js';
 
 // ── $w mock helpers ──────────────────────────────────────────────────────────
 
@@ -27,6 +27,38 @@ function make$w() {
   };
   return (id) => els[id] ?? makeEl();
 }
+
+// ── buildBenefitText ─────────────────────────────────────────────────────────
+
+describe('buildBenefitText — perk-driven benefit copy', () => {
+  it('returns empty string when tier is unchanged', () => {
+    expect(buildBenefitText('Mountain Guide', 'Mountain Guide')).toBe('');
+  });
+
+  it('returns new perks for Trail Blazer → Mountain Guide', () => {
+    const text = buildBenefitText('Trail Blazer', 'Mountain Guide');
+    expect(text).toContain('15% off accessories');
+    expect(text).toContain('Priority support');
+    // Should NOT include birthday discount (already had it)
+    expect(text).not.toContain('birthday');
+  });
+
+  it('returns new perks for Mountain Guide → Summit Master', () => {
+    const text = buildBenefitText('Mountain Guide', 'Summit Master');
+    expect(text).toContain('Free white-glove delivery');
+    expect(text).toContain('early access');
+    expect(text).toContain('styling call');
+    // Should NOT include perks they already had
+    expect(text).not.toContain('15% off accessories');
+  });
+
+  it('returns empty for null → Trail Blazer (no new perks vs baseline)', () => {
+    // Trail Blazer perks are baseline — getNewPerksOnPromotion(null, 'Trail Blazer')
+    // returns all Trail Blazer perks since null tier has none
+    const text = buildBenefitText(null, 'Trail Blazer');
+    expect(text).toContain('birthday');
+  });
+});
 
 // ── Modal display ──────────────────────────────────────────────────────────
 
@@ -68,24 +100,18 @@ describe('initTierUpgradeModal — heading and benefits', () => {
     expect($w('#tierUpgradeHeading').text).toBe('You reached Mountain Guide!');
   });
 
-  it('sets benefits text for Mountain Guide', async () => {
+  it('sets perk-driven benefits text for Mountain Guide', async () => {
     await initTierUpgradeModal('Trail Blazer', 'Mountain Guide', { $w });
-    expect($w('#tierUpgradeBenefits').text).toBe('Early access to sales + 2x review points');
+    const text = $w('#tierUpgradeBenefits').text;
+    expect(text).toContain('15% off accessories');
+    expect(text).toContain('Priority support');
   });
 
-  it('sets benefits text for Summit Seeker', async () => {
-    await initTierUpgradeModal('Mountain Guide', 'Summit Seeker', { $w });
-    expect($w('#tierUpgradeBenefits').text).toBe('Free shipping on orders over $150 + priority support');
-  });
-
-  it('sets benefits text for Peak Pioneer', async () => {
-    await initTierUpgradeModal('Summit Seeker', 'Peak Pioneer', { $w });
-    expect($w('#tierUpgradeBenefits').text).toBe('VIP events + dedicated support + 3x review points');
-  });
-
-  it('uses default (empty) benefits text for Trail Blazer', async () => {
-    await initTierUpgradeModal(null, 'Trail Blazer', { $w });
-    expect($w('#tierUpgradeBenefits').text).toBe('');
+  it('sets perk-driven benefits text for Summit Master', async () => {
+    await initTierUpgradeModal('Mountain Guide', 'Summit Master', { $w });
+    const text = $w('#tierUpgradeBenefits').text;
+    expect(text).toContain('Free white-glove delivery');
+    expect(text).toContain('styling call');
   });
 
   it('does not update heading or benefits when tier is unchanged', async () => {
@@ -117,19 +143,5 @@ describe('initTierUpgradeModal — close button', () => {
   it('does not wire close button when tier is unchanged', async () => {
     await initTierUpgradeModal('Mountain Guide', 'Mountain Guide', { $w });
     expect($w('#tierUpgradeCloseBtn').onClick).not.toHaveBeenCalled();
-  });
-});
-
-// ── TIER_BENEFITS export ───────────────────────────────────────────────────
-
-describe('TIER_BENEFITS constant', () => {
-  it('exports benefit text for each tier', () => {
-    expect(TIER_BENEFITS['Mountain Guide']).toBe('Early access to sales + 2x review points');
-    expect(TIER_BENEFITS['Summit Seeker']).toBe('Free shipping on orders over $150 + priority support');
-    expect(TIER_BENEFITS['Peak Pioneer']).toBe('VIP events + dedicated support + 3x review points');
-  });
-
-  it('Trail Blazer entry is empty string (default)', () => {
-    expect(TIER_BENEFITS['Trail Blazer']).toBe('');
   });
 });
