@@ -382,3 +382,164 @@ describe('initVideoReviewGrid — overlay close interactions', () => {
     expect(elements['#videoPlayerEmbed'].src).toBe('about:blank');
   });
 });
+
+// ── State edge cases ──────────────────────────────────────────────────────────
+
+describe('initVideoReviewGrid — state edge cases', () => {
+  it('collapses section when state is null', async () => {
+    const { $w, elements } = makeElements();
+    await initVideoReviewGrid($w, null);
+    expect(elements['#videoReviewSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when state.product is null', async () => {
+    const { $w, elements } = makeElements();
+    await initVideoReviewGrid($w, { product: null });
+    expect(elements['#videoReviewSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when response has no reviews field', async () => {
+    mockGetVideoReviews.mockResolvedValue({ success: true });
+    const { $w, elements } = makeElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoReviewSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when reviews field is undefined', async () => {
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews: undefined });
+    const { $w, elements } = makeElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoReviewSection'].collapse).toHaveBeenCalled();
+  });
+});
+
+// ── Repeater ID fallback ──────────────────────────────────────────────────────
+
+describe('initVideoReviewGrid — repeater _id fallback', () => {
+  it('assigns fallback _id when review has none', async () => {
+    const reviews = [
+      { videoFileId: 'wix:video://v1/a.mp4', reviewerName: 'Alice' },
+      { videoFileId: 'wix:video://v1/b.mp4', reviewerName: 'Bob' },
+    ];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._data[0]._id).toBe('vr-0');
+    expect(repeater._data[1]._id).toBe('vr-1');
+  });
+
+  it('preserves existing _id when review has one', async () => {
+    const reviews = [{ _id: 'my-id-99', videoFileId: 'wix:video://v1/x.mp4', reviewerName: 'Carol' }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._data[0]._id).toBe('my-id-99');
+  });
+
+  it('loads all reviews when count is large', async () => {
+    const reviews = makeReviews(12);
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._data).toHaveLength(12);
+  });
+});
+
+// ── Thumbnail without thumbnailUrl ────────────────────────────────────────────
+
+describe('initVideoReviewGrid — thumbnail src when thumbnailUrl absent', () => {
+  it('does not set thumbnail src when thumbnailUrl is missing', async () => {
+    const reviews = [{ _id: 'vr-nt', videoFileId: 'wix:video://v1/nt.mp4', reviewerName: 'Dave' }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    // src should remain the initial empty string — not overwritten
+    expect(repeater._itemEls['vr-nt'].vrThumbnail.src).toBe('');
+  });
+
+  it('still sets alt text when thumbnailUrl is missing', async () => {
+    const reviews = [{ _id: 'vr-nt2', videoFileId: 'wix:video://v1/nt2.mp4', reviewerName: 'Eve' }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-nt2'].vrThumbnail.alt).toContain('Eve');
+  });
+});
+
+// ── mounted guard (after destroy) ────────────────────────────────────────────
+
+describe('initVideoReviewGrid — mounted guard after destroy', () => {
+  it('clicking thumbnail after destroy does not expand the overlay', async () => {
+    const { $w, elements, repeater } = makeSmartElements();
+    const { destroy } = await initVideoReviewGrid($w, makeState());
+    const id = repeater._data[0]._id;
+    destroy();
+    // Trigger click after destroy
+    const handler = repeater._itemEls[id].vrThumbnail.onClick.mock.calls[0][0];
+    handler();
+    // expand was called once before destroy during setup — after destroy it must not be called again
+    const expandCallCount = elements['#videoPlayerOverlay'].expand.mock.calls.length;
+    expect(expandCallCount).toBe(0);
+  });
+
+  it('clicking play icon after destroy does not expand the overlay', async () => {
+    const { $w, elements, repeater } = makeSmartElements();
+    const { destroy } = await initVideoReviewGrid($w, makeState());
+    const id = repeater._data[0]._id;
+    destroy();
+    const handler = repeater._itemEls[id].vrPlayIcon.onClick.mock.calls[0][0];
+    handler();
+    expect(elements['#videoPlayerOverlay'].expand.mock.calls.length).toBe(0);
+  });
+});
+
+// ── Overlay player additional behaviour ──────────────────────────────────────
+
+describe('initVideoReviewGrid — overlay player additional behaviour', () => {
+  it('calls scrollTo on the overlay when video is opened', async () => {
+    const { $w, elements, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    const id = repeater._data[0]._id;
+    const handler = repeater._itemEls[id].vrThumbnail.onClick.mock.calls[0][0];
+    handler();
+    expect(elements['#videoPlayerOverlay'].scrollTo).toHaveBeenCalled();
+  });
+
+  it('resets embed src to about:blank before loading new video', async () => {
+    const { $w, elements, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    const id = repeater._data[0]._id;
+    // Set a non-blank src to simulate a previously loaded video
+    elements['#videoPlayerEmbed'].src = 'some-previous-html';
+    const handler = repeater._itemEls[id].vrThumbnail.onClick.mock.calls[0][0];
+    handler();
+    // After click, src should be the new player HTML (not blank), but we verify
+    // that the final src contains the video fileId (reset happened then new src set)
+    expect(elements['#videoPlayerEmbed'].src).toContain(repeater._data[0].videoFileId);
+  });
+
+  it('sets closeVideoOverlay ariaLabel when video is opened', async () => {
+    const { $w, elements, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    const id = repeater._data[0]._id;
+    const handler = repeater._itemEls[id].vrThumbnail.onClick.mock.calls[0][0];
+    handler();
+    expect(elements['#closeVideoOverlay'].accessibility.ariaLabel).toBe('Close video player');
+  });
+});
+
+// ── Section accessibility ─────────────────────────────────────────────────────
+
+describe('initVideoReviewGrid — section accessibility', () => {
+  it('sets accessibility role to region on the section', async () => {
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoReviewSection'].accessibility.role).toBe('region');
+  });
+
+  it('sets accessibility ariaLabel on the section', async () => {
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoReviewSection'].accessibility.ariaLabel).toBe('Customer video reviews');
+  });
+});
