@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v3.0 — Session 32: Share Your Room UGC modal (CF-rw9i.1) — 12 elements on Product Page; BNPL Widget (CF-nqb5.1) — 3 elements on Product Page. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5).)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.1 — 10 PRs merged: Warranty Registration (cf-46ct) 11 elements; NPS Survey (cf-1mlj) 4 elements; Video Review Grid (CF-ou66.3) 9 elements on PDP; Futon Sommelier hookup (cf-p1c9); Trail Perk Unlock (CF-mcyh.2); Video Review Badge (CF-ou66.2); Room Planner Canvas (CF-eqc5.3); Content Calendar (cf-6ika); Delivery SMS (CF-rjxq); Flaky test fix (CF-0ypu). Previous: v3.0 — BNPL Widget + Share Your Room.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2608,10 +2608,84 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Customer Room Gallery | 🔄 In review PR #673 — onItemReady fix pending | `/rooms` — Sprint 5 |
 | Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Comfort Timeline Widget | 🔲 Backend merged (PR #875) — Member Dashboard section TBD | CF-256r — break-in tracker |
-| Futon Sommelier Widget | 🔲 Backend merged (PR #876) — Style Quiz handoff or standalone page TBD | CF-ofc0 — lifestyle recommendation engine |
+| Futon Sommelier Widget | ✅ Wired to StyleQuizResult page (PR #919, cf-p1c9) | CF-ofc0 — lifestyle recommendation engine |
 | Personalized Hero | 🔲 Backend merged (commit f0fbb9fd) — Home page hero wiring TBD | CF-tj6f — blocked on Home page hookup |
 | Futon Fit Score | 🔲 Backend merged (commit 92ed82b2) — Product card wiring TBD | CF-hx8m — "94% match" badge on product cards |
 | AI Room Staging | 🔲 Backend merged (commit 17a72f85) — PDP "See It In Your Room" button TBD | CF-s22f — photo upload + AI composite |
 | Live Showroom Camera | 🔲 Backend merged (commit f72ddb7e) — PDP "See It Live" toggle TBD | CF-gt99 — webcam feed + reserve button |
 | App Download Banner | 🔲 Backend merged (PR #884) — Android elements need editor wiring | CF-e2ib — iOS auto via meta tag; Android needs #appDownloadBanner |
-| Charcoal | `#2C2C2C` | Body text |
+| Warranty Registration | ✅ Frontend + backend complete (PR #923, cf-46ct) | /warranty-registration — 11 elements |
+| NPS/CSAT Survey | ✅ Frontend + backend complete (PR #924, cf-1mlj) | /survey — 4 elements |
+| Video Review Grid | ✅ Frontend complete (PR #941, CF-ou66.3) | Product Page — 9 elements |
+| Video Review Badge | ✅ Backend gamification (PR #940, CF-ou66.2) | 500pts + badge — no editor elements |
+| Trail Perk Unlock | ✅ Backend service (PR #942, CF-mcyh.2) | Free delivery/styling call perks — no editor elements |
+| Delivery SMS Notifications | ✅ Backend complete (PR #916, CF-rjxq) | White-glove SMS — no editor elements |
+| Content Calendar + Buying Guides | ✅ Backend + CMS (PR #921, cf-6ika) | 12-week calendar + 8 guides — CMS-driven |
+| Room Planner Canvas | ✅ HtmlComponent (PR #949, CF-eqc5.3) | Self-contained HTML — drag-and-drop layout |
+
+---
+
+## Warranty Registration Page (NEW — cf-46ct, PR #923)
+
+**Route**: `/warranty-registration` | **Source**: `src/pages/Warranty Registration.js` + `src/public/WarrantyWidget.js` | **Backend**: `warrantyService.web.js`
+
+Deep-linked from order confirmation emails: `?product=NAME&productId=ID&orderId=ORDER`
+
+### Page Elements
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#warrantyProductName` | TextInput | Pre-filled product name from URL |
+| `#warrantyProductId` | TextInput | Hidden — product ID from URL |
+| `#warrantyOrderId` | TextInput | Hidden — order ID from URL |
+| `#warrantyPurchaseDate` | DatePicker | Customer selects purchase date (must be within last year) |
+| `#warrantySubmitBtn` | Button | "Register Warranty" — disabled during submit |
+| `#warrantyLoadingIndicator` | Box | Loading spinner — hidden by default |
+
+### WarrantyWidget Elements (Member Page sidebar)
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#warrantyCtaBtn` | Button | Navigates to /warranty-registration |
+| `#warrantyListLoading` | Box | Spinner while fetching warranties |
+| `#warrantyRepeater` | Repeater | List of warranty registrations |
+| `#warrantyItemPlan` | Text | Repeater child — plan name |
+| `#warrantyItemProduct` | Text | Repeater child — product name |
+| `#warrantyItemStatus` | Text | Repeater child — Active/Expired/Pending |
+| `#warrantyItemExpires` | Text | Repeater child — expiration date |
+| `#warrantyItemRegistered` | Text | Repeater child — registration date |
+
+---
+
+## Survey / NPS Page (NEW — cf-1mlj, PR #924)
+
+**Route**: `/survey?orderId=ORDER_ID` | **Source**: `src/pages/Survey.js` | **Backend**: `surveyService.web.js`
+
+Post-purchase email links here. Checks if already surveyed. NPS 0–6 = Detractor, 7–8 = Passive, 9–10 = Promoter.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#surveyNpsSlider` | Slider | NPS score 0–10, step 1 |
+| `#surveyComment` | TextArea | Optional free-text feedback |
+| `#surveySubmitBtn` | Button | "Submit Feedback" — hidden after success |
+| `#surveyLoadingIndicator` | Box | Loading spinner — hidden by default |
+
+---
+
+## Video Review Grid — Product Page (NEW — CF-ou66.3, PR #941)
+
+**Source**: `src/public/VideoReviewGrid.js` | **Backend**: `videoReviewService.web.js`
+
+TikTok-style horizontal thumbnail row of approved customer video reviews. Clicking opens full-screen HTML5 video player overlay. Section stays collapsed if no videos exist.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#videoReviewSection` | Box | Container — collapsed unless approved videos exist |
+| `#videoReviewTitle` | Text | "Customer Videos" heading |
+| `#videoReviewRepeater` | Repeater | Horizontal thumbnail row |
+| `#vrThumbnail` | Image | Repeater child — video thumbnail, clickable |
+| `#vrPlayIcon` | Image | Repeater child — play button overlay |
+| `#vrReviewerName` | Text | Repeater child — reviewer name (truncated 30 chars) |
+| `#videoPlayerOverlay` | Box | Page-level dimmed overlay — NOT inside repeater |
+| `#videoPlayerEmbed` | HtmlComponent | HTML5 video player — **NOT Wix Video** (wix: URIs need HTML embed) |
+| `#closeVideoOverlay` | Button | Close overlay — resets player to about:blank |
