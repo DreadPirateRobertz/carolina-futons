@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.9 · Updated 2026-03-29 — Session 31: Admin A/B Tests dashboard (CF-0jk5) — 3 sections, 14 elements, auto-stop cron wiring. Previous: White Glove Delivery scheduling (CF-y7lp), Price Lock (CF-tjf0), Stamped.io (CF-gxn1), Gift Registry (CF-easy). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v3.0 · Updated 2026-03-29 — Session 32: BNPL Widget (CF-nqb5.1) — 3 elements; Share Your Room UGC modal (CF-rw9i.1) — 12 elements. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1621,6 +1621,52 @@ Right column:
         ["priceDropNotifySuccess","Text","Success confirmation — hidden by default"],
         ["priceDropNotifyError","Text","Inline error message — hidden by default"]
       ]},
+      { name: "Share Your Room CTA", impl: `<h4>📸 Implementation — "Share Your Room" UGC Submit CTA (Product Page)</h4>
+<p><strong>CF-rw9i.1</strong>: Adds a "Share your room" button on the PDP that opens an inline photo-submission modal. Members upload a photo, choose a room type, optionally add a caption, then submit for moderation. Calls <code>submitUGCPhoto</code> from <code>ugcService.web.js</code>. Non-members see a sign-in prompt instead of the upload form.</p>
+<div class="layer-diagram">LAYOUT:
+  #shareYourRoomBtn        (Button — "Share your room" CTA, always visible)
+  #shareYourRoomOverlay    (Box — full-screen dimmed overlay, collapsed by default)
+  #shareYourRoomModal      (Box — modal container, collapsed by default)
+    ├─ #shareYourRoomClose   (Button — "×" close, top-right)
+    ├─ #shareYourRoomLoginPrompt (Box — sign-in message, collapsed for members)
+    ├─ #shareYourRoomForm    (Section — form controls, hides on success)
+    │    ├─ #shareYourRoomUpload   (UploadButton — fileType=Image)
+    │    ├─ #shareYourRoomPreview  (Image — collapsed until file chosen)
+    │    ├─ #shareYourRoomRoomType (Dropdown — 5 room types)
+    │    ├─ #shareYourRoomCaption  (TextInput — optional, max 300 chars)
+    │    ├─ #shareYourRoomValidation (Text — error messages, collapsed by default)
+    │    └─ #shareYourRoomSubmitBtn (Button — "Submit photo", disabled until upload+roomType set)
+    └─ #shareYourRoomSuccess (Section — "Thanks! Your photo will appear after review.", collapsed by default)
+</div>
+<ul>
+  <li><strong>#shareYourRoomBtn</strong>: Button — "Share your room". Visible to all visitors. Opens modal on click.</li>
+  <li><strong>#shareYourRoomOverlay</strong>: Box — dimmed background overlay. Click closes modal. Collapsed by default.</li>
+  <li><strong>#shareYourRoomModal</strong>: Box — modal wrapper. Collapsed by default. Expand on CTA click.</li>
+  <li><strong>#shareYourRoomClose</strong>: Button — "×". Collapses modal + overlay.</li>
+  <li><strong>#shareYourRoomLoginPrompt</strong>: Box — "Please sign in to share your room." Shown to guests, collapsed for members.</li>
+  <li><strong>#shareYourRoomForm</strong>: Section — contains upload + form. Collapses on successful submit.</li>
+  <li><strong>#shareYourRoomUpload</strong>: UploadButton — fileType must be "Image". Required.</li>
+  <li><strong>#shareYourRoomPreview</strong>: Image — collapsed until upload succeeds. Src set to uploaded URL.</li>
+  <li><strong>#shareYourRoomRoomType</strong>: Dropdown — options auto-populated (Living Room, Bedroom, Office, Dorm, Porch).</li>
+  <li><strong>#shareYourRoomCaption</strong>: TextInput — optional caption, max 300 chars.</li>
+  <li><strong>#shareYourRoomValidation</strong>: Text — inline validation errors. Collapsed by default.</li>
+  <li><strong>#shareYourRoomSubmitBtn</strong>: Button — "Submit photo". Disabled until both upload URL and room type are present.</li>
+  <li><strong>#shareYourRoomSuccess</strong>: Section — success confirmation. Collapsed by default; expanded after submit.</li>
+</ul>`, elements: [
+        ["shareYourRoomBtn","Button","Share your room CTA — always visible"],
+        ["shareYourRoomOverlay","Box","Dimmed overlay — collapsed by default; click closes modal"],
+        ["shareYourRoomModal","Box","Modal container — collapsed by default"],
+        ["shareYourRoomClose","Button","Close × button inside modal"],
+        ["shareYourRoomLoginPrompt","Box","Sign-in prompt for guests — collapsed for members"],
+        ["shareYourRoomForm","Section","Form controls wrapper — collapses on success"],
+        ["shareYourRoomUpload","UploadButton","Photo upload — fileType=Image"],
+        ["shareYourRoomPreview","Image","Preview of uploaded photo — collapsed until upload done"],
+        ["shareYourRoomRoomType","Dropdown","Room type selector — 5 options auto-populated"],
+        ["shareYourRoomCaption","TextInput","Optional caption — max 300 chars"],
+        ["shareYourRoomValidation","Text","Inline validation/error — collapsed by default"],
+        ["shareYourRoomSubmitBtn","Button","Submit photo — disabled until upload+roomType set"],
+        ["shareYourRoomSuccess","Section","Success message — collapsed by default"]
+      ]},
       { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
 <p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
 <div class="layer-diagram">LAYOUT:
@@ -1741,6 +1787,19 @@ Right column:
 </ul>
 <p>Category cards use <code>getBatchStampedRatings</code> → same <code>#gridReviewStars</code> / <code>#gridReviewCount</code> elements as before (no new editor elements).</p>`, elements: [
         ["productReviewWidget","Box","Stamped.io native embed container — place below review form"]
+      ]},
+      { name: "BNPL Widget (CF-nqb5.1 — PR #936 ✅ MERGED 2026-03-29)", impl: `<h4>💳 Implementation — BNPL Widget (CF-nqb5.1)</h4>
+<p><em>Source: <code>src/public/BNPLWidget.js</code> — <code>initBNPLWidget($w, price)</code></em></p>
+<p>Displays Affirm and Klarna monthly payment estimates on the Product Page. Affirm = price ÷ 12, Klarna = price ÷ 4, both rounded to 2 decimal places. Container hidden until a valid price is available.</p>
+<p><strong>Placement:</strong> Place <code>#bnplContainer</code> below the price display on Product Page. Called from <code>Product Page.js</code> orchestrator on load and on variant price change.</p>
+<ul>
+  <li><strong>#bnplContainer</strong>: Box — wrapper. Hidden by default; shown when estimates available. Contains both estimate Text elements.</li>
+  <li><strong>#bnplAffirm</strong>: Text — "As low as $X/mo with Affirm". Code sets <code>.text</code> to formatted estimate.</li>
+  <li><strong>#bnplKlarna</strong>: Text — "4 payments of $X with Klarna". Code sets <code>.text</code> to formatted estimate.</li>
+</ul>`, elements: [
+        ["bnplContainer","Box","Wrapper — hidden by default; shown when estimates available"],
+        ["bnplAffirm","Text","'As low as $X/mo with Affirm' (price ÷ 12)"],
+        ["bnplKlarna","Text","'4 payments of $X with Klarna' (price ÷ 4)"]
       ]}
     ]
   },
