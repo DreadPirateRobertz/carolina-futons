@@ -11,10 +11,11 @@
  *
  * @setup
  * Create `PriceAlerts` CMS collection with fields:
- *   productId   (text)
- *   email       (text)
- *   subscribedAt (dateTime)
- *   active      (boolean)
+ *   productId              (text)
+ *   email                  (text)
+ *   subscribedAt           (dateTime)
+ *   active                 (boolean)
+ *   subscriberDeviceToken  (text, optional) — mobile push token (FCM/APNs); null for web-only subscribers
  * Set collection permissions to Anyone for read + write (webMethod handles authz).
  */
 import { Permissions, webMethod } from 'wix-web-module';
@@ -28,13 +29,15 @@ const COLLECTION = 'PriceAlerts';
  * Deduplicates: reactivates an existing inactive subscription instead of
  * creating a duplicate. Rejects if already actively subscribed.
  *
- * @param {string} productId
- * @param {string} email
+ * @param {string}      productId
+ * @param {string}      email
+ * @param {string|null} [deviceToken]  Optional mobile push token (FCM/APNs). Stored
+ *                                     as subscriberDeviceToken; null for web-only subscribers.
  * @returns {Promise<{success: boolean, reason?: string, error?: string}>}
  */
 export const subscribe = webMethod(
   Permissions.Anyone,
-  async (productId, email) => {
+  async (productId, email, deviceToken) => {
     try {
       const cleanProductId = sanitize(productId, 50);
       if (!cleanProductId) return { success: false, error: 'invalid_product_id' };
@@ -42,6 +45,11 @@ export const subscribe = webMethod(
       if (!email || typeof email !== 'string') return { success: false, error: 'invalid_email' };
       const normalizedEmail = email.trim().toLowerCase();
       if (!validateEmail(normalizedEmail)) return { success: false, error: 'invalid_email' };
+
+      const cleanDeviceToken =
+        deviceToken && typeof deviceToken === 'string'
+          ? deviceToken.trim().slice(0, 500) || null
+          : null;
 
       // Check for existing subscription (dedup on productId+email)
       const existing = await wixData.query(COLLECTION)
@@ -56,11 +64,12 @@ export const subscribe = webMethod(
           return { success: false, reason: 'already_subscribed' };
         }
 
-        // Reactivate inactive subscription
+        // Reactivate inactive subscription; update device token in case device changed
         await wixData.update(COLLECTION, {
           ...record,
           active: true,
           subscribedAt: new Date(),
+          subscriberDeviceToken: cleanDeviceToken,
         });
         return { success: true };
       }
@@ -71,6 +80,7 @@ export const subscribe = webMethod(
         email: normalizedEmail,
         subscribedAt: new Date(),
         active: true,
+        subscriberDeviceToken: cleanDeviceToken,
       });
 
       return { success: true };
@@ -126,7 +136,7 @@ export const unsubscribe = webMethod(
  * Get all active subscribers for a product.
  *
  * @param {string} productId
- * @returns {Promise<{success: boolean, subscribers?: Array<{email: string, productId: string, subscribedAt: Date}>, count?: number, error?: string}>}
+ * @returns {Promise<{success: boolean, subscribers?: Array<{email: string, productId: string, subscribedAt: Date, subscriberDeviceToken: string|null}>, count?: number, error?: string}>}
  */
 export const getSubscribers = webMethod(
   Permissions.Anyone,
@@ -144,6 +154,7 @@ export const getSubscribers = webMethod(
         email: i.email,
         productId: i.productId,
         subscribedAt: i.subscribedAt,
+        subscriberDeviceToken: i.subscriberDeviceToken ?? null,
       }));
 
       return { success: true, subscribers, count: subscribers.length };
