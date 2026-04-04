@@ -979,6 +979,9 @@ export const runDailyContentRotation = webMethod(
   }
 );
 
+// Cron job alias — jobs.config key must match exported function name
+export { runDailySocialStories as dailySocialStories };
+
 // Export internals for testing
 export const _DEDUP_WINDOW_MS = DEDUP_WINDOW_MS;
 export const _PLATFORMS = PLATFORMS;

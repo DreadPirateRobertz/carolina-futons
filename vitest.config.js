@@ -56,12 +56,14 @@ export default defineConfig({
         'src/pages/Community Gallery.js',
         'src/pages/Local SEO Page.js',
         'src/pages/Topic Cluster.js',
+        'src/pages/Admin A-B Tests.js',
         'src/pages/Loyalty.js',
         'src/pages/Rooms.js',
         'src/pages/Admin Delivery Calendar.js',
         'src/pages/Admin Review Moderation.js',
         'src/pages/UGC Gallery.js',
-        'src/pages/PriceLockWidget.js',
+        // Wix widget component files — $w UI-only, no unit test path
+        'src/public/PriceLockWidget.js',
       ],
       thresholds: {
         statements: 90,

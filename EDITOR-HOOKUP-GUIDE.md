@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v2.8 — Session 30: White Glove Delivery scheduling (CF-y7lp) — White Glove Delivery page (10 elements), Admin Delivery Calendar page (15 elements), Thank You Page white-glove prompt section (4 elements). Previous: v2.7 — Price Lock Widget (CF-tjf0), Stamped.io reviews (CF-gxn1), Gift Registry (CF-easy).)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-29 (v3.0 — Session 32: Share Your Room UGC modal (CF-rw9i.1) — 12 elements on Product Page; BNPL Widget (CF-nqb5.1) — 3 elements on Product Page. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5).)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -389,6 +389,7 @@ For each section below:
 | **Thank You** | ~44 | 3 + children | 30 min | P2 — post-purchase |
 | **White Glove Delivery** | ~20 | 5 + children | 25 min | P2 — scheduling (NEW CF-y7lp) |
 | **Admin Delivery Calendar** | ~15 | 2 + children | 20 min | P2 — admin (NEW CF-y7lp) |
+| **Admin A/B Tests** | ~14 | 3 + children | 20 min | P2 — admin (NEW CF-0jk5) |
 | **Shipping Policy** | ~20 | 4 + children | 20 min | P3 — info |
 | **Fullscreen/Videos** | ~15 | 2 + children | 15 min | P3 — content |
 | **Privacy Policy** | ~15 | 2 + children | 10 min | P3 — legal |
@@ -1239,6 +1240,43 @@ CF+ members can lock today's price with a $25 refundable deposit for 30/60/90 da
 
 **Stilgar TODO (dashboard only):** Install Stamped.io from Wix App Market + add secrets: `STAMPED_API_KEY`, `STAMPED_API_SECRET`, `STAMPED_STORE_HASH`.
 
+### BNPL Widget (CF-nqb5.1 — PR #936 ✅ MERGED 2026-03-29)
+*Source: `src/public/BNPLWidget.js` — `initBNPLWidget($w, price)`*
+
+Displays Affirm (price/12) and Klarna (price/4) monthly estimate text on the Product Page. Three elements; all collapsed/hidden until a valid price is available.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `bnplContainer` | Box | Wrapper — hidden by default; shown when estimates available |
+| `bnplAffirm` | Text | "As low as $X/mo with Affirm" (price ÷ 12) |
+| `bnplKlarna` | Text | "4 payments of $X with Klarna" (price ÷ 4) |
+
+**Placement:** Place `#bnplContainer` on Product Page below the price display. Wire via `Product Page.js` orchestrator — called with current product price on page load and on variant change.
+
+### Share Your Room — UGC Photo Submit (CF-rw9i.1 — PR #938 ✅ MERGED 2026-03-29)
+*Source: `src/public/ShareYourRoom.js` — `initShareYourRoom($w, productId)`*
+*Backend: `src/backend/ugcService.web.js` — `submitUGCPhoto()`*
+
+Members upload a room photo, select a room type, optionally add a caption, then submit for moderation. Non-members see a sign-in prompt. **All modal/overlay elements collapsed by default.**
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `shareYourRoomBtn` | Button | "Share your room" CTA — visible to all visitors |
+| `shareYourRoomOverlay` | Box | Full-screen dimmed overlay — click closes modal |
+| `shareYourRoomModal` | Box | Modal container — collapsed by default |
+| `shareYourRoomClose` | Button | "×" close button (top-right of modal) |
+| `shareYourRoomLoginPrompt` | Box | Sign-in message — shown to guests, collapsed for members |
+| `shareYourRoomForm` | Section | Form controls container — collapses on success |
+| `shareYourRoomUpload` | UploadButton | `fileType = 'Image'` — required before submit enables |
+| `shareYourRoomPreview` | Image | Photo preview — collapsed until file chosen |
+| `shareYourRoomRoomType` | Dropdown | Room type selector (Living Room, Bedroom, Office, Studio, Other) |
+| `shareYourRoomCaption` | Input | Optional caption (max 300 chars) |
+| `shareYourRoomValidation` | Text | Inline error messages — collapsed by default |
+| `shareYourRoomSubmitBtn` | Button | "Submit photo" — disabled until upload + roomType set |
+| `shareYourRoomSuccess` | Section | "Thanks! Your photo will appear after review." — collapsed by default |
+
+**CMS collection required:** `CustomerRoomPhotos` (photoUrl, caption, productId, roomType, memberEmail, status: pending/approved/rejected, submittedAt, approvedAt, moderatorNotes, likes).
+
 ---
 
 ## CATEGORY PAGE (`Category Page.u0gn0.js`)
@@ -1824,6 +1862,20 @@ Add these elements to the **Member Page** in the editor:
 
 ### Block Date Form
 `blockDateInput` (DatePicker), `blockReasonInput` (Input), `blockDateSubmitBtn` (Button), `blockFormError` (Text — collapsed by default), `blockFormSuccess` (Text — collapsed by default), `blockedDatesSection` (Section)
+
+---
+
+## ADMIN A/B TESTS (`Admin A-B Tests.js` / `abTestDashboard.web.js`) — NEW CF-0jk5
+
+### Summary Stats
+`txtActiveCount` (Text), `txtConcludedCount` (Text), `txtTotalEvents` (Text), `txtReadyToConclude` (Text), `badgeReadyToConclude` (Box/Badge), `txtEmpty` (Text — shown when no experiments exist)
+
+### Experiments ⚠️ REPEATER
+`repeaterExperiments` (Repeater)
+**↳ Inside:** `barVariant1` (ProgressBar), `barVariant2` (ProgressBar), `lblVariant1` (Text), `lblVariant2` (Text)
+
+### Detail Panel
+`panelDetail` (Box/Section — collapsed by default), `btnCloseDetail` (Button), `btnConclude` (Button), `btnRunAutoStop` (Button)
 
 ---
 
