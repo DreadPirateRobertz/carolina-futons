@@ -1,20 +1,24 @@
 /**
  * @module rewardEngine.web
- * @description Auto-delivers tier perks when a member is promoted.
- * Generates coupon codes, triggers notification emails, and tracks delivery
- * idempotently via TierPerkDeliveries collection.
+ * @description Auto-delivers tier perks when a member is promoted (CF-c6el.2),
+ * and provides perk resolution for the Loyalty page "Your Perks" section (CF-c6el.3).
  *
- * Called from gamificationCore.web.js on tier_upgraded events.
+ * Generates coupon codes, triggers notification emails, tracks delivery
+ * idempotently via TierPerkDeliveries collection, and returns cumulative
+ * unlocked perks plus next-tier teaser.
  *
- * CF-c6el.2
+ * @requires wix-web-module
+ * @requires wix-data
+ * @requires wix-members-backend
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { getNewPerksOnPromotion, PERK_TYPES } from 'public/gamificationTokens.js';
+import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
+const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 
 const STYLING_CALL_BOOKING_URL = 'https://calendly.com/carolinafutons-brenda/styling-call';
 
@@ -174,29 +178,95 @@ async function sendTierPerkEmail(memberId, newTier, deliveredPerks) {
   );
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 /**
- * Look up all perks delivered to the calling member.
- *
- * @param {string} memberId
- * @returns {Promise<Array<{perkType: string, tier: string, couponCode?: string, bookingUrl?: string, deliveredAt: string}> | {error: string}>}
+ * Returns the index of a tier in TIER_PERKS by its tierKey, or -1 if not found.
+ * @param {string} tierName  Display name e.g. 'Mountain Guide'
+ * @returns {number}
  */
-export const getMemberDeliveredPerks = webMethod(
-  Permissions.SiteMember,
-  async (memberId) => {
-    if (!memberId) return [];
-    try {
-      const caller = await currentMember.getMember();
-      if (!caller || caller._id !== memberId) return { error: 'forbidden' };
-      const result = await wixData
-        .query(DELIVERIES_COLLECTION)
-        .eq('memberId', memberId)
-        .find({ suppressAuth: true });
-      return result.items.map(({ perkType, tier, couponCode, bookingUrl, deliveredAt }) => ({
-        perkType, tier, couponCode, bookingUrl, deliveredAt,
-      }));
-    } catch (err) {
-      logError(`getMemberDeliveredPerks failed for ${memberId}`, err);
-      return [];
-    }
+function tierIndex(tierName) {
+  return TIER_PERKS.findIndex(t => t.tierName === tierName);
+}
+
+// ── getMemberDeliveredPerks ───────────────────────────────────────────────────
+
+/**
+ * Returns the unlocked tier perks for the authenticated member plus a teaser
+ * of the next tier's perks. Used by LoyaltyPerksWidget on the Loyalty page.
+ *
+ * Perks are cumulative: a Summit Master member has all Trail Blazer,
+ * Mountain Guide, and Summit Master perks unlocked.
+ *
+ * @returns {Promise<{
+ *   success: boolean,
+ *   currentTierName: string,
+ *   currentTierKey: string,
+ *   totalPoints: number,
+ *   unlockedPerks: Array<{ tierKey: string, tierName: string, perkId: string, label: string, description: string, icon: string }>,
+ *   nextTierName: string|null,
+ *   nextTierKey: string|null,
+ *   nextTierPointsNeeded: number|null,
+ *   nextTierPerks: Array<{ perkId: string, label: string, description: string, icon: string }>|null,
+ *   error?: string
+ * }>}
+ * @permission SiteMember
+ */
+export const getMemberDeliveredPerks = webMethod(Permissions.SiteMember, async () => {
+  let member;
+  try {
+    member = await currentMember.getMember();
+  } catch {
+    member = null;
   }
-);
+
+  if (!member?._id) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  try {
+    const result = await wixData.query(MEMBER_POINTS_COLLECTION)
+      .eq('memberId', member._id)
+      .limit(1)
+      .find();
+
+    const record = result.items[0];
+    const totalPoints = record?.totalPoints ?? 0;
+    const currentTierName = getTierForPoints(totalPoints);
+    const idx = tierIndex(currentTierName);
+
+    // Collect all perks for tiers at or below the current tier (cumulative)
+    const unlockedPerks = [];
+    for (let i = 0; i <= idx; i++) {
+      const group = TIER_PERKS[i];
+      for (const perk of group.perks) {
+        unlockedPerks.push({
+          tierKey: group.tierKey,
+          tierName: group.tierName,
+          perkId: perk.perkId,
+          label: perk.label,
+          description: perk.description,
+          icon: perk.icon,
+        });
+      }
+    }
+
+    // Next tier teaser
+    const nextGroup = idx < TIER_PERKS.length - 1 ? TIER_PERKS[idx + 1] : null;
+    const nextTierThreshold = nextGroup ? (TIER_THRESHOLDS[nextGroup.tierKey] ?? null) : null;
+
+    return {
+      success: true,
+      currentTierName,
+      currentTierKey: TIER_PERKS[idx]?.tierKey ?? 'TRAIL_BLAZER',
+      totalPoints,
+      unlockedPerks,
+      nextTierName: nextGroup?.tierName ?? null,
+      nextTierKey: nextGroup?.tierKey ?? null,
+      nextTierPointsNeeded: nextTierThreshold !== null ? Math.max(0, nextTierThreshold - totalPoints) : null,
+      nextTierPerks: nextGroup ? nextGroup.perks.map(p => ({ ...p })) : null,
+    };
+  } catch {
+    return { success: false, error: 'Failed to load perks' };
+  }
+});
