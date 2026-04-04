@@ -11,6 +11,7 @@ import {
   getConsultationDetails,
   submitConsultationIntake,
   getConsultationIntake,
+  addConsultationNotes,
 } from '../src/backend/virtualConsultation.web.js';
 
 beforeEach(() => {
@@ -828,6 +829,67 @@ describe('getConsultationIntake', () => {
     const result = await getConsultationIntake('booking-1');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/authentication/i);
+  });
+});
+
+// ── addConsultationNotes ─────────────────────────────────────────────
+
+describe('addConsultationNotes', () => {
+  beforeEach(() => {
+    __seed('Designers', [
+      { _id: 'd-1', name: 'Sarah Mountain', specialty: 'living-room', bio: '', avatarUrl: '', isActive: true },
+    ]);
+    __seed('ConsultationBookings', [
+      { _id: 'booking-1', memberId: 'member-1', designerId: 'd-1',
+        date: '2099-08-01', timeSlot: '10:00', consultationType: 'video',
+        status: 'confirmed', notes: '', videoCallUrl: '', photos: '[]',
+        quizAnswers: '{}', contactName: 'Alice Smith', recipientEmail: 'alice@example.com' },
+    ]);
+    __seed('EmailQueue', []);
+  });
+
+  it('marks booking as completed and saves product IDs', async () => {
+    const result = await addConsultationNotes('booking-1', ['p-1', 'p-2'], 'Great session.');
+    expect(result.success).toBe(true);
+
+    const updated = __getUpdated('ConsultationBookings').find(b => b._id === 'booking-1');
+    expect(updated?.status).toBe('completed');
+    const ids = JSON.parse(updated?.recommendedProductIds || '[]');
+    expect(ids).toContain('p-1');
+    expect(ids).toContain('p-2');
+  });
+
+  it('saves staff notes on the booking record', async () => {
+    await addConsultationNotes('booking-1', [], 'Customer interested in twin sofa beds.');
+    const updated = __getUpdated('ConsultationBookings').find(b => b._id === 'booking-1');
+    expect(updated?.staffNotes).toBe('Customer interested in twin sofa beds.');
+  });
+
+  it('caps productIds at 5', async () => {
+    const ids = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
+    await addConsultationNotes('booking-1', ids, '');
+    const updated = __getUpdated('ConsultationBookings').find(b => b._id === 'booking-1');
+    const saved = JSON.parse(updated?.recommendedProductIds || '[]');
+    expect(saved.length).toBeLessThanOrEqual(5);
+  });
+
+  it('handles empty productIds array gracefully', async () => {
+    const result = await addConsultationNotes('booking-1', [], '');
+    expect(result.success).toBe(true);
+    const updated = __getUpdated('ConsultationBookings').find(b => b._id === 'booking-1');
+    expect(JSON.parse(updated?.recommendedProductIds || '[]')).toEqual([]);
+  });
+
+  it('returns error for missing bookingId', async () => {
+    const result = await addConsultationNotes('', ['p-1'], 'notes');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/bookingId/i);
+  });
+
+  it('returns error when booking not found', async () => {
+    const result = await addConsultationNotes('nonexistent-id', [], '');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/not found/i);
   });
 });
 

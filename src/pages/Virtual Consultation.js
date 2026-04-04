@@ -1,20 +1,37 @@
 /**
- * @page Virtual Consultation
- * @url /virtual-consultation
- * @description Customer-facing booking flow for virtual room consultations.
- * Customers pick a designer, choose a date/time, select consultation type,
- * add notes, and confirm their appointment.
+ * Virtual Consultation page — booking flow controller.
  *
- * Modes:
- * - S1: Loading
- * - S2: Designer picker
- * - S3: Slot picker (date → time slot → type form)
- * - S4: Confirmation view (with video call link if applicable)
- * - S5: Error / not-authenticated
+ * Flow:
+ *   Step 1 — Choose a designer (designer cards in repeater)
+ *   Step 2 — Choose a date, time, and consultation type (video/phone)
+ *   Step 3 — Add optional notes and confirm booking
+ *   Step 4 — Confirmation view (video call link if applicable)
+ *
+ * Element IDs (set in Wix editor):
+ *   #designerRepeater           — Designer card repeater (step 1)
+ *     #designerAvatar           — Image: designer headshot
+ *     #designerNameText         — Text: designer name
+ *     #designerSpecialtyText    — Text: specialty label
+ *     #designerBioText          — Text: short bio
+ *     #selectDesignerBtn        — Button: "Book with [Name]"
+ *   #bookingFormSection         — Step 2+3 container (hidden until designer chosen)
+ *   #selectedDesignerName       — Text: "Booking with Sarah Mountain"
+ *   #slotDateDropdown           — Dropdown: available dates grouped by slot
+ *   #timeSlotDropdown           — Dropdown: available times for selected date
+ *   #consultationTypeDropdown   — Dropdown: Video Call / Phone Call
+ *   #notesInput                 — TextInput: optional customer notes
+ *   #bookBtn                    — Button: "Confirm Booking"
+ *   #bookingError               — Text: inline error message
+ *   #loadingSpinner             — Image/strip: loading indicator
+ *   #confirmationSection        — Container: shown after successful booking
+ *   #confirmationSummary        — Text: "Confirmed: Wed, Apr 2 at 10 AM — Video Call"
+ *   #videoCallSection           — Container: shown only for video bookings
+ *   #videoCallLinkText          — Text: meeting URL
+ *   #bookAnotherBtn             — Button: "Book Another Consultation"
+ *   #consultationHeroText       — Text: page hero heading
  *
  * CF-ym1x
  */
-
 import {
   getDesigners,
   getAvailableConsultationSlots,
@@ -22,426 +39,309 @@ import {
 } from 'backend/virtualConsultation.web';
 import {
   validateConsultationForm,
-  buildBookingConfirmation,
   formatSlotDisplay,
+  getConsultationTypeLabel,
   groupSlotsByDate,
-  TIME_SLOTS,
+  CONSULTATION_TYPES,
 } from 'public/consultationHelpers';
-import { announce } from 'public/a11yHelpers';
-import wixLocationFrontend from 'wix-location-frontend';
+import { trackEvent } from 'public/engagementTracker';
 
-// ── State ─────────────────────────────────────────────────────────────
+// State
+let _selectedDesignerId = '';
+let _selectedDesignerName = '';
+let _availableSlots = [];
+let _slotsByDate = {};
 
-/** @type {{ designerId: string, date: string, timeSlot: string, consultationType: string, notes: string, email: string }} */
-let _form = {};
-
-// ── Page entry point ──────────────────────────────────────────────────
+// ── Page init ─────────────────────────────────────────────────────────────────
 
 $w.onReady(async function () {
-  await _initPage();
+  showSection('designers');
+  hideError();
+
+  await loadDesigners();
+  initBookingForm();
+  initConfirmationReset();
+  trackEvent('page_view', { page: 'virtual_consultation' });
 });
 
-// ── Main init ─────────────────────────────────────────────────────────
+// ── Step 1: Load designers ────────────────────────────────────────────────────
 
-/**
- * Load designers and render picker.
- * Exported for testing.
- */
-export async function _initPage() {
-  _showSection('loading');
-
+async function loadDesigners() {
+  showLoading(true);
   try {
-    const result = await getDesigners();
-
-    if (!result.success) {
-      _showError(result.error || 'Could not load available designers.');
+    const { success, designers } = await getDesigners();
+    if (!success || !designers.length) {
+      showError('No designers are currently available. Please check back soon.');
       return;
     }
 
-    if (!result.designers || result.designers.length === 0) {
-      _showError('No designers are available for booking at this time. Please check back soon.');
-      return;
-    }
-
-    _renderDesignerPicker(result.designers);
-  } catch (err) {
-    console.error('[VirtualConsultation] Init error:', err);
-    _showError('Something went wrong. Please try again.');
-  }
-}
-
-// ── S2: Designer picker ───────────────────────────────────────────────
-
-/**
- * Render the designer list so the customer can choose who to consult.
- * Exported for testing.
- * @param {Array} designers - from getDesigners
- */
-export function _renderDesignerPicker(designers) {
-  _showSection('designers');
-
-  try {
-    $w('#designerPickerHeadline').text = 'Choose Your Designer';
-  } catch (e) {}
-
-  try {
-    const repeater = $w('#designerRepeater');
-    repeater.data = designers.map(d => ({ _id: d._id, ...d }));
-
-    repeater.onItemReady(($item, itemData) => {
-      try { $item('#designerName').text = itemData.name || ''; } catch (e) {}
-      try { $item('#designerSpecialty').text = _formatSpecialty(itemData.specialty); } catch (e) {}
-      try { $item('#designerBio').text = itemData.bio || ''; } catch (e) {}
-      try {
-        if (itemData.avatarUrl) {
-          $item('#designerAvatar').src = itemData.avatarUrl;
-        }
-      } catch (e) {}
-
-      try {
-        $item('#selectDesignerBtn').onClick(async () => {
-          _form = { designerId: itemData._id };
-          await _loadSlotsForDesigner(itemData._id, itemData.name);
-        });
-      } catch (e) {}
-    });
-  } catch (e) {}
-}
-
-// ── S3: Slot picker ───────────────────────────────────────────────────
-
-/**
- * Load available slots for the chosen designer and render date list.
- * @param {string} designerId
- * @param {string} designerName
- */
-async function _loadSlotsForDesigner(designerId, designerName) {
-  _showSection('loading');
-
-  try {
-    const result = await getAvailableConsultationSlots(designerId);
-
-    if (!result.success) {
-      _showError(result.error || 'Could not load available slots.');
-      return;
-    }
-
-    _renderSlotPicker(result.slots || [], designerName);
-  } catch (err) {
-    console.error('[VirtualConsultation] Load slots error:', err);
-    _showError('Could not load available slots. Please try again.');
-  }
-}
-
-/**
- * Render the date/time/type picker.
- * Exported for testing.
- * @param {Array}  slots        - from getAvailableConsultationSlots
- * @param {string} designerName
- */
-export function _renderSlotPicker(slots, designerName) {
-  _showSection('slots');
-
-  try {
-    $w('#slotPickerDesignerName').text = `Booking with ${designerName}`;
-  } catch (e) {}
-
-  const byDate = groupSlotsByDate(slots);
-  const dateKeys = Object.keys(byDate).sort();
-
-  if (dateKeys.length === 0) {
-    try { $w('#noSlotsMessage').expand(); } catch (e) {}
-    try { $w('#dateRepeater').collapse(); } catch (e) {}
-    try { $w('#slotFormSection').collapse(); } catch (e) {}
-    return;
-  }
-
-  try { $w('#noSlotsMessage').collapse(); } catch (e) {}
-  try { $w('#dateRepeater').expand(); } catch (e) {}
-
-  try {
-    const repeater = $w('#dateRepeater');
-    repeater.data = dateKeys.map(d => ({
-      _id: d,
-      date: d,
-      slots: byDate[d],
-    }));
-
-    repeater.onItemReady(($item, itemData) => {
-      try {
-        $item('#dateLabelText').text = _formatDateShort(itemData.date);
-      } catch (e) {}
-
-      try {
-        $item('#selectDateBtn').onClick(() => {
-          _showTimeSlotPicker(itemData.date, itemData.slots);
-        });
-      } catch (e) {}
-    });
-  } catch (e) {}
-
-  // Back to designer picker
-  try {
-    $w('#slotBackBtn').onClick(() => _initPage());
-  } catch (e) {}
-
-  try { $w('#slotFormSection').collapse(); } catch (e) {}
-}
-
-/**
- * Show the time slot options for a chosen date, then reveal the booking form.
- * Exported for testing.
- * @param {string} dateStr - YYYY-MM-DD
- * @param {Array}  slots   - slots for that date
- */
-export function _showTimeSlotPicker(dateStr, slots) {
-  _form.date = dateStr;
-  delete _form.timeSlot;
-
-  try { $w('#selectedDateLabel').text = _formatDateFull(dateStr); } catch (e) {}
-
-  try {
-    const repeater = $w('#timeSlotRepeater');
-    repeater.data = slots.map(s => ({ _id: s.timeSlot, ...s }));
-
-    repeater.onItemReady(($item, itemData) => {
-      const entry = TIME_SLOTS.find(t => t.value === itemData.timeSlot);
-      try { $item('#timeSlotLabel').text = entry ? entry.label : itemData.timeSlot; } catch (e) {}
-
-      try {
-        $item('#selectTimeBtn').onClick(() => {
-          _form.timeSlot = itemData.timeSlot;
-          _showBookingForm(dateStr, itemData.timeSlot);
-        });
-      } catch (e) {}
-    });
-  } catch (e) {}
-
-  try { $w('#timeSlotSection').expand(); } catch (e) {}
-  try { $w('#slotFormSection').collapse(); } catch (e) {}
-}
-
-/**
- * Reveal the booking form (consultation type + notes) after slot is chosen.
- * Exported for testing.
- * @param {string} dateStr
- * @param {string} timeSlot
- */
-export function _showBookingForm(dateStr, timeSlot) {
-  try {
-    $w('#formSlotSummary').text = formatSlotDisplay(dateStr, timeSlot);
-  } catch (e) {}
-
-  // Wire consultation type radio/buttons
-  try {
-    $w('#typeVideoBtn').onClick(() => { _form.consultationType = 'video'; });
-  } catch (e) {}
-  try {
-    $w('#typePhoneBtn').onClick(() => { _form.consultationType = 'phone'; });
-  } catch (e) {}
-
-  // Wire submit
-  try {
-    $w('#submitBookingBtn').onClick(async () => {
-      await _handleSubmitBooking();
-    });
-  } catch (e) {}
-
-  try { $w('#slotFormSection').expand(); } catch (e) {}
-}
-
-// ── S4: Booking submission ────────────────────────────────────────────
-
-/**
- * Read form values, validate, and submit booking.
- * Exported for testing.
- */
-export async function _handleSubmitBooking() {
-  // Read live field values
-  try { _form.notes = $w('#bookingNotesInput').value || ''; } catch (e) {}
-  try { _form.email = $w('#bookingEmailInput').value || ''; } catch (e) {}
-  if (!_form.consultationType) {
-    try { _form.consultationType = $w('#consultationTypeDropdown').value || ''; } catch (e) {}
-  }
-
-  const { valid, errors } = validateConsultationForm(_form);
-  if (!valid) {
-    _showFormError(errors[0]);
-    return;
-  }
-
-  _showSection('loading');
-
-  try {
-    const result = await bookConsultation({
-      designerId: _form.designerId,
-      date: _form.date,
-      timeSlot: _form.timeSlot,
-      consultationType: _form.consultationType,
-      notes: _form.notes,
-      email: _form.email,
-    });
-
-    if (!result.success) {
-      if (result.error === 'Authentication required.') {
-        _showError('Please sign in to book a consultation.');
-      } else {
-        _showError(result.error || 'Could not complete booking. Please try again.');
-      }
-      return;
-    }
-
-    const confirmation = buildBookingConfirmation(result, _form);
-    _renderConfirmation(confirmation);
-  } catch (err) {
-    console.error('[VirtualConsultation] Booking error:', err);
-    _showError('Something went wrong. Please try again.');
-  }
-}
-
-// ── S5: Confirmation ──────────────────────────────────────────────────
-
-/**
- * Show the success confirmation view.
- * Exported for testing.
- * @param {Object} confirmation - from buildBookingConfirmation
- */
-export function _renderConfirmation(confirmation) {
-  if (!confirmation) {
-    _showError('Booking created but could not display confirmation.');
-    return;
-  }
-
-  _showSection('confirmation');
-
-  try {
-    $w('#confirmSlotText').text = confirmation.dateDisplay || '';
-  } catch (e) {}
-  try {
-    $w('#confirmTypeText').text = confirmation.typeLabel || '';
-  } catch (e) {}
-
-  // Video call link — show if present
-  if (confirmation.videoCallUrl) {
     try {
-      $w('#videoCallSection').expand();
-      $w('#videoCallLink').link = confirmation.videoCallUrl;
-      $w('#videoCallLink').target = '_blank';
-    } catch (e) {}
-  } else {
-    try { $w('#videoCallSection').collapse(); } catch (e) {}
+      $w('#designerRepeater').data = designers.map(d => ({
+        _id: d._id,
+        name: d.name,
+        specialty: specialtyLabel(d.specialty),
+        bio: d.bio || '',
+        avatarUrl: d.avatarUrl || '',
+      }));
+
+      $w('#designerRepeater').onItemReady(($item, itemData) => {
+        try { $item('#designerNameText').text = itemData.name; } catch (e) {}
+        try { $item('#designerSpecialtyText').text = itemData.specialty; } catch (e) {}
+        try { $item('#designerBioText').text = itemData.bio; } catch (e) {}
+        try {
+          if (itemData.avatarUrl) {
+            $item('#designerAvatar').src = itemData.avatarUrl;
+          }
+        } catch (e) {}
+
+        try {
+          $item('#selectDesignerBtn').label = `Book with ${itemData.name}`;
+          $item('#selectDesignerBtn').onClick(async () => {
+            await selectDesigner(itemData._id, itemData.name);
+          });
+        } catch (e) {}
+      });
+    } catch (e) {
+      console.error('[VirtualConsultation] Repeater setup failed:', e);
+    }
+  } catch (err) {
+    console.error('[VirtualConsultation] loadDesigners failed:', err);
+    showError('Could not load designers. Please refresh the page.');
+  } finally {
+    showLoading(false);
   }
+}
 
-  announce($w, `Consultation booked: ${confirmation.dateDisplay}`);
+// ── Step 2: Designer selected — load slots ────────────────────────────────────
 
-  // Return to member page
+async function selectDesigner(designerId, designerName) {
+  _selectedDesignerId = designerId;
+  _selectedDesignerName = designerName;
+  hideError();
+  showLoading(true);
+
   try {
-    $w('#confirmDoneBtn').onClick(() => {
-      try { wixLocationFrontend.to('/member-page'); } catch (e) {}
+    const { success, slots, error } = await getAvailableConsultationSlots(designerId);
+    if (!success || !slots.length) {
+      showError(error || 'No slots available for this designer. Please try another.');
+      showLoading(false);
+      return;
+    }
+
+    _availableSlots = slots;
+    _slotsByDate = groupSlotsByDate(slots);
+
+    populateDateDropdown();
+    populateTypeDropdown();
+    updateSelectedDesignerLabel(designerName);
+    showSection('form');
+    trackEvent('consultation_designer_selected', { designerId });
+  } catch (err) {
+    console.error('[VirtualConsultation] selectDesigner failed:', err);
+    showError('Could not load available slots. Please try again.');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function populateDateDropdown() {
+  const dates = Object.keys(_slotsByDate).sort();
+  const options = dates.map(d => ({
+    label: formatSlotDisplay(d, '09:00').split(' at ')[0], // "Wed, Apr 2"
+    value: d,
+  }));
+
+  try {
+    $w('#slotDateDropdown').options = options;
+    $w('#slotDateDropdown').value = '';
+    $w('#slotDateDropdown').onChange(() => {
+      populateTimeDropdown($w('#slotDateDropdown').value);
     });
   } catch (e) {}
+}
 
-  // Book another
+function populateTimeDropdown(dateStr) {
+  const slots = _slotsByDate[dateStr] || [];
+  const options = slots.map(s => ({
+    label: formatSlotDisplay(dateStr, s.timeSlot).split(' at ')[1], // "10:00 AM"
+    value: s.timeSlot,
+  }));
+
+  try {
+    $w('#timeSlotDropdown').options = options;
+    $w('#timeSlotDropdown').value = '';
+  } catch (e) {}
+}
+
+function populateTypeDropdown() {
+  const options = Object.entries(CONSULTATION_TYPES).map(([value, meta]) => ({
+    label: meta.label,
+    value,
+  }));
+
+  try {
+    $w('#consultationTypeDropdown').options = options;
+    $w('#consultationTypeDropdown').value = 'video';
+  } catch (e) {}
+}
+
+function updateSelectedDesignerLabel(name) {
+  try {
+    $w('#selectedDesignerName').text = `Booking with ${name}`;
+  } catch (e) {}
+}
+
+// ── Step 3: Submit booking ────────────────────────────────────────────────────
+
+function initBookingForm() {
+  try {
+    $w('#bookBtn').onClick(async () => {
+      await handleBookingSubmit();
+    });
+  } catch (e) {}
+}
+
+async function handleBookingSubmit() {
+  hideError();
+
+  let date = '';
+  let timeSlot = '';
+  let consultationType = '';
+  let notes = '';
+
+  try { date = $w('#slotDateDropdown').value; } catch (e) {}
+  try { timeSlot = $w('#timeSlotDropdown').value; } catch (e) {}
+  try { consultationType = $w('#consultationTypeDropdown').value || 'video'; } catch (e) {}
+  try { notes = ($w('#notesInput').value || '').slice(0, 1000); } catch (e) {}
+
+  const form = {
+    designerId: _selectedDesignerId,
+    date,
+    timeSlot,
+    consultationType,
+  };
+
+  const { valid, errors } = validateConsultationForm(form);
+  if (!valid) {
+    showError(errors[0]);
+    return;
+  }
+
+  showLoading(true);
+  try {
+    $w('#bookBtn').disable();
+  } catch (e) {}
+
+  try {
+    const result = await bookConsultation({ ...form, notes });
+
+    if (!result.success) {
+      showError(result.error || 'Booking failed. Please try again.');
+      return;
+    }
+
+    showConfirmation({
+      dateDisplay: formatSlotDisplay(date, timeSlot),
+      typeLabel: getConsultationTypeLabel(consultationType),
+      videoCallUrl: result.videoCallUrl || '',
+    });
+
+    trackEvent('consultation_booked', {
+      designerId: _selectedDesignerId,
+      consultationType,
+    });
+  } catch (err) {
+    console.error('[VirtualConsultation] handleBookingSubmit failed:', err);
+    showError('Unable to complete booking. Please try again or call (828) 252-9449.');
+  } finally {
+    showLoading(false);
+    try { $w('#bookBtn').enable(); } catch (e) {}
+  }
+}
+
+// ── Step 4: Confirmation ──────────────────────────────────────────────────────
+
+function showConfirmation({ dateDisplay, typeLabel, videoCallUrl }) {
+  showSection('confirmation');
+
+  try {
+    $w('#confirmationSummary').text = `Confirmed: ${dateDisplay} — ${typeLabel}`;
+  } catch (e) {}
+
+  try {
+    if (videoCallUrl) {
+      $w('#videoCallSection').show();
+      $w('#videoCallLinkText').text = videoCallUrl;
+    } else {
+      $w('#videoCallSection').hide();
+    }
+  } catch (e) {}
+}
+
+function initConfirmationReset() {
   try {
     $w('#bookAnotherBtn').onClick(() => {
-      _form = {};
-      _initPage();
+      _selectedDesignerId = '';
+      _selectedDesignerName = '';
+      _availableSlots = [];
+      _slotsByDate = {};
+      showSection('designers');
+      hideError();
     });
   } catch (e) {}
 }
 
-// ── Section helpers ───────────────────────────────────────────────────
+// ── UI helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Collapse all sections and expand only the named one.
- * Exported for testing.
- */
-export function _showSection(name) {
-  const sectionIds = {
-    loading:      '#vcLoadingSection',
-    designers:    '#vcDesignerSection',
-    slots:        '#vcSlotSection',
-    confirmation: '#vcConfirmSection',
-    error:        '#vcErrorSection',
+/** Show one of: 'designers' | 'form' | 'confirmation' */
+function showSection(section) {
+  const ids = {
+    designers: '#designerRepeater',
+    form: '#bookingFormSection',
+    confirmation: '#confirmationSection',
   };
 
-  for (const [key, sel] of Object.entries(sectionIds)) {
+  for (const [name, id] of Object.entries(ids)) {
     try {
-      if (key === name) {
-        $w(sel).expand();
+      if (name === section) {
+        $w(id).show();
       } else {
-        $w(sel).collapse();
+        $w(id).hide();
       }
     } catch (e) {}
   }
-
-  // Sub-panels within slots — always start collapsed on section change
-  if (name !== 'slots') {
-    try { $w('#timeSlotSection').collapse(); } catch (e) {}
-    try { $w('#slotFormSection').collapse(); } catch (e) {}
-  }
 }
 
-function _showError(message) {
-  _showSection('error');
-  try { $w('#vcErrorText').text = message; } catch (e) {}
+function showLoading(visible) {
   try {
-    $w('#vcRetryBtn').onClick(() => {
-      _form = {};
-      _initPage();
-    });
+    if (visible) {
+      $w('#loadingSpinner').show();
+    } else {
+      $w('#loadingSpinner').hide();
+    }
   } catch (e) {}
 }
 
-function _showFormError(message) {
+function showError(message) {
   try {
-    $w('#formErrorText').text = message;
-    $w('#formErrorText').expand();
+    $w('#bookingError').text = message;
+    $w('#bookingError').show();
   } catch (e) {}
 }
 
-// ── Format helpers ────────────────────────────────────────────────────
-
-/**
- * Format YYYY-MM-DD to short display like "Wed Apr 1".
- * Exported for testing.
- */
-export function _formatDateShort(dateStr) {
-  if (!dateStr) return '';
+function hideError() {
   try {
-    const d = new Date(dateStr + 'T12:00:00');
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  } catch (e) {
-    return dateStr;
-  }
+    $w('#bookingError').hide();
+    $w('#bookingError').text = '';
+  } catch (e) {}
 }
 
-/**
- * Format YYYY-MM-DD to full display like "Wednesday, April 1, 2026".
- * Exported for testing.
- */
-export function _formatDateFull(dateStr) {
-  if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr + 'T12:00:00');
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  } catch (e) {
-    return dateStr;
-  }
-}
-
-/**
- * Format a backend specialty key to a display label.
- * Exported for testing.
- */
-export function _formatSpecialty(specialty) {
+function specialtyLabel(specialty) {
   const labels = {
-    'living-room': 'Living Room',
-    'bedroom':     'Bedroom',
-    'office':      'Home Office',
-    'multi-room':  'Multi-Room',
+    'living-room': 'Living Room Expert',
+    'bedroom': 'Bedroom Specialist',
+    'office': 'Home Office Design',
+    'multi-room': 'Whole-Home Design',
   };
-  return labels[specialty] || specialty || '';
+  return labels[specialty] || specialty;
 }
