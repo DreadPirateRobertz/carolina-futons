@@ -199,6 +199,53 @@ describe('initMobileDrawer', () => {
     expect(() => drawer.open()).not.toThrow();
     expect(() => drawer.close()).not.toThrow();
   });
+
+  // cf-3zs3: desktop nav must be hidden and hamburger shown on mobile viewport
+  it('on mobile: shows #mobileMenuButton and hides #desktopNavBar', async () => {
+    const { isMobile } = await import('public/mobileHelpers');
+    isMobile.mockReturnValueOnce(true);
+
+    const mobileBtn = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn(), focus: vi.fn() };
+    const desktopNav = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn() };
+    const $w = createMock$w({ '#mobileMenuButton': mobileBtn, '#desktopNavBar': desktopNav });
+
+    initMobileDrawer($w, '/');
+
+    expect(mobileBtn.show).toHaveBeenCalled();
+    expect(desktopNav.hide).toHaveBeenCalled();
+    expect(mobileBtn.hide).not.toHaveBeenCalled();
+    expect(desktopNav.show).not.toHaveBeenCalled();
+  });
+
+  // cf-3zs3: desktop nav must be visible and hamburger hidden on desktop viewport
+  it('on desktop: hides #mobileMenuButton and shows #desktopNavBar', async () => {
+    const { isMobile } = await import('public/mobileHelpers');
+    isMobile.mockReturnValueOnce(false);
+
+    const mobileBtn = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn(), focus: vi.fn() };
+    const desktopNav = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn() };
+    const $w = createMock$w({ '#mobileMenuButton': mobileBtn, '#desktopNavBar': desktopNav });
+
+    initMobileDrawer($w, '/');
+
+    expect(mobileBtn.hide).toHaveBeenCalled();
+    expect(desktopNav.show).toHaveBeenCalled();
+    expect(mobileBtn.show).not.toHaveBeenCalled();
+    expect(desktopNav.hide).not.toHaveBeenCalled();
+  });
+
+  // cf-3zs3: if #mobileMenuButton throws, #desktopNavBar must still be hidden on mobile
+  it('on mobile: hides #desktopNavBar even when #mobileMenuButton.show throws', async () => {
+    const { isMobile } = await import('public/mobileHelpers');
+    isMobile.mockReturnValueOnce(true);
+
+    const mobileBtn = { show: vi.fn(() => { throw new Error('element not found'); }), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn(), focus: vi.fn() };
+    const desktopNav = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn() };
+    const $w = createMock$w({ '#mobileMenuButton': mobileBtn, '#desktopNavBar': desktopNav });
+
+    expect(() => initMobileDrawer($w, '/')).not.toThrow();
+    expect(desktopNav.hide).toHaveBeenCalled();
+  });
 });
 
 // ── initMobileAccordions ──────────────────────────────────────────────
