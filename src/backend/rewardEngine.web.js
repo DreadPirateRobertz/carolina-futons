@@ -92,7 +92,7 @@ export const deliverTierPerks = webMethod(
         deliveredAt: new Date().toISOString(),
       };
 
-      const result = { type: perk.type };
+      const result = { type: perk.type, label: perk.label };
 
       if (perk.delivery === 'coupon_email') {
         const couponCode = await generateUniqueCouponCode();
@@ -144,10 +144,8 @@ export const deliverTierPerks = webMethod(
 async function sendTierPerkEmail(memberId, newTier, deliveredPerks) {
   const { triggeredEmails } = await import('wix-crm-backend');
 
-  const perkLabels = getNewPerksOnPromotion('Trail Blazer', newTier);
   const perkSummary = deliveredPerks.map(d => {
-    const def = perkLabels.find(p => p.type === d.type);
-    let line = def?.label ?? d.type;
+    let line = d.label;
     if (d.couponCode) line += ` (code: ${d.couponCode})`;
     if (d.bookingUrl) line += ` — Book here: ${d.bookingUrl}`;
     return line;

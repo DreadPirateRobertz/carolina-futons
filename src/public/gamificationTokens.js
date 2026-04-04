@@ -208,31 +208,26 @@ export const PERK_TYPES = {
   STYLING_CALL: 'STYLING_CALL',
 };
 
+const TRAIL_BLAZER_PERKS = [
+  { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+];
+const MOUNTAIN_GUIDE_PERKS = [
+  ...TRAIL_BLAZER_PERKS,
+  { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+  { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+];
+const SUMMIT_MASTER_PERKS = [
+  ...MOUNTAIN_GUIDE_PERKS,
+  { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
+  { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
+  { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
+];
+
 export const TIER_PERKS = {
-  'Trail Blazer': [
-    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
-  ],
-  'Mountain Guide': [
-    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
-    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
-    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
-  ],
-  'Summit Master': [
-    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
-    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
-    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
-    { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
-    { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
-    { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
-  ],
-  'Blue Ridge Legend': [
-    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
-    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
-    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
-    { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
-    { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
-    { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
-  ],
+  'Trail Blazer':      TRAIL_BLAZER_PERKS,
+  'Mountain Guide':    MOUNTAIN_GUIDE_PERKS,
+  'Summit Master':     SUMMIT_MASTER_PERKS,
+  'Blue Ridge Legend':  SUMMIT_MASTER_PERKS, // same perks as Summit Master
 };
 
 /**

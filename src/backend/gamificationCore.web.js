@@ -241,7 +241,7 @@ export const receiveGamificationEvent = webMethod(
         try {
           const { deliverTierPerks } = await import('backend/rewardEngine.web');
           await deliverTierPerks(memberId, oldTier, newTier);
-        } catch (_) {}
+        } catch (e) { logError(`gamificationEventReceiver — deliverTierPerks failed for ${memberId}`, e); }
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
