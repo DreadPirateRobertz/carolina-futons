@@ -239,6 +239,8 @@ async function initProductPage() {
       { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
       // CF-uits: Room Planner CTA — links to /room-planner with product preloaded
       { name: 'roomPlannerCTA', init: async () => { const m = await import('public/roomPlannerCTA.js'); m.initRoomPlannerCTA($w, state); }, critical: false },
+      // CF-rw9i.1: 'Share your room' UGC photo submit CTA
+      { name: 'shareYourRoom', init: async () => { const m = await import('public/ShareYourRoom.js'); m.initShareYourRoomCTA($w, state); }, critical: false },
       // CF-ac80 (S1) / CF-1792 (S3): Showroom CTA + QR mode banner
       { name: 'showroomCTA', init: async () => { const m = await import('backend/showroomService.web.js'); await initShowroomCTA($w, state, m); }, critical: false },
       // CF-9fv2: Gift product button — adds gift card to cart for current product
