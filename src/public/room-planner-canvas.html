@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<!--
+  room-planner-canvas.html
+  Wix HtmlComponent host for the Room Planner 2D canvas.
+
+  Embedded as #plannerCanvas on the Room Planner page.
+  Receives room dimensions + product placements via window.postMessage
+  from "Room Planner.js" page code. Renders an interactive 2D layout
+  with drag-and-drop product repositioning.
+
+  Messages IN (from parent):
+    { type: 'updateRoom', roomWidth, roomLength, scale }
+    { type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed, rotation?, isBedMode? } }
+    { type: 'removeProduct', id }
+    { type: 'setMobileMode', enabled }
+    { type: 'exportImage' }
+
+  Messages OUT (to parent):
+    { type: 'canvasUpdate', products: [{ id, x, y, fits, label }] }
+    { type: 'exportResult', dataUrl }
+
+  CF-eqc5.3 / CF-fnv9
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Room Planner Canvas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f7f7f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  </style>
+</head>
+<body>
+<canvas id="planner" role="img" aria-label="Interactive 2D room planner canvas"></canvas>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Constants ──────────────────────────────────────────────────────
+  var PADDING = 20;
+  var GRID_STEP_INCHES = 12; // 1-foot grid lines
+  var CATEGORY_COLORS = {
+    'futon-frames': { fill: 'rgba(74, 111, 165, 0.35)', stroke: '#4a6fa5', label: '#2c4a6e' },
+    'storage':      { fill: 'rgba(107, 142, 87, 0.35)', stroke: '#6b8e57', label: '#3d5c2d' },
+    'accessories':  { fill: 'rgba(178, 134, 80, 0.35)', stroke: '#b28650', label: '#7a5a2f' },
+  };
+  var DEFAULT_COLOR = { fill: 'rgba(140, 140, 140, 0.35)', stroke: '#8c8c8c', label: '#555' };
+  var NOFIT_STROKE = '#dc3545';
+  var SELECTED_STROKE = '#0066cc';
+
+  // ── State ──────────────────────────────────────────────────────────
+  var canvas = document.getElementById('planner');
+  var ctx = canvas.getContext('2d');
+  var roomWidth = 0;   // inches
+  var roomLength = 0;  // inches
+  var scale = 1;       // pixels per inch
+  var products = [];
+  var selectedId = null;
+  var dragging = null; // { id, offsetX, offsetY }
+
+  // ── Canvas Logic (inlined from roomPlannerCanvas.js) ───────────────
+
+  function roomToCanvas(rx, ry) {
+    return { x: PADDING + rx * scale, y: PADDING + ry * scale };
+  }
+
+  function canvasToRoom(cx, cy) {
+    if (scale <= 0) return { x: 0, y: 0 };
+    return {
+      x: Math.max(0, (cx - PADDING) / scale),
+      y: Math.max(0, (cy - PADDING) / scale),
+    };
+  }
+
+  function getProductBounds(p) {
+    var depth = p.isBedMode ? (p.depthBed || p.depth) : p.depth;
+    var isSwapped = p.rotation === 90 || p.rotation === 270;
+    return {
+      x: p.x, y: p.y,
+      w: isSwapped ? depth : p.width,
+      h: isSwapped ? p.width : depth,
+    };
+  }
+
+  function checkFit(p) {
+    var b = getProductBounds(p);
+    if (b.x < 0 || b.y < 0) return false;
+    return (b.x + b.w <= roomWidth) && (b.y + b.h <= roomLength);
+  }
+
+  function hitTest(cx, cy) {
+    for (var i = products.length - 1; i >= 0; i--) {
+      var b = getProductBounds(products[i]);
+      var tl = roomToCanvas(b.x, b.y);
+      var w = b.w * scale;
+      var h = b.h * scale;
+      if (cx >= tl.x && cx <= tl.x + w && cy >= tl.y && cy <= tl.y + h) {
+        return products[i];
+      }
+    }
+    return null;
+  }
+
+  // ── Rendering ──────────────────────────────────────────────────────
+
+  function render() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    if (roomWidth <= 0 || roomLength <= 0) {
+      drawEmptyState(rect);
+      return;
+    }
+
+    // Recalculate scale to fit room in canvas
+    var availW = rect.width - 2 * PADDING;
+    var availH = rect.height - 2 * PADDING;
+    scale = Math.min(availW / roomWidth, availH / roomLength);
+
+    drawRoom();
+    drawGrid();
+    drawProducts();
+    drawDimensionLabels(rect);
+  }
+
+  function drawEmptyState(rect) {
+    ctx.fillStyle = '#999';
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Set room dimensions to start planning', rect.width / 2, rect.height / 2);
+  }
+
+  function drawRoom() {
+    var rw = roomWidth * scale;
+    var rh = roomLength * scale;
+
+    // Room floor
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(PADDING, PADDING, rw, rh);
+
+    // Room border
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(PADDING, PADDING, rw, rh);
+  }
+
+  function drawGrid() {
+    var rw = roomWidth * scale;
+    var rh = roomLength * scale;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+    ctx.lineWidth = 1;
+
+    var stepPx = GRID_STEP_INCHES * scale;
+    if (stepPx < 8) return; // Skip grid if too dense
+
+    ctx.beginPath();
+    // Vertical lines
+    for (var x = stepPx; x < rw; x += stepPx) {
+      ctx.moveTo(PADDING + x, PADDING);
+      ctx.lineTo(PADDING + x, PADDING + rh);
+    }
+    // Horizontal lines
+    for (var y = stepPx; y < rh; y += stepPx) {
+      ctx.moveTo(PADDING, PADDING + y);
+      ctx.lineTo(PADDING + rw, PADDING + y);
+    }
+    ctx.stroke();
+  }
+
+  function drawProducts() {
+    for (var i = 0; i < products.length; i++) {
+      drawProduct(products[i]);
+    }
+  }
+
+  function drawProduct(p) {
+    var b = getProductBounds(p);
+    var tl = roomToCanvas(b.x, b.y);
+    var pw = b.w * scale;
+    var ph = b.h * scale;
+    var fits = checkFit(p);
+
+    // Determine category from productType
+    var catKey = null;
+    if (p.productType) {
+      if (p.productType.indexOf('futon') >= 0) catKey = 'futon-frames';
+      else if (p.productType.indexOf('storage') === 0 || p.productType.indexOf('ottoman') >= 0) catKey = 'storage';
+      else catKey = 'accessories';
+    }
+    var colors = CATEGORY_COLORS[catKey] || DEFAULT_COLOR;
+
+    // Fill
+    ctx.fillStyle = colors.fill;
+    ctx.fillRect(tl.x, tl.y, pw, ph);
+
+    // Border — color depends on selection and fit state
+    ctx.lineWidth = p.id === selectedId ? 3 : 2;
+    if (p.id === selectedId) {
+      ctx.strokeStyle = SELECTED_STROKE;
+    } else {
+      ctx.strokeStyle = fits ? colors.stroke : NOFIT_STROKE;
+    }
+    ctx.strokeRect(tl.x, tl.y, pw, ph);
+
+    // Fit indicator — small corner triangle when not fitting
+    if (!fits) {
+      ctx.fillStyle = NOFIT_STROKE;
+      ctx.beginPath();
+      ctx.moveTo(tl.x + pw - 12, tl.y);
+      ctx.lineTo(tl.x + pw, tl.y);
+      ctx.lineTo(tl.x + pw, tl.y + 12);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Label (only if enough space)
+    if (pw > 30 && ph > 16) {
+      ctx.fillStyle = colors.label;
+      var fontSize = Math.max(9, Math.min(12, pw / 8));
+      ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      var label = p.label || p.productType || '';
+      // Truncate if too wide
+      var maxChars = Math.floor(pw / (fontSize * 0.55));
+      if (label.length > maxChars) label = label.slice(0, maxChars - 1) + '\u2026';
+      ctx.fillText(label, tl.x + pw / 2, tl.y + ph / 2);
+    }
+
+    // Bed mode indicator — small "B" in top-left
+    if (p.isBedMode && pw > 20 && ph > 20) {
+      ctx.fillStyle = colors.label;
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('B', tl.x + 3, tl.y + 2);
+    }
+  }
+
+  function drawDimensionLabels(rect) {
+    var rw = roomWidth * scale;
+    var rh = roomLength * scale;
+    ctx.fillStyle = '#666';
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+
+    // Width label (top)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    var wFt = Math.floor(roomWidth / 12);
+    var wIn = roomWidth % 12;
+    var wLabel = wIn > 0 ? wFt + "'" + wIn + '"' : wFt + "'";
+    ctx.fillText(wLabel, PADDING + rw / 2, PADDING - 4);
+
+    // Length label (left)
+    ctx.save();
+    ctx.translate(PADDING - 4, PADDING + rh / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    var lFt = Math.floor(roomLength / 12);
+    var lIn = roomLength % 12;
+    var lLabel = lIn > 0 ? lFt + "'" + lIn + '"' : lFt + "'";
+    ctx.fillText(lLabel, 0, 0);
+    ctx.restore();
+  }
+
+  // ── Interaction ────────────────────────────────────────────────────
+
+  function getEventPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function onPointerDown(e) {
+    var pos = getEventPos(e);
+    var hit = hitTest(pos.x, pos.y);
+
+    if (hit) {
+      selectedId = hit.id;
+      var b = getProductBounds(hit);
+      var tl = roomToCanvas(b.x, b.y);
+      dragging = { id: hit.id, offsetX: pos.x - tl.x, offsetY: pos.y - tl.y };
+      canvas.style.cursor = 'grabbing';
+    } else {
+      selectedId = null;
+      dragging = null;
+    }
+    render();
+  }
+
+  function onPointerMove(e) {
+    if (!dragging) {
+      // Hover cursor
+      var pos = getEventPos(e);
+      var hit = hitTest(pos.x, pos.y);
+      canvas.style.cursor = hit ? 'grab' : 'crosshair';
+      return;
+    }
+
+    e.preventDefault();
+    var pos = getEventPos(e);
+    var room = canvasToRoom(pos.x - dragging.offsetX, pos.y - dragging.offsetY);
+
+    var product = products.find(function (p) { return p.id === dragging.id; });
+    if (product) {
+      // Snap to 1-inch grid
+      product.x = Math.round(room.x);
+      product.y = Math.round(room.y);
+      render();
+    }
+  }
+
+  function onPointerUp() {
+    if (dragging) {
+      canvas.style.cursor = 'grab';
+      dragging = null;
+      notifyParent();
+    }
+  }
+
+  function onDoubleClick(e) {
+    var pos = getEventPos(e);
+    var hit = hitTest(pos.x, pos.y);
+    if (hit) {
+      // Cycle rotation: 0 → 90 → 180 → 270 → 0
+      hit.rotation = ((hit.rotation || 0) + 90) % 360;
+      render();
+      notifyParent();
+    }
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  canvas.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('mouseleave', onPointerUp);
+  canvas.addEventListener('dblclick', onDoubleClick);
+
+  // Touch events
+  canvas.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 1) onPointerDown(e);
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 1 && dragging) onPointerMove(e);
+  }, { passive: false });
+  canvas.addEventListener('touchend', onPointerUp);
+
+  // ── PostMessage Protocol ───────────────────────────────────────────
+
+  function notifyParent() {
+    var summary = products.map(function (p) {
+      return { id: p.id, x: p.x, y: p.y, fits: checkFit(p), label: p.label || '' };
+    });
+    window.parent.postMessage({ type: 'canvasUpdate', products: summary }, '*');
+  }
+
+  window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || !data.type) return;
+
+    switch (data.type) {
+      case 'updateRoom':
+        roomWidth = Math.max(0, Number(data.roomWidth) || 0);
+        roomLength = Math.max(0, Number(data.roomLength) || 0);
+        if (data.scale) scale = data.scale;
+        render();
+        notifyParent();
+        break;
+
+      case 'addProduct':
+        if (data.product && data.product.id) {
+          products.push({
+            id: data.product.id,
+            productType: data.product.productType || '',
+            label: data.product.label || '',
+            x: Number(data.product.x) || 0,
+            y: Number(data.product.y) || 0,
+            width: Number(data.product.width) || 20,
+            depth: Number(data.product.depth) || 20,
+            depthBed: Number(data.product.depthBed) || Number(data.product.depth) || 20,
+            rotation: Number(data.product.rotation) || 0,
+            isBedMode: Boolean(data.product.isBedMode),
+          });
+          selectedId = data.product.id;
+          render();
+          notifyParent();
+        }
+        break;
+
+      case 'removeProduct':
+        if (data.id) {
+          products = products.filter(function (p) { return p.id !== data.id; });
+          if (selectedId === data.id) selectedId = null;
+          render();
+          notifyParent();
+        }
+        break;
+
+      case 'setMobileMode':
+        // Mobile layout changes handled by roomPlannerMobile.js on the page side.
+        // Canvas re-renders to pick up any resize changes.
+        render();
+        break;
+
+      case 'exportImage':
+        var dataUrl = canvas.toDataURL('image/png');
+        window.parent.postMessage({ type: 'exportResult', dataUrl: dataUrl }, '*');
+        break;
+    }
+  });
+
+  // ── Resize Handling ────────────────────────────────────────────────
+
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 100);
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+</body>
+</html>
