@@ -8,16 +8,19 @@
   from "Room Planner.js" page code. Renders an interactive 2D layout
   with drag-and-drop product repositioning.
 
-  Messages IN (from parent):
-    { type: 'updateRoom', roomWidth, roomLength, scale }
-    { type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed, rotation?, isBedMode? } }
+  Messages IN (from parent — source-validated, origin-pinned):
+    { type: 'updateRoom', roomWidth, roomLength, scale? }
+    { type: 'addProduct', product: { id, productType?, label?, x?, y?, width?, depth?, depthBed?, rotation?, isBedMode? } }
     { type: 'removeProduct', id }
     { type: 'setMobileMode', enabled }
     { type: 'exportImage' }
 
-  Messages OUT (to parent):
+  Messages OUT (to parent — sent to pinned origin, not wildcard):
     { type: 'canvasUpdate', products: [{ id, x, y, fits, label }] }
     { type: 'exportResult', dataUrl }
+
+  Note: setMobileMode triggers a re-render but does NOT emit canvasUpdate
+  (no product state change — mobile layout is handled by the page side).
 
   CF-eqc5.3 / CF-fnv9
 -->
@@ -42,6 +45,7 @@
   // ── Constants ──────────────────────────────────────────────────────
   var PADDING = 20;
   var GRID_STEP_INCHES = 12; // 1-foot grid lines
+  var MAX_DPR = 3; // Cap devicePixelRatio to prevent GPU memory exhaustion
   var CATEGORY_COLORS = {
     'futon-frames': { fill: 'rgba(74, 111, 165, 0.35)', stroke: '#4a6fa5', label: '#2c4a6e' },
     'storage':      { fill: 'rgba(107, 142, 87, 0.35)', stroke: '#6b8e57', label: '#3d5c2d' },
@@ -60,6 +64,7 @@
   var products = [];
   var selectedId = null;
   var dragging = null; // { id, offsetX, offsetY }
+  var parentOrigin = null; // Pinned on first message from parent
 
   // ── Canvas Logic (inlined from roomPlannerCanvas.js) ───────────────
 
@@ -107,7 +112,7 @@
   // ── Rendering ──────────────────────────────────────────────────────
 
   function render() {
-    var dpr = window.devicePixelRatio || 1;
+    var dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     var rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
@@ -364,24 +369,34 @@
     var summary = products.map(function (p) {
       return { id: p.id, x: p.x, y: p.y, fits: checkFit(p), label: p.label || '' };
     });
-    window.parent.postMessage({ type: 'canvasUpdate', products: summary }, '*');
+    window.parent.postMessage({ type: 'canvasUpdate', products: summary }, parentOrigin || window.location.origin);
   }
 
   window.addEventListener('message', function (event) {
+    // Security: only accept messages from the parent frame
+    if (event.source !== window.parent) return;
     var data = event.data;
     if (!data || !data.type) return;
+
+    // Pin the parent origin on first valid message
+    if (!parentOrigin) parentOrigin = event.origin;
 
     switch (data.type) {
       case 'updateRoom':
         roomWidth = Math.max(0, Number(data.roomWidth) || 0);
         roomLength = Math.max(0, Number(data.roomLength) || 0);
-        if (data.scale) scale = data.scale;
+        if (data.scale != null) {
+          var s = Number(data.scale);
+          if (s > 0 && isFinite(s)) scale = s;
+        }
         render();
         notifyParent();
         break;
 
       case 'addProduct':
         if (data.product && data.product.id) {
+          // Deduplicate: replace existing product with same id
+          products = products.filter(function (p) { return p.id !== data.product.id; });
           products.push({
             id: data.product.id,
             productType: data.product.productType || '',
@@ -411,13 +426,22 @@
 
       case 'setMobileMode':
         // Mobile layout changes handled by roomPlannerMobile.js on the page side.
-        // Canvas re-renders to pick up any resize changes.
+        // Canvas re-renders to pick up any resize changes. No canvasUpdate emitted
+        // because product state is unchanged.
         render();
         break;
 
       case 'exportImage':
-        var dataUrl = canvas.toDataURL('image/png');
-        window.parent.postMessage({ type: 'exportResult', dataUrl: dataUrl }, '*');
+        try {
+          var dataUrl = canvas.toDataURL('image/png');
+          window.parent.postMessage({ type: 'exportResult', dataUrl: dataUrl }, parentOrigin || window.location.origin);
+        } catch (e) {
+          window.parent.postMessage({ type: 'exportResult', dataUrl: '', error: 'Canvas export failed' }, parentOrigin || window.location.origin);
+        }
+        break;
+
+      default:
+        // Unknown message type — ignored
         break;
     }
   });

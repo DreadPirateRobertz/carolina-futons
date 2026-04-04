@@ -1,13 +1,10 @@
 /**
- * Tests for room-planner-canvas.html postMessage protocol and interaction logic.
+ * Tests for room-planner-canvas.html postMessage protocol and state logic.
  *
  * Since the HtmlComponent runs in an iframe, we test the protocol contract:
  * - Messages the page sends IN → expected state changes
  * - Messages the canvas sends OUT → expected shape
- * - Interaction sequences (add, move, rotate, remove, export)
- *
- * These tests verify the same logic inlined in the HTML by reimplementing the
- * pure state functions and testing the message flow contract.
+ * - Edge cases: dedup, falsy ids, scale validation, bed mode fallbacks
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
@@ -29,11 +26,12 @@ function checkFit(p, roomWidth, roomLength) {
   return (b.x + b.w <= roomWidth) && (b.y + b.h <= roomLength);
 }
 
-// ── Simulated Canvas State Machine ──────────────────────────────────
+// ── Simulated Canvas State Machine (mirrors HTML message handler) ────
 
 function createCanvasState() {
   let roomWidth = 0;
   let roomLength = 0;
+  let scale = 1;
   let products = [];
   let selectedId = null;
   const messages = [];
@@ -54,11 +52,17 @@ function createCanvasState() {
       case 'updateRoom':
         roomWidth = Math.max(0, Number(data.roomWidth) || 0);
         roomLength = Math.max(0, Number(data.roomLength) || 0);
+        if (data.scale != null) {
+          const s = Number(data.scale);
+          if (s > 0 && isFinite(s)) scale = s;
+        }
         notifyParent();
         break;
 
       case 'addProduct':
         if (data.product && data.product.id) {
+          // Deduplicate: replace existing product with same id
+          products = products.filter(p => p.id !== data.product.id);
           products.push({
             id: data.product.id,
             productType: data.product.productType || '',
@@ -84,15 +88,23 @@ function createCanvasState() {
         }
         break;
 
+      case 'setMobileMode':
+        // No canvasUpdate — product state unchanged. Canvas re-renders only.
+        break;
+
       case 'exportImage':
         messages.push({ type: 'exportResult', dataUrl: 'data:image/png;base64,MOCK' });
+        break;
+
+      default:
+        // Unknown message type — ignored
         break;
     }
   }
 
   return {
     handleMessage,
-    getState: () => ({ roomWidth, roomLength, products: [...products], selectedId }),
+    getState: () => ({ roomWidth, roomLength, scale, products: [...products], selectedId }),
     getMessages: () => [...messages],
     clearMessages: () => { messages.length = 0; },
   };
@@ -107,7 +119,7 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
     state = createCanvasState();
   });
 
-  // ── updateRoom ───────────��──────────────────────────────────────
+  // ── updateRoom ────────────────────────────────────────────────────
 
   describe('updateRoom message', () => {
     it('sets room dimensions from message', () => {
@@ -137,6 +149,31 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
       expect(msgs).toHaveLength(1);
       expect(msgs[0].type).toBe('canvasUpdate');
       expect(msgs[0].products).toEqual([]);
+    });
+
+    it('accepts valid scale override', () => {
+      state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 144, scale: 2.5 });
+      expect(state.getState().scale).toBe(2.5);
+    });
+
+    it('ignores negative scale', () => {
+      state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 144, scale: -1 });
+      expect(state.getState().scale).toBe(1); // default unchanged
+    });
+
+    it('ignores Infinity scale', () => {
+      state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 144, scale: Infinity });
+      expect(state.getState().scale).toBe(1);
+    });
+
+    it('ignores zero scale', () => {
+      state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 144, scale: 0 });
+      expect(state.getState().scale).toBe(1);
+    });
+
+    it('ignores NaN scale', () => {
+      state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 144, scale: NaN });
+      expect(state.getState().scale).toBe(1);
     });
   });
 
@@ -212,6 +249,34 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
       state.handleMessage({ type: 'addProduct', product: { id: 'p3', width: 40, depth: 40 } });
       expect(state.getState().products).toHaveLength(3);
     });
+
+    it('deduplicates: re-adding same id replaces the product', () => {
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', label: 'V1', x: 0, y: 0, width: 20, depth: 20 } });
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', label: 'V2', x: 50, y: 50, width: 30, depth: 30 } });
+      const s = state.getState();
+      expect(s.products).toHaveLength(1);
+      expect(s.products[0].label).toBe('V2');
+      expect(s.products[0].x).toBe(50);
+      expect(s.products[0].width).toBe(30);
+    });
+
+    it('depthBed defaults to depth when omitted', () => {
+      state.handleMessage({
+        type: 'addProduct',
+        product: { id: 'p1', width: 20, depth: 30 },
+      });
+      expect(state.getState().products[0].depthBed).toBe(30);
+    });
+
+    it('depthBed defaults to 20 when both depth and depthBed omitted', () => {
+      state.handleMessage({
+        type: 'addProduct',
+        product: { id: 'p1', width: 40 },
+      });
+      const p = state.getState().products[0];
+      expect(p.depth).toBe(20);
+      expect(p.depthBed).toBe(20);
+    });
   });
 
   // ── removeProduct ───────────────────────────────────────────────
@@ -256,9 +321,48 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
       expect(msgs[0].type).toBe('canvasUpdate');
       expect(msgs[0].products).toHaveLength(0);
     });
+
+    it('no-ops when id is missing (undefined)', () => {
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', width: 20, depth: 20 } });
+      state.clearMessages();
+      state.handleMessage({ type: 'removeProduct' });
+      expect(state.getState().products).toHaveLength(1);
+      expect(state.getMessages()).toHaveLength(0); // no canvasUpdate emitted
+    });
+
+    it('no-ops when id is empty string', () => {
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', width: 20, depth: 20 } });
+      state.clearMessages();
+      state.handleMessage({ type: 'removeProduct', id: '' });
+      expect(state.getState().products).toHaveLength(1);
+      expect(state.getMessages()).toHaveLength(0);
+    });
   });
 
-  // ── exportImage ─────────────────────────────���───────────────────
+  // ── setMobileMode ─────────────────────────────────────────────
+
+  describe('setMobileMode message', () => {
+    it('does not emit canvasUpdate (no product state change)', () => {
+      state.handleMessage({ type: 'setMobileMode', enabled: true });
+      expect(state.getMessages()).toHaveLength(0);
+    });
+
+    it('does not alter products array', () => {
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', width: 20, depth: 20 } });
+      const before = state.getState().products;
+      state.handleMessage({ type: 'setMobileMode', enabled: true });
+      expect(state.getState().products).toEqual(before);
+    });
+
+    it('does not alter selection', () => {
+      state.handleMessage({ type: 'addProduct', product: { id: 'p1', width: 20, depth: 20 } });
+      expect(state.getState().selectedId).toBe('p1');
+      state.handleMessage({ type: 'setMobileMode', enabled: false });
+      expect(state.getState().selectedId).toBe('p1');
+    });
+  });
+
+  // ── exportImage ───────────────────────────────────────────────
 
   describe('exportImage message', () => {
     it('sends exportResult with dataUrl', () => {
@@ -270,7 +374,7 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
     });
   });
 
-  // ── Invalid messages ───────────────────────────────────��────────
+  // ── Invalid messages ──────────────────────────────────────────
 
   describe('invalid messages', () => {
     it('ignores null data', () => {
@@ -285,6 +389,11 @@ describe('Room Planner Canvas HTML — postMessage protocol', () => {
 
     it('ignores unknown message type', () => {
       state.handleMessage({ type: 'unknownType' });
+      expect(state.getMessages()).toHaveLength(0);
+    });
+
+    it('ignores undefined data', () => {
+      state.handleMessage(undefined);
       expect(state.getMessages()).toHaveLength(0);
     });
   });
@@ -315,14 +424,21 @@ describe('Room Planner Canvas HTML — fit checking', () => {
 
   it('handles bed mode (larger depth)', () => {
     const p = { x: 0, y: 0, width: 82, depth: 38, depthBed: 54, rotation: 0, isBedMode: true };
-    // In bed mode depth=54, so needs 54 in length
     expect(checkFit(p, 100, 53)).toBe(false);
     expect(checkFit(p, 100, 54)).toBe(true);
   });
 
+  it('bed mode falls back to depth when depthBed is missing', () => {
+    const p = { x: 0, y: 0, width: 82, depth: 38, rotation: 0, isBedMode: true };
+    // No depthBed — falls back to depth=38
+    const b = getProductBounds(p);
+    expect(b.h).toBe(38);
+    expect(checkFit(p, 100, 38)).toBe(true);
+    expect(checkFit(p, 100, 37)).toBe(false);
+  });
+
   it('handles rotation (90°) — swaps width and depth', () => {
     const p = { x: 0, y: 0, width: 82, depth: 38, rotation: 90, isBedMode: false };
-    // Rotated: w=38, h=82
     const b = getProductBounds(p);
     expect(b.w).toBe(38);
     expect(b.h).toBe(82);
@@ -344,18 +460,24 @@ describe('Room Planner Canvas HTML — fit checking', () => {
 
   it('product exactly filling room edge fits', () => {
     const p = { x: 18, y: 0, width: 82, depth: 38, rotation: 0, isBedMode: false };
-    // x(18) + w(82) = 100 <= roomWidth(100)
     expect(checkFit(p, 100, 100)).toBe(true);
   });
 
   it('product one inch past room edge does not fit', () => {
     const p = { x: 19, y: 0, width: 82, depth: 38, rotation: 0, isBedMode: false };
-    // x(19) + w(82) = 101 > roomWidth(100)
     expect(checkFit(p, 100, 100)).toBe(false);
+  });
+
+  it('bed mode + rotation swaps depthBed and width', () => {
+    const p = { x: 0, y: 0, width: 82, depth: 38, depthBed: 54, rotation: 90, isBedMode: true };
+    // Bed mode depth=54, rotated: w=54, h=82
+    const b = getProductBounds(p);
+    expect(b.w).toBe(54);
+    expect(b.h).toBe(82);
   });
 });
 
-// ── Integration sequence tests ─────────────────────────────��────────
+// ── Integration sequence tests ──────────────────────────────────────
 
 describe('Room Planner Canvas HTML — interaction sequences', () => {
   let state;
@@ -393,7 +515,6 @@ describe('Room Planner Canvas HTML — interaction sequences', () => {
   });
 
   it('changing room dimensions re-evaluates fit of existing products', () => {
-    // Add product that fits in big room
     state.handleMessage({ type: 'updateRoom', roomWidth: 200, roomLength: 200 });
     state.handleMessage({
       type: 'addProduct',
@@ -401,7 +522,6 @@ describe('Room Planner Canvas HTML — interaction sequences', () => {
     });
     state.clearMessages();
 
-    // Shrink room — product no longer fits
     state.handleMessage({ type: 'updateRoom', roomWidth: 50, roomLength: 50 });
     const msgs = state.getMessages();
     expect(msgs[0].products[0].fits).toBe(false);
@@ -415,5 +535,28 @@ describe('Room Planner Canvas HTML — interaction sequences', () => {
     const exportMsg = state.getMessages().find(m => m.type === 'exportResult');
     expect(exportMsg).toBeDefined();
     expect(exportMsg.dataUrl).toBeTruthy();
+  });
+
+  it('setMobileMode mid-session does not disrupt products', () => {
+    state.handleMessage({ type: 'updateRoom', roomWidth: 120, roomLength: 120 });
+    state.handleMessage({ type: 'addProduct', product: { id: 'p1', x: 10, y: 10, width: 20, depth: 20 } });
+    state.clearMessages();
+
+    state.handleMessage({ type: 'setMobileMode', enabled: true });
+    // Products unchanged
+    expect(state.getState().products).toHaveLength(1);
+    expect(state.getState().products[0].id).toBe('p1');
+    // No canvasUpdate emitted
+    expect(state.getMessages()).toHaveLength(0);
+  });
+
+  it('duplicate addProduct replaces rather than appending', () => {
+    state.handleMessage({ type: 'updateRoom', roomWidth: 200, roomLength: 200 });
+    state.handleMessage({ type: 'addProduct', product: { id: 'f1', x: 0, y: 0, width: 82, depth: 38 } });
+    state.handleMessage({ type: 'addProduct', product: { id: 'f1', x: 50, y: 50, width: 82, depth: 38 } });
+
+    const lastUpdate = state.getMessages().filter(m => m.type === 'canvasUpdate').pop();
+    expect(lastUpdate.products).toHaveLength(1);
+    expect(lastUpdate.products[0].x).toBe(50);
   });
 });
