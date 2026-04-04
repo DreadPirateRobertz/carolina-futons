@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -111,6 +111,8 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
   beforeEach(() => {
     elements.clear();
   });
+
+  afterEach(() => new Promise((r) => setTimeout(r, 0)));
 
   // ═══════════════════════════════════════════════════════════════════
   // AC: TRUST BAR — 5-icon Joybird-style trust strip
