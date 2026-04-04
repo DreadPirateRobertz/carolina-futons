@@ -191,11 +191,69 @@ export function getTierForPoints(points) {
 
 export const GAMIFICATION_TIER_ORDER = [
   'Trail Blazer',
-  'Blue Ridge Explorer',
-  'Summit Seeker',
-  'Peak Performer',
+  'Mountain Guide',
+  'Summit Master',
   'Blue Ridge Legend',
 ];
+
+// ── Tier Perks — canonical perk definitions per tier ─────────────────────────
+// CF-c6el.1: Each tier unlocks cumulative perks (higher tiers inherit lower).
+
+export const PERK_TYPES = {
+  BIRTHDAY_DISCOUNT: 'BIRTHDAY_DISCOUNT',
+  ACCESSORY_DISCOUNT: 'ACCESSORY_DISCOUNT',
+  PRIORITY_SUPPORT: 'PRIORITY_SUPPORT',
+  FREE_WHITE_GLOVE: 'FREE_WHITE_GLOVE',
+  EARLY_ACCESS: 'EARLY_ACCESS',
+  STYLING_CALL: 'STYLING_CALL',
+};
+
+export const TIER_PERKS = {
+  'Trail Blazer': [
+    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+  ],
+  'Mountain Guide': [
+    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+  ],
+  'Summit Master': [
+    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+    { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
+    { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
+    { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
+  ],
+  'Blue Ridge Legend': [
+    { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+    { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+    { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+    { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
+    { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
+    { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
+  ],
+};
+
+/**
+ * Returns the perks unlocked at a given tier.
+ * @param {string} tierName
+ * @returns {Array<{type: string, value: number|null, label: string, delivery: string}>}
+ */
+export function getPerksByTier(tierName) {
+  return TIER_PERKS[tierName] ?? [];
+}
+
+/**
+ * Returns perks newly unlocked by a tier promotion (in newTier but not in prevTier).
+ * @param {string} prevTier
+ * @param {string} newTier
+ * @returns {Array<{type: string, value: number|null, label: string, delivery: string}>}
+ */
+export function getNewPerksOnPromotion(prevTier, newTier) {
+  const prevTypes = new Set((TIER_PERKS[prevTier] ?? []).map(p => p.type));
+  return (TIER_PERKS[newTier] ?? []).filter(p => !prevTypes.has(p.type));
+}
 
 // ── isBonusPointsDayAvailable ─────────────────────────────────────────────────
 
