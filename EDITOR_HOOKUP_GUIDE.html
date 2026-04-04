@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.0 · Updated 2026-03-29 — Session 32: BNPL Widget (CF-nqb5.1) — 3 elements; Share Your Room UGC modal (CF-rw9i.1) — 12 elements. Previous: v2.9 — Admin A/B Tests dashboard (CF-0jk5). Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v3.1 · Updated 2026-04-04 — 10 PRs merged: Warranty Registration (cf-46ct) 11 elements; NPS Survey (cf-1mlj) 4 elements; Video Review Grid (CF-ou66.3) 10 elements; Futon Sommelier hookup (cf-p1c9); Trail Perk Unlock (CF-mcyh.2); Video Review Badge (CF-ou66.2); Room Planner Canvas (CF-eqc5.3); Content Calendar (cf-6ika); Delivery SMS (CF-rjxq); Flaky test fix (CF-0ypu). Previous: v3.0 — BNPL Widget + Share Your Room.</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -1666,6 +1666,43 @@ Right column:
         ["shareYourRoomValidation","Text","Inline validation/error — collapsed by default"],
         ["shareYourRoomSubmitBtn","Button","Submit photo — disabled until upload+roomType set"],
         ["shareYourRoomSuccess","Section","Success message — collapsed by default"]
+      ]},
+      { name: "Video Review Grid (CF-ou66.3, PR #941)", impl: `<h4>🎬 Implementation — Video Review Grid (Product Page)</h4>
+<p><strong>CF-ou66.3</strong>: TikTok-style horizontal thumbnail row of approved customer video reviews on PDPs. Customers can play videos in a full-screen overlay. Backend: <code>videoReviewService.web.js</code> → <em>VideoReviews</em> CMS collection (status=approved only). Module: <code>src/public/VideoReviewGrid.js</code>.</p>
+<p><strong>Data flow</strong>: On page load, <code>initVideoReviewGrid()</code> calls <code>getVideoReviews(productId)</code> which returns approved videos sorted by newest first. If no videos exist, the entire section stays collapsed. Clicking a thumbnail opens a custom HTML video player in an overlay (uses HtmlComponent, NOT Wix Video — required for <code>wix:</code> media URIs).</p>
+<div class="layer-diagram">LAYOUT:
+  #videoReviewSection    (Box — collapsed by default, expands when videos exist)
+    ├─ #videoReviewTitle (Text — "Customer Videos")
+    └─ #videoReviewRepeater (Repeater — horizontal scroll)
+          ├─ #vrThumbnail    (Image — video thumbnail, clickable)
+          ├─ #vrPlayIcon     (Image/Icon — play triangle overlay)
+          └─ #vrReviewerName (Text — reviewer display name, truncated 30 chars)
+
+  #videoPlayerOverlay  (Box — full-screen dimmed overlay, collapsed by default)
+    ├─ #videoPlayerEmbed (HtmlComponent — custom HTML5 video player, NOT Wix Video)
+    └─ #closeVideoOverlay (Button — "×" close, top-right)
+</div>
+<ul>
+  <li><strong>#videoReviewSection</strong>: Box — container for the entire grid. Collapsed on load; expanded by code only when approved videos exist. Has <code>role="region"</code> and <code>aria-label="Customer video reviews"</code>.</li>
+  <li><strong>#videoReviewTitle</strong>: Text — "Customer Videos" heading.</li>
+  <li><strong>#videoReviewRepeater</strong>: Repeater — horizontal layout. Each item shows a thumbnail+overlay+name. Data set via <code>.data = reviews.map(...)</code>.</li>
+  <li><strong>#vrThumbnail</strong>: Image (repeater child) — video thumbnail. Alt text auto-set to "Video review by {name}". Click opens video overlay.</li>
+  <li><strong>#vrPlayIcon</strong>: Image (repeater child) — play button overlay on thumbnail. Also clickable, opens same overlay.</li>
+  <li><strong>#vrReviewerName</strong>: Text (repeater child) — reviewer name, truncated to 30 chars.</li>
+  <li><strong>#videoPlayerOverlay</strong>: Box — page-level dimmed overlay, NOT inside repeater. Collapsed by default.</li>
+  <li><strong>#videoPlayerEmbed</strong>: HtmlComponent (NOT Wix Video!) — receives video file ID via <code>.src</code>, builds custom HTML5 player. Must be HtmlComponent because Wix media URIs require the embed pattern.</li>
+  <li><strong>#closeVideoOverlay</strong>: Button — "×" close, collapses overlay and resets player to <code>about:blank</code>.</li>
+</ul>
+<p><strong>Gamification tie-in</strong>: Submitting a video review (CF-ou66.2) awards 500 loyalty points + an exclusive "Video Reviewer" badge. The video must be approved by admin before it appears in this grid.</p>`, elements: [
+        ["videoReviewSection","Box","Container — collapsed unless videos exist"],
+        ["videoReviewTitle","Text","'Customer Videos' heading"],
+        ["videoReviewRepeater","Repeater","Horizontal thumbnail row"],
+        ["vrThumbnail","Image","Video thumbnail (repeater child) — clickable"],
+        ["vrPlayIcon","Image","Play button overlay (repeater child)"],
+        ["vrReviewerName","Text","Reviewer name (repeater child)"],
+        ["videoPlayerOverlay","Box","Full-screen overlay — page level"],
+        ["videoPlayerEmbed","HtmlComponent","HTML5 video player — NOT Wix Video"],
+        ["closeVideoOverlay","Button","Close overlay button"]
       ]},
       { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
 <p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
@@ -5511,6 +5548,91 @@ SHARING:
         ["submitBtn","Button","Submit Photo — disabled during upload"],
         ["successSection","Box","Success state — collapsed by default"],
         ["successMessage","Text","'Thanks! Your photo is in review.'"]
+      ]}
+    ]
+  },
+  {
+    name: "Warranty Registration", file: "Warranty Registration.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "Warranty Registration Form (cf-46ct, PR #923)", impl: `<h4>🛡️ Implementation — Warranty Registration Page</h4>
+<p><strong>Route</strong>: <code>/warranty-registration</code>. Source: <code>src/pages/Warranty Registration.js</code> + <code>src/public/WarrantyWidget.js</code>. Backend: <code>warrantyService.web.js</code> → <em>WarrantyRegistrations</em> CMS collection.</p>
+<p><strong>How it works</strong>: Customer lands on this page after purchase (deep-linked from order confirmation email with <code>?product=NAME&productId=ID&orderId=ORDER</code> query params). The form auto-fills product info from the URL. Customer picks their purchase date and submits. Backend validates the order exists, creates a warranty record, and returns a registration ID.</p>
+<p><strong>WarrantyWidget</strong> (Member Page sidebar): Shows "Register Warranty" CTA + list of existing registrations in a repeater. Each row shows plan name, product, status, dates.</p>
+<div class="layer-diagram">LAYOUT (Warranty Registration Page):
+  #warrantyProductName   (TextInput — pre-filled from URL, read-only feel)
+  #warrantyProductId     (TextInput — hidden, pre-filled from URL)
+  #warrantyOrderId       (TextInput — hidden, pre-filled from URL)
+  #warrantyPurchaseDate  (DatePicker — customer selects purchase date)
+  #warrantySubmitBtn     (Button — "Register Warranty")
+  #warrantyLoadingIndicator (Box/Image — spinner during submission)
+
+LAYOUT (WarrantyWidget — Member Page):
+  #warrantyCtaBtn        (Button — "Register Warranty" → navigates to page)
+  #warrantyListLoading   (Box — loading spinner for list)
+  #warrantyRepeater      (Repeater — list of warranty records)
+    ├─ #warrantyItemPlan       (Text — plan name)
+    ├─ #warrantyItemProduct    (Text — product name)
+    ├─ #warrantyItemStatus     (Text — Active/Expired/Pending)
+    ├─ #warrantyItemExpires    (Text — "Expires: date")
+    └─ #warrantyItemRegistered (Text — "Registered: date")
+</div>
+<ul>
+  <li><strong>#warrantyProductName</strong>: TextInput — auto-filled from <code>?product=</code> URL param. Shows the product name so customer confirms what they're registering.</li>
+  <li><strong>#warrantyProductId</strong>: TextInput — hidden field, auto-filled from <code>?productId=</code>. Not visible to customer.</li>
+  <li><strong>#warrantyOrderId</strong>: TextInput — hidden field, auto-filled from <code>?orderId=</code>. Links warranty to the purchase.</li>
+  <li><strong>#warrantyPurchaseDate</strong>: DatePicker — customer selects when they bought the item. Validated: must be within the last year, not in the future.</li>
+  <li><strong>#warrantySubmitBtn</strong>: Button — "Register Warranty". Disabled during submission. On success, page shows registration ID.</li>
+  <li><strong>#warrantyLoadingIndicator</strong>: Box or Image — loading spinner. Hidden by default, shown during submit, hidden after response.</li>
+  <li><strong>#warrantyCtaBtn</strong>: Button (Member Page) — navigates to /warranty-registration. Always visible in member sidebar.</li>
+  <li><strong>#warrantyListLoading</strong>: Box (Member Page) — spinner while fetching existing warranties.</li>
+  <li><strong>#warrantyRepeater</strong>: Repeater (Member Page) — lists all customer's warranty registrations.</li>
+  <li><strong>#warrantyItemPlan</strong>: Text (repeater child) — warranty plan name.</li>
+  <li><strong>#warrantyItemProduct</strong>: Text (repeater child) — product name.</li>
+  <li><strong>#warrantyItemStatus</strong>: Text (repeater child) — "Active", "Expired", or "Pending".</li>
+  <li><strong>#warrantyItemExpires</strong>: Text (repeater child) — expiration date.</li>
+  <li><strong>#warrantyItemRegistered</strong>: Text (repeater child) — registration date.</li>
+</ul>`, elements: [
+        ["warrantyProductName","TextInput","Product name — pre-filled from URL"],
+        ["warrantyProductId","TextInput","Hidden — product ID from URL"],
+        ["warrantyOrderId","TextInput","Hidden — order ID from URL"],
+        ["warrantyPurchaseDate","DatePicker","Purchase date selector"],
+        ["warrantySubmitBtn","Button","Register Warranty — disabled during submit"],
+        ["warrantyLoadingIndicator","Box","Loading spinner — hidden by default"],
+        ["warrantyCtaBtn","Button","Member Page — navigates to registration"],
+        ["warrantyListLoading","Box","Member Page — list loading spinner"],
+        ["warrantyRepeater","Repeater","Member Page — warranty records list"],
+        ["warrantyItemPlan","Text","Repeater child — plan name"],
+        ["warrantyItemProduct","Text","Repeater child — product name"],
+        ["warrantyItemStatus","Text","Repeater child — Active/Expired/Pending"],
+        ["warrantyItemExpires","Text","Repeater child — expiration date"],
+        ["warrantyItemRegistered","Text","Repeater child — registration date"]
+      ]}
+    ]
+  },
+  {
+    name: "Survey (NPS/CSAT)", file: "Survey.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Post-Purchase NPS Survey (cf-1mlj, PR #924)", impl: `<h4>📊 Implementation — NPS/CSAT Post-Purchase Survey</h4>
+<p><strong>Route</strong>: <code>/survey</code>. Source: <code>src/pages/Survey.js</code>. Backend: <code>surveyService.web.js</code> → <em>SurveyResponses</em> CMS collection.</p>
+<p><strong>How it works</strong>: Customer receives a post-purchase email with a link like <code>/survey?orderId=ORDER_ID</code>. Page loads, checks if the order exists and hasn't already been surveyed. Customer slides the NPS slider (0–10), optionally adds a comment, and submits. Backend stores the response and links it to the order. If already completed, the page shows a "thanks, already done" message.</p>
+<p><strong>NPS scoring</strong>: 0–6 = Detractor (red), 7–8 = Passive (yellow), 9–10 = Promoter (green). The slider updates a score label in real-time as the customer drags.</p>
+<div class="layer-diagram">LAYOUT:
+  #surveyNpsSlider         (Slider — 0 to 10, step 1)
+  #surveyComment           (TextArea — optional feedback)
+  #surveySubmitBtn         (Button — "Submit Feedback")
+  #surveyLoadingIndicator  (Box — spinner during submission)
+</div>
+<ul>
+  <li><strong>#surveyNpsSlider</strong>: Slider — range 0–10, step 1. onChange updates a visible score label. This is the core NPS input.</li>
+  <li><strong>#surveyComment</strong>: TextArea — optional free-text feedback. Value read on submit.</li>
+  <li><strong>#surveySubmitBtn</strong>: Button — "Submit Feedback". Disabled during submit. Hidden after successful submit (replaced by thank-you state).</li>
+  <li><strong>#surveyLoadingIndicator</strong>: Box — loading spinner. Hidden by default, shown during submit.</li>
+</ul>
+<p><strong>Edge cases</strong>: If <code>?orderId</code> is missing, page shows an error. If already submitted for this order, slider and button are disabled with a "you've already responded" message.</p>`, elements: [
+        ["surveyNpsSlider","Slider","NPS score 0–10"],
+        ["surveyComment","TextArea","Optional feedback comment"],
+        ["surveySubmitBtn","Button","Submit Feedback — disabled during submit"],
+        ["surveyLoadingIndicator","Box","Loading spinner — hidden by default"]
       ]}
     ]
   }
