@@ -1,11 +1,11 @@
 /**
  * @file analyticsDigest.test.js
- * @description Tests for the weekly analytics digest module (cf-w62s).
+ * @description Tests for the weekly analytics digest module (cf-w62s, cf-u30i).
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
-import { generateWeeklyDigest, sendWeeklyDigestEmail } from '../src/backend/analyticsDigest.web.js';
+import { generateWeeklyDigest, sendWeeklyDigestEmail, fetchOrderMetrics } from '../src/backend/analyticsDigest.web.js';
 
 beforeEach(() => {
   __reset();
@@ -24,6 +24,36 @@ const SAMPLE_EVENTS = [
   { eventType: 'spin_won', source: 'spin', timestamp: TWO_DAYS_AGO, memberId: 'mem-3', payload: '{}' },
   { eventType: 'financing_calculated', source: 'financing', timestamp: YESTERDAY, memberId: null, payload: '{}' },
   { eventType: 'review_submitted', source: 'review', timestamp: TWO_DAYS_AGO, memberId: 'mem-4', payload: '{}' },
+];
+
+// cf-u30i: sample orders for order metrics tests
+const SAMPLE_ORDERS = [
+  {
+    _id: 'ord-1', _createdDate: YESTERDAY,
+    totals: { total: 899.00, subtotal: 849.00 },
+    lineItems: [
+      { name: 'Monterey Futon Frame', price: 699.00, quantity: 1 },
+      { name: 'Premium Cotton Mattress', price: 200.00, quantity: 1 },
+    ],
+    buyerInfo: { email: 'customer1@example.com', memberId: 'mem-10' },
+  },
+  {
+    _id: 'ord-2', _createdDate: TWO_DAYS_AGO,
+    totals: { total: 1199.00, subtotal: 1149.00 },
+    lineItems: [
+      { name: 'Monterey Futon Frame', price: 699.00, quantity: 1 },
+      { name: 'Deluxe Innerspring Mattress', price: 500.00, quantity: 1 },
+    ],
+    buyerInfo: { email: 'customer2@example.com', memberId: 'mem-11' },
+  },
+  {
+    _id: 'ord-3', _createdDate: YESTERDAY,
+    totals: { total: 400.00, subtotal: 400.00 },
+    lineItems: [
+      { name: 'Premium Cotton Mattress', price: 200.00, quantity: 2 },
+    ],
+    buyerInfo: { email: 'customer3@example.com', memberId: null },
+  },
 ];
 
 describe('generateWeeklyDigest', () => {
@@ -160,7 +190,7 @@ describe('sendWeeklyDigestEmail', () => {
     const vars = JSON.parse(queued[0].variables);
     expect(vars.subject).toContain('Weekly Analytics Digest');
     expect(vars.html).toContain('Weekly Analytics Digest');
-    expect(vars.html).toContain('Top Events');
+    expect(vars.html).toContain('Traffic');
   });
 
   it('logs to AuditLog', async () => {
@@ -183,5 +213,112 @@ describe('sendWeeklyDigestEmail', () => {
     const queued = __getInserted('EmailQueue');
     const vars = JSON.parse(queued[0].variables);
     expect(vars.html).toContain('0');
+  });
+
+  // cf-u30i: email HTML includes revenue, orders, and top products
+  it('email includes revenue and order count from orders', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+
+    await sendWeeklyDigestEmail();
+
+    const queued = __getInserted('EmailQueue');
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.html).toContain('Revenue &amp; Orders');
+    expect(vars.html).toContain('2,498.00');  // total revenue
+    expect(vars.html).toContain('3');          // order count
+  });
+
+  it('email includes top products section', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+
+    await sendWeeklyDigestEmail();
+
+    const queued = __getInserted('EmailQueue');
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.html).toContain('Top Products');
+    expect(vars.html).toContain('Monterey Futon Frame');
+    expect(vars.html).toContain('Premium Cotton Mattress');
+  });
+});
+
+// ── fetchOrderMetrics (cf-u30i) ────────────────────────────────────────
+
+describe('fetchOrderMetrics', () => {
+  it('returns order count, revenue, and AOV', async () => {
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+    const metrics = await fetchOrderMetrics(new Date(0));
+
+    expect(metrics.orderCount).toBe(3);
+    expect(metrics.totalRevenue).toBeCloseTo(2498.00, 2);
+    expect(metrics.avgOrderValue).toBeCloseTo(832.67, 1);
+  });
+
+  it('aggregates top products by revenue', async () => {
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+    const metrics = await fetchOrderMetrics(new Date(0));
+
+    expect(metrics.topProducts.length).toBeGreaterThanOrEqual(2);
+    // Monterey ($699 + $699 = $1398) should lead
+    expect(metrics.topProducts[0].name).toBe('Monterey Futon Frame');
+    expect(metrics.topProducts[0].revenue).toBeCloseTo(1398.00, 2);
+    expect(metrics.topProducts[0].units).toBe(2);
+  });
+
+  it('counts units correctly for multi-quantity line items', async () => {
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+    const metrics = await fetchOrderMetrics(new Date(0));
+
+    const mattress = metrics.topProducts.find(p => p.name === 'Premium Cotton Mattress');
+    // ord-1 qty:1 + ord-3 qty:2 = 3 units
+    expect(mattress).toBeDefined();
+    expect(mattress.units).toBe(3);
+  });
+
+  it('returns zeros on empty orders', async () => {
+    __seed('Stores/Orders', []);
+    const metrics = await fetchOrderMetrics(new Date(0));
+
+    expect(metrics.orderCount).toBe(0);
+    expect(metrics.totalRevenue).toBe(0);
+    expect(metrics.avgOrderValue).toBe(0);
+    expect(metrics.topProducts).toEqual([]);
+  });
+
+  it('returns zeros and logs error on query failure', async () => {
+    const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setQueryError('Stores/Orders', new Error('db down'));
+
+    const metrics = await fetchOrderMetrics(new Date(0));
+
+    expect(metrics.orderCount).toBe(0);
+    expect(metrics.totalRevenue).toBe(0);
+    expect(metrics.topProducts).toEqual([]);
+  });
+
+  it('digest includes orderMetrics block', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+
+    const result = await generateWeeklyDigest();
+
+    expect(result.digest.orderMetrics).toBeDefined();
+    expect(result.digest.orderMetrics.orderCount).toBe(3);
+    expect(result.digest.orderMetrics.totalRevenue).toBeCloseTo(2498.00, 2);
+    expect(result.digest.orderMetrics.topProducts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('audit log includes order metrics summary', async () => {
+    __seed('AnalyticsEvents', SAMPLE_EVENTS);
+    __seed('Stores/Orders', SAMPLE_ORDERS);
+
+    await generateWeeklyDigest();
+
+    const audits = __getInserted('AuditLog');
+    const digestAudit = audits.find(a => a.action === 'generate');
+    const meta = JSON.parse(digestAudit.metadata);
+    expect(meta.orderCount).toBe(3);
+    expect(meta.totalRevenue).toBeCloseTo(2498.00, 2);
   });
 });
