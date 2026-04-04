@@ -48,7 +48,6 @@
     'accessories':  { fill: 'rgba(178, 134, 80, 0.35)', stroke: '#b28650', label: '#7a5a2f' },
   };
   var DEFAULT_COLOR = { fill: 'rgba(140, 140, 140, 0.35)', stroke: '#8c8c8c', label: '#555' };
-  var FIT_STROKE = '#28a745';
   var NOFIT_STROKE = '#dc3545';
   var SELECTED_STROKE = '#0066cc';
 
@@ -61,7 +60,6 @@
   var products = [];
   var selectedId = null;
   var dragging = null; // { id, offsetX, offsetY }
-  var isMobile = false;
 
   // ── Canvas Logic (inlined from roomPlannerCanvas.js) ───────────────
 
@@ -127,7 +125,7 @@
     var availH = rect.height - 2 * PADDING;
     scale = Math.min(availW / roomWidth, availH / roomLength);
 
-    drawRoom(rect);
+    drawRoom();
     drawGrid();
     drawProducts();
     drawDimensionLabels(rect);
@@ -194,7 +192,7 @@
     // Determine category from productType
     var catKey = null;
     if (p.productType) {
-      if (p.productType.indexOf('futon') === 0 || p.productType.indexOf('futon') >= 0) catKey = 'futon-frames';
+      if (p.productType.indexOf('futon') >= 0) catKey = 'futon-frames';
       else if (p.productType.indexOf('storage') === 0 || p.productType.indexOf('ottoman') >= 0) catKey = 'storage';
       else catKey = 'accessories';
     }
@@ -412,7 +410,8 @@
         break;
 
       case 'setMobileMode':
-        isMobile = Boolean(data.enabled);
+        // Mobile layout changes handled by roomPlannerMobile.js on the page side.
+        // Canvas re-renders to pick up any resize changes.
         render();
         break;
 
