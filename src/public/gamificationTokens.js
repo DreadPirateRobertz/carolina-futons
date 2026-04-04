@@ -338,3 +338,13 @@ export const BADGE_DISPLAY_NAMES = {
   ar_explorer: 'AR Explorer',
   video_reviewer: 'Video Reviewer',
 };
+
+// ── TIER_PERKS — perks unlocked at each gamification tier (CF-c6el.3) ─────────
+
+/** @type {Array<{tierKey:string,tierName:string,perks:Array<{perkId:string,label:string,description:string,icon:string}>}>} */
+export const TIER_PERKS = [
+  { tierKey: 'TRAIL_BLAZER', tierName: 'Trail Blazer', perks: [{ perkId: 'daily-spin', label: 'Daily Spin Wheel', description: 'Spin once per day to win bonus points and prizes.', icon: '🎡' }, { perkId: 'challenge-access', label: 'Challenge Trails', description: 'Access to Blue Ridge Trail challenges and seasonal missions.', icon: '🥾' }] },
+  { tierKey: 'MOUNTAIN_GUIDE', tierName: 'Mountain Guide', perks: [{ perkId: 'birthday-bonus', label: 'Birthday Bonus Points', description: 'Earn 150 bonus points during your birthday week.', icon: '🎂' }, { perkId: 'guide-badge-frame', label: 'Mountain Guide Badge Frame', description: 'Exclusive badge frame unlocked on your loyalty profile.', icon: '🏔️' }] },
+  { tierKey: 'SUMMIT_MASTER', tierName: 'Summit Master', perks: [{ perkId: 'styling-call', label: 'Free Styling Consultation', description: 'Book a free 30-minute styling call with our design team.', icon: '📞' }, { perkId: 'double-spin', label: 'Double Daily Spins', description: 'Spin the wheel twice per day instead of once.', icon: '🎰' }] },
+  { tierKey: 'BLUE_RIDGE_LEGEND', tierName: 'Blue Ridge Legend', perks: [{ perkId: 'free-shipping-all', label: 'Free Shipping Always', description: 'Free shipping on every order — no minimum required.', icon: '📦' }, { perkId: 'vip-early-access', label: 'VIP Early Access', description: 'Shop new arrivals 48 hours before the general public.', icon: '⭐' }] },
+];
