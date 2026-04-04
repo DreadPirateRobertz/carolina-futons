@@ -257,9 +257,9 @@ describe('getRelatedGuides — affinity scoring and ordering', () => {
     expect(result.success).toBe(true);
 
     const slugs = result.guides.map(g => g.slug);
-    const frameIdx   = slugs.indexOf('another-frame');
+    const frameIdx    = slugs.indexOf('another-frame');
     const mattressIdx = slugs.indexOf('mattress-guide');
-    const murphyIdx  = slugs.indexOf('murphy-guide');
+    const murphyIdx   = slugs.indexOf('murphy-guide');
 
     expect(frameIdx).toBeLessThan(mattressIdx);
     expect(mattressIdx).toBeLessThan(murphyIdx);
@@ -280,7 +280,7 @@ describe('getRelatedGuides — affinity scoring and ordering', () => {
   it('guides with score 1 (no affinity) are still included in results', () => {
     const guides = makeGuideList([
       ['current',  'futon-frames', 'Current'],
-      ['unrelated','outdoor-furniture','Outdoor'],  // not in futon-frames affinity → score 1
+      ['unrelated','novelty-items','Novelty'],  // not in any affinity → score 1
     ]);
 
     const result = getRelatedGuides('current', 'futon-frames', guides);
@@ -356,9 +356,9 @@ describe('getRelatedGuides — category affinity map', () => {
   function assertAffinity(fromCat, toCat) {
     const UNRELATED_CAT = 'novelty-items';
     const guides = makeGuideList([
-      ['cur',      fromCat,      'Current'],
-      ['related',  toCat,        'Related'],
-      ['unrelated', UNRELATED_CAT, 'Unrelated'],
+      ['cur',       fromCat,      'Current'],
+      ['related',   toCat,        'Related'],
+      ['unrelated', UNRELATED_CAT,'Unrelated'],
     ]);
 
     const result = getRelatedGuides('cur', fromCat, guides);
