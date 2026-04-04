@@ -75,6 +75,7 @@ const REFERRAL_SHARED_POINTS = 100; // distinct from REFERRAL_ACCEPTED (200 pts 
 const FIXED_AWARD_EVENTS = new Set([
   'gamification_birthday_bonus',
   'gamification_anniversary_bonus',
+  'video_review_approved', // 500 pts, not streak-multiplied — one-time exclusive award
 ]);
 
 /**
@@ -267,6 +268,22 @@ export const receiveGamificationEvent = webMethod(
         }
       }
 
+      // CF-ou66.2: video_reviewer exclusive badge — one-time award on video review approval
+      if (eventName === 'video_review_approved') {
+        try {
+          await wixData.insert(MEMBER_BADGES_COLLECTION, {
+            _id: `${memberId}_video_reviewer`,
+            memberId,
+            badgeId: 'video_reviewer',
+          });
+          badgeUnlocked = 'video_reviewer';
+        } catch (err) {
+          const msg = String(err?.message ?? err).toLowerCase();
+          const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
+          logError(`gamificationEventReceiver — video_reviewer badge award failed for ${memberId}`, err, { silent: isDuplicate });
+        }
+      }
+
       // CF-3wl: AnalyticsEvents pipeline — best-effort, never throws
       const prevStreakDays = record ? (record.currentStreakDays || 0) : 0;
       try {
@@ -275,6 +292,9 @@ export const receiveGamificationEvent = webMethod(
         }
         if (streakState.milestoneBonus > 0) {
           await insertAnalyticsEvent({ memberId, eventType: 'badge_earned', source: 'gamification', payload: { badgeId: 'week_wanderer' } });
+        }
+        if (badgeUnlocked === 'video_reviewer') {
+          await insertAnalyticsEvent({ memberId, eventType: 'badge_earned', source: 'gamification', payload: { badgeId: 'video_reviewer' } });
         }
         if (streakState.currentStreakDays === prevStreakDays + 1) {
           await insertAnalyticsEvent({ memberId, eventType: 'streak_extended', source: 'gamification', payload: { currentStreakDays: streakState.currentStreakDays } });
@@ -337,6 +357,8 @@ function resolvePoints(eventName, payload) {
       return POINT_VALUES.AR_TRY_ON; // 25 pts — first AR session only (cap enforced in receiver)
     case 'gamification_wishlist_add':
       return POINT_VALUES.WISHLIST_ADD;
+    case 'video_review_approved':
+      return POINT_VALUES.VIDEO_REVIEW;
     default:
       return null;
   }

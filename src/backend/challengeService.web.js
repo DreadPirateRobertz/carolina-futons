@@ -14,9 +14,13 @@
  *   - TRAIL_REGISTRY    — static trail definitions
  *   - TRAIL_PROGRESS_COLLECTION — CMS collection name
  *   - getTrailProgress(memberId) — webMethod: progress for all trails for a member
+ *   - recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail)
+ *       — marks a challenge done; if trail now complete, triggers perk delivery
  */
 
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
+import { deliverTrailPerk } from 'backend/trailPerkService.web';
 
 export const TRAIL_PROGRESS_COLLECTION = 'MemberTrailProgress';
 
@@ -118,4 +122,108 @@ export async function getTrailProgress(memberId) {
     console.error('[challengeService] Error getting trail progress:', err);
     return { success: false, trails: [], error: 'Failed to load trail progress.' };
   }
+}
+
+// ── recordTrailChallengeCompletion ────────────────────────────────────────────
+
+/**
+ * Marks a single challenge as complete for a member on a given trail.
+ * Idempotent: completing an already-completed challenge is a no-op.
+ * If all challenges on the trail are now complete, auto-delivers the trail perk.
+ *
+ * @param {string} memberId
+ * @param {string} trailId        — must match a TRAIL_REGISTRY entry id
+ * @param {string} challengeId    — must be in the trail's challengeIds array
+ * @param {string} recipientEmail — member email for perk notification
+ * @returns {Promise<{
+ *   success: boolean,
+ *   trailComplete?: boolean,
+ *   perkDelivered?: boolean,
+ *   couponCode?: string | null,
+ *   error?: string
+ * }>}
+ */
+export async function recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail) {
+  if (!memberId || typeof memberId !== 'string') {
+    return { success: false, error: 'memberId is required.' };
+  }
+  if (!trailId || typeof trailId !== 'string') {
+    return { success: false, error: 'trailId is required.' };
+  }
+  if (!challengeId || typeof challengeId !== 'string') {
+    return { success: false, error: 'challengeId is required.' };
+  }
+
+  // Validate trail and challenge exist in registry
+  const trail = TRAIL_REGISTRY.find(t => t.id === trailId);
+  if (!trail) {
+    return { success: false, error: `Unknown trailId: ${trailId}.` };
+  }
+  if (!trail.challengeIds.includes(challengeId)) {
+    return { success: false, error: `challengeId ${challengeId} does not belong to trail ${trailId}.` };
+  }
+
+  // Fetch or create progress record
+  const existing = await wixData
+    .query(TRAIL_PROGRESS_COLLECTION)
+    .eq('memberId', memberId)
+    .eq('trailId', trailId)
+    .limit(1)
+    .find({ suppressAuth: true });
+
+  const savedRecord = existing.items[0] || null;
+  const completedChallengeIds = savedRecord
+    ? [...(savedRecord.completedChallengeIds || [])]
+    : [];
+
+  // Idempotent: already marked
+  if (completedChallengeIds.includes(challengeId)) {
+    const isComplete = completedChallengeIds.length === trail.challengeIds.length;
+    return { success: true, trailComplete: isComplete, perkDelivered: false };
+  }
+
+  completedChallengeIds.push(challengeId);
+  const now = new Date();
+  const isComplete = completedChallengeIds.length === trail.challengeIds.length;
+
+  // Upsert progress record
+  try {
+    if (savedRecord) {
+      await wixData.update(TRAIL_PROGRESS_COLLECTION, {
+        ...savedRecord,
+        completedChallengeIds,
+        ...(isComplete && !savedRecord.completedAt ? { completedAt: now } : {}),
+      }, { suppressAuth: true });
+    } else {
+      await wixData.insert(TRAIL_PROGRESS_COLLECTION, {
+        _id: `${memberId}_${trailId}`,
+        memberId,
+        trailId,
+        completedChallengeIds,
+        completedAt: isComplete ? now : null,
+      }, { suppressAuth: true });
+    }
+  } catch (err) {
+    logError(`challengeService — progress upsert failed for ${memberId} / ${trailId}`, err);
+    return { success: false, error: 'Failed to save trail progress.' };
+  }
+
+  // Deliver perk on trail completion
+  if (isComplete) {
+    try {
+      const perkResult = await deliverTrailPerk(memberId, trail.perkId, recipientEmail || '');
+      return {
+        success: true,
+        trailComplete: true,
+        perkDelivered: perkResult.success && !perkResult.alreadyDelivered,
+        couponCode: perkResult.couponCode || null,
+      };
+    } catch (err) {
+      logError(`challengeService — perk delivery failed for ${memberId} / ${trail.perkId}`, err);
+      // Progress is saved; perk delivery failure is non-fatal
+      return { success: true, trailComplete: true, perkDelivered: false };
+    }
+  }
+
+  return { success: true, trailComplete: false, perkDelivered: false };
 }
