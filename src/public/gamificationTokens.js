@@ -28,6 +28,7 @@ export const POINT_VALUES = {
   STREAK_7_DAY: 100,
   AR_USED: 10,           // gamification_ar_used event
   WISHLIST_ADD: 25,      // gamification_wishlist_add event (1/month cap enforced in receiver)
+  VIDEO_REVIEW: 500,     // video_review_approved event (exclusive badge + 500 pts)
 };
 
 /** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */
@@ -157,6 +158,25 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Write 3 reviews.',
     // Keeps emoji icon — no SVG replacement for this badge
   },
+  video_reviewer: {
+    label: 'Video Reviewer',
+    icon: '🎬',
+    tier: 'MOUNTAIN_GUIDE',
+    description: 'Shared a video review of a product.',
+    earnCondition: 'Submit a video review that gets approved.',
+    // Exclusive badge — awarded once per member on first approved video review
+    // Monarch Butterfly — spread wings, iconic orange + black pattern
+    svgLabel: 'Monarch Butterfly',
+    svgColor: colors.badgeGold,
+    svgPath:
+      'M24 15 C22 13 17 11 13 13 C9 15 8 19 10 22 ' +
+      'C7 23 6 27 9 29 C8 32 10 36 13 37 L12 40 L14 41 L16 38 ' +
+      'C18 40 21 41 24 41 C27 41 30 40 32 38 L34 41 L36 40 L35 37 ' +
+      'C38 36 40 32 39 29 C42 27 41 23 38 22 ' +
+      'C40 19 39 15 35 13 C31 11 26 13 24 15Z ' +
+      'M21 39 C20 42 18 44 17 46 L19 46 L23 41 Z ' +
+      'M27 39 C28 42 30 44 31 46 L29 46 L25 41 Z',
+  },
 };
 
 // ── TIER_NAMES — ascending by threshold; getTierForPoints depends on this order ─
@@ -259,4 +279,5 @@ export const BADGE_DISPLAY_NAMES = {
   trail_regular: 'Trail Regular',
   top_reviewer: 'Top Reviewer',
   ar_explorer: 'AR Explorer',
+  video_reviewer: 'Video Reviewer',
 };
