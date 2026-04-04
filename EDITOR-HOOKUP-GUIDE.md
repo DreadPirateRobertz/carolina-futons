@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.1 — 10 PRs merged: Warranty Registration (cf-46ct) 11 elements; NPS Survey (cf-1mlj) 4 elements; Video Review Grid (CF-ou66.3) 9 elements on PDP; Futon Sommelier hookup (cf-p1c9); Trail Perk Unlock (CF-mcyh.2); Video Review Badge (CF-ou66.2); Room Planner Canvas (CF-eqc5.3); Content Calendar (cf-6ika); Delivery SMS (CF-rjxq); Flaky test fix (CF-0ypu). Previous: v3.0 — BNPL Widget + Share Your Room.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.2 — 20 PRs merged session 33. v3.2 adds: Virtual Consultation booking page (CF-ym1x) 19 elements; Swatch Kit (cf-hcp4); OG images (cf-jdgq); Badge SVG fix (CF-jnk3); cross-platform loyalty spec locked with dallas. Previous: v3.1 — Warranty, Survey, VideoReviewGrid + 7 features.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2622,6 +2622,10 @@ Also required: `MemberPoints.bonusSpinsAvailable` (Number field — add to exist
 | Delivery SMS Notifications | ✅ Backend complete (PR #916, CF-rjxq) | White-glove SMS — no editor elements |
 | Content Calendar + Buying Guides | ✅ Backend + CMS (PR #921, cf-6ika) | 12-week calendar + 8 guides — CMS-driven |
 | Room Planner Canvas | ✅ HtmlComponent (PR #949, CF-eqc5.3) | Self-contained HTML — drag-and-drop layout |
+| Virtual Consultation | ✅ Frontend + backend complete (PR #917, CF-ym1x) | /virtual-consultation — 19 elements |
+| Swatch Kit | ✅ Frontend + backend complete (PR #927, cf-hcp4) | $5 refundable micro-product |
+| OG Images | ✅ Complete (PR #928, cf-jdgq) | OG images for 8 buying guides |
+| BadgeDisplayWidget SVG | ✅ Fix merged (PR #943, CF-jnk3) | Inline SVG badges, no PNG 404s |
 
 ---
 
@@ -2689,3 +2693,46 @@ TikTok-style horizontal thumbnail row of approved customer video reviews. Clicki
 | `#videoPlayerOverlay` | Box | Page-level dimmed overlay — NOT inside repeater |
 | `#videoPlayerEmbed` | HtmlComponent | HTML5 video player — **NOT Wix Video** (wix: URIs need HTML embed) |
 | `#closeVideoOverlay` | Button | Close overlay — resets player to about:blank |
+
+---
+
+## Virtual Consultation Page (NEW — CF-ym1x, PR #917)
+
+**Route**: `/virtual-consultation` | **Source**: `src/pages/Virtual Consultation.js` | **Backend**: `virtualConsultation.web.js`
+
+4-step booking flow: designer selection → date/time/type → notes + confirm → confirmation with video link.
+
+### Step 1 — Designer Selection
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#designerRepeater` | Repeater | Designer cards |
+| `#designerAvatar` | Image | Repeater child — designer headshot |
+| `#designerNameText` | Text | Repeater child — designer name |
+| `#designerSpecialtyText` | Text | Repeater child — specialty label |
+| `#designerBioText` | Text | Repeater child — short bio |
+| `#selectDesignerBtn` | Button | Repeater child — "Book with [Name]" |
+
+### Step 2+3 — Booking Form
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#bookingFormSection` | Box | Hidden until designer chosen |
+| `#selectedDesignerName` | Text | "Booking with [name]" |
+| `#slotDateDropdown` | Dropdown | Available dates from getAvailableSlots() |
+| `#timeSlotDropdown` | Dropdown | Time slots for selected date |
+| `#consultationTypeDropdown` | Dropdown | Video Call / Phone Call |
+| `#notesInput` | TextInput | Optional customer notes |
+| `#bookBtn` | Button | Confirm Booking — disabled during submit |
+| `#bookingError` | Text | Inline error — hidden by default |
+| `#loadingSpinner` | Image | Loading indicator |
+
+### Step 4 — Confirmation
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `#confirmationSection` | Box | Shown after successful booking |
+| `#confirmationSummary` | Text | "Confirmed: date at time — type" |
+| `#videoCallSection` | Box | Video-only — contains meeting link |
+| `#videoCallLinkText` | Text | Video call URL |
+| `#bookAnotherBtn` | Button | Reset form to step 1 |

@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.1 · Updated 2026-04-04 — 10 PRs merged: Warranty Registration (cf-46ct) 11 elements; NPS Survey (cf-1mlj) 4 elements; Video Review Grid (CF-ou66.3) 10 elements; Futon Sommelier hookup (cf-p1c9); Trail Perk Unlock (CF-mcyh.2); Video Review Badge (CF-ou66.2); Room Planner Canvas (CF-eqc5.3); Content Calendar (cf-6ika); Delivery SMS (CF-rjxq); Flaky test fix (CF-0ypu). Previous: v3.0 — BNPL Widget + Share Your Room.</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v3.2 · Updated 2026-04-04 — 20 PRs merged session 33. v3.2 adds: Virtual Consultation booking page (CF-ym1x) 19 elements; Swatch Kit micro-product (cf-hcp4); OG images for buying guides (cf-jdgq); BadgeDisplayWidget SVG fix (CF-jnk3); cross-platform loyalty spec locked with dallas. Previous: v3.1 — Warranty, Survey, VideoReviewGrid + 7 features.</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -5633,6 +5633,85 @@ LAYOUT (WarrantyWidget — Member Page):
         ["surveyComment","TextArea","Optional feedback comment"],
         ["surveySubmitBtn","Button","Submit Feedback — disabled during submit"],
         ["surveyLoadingIndicator","Box","Loading spinner — hidden by default"]
+      ]}
+    ]
+  },
+  {
+    name: "Virtual Consultation", file: "Virtual Consultation.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Virtual Consultation Booking Flow (CF-ym1x, PR #917)", impl: `<h4>📞 Implementation — Virtual Consultation Booking Page</h4>
+<p><strong>Route</strong>: <code>/virtual-consultation</code>. Source: <code>src/pages/Virtual Consultation.js</code>. Backend: <code>virtualConsultation.web.js</code> → <em>ConsultationBookings</em> CMS collection.</p>
+<p><strong>How it works</strong>: 4-step booking flow. Step 1: customer browses designer cards in a repeater and clicks "Book with [Name]". Step 2: dropdowns populate with available dates, times, and consultation type (video/phone). Step 3: optional notes + confirm booking. Step 4: confirmation with video call link (if video type). Backend validates slots, creates booking, triggers follow-up email.</p>
+<p><strong>Data flow</strong>: Page loads → <code>getDesigners()</code> populates repeater. Designer click → <code>getAvailableSlots(designerId)</code> populates date dropdown. Date change → time dropdown filters. Submit → <code>bookConsultation()</code> → confirmation section expands.</p>
+<div class="layer-diagram">LAYOUT:
+  Step 1 — Designer Selection:
+  #designerRepeater        (Repeater — designer cards)
+    ├─ #designerAvatar      (Image — headshot)
+    ├─ #designerNameText    (Text — designer name)
+    ├─ #designerSpecialtyText (Text — specialty label)
+    ├─ #designerBioText     (Text — short bio)
+    └─ #selectDesignerBtn   (Button — "Book with [Name]")
+
+  Step 2+3 — Booking Form:
+  #bookingFormSection       (Box — hidden until designer chosen)
+    ├─ #selectedDesignerName (Text — "Booking with Sarah Mountain")
+    ├─ #slotDateDropdown     (Dropdown — available dates)
+    ├─ #timeSlotDropdown     (Dropdown — times for selected date)
+    ├─ #consultationTypeDropdown (Dropdown — Video Call / Phone Call)
+    ├─ #notesInput           (TextInput — optional customer notes)
+    ├─ #bookBtn              (Button — "Confirm Booking")
+    ├─ #bookingError         (Text — inline error message)
+    └─ #loadingSpinner       (Image — loading indicator)
+
+  Step 4 — Confirmation:
+  #confirmationSection      (Box — shown after successful booking)
+    ├─ #confirmationSummary  (Text — "Confirmed: Wed, Apr 2 at 10 AM — Video Call")
+    ├─ #videoCallSection     (Box — shown only for video type)
+    │    └─ #videoCallLinkText (Text — meeting URL)
+    └─ #bookAnotherBtn       (Button — "Book Another Consultation")
+</div>
+<ul>
+  <li><strong>#designerRepeater</strong>: Repeater — designer cards. Data populated by <code>getDesigners()</code>. Each card shows avatar, name, specialty, bio, and booking button.</li>
+  <li><strong>#designerAvatar</strong>: Image (repeater child) — designer headshot from CMS.</li>
+  <li><strong>#designerNameText</strong>: Text (repeater child) — designer display name.</li>
+  <li><strong>#designerSpecialtyText</strong>: Text (repeater child) — formatted specialty label (e.g., "Living Room Design").</li>
+  <li><strong>#designerBioText</strong>: Text (repeater child) — short designer bio.</li>
+  <li><strong>#selectDesignerBtn</strong>: Button (repeater child) — "Book with [Name]". Click loads available slots and expands booking form.</li>
+  <li><strong>#bookingFormSection</strong>: Box — hidden by default. Expands when designer selected. Contains all booking controls.</li>
+  <li><strong>#selectedDesignerName</strong>: Text — "Booking with [designer name]". Set on designer selection.</li>
+  <li><strong>#slotDateDropdown</strong>: Dropdown — populated with available dates from <code>getAvailableSlots()</code>. Change event populates time dropdown.</li>
+  <li><strong>#timeSlotDropdown</strong>: Dropdown — time slots for selected date. Valid: 09:00, 10:00, 11:00, 13:00, 14:00, 15:00, 16:00.</li>
+  <li><strong>#consultationTypeDropdown</strong>: Dropdown — "Video Call" or "Phone Call".</li>
+  <li><strong>#notesInput</strong>: TextInput — optional customer notes.</li>
+  <li><strong>#bookBtn</strong>: Button — "Confirm Booking". Disabled during submission.</li>
+  <li><strong>#bookingError</strong>: Text — inline error. Hidden by default, shown on validation/booking failure.</li>
+  <li><strong>#loadingSpinner</strong>: Image — loading indicator during slot fetch and booking.</li>
+  <li><strong>#confirmationSection</strong>: Box — hidden by default. Expands after successful booking.</li>
+  <li><strong>#confirmationSummary</strong>: Text — "Confirmed: [date] at [time] — [type]".</li>
+  <li><strong>#videoCallSection</strong>: Box — shown only for video consultations. Contains meeting link.</li>
+  <li><strong>#videoCallLinkText</strong>: Text — video call URL. Only populated for video type bookings.</li>
+  <li><strong>#bookAnotherBtn</strong>: Button — "Book Another Consultation". Resets form to step 1.</li>
+</ul>
+<p><strong>Cross-platform</strong>: Mobile (dallas) building same booking flow consuming ConsultationBookings collection. Schema aligned in cross-platform spec (2026-04-04).</p>`, elements: [
+        ["designerRepeater","Repeater","Designer cards — step 1"],
+        ["designerAvatar","Image","Repeater child — designer headshot"],
+        ["designerNameText","Text","Repeater child — designer name"],
+        ["designerSpecialtyText","Text","Repeater child — specialty label"],
+        ["designerBioText","Text","Repeater child — short bio"],
+        ["selectDesignerBtn","Button","Repeater child — 'Book with [Name]'"],
+        ["bookingFormSection","Box","Step 2+3 container — hidden until designer chosen"],
+        ["selectedDesignerName","Text","'Booking with [name]'"],
+        ["slotDateDropdown","Dropdown","Available dates"],
+        ["timeSlotDropdown","Dropdown","Time slots for selected date"],
+        ["consultationTypeDropdown","Dropdown","Video Call / Phone Call"],
+        ["notesInput","TextInput","Optional customer notes"],
+        ["bookBtn","Button","Confirm Booking — disabled during submit"],
+        ["bookingError","Text","Inline error — hidden by default"],
+        ["loadingSpinner","Image","Loading indicator"],
+        ["confirmationSection","Box","Step 4 — shown after booking"],
+        ["confirmationSummary","Text","Confirmed: date at time — type"],
+        ["videoCallSection","Box","Video-only — contains meeting link"],
+        ["videoCallLinkText","Text","Video call URL"]
       ]}
     ]
   }
