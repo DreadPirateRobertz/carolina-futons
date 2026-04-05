@@ -17,6 +17,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { logError } from 'backend/utils/errorHandler';
+import { sanitize } from 'backend/utils/sanitize';
 
 export const TRAIL_PERKS_COLLECTION = 'MemberTrailPerks';
 const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
@@ -145,6 +146,107 @@ export const deliverTrailPerk = webMethod(
 export const _VALID_PERK_IDS = VALID_PERK_IDS;
 export const _PERK_EMAIL_TEMPLATES = PERK_EMAIL_TEMPLATES;
 export const _TRAIL_PERKS_COLLECTION = TRAIL_PERKS_COLLECTION;
+
+// ── getAvailableTrailPerks [Anyone] ──────────────────────────────────────────
+
+export const getAvailableTrailPerks = webMethod(
+  Permissions.Anyone,
+  async () => {
+    const perks = [...VALID_PERK_IDS].map(id => ({ id }));
+    return { success: true, perks };
+  }
+);
+
+// ── getPublicTrailPerkStatus [Anyone] ────────────────────────────────────────
+
+export const getPublicTrailPerkStatus = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    if (!memberId || typeof memberId !== 'string') {
+      return { success: false, error: 'memberId is required.' };
+    }
+
+    const cleanId = sanitize(memberId, 50);
+    if (!cleanId) {
+      return { success: true, perks: [] };
+    }
+
+    try {
+      const result = await wixData
+        .query(TRAIL_PERKS_COLLECTION)
+        .eq('memberId', cleanId)
+        .find({ suppressAuth: true });
+
+      const perks = result.items.map(r => ({
+        perkId:      r.perkId,
+        deliveredAt: r.deliveredAt,
+      }));
+
+      return { success: true, perks };
+    } catch (err) {
+      logError(`trailPerkService — getPublicTrailPerkStatus failed for ${cleanId}`, err);
+      return { success: false, error: 'Failed to load perk status.' };
+    }
+  }
+);
+
+// ── claimTrailPerk [SiteMember] ──────────────────────────────────────────────
+
+export const claimTrailPerk = webMethod(
+  Permissions.SiteMember,
+  async (perkId) => {
+    const { currentMember } = await import('wix-members-backend');
+    const caller = await currentMember.getMember();
+    const memberId = caller?._id;
+
+    if (!memberId) {
+      return { success: false, error: 'Authentication required.' };
+    }
+
+    if (!perkId || typeof perkId !== 'string') {
+      return { success: false, error: 'perkId is required.' };
+    }
+
+    const cleanPerkId = sanitize(perkId, 50);
+    if (!VALID_PERK_IDS.has(cleanPerkId)) {
+      return { success: false, error: `Unknown perkId: ${cleanPerkId}. Valid: ${[...VALID_PERK_IDS].join(', ')}.` };
+    }
+
+    // Idempotency check
+    const existingResult = await wixData
+      .query(TRAIL_PERKS_COLLECTION)
+      .eq('memberId', memberId)
+      .eq('perkId', cleanPerkId)
+      .limit(1)
+      .find({ suppressAuth: true });
+
+    if (existingResult.items.length > 0) {
+      const existing = existingResult.items[0];
+      return {
+        success: true,
+        alreadyClaimed: true,
+        couponCode: existing.couponCode || null,
+      };
+    }
+
+    // Generate coupon for free-shipping perk
+    let couponCode = null;
+    if (cleanPerkId === 'perk-free-shipping') {
+      couponCode = generatePerkCouponCode();
+    }
+
+    const now = new Date();
+    await wixData.insert(TRAIL_PERKS_COLLECTION, {
+      _id: `${memberId}_${cleanPerkId}`,
+      memberId,
+      perkId: cleanPerkId,
+      deliveredAt: now,
+      ...(couponCode ? { couponCode } : {}),
+    });
+
+    return { success: true, alreadyClaimed: false, couponCode };
+  }
+);
 
 // ── getTrailPerkStatus ────────────────────────────────────────────────────────
 
