@@ -209,3 +209,37 @@ describe('tracker.track — result branch paths', () => {
     expect('memberId'     in payload).toBe(false);
   });
 });
+
+// ── getBackend error path (lines 40-42) ───────────────────────────
+// Covers: catch(e) when import('backend/conversionFunnel.web') throws,
+// logError called, _backend set to LOAD_FAILED, null returned.
+
+describe('getBackend load failure', () => {
+  it('returns null and marks backend as LOAD_FAILED when import throws', async () => {
+    // Reset module registry so _backend is re-initialized to null
+    vi.resetModules();
+
+    const mockLogError = vi.fn();
+    vi.doMock('backend/errorMonitoring.web', () => ({ logError: mockLogError }));
+    vi.doMock('backend/conversionFunnel.web', () => {
+      throw new Error('backend unavailable');
+    });
+
+    const { initFunnelTracker: freshInit } = await import('../src/public/funnelTracker.js');
+
+    const tracker = freshInit('sess-load-fail');
+    // track() calls getBackend() internally; the import failure should be swallowed
+    tracker.track('page_view');
+    await vi.advanceTimersByTimeAsync(400);
+
+    // Should not throw, and logError should have been called for the getBackend failure
+    expect(mockLogError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'funnelTracker.getBackend' }),
+    );
+
+    // Restore static mock for subsequent test files
+    vi.doUnmock('backend/conversionFunnel.web');
+    vi.doUnmock('backend/errorMonitoring.web');
+    vi.resetModules();
+  });
+});
