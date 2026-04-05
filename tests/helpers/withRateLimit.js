@@ -38,6 +38,7 @@
  */
 
 import { __seed } from '../__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../../src/backend/utils/rateLimit.js';
 
 /**
  * Pre-seed a rate limit collection with a fresh, passing record.
@@ -56,7 +57,7 @@ export function withRateLimit(collection, opts = {}) {
 
   __seed(collection, [{
     _id: `rl-seed-${collection}`,
-    key,
+    key: hashRateLimitKey(key),
     count,
     windowStart: new Date(), // Fresh window — won't be expired
   }]);

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 vi.mock('wix-web-module', () => ({
   Permissions: { Anyone: 'Anyone', Admin: 'Admin', SiteMember: 'SiteMember' },
@@ -96,7 +97,7 @@ describe('submitContactForm', () => {
   it('silently succeeds when 3/hour rate limit is reached', async () => {
     __seed('ContactRateLimits', [{
       _id: 'rl-1',
-      key: 'jane@test.com',
+      key: hashRateLimitKey('jane@test.com'),
       count: 3,
       windowStart: new Date(Date.now() - 1000),
     }]);

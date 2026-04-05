@@ -14,6 +14,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 const ONE_HOUR = 60 * 60 * 1000;
 
@@ -24,7 +25,7 @@ const ONE_HOUR = 60 * 60 * 1000;
 function seedRateLimit(collection, key, count, windowStart = Date.now()) {
   __seed(collection, [{
     _id: `rl-${collection}-1`,
-    key: key.toLowerCase(),
+    key: hashRateLimitKey(key.toLowerCase()),
     count,
     windowStart: new Date(windowStart),
   }]);

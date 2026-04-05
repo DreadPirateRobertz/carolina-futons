@@ -17,6 +17,26 @@ export const RATE_LIMIT_MAX = 3;
 export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
+ * One-way FNV-1a hash of a rate-limit key.
+ * CF-sec1 CMEK compliance: bucket keys stored in wixData must not contain
+ * plaintext PII (e.g. email addresses). Hashing is deterministic so the
+ * rate-limit logic is unaffected, but the stored value is opaque.
+ *
+ * Uses FNV-1a because the Wix Velo backend does not expose the Web Crypto API.
+ *
+ * @param {string} key - Sanitized key (e.g. email, session ID).
+ * @returns {string} 8-character lowercase hex digest.
+ */
+export function hashRateLimitKey(key) {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+/**
  * Check and record a rate-limit attempt for a given key in a given collection.
  * Allows up to RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per key.
  * Fails open (allows) if the DB check itself errors, to avoid blocking
@@ -34,16 +54,18 @@ export async function checkRateLimit(collection, key, opts = {}) {
   const now = opts.now ?? Date.now();
   const windowMs = opts.windowMs ?? RATE_LIMIT_WINDOW_MS;
   const cleanKey = sanitize(key, 254).toLowerCase();
+  // CF-sec1: hash before storing — bucket keys must not contain plaintext PII
+  const storedKey = hashRateLimitKey(cleanKey);
   try {
 
     const existing = await wixData.query(collection)
-      .eq('key', cleanKey)
+      .eq('key', storedKey)
       .limit(1)
       .find();
 
     if (existing.items.length === 0) {
       await wixData.insert(collection, {
-        key: cleanKey,
+        key: storedKey,
         count: 1,
         windowStart: new Date(now),
       });
@@ -74,7 +96,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
     });
     return { allowed: true };
   } catch (err) {
-    logError(`rateLimit.checkRateLimit[${collection}/${key}]`, err);
+    logError(`rateLimit.checkRateLimit[${collection}/${storedKey}]`, err);
     return { allowed: true }; // Fail open — don't block on DB errors
   }
 }

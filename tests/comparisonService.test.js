@@ -26,6 +26,7 @@ import {
   casegoodsItem,
 } from './fixtures/products.js';
 import wixData, { __reset, __seed } from 'wix-data';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -362,7 +363,7 @@ describe('getComparisonData', () => {
   it('returns rate-limited error when ComparisonRateLimit record is at max', async () => {
     __seed('ComparisonRateLimit', [{
       _id: 'rl-1',
-      key: 'session:tok-abc',
+      key: hashRateLimitKey('session:tok-abc'),
       count: 10,
       windowStart: new Date(Date.now() - 1_000), // within window
     }]);
@@ -376,7 +377,7 @@ describe('getComparisonData', () => {
   it('passes through when under rate limit', async () => {
     __seed('ComparisonRateLimit', [{
       _id: 'rl-1',
-      key: 'session:tok-ok',
+      key: hashRateLimitKey('session:tok-ok'),
       count: 3,
       windowStart: new Date(Date.now() - 1_000),
     }]);
@@ -587,7 +588,7 @@ describe('trackComparison', () => {
   it('returns false when rate limited', async () => {
     __seed('ComparisonRateLimit', [{
       _id: 'rl-t1',
-      key: 'session:track-tok',
+      key: hashRateLimitKey('session:track-tok'),
       count: 20,
       windowStart: new Date(Date.now() - 1_000),
     }]);
@@ -599,7 +600,7 @@ describe('trackComparison', () => {
   it('allows tracking when under rate limit', async () => {
     __seed('ComparisonRateLimit', [{
       _id: 'rl-t2',
-      key: 'session:track-ok',
+      key: hashRateLimitKey('session:track-ok'),
       count: 5,
       windowStart: new Date(Date.now() - 1_000),
     }]);

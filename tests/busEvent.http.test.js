@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import { __reset as resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
 import { post_busEvent } from '../src/backend/http-functions.js';
 
@@ -218,7 +219,7 @@ describe('post_busEvent — rate limiting', () => {
     // Rate limit key is session-resolved memberId, not payload userId
     __seed('BusEventRateLimit', [{
       _id: 'rl-1',
-      key: VALID_MEMBER._id,
+      key: hashRateLimitKey(VALID_MEMBER._id),
       count: 30,
       windowStart: new Date(Date.now() - 1000), // within the window
     }]);
@@ -262,7 +263,7 @@ describe('post_busEvent — E2E smoke: busEvent→EventTraceLog', () => {
     // Seed a rate-limit record that blocks the request
     __seed('BusEventRateLimit', [{
       _id: 'rl-smoke',
-      key: VALID_MEMBER._id,
+      key: hashRateLimitKey(VALID_MEMBER._id),
       count: 30,
       windowStart: new Date(Date.now() - 1000),
     }]);
