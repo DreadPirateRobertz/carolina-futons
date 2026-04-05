@@ -88,7 +88,7 @@ export const submitRoomPhoto = webMethod(
             : member.contactDetails.firstName;
         }
         if (member?.loginEmail) memberEmail = member.loginEmail;
-      } catch (_) {}
+      } catch (memberErr) { logError('customerRoomPhotos.submitRoomPhoto:getMember', memberErr); }
 
       const slugBase = [roomType, productName]
         .filter(Boolean).join('-').toLowerCase()
@@ -178,6 +178,7 @@ export const likeRoomPhoto = webMethod(
       if (!member) return { success: false, error: 'Authentication required.' };
 
       const cleanId = sanitize(photoId || '', 50);
+      if (!cleanId) return { success: false, error: 'Invalid photo ID.' };
       const photo = await wixData.get(COLLECTION, cleanId, { suppressAuth: true });
       if (!photo) return { success: false, error: 'Photo not found.' };
       if (!APPROVED_STATUSES.includes(photo.status)) {
@@ -224,6 +225,7 @@ export const moderateRoomPhoto = webMethod(
       }
 
       const cleanId = sanitize(photoId || '', 50);
+      if (!cleanId) return { success: false, error: 'Invalid photo ID.' };
       const photo = await wixData.get(COLLECTION, cleanId, { suppressAuth: true });
       if (!photo) return { success: false, error: 'Photo not found.' };
       if (photo.status !== 'pending') return { success: false, error: `Photo is already ${photo.status}.` };
@@ -241,7 +243,7 @@ export const moderateRoomPhoto = webMethod(
         const { currentMember } = await import('wix-members-backend');
         const mod = await currentMember.getMember();
         if (mod?._id) moderatorId = mod._id;
-      } catch (_) {}
+      } catch (modErr) { logError('customerRoomPhotos.moderateRoomPhoto:getMember', modErr); }
 
       logAuditEvent(COLLECTION, action, moderatorId, { photoId: cleanId, memberId: photo.memberId });
       return { success: true };
