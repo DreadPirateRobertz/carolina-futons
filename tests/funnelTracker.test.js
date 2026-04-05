@@ -165,3 +165,79 @@ describe('tracker.identify', () => {
     expect(firstCall[1].memberId).toBeUndefined();
   });
 });
+
+// ── branch coverage — result outcome paths ─────────────────────────
+
+describe('tracker.track — result branch paths', () => {
+  it('marks stage as emitted when result.duplicate is true (even if success=false)', async () => {
+    // Covers the `else if (result?.duplicate)` branch (line 109-111)
+    mockTrackFunnelEvent.mockResolvedValueOnce({ success: false, duplicate: true });
+    const tracker = initFunnelTracker('sess-dup');
+    tracker.track('page_view', {});
+    await vi.runAllTimersAsync();
+
+    // Stage should be marked emitted — second call must be skipped
+    tracker.track('page_view', {});
+    await vi.runAllTimersAsync();
+    expect(mockTrackFunnelEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT mark stage as emitted when success=false and duplicate=false', async () => {
+    // Covers the "neither" branch — stage stays un-emitted, allowing retry
+    mockTrackFunnelEvent.mockResolvedValueOnce({ success: false, duplicate: false });
+    const tracker = initFunnelTracker('sess-retry');
+    tracker.track('page_view', {});
+    await vi.runAllTimersAsync();
+
+    // Stage was NOT emitted, so second call should proceed to backend
+    mockTrackFunnelEvent.mockResolvedValueOnce({ success: true });
+    tracker.track('page_view', {});
+    await vi.runAllTimersAsync();
+    expect(mockTrackFunnelEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('omits optional fields from payload when opts is empty', async () => {
+    // Covers the FALSE branches of all `opts.X != null && { X }` conditionals
+    const tracker = initFunnelTracker('sess-empty');
+    tracker.track('page_view', {});
+    await vi.runAllTimersAsync();
+    const payload = mockTrackFunnelEvent.mock.calls[0][1];
+    expect('productId'    in payload).toBe(false);
+    expect('revenue'      in payload).toBe(false);
+    expect('experimentId' in payload).toBe(false);
+    expect('variantId'    in payload).toBe(false);
+    expect('memberId'     in payload).toBe(false);
+  });
+});
+
+// ── getBackend error path (lines 40-42) ───────────────────────────
+// Covers: catch(e) when import('backend/conversionFunnel.web') throws,
+// logError called, _backend set to LOAD_FAILED, null returned.
+
+describe('getBackend load failure', () => {
+  it('returns null and marks backend as LOAD_FAILED when import throws', async () => {
+    // Reset module registry so _backend is re-initialized to null
+    vi.resetModules();
+
+    const mockLogError = vi.fn();
+    vi.doMock('backend/errorMonitoring.web', () => ({ logError: mockLogError })); // vi-domock-legacy
+    vi.doMock('backend/conversionFunnel.web', () => { throw new Error('backend unavailable'); }); // vi-domock-legacy
+
+    const { initFunnelTracker: freshInit } = await import('../src/public/funnelTracker.js');
+
+    const tracker = freshInit('sess-load-fail');
+    // track() calls getBackend() internally; the import failure should be swallowed
+    tracker.track('page_view');
+    await vi.advanceTimersByTimeAsync(400);
+
+    // Should not throw, and logError should have been called for the getBackend failure
+    expect(mockLogError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'funnelTracker.getBackend' }),
+    );
+
+    // Restore static mock for subsequent test files
+    vi.doUnmock('backend/conversionFunnel.web');
+    vi.doUnmock('backend/errorMonitoring.web');
+    vi.resetModules();
+  });
+});
