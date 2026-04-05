@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 beforeEach(() => {
   __reset();
@@ -274,7 +275,7 @@ describe('getRecommendation', () => {
   it('rate-limits per session', async () => {
     __seed('SommelierRateLimit', [{
       _id: 'rl-1',
-      key: 'flood-session',
+      key: hashRateLimitKey('flood-session'),
       count: 5,
       windowStart: new Date(),
     }]);

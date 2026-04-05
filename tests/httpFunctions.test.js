@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onUpdate, __setQueryError, __getLastFindOptions, __reset as resetData } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import { __setMember, __reset as resetMembers, currentMember as membersMock } from './__mocks__/wix-members-backend.js';
@@ -1884,7 +1885,7 @@ describe('get_leaderboard — public (type=points)', () => {
   it('returns 429 when global rate limit is exceeded (60 req/min)', async () => {
     // Seed the rate limit bucket at max count within the window
     __seed('LeaderboardPublicRateLimit', [{
-      _id: 'rl-global', key: 'global', count: 60,
+      _id: 'rl-global', key: hashRateLimitKey('global'), count: 60,
       windowStart: new Date(Date.now() - 30_000), // 30s ago — still in window
     }]);
     const result = await get_leaderboard(makePublicLeaderboardRequest({ type: 'points' }));
@@ -2135,7 +2136,7 @@ describe('get_badges', () => {
 
   it('returns 429 when rate limit is exceeded', async () => {
     __seed('BadgesPublicRateLimit', [
-      { _id: `rl-${MEMBER_ID}`, key: MEMBER_ID, count: 30, windowStart: new Date(Date.now() - 5_000) },
+      { _id: `rl-${MEMBER_ID}`, key: hashRateLimitKey(MEMBER_ID), count: 30, windowStart: new Date(Date.now() - 5_000) },
     ]);
     const res = await get_badges(badgesRequest(MEMBER_ID));
     expect(res.status).toBe(429);
@@ -2144,7 +2145,7 @@ describe('get_badges', () => {
 
   it('allows request when rate limit count is below the max', async () => {
     __seed('BadgesPublicRateLimit', [
-      { _id: `rl-${MEMBER_ID}`, key: MEMBER_ID, count: 29, windowStart: new Date(Date.now() - 5_000) },
+      { _id: `rl-${MEMBER_ID}`, key: hashRateLimitKey(MEMBER_ID), count: 29, windowStart: new Date(Date.now() - 5_000) },
     ]);
     const res = await get_badges(badgesRequest(MEMBER_ID));
     expect(res.status).toBe(200);

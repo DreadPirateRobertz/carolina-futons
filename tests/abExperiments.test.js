@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 beforeEach(() => {
   __reset();
@@ -241,7 +242,7 @@ describe('getExperimentVariant', () => {
   it('rate-limits per userId', async () => {
     __seed('ExperimentVariantRateLimit', [{
       _id: 'rl-1',
-      key: 'flood-user',
+      key: hashRateLimitKey('flood-user'),
       count: 30,
       windowStart: new Date(),
     }]);

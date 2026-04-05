@@ -33,6 +33,7 @@ import {
   EMAIL_QUEUE_COLLECTION,
   MAX_RETRIES,
 } from '../src/backend/emailQueueService.web.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -567,7 +568,7 @@ describe('processQueue — rate limiting', () => {
     __seed('EmailQueueRateLimit', [
       {
         _id: `rl-${email}`,
-        key: email,
+        key: hashRateLimitKey(email),
         count: 10,
         windowStart: new Date(now - 1000), // within window
       },

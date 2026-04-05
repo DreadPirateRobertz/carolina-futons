@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import { submitContactForm } from '../src/backend/contactSubmissions.web.js';
 
 // ── submitContactForm ───────────────────────────────────────────────
@@ -63,7 +64,7 @@ describe('submitContactForm', () => {
     // Seed rate limit record at max (3) within window
     __seed('ContactRateLimits', [{
       _id: 'rl-1',
-      key: 'repeat@test.com',
+      key: hashRateLimitKey('repeat@test.com'),
       count: 3,
       windowStart: new Date(Date.now() - 1000), // 1 second ago (within window)
     }]);

@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
 import { __reset as __resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // Mock the gamification receiver to isolate HTTP layer
 vi.mock('backend/gamificationEventReceiver.web', () => ({
@@ -34,7 +35,7 @@ function makeRequest(body = {}) {
 function makeRateLimitRecord(key, count, windowStart = Date.now() - 5_000) {
   return {
     _id: `rl-${key}`,
-    key,
+    key: hashRateLimitKey(key),
     count,
     windowStart: new Date(windowStart),
   };

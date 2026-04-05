@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import { sampleOrder } from './fixtures/products.js';
@@ -289,7 +290,7 @@ describe('lookupOrder — rate limiting', () => {
     // Key is compound: email + ':' + orderNumber (prevents rotating-address bypass)
     __seed('TrackingRateLimit', [{
       _id: 'rl-1',
-      key: 'jane@example.com:10042',
+      key: hashRateLimitKey('jane@example.com:10042'),
       count: 10,
       windowStart: Date.now() - 1000,
     }]);
@@ -308,7 +309,7 @@ describe('lookupOrder — rate limiting', () => {
     // Exhaust the limit for order 10042 only — compound key isolates per-order buckets
     __seed('TrackingRateLimit', [{
       _id: 'rl-1',
-      key: 'jane@example.com:10042',
+      key: hashRateLimitKey('jane@example.com:10042'),
       count: 10,
       windowStart: Date.now() - 1000,
     }]);

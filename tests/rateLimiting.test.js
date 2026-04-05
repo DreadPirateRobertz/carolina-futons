@@ -15,6 +15,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __onInsert, __setQueryError } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 import {
   _checkPromoRateLimit,
@@ -33,8 +34,14 @@ function makePromoRecord(count, windowStart = NOW) {
   return { _id: 'pr-1', key: 'test-ip', count, windowStart: new Date(windowStart) };
 }
 
+// Raw key — for tests of _checkContactRateLimit (local impl, no hashing)
 function makeContactRecord(count, windowStart = NOW) {
   return { _id: 'cr-1', key: 'test@example.com', count, windowStart: new Date(windowStart) };
+}
+
+// Hashed key — for tests of submitContactForm (uses shared checkRateLimit which hashes)
+function makeHashedContactRecord(email, count, windowStart = NOW) {
+  return { _id: 'cr-1', key: hashRateLimitKey(email.toLowerCase()), count, windowStart: new Date(windowStart) };
 }
 
 beforeEach(() => {
@@ -194,7 +201,7 @@ describe('submitContactForm — rate limiting', () => {
   const validData = { email: 'user@example.com', source: 'contact_page' };
 
   it('returns silent success (not an error) when rate limited', async () => {
-    __seed('ContactRateLimits', [makeContactRecord(3, NOW)]);
+    __seed('ContactRateLimits', [makeHashedContactRecord('test@example.com', 3, NOW)]);
     const result = await submitContactForm(
       { ...validData, email: 'test@example.com' },
       { rateLimitNow: NOW + 1 }
@@ -206,7 +213,7 @@ describe('submitContactForm — rate limiting', () => {
   it('allows submission and inserts to CMS when under rate limit', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('ContactRateLimits', [makeContactRecord(1, NOW)]);
+    __seed('ContactRateLimits', [makeHashedContactRecord('user@example.com', 1, NOW)]);
 
     const result = await submitContactForm(validData, { rateLimitNow: NOW + 1 });
 
@@ -219,7 +226,7 @@ describe('submitContactForm — rate limiting', () => {
   it('does not insert to CMS when rate limited', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('ContactRateLimits', [makeContactRecord(3, NOW)]);
+    __seed('ContactRateLimits', [makeHashedContactRecord('test@example.com', 3, NOW)]);
 
     await submitContactForm(
       { ...validData, email: 'test@example.com' },
