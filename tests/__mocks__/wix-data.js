@@ -97,8 +97,7 @@ function toCmp(v, value) {
 
 function createQueryBuilder(collection) {
   let filters = [];
-  let sortField = null;
-  let sortDir = 'asc';
+  let sortKeys = [];  // array of { field, dir } — supports multi-key sort
   let limitVal = 50;
   let skipVal = 0;
 
@@ -167,8 +166,8 @@ function createQueryBuilder(collection) {
       return builder;
     },
     include(..._fields) { return builder; },
-    ascending(field) { sortField = field; sortDir = 'asc'; return builder; },
-    descending(field) { sortField = field; sortDir = 'desc'; return builder; },
+    ascending(field) { sortKeys.push({ field, dir: 'asc' }); return builder; },
+    descending(field) { sortKeys.push({ field, dir: 'desc' }); return builder; },
     skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
@@ -179,11 +178,13 @@ function createQueryBuilder(collection) {
         filters.every(f => f(item))
       );
 
-      if (sortField) {
+      if (sortKeys.length > 0) {
         items.sort((a, b) => {
-          const av = a[sortField], bv = b[sortField];
-          if (av < bv) return sortDir === 'asc' ? -1 : 1;
-          if (av > bv) return sortDir === 'asc' ? 1 : -1;
+          for (const { field, dir } of sortKeys) {
+            const av = getField(a, field), bv = getField(b, field);
+            if (av < bv) return dir === 'asc' ? -1 : 1;
+            if (av > bv) return dir === 'asc' ? 1 : -1;
+          }
           return 0;
         });
       }
