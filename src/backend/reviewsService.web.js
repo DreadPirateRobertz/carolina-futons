@@ -713,24 +713,26 @@ const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
 
 /**
  * Upload a video blob to Wix Media Manager and insert a VideoReviews record
- * with status=pending_moderation.
+ * with status=pending_moderation. Ownership is enforced via currentMember —
+ * the caller-supplied memberId hint is overridden by the authenticated session ID.
  *
  * @param {string} productId
- * @param {string} memberId
+ * @param {string} _memberIdHint - Ignored; retained for backwards-compat call sites.
  * @param {Buffer|Blob} videoBlob - Raw video binary.
  * @param {number} durationMs - Video duration in ms. Must be ≤ 30 000.
  * @returns {Promise<{success: boolean, reviewId?: string, error?: string}>}
  */
 export const uploadVideoReview = webMethod(
   Permissions.SiteMember,
-  async (productId, memberId, videoBlob, durationMs) => {
+  async (productId, _memberIdHint, videoBlob, durationMs) => {
     try {
       const cleanProductId = validateId(productId);
       if (!cleanProductId) return { success: false, error: 'Valid product ID is required.' };
 
-      if (!memberId || typeof memberId !== 'string') {
-        return { success: false, error: 'Valid member ID is required.' };
-      }
+      // Ownership guard — always derive memberId from the authenticated session
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Member not found.' };
+      const memberId = member._id;
 
       if (typeof durationMs !== 'number' || isNaN(durationMs) || durationMs > MAX_VIDEO_DURATION_MS) {
         return { success: false, error: 'Video must be 30 seconds or less.' };

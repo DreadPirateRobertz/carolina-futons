@@ -13,6 +13,7 @@ import {
   __setInsertError,
   __setQueryError,
 } from 'wix-data';
+import { __setMember } from 'wix-members-backend';
 
 import {
   uploadVideoReview,
@@ -42,6 +43,7 @@ beforeEach(() => {
   resetData();
   __seed('VideoReviews', []);
   vi.restoreAllMocks();
+  __setMember({ _id: MEMBER_ID });
 });
 
 // ── uploadVideoReview — happy path ────────────────────────────────────────────
