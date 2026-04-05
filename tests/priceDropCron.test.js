@@ -27,8 +27,14 @@ import {
   __getUpdated,
   __setQueryError,
   __onInsert,
+  __setUniqueField,
 } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
+import {
+  __reset as __resetCrm,
+  __getEmailLog,
+  __failNextEmail,
+} from 'wix-crm-backend';
 
 import {
   detectPriceDrops,
@@ -36,6 +42,7 @@ import {
   _MIN_DROP_FRACTION,
   _DEDUP_WINDOW_MS,
   _PRICE_DROP_EMAIL_TEMPLATE,
+  _PRICE_DROP_NOTIFICATIONS_COLLECTION,
   _emailPriceAlertSubscribers,
 } from '../src/backend/priceDropCron.web.js';
 
@@ -75,6 +82,7 @@ const queueEntry = (productId, msAgo = 0) => ({
 
 beforeEach(() => {
   __reset();
+  __resetCrm();
   __setMember({ _id: 'system' });
   __setRoles([{ title: 'Admin' }]);
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -496,21 +504,24 @@ describe('queuePriceDropNotifications — error resilience', () => {
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const alertSub = (email, productId = 'prod-a', active = true) => ({
+const alertSub = (memberId, email, productId = 'prod-a', active = true) => ({
   _id: `pa-${email}`,
   productId,
   email,
+  memberId: memberId ?? null,
   active,
   subscribedAt: new Date(Date.now() - 60_000),
 });
 
-const emailQueueEntry = (email, productId, msAgo = 0) => ({
-  _id: `eq-${email}-${productId}`,
-  sequenceType: 'price_drop_alert',
-  recipientEmail: email,
-  checkoutId: productId,
-  createdAt: new Date(Date.now() - msAgo),
+const dedupRecord = (memberId, productId, dropDate) => ({
+  _id: `${memberId}_${productId}_${dropDate}`,
+  memberId,
+  productId,
+  dropDate,
+  sentAt: new Date(),
 });
+
+const TODAY = new Date().toISOString().slice(0, 10);
 
 describe('emailPriceAlertSubscribers — no subscribers', () => {
   it('returns 0 when no active subscribers exist', async () => {
@@ -520,153 +531,131 @@ describe('emailPriceAlertSubscribers — no subscribers', () => {
   });
 
   it('returns 0 when all subscribers are inactive', async () => {
-    __seed('PriceAlerts', [alertSub('a@example.com', 'prod-a', false)]);
+    __seed('PriceAlerts', [alertSub('mem-1', 'a@example.com', 'prod-a', false)]);
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(0);
+  });
+
+  it('returns 0 when all active subscribers lack a memberId', async () => {
+    __seed('PriceAlerts', [alertSub(null, 'anon@example.com')]);
     const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
     expect(count).toBe(0);
   });
 });
 
-describe('emailPriceAlertSubscribers — queues emails', () => {
-  it('inserts one EmailQueue entry per active subscriber', async () => {
+describe('emailPriceAlertSubscribers — sends emails', () => {
+  it('calls emailMember once per active member subscriber', async () => {
     __seed('PriceAlerts', [
-      alertSub('alice@example.com'),
-      alertSub('bob@example.com'),
+      alertSub('mem-alice', 'alice@example.com'),
+      alertSub('mem-bob',   'bob@example.com'),
     ]);
 
     const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
     expect(count).toBe(2);
+    expect(__getEmailLog()).toHaveLength(2);
   });
 
-  it('sets correct templateId and sequenceType', async () => {
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+  it('uses the correct template ID', async () => {
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
 
     await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
 
-    expect(captured).toHaveLength(1);
-    expect(captured[0].templateId).toBe(_PRICE_DROP_EMAIL_TEMPLATE);
-    expect(captured[0].sequenceType).toBe('price_drop_alert');
-    expect(captured[0].sequenceStep).toBe(1);
-    expect(captured[0].status).toBe('pending');
+    const [entry] = __getEmailLog();
+    expect(entry.templateId).toBe(_PRICE_DROP_EMAIL_TEMPLATE);
+    expect(entry.memberId).toBe('mem-alice');
   });
 
-  it('sets correct email variables: newPrice, oldPrice, savings, savingsPct, pdpUrl', async () => {
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+  it('passes correct variables: productName, newPrice, oldPrice, savings, pdpUrl', async () => {
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
 
     await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 500, 450, 0.10);
 
-    expect(captured[0].variables.oldPrice).toBe('500.00');
-    expect(captured[0].variables.newPrice).toBe('450.00');
-    expect(captured[0].variables.savings).toBe('50.00');
-    expect(captured[0].variables.savingsPct).toBe('10');
-    expect(captured[0].variables.productName).toBe('Monterey Futon');
-    expect(captured[0].variables.pdpUrl).toBe('/product-page/monterey-futon');
+    const { options } = __getEmailLog()[0];
+    expect(options.variables.oldPrice).toBe('500.00');
+    expect(options.variables.newPrice).toBe('450.00');
+    expect(options.variables.savings).toBe('50.00');
+    expect(options.variables.productName).toBe('Monterey Futon');
+    expect(options.variables.pdpUrl).toBe('/product-page/monterey-futon');
   });
 
   it('falls back to productId in pdpUrl when slug is empty', async () => {
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
 
     await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', '', 500, 450, 0.10);
 
-    expect(captured[0].variables.pdpUrl).toBe('/product-page/prod-a');
-  });
-
-  it('uses productId as checkoutId dedup key', async () => {
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
-
-    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
-
-    expect(captured[0].checkoutId).toBe('prod-a');
+    expect(__getEmailLog()[0].options.variables.pdpUrl).toBe('/product-page/prod-a');
   });
 
   it('falls back to generic product name when name is empty', async () => {
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
 
     await _emailPriceAlertSubscribers('prod-a', '', 'monterey-futon', 499, 449, 0.10);
 
-    expect(captured[0].variables.productName).toBe('A product you saved');
+    expect(__getEmailLog()[0].options.variables.productName).toBe('A product you saved');
+  });
+
+  it('inserts a PriceDropNotifications dedup record for each sent email', async () => {
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
+
+    await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+
+    const dedup = __getInserted(_PRICE_DROP_NOTIFICATIONS_COLLECTION);
+    expect(dedup).toHaveLength(1);
+    expect(dedup[0]._id).toBe(`mem-alice_prod-a_${TODAY}`);
+    expect(dedup[0].memberId).toBe('mem-alice');
+    expect(dedup[0].productId).toBe('prod-a');
+  });
+
+  it('skips email-only subscribers (no memberId)', async () => {
+    __seed('PriceAlerts', [
+      alertSub('mem-alice', 'alice@example.com'),
+      alertSub(null,        'anon@example.com'),
+    ]);
+
+    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
+    expect(count).toBe(1);
+    expect(__getEmailLog()[0].memberId).toBe('mem-alice');
   });
 });
 
 describe('emailPriceAlertSubscribers — deduplication', () => {
-  it('skips subscriber already emailed within 24h window', async () => {
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
-    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]); // 1 min ago
-
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+  it('skips subscriber already notified today (dedup record exists)', async () => {
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com')]);
+    __seed(_PRICE_DROP_NOTIFICATIONS_COLLECTION, [dedupRecord('mem-alice', 'prod-a', TODAY)]);
 
     const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
     expect(count).toBe(0);
-    expect(captured).toHaveLength(0);
-  });
-
-  it('allows email outside 24h window', async () => {
-    const beyond24h = _DEDUP_WINDOW_MS + 60_000; // 1 min past window
-    __seed('PriceAlerts', [alertSub('alice@example.com')]);
-    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', beyond24h)]);
-
-    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
-    expect(count).toBe(1);
+    expect(__getEmailLog()).toHaveLength(0);
   });
 
   it('sends to non-deduped subscriber when another is deduped', async () => {
     __seed('PriceAlerts', [
-      alertSub('alice@example.com'),
-      alertSub('bob@example.com'),
+      alertSub('mem-alice', 'alice@example.com'),
+      alertSub('mem-bob',   'bob@example.com'),
     ]);
-    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]);
-
-    const captured = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') captured.push(item); });
+    __seed(_PRICE_DROP_NOTIFICATIONS_COLLECTION, [dedupRecord('mem-alice', 'prod-a', TODAY)]);
 
     const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
     expect(count).toBe(1);
-
-    expect(captured[0].recipientEmail).toBe('bob@example.com');
+    expect(__getEmailLog()[0].memberId).toBe('mem-bob');
   });
 
   it('dedup is scoped to productId — different product not suppressed', async () => {
-    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-b')]);
-    __seed('EmailQueue', [emailQueueEntry('alice@example.com', 'prod-a', 60_000)]); // different productId
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com', 'prod-b')]);
+    __seed(_PRICE_DROP_NOTIFICATIONS_COLLECTION, [dedupRecord('mem-alice', 'prod-a', TODAY)]);
 
     const count = await _emailPriceAlertSubscribers('prod-b', 'Eureka Futon', 'eureka-futon', 699, 629, 0.10);
     expect(count).toBe(1);
   });
 });
 
-describe('emailPriceAlertSubscribers — skips invalid entries', () => {
-  it('skips subscriber with missing email field', async () => {
-    __seed('PriceAlerts', [{ _id: 'pa-1', productId: 'prod-a', active: true, email: '' }]);
-
-    const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
-    expect(count).toBe(0);
-  });
-});
-
 describe('emailPriceAlertSubscribers — error resilience', () => {
-  it('continues processing other subscribers if one insert fails', async () => {
+  it('continues processing other subscribers if emailMember fails for one', async () => {
     __seed('PriceAlerts', [
-      alertSub('fail@example.com'),
-      alertSub('success@example.com'),
+      alertSub('mem-fail',    'fail@example.com'),
+      alertSub('mem-success', 'success@example.com'),
     ]);
-
-    let callCount = 0;
-    __onInsert((collection, item) => {
-      if (collection === 'EmailQueue') {
-        callCount++;
-        if (callCount === 1) throw new Error('insert failed');
-      }
-    });
+    __failNextEmail();
 
     const count = await _emailPriceAlertSubscribers('prod-a', 'Monterey Futon', 'monterey-futon', 499, 449, 0.10);
     expect(count).toBe(1);
@@ -674,10 +663,10 @@ describe('emailPriceAlertSubscribers — error resilience', () => {
 });
 
 describe('detectPriceDrops — emailsQueued integration', () => {
-  it('increments emailsQueued when subscribers exist for a dropped product', async () => {
+  it('increments emailsQueued when member subscribers exist for a dropped product', async () => {
     __seed('Stores/Products', [product({ price: 449, slug: 'monterey-futon' })]);
     __seed('ProductPriceHistory', [priceRecord('prod-a', 499, 25 * 60 * 60 * 1000)]);
-    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-a')]);
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com', 'prod-a')]);
 
     const result = await detectPriceDrops();
     expect(result.success).toBe(true);
@@ -693,10 +682,19 @@ describe('detectPriceDrops — emailsQueued integration', () => {
     expect(result.emailsQueued).toBe(0);
   });
 
+  it('emailsQueued is 0 when subscribers have no memberId', async () => {
+    __seed('Stores/Products', [product({ price: 449, slug: 'monterey-futon' })]);
+    __seed('ProductPriceHistory', [priceRecord('prod-a', 499, 25 * 60 * 60 * 1000)]);
+    __seed('PriceAlerts', [alertSub(null, 'anon@example.com', 'prod-a')]);
+
+    const result = await detectPriceDrops();
+    expect(result.emailsQueued).toBe(0);
+  });
+
   it('emailsQueued is 0 when no price drop detected', async () => {
     __seed('Stores/Products', [product({ price: 499 })]);
     __seed('ProductPriceHistory', [priceRecord('prod-a', 449, 25 * 60 * 60 * 1000)]); // price went UP
-    __seed('PriceAlerts', [alertSub('alice@example.com', 'prod-a')]);
+    __seed('PriceAlerts', [alertSub('mem-alice', 'alice@example.com', 'prod-a')]);
 
     const result = await detectPriceDrops();
     expect(result.emailsQueued).toBe(0);
