@@ -17,6 +17,7 @@ import {
   __reset as resetData,
   __setQueryError,
   __setInsertError,
+  __setUpdateError,
   __getInserted,
   __getUpdated,
   __onInsert,
@@ -642,5 +643,67 @@ describe('cancelQueuedEmails', () => {
     const result = await cancelQueuedEmails('alice@example.com', 'welcome');
 
     expect(result.cancelled).toBe(0);
+  });
+});
+
+// ── cancelQueuedEmails — error paths (branch coverage for lines 321, 327-328) ─
+
+describe('cancelQueuedEmails — error paths', () => {
+  it('returns cancelled: 0 when query throws', async () => {
+    __setQueryError(EMAIL_QUEUE_COLLECTION, new Error('DB query failed'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await cancelQueuedEmails('alice@example.com', 'welcome');
+
+    expect(result.cancelled).toBe(0);
+    consoleSpy.mockRestore();
+  });
+
+  it('skips failed item and continues cancelling remaining items', async () => {
+    __seed(EMAIL_QUEUE_COLLECTION, [
+      makeQueueItem({ _id: 'q1', recipientEmail: 'alice@example.com', sequenceType: 'welcome', status: 'pending' }),
+      makeQueueItem({ _id: 'q2', recipientEmail: 'alice@example.com', sequenceType: 'welcome', status: 'pending' }),
+    ]);
+    // First update throws (q1 fails), second succeeds (q2 cancelled)
+    __setUpdateError(EMAIL_QUEUE_COLLECTION, new Error('update failed'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await cancelQueuedEmails('alice@example.com', 'welcome');
+
+    // q1 update failed (skipped), q2 update succeeded — partial cancel
+    expect(result.cancelled).toBe(1);
+    consoleSpy.mockRestore();
+  });
+});
+
+// ── processQueue — error paths (branch coverage for lines 214-215, 235, 280) ─
+
+describe('processQueue — query error', () => {
+  it('returns zero counts when queue query throws', async () => {
+    __setQueryError(EMAIL_QUEUE_COLLECTION, new Error('DB read failed'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await processQueue({ now: makeNowET(10, 0) });
+
+    expect(result.sent).toBe(0);
+    expect(result.rescheduled).toBe(0);
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('processQueue — reschedule update error', () => {
+  it('continues gracefully when reschedule update throws outside send window', async () => {
+    const now = makeNowET(6, 0); // 6am ET — outside 9am-8pm window
+    __seed(EMAIL_QUEUE_COLLECTION, [
+      makeQueueItem({ scheduledFor: new Date(now - 60000) }),
+    ]);
+    __setUpdateError(EMAIL_QUEUE_COLLECTION, new Error('reschedule update failed'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await processQueue({ now });
+
+    // Update threw but function returned gracefully; rescheduled not incremented
+    expect(result.sent).toBe(0);
+    consoleSpy.mockRestore();
   });
 });

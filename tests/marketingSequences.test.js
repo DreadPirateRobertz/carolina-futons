@@ -532,3 +532,125 @@ describe('sequences — multiple steps in CMS', () => {
     expect(step2.scheduledFor.getTime()).toBeGreaterThanOrEqual(before + 48 * 3600 * 1000 - 100);
   });
 });
+
+// ── Error path coverage for triggerReviewRequestSequence + triggerWinbackSequence ──
+
+describe('triggerReviewRequestSequence — error path', () => {
+  it('returns success:false when CMS query throws', async () => {
+    __setQueryError(EMAIL_SEQUENCES_COLLECTION, new Error('DB error'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await triggerReviewRequestSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      firstName: 'Alice',
+      productName: 'Futon',
+      orderId: 'order-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('triggerWinbackSequence — error path', () => {
+  it('returns success:false when CMS query throws', async () => {
+    __setQueryError(EMAIL_SEQUENCES_COLLECTION, new Error('DB error'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await triggerWinbackSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      firstName: 'Alice',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('triggerCartAbandonSequence — error path', () => {
+  it('returns success:false when CMS query throws', async () => {
+    __setQueryError(EMAIL_SEQUENCES_COLLECTION, new Error('DB error'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await triggerCartAbandonSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      checkoutId: 'checkout-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('triggerPostPurchaseSequence — error path', () => {
+  it('returns success:false when CMS query throws', async () => {
+    __setQueryError(EMAIL_SEQUENCES_COLLECTION, new Error('DB error'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await triggerPostPurchaseSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      orderNumber: 'ORD-001',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+    consoleSpy.mockRestore();
+  });
+});
+
+// ── Default-param branch coverage (params ?? {}, firstName = '', etc.) ─────────
+
+describe('triggerReviewRequestSequence — null params', () => {
+  it('returns error when called with null params', async () => {
+    const result = await triggerReviewRequestSequence(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/email/i);
+  });
+
+  it('uses default firstName when not provided', async () => {
+    seedSequence('review_request', [{ delayHours: 168, templateId: 'tpl-rv' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+
+    await triggerReviewRequestSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      productName: 'Futon',
+      orderId: 'order-1',
+      // firstName intentionally omitted — hits firstName = '' default branch
+    });
+
+    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.firstName).toBe('');
+  });
+});
+
+describe('triggerWinbackSequence — null params', () => {
+  it('returns error when called with null params', async () => {
+    const result = await triggerWinbackSequence(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/email/i);
+  });
+
+  it('uses default firstName when not provided', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+
+    await triggerWinbackSequence({
+      email: 'alice@example.com',
+      contactId: 'contact-1',
+      // firstName intentionally omitted
+    });
+
+    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
+    const vars = JSON.parse(queued[0].variables);
+    expect(vars.firstName).toBe('');
+  });
+});
