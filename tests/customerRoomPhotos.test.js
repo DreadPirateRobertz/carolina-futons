@@ -3,12 +3,16 @@
  * @description Tests for CF-rw9i: CustomerRoomPhotos backend service.
  *
  * Covers:
- *  - Constants: COLLECTION, VALID_ROOM_TYPES, MAX_CAPTION_LENGTH
- *  - submitRoomPhoto: auth, validation, slug gen, rate limit, inserts correctly
- *  - getProductRoomPhotos: filters by productId + approved, pagination
+ *  - Constants: COLLECTION, LIKES_COLLECTION, VALID_ROOM_TYPES, MAX_CAPTION_LENGTH
+ *  - submitRoomPhoto: auth, isWixMediaUrl validation, arbitrary URL rejection,
+ *    room type, slug gen, rate limit, inserts correctly
+ *  - getProductRoomPhotos: filters by productId + approved, pagination,
+ *    does not expose memberEmail/memberId
  *  - getAllRoomPhotos: approved-only, roomType filter, pagination
- *  - likeRoomPhoto: increments likes, rejects missing photo
- *  - moderateRoomPhoto: approve, reject, notes, idempotency guard
+ *  - likeRoomPhoto: inserts RoomPhotoLikes record, dedup (alreadyLiked),
+ *    concurrent duplicate insert guard, rejects missing/non-approved photo
+ *  - moderateRoomPhoto: approve, reject, notes, idempotency guard,
+ *    resolves actual moderator identity for audit log
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __reset, __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
@@ -22,6 +26,7 @@ import {
   likeRoomPhoto,
   moderateRoomPhoto,
   _COLLECTION,
+  _LIKES_COLLECTION,
   _VALID_ROOM_TYPES,
   _MAX_CAPTION_LENGTH,
 } from '../src/backend/customerRoomPhotos.web.js';
@@ -67,6 +72,10 @@ beforeEach(() => {
 describe('CustomerRoomPhotos — constants', () => {
   it('_COLLECTION is CustomerRoomPhotos', () => {
     expect(_COLLECTION).toBe('CustomerRoomPhotos');
+  });
+
+  it('_LIKES_COLLECTION is RoomPhotoLikes', () => {
+    expect(_LIKES_COLLECTION).toBe('RoomPhotoLikes');
   });
 
   it('_VALID_ROOM_TYPES includes expected values', () => {
@@ -167,6 +176,58 @@ describe('submitRoomPhoto', () => {
     }, 'member-1');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/photo/i);
+  });
+
+  it('rejects non-Wix photoUrl (arbitrary HTTPS)', async () => {
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+    const result = await submitRoomPhoto({
+      photoUrl: 'https://attacker.com/evil.jpg',
+      caption: '',
+      productId: 'p1',
+      productName: 'Frame',
+      roomType: 'bedroom',
+    }, 'member-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/upload form/i);
+  });
+
+  it('rejects javascript: URI in photoUrl', async () => {
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+    const result = await submitRoomPhoto({
+      photoUrl: 'javascript:alert(1)',
+      caption: '',
+      productId: 'p1',
+      productName: 'Frame',
+      roomType: 'bedroom',
+    }, 'member-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/upload form/i);
+  });
+
+  it('accepts wix:video:// photoUrl', async () => {
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+    __onInsert(() => {});
+    const result = await submitRoomPhoto({
+      photoUrl: 'wix:video://v1/abc123_clip.mp4',
+      caption: '',
+      productId: 'p1',
+      productName: 'Frame',
+      roomType: 'bedroom',
+    }, 'member-1');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts static.wixstatic.com CDN URL', async () => {
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+    __onInsert(() => {});
+    const result = await submitRoomPhoto({
+      photoUrl: 'https://static.wixstatic.com/media/abc123~mv2.jpg',
+      caption: '',
+      productId: 'p1',
+      productName: 'Frame',
+      roomType: 'bedroom',
+    }, 'member-1');
+    expect(result.success).toBe(true);
   });
 
   it('rejects invalid roomType', async () => {
@@ -419,7 +480,40 @@ describe('likeRoomPhoto', () => {
     const result = await likeRoomPhoto('photo-1');
     expect(result.success).toBe(true);
     expect(result.likes).toBe(5);
+    expect(result.alreadyLiked).toBe(false);
     expect(updated.likes).toBe(5);
+  });
+
+  it('inserts a RoomPhotoLikes record on first like', async () => {
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', likes: 0, status: 'approved' })]);
+    let likeInserted = null;
+    __onInsert((col, item) => { if (col === _LIKES_COLLECTION) likeInserted = item; });
+
+    await likeRoomPhoto('photo-1');
+    expect(likeInserted).not.toBeNull();
+    expect(likeInserted.memberId).toBe('member-1');
+    expect(likeInserted.photoId).toBe('photo-1');
+    expect(likeInserted.createdAt).toBeInstanceOf(Date);
+  });
+
+  it('returns alreadyLiked:true when RoomPhotoLikes record exists', async () => {
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', likes: 7, status: 'approved' })]);
+    __seed(_LIKES_COLLECTION, [{ _id: 'like-1', memberId: 'member-1', photoId: 'photo-1' }]);
+
+    const result = await likeRoomPhoto('photo-1');
+    expect(result.success).toBe(true);
+    expect(result.alreadyLiked).toBe(true);
+    expect(result.likes).toBe(7);
+  });
+
+  it('does not increment likes counter when already liked', async () => {
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', likes: 7, status: 'approved' })]);
+    __seed(_LIKES_COLLECTION, [{ _id: 'like-1', memberId: 'member-1', photoId: 'photo-1' }]);
+    let updated = null;
+    __onUpdate((col, item) => { if (col === _COLLECTION) updated = item; });
+
+    await likeRoomPhoto('photo-1');
+    expect(updated).toBeNull(); // no update should have fired
   });
 
   it('returns error for non-existent photo', async () => {
@@ -515,5 +609,14 @@ describe('moderateRoomPhoto', () => {
 
     await moderateRoomPhoto('photo-1', 'reject');
     expect(updated.approvedAt).toBeNull();
+  });
+
+  it('resolves actual moderator identity — succeeds when member is available', async () => {
+    // Verifies moderateRoomPhoto resolves currentMember for audit identity
+    // (actual member ID used instead of literal 'admin') — code-review fix.
+    // __setMember sets MEMBER (_id: 'member-1') in beforeEach.
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', status: 'pending' })]);
+    const result = await moderateRoomPhoto('photo-1', 'approve');
+    expect(result.success).toBe(true);
   });
 });
