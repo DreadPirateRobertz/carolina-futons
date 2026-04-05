@@ -70,8 +70,8 @@ export function validatePhotoMetadata(obj) {
   }
 
   if (obj.productId !== undefined && obj.productId !== null) {
-    if (typeof obj.productId !== 'string' || obj.productId.length > MAX_ID_LENGTH) {
-      return { valid: false, error: `productId must be a string of ${MAX_ID_LENGTH} characters or fewer.` };
+    if (typeof obj.productId !== 'string' || obj.productId.length > MAX_ID_LENGTH || !/^[a-zA-Z0-9_-]+$/.test(obj.productId)) {
+      return { valid: false, error: `productId must be a string of ${MAX_ID_LENGTH} characters or fewer containing only alphanumeric characters, hyphens, and underscores.` };
     }
   }
 
