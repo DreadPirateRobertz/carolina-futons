@@ -270,10 +270,12 @@ export const getSurveyResponseAggregation = webMethod(
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     try {
-      // Fetch all scheduled surveys (total) and completed ones for the period
+      // Fetch all scheduled surveys (total) and completed ones for the period.
+      // Both queries anchor on sentAt so numerator and denominator share the same
+      // cohort (surveys sent in the window), avoiding mixed date-axis skew.
       const [completedResult, scheduledResult] = await Promise.all([
         wixData.query(SURVEY_COLLECTION)
-          .ge('completedAt', since)
+          .ge('sentAt', since)
           .isNotEmpty('completedAt')
           .limit(1000)
           .find(),
