@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.3 — Loyalty Perks Widget (CF-c6el.3) 7 elements on Loyalty page; BundleBuilder PDP module (CF-eqc5.2) 14 elements on Product Page; weekly analytics digest (CF-u30i); mobile nav fix (CF-3zs3); bear Lottie tests (CF-tgsn.3). Previous: v3.2 — Virtual Consultation, Swatch Kit, OG images, Badge SVG fix.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v4.1 — Room Planner Canvas HtmlComponent (CF-eqc5.3, PR #948/949) — full postMessage protocol documented. v4.0: 19 new pages. Previous: v3.3 — BundleBuilder PDP + Loyalty Perks Widget.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2165,8 +2165,15 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 `paletteCategoryRepeater` (Repeater)
 **↳ Inside:** `paletteCategoryName` (Text)
 
-### Canvas
-`plannerCanvas` (HtmlComponent)
+### Canvas — CF-eqc5.3 (PR #948/949)
+`plannerCanvas` (HtmlComponent) — self-contained 2D drag-and-drop room layout with origin-pinned security.
+
+**postMessage API (page → canvas):**
+- `{ type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed } }` — place furniture at (x, y) in inches
+- `{ type: 'updateRoom', roomWidth, roomLength, scale }` — resize room, re-renders canvas
+
+**onMessage (canvas → page):**
+- `{ type: 'canvasUpdate', products: [{ id, fits, isBedMode, rotation, x, y }] }` — fired after drag/drop; use `fits` flag to update `#plannerStatusText`
 
 ### Save/Share
 `layoutNameInput` (Input), `saveLayoutBtn` (Button), `shareLayoutBtn` (Button), `shareUrlText` (Text)

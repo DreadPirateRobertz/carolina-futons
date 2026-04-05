@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.3 · Updated 2026-04-04 — v3.3 adds: BundleBuilder PDP module (CF-eqc5.2) 14 elements on Product Page; Loyalty Perks Widget (CF-c6el.3) 7 elements on Loyalty page; weekly analytics digest (CF-u30i); mobile nav fix (CF-3zs3); bear Lottie tests. Previous: v3.2 — Virtual Consultation, Swatch Kit, OG images, Badge SVG fix.</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v4.1 · Updated 2026-04-04 — v4.1 adds: Room Planner Canvas HtmlComponent (CF-eqc5.3, PR #948/949) — full postMessage protocol documented. v4.0: 19 new pages added (Order Tracking, Returns, Admin, Assembly Guides, Buying Guides, Loyalty, Newsletter, Sale, Shared Wishlist, Store Locator, StyleQuizResult, Swatch Kit, Trade In + public widgets). Previous: v3.3 — BundleBuilder PDP + Loyalty Perks Widget.</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -4856,11 +4856,21 @@ SHARING:
       ], children: [
         ["paletteCategoryName","Text","Category name"]
       ]},
-      { name: "Canvas", impl: `<h4>🖼️ Implementation — Canvas (Room Planner)</h4>
+      { name: "Canvas", impl: `<h4>🖼️ Implementation — Canvas (Room Planner) — CF-eqc5.3 (PR #948/949)</h4>
 <ul>
-  <li><strong>#plannerCanvas</strong>: HtmlComponent — the interactive room canvas. Receives product data via <code>postMessage({ type: 'addProduct', product: {...} })</code>.</li>
-</ul>`, elements: [
-        ["plannerCanvas","HtmlComponent","Interactive room canvas (postMessage API)"]
+  <li><strong>#plannerCanvas</strong>: HtmlComponent — self-contained 2D drag-and-drop room layout canvas with origin-pinned security.</li>
+</ul>
+<h5>postMessage Protocol (page → canvas)</h5>
+<ul>
+  <li><code>{ type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed } }</code> — adds a furniture piece at position (x, y) in inches.</li>
+  <li><code>{ type: 'updateRoom', roomWidth, roomLength, scale }</code> — updates room dimensions and re-renders at new scale.</li>
+</ul>
+<h5>onMessage Protocol (canvas → page)</h5>
+<ul>
+  <li><code>{ type: 'canvasUpdate', products: [{ id, fits, isBedMode, rotation, x, y, width, depth }] }</code> — fired after any drag/drop. Use <code>fits</code> flag to update <code>#plannerStatusText</code>.</li>
+</ul>
+<p><em>Note: status text ("N piece(s) placed — all fit!" / "N piece(s) outside room bounds") is rendered to <code>#plannerStatusText</code> in Room Setup section via the <code>onMessage</code> handler.</em></p>`, elements: [
+        ["plannerCanvas","HtmlComponent","2D drag-and-drop canvas (postMessage API, origin-pinned)"]
       ]},
       { name: "Save/Share", impl: `<h4>💾 Implementation — Save/Share (Room Planner)</h4>
 <ul>
