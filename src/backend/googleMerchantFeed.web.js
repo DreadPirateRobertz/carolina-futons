@@ -100,7 +100,9 @@ function getProductType(collections) {
   return 'Furniture';
 }
 
-// Validate GTIN format: must be 8, 12, 13, or 14 digits
+// Validate GTIN format: digit-count only (8/12/13/14 digits); no GS1 checksum.
+// GS1 check digits use ×3/×1 alternation (not standard Luhn). Risk is low —
+// furniture rarely has GTINs and GMC flags bad check digits at catalog review.
 function isValidGtin(gtin) {
   if (!gtin || typeof gtin !== 'string') return false;
   const digits = gtin.trim().replace(/\D/g, '');
