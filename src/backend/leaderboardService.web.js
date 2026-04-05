@@ -6,12 +6,15 @@
  *   totalPoints desc with rank assigned 1-based.
  * webMethod snapshotLeaderboard() — writes current top-10 to LeaderboardSnapshots
  *   with snapshotDate (YYYY-MM-DD) and entries JSON array.
+ * webMethod getTopEarners(limit, offset) — paginated top-earners sorted by
+ *   totalPoints desc, ties broken by lastActivityAt asc.
+ *   limit: 1–100 (default 10), offset: 0–10000 (default 0).
  *
  * CMS collections:
- *   MemberPoints (read)          — memberId, displayName, totalPoints, tier
+ *   MemberPoints (read)          — memberId, displayName, totalPoints, tier, lastActivityAt
  *   LeaderboardSnapshots (write) — snapshotDate, entries, createdAt
  *
- * CF-9t0w
+ * CF-9t0w / CF-znpj.2
  *
  * @requires wix-web-module
  * @requires wix-data
@@ -89,5 +92,55 @@ export const snapshotLeaderboard = webMethod(
     }
 
     return { success: true, snapshotDate };
+  }
+);
+
+/**
+ * Returns a paginated list of top-earning members sorted by totalPoints
+ * descending, with ties broken by lastActivityAt ascending.
+ *
+ * @param {number} [limit=10]  Max entries to return (1–100).
+ * @param {number} [offset=0]  Number of entries to skip (0–10000).
+ * @returns {Promise<{success: boolean, entries: Array, total: number, error?: string}>}
+ */
+export const getTopEarners = webMethod(
+  Permissions.Anyone,
+  async (limit = 10, offset = 0) => {
+    if (limit <= 0) {
+      return { success: false, error: 'limit must be greater than 0.' };
+    }
+    if (offset < 0) {
+      return { success: false, error: 'offset must be 0 or greater.' };
+    }
+
+    const safeLimit  = Math.min(limit, 100);
+    const safeOffset = Math.min(offset, 10000);
+
+    try {
+      const result = await wixData
+        .query('MemberPoints')
+        .eq('leaderboardOptIn', true)
+        .descending('totalPoints')
+        .ascending('lastActivityAt')
+        .skip(safeOffset)
+        .limit(safeLimit)
+        .find({ suppressAuth: true });
+
+      return {
+        success: true,
+        entries: result.items.map((item, i) => ({
+          rank:           safeOffset + i + 1,
+          memberId:       item.memberId       ?? null,
+          displayName:    item.displayName     ?? null,
+          totalPoints:    item.totalPoints     ?? 0,
+          tier:           item.tier            ?? null,
+          lastActivityAt: item.lastActivityAt  ?? null,
+        })),
+        total: result.totalCount,
+      };
+    } catch (e) {
+      logError('leaderboardService.getTopEarners.query', e);
+      return { success: false, error: 'Failed to fetch leaderboard.' };
+    }
   }
 );
