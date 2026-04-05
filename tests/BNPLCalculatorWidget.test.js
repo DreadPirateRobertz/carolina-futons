@@ -368,3 +368,42 @@ describe('updateBNPLCalculatorPrice', () => {
     expect(mockGetFinancingWidget).toHaveBeenCalledWith(999);
   });
 });
+
+// ── safeGet — unexpected error warning ────────────────────────────────────────
+
+describe('safeGet — unexpected error warning', () => {
+  it('warns to console for unexpected $w errors (not "not found"/"Cannot read")', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // $w throws a non-standard error for all selectors
+    const throwingW = () => { throw new Error('Unexpected API failure'); };
+    // initBNPLCalculator calls safeGet internally; the error is unexpected so warn is called
+    await initBNPLCalculator(throwingW, 500);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[BNPLCalculatorWidget]'),
+      expect.any(String),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+});
+
+// ── onItemReady callback — item element assignment ────────────────────────────
+
+describe('onItemReady callback', () => {
+  it('sets providerName, providerAmount, providerNote on item elements', async () => {
+    // Make onItemReady immediately invoke its callback with a mock $item
+    const mockItem = { name: '', amount: '', note: '' };
+    const mockItemEl = (sel) => ({
+      set text(val) { mockItem[sel.replace('#provider', '').toLowerCase()] = val; },
+    });
+    getEl('#bnplCalcRepeater').onItemReady = vi.fn((cb) => {
+      cb(mockItemEl, { name: 'In-house 12 mo', amount: '$42/mo', note: '0% APR' });
+    });
+
+    await initBNPLCalculator($w, 500);
+
+    expect(mockItem.name).toBe('In-house 12 mo');
+    expect(mockItem.amount).toBe('$42/mo');
+    expect(mockItem.note).toBe('0% APR');
+  });
+});
