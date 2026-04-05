@@ -28,7 +28,7 @@ const WIX_MEDIA_API = 'https://www.wixapis.com/site-media/v1';
 // Bear shape: brown circle (head) with simple scale pulse animation.
 // Replace with real design assets when available.
 
-function makePlaceholderLottie(name, hue) {
+export function makePlaceholderLottie(name, hue) {
   // hue: 'brown' = dancing bear (orange-brown), 'tan' = idle bear (light brown)
   const [r, g, b] = hue === 'brown' ? [0.55, 0.27, 0.07] : [0.82, 0.69, 0.44];
   return {
@@ -105,7 +105,7 @@ function makePlaceholderLottie(name, hue) {
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 
-function getConfig() {
+export function getConfig() {
   // Requires a Wix Site API Key (dashboard → Settings → API Keys), NOT the Velo IST backend key
   const apiKey = process.env.WIX_SITE_API_KEY;
   const siteId = process.env.WIX_SITE_ID || '49cd75b0-92f1-4978-93e2-f5b5da531142';
@@ -123,7 +123,7 @@ function getConfig() {
 /**
  * Step 1: Request a signed upload URL from Wix Media Manager.
  */
-async function getUploadUrl(fileName, mimeType, config) {
+export async function getUploadUrl(fileName, mimeType, config) {
   const res = await fetch(`${WIX_MEDIA_API}/upload/url`, {
     method: 'POST',
     headers: {
@@ -149,8 +149,10 @@ async function getUploadUrl(fileName, mimeType, config) {
  *   - field "uploadToken" (the token from step 1)
  *   - field "file" (the file content)
  */
-async function uploadFile(uploadUrl, uploadToken, fileName, content) {
-  const { FormData, Blob } = await import('node:buffer').catch(() => globalThis);
+export async function uploadFile(uploadUrl, uploadToken, fileName, content) {
+  const bufModule = await import('node:buffer').catch(() => ({}));
+  const FormData = bufModule.FormData ?? globalThis.FormData;
+  const Blob = bufModule.Blob ?? globalThis.Blob;
 
   const form = new FormData();
   form.append('uploadToken', uploadToken);
@@ -171,7 +173,7 @@ async function uploadFile(uploadUrl, uploadToken, fileName, content) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const ANIMATIONS = [
+export const ANIMATIONS = [
   {
     key: 'DANCING_BEAR_ID',
     fileName: 'cute-bear-dancing.json',
@@ -186,7 +188,7 @@ const ANIMATIONS = [
   },
 ];
 
-async function main() {
+export async function main() {
   let config;
   try {
     config = getConfig();
@@ -243,4 +245,7 @@ async function main() {
   }
 }
 
-main();
+// Run only when executed directly (not imported by tests)
+if (process.argv[1] && new URL(import.meta.url).pathname === process.argv[1]) {
+  main();
+}
