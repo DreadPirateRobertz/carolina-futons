@@ -338,3 +338,32 @@ describe('getNpsStats', () => {
     expect(result.error).toBeDefined();
   });
 });
+
+// ── suppressAuth on all queries ─────────────────────────────────────────────
+
+describe('suppressAuth — all queries use { suppressAuth: true }', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupQueryMocks();
+    mockGetMember.mockResolvedValue({ _id: MEMBER_ID });
+    mockFind.mockResolvedValue({ items: [makeSurveyRecord()] });
+    mockUpdate.mockResolvedValue({});
+  });
+
+  it('submitSurveyResponse passes suppressAuth to find()', async () => {
+    await submitSurveyResponse({ orderId: ORDER_ID, npsScore: 8 });
+    expect(mockFind).toHaveBeenCalledWith({ suppressAuth: true });
+  });
+
+  it('getSurveyForOrder passes suppressAuth to find()', async () => {
+    mockFind.mockResolvedValue({ items: [] });
+    await getSurveyForOrder(ORDER_ID);
+    expect(mockFind).toHaveBeenCalledWith({ suppressAuth: true });
+  });
+
+  it('getNpsStats passes suppressAuth to find()', async () => {
+    mockFind.mockResolvedValue({ items: [] });
+    await getNpsStats();
+    expect(mockFind).toHaveBeenCalledWith({ suppressAuth: true });
+  });
+});

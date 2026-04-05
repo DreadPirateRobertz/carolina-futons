@@ -17,7 +17,7 @@
  *  - returns error on DB failure
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset, __setQueryError } from './__mocks__/wix-data.js';
+import { __seed, __reset, __setQueryError, __getLastFindOptions } from './__mocks__/wix-data.js';
 import { getSurveyResponseAggregation } from '../src/backend/surveyService.web.js';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -243,5 +243,16 @@ describe('getSurveyResponseAggregation — error handling', () => {
     const result = await getSurveyResponseAggregation();
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
+  });
+});
+
+// ── suppressAuth ────────────────────────────────────────────────────────────
+
+describe('getSurveyResponseAggregation — suppressAuth', () => {
+  it('queries SurveyResponses with suppressAuth: true', async () => {
+    __seed('SurveyResponses', [makeCompleted(9, 'great')]);
+    await getSurveyResponseAggregation();
+    const opts = __getLastFindOptions('SurveyResponses');
+    expect(opts).toEqual({ suppressAuth: true });
   });
 });

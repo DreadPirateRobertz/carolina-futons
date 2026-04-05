@@ -168,7 +168,7 @@ export const submitSurveyResponse = webMethod(
       const result = await wixData.query(SURVEY_COLLECTION)
         .eq('memberId', memberId)
         .eq('orderId', orderId)
-        .find();
+        .find({ suppressAuth: true });
 
       if (result.items.length === 0) {
         return { success: false, error: 'No survey found for this order' };
@@ -224,7 +224,7 @@ export const getSurveyForOrder = webMethod(
       const result = await wixData.query(SURVEY_COLLECTION)
         .eq('memberId', memberId)
         .eq('orderId', cleanId)
-        .find();
+        .find({ suppressAuth: true });
 
       if (result.items.length === 0) return { success: true, survey: null };
 
@@ -278,11 +278,11 @@ export const getSurveyResponseAggregation = webMethod(
           .ge('sentAt', since)
           .isNotEmpty('completedAt')
           .limit(1000)
-          .find(),
+          .find({ suppressAuth: true }),
         wixData.query(SURVEY_COLLECTION)
           .ge('sentAt', since)
           .limit(1000)
-          .find(),
+          .find({ suppressAuth: true }),
       ]);
 
       const completed = completedResult.items;
@@ -354,7 +354,7 @@ export const getNpsStats = webMethod(
         .ge('completedAt', since)
         .isNotEmpty('completedAt')
         .limit(1000)
-        .find();
+        .find({ suppressAuth: true });
 
       const responses = result.items;
       if (responses.length === 0) {
