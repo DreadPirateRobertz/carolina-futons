@@ -108,7 +108,7 @@ describe('generateFeed', () => {
     __seed('Stores/Products', [sampleProduct]);
     const r = await mod.generateFeed();
     expect(r).toContain('<g:google_product_category>2720</g:google_product_category>');
-    expect(r).toContain('<g:product_type>Futon Frames</g:product_type>');
+    expect(r).toContain('<g:product_type>Furniture &gt; Futon Frames</g:product_type>');
   });
 
   it('maps murphy beds correctly', async () => {

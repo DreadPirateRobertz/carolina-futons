@@ -86,10 +86,10 @@ describe('Google Merchant Feed — discountedPrice falsy-zero fix', () => {
 
 describe('Google Merchant Feed — category mapping coverage', () => {
   const categoryTests = [
-    { collection: 'covers', expectedType: 'Futon Covers', label: 'covers' },
-    { collection: 'outdoor-furniture', expectedType: 'Outdoor Furniture', label: 'outdoor' },
-    { collection: 'pillows', expectedType: 'Pillows &amp; Bolsters', label: 'pillows' },
-    { collection: 'log-frames', expectedType: 'Futon Frames &gt; Log Futon', label: 'log frames' },
+    { collection: 'covers', expectedType: 'Furniture &gt; Futon Covers', label: 'covers' },
+    { collection: 'outdoor-furniture', expectedType: 'Furniture &gt; Outdoor Furniture', label: 'outdoor' },
+    { collection: 'pillows', expectedType: 'Furniture &gt; Pillows &amp; Bolsters', label: 'pillows' },
+    { collection: 'log-frames', expectedType: 'Furniture &gt; Futon Frames &gt; Log Futon', label: 'log frames' },
   ];
 
   for (const tc of categoryTests) {
