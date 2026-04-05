@@ -114,6 +114,12 @@ describe('validatePhotoMetadata', () => {
     expect(r.error).toMatch(/productId must be a string of 50/i);
   });
 
+  it('returns error when productId contains invalid characters', () => {
+    const r = validatePhotoMetadata({ ...VALID, productId: 'invalid id/path?x=1' });
+    expect(r.valid).toBe(false);
+    expect(r.error).toMatch(/productId must be a string/i);
+  });
+
   it('skips productId check when productId is null', () => {
     expect(validatePhotoMetadata({ ...VALID, productId: null })).toEqual({ valid: true });
   });
