@@ -13,11 +13,14 @@
  * Exports:
  *   - TRAIL_REGISTRY    — static trail definitions
  *   - TRAIL_PROGRESS_COLLECTION — CMS collection name
- *   - getTrailProgress(memberId) — webMethod: progress for all trails for a member
- *   - recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail)
- *       — marks a challenge done; if trail now complete, triggers perk delivery
+ *   - getTrailProgress — webMethod: progress for all trails (memberId derived server-side)
+ *   - recordTrailChallengeCompletion — webMethod: mark challenge done (memberId derived server-side)
+ *   - _getTrailProgressForMember(memberId) — internal helper for backend-to-backend calls
+ *   - _recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail) — internal helper
  */
 
+import { Permissions, webMethod } from 'wix-web-module';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { logError } from 'backend/utils/errorHandler';
 import { deliverTrailPerk } from 'backend/trailPerkService.web';
@@ -75,16 +78,14 @@ export const TRAIL_REGISTRY = [
 ];
 
 /**
- * Returns trail progress for all trails for a given member.
- * Each entry includes the trail definition fields plus:
- *   - completedChallengeIds: string[] (from saved progress, or [] if none)
- *   - isComplete: boolean (all trail challenges completed)
- *   - completedAt: Date | null
+ * Internal helper: returns trail progress for a given member.
+ * Used by trailChallengeService.web.js (backend-to-backend).
+ * NOT safe for direct frontend calls — use getTrailProgress webMethod instead.
  *
  * @param {string} memberId
  * @returns {Promise<{ success: boolean, trails: Array, error?: string }>}
  */
-export async function getTrailProgress(memberId) {
+export async function _getTrailProgressForMember(memberId) {
   try {
     const { items } = await wixData
       .query(TRAIL_PROGRESS_COLLECTION)
@@ -124,12 +125,25 @@ export async function getTrailProgress(memberId) {
   }
 }
 
+/**
+ * WebMethod: returns trail progress for the currently authenticated member.
+ * memberId is derived server-side — callers cannot supply an arbitrary member.
+ *
+ * @returns {Promise<{ success: boolean, trails: Array, error?: string }>}
+ */
+export const getTrailProgress = webMethod(Permissions.SiteMember, async () => {
+  let member;
+  try { member = await currentMember.getMember(); } catch { member = null; }
+  if (!member?._id) return { success: false, trails: [], error: 'auth_required' };
+  return _getTrailProgressForMember(member._id);
+});
+
 // ── recordTrailChallengeCompletion ────────────────────────────────────────────
 
 /**
- * Marks a single challenge as complete for a member on a given trail.
- * Idempotent: completing an already-completed challenge is a no-op.
- * If all challenges on the trail are now complete, auto-delivers the trail perk.
+ * Internal helper: marks a single challenge as complete for a member on a given trail.
+ * Used by trailChallengeService.web.js (backend-to-backend).
+ * NOT safe for direct frontend calls — use recordTrailChallengeCompletion webMethod instead.
  *
  * @param {string} memberId
  * @param {string} trailId        — must match a TRAIL_REGISTRY entry id
@@ -143,7 +157,7 @@ export async function getTrailProgress(memberId) {
  *   error?: string
  * }>}
  */
-export async function recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail) {
+export async function _recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail) {
   if (!memberId || typeof memberId !== 'string') {
     return { success: false, error: 'memberId is required.' };
   }
@@ -227,3 +241,18 @@ export async function recordTrailChallengeCompletion(memberId, trailId, challeng
 
   return { success: true, trailComplete: false, perkDelivered: false };
 }
+
+/**
+ * WebMethod: marks a challenge complete for the currently authenticated member.
+ * memberId is derived server-side — callers cannot target another member.
+ *
+ * @param {string} trailId
+ * @param {string} challengeId
+ * @returns {Promise<{ success: boolean, trailComplete?: boolean, perkDelivered?: boolean, couponCode?: string|null, error?: string }>}
+ */
+export const recordTrailChallengeCompletion = webMethod(Permissions.SiteMember, async (trailId, challengeId) => {
+  let member;
+  try { member = await currentMember.getMember(); } catch { member = null; }
+  if (!member?._id) return { success: false, error: 'auth_required' };
+  return _recordTrailChallengeCompletion(member._id, trailId, challengeId, member.loginEmail || '');
+});

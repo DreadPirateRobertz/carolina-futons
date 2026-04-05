@@ -19,8 +19,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import {
-  getTrailProgress,
-  recordTrailChallengeCompletion,
+  _getTrailProgressForMember,
+  _recordTrailChallengeCompletion,
 } from 'backend/challengeService.web';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ export const getMyTrailProgress = webMethod(
     if (!member?._id) {
       return { success: false, trails: [], error: 'Authentication required.' };
     }
-    return getTrailProgress(member._id);
+    return _getTrailProgressForMember(member._id);
   }
 );
 
@@ -86,7 +86,7 @@ export const completeTrailChallenge = webMethod(
       return { success: false, error: 'Authentication required.' };
     }
 
-    return recordTrailChallengeCompletion(
+    return _recordTrailChallengeCompletion(
       member._id,
       trailId,
       challengeId,

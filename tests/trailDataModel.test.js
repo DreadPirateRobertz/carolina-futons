@@ -20,7 +20,7 @@ import { __setMember, __reset as resetMember } from './__mocks__/wix-members-bac
 import {
   TRAIL_REGISTRY,
   TRAIL_PROGRESS_COLLECTION,
-  getTrailProgress,
+  _getTrailProgressForMember as getTrailProgress,
 } from '../src/backend/challengeService.web.js';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────

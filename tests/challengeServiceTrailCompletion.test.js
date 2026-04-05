@@ -20,7 +20,7 @@ vi.mock('backend/trailPerkService.web', () => ({
 }));
 
 import {
-  recordTrailChallengeCompletion,
+  _recordTrailChallengeCompletion as recordTrailChallengeCompletion,
   TRAIL_REGISTRY,
   TRAIL_PROGRESS_COLLECTION,
 } from '../src/backend/challengeService.web.js';

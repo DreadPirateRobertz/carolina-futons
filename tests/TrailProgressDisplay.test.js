@@ -255,7 +255,7 @@ describe('initTrailsDisplay', () => {
     const trails = [makeTrail(), makeTrail({ trailId: 'trail-summer', name: 'Summer Stride' })];
     const getFn = vi.fn().mockResolvedValue({ success: true, trails });
 
-    await initTrailsDisplay('member-1', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
     expect($section.show).toHaveBeenCalled();
     expect($list.data).toHaveLength(2);
@@ -266,7 +266,7 @@ describe('initTrailsDisplay', () => {
     const $list = makeRepeater();
     const getFn = vi.fn().mockResolvedValue({ success: true, trails: [] });
 
-    await initTrailsDisplay('member-1', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
     expect($section.hide).toHaveBeenCalled();
     expect($section.show).not.toHaveBeenCalled();
@@ -277,7 +277,7 @@ describe('initTrailsDisplay', () => {
     const $list = makeRepeater();
     const getFn = vi.fn().mockResolvedValue({ success: false });
 
-    await initTrailsDisplay('member-1', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
     expect($section.hide).toHaveBeenCalled();
   });
@@ -287,20 +287,20 @@ describe('initTrailsDisplay', () => {
     const $list = makeRepeater();
     const getFn = vi.fn().mockRejectedValue(new Error('DB failure'));
 
-    await initTrailsDisplay('member-1', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
     expect($section.hide).toHaveBeenCalled();
     expect($section.show).not.toHaveBeenCalled();
   });
 
-  it('passes memberId to the getTrailProgressFn', async () => {
+  it('calls getTrailProgressFn with no arguments (memberId derived server-side)', async () => {
     const $section = makeSection();
     const $list = makeRepeater();
     const getFn = vi.fn().mockResolvedValue({ success: true, trails: [] });
 
-    await initTrailsDisplay('member-xyz', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
-    expect(getFn).toHaveBeenCalledWith('member-xyz');
+    expect(getFn).toHaveBeenCalledWith();
   });
 
   it('renders all 3 trails from a full response', async () => {
@@ -313,7 +313,7 @@ describe('initTrailsDisplay', () => {
     ];
     const getFn = vi.fn().mockResolvedValue({ success: true, trails });
 
-    await initTrailsDisplay('member-1', getFn, $section, $list);
+    await initTrailsDisplay(getFn, $section, $list);
 
     expect($list.data).toHaveLength(3);
     expect($list.data.map(d => d._id)).toEqual(['trail-spring', 'trail-summer', 'trail-fall']);

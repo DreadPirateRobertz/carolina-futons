@@ -29,6 +29,36 @@ const QUERY_PATTERN = /\.eq\s*\(/;
 const OWNERSHIP_CHECK = /getMember\s*\(\)|currentMember\s*\.|requireOwnMember\s*\(/;
 
 /**
+ * Extract plain `export async function` from .web.js source.
+ * These bypass webMethod auth entirely — invisible to the original scanner.
+ * Returns array of {name, params, body, lineNumber, isPlainExport: true}.
+ */
+export function extractPlainExports(source) {
+  const methods = [];
+  // Match plain exported async functions; skip _-prefixed (internal helpers)
+  const fnRe = /export\s+async\s+function\s+(\w+)\s*\(([^)]*)\)\s*\{/g;
+  let match;
+  while ((match = fnRe.exec(source)) !== null) {
+    const name = match[1];
+    // Skip _-prefixed functions: convention for internal backend-to-backend helpers
+    if (name.startsWith('_')) continue;
+    const params = match[2];
+    const startIdx = match.index + match[0].length - 1;
+    let depth = 1;
+    let i = startIdx + 1;
+    while (i < source.length && depth > 0) {
+      if (source[i] === '{') depth++;
+      else if (source[i] === '}') depth--;
+      i++;
+    }
+    const body = source.slice(startIdx, i);
+    const lineNumber = source.slice(0, match.index).split('\n').length;
+    methods.push({ name, params, body, lineNumber, isPlainExport: true });
+  }
+  return methods;
+}
+
+/**
  * Extract all SiteMember webMethod function bodies from a file's source text.
  * Returns array of {name, params, body, lineNumber} for each SiteMember webMethod.
  */
@@ -70,7 +100,9 @@ export function checkMethodForIDOR(method) {
   if (OWNERSHIP_CHECK.test(body)) return { violation: false };
   return {
     violation: true,
-    reason: `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`,
+    reason: method.isPlainExport
+      ? `Plain export '${name}' in .web.js accepts memberId-like param — bypasses webMethod auth; wrap in webMethod() and derive memberId server-side`
+      : `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`,
   };
 }
 
@@ -86,9 +118,12 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
   for (const file of files) {
     const filePath = join(backendDir, file);
     const source = readFileSync(filePath, 'utf8');
-    const methods = extractSiteMemberMethods(source);
+    const allMethods = [
+      ...extractSiteMemberMethods(source),
+      ...extractPlainExports(source),
+    ];
 
-    for (const method of methods) {
+    for (const method of allMethods) {
       const result = checkMethodForIDOR(method);
       if (result.violation) {
         violations.push({ file, name: method.name, line: method.lineNumber, reason: result.reason });
