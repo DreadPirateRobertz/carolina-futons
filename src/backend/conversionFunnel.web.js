@@ -73,6 +73,7 @@ export const trackFunnelEvent = webMethod(
       const sessionId = sanitize(String(rawSession), 254);
       if (!sessionId) return { success: false, error: 'sessionId is required' };
 
+      // Rate limit: max 10 funnel events per session per minute
       const { allowed } = await checkRateLimit(RATE_LIMIT_COLLECTION, sessionId, { max: 10, windowMs: 60_000 });
       if (!allowed) return { success: false, error: 'rate_limited' };
 
@@ -122,20 +123,18 @@ export const getFunnelReport = webMethod(
       const days = Math.min(90, Math.max(1, options.days != null ? options.days : 7));
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const baseQuery = () => {
-        let q = wixData.query(FUNNEL_COLLECTION).ge('timestamp', since).limit(PAGE_SIZE);
-        if (options.productId) {
-          q = q.eq('productId', sanitize(String(options.productId), 254));
-        }
-        return q;
-      };
+      // Paginate to avoid the hard 1000-row cap silently undercounting busy periods
+      let baseQuery = wixData.query(FUNNEL_COLLECTION).ge('timestamp', since);
+      if (options.productId) {
+        baseQuery = baseQuery.eq('productId', sanitize(String(options.productId), 254));
+      }
 
       const events = [];
       let offset = 0;
       while (true) {
-        const page = await baseQuery().skip(offset).find({ suppressAuth: true });
-        events.push(...page.items);
-        if (page.items.length < PAGE_SIZE) break;
+        const batch = await baseQuery.limit(PAGE_SIZE).skip(offset).find({ suppressAuth: true });
+        events.push(...batch.items);
+        if (batch.items.length < PAGE_SIZE) break;
         offset += PAGE_SIZE;
       }
 

@@ -18,12 +18,12 @@ import {
   __setUniqueField,
 } from './__mocks__/wix-data.js';
 
+// Default: all requests allowed; individual tests override to simulate blocks
 vi.mock('backend/utils/rateLimit', () => ({
   checkRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
 }));
 
 import { checkRateLimit } from '../src/backend/utils/rateLimit.js';
-
 import {
   trackFunnelEvent,
   getFunnelReport,
@@ -131,6 +131,31 @@ describe('trackFunnelEvent', () => {
     __setInsertError('FunnelEvents', new Error('connection timeout'));
     const result = await trackFunnelEvent('page_view', BASE);
     expect(result.success).toBe(false);
+  });
+
+  // ── rate limiting ────────────────────────────────────────────────
+
+  it('calls checkRateLimit with FunnelEventRateLimit, sessionId, and correct options', async () => {
+    await trackFunnelEvent('page_view', BASE);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'FunnelEventRateLimit',
+      'sess-abc',
+      expect.objectContaining({ max: 10, windowMs: 60_000 }),
+    );
+  });
+
+  it('returns { success: false, error: "rate_limited" } when rate limit exceeded', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: false, reason: 'rate_limited' });
+    const result = await trackFunnelEvent('page_view', BASE);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('rate_limited');
+    expect(__getInserted('FunnelEvents')).toHaveLength(0);
+  });
+
+  it('still inserts when rate limit allows', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: true });
+    await trackFunnelEvent('page_view', BASE);
+    expect(__getInserted('FunnelEvents')).toHaveLength(1);
   });
 
   it('truncates oversized sessionId via sanitize', async () => {
