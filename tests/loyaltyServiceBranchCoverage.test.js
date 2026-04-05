@@ -338,12 +338,12 @@ describe('getChallengeLeaderboard — branch coverage', () => {
 
     __seed('ChallengeProgress', []);
 
-    await getChallengeLeaderboard({ challengeId: 'ch-test' });
+    await getChallengeLeaderboard('ch-test');
 
     // Jump past 1-minute window
     vi.advanceTimersByTime(65_000);
 
-    const result = await getChallengeLeaderboard({ challengeId: 'ch-test' });
+    const result = await getChallengeLeaderboard('ch-test');
     expect(result).not.toHaveProperty('status', 429);
 
     vi.useRealTimers();
@@ -357,7 +357,7 @@ describe('getChallengeLeaderboard — branch coverage', () => {
       completedAt: completedDate,
     }]);
 
-    const result = await getChallengeLeaderboard({ challengeId: 'ch-iso' });
+    const result = await getChallengeLeaderboard('ch-iso');
     expect(result.leaderboard[0].completedAt).toBe('2026-03-15T09:00:00.000Z');
   });
 
@@ -368,7 +368,7 @@ describe('getChallengeLeaderboard — branch coverage', () => {
       completedAt: '2026-03-20T10:00:00.000Z',
     }]);
 
-    const result = await getChallengeLeaderboard({ challengeId: 'ch-str' });
+    const result = await getChallengeLeaderboard('ch-str');
     expect(result.leaderboard[0].completedAt).toBe('2026-03-20T10:00:00.000Z');
   });
 });

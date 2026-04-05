@@ -25,9 +25,9 @@ it('window reset test', async () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-04-04T12:00:00.000Z'));
   __seed('ChallengeProgress', []);
-  await getChallengeLeaderboard({ challengeId: 'ch-test' });
+  await getChallengeLeaderboard('ch-test');
   vi.advanceTimersByTime(65_000);
-  const result = await getChallengeLeaderboard({ challengeId: 'ch-test' });
+  const result = await getChallengeLeaderboard('ch-test');
   expect(result).not.toHaveProperty('status', 429);
   vi.useRealTimers();
 });
@@ -43,7 +43,7 @@ it('Date completedAt test', async () => {
   const raw = await wixData.query('ChallengeProgress').eq('challengeId', 'ch-iso').find();
   console.log('raw items count:', raw.items.length, 'items:', JSON.stringify(raw.items.map(i => ({challengeId: i.challengeId, completedAt: i.completedAt}))));
 
-  const result = await getChallengeLeaderboard({ challengeId: 'ch-iso' });
+  const result = await getChallengeLeaderboard('ch-iso');
   console.log('leaderboard:', JSON.stringify(result));
   expect(result.leaderboard).toHaveLength(1);
 });
