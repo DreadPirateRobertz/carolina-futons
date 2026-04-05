@@ -145,6 +145,14 @@ describe('saveQuestProgress — validation', () => {
     expect(result.error).toContain('Invalid status');
   });
 
+  it('returns error when progressData is not JSON-serializable (circular ref)', async () => {
+    const circular = {};
+    circular.self = circular;
+    const result = await saveQuestProgress('quest-abc', circular);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('progressData must be JSON-serializable');
+  });
+
   it('returns error on DB failure', async () => {
     __setQueryError('QuestProgress', new Error('DB down'));
     const result = await saveQuestProgress('quest-abc', { step: 1 });
