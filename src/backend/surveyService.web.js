@@ -347,6 +347,7 @@ export const getNpsStats = webMethod(
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     try {
+      // TODO: paginate when SurveyResponse volume exceeds 1000
       const result = await wixData.query(SURVEY_COLLECTION)
         .ge('completedAt', since)
         .isNotEmpty('completedAt')
@@ -364,12 +365,17 @@ export const getNpsStats = webMethod(
 
       for (const r of responses) {
         const score = r.npsScore;
+        // Skip rows with null/non-finite score — don't count as detractors
+        if (score == null || !Number.isFinite(score)) continue;
         if (score >= 9) promoters++;
         else if (score >= 7) passives++;
         else detractors++;
       }
 
-      const total = responses.length;
+      const total = promoters + passives + detractors;
+      if (total === 0) {
+        return { success: true, stats: { count: 0, npsScore: null, promoters: 0, passives: 0, detractors: 0 } };
+      }
       const npsScore = Math.round(((promoters - detractors) / total) * 100);
 
       return {

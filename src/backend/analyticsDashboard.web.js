@@ -264,6 +264,46 @@ export const getRevenueAttribution = webMethod(
 // ── NPS Dashboard Section ───────────────────────────────────────────
 
 /**
+ * Shared NPS bucketing — extracted so getNpsDashboardSection doesn't
+ * duplicate the categorisation logic inline (radahn review #1).
+ * Rows with null/non-finite npsScore are skipped, not counted as
+ * detractors (radahn review #2).
+ *
+ * @param {Array<{npsScore: number|null}>} items
+ * @returns {{npsScore: number|null, count: number, promoters: number, passives: number, detractors: number, promoterPct: number, passivePct: number, detractorPct: number}}
+ */
+function _aggregateNpsItems(items) {
+  let promoters = 0;
+  let passives = 0;
+  let detractors = 0;
+
+  for (const r of items) {
+    const s = r.npsScore;
+    // Skip rows where score is null or non-finite (pending survey, data gap)
+    if (s == null || !Number.isFinite(s)) continue;
+    if (s >= 9) promoters++;
+    else if (s >= 7) passives++;
+    else detractors++;
+  }
+
+  const total = promoters + passives + detractors;
+  if (total === 0) {
+    return { npsScore: null, count: 0, promoters: 0, passives: 0, detractors: 0, promoterPct: 0, passivePct: 0, detractorPct: 0 };
+  }
+
+  return {
+    npsScore: Math.round(((promoters - detractors) / total) * 100),
+    count: total,
+    promoters,
+    passives,
+    detractors,
+    promoterPct: Math.round((promoters / total) * 100),
+    passivePct: Math.round((passives / total) * 100),
+    detractorPct: Math.round((detractors / total) * 100),
+  };
+}
+
+/**
  * Get NPS survey stats formatted for the analytics dashboard.
  * Pulls completed SurveyResponses within the lookback window and returns
  * a dashboard-ready object with score, tier breakdown, and response count.
@@ -283,49 +323,15 @@ export const getNpsDashboardSection = webMethod(
     const since = new Date(Date.now() - lookback * 24 * 60 * 60 * 1000);
 
     try {
+      // TODO: paginate when SurveyResponse volume exceeds 1000
       const result = await wixData.query('SurveyResponses')
         .ge('completedAt', since)
         .isNotEmpty('completedAt')
         .limit(1000)
         .find();
 
-      const responses = result.items;
-      if (responses.length === 0) {
-        return {
-          npsScore: null,
-          count: 0,
-          promoterPct: 0,
-          detractorPct: 0,
-          passivePct: 0,
-          promoters: 0,
-          passives: 0,
-          detractors: 0,
-          periodDays: lookback,
-        };
-      }
-
-      let promoters = 0;
-      let passives = 0;
-      let detractors = 0;
-      for (const r of responses) {
-        const s = r.npsScore;
-        if (s >= 9) promoters++;
-        else if (s >= 7) passives++;
-        else detractors++;
-      }
-
-      const total = responses.length;
-      return {
-        npsScore: Math.round(((promoters - detractors) / total) * 100),
-        count: total,
-        promoters,
-        passives,
-        detractors,
-        promoterPct: Math.round((promoters / total) * 100),
-        passivePct: Math.round((passives / total) * 100),
-        detractorPct: Math.round((detractors / total) * 100),
-        periodDays: lookback,
-      };
+      const agg = _aggregateNpsItems(result.items);
+      return { ...agg, periodDays: lookback };
     } catch (err) {
       console.error('[analyticsDashboard] Error fetching NPS data:', err);
       return {
@@ -349,20 +355,26 @@ export const getNpsDashboardSection = webMethod(
  * Get a unified dashboard summary with key KPIs.
  *
  * @function getDashboardSummary
- * @param {number} [days=30] - Lookback window
+ * @param {number} [days=30] - Lookback window for funnel / email metrics.
+ *   NPS uses Math.max(days, 90): survey responses accumulate slowly (7-day
+ *   send delay + response time), so a sub-90-day window yields too few data
+ *   points for a reliable score. Callers needing a custom NPS window should
+ *   call getNpsDashboardSection() directly (radahn review #3).
  * @returns {Promise<Object>} Dashboard KPIs
  * @permission Admin
  */
 export const getDashboardSummary = webMethod(
   Permissions.Admin,
   async (days = 30) => {
+    // NPS window floors at 90 days — see JSDoc above
+    const npsDays = Math.max(days, 90);
     try {
       const [funnel, categories, emailMetrics, revenue, nps] = await Promise.all([
         getConversionFunnel(days),
         getCategoryPerformance(),
         getEmailFunnelMetrics(days),
         getRevenueAttribution(5),
-        getNpsDashboardSection(90),
+        getNpsDashboardSection(npsDays),
       ]);
 
       return {

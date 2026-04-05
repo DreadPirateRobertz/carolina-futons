@@ -149,6 +149,31 @@ describe('getNpsDashboardSection — error handling', () => {
   });
 });
 
+// ── getNpsDashboardSection — null score guard (radahn review #2) ──────────────
+
+describe('getNpsDashboardSection — null/non-finite score guard', () => {
+  it('does not count null npsScore as a detractor', async () => {
+    // A row with npsScore=null should be skipped entirely
+    __seed('SurveyResponses', [
+      { _id: 'r1', npsScore: null, completedAt: new Date() },
+      makeResponse(9),
+    ]);
+    const result = await getNpsDashboardSection();
+    expect(result.detractors).toBe(0);
+    expect(result.promoters).toBe(1);
+    expect(result.count).toBe(1); // null row excluded from count
+  });
+
+  it('returns null npsScore when only null-score rows exist', async () => {
+    __seed('SurveyResponses', [
+      { _id: 'r1', npsScore: null, completedAt: new Date() },
+    ]);
+    const result = await getNpsDashboardSection();
+    expect(result.npsScore).toBeNull();
+    expect(result.count).toBe(0);
+  });
+});
+
 // ── getDashboardSummary NPS fields ────────────────────────────────────────────
 
 describe('getDashboardSummary — NPS integration', () => {
@@ -172,6 +197,16 @@ describe('getDashboardSummary — NPS integration', () => {
     const result = await getDashboardSummary();
     expect(result.npsScore).toBe(100);
     expect(result.npsResponseCount).toBe(2);
+  });
+
+  it('uses at least a 90-day NPS window even when days param is smaller (radahn review #3)', async () => {
+    // Seed a response 60 days ago — visible under 90-day window but not 30-day
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    __seed('SurveyResponses', [{ _id: 'r1', npsScore: 10, completedAt: sixtyDaysAgo }]);
+    // getDashboardSummary(30) must still pick up the 60-day-old response
+    const result = await getDashboardSummary(30);
+    expect(result.npsScore).toBe(100);
+    expect(result.npsResponseCount).toBe(1);
   });
 
   it('npsScore is null in error-fallback response', async () => {
