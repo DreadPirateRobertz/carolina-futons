@@ -16,7 +16,7 @@ import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 
 // ── Mock surveyService ────────────────────────────────────────────────────────
 
-const mockScheduleSurvey = vi.fn(() => Promise.resolve({ success: true, scheduled: true }));
+const mockScheduleSurvey = vi.hoisted(() => vi.fn().mockResolvedValue({ success: true, scheduled: true }));
 
 vi.mock('backend/surveyService.web', () => ({
   scheduleSurvey: mockScheduleSurvey,
@@ -25,7 +25,18 @@ vi.mock('backend/surveyService.web', () => ({
 // ── Mock emailService so other onOrderDelivered chains don't blow up ──────────
 
 vi.mock('backend/emailService.web', () => ({
+  sendOrderConfirmation: vi.fn(() => Promise.resolve()),
   sendDeliveryConfirmation: vi.fn(() => Promise.resolve()),
+  sendFreightShippingNotification: vi.fn(() => Promise.resolve()),
+  sendShippingNotification: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('backend/freightTracking.web', () => ({
+  buildFreightTrackingPayload: vi.fn(() => ({ isLTL: false })),
+}));
+
+vi.mock('backend/referralService.web', () => ({
+  _getReferralLinkForMember: vi.fn(() => Promise.resolve(null)),
 }));
 
 vi.mock('backend/utils/errorHandler', () => ({
