@@ -39,6 +39,10 @@ import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
+import { sendOrderConfirmation, sendFreightShippingNotification, sendShippingNotification, sendDeliveryConfirmation } from 'backend/emailService.web';
+import { buildFreightTrackingPayload } from 'backend/freightTracking.web';
+import { scheduleSurvey } from 'backend/surveyService.web';
+import { _getReferralLinkForMember } from 'backend/referralService.web';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -184,16 +188,14 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
-  import('backend/emailService.web')
-    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
-      contactId,
-      email,
-      firstName,
-      orderNumber: String(orderNumber),
-      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-    }))
-    .catch(err => console.error('Error sending order confirmation:', err));
+  sendOrderConfirmation({
+    contactId,
+    email,
+    firstName,
+    orderNumber: String(orderNumber),
+    total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+    itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+  }).catch(err => console.error('Error sending order confirmation:', err));
 
   // CF-fzsd: Queue post-purchase care sequence at order creation so slug
   // extraction from lineItems is available (Day 7 review URL uses product slug).
@@ -218,38 +220,32 @@ export function wixEcom_onFulfillmentCreated(event) {
 
   // Detect LTL freight carriers (XPO, Estes, WWEX) and route to freight email.
   // Parcel carriers (UPS, USPS, FedEx) use the standard shipping notification.
-  import('backend/freightTracking.web')
-    .then(({ buildFreightTrackingPayload }) => {
-      const payload = buildFreightTrackingPayload({
-        carrierName: tracking.shippingProvider || '',
-        proNumber: tracking.trackingNumber || '',
-      });
+  const payload = buildFreightTrackingPayload({
+    carrierName: tracking.shippingProvider || '',
+    proNumber: tracking.trackingNumber || '',
+  });
 
-      if (payload.isLTL) {
-        return import('backend/emailService.web')
-          .then(({ sendFreightShippingNotification }) => sendFreightShippingNotification({
-            contactId,
-            email,
-            firstName,
-            orderNumber: String(orderNumber),
-            proNumber: payload.proNumber,
-            trackingUrl: payload.trackingUrl || '',
-            carrier: payload.displayCarrier,
-          }));
-      }
-
-      return import('backend/emailService.web')
-        .then(({ sendShippingNotification }) => sendShippingNotification({
-          contactId,
-          email,
-          firstName,
-          orderNumber: String(orderNumber),
-          trackingNumber: tracking.trackingNumber || '',
-          trackingUrl: tracking.trackingLink || '',
-          carrier: tracking.shippingProvider || '',
-        }));
-    })
-    .catch(err => console.error('Error sending fulfillment notification:', err));
+  if (payload.isLTL) {
+    sendFreightShippingNotification({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      proNumber: payload.proNumber,
+      trackingUrl: payload.trackingUrl || '',
+      carrier: payload.displayCarrier,
+    }).catch(err => console.error('Error sending fulfillment notification:', err));
+  } else {
+    sendShippingNotification({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      trackingNumber: tracking.trackingNumber || '',
+      trackingUrl: tracking.trackingLink || '',
+      carrier: tracking.shippingProvider || '',
+    }).catch(err => console.error('Error sending fulfillment notification:', err));
+  }
 }
 
 /**
@@ -268,14 +264,12 @@ export function wixEcom_onOrderDelivered(event) {
 
   if (!email) return;
 
-  import('backend/emailService.web')
-    .then(({ sendDeliveryConfirmation }) => sendDeliveryConfirmation({
-      contactId,
-      email,
-      firstName,
-      orderNumber: String(orderNumber),
-    }))
-    .catch(err => logError('wixEcom_onOrderDelivered:confirmation', err));
+  sendDeliveryConfirmation({
+    contactId,
+    email,
+    firstName,
+    orderNumber: String(orderNumber),
+  }).catch(err => logError('wixEcom_onOrderDelivered:confirmation', err));
 
   // CF-nkau: Queue post-purchase care sequence starting from delivery date
   // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
@@ -290,6 +284,14 @@ export function wixEcom_onOrderDelivered(event) {
   const primarySlug = extractPrimarySlug(lineItems);
   triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
     .catch(err => logError('wixEcom_onOrderDelivered:reviewReward', err));
+
+  // CF-1mlj: Queue 7-day NPS survey — fires after delivery, non-fatal
+  scheduleSurvey({
+    memberId: contactId,
+    orderId: order._id || String(orderNumber),
+    email,
+    deliveredAt: new Date(),
+  }).catch(err => logError('wixEcom_onOrderDelivered:survey', err));
 }
 
 /**
@@ -592,7 +594,6 @@ export const triggerPostPurchaseSequence = webMethod(
           const memberId = sanitize(opts?.memberId || '', 50);
           if (memberId) {
             try {
-              const { _getReferralLinkForMember } = await import('backend/referralService.web');
               const refData = await _getReferralLinkForMember(memberId);
               if (refData) {
                 variables.referralUrl = refData.referralUrl;

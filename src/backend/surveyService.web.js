@@ -249,6 +249,90 @@ export const getSurveyForOrder = webMethod(
 );
 
 /**
+ * Get detailed survey response aggregation for the admin analytics dashboard.
+ * Returns score distribution histogram, completion rate, and recent open comments.
+ *
+ * @param {Object} [opts]
+ * @param {number} [opts.days=90]       — look-back window in days (1–365)
+ * @param {number} [opts.commentLimit=10] — max recent comments to return
+ * @returns {Promise<{success: boolean, aggregation: Object}>}
+ */
+export const getSurveyResponseAggregation = webMethod(
+  Permissions.Admin,
+  async (opts = {}) => {
+    const days = (opts.days != null && Number.isFinite(Number(opts.days)))
+      ? Math.min(Math.max(1, Number(opts.days)), 365)
+      : 90;
+    const commentLimit = (opts.commentLimit != null && Number.isFinite(Number(opts.commentLimit)))
+      ? Math.min(Math.max(1, Number(opts.commentLimit)), 100)
+      : 10;
+
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    try {
+      // Fetch all scheduled surveys (total) and completed ones for the period.
+      // Both queries anchor on sentAt so numerator and denominator share the same
+      // cohort (surveys sent in the window), avoiding mixed date-axis skew.
+      const [completedResult, scheduledResult] = await Promise.all([
+        wixData.query(SURVEY_COLLECTION)
+          .ge('sentAt', since)
+          .isNotEmpty('completedAt')
+          .limit(1000)
+          .find(),
+        wixData.query(SURVEY_COLLECTION)
+          .ge('sentAt', since)
+          .limit(1000)
+          .find(),
+      ]);
+
+      const completed = completedResult.items;
+      const scheduled = scheduledResult.items;
+
+      // Score distribution histogram: keys 0–10
+      const scoreDistribution = {};
+      for (let i = NPS_MIN; i <= NPS_MAX; i++) scoreDistribution[i] = 0;
+      for (const r of completed) {
+        const s = r.npsScore;
+        if (s != null && s >= NPS_MIN && s <= NPS_MAX) {
+          scoreDistribution[s]++;
+        }
+      }
+
+      // Completion rate: completed / scheduled (in period)
+      const completionRate = scheduled.length > 0
+        ? Math.round((completed.length / scheduled.length) * 100)
+        : 0;
+
+      // Recent comments: most recent non-empty comments up to commentLimit
+      const recentComments = completed
+        .filter(r => r.comment && r.comment.trim().length > 0)
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+        .slice(0, commentLimit)
+        .map(r => ({
+          npsScore: r.npsScore,
+          comment: r.comment,
+          completedAt: r.completedAt,
+        }));
+
+      return {
+        success: true,
+        aggregation: {
+          totalScheduled: scheduled.length,
+          totalCompleted: completed.length,
+          completionRate,
+          scoreDistribution,
+          recentComments,
+          periodDays: days,
+        },
+      };
+    } catch (err) {
+      logError('surveyService:getSurveyResponseAggregation', err);
+      return { success: false, error: 'Failed to compute survey aggregation' };
+    }
+  }
+);
+
+/**
  * Get aggregate NPS statistics for the admin analytics dashboard.
  *
  * @param {Object} [opts]
@@ -265,6 +349,7 @@ export const getNpsStats = webMethod(
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     try {
+      // TODO: paginate when SurveyResponse volume exceeds 1000
       const result = await wixData.query(SURVEY_COLLECTION)
         .ge('completedAt', since)
         .isNotEmpty('completedAt')
@@ -282,12 +367,17 @@ export const getNpsStats = webMethod(
 
       for (const r of responses) {
         const score = r.npsScore;
+        // Skip rows with null/non-finite score — don't count as detractors
+        if (score == null || !Number.isFinite(score)) continue;
         if (score >= 9) promoters++;
         else if (score >= 7) passives++;
         else detractors++;
       }
 
-      const total = responses.length;
+      const total = promoters + passives + detractors;
+      if (total === 0) {
+        return { success: true, stats: { count: 0, npsScore: null, promoters: 0, passives: 0, detractors: 0 } };
+      }
       const npsScore = Math.round(((promoters - detractors) / total) * 100);
 
       return {
