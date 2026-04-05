@@ -272,6 +272,6 @@ describe('getFeedData', () => {
   it('detects product types from collections', async () => {
     const data = await getFeedData();
     const murphy = data.find(p => p.id === 'prod-2');
-    expect(murphy.productType).toBe('Beds > Murphy Cabinet Beds');
+    expect(murphy.productType).toBe('Furniture > Beds > Murphy Cabinet Beds');
   });
 });
