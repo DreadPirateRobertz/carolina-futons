@@ -310,4 +310,19 @@ describe('addFutonStudioBundleToCart', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/failed/i);
   });
+
+  it('falls back to 2-item bundle when cover exists in DB but cover lookup returns null', async () => {
+    // coverId is valid but not in the seeded products → cover not found → skip cover
+    const result = await addFutonStudioBundleToCart('frame-full', 'matt-full', 'cover-nonexistent');
+    expect(result.success).toBe(true);
+    expect(result.productsAdded).toBe(2);
+    expect(result.discountPercent).toBe(10);
+  });
+
+  it('returns error when both frameId and mattressId are missing', async () => {
+    const result = await addFutonStudioBundleToCart(null, null, null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/required/i);
+  });
+
 });
