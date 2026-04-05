@@ -33,7 +33,8 @@ const CHI_SQ_95 = 3.841;
  *   |    c1     |   n1 - c1     |   variant 1
  *   |    c2     |   n2 - c2     |   variant 2
  *
- * Uses standard Pearson chi-squared (no Yates' correction — appropriate for n≥30).
+ * Uses standard Pearson chi-squared (no Yates' continuity correction).
+ * Appropriate for n ≥ 30 per cell; expected cell count should be ≥ 5.
  *
  * @param {number} n1 - Impressions for variant 1
  * @param {number} c1 - Conversions for variant 1
@@ -149,21 +150,20 @@ export const getAbTestResults = webMethod(
           .eq('eventType', 'conversion')
           .count();
 
-        // Revenue: paginated sum of FunnelEvents purchase rows tagged to this experiment variant
-        const PAGE = 500;
+        // Revenue: paginate purchase rows to avoid 500-row cap undercounting high-traffic variants
         let revenue = 0;
         let revOffset = 0;
         while (true) {
-          const purchasePage = await wixData.query(FUNNEL_COLLECTION)
+          const batch = await wixData.query(FUNNEL_COLLECTION)
             .eq('stage', 'purchase')
             .eq('experimentId', cleanName)
             .eq('variantId', v.id)
-            .limit(PAGE)
+            .limit(500)
             .skip(revOffset)
             .find({ suppressAuth: true });
-          revenue += purchasePage.items.reduce((sum, r) => sum + (r.revenue || 0), 0);
-          if (purchasePage.items.length < PAGE) break;
-          revOffset += PAGE;
+          revenue += batch.items.reduce((sum, r) => sum + (r.revenue || 0), 0);
+          if (batch.items.length < 500) break;
+          revOffset += 500;
         }
 
         const rate = impressions > 0 ? (conversions / impressions) * 100 : 0;
