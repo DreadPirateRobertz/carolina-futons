@@ -18,6 +18,7 @@ import {
   __reset as resetData,
   __getUpdated,
   __onUpdate,
+  __setUpdateError,
 } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import { getMyWarranties, getWarrantyDetails } from '../src/backend/warrantyService.web.js';
@@ -117,6 +118,14 @@ describe('getMyWarranties — auto-expire', () => {
     const result = await getMyWarranties();
     expect(result.success).toBe(true);
     expect(result.warranties[0].status).toBe('active');
+  });
+
+  it('still returns correct expired status even when auto-expire DB update fails', async () => {
+    __seed('WarrantyRegistrations', [makeWarranty({ expiresAt: PAST })]);
+    __setUpdateError('WarrantyRegistrations', new Error('DB write failed'));
+    const result = await getMyWarranties();
+    expect(result.success).toBe(true);
+    expect(result.warranties[0].status).toBe('expired');
   });
 });
 

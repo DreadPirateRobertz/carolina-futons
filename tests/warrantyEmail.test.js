@@ -132,6 +132,13 @@ describe('purchaseWarranty — email confirmation', () => {
     const queued = __getInserted('EmailQueue');
     expect(queued).toHaveLength(0);
   });
+
+  it('skips queueEmail when member loginEmail is null', async () => {
+    __setMember({ _id: MEMBER_ID, loginEmail: null });
+    await purchaseWarranty(makePurchaseData());
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(0);
+  });
 });
 
 // ── registerWarranty email ────────────────────────────────────────────────────

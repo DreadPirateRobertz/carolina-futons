@@ -86,10 +86,15 @@ async function requireMemberWithEmail() {
  * @param {Object} variables
  */
 async function queueEmail(templateId, recipientEmail, variables) {
+  const cleanEmail = sanitize(recipientEmail, 254);
+  if (!validateEmail(cleanEmail)) {
+    console.warn(`[warrantyService] queueEmail skipped — invalid recipientEmail for template ${templateId}`);
+    return;
+  }
   try {
     await wixData.insert(EMAIL_QUEUE_COLLECTION, {
-      templateId,
-      recipientEmail,
+      templateId: sanitize(templateId, 100),
+      recipientEmail: cleanEmail,
       variables,
       status: 'pending',
       createdAt: new Date(),
@@ -341,10 +346,13 @@ export const registerWarranty = webMethod(
         return { success: false, error: 'Warranty not found.' };
       }
 
-      const warranty = result.items[0];
-      warranty.registeredAt = new Date();
-      warranty.serialNumber = sanitize(data.serialNumber || '', 100);
-      warranty.purchaseDate = sanitize(data.purchaseDate || '', 20);
+      const registeredAt = new Date();
+      const warranty = {
+        ...result.items[0],
+        registeredAt,
+        serialNumber: sanitize(data.serialNumber || '', 100),
+        purchaseDate: sanitize(data.purchaseDate || '', 20),
+      };
 
       await wixData.update('WarrantyRegistrations', warranty);
 
@@ -355,7 +363,7 @@ export const registerWarranty = webMethod(
         productName: warranty.productName || '',
         planName: warranty.planName || '',
         serialNumber: warranty.serialNumber || '',
-        registeredAt: warranty.registeredAt.toISOString(),
+        registeredAt: registeredAt.toISOString(),
       });
 
       return { success: true };
@@ -384,15 +392,16 @@ export const getMyWarranties = webMethod(
         .find();
 
       const now = new Date();
-      const warranties = await Promise.all(result.items.map(async item => {
-        // Auto-expire: if stored as active but past expiresAt, flip to expired.
-        if (item.status === 'active' && item.expiresAt && new Date(item.expiresAt) < now) {
-          item.status = 'expired';
-          // Fire-and-forget DB update — non-fatal
-          wixData.update('WarrantyRegistrations', { ...item }).catch(() => {});
+      const warranties = [];
+      for (const raw of result.items) {
+        // Auto-expire: immutable — never mutate the DB record in-place.
+        const item = (raw.status === 'active' && raw.expiresAt && new Date(raw.expiresAt) < now)
+          ? { ...raw, status: 'expired' }
+          : raw;
+        if (item.status === 'expired' && raw.status === 'active') {
+          await wixData.update('WarrantyRegistrations', item).catch(() => {});
         }
-
-        return {
+        warranties.push({
           _id: item._id,
           planId: item.planId,
           planName: item.planName,
@@ -404,8 +413,8 @@ export const getMyWarranties = webMethod(
           purchasedAt: item.purchasedAt,
           expiresAt: item.expiresAt,
           registeredAt: item.registeredAt,
-        };
-      }));
+        });
+      }
 
       return { success: true, warranties };
     } catch (err) {
