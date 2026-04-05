@@ -215,6 +215,27 @@ describe('submitVideoReview — input validation', () => {
     expect(inserted[0].mediaUrl).toBe(WIX_VIDEO_URL);
   });
 
+  it('stores reviewerName from member profile (GH#992)', async () => {
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Alice', lastName: 'Smith' } });
+    await submitVideoReview(PROD_ID, WIX_VIDEO_URL, 'Love it');
+    const inserted = __getInserted(VIDEO_REVIEWS_COLLECTION);
+    expect(inserted[0].reviewerName).toBe('Alice S.');
+  });
+
+  it('stores first name only when lastName is missing', async () => {
+    __setMember({ _id: 'member-2', contactDetails: { firstName: 'Bob' } });
+    await submitVideoReview(PROD_ID, WIX_VIDEO_URL, 'Nice');
+    const inserted = __getInserted(VIDEO_REVIEWS_COLLECTION);
+    expect(inserted[0].reviewerName).toBe('Bob');
+  });
+
+  it('falls back to Customer when no contactDetails', async () => {
+    __setMember({ _id: 'member-3' });
+    await submitVideoReview(PROD_ID, WIX_VIDEO_URL, 'Good');
+    const inserted = __getInserted(VIDEO_REVIEWS_COLLECTION);
+    expect(inserted[0].reviewerName).toBe('Customer');
+  });
+
   it('returns reviewId on success', async () => {
     const result = await submitVideoReview(PROD_ID, WIX_VIDEO_URL, 'caption');
     expect(result.success).toBe(true);
