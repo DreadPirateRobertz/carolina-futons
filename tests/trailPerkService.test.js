@@ -2,7 +2,7 @@
  * Tests for trailPerkService.web.js — CF-mcyh.2
  * Perk delivery for Blue Ridge Trail completions.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
@@ -155,9 +155,8 @@ import { getTrailPerkStatus } from '../src/backend/trailPerkService.web.js';
 
 // ── currentMember mock for getTrailPerkStatus ─────────────────────────────────
 
-import { vi as _vi } from 'vitest';
-const mockGetMember = _vi.fn(async () => ({ _id: 'mem-1' }));
-_vi.mock('wix-members-backend', () => ({
+const mockGetMember = vi.fn(async () => ({ _id: 'mem-1' }));
+vi.mock('wix-members-backend', () => ({
   currentMember: { getMember: (...args) => mockGetMember(...args) },
 }));
 
