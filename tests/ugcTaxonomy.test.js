@@ -120,6 +120,7 @@ describe('validatePhotoMetadata', () => {
     expect(r.error).toMatch(/productId must be a string/i);
   });
 
+
   it('skips productId check when productId is null', () => {
     expect(validatePhotoMetadata({ ...VALID, productId: null })).toEqual({ valid: true });
   });
