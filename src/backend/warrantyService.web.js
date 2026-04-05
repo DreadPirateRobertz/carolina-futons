@@ -59,11 +59,44 @@ import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 const MAX_PRODUCT_PRICE = 25000;
 const VALID_ISSUE_TYPES = ['structural', 'fabric', 'mechanism', 'accidental', 'stain', 'other'];
 const MIN_DESCRIPTION_LENGTH = 10;
+const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
 
 async function requireMember() {
   const member = await currentMember.getMember();
   if (!member) throw new Error('Authentication required');
   return member._id;
+}
+
+/**
+ * Like requireMember() but also returns the member's login email.
+ * Used when we need to send a confirmation email after the action.
+ * @returns {Promise<{memberId: string, email: string}>}
+ */
+async function requireMemberWithEmail() {
+  const member = await currentMember.getMember();
+  if (!member) throw new Error('Authentication required');
+  return { memberId: member._id, email: member.loginEmail || '' };
+}
+
+/**
+ * Queue an email notification — non-fatal; failures are logged and swallowed
+ * so they never abort the parent operation.
+ * @param {string} templateId
+ * @param {string} recipientEmail
+ * @param {Object} variables
+ */
+async function queueEmail(templateId, recipientEmail, variables) {
+  try {
+    await wixData.insert(EMAIL_QUEUE_COLLECTION, {
+      templateId,
+      recipientEmail,
+      variables,
+      status: 'pending',
+      createdAt: new Date(),
+    });
+  } catch (err) {
+    console.error(`[warrantyService] Email queue insert failed (${templateId}):`, err);
+  }
 }
 
 function parseJsonArray(json) {
@@ -191,7 +224,7 @@ export const purchaseWarranty = webMethod(
   Permissions.SiteMember,
   async (data) => {
     try {
-      const memberId = await requireMember();
+      const { memberId, email: memberEmail } = await requireMemberWithEmail();
 
       const planId = validateId(data.planId);
       if (!planId) {
@@ -250,6 +283,16 @@ export const purchaseWarranty = webMethod(
 
       const inserted = await wixData.insert('WarrantyRegistrations', registration);
 
+      // Queue purchase confirmation email — non-fatal
+      await queueEmail('warranty_purchased', memberEmail, {
+        memberId,
+        warrantyId: inserted._id,
+        planName: plan.name,
+        productName,
+        warrantyPrice,
+        expiresAt: expiresAt.toISOString(),
+      });
+
       return {
         success: true,
         warranty: {
@@ -282,7 +325,7 @@ export const registerWarranty = webMethod(
   Permissions.SiteMember,
   async (data) => {
     try {
-      const memberId = await requireMember();
+      const { memberId, email: memberEmail } = await requireMemberWithEmail();
 
       const warrantyId = validateId(data.warrantyId);
       if (!warrantyId) {
@@ -304,6 +347,16 @@ export const registerWarranty = webMethod(
       warranty.purchaseDate = sanitize(data.purchaseDate || '', 20);
 
       await wixData.update('WarrantyRegistrations', warranty);
+
+      // Queue registration confirmation email — non-fatal
+      await queueEmail('warranty_registered', memberEmail, {
+        memberId,
+        warrantyId: warranty._id,
+        productName: warranty.productName || '',
+        planName: warranty.planName || '',
+        serialNumber: warranty.serialNumber || '',
+        registeredAt: warranty.registeredAt.toISOString(),
+      });
 
       return { success: true };
     } catch (err) {
@@ -330,18 +383,28 @@ export const getMyWarranties = webMethod(
         .limit(50)
         .find();
 
-      const warranties = result.items.map(item => ({
-        _id: item._id,
-        planId: item.planId,
-        planName: item.planName,
-        productId: item.productId,
-        productName: item.productName,
-        orderId: item.orderId,
-        warrantyPrice: item.warrantyPrice,
-        status: item.status,
-        purchasedAt: item.purchasedAt,
-        expiresAt: item.expiresAt,
-        registeredAt: item.registeredAt,
+      const now = new Date();
+      const warranties = await Promise.all(result.items.map(async item => {
+        // Auto-expire: if stored as active but past expiresAt, flip to expired.
+        if (item.status === 'active' && item.expiresAt && new Date(item.expiresAt) < now) {
+          item.status = 'expired';
+          // Fire-and-forget DB update — non-fatal
+          wixData.update('WarrantyRegistrations', { ...item }).catch(() => {});
+        }
+
+        return {
+          _id: item._id,
+          planId: item.planId,
+          planName: item.planName,
+          productId: item.productId,
+          productName: item.productName,
+          orderId: item.orderId,
+          warrantyPrice: item.warrantyPrice,
+          status: item.status,
+          purchasedAt: item.purchasedAt,
+          expiresAt: item.expiresAt,
+          registeredAt: item.registeredAt,
+        };
       }));
 
       return { success: true, warranties };
@@ -378,7 +441,13 @@ export const getWarrantyDetails = webMethod(
         return { success: false, error: 'Warranty not found.' };
       }
 
-      const item = result.items[0];
+      let item = result.items[0];
+
+      // Auto-expire: flip status in DB and return if past expiresAt
+      if (item.status === 'active' && item.expiresAt && new Date(item.expiresAt) < new Date()) {
+        item = { ...item, status: 'expired' };
+        wixData.update('WarrantyRegistrations', item).catch(() => {});
+      }
 
       let coveredItems = [];
       let excludedItems = [];
