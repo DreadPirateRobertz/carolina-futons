@@ -1253,6 +1253,25 @@ Displays Affirm (price/12) and Klarna (price/4) monthly estimate text on the Pro
 
 **Placement:** Place `#bnplContainer` on Product Page below the price display. Wire via `Product Page.js` orchestrator — called with current product price on page load and on variant change.
 
+### BNPL Calculator Widget (CF-zpf — in progress)
+*Source: `src/public/BNPLCalculatorWidget.js` — `initBNPLCalculator($w, price)`, `updateBNPLCalculatorPrice($w, price)`*
+*Backend: `src/backend/financingCalc.web.js` — `getFinancingWidget(price)`*
+
+Interactive multi-provider comparison widget. Shows real in-house financing terms (6/12/18/24 months with APR), Afterpay breakdown, plus Affirm and Klarna estimates — all in a compact expandable widget embeddable on any page. Distinct from the full-page `Financing.js` calculator and from the static-text `BNPLWidget.js`.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `bnplCalcContainer` | Box | Wrapper — hidden by default; shown when ≥1 option is available |
+| `bnplCalcLowest` | Text | "As low as $X/mo" headline from backend |
+| `bnplCalcRepeater` | Repeater | One card per provider/term; item elements below |
+| `providerName` | Text (item) | Provider/term label e.g. "In-house 12 mo", "Afterpay", "Klarna" |
+| `providerAmount` | Text (item) | Payment amount e.g. "$42/mo" or "4 × $125" |
+| `providerNote` | Text (item) | Qualifier e.g. "0% APR" or "pay-in-4, 0% interest" |
+| `bnplCalcDetails` | Box | Expanded breakdown — collapsed by default |
+| `bnplCalcToggle` | Button | "See all options" / "Hide options" toggle |
+
+**Placement:** Embeddable on Product Page, Cart Page, or any page where a price is available. Call `initBNPLCalculator($w, price)` on page load; call `updateBNPLCalculatorPrice($w, newPrice)` on variant/quantity changes.
+
 ### Share Your Room — UGC Photo Submit (CF-rw9i.1 — PR #938 ✅ MERGED 2026-03-29)
 *Source: `src/public/ShareYourRoom.js` — `initShareYourRoom($w, productId)`*
 *Backend: `src/backend/ugcService.web.js` — `submitUGCPhoto()`*
