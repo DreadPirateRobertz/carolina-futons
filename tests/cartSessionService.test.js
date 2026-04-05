@@ -308,3 +308,87 @@ describe('mergeGuestCart', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── eventBus utilities (branch coverage) ──────────────────────────
+
+import {
+  validateIncomingEvent,
+  logEventTrace,
+  BUS_SCHEMA_VERSION,
+} from '../src/backend/utils/eventBus.js';
+
+describe('validateIncomingEvent', () => {
+  it('returns null for a valid event', () => {
+    const result = validateIncomingEvent({
+      eventId: 'evt-1', schemaVersion: BUS_SCHEMA_VERSION, event: 'streak_extended',
+    });
+    expect(result).toBeNull();
+  });
+
+  it('returns error when eventId is missing', () => {
+    expect(validateIncomingEvent({ schemaVersion: BUS_SCHEMA_VERSION, event: 'badge_earned' })).toMatch(/eventId/);
+  });
+
+  it('returns error when schemaVersion is missing', () => {
+    expect(validateIncomingEvent({ eventId: 'e1', event: 'badge_earned' })).toMatch(/schemaVersion/);
+  });
+
+  it('returns error when schemaVersion does not match', () => {
+    expect(validateIncomingEvent({ eventId: 'e1', schemaVersion: '99.0', event: 'badge_earned' })).toMatch(/schemaVersion/);
+  });
+
+  it('returns error when event is missing', () => {
+    expect(validateIncomingEvent({ eventId: 'e1', schemaVersion: BUS_SCHEMA_VERSION })).toMatch(/event/);
+  });
+
+  it('returns error for an unknown event name', () => {
+    expect(validateIncomingEvent({ eventId: 'e1', schemaVersion: BUS_SCHEMA_VERSION, event: 'unknown_event' })).toMatch(/Unknown event/);
+  });
+});
+
+describe('logEventTrace', () => {
+  const TRACE_COLLECTION = 'EventTraceLog';
+
+  it('inserts a new trace when eventId is not yet recorded', async () => {
+    __seed(TRACE_COLLECTION, []);
+    await logEventTrace({ eventId: 'evt-new', traceId: 'tr-1', event: 'streak_extended', userId: 'u1', source: 'mobile', ts: 12345, status: 'ok' });
+    const inserted = __getInserted(TRACE_COLLECTION);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].eventId).toBe('evt-new');
+  });
+
+  it('skips insert when eventId already recorded (idempotency)', async () => {
+    __seed(TRACE_COLLECTION, [{ _id: 'evt-dup', eventId: 'evt-dup' }]);
+    await logEventTrace({ eventId: 'evt-dup', traceId: 'tr-2', event: 'badge_earned', userId: 'u2', source: 'web', ts: 0, status: 'ok' });
+    // Store should still have exactly 1 item (the seeded one — no new insert happened)
+    expect(__getInserted(TRACE_COLLECTION)).toHaveLength(1);
+  });
+
+  it('defaults userId to null when not provided', async () => {
+    __seed(TRACE_COLLECTION, []);
+    await logEventTrace({ eventId: 'evt-no-user', traceId: 'tr-3', event: 'tier_changed', source: 'web', ts: 0, status: 'ok' });
+    expect(__getInserted(TRACE_COLLECTION)[0].userId).toBeNull();
+  });
+
+  it('defaults source to null when not provided', async () => {
+    __seed(TRACE_COLLECTION, []);
+    await logEventTrace({ eventId: 'evt-no-src', traceId: 'tr-4', event: 'tier_changed', userId: 'u4', ts: 0, status: 'ok' });
+    expect(__getInserted(TRACE_COLLECTION)[0].source).toBeNull();
+  });
+
+  it('uses provided ts when present', async () => {
+    __seed(TRACE_COLLECTION, []);
+    await logEventTrace({ eventId: 'evt-ts', traceId: 'tr-5', event: 'badge_earned', userId: 'u5', source: 'web', ts: 9999, status: 'ok' });
+    expect(__getInserted(TRACE_COLLECTION)[0].ts).toBe(9999);
+  });
+
+  it('falls back to current time when ts is falsy', async () => {
+    __seed(TRACE_COLLECTION, []);
+    const before = Math.floor(Date.now() / 1000);
+    await logEventTrace({ eventId: 'evt-no-ts', traceId: 'tr-6', event: 'badge_earned', userId: 'u6', source: 'web', ts: 0, status: 'ok' });
+    const after = Math.floor(Date.now() / 1000) + 1;
+    const ts = __getInserted(TRACE_COLLECTION)[0].ts;
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
+  });
+});
