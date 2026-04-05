@@ -572,12 +572,14 @@ const BADGE_LABELS = {
  * @returns {Promise<number[]>}
  */
 export async function checkStreakAchievements(memberId, currentStreakDays) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) return [];
   try {
     const reached = STREAK_MILESTONES.filter(m => currentStreakDays >= m);
     if (reached.length === 0) return [];
 
     const existing = await wixData.query('StreakAchievements')
-      .eq('memberId', memberId)
+      .eq('memberId', cleanId)
       .find({ suppressAuth: true });
     const earned = new Set(existing.items.map(r => r.milestone));
     return reached.filter(m => !earned.has(m));
@@ -596,22 +598,25 @@ export async function checkStreakAchievements(memberId, currentStreakDays) {
  * @returns {Promise<void>}
  */
 export async function insertStreakAchievement(memberId, milestone, streakDays) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('insertStreakAchievement: invalid memberId');
   try {
     const existing = await wixData.query('StreakAchievements')
-      .eq('memberId', memberId)
+      .eq('memberId', cleanId)
       .eq('milestone', milestone)
       .limit(1)
       .find({ suppressAuth: true });
     if (existing.items.length > 0) return;
 
     await wixData.insert('StreakAchievements', {
-      memberId,
+      memberId: cleanId,
       milestone,
       streakDays,
       earnedAt: new Date(),
       notified: false,
     }, { suppressAuth: true });
   } catch (err) {
+    if (isDuplicateKeyError(err)) return; // concurrent insert — already recorded
     console.error('Error inserting streak achievement:', err);
     throw err;
   }
@@ -765,14 +770,20 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
     .find({ suppressAuth: true });
   const title = challengeRes.items[0]?.title ?? cleanChallengeId;
 
-  await wixData.insert(POINTS_LEDGER_COLLECTION, {
-    memberId: cleanId,
-    type: 'challenge_complete',
-    challengeId: cleanChallengeId,
-    description: `${title} completed`,
-    points,
-    earnedAt: new Date(),
-  }, { suppressAuth: true });
+  try {
+    await wixData.insert(POINTS_LEDGER_COLLECTION, {
+      memberId: cleanId,
+      type: 'challenge_complete',
+      challengeId: cleanChallengeId,
+      description: `${title} completed`,
+      points,
+      earnedAt: new Date(),
+    }, { suppressAuth: true });
+  } catch (err) {
+    // DB-level unique constraint: concurrent write already recorded this event.
+    if (isDuplicateKeyError(err)) return;
+    throw err;
+  }
 }
 
 /**
