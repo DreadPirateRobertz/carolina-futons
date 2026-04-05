@@ -458,10 +458,10 @@ describe('initTrailProgressWidget', () => {
 
   // ── Correct trailId selection ───────────────────────────────────────────────
 
-  it('passes memberId to getTrailProgress', async () => {
+  it('calls getTrailProgress with no arguments (memberId derived server-side)', async () => {
     const getFn = makeGetFn([makeTrail()]);
     await initTrailProgressWidget('member-xyz', 'trail-spring', { $w, getTrailProgress: getFn });
-    expect(getFn).toHaveBeenCalledWith('member-xyz');
+    expect(getFn).toHaveBeenCalledWith();
   });
 
   it('renders the correct trail when response contains multiple trails', async () => {

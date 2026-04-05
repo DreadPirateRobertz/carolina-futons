@@ -95,18 +95,17 @@ export function renderTrailsRail($trailsList, trails) {
 
 /**
  * Initializes the trail progress display section on page load.
- * Calls getTrailProgressFn, hides section if no trails returned, renders rail otherwise.
- * Wired in Member Page.js — not called directly from this module.
+ * Calls getTrailProgressFn (no args — memberId derived server-side),
+ * hides section if no trails returned, renders rail otherwise.
  *
- * @param {string}   memberId
  * @param {Function} getTrailProgressFn  - webMethod reference (injected for testability)
  * @param {Object}   $trailsSection      - Outer container Box
  * @param {Object}   $trailsList         - Repeater element
  * @returns {Promise<void>}
  */
-export async function initTrailsDisplay(memberId, getTrailProgressFn, $trailsSection, $trailsList) {
+export async function initTrailsDisplay(getTrailProgressFn, $trailsSection, $trailsList) {
   try {
-    const response = await getTrailProgressFn(memberId);
+    const response = await getTrailProgressFn();
     const trails = response.trails || [];
 
     if (trails.length === 0) {
