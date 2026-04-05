@@ -698,3 +698,69 @@ describe('getAllRoomPhotos — invalid roomType silently returns all', () => {
     expect(result.photos.length).toBe(2);
   });
 });
+
+// ── Additional branch coverage tests (CF-rw9i CI gap) ───────────────────────
+
+describe('submitRoomPhoto — null data object', () => {
+  it('returns error when data is null (covers data && data.photoUrl false branch)', async () => {
+    // Covers the `(data && data.photoUrl) || ''` false branch when data itself is null
+    const result = await submitRoomPhoto(null, 'member-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/photo.*required/i);
+  });
+});
+
+describe('getProductRoomPhotos — limit clamped below minimum', () => {
+  it('clamps limit of 0 to 1 (covers Math.max(1, limit) true branch)', async () => {
+    // Covers `Math.max(1, limit)` where limit < 1
+    __seed(_COLLECTION, [
+      makePhoto({ _id: 'p1', productId: 'prod-1', status: 'approved' }),
+      makePhoto({ _id: 'p2', productId: 'prod-1', status: 'approved' }),
+    ]);
+    const result = await getProductRoomPhotos('prod-1', { limit: 0 });
+    expect(result.success).toBe(true);
+    expect(result.photos.length).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('likeRoomPhoto — alreadyLiked with null likes field', () => {
+  it('returns 0 likes when photo.likes is undefined and already liked (covers || 0 fallback)', async () => {
+    // Covers `Number(photo.likes) || 0` in the alreadyLiked early-return path
+    const photo = makePhoto({ _id: 'photo-1', status: 'approved' });
+    delete photo.likes;
+    __seed(_COLLECTION, [photo]);
+    __seed(_LIKES_COLLECTION, [{ _id: 'like-1', memberId: 'member-1', photoId: 'photo-1' }]);
+
+    const result = await likeRoomPhoto('photo-1');
+    expect(result.success).toBe(true);
+    expect(result.alreadyLiked).toBe(true);
+    expect(result.likes).toBe(0);
+  });
+});
+
+describe('likeRoomPhoto — duplicate insert with "unique" error message', () => {
+  it('treats "unique constraint" error as alreadyLiked (covers || msg.includes("unique") branch)', async () => {
+    // Covers the `msg.includes('unique')` OR branch in the dupErr catch handler
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', likes: 3, status: 'approved' })]);
+    __onInsert(() => {
+      const err = new Error('violates unique constraint');
+      throw err;
+    });
+
+    const result = await likeRoomPhoto('photo-1');
+    expect(result.success).toBe(true);
+    expect(result.alreadyLiked).toBe(true);
+    expect(result.likes).toBe(3);
+  });
+});
+
+describe('moderateRoomPhoto — moderator has no _id', () => {
+  it('falls back to "admin" moderatorId when mod._id is falsy (covers mod?._id false branch)', async () => {
+    // Covers `if (mod?._id) moderatorId = mod._id` false branch
+    __setMember({ ...MEMBER, _id: undefined });
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', status: 'pending' })]);
+
+    const result = await moderateRoomPhoto('photo-1', 'approve');
+    expect(result.success).toBe(true);
+  });
+});
