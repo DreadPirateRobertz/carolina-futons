@@ -152,6 +152,7 @@ export const getSubscribers = webMethod(
 
       const subscribers = result.items.map(i => ({
         email: i.email,
+        memberId: i.memberId ?? null,
         productId: i.productId,
         subscribedAt: i.subscribedAt,
         subscriberDeviceToken: i.subscriberDeviceToken ?? null,

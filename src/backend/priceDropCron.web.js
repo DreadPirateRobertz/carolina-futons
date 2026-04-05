@@ -36,16 +36,17 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { triggeredEmails } from 'wix-crm-backend';
+import { getSubscribers } from 'backend/priceAlertService.web';
 
 const PRICE_HISTORY_COLLECTION = 'ProductPriceHistory';
 const PRICE_DROP_QUEUE_COLLECTION = 'PriceDropQueue';
 const PRODUCTS_COLLECTION = 'Stores/Products';
 const WISHLIST_COLLECTION = 'Wishlist';
 const NOTIFICATIONS_COLLECTION = 'Notifications';
-const PRICE_ALERTS_COLLECTION = 'PriceAlerts';
-const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
+const PRICE_DROP_NOTIFICATIONS_COLLECTION = 'PriceDropNotifications';
 
-/** Template ID used when queuing price-drop alert emails. */
+/** Template ID used for triggered email notifications on price drop. */
 const PRICE_DROP_EMAIL_TEMPLATE = 'price-drop-alert';
 
 /** Minimum percent drop (as a fraction) to trigger a queue entry. */
@@ -291,9 +292,13 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
 // ── Price-alert email helpers (CF-hwr1.3) ─────────────────────────────────────
 
 /**
- * Queue price-drop notification emails for all active PriceAlerts subscribers.
- * Deduped: skips any subscriber who already received an email for this product
- * within the last 24 hours (checked via EmailQueue.checkoutId = productId).
+ * Send triggered price-drop notification emails to all active PriceAlerts
+ * subscribers who have a Wix memberId on file. Uses wix-crm-backend
+ * triggeredEmails.emailMember with the 'price-drop-alert' template.
+ *
+ * Deduplication: a PriceDropNotifications record is inserted with
+ * _id = `${memberId}_${productId}_${dropDate}` before sending. If that record
+ * already exists, the subscriber is skipped.
  *
  * @param {string} productId
  * @param {string} productName
@@ -301,86 +306,60 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
  * @param {number} oldPrice
  * @param {number} newPrice
  * @param {number} pctDrop      — Fraction (e.g. 0.12 = 12%)
- * @returns {Promise<number>}   — Count of emails queued this run.
+ * @returns {Promise<number>}   — Count of emails sent this run.
  */
 async function emailPriceAlertSubscribers(productId, productName, productSlug, oldPrice, newPrice, pctDrop) {
-  // Paginate subscribers to avoid the 500-item hard cap
-  const subs = [];
-  let subOffset = 0;
-  const SUB_PAGE = 500;
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const page = await wixData
-      .query(PRICE_ALERTS_COLLECTION)
-      .eq('productId', productId)
-      .eq('active', true)
-      .limit(SUB_PAGE)
-      .skip(subOffset)
-      .find({ suppressAuth: true });
-    subs.push(...page.items);
-    if (page.items.length < SUB_PAGE) break;
-    subOffset += SUB_PAGE;
-  }
+  const result = await getSubscribers(productId);
+  if (!result.success || result.subscribers.length === 0) return 0;
 
-  if (subs.length === 0) return 0;
-
-  const windowStart = new Date(Date.now() - DEDUP_WINDOW_MS);
   const savings = oldPrice - newPrice;
   const savingsPct = Math.round(pctDrop * 100);
   const pdpUrl = productSlug
     ? `/product-page/${productSlug}`
     : `/product-page/${productId}`;
+  const dropDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-  // Bulk-fetch already-queued emails for this product within 24h to avoid N+1 dedup queries
-  const dedupResult = await wixData
-    .query(EMAIL_QUEUE_COLLECTION)
-    .eq('sequenceType', 'price_drop_alert')
-    .eq('checkoutId', productId)
-    .ge('createdAt', windowStart)
-    .limit(500)
-    .find({ suppressAuth: true });
-  const alreadySent = new Set(dedupResult.items.map(e => e.recipientEmail));
+  let sent = 0;
 
-  let queued = 0;
+  for (const sub of result.subscribers) {
+    if (!sub.memberId) continue;
 
-  for (const sub of subs) {
-    if (!sub.email || alreadySent.has(sub.email)) continue;
+    const dedupId = `${sub.memberId}_${productId}_${dropDate}`;
 
     try {
+      // Insert dedup record first — if it already exists the insert will throw
+      // a duplicate-key error and we skip this subscriber.
       await wixData.insert(
-        EMAIL_QUEUE_COLLECTION,
+        PRICE_DROP_NOTIFICATIONS_COLLECTION,
+        { _id: dedupId, memberId: sub.memberId, productId, dropDate, sentAt: new Date() },
+        { suppressAuth: true }
+      );
+    } catch (dedupErr) {
+      // Already notified today for this product — skip.
+      continue;
+    }
+
+    try {
+      await triggeredEmails.emailMember(
+        PRICE_DROP_EMAIL_TEMPLATE,
+        sub.memberId,
         {
-          templateId:         PRICE_DROP_EMAIL_TEMPLATE,
-          recipientEmail:     sub.email,
-          recipientContactId: '',
           variables: {
             productName: productName || 'A product you saved',
             oldPrice:    oldPrice.toFixed(2),
             newPrice:    newPrice.toFixed(2),
             savings:     savings.toFixed(2),
-            savingsPct:  String(savingsPct),
             pdpUrl,
           },
-          sequenceType:  'price_drop_alert',
-          sequenceStep:  1,
-          checkoutId:    productId,   // reused as productId dedup key
-          status:        'pending',
-          scheduledFor:  new Date(),
-          sentAt:        null,
-          attempt:       0,
-          lastError:     '',
-          abVariant:     null,
-          createdAt:     new Date(),
-        },
-        { suppressAuth: true }
+        }
       );
-      queued++;
-    } catch (err) {
-      console.error('[priceDropCron] Failed to queue email for subscriber:', sub.email, err?.message);
+      sent++;
+    } catch (emailErr) {
+      console.error('[priceDropCron] Failed to send email to member:', sub.memberId, emailErr?.message);
     }
   }
 
-  return queued;
+  return sent;
 }
 
 // ── Test helpers ──────────────────────────────────────────────────────────
@@ -389,6 +368,7 @@ async function emailPriceAlertSubscribers(productId, productName, productSlug, o
 export const _MIN_DROP_FRACTION = MIN_DROP_FRACTION;
 export const _DEDUP_WINDOW_MS = DEDUP_WINDOW_MS;
 export const _PRICE_DROP_EMAIL_TEMPLATE = PRICE_DROP_EMAIL_TEMPLATE;
+export const _PRICE_DROP_NOTIFICATIONS_COLLECTION = PRICE_DROP_NOTIFICATIONS_COLLECTION;
 export { enqueuePriceDrop as _enqueuePriceDrop };
 export { getLastPriceRecord as _getLastPriceRecord };
 export { upsertPriceRecord as _upsertPriceRecord };
