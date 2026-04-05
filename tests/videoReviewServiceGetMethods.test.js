@@ -156,6 +156,20 @@ describe('getProductVideoReviews — input validation', () => {
   });
 });
 
+// ── getProductVideoReviews — cross-product isolation ─────────────────────────
+
+describe('getProductVideoReviews — cross-product isolation', () => {
+  it('excludes reviews belonging to a different product', async () => {
+    __seed('VideoReviews', [
+      makeVideoReview({ productId: PRODUCT_ID, status: 'approved' }),
+      makeVideoReview({ productId: 'other-prod', status: 'approved' }),
+    ]);
+    const result = await getProductVideoReviews(PRODUCT_ID);
+    expect(result.reviews).toHaveLength(1);
+    expect(result.reviews[0].productId).toBe(PRODUCT_ID);
+  });
+});
+
 // ── getProductVideoReviews — error handling ───────────────────────────────────
 
 describe('getProductVideoReviews — error handling', () => {
