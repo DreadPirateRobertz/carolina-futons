@@ -15,7 +15,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
+import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 import { validateId } from 'backend/utils/sanitize';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
@@ -241,7 +241,7 @@ export const getMemberDeliveredPerks = webMethod(Permissions.SiteMember, async (
     const unlockedPerks = [];
     for (let i = 0; i <= idx; i++) {
       const group = TIER_PERK_CATALOG[i];
-      for (const perk of group.perks) {
+      for (const perk of (group?.perks ?? [])) {
         unlockedPerks.push({
           tierKey: group.tierKey,
           tierName: group.tierName,
