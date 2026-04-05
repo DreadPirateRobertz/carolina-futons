@@ -5759,6 +5759,461 @@ LAYOUT (WarrantyWidget — Member Page):
         ["perkNextTierList","Text","Comma-separated perk names unlocked at next tier"]
       ]}
     ]
+  },
+  {
+    name: "Order Tracking",
+    id: "order-tracking",
+    note: "Customers paste order # → real-time tracking, delivery timeline, freight scheduling, notification opt-in. Deep-linked from confirmation emails.",
+    source: "src/pages/Order Tracking.js",
+    backend: "orderTracking.web.js",
+    sections: [
+      { title: "Page Elements (34)", elements: [
+        ["orderNumberInput","Input","Order # entry field"],
+        ["emailInput","Input","Email verification"],
+        ["trackOrderBtn","Button","Track Order — triggers lookup"],
+        ["trackingLoader","Box","Loading spinner"],
+        ["trackingError","Text","Error (invalid order, not found)"],
+        ["trackingResultsSection","Box","Results container — hidden until lookup"],
+        ["trackingTitle","Text","Order #12345 heading"],
+        ["trackingSubtitle","Text","Order date + status summary"],
+        ["resultOrderNumber","Text","Order number"],
+        ["resultOrderDate","Text","Order date"],
+        ["resultStatus","Text","Status badge (Processing/Shipped/Delivered)"],
+        ["resultStatusDescription","Text","Human-readable status"],
+        ["trackingNumberText","Text","Carrier tracking number"],
+        ["upsTrackingBtn","Button","Track on UPS — external link"],
+        ["carrierName","Text","Carrier (UPS/WWEX/Local)"],
+        ["serviceName","Text","Service level"],
+        ["estimatedDelivery","Text","Estimated delivery date"],
+        ["trackingTimeline","Box","Visual timeline"],
+        ["shippingDetailsSection","Box","Address + totals"],
+        ["shippingDestination","Text","Delivery address"],
+        ["totalSubtotal","Text","Subtotal"],
+        ["totalShipping","Text","Shipping cost"],
+        ["totalAmount","Text","Order total"],
+        ["lineItemsSection","Box","Items container"],
+        ["trackingItemsRepeater","Repeater","Line items"],
+        ["activitySection","Box","Tracking activity log"],
+        ["activityRepeater","Repeater","Activity events"],
+        ["deliveryTimeline","Box","Delivery progress"],
+        ["freightTrackingSection","Box","Freight tracking (LTL)"],
+        ["freightTrackingTitle","Text","Freight Tracking heading"],
+        ["freightTrackingMessage","Text","Freight status"],
+        ["freightScheduleMessage","Text","White-glove scheduling"],
+        ["notificationSection","Box","Notification opt-in"],
+        ["notificationToggle","Switch","SMS/email toggle"],
+        ["notificationLabel","Text","Get delivery updates"],
+        ["noTrackingMessage","Text","No tracking info yet"],
+        ["newSearchBtn","Button","Track another order"],
+        ["refreshTrackingBtn","Button","Refresh tracking"]
+      ]}
+    ]
+  },
+  {
+    name: "Returns Portal",
+    id: "returns-portal",
+    note: "Self-service returns. Order lookup → item selection → return type (refund/exchange/credit) → RMA tracking.",
+    source: "src/pages/Returns.js",
+    backend: "returnsService.web.js",
+    sections: [
+      { title: "Page Elements (35)", elements: [
+        ["returnsTitle","Text","Page title"],
+        ["returnsSubtitle","Text","Policy summary"],
+        ["returnOrderNumberInput","Input","Order # for lookup"],
+        ["returnEmailInput","Input","Email verification"],
+        ["lookupReturnBtn","Button","Find My Order"],
+        ["returnLoader","Box","Loading spinner"],
+        ["returnError","Text","Lookup error"],
+        ["returnResultsSection","Box","Results container"],
+        ["returnOrderNumber","Text","Order #"],
+        ["returnOrderDate","Text","Order date"],
+        ["returnOrderTotal","Text","Order total"],
+        ["returnWindowStatus","Text","Return window (eligible/expired)"],
+        ["returnFormSection","Box","Return form"],
+        ["returnItemsSelector","Repeater","Selectable items"],
+        ["returnTypeSelect","Dropdown","Refund/Exchange/Store Credit"],
+        ["returnReasonSelect","Dropdown","Return reason"],
+        ["returnDetailsTextbox","TextBox","Optional notes"],
+        ["submitGuestReturnBtn","Button","Submit return"],
+        ["returnFormError","Text","Validation error"],
+        ["returnSuccessMessage","Text","Success confirmation"],
+        ["cancelReturnFormBtn","Button","Cancel"],
+        ["newReturnSearchBtn","Button","New search"],
+        ["existingReturnsSection","Box","Previous returns"],
+        ["existingReturnsRepeater","Repeater","Past returns"],
+        ["rmaInput","Input","RMA # input"],
+        ["trackRmaBtn","Button","Track Return"],
+        ["rmaResultsSection","Box","RMA results"],
+        ["rmaStatusNumber","Text","RMA number"],
+        ["rmaStatusLabel","Text","Status"],
+        ["rmaTrackingSection","Box","Return tracking"],
+        ["rmaTrackingNumber","Text","Tracking #"],
+        ["rmaTrackingStatus","Text","Shipment status"],
+        ["rmaNoTracking","Text","No tracking yet"],
+        ["rmaTimeline","Box","Progress timeline"],
+        ["rmaActivityRepeater","Repeater","Activity events"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin Returns Dashboard",
+    id: "admin-returns",
+    note: "Staff dashboard: return queue, bulk actions, detail panel, refund processing, label generation. 47 elements.",
+    source: "src/pages/Admin Returns.js",
+    backend: "returnsService.web.js",
+    sections: [
+      { title: "Stats + Filters", elements: [
+        ["dashboardLoader","Box","Loading spinner"],
+        ["dashboardError","Text","Error"],
+        ["statTotal","Text","Total count"],["statTotalLabel","Text","Total label"],
+        ["statInProgress","Text","In-progress"],["statProgressLabel","Text","Label"],
+        ["statActionRequired","Text","Needs action"],["statActionLabel","Text","Label"],
+        ["statCompleted","Text","Completed"],["statCompletedLabel","Text","Label"],
+        ["btnFilterAll","Button","Show all"],["btnFilterPending","Button","Pending"],
+        ["btnFilterApproved","Button","Approved"],["btnFilterRejected","Button","Rejected"],
+        ["statusFilterDropdown","Dropdown","Status filter"],
+        ["returnsRepeater","Repeater","Returns queue"],
+        ["emptyState","Box","No returns"],
+        ["btnPrevPage","Button","Prev page"],["btnNextPage","Button","Next page"],["txtPageInfo","Text","Page X of Y"]
+      ]},
+      { title: "Bulk + Detail", elements: [
+        ["btnSelectAll","Button","Select all"],["containerBulkBar","Box","Bulk toolbar"],
+        ["txtSelectionCount","Text","X selected"],["btnBulkApprove","Button","Bulk approve"],
+        ["btnBulkReject","Button","Bulk reject"],["btnClearSelection","Button","Clear"],
+        ["detailPanel","Box","Detail panel"],["closeDetailBtn","Button","Close"],
+        ["detailRma","Text","RMA"],["detailDate","Text","Date"],["detailOrder","Text","Order"],
+        ["detailCustomer","Text","Customer"],["detailEmail","Text","Email"],
+        ["detailStatus","Text","Status"],["detailType","Text","Type"],
+        ["detailReason","Text","Reason"],["detailDescription","Text","Notes"],
+        ["detailNotes","Text","Internal notes"],["detailTracking","Text","Tracking"],
+        ["statusActionsSection","Box","Actions"],
+        ["approveBtn","Button","Approve"],["denyBtn","Button","Deny"],
+        ["markShippedBtn","Button","Mark shipped"],["markReceivedBtn","Button","Mark received"],
+        ["generateLabelBtn","Button","Generate label"],["processRefundBtn","Button","Refund"],
+        ["trackShipmentBtn","Button","Track"],
+        ["trackingSection","Box","Tracking"],["trackingStatus","Text","Status"],["trackingEta","Text","ETA"],
+        ["refundModal","Box","Refund modal"],["refundRmaLabel","Text","RMA"],
+        ["refundCustomerLabel","Text","Customer"],["refundAmountInput","Input","Amount"],
+        ["refundNotesInput","Input","Notes"],["refundError","Text","Error"],
+        ["confirmRefundBtn","Button","Confirm"],["cancelRefundBtn","Button","Cancel"],
+        ["refreshBtn","Button","Refresh"],["loadingSpinner","Box","Spinner"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin Review Moderation",
+    id: "admin-review-mod",
+    note: "Staff review queue: bulk approve/reject, auto-approve, spam detection. 22 elements.",
+    source: "src/pages/Admin Review Moderation.js",
+    backend: "reviewModeration.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["repeaterReviews","Repeater","Review queue"],["loadingSpinner","Box","Loading"],
+        ["txtQueueEmpty","Text","No reviews"],["txtPendingCount","Text","Pending"],
+        ["txtApprovedCount","Text","Approved"],["txtRejectedCount","Text","Rejected"],
+        ["txtFlaggedCount","Text","Flagged"],
+        ["btnFilterAll","Button","All"],["btnFilterPending","Button","Pending"],
+        ["btnFilterApproved","Button","Approved"],["btnFilterRejected","Button","Rejected"],
+        ["btnSelectAll","Button","Select all"],["containerBulkBar","Box","Bulk bar"],
+        ["txtSelectionCount","Text","X selected"],["btnBulkApprove","Button","Approve"],
+        ["btnBulkReject","Button","Reject"],["btnClearSelection","Button","Clear"],
+        ["btnAutoApprove","Button","Auto-approve eligible"],
+        ["btnAutoRejectSpam","Button","Auto-reject spam"],
+        ["btnPrevPage","Button","Prev"],["btnNextPage","Button","Next"],["txtPageInfo","Text","Page info"]
+      ]}
+    ]
+  },
+  {
+    name: "Admin Virtual Consultation",
+    id: "admin-virtual-consult",
+    note: "Staff: manage virtual consultation bookings, date filtering, staff notes. 17 elements.",
+    source: "src/pages/Admin Virtual Consultation.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["bookingsRepeater","Repeater","Booking list"],["bookingsEmpty","Text","No bookings"],
+        ["bookingsCount","Text","Total count"],["bookingsRangeLabel","Text","Date range"],
+        ["filterFromDate","DatePicker","Start date"],["filterToDate","DatePicker","End date"],
+        ["filterBtn","Button","Apply filter"],["filterError","Text","Filter error"],
+        ["notesFormSection","Box","Notes panel"],["notesBookingId","Text","Booking ID"],
+        ["notesInput","TextBox","Staff notes"],["notesProductIds","Input","Product IDs"],
+        ["saveNotesBtn","Button","Save"],["notesFormError","Text","Error"],
+        ["cancelNotesBtn","Button","Cancel"],["avcErrorText","Text","General error"],
+        ["avcRetryBtn","Button","Retry"]
+      ]}
+    ]
+  },
+  {
+    name: "Assembly Guides",
+    id: "assembly-guides",
+    note: "Searchable assembly guide library: categories, step-by-step, PDF, video, care tips. 25 elements.",
+    source: "src/pages/Assembly Guides.js",
+    backend: "assemblyGuides.web.js",
+    sections: [
+      { title: "Listing", elements: [
+        ["guideSearchInput","Input","Search guides"],
+        ["guideCategoryRepeater","Repeater","Category filters"],
+        ["guideListSection","Box","Listing area"],
+        ["guideListRepeater","Repeater","Guide cards"],
+        ["guideLoading","Box","Loading"],["guideNoResults","Text","No results"]
+      ]},
+      { title: "Detail View", elements: [
+        ["guideDetailSection","Box","Detail view"],["guideBackBtn","Button","Back"],
+        ["detailTitle","Text","Title"],["detailCategory","Text","Category"],
+        ["detailTime","Text","Est. time"],["detailContent","Text","Content"],
+        ["detailStepsSection","Box","Steps container"],["detailSteps","Repeater","Steps"],
+        ["detailTipsSection","Box","Tips"],["detailTips","Text","Tips text"],
+        ["detailVideoSection","Box","Video"],["detailVideo","HtmlComponent","Video player"],
+        ["detailPdfSection","Box","PDF area"],["detailPdfBtn","Button","Download PDF"],
+        ["detailLoading","Box","Loading"],["detailError","Text","Error"],
+        ["careTipsSection","Box","Care tips"],["careTipsRepeater","Repeater","Tips"],
+        ["guideSchemaHtml","HtmlComponent","JSON-LD"]
+      ]}
+    ]
+  },
+  {
+    name: "Buying Guide Detail",
+    id: "buying-guide-detail",
+    note: "Individual buying guide (e.g. /buying-guides/futon-mattresses). Long-form with TOC, product recs, FAQ, comparison, social share. 31 elements.",
+    source: "src/pages/Buying Guide.js",
+    backend: "seoContentHub.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["guideTitle","Text","H1 title"],["guideCategoryLabel","Text","Category"],
+        ["guideDate","Text","Updated date"],["guideReadTime","Text","X min read"],
+        ["guideHeroImage","Image","Hero"],["guideContent","Text","Main content"],
+        ["tocContainer","Box","TOC sidebar"],["tocRepeater","Repeater","TOC links"],
+        ["tocToggle","Button","Collapse TOC"],["sectionRepeater","Repeater","Sections"],
+        ["comparisonBox","Box","Comparison table"],["comparisonTitle","Text","Heading"],
+        ["comparisonHeaderRepeater","Repeater","Column headers"],
+        ["comparisonRowRepeater","Repeater","Data rows"],
+        ["relatedProductsBox","Box","Products"],["relatedProductRepeater","Repeater","Cards"],
+        ["relatedGuidesBox","Box","Related guides"],["relatedGuideRepeater","Repeater","Links"],
+        ["faqBox","Box","FAQ"],["guideFaqRepeater","Repeater","FAQ items"],
+        ["breadcrumbRepeater","Repeater","Breadcrumbs"],
+        ["shareEmail","Button","Email"],["shareFacebook","Button","Facebook"],
+        ["sharePinterest","Button","Pinterest"],["shareTwitter","Button","Twitter"],
+        ["comingSoonBox","Box","Unpublished placeholder"],["comingSoonTitle","Text","Coming Soon"],
+        ["comingSoonMessage","Text","Message"],["notFoundBox","Box","404"],
+        ["guideMetaHtml","HtmlComponent","OG tags"],["guideSeoSchema","HtmlComponent","JSON-LD"]
+      ]}
+    ]
+  },
+  {
+    name: "Buying Guides Listing",
+    id: "buying-guides-listing",
+    note: "Index page listing all buying guides with category filter. 7 elements.",
+    source: "src/pages/Buying Guides.js",
+    backend: "buyingGuides.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["guidesRepeater","Repeater","Guide cards"],
+        ["categoryFilterRepeater","Repeater","Category filters"],
+        ["guideCountText","Text","X guides"],["emptyStateBox","Box","No guides"],
+        ["breadcrumbRepeater","Repeater","Breadcrumbs"],
+        ["hubMetaHtml","HtmlComponent","OG tags"],["hubSeoSchema","HtmlComponent","JSON-LD"]
+      ]}
+    ]
+  },
+  {
+    name: "Consultation (In-Store)",
+    id: "consultation-instore",
+    note: "In-store styling appointment booking. Select designer → date/time → confirmation. 16 elements.",
+    source: "src/pages/Consultation.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["designerSection","Box","Designer selection"],
+        ["designerRepeater","Repeater","Designer cards"],
+        ["noDesignersMsg","Text","No designers"],
+        ["bookingForm","Box","Form — hidden until designer selected"],
+        ["dateDropdown","Dropdown","Available dates"],
+        ["slotSection","Box","Time slots"],["timeSlotDropdown","Dropdown","Time slots"],
+        ["noSlotsMsg","Text","No slots"],
+        ["consultTypePhone","Button","Phone"],["consultTypeVideo","Button","Video"],
+        ["bookBtn","Button","Confirm booking"],["bookingErrorMsg","Text","Error"],
+        ["loadingIndicator","Box","Loading"],
+        ["confirmationSection","Box","Confirmation"],
+        ["confirmCallSection","Box","Call info"],["confirmCallUrl","Text","Meeting URL"]
+      ]}
+    ]
+  },
+  {
+    name: "Financing Calculator",
+    id: "financing-calc",
+    note: "Enter price → see monthly payments across Affirm/Afterpay/Klarna. Comparison, FAQ. 18 elements.",
+    source: "src/pages/Financing.js",
+    backend: "financingCalc.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["priceInput","Input","Product price"],["calculateBtn","Button","Calculate"],
+        ["priceError","Text","Invalid price"],["loadingIndicator","Box","Spinner"],
+        ["resultsSection","Box","Results"],["resultHeader","Text","Monthly for $X"],
+        ["lowestMonthly","Text","Lowest monthly"],
+        ["providerRepeater","Repeater","Provider cards"],
+        ["quickPriceRepeater","Repeater","Quick-select prices"],
+        ["priceRangeLabel","Text","Price range"],
+        ["comparisonRepeater","Repeater","Comparison table"],
+        ["afterpaySection","Box","Afterpay detail"],
+        ["afterpayMessage","Text","4-payment breakdown"],
+        ["afterpayScheduleRepeater","Repeater","Payment schedule"],
+        ["financingFaqRepeater","Repeater","FAQ"],
+        ["financingContactBtn","Button","Contact"],
+        ["noResultsMessage","Text","No financing"],["shopNowBtn","Button","Shop"]
+      ]}
+    ]
+  },
+  {
+    name: "Getting It Home",
+    id: "getting-it-home",
+    note: "Delivery options explainer: service tiers, rates, min charges. 6 elements.",
+    source: "src/pages/Getting It Home.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["serviceTierRepeater","Repeater","Tier cards (Standard/White Glove/Freight)"],
+        ["deliveryIntro","Text","Intro text"],["deliveryMinCharge","Text","Min charge"],
+        ["deliveryRateNote","Text","Rate disclaimer"],
+        ["deliveryFaqLink","Button","FAQ link"],["deliveryContactLink","Button","Contact link"]
+      ]}
+    ]
+  },
+  {
+    name: "Loyalty Program",
+    id: "loyalty-program",
+    note: "Blue Ridge Rewards landing: join, view tier/points, calculator, tier FAQ. 15 elements.",
+    source: "src/pages/Loyalty.js",
+    backend: "loyaltyService.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["loyaltyHeroTitle","Text","Blue Ridge Rewards heading"],
+        ["loyaltyHeroSubtitle","Text","Tagline"],
+        ["enrollmentSection","Box","Join section — hidden for members"],
+        ["joinButton","Button","Join Now"],
+        ["memberStatusSection","Box","Member dashboard — hidden for non-members"],
+        ["memberTier","Text","Current tier"],["memberPoints","Text","Points balance"],
+        ["tierProgress","Box","Progress bar"],["tierProgressLabel","Text","X pts to next tier"],
+        ["tierRepeater","Repeater","Tier benefit cards"],
+        ["calcInput","Input","Points calculator"],["calcButton","Button","Calculate"],
+        ["calcResult","Text","Result"],["calcNextTier","Text","Next tier"],
+        ["faqRepeater","Repeater","FAQ accordion"]
+      ]}
+    ]
+  },
+  {
+    name: "Newsletter Signup",
+    id: "newsletter-signup",
+    note: "Newsletter page: benefits, signup form, social links. 9 elements.",
+    source: "src/pages/Newsletter.js",
+    backend: "newsletterService.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["newsletterHeroTitle","Text","Title"],["newsletterHeroSubtitle","Text","Incentive"],
+        ["nlNameInput","Input","First name"],["nlEmailInput","Input","Email"],
+        ["nlSubmitBtn","Button","Subscribe"],["nlSuccessMessage","Text","Success"],
+        ["nlErrorMessage","Text","Error"],["benefitsRepeater","Repeater","Benefit cards"],
+        ["nlSocialTitle","Text","Follow us heading"]
+      ]}
+    ]
+  },
+  {
+    name: "Sale Page",
+    id: "sale-page",
+    note: "Active sale products with promo banner. 5 elements.",
+    source: "src/pages/Sale.js",
+    backend: "promotions.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["salePromoBanner","Box","Promo banner"],["salePromoTitle","Text","Sale title"],
+        ["saleProductRepeater","Repeater","Sale products"],
+        ["salePriceMatchNote","Text","Price match note"],["saleShopLink","Button","Shop All"]
+      ]}
+    ]
+  },
+  {
+    name: "Shared Wishlist",
+    id: "shared-wishlist",
+    note: "Recipient view of shared wishlist link. 12 elements.",
+    source: "src/pages/Shared Wishlist.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["shareOwnerName","Text","Owner name"],["shareItemCount","Text","Item count"],
+        ["shareContentSection","Box","Content"],["shareRepeater","Repeater","Items"],
+        ["shareEmptyState","Box","No items"],["shareLoadingSection","Box","Loading"],
+        ["shareErrorSection","Box","Error"],["shareErrorText","Text","Error msg"],
+        ["shareMetaTitle","Text","SEO title"],["shareNoIndex","HtmlComponent","noindex"],
+        ["cartIcon","Button","Cart icon"],["cartCount","Text","Cart badge"]
+      ]}
+    ]
+  },
+  {
+    name: "Store Locator",
+    id: "store-locator",
+    note: "Hendersonville showroom: hours, directions, amenities, gallery, Google Map. 19 elements.",
+    source: "src/pages/Store Locator.js",
+    backend: "storeLocatorService.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["storeAddress","Text","Address"],["storePhone","Text","Phone"],
+        ["storePhoneBtn","Button","Click-to-call"],
+        ["storeEmail","Text","Email"],["storeEmailBtn","Button","Click-to-email"],
+        ["storeDirectionsBtn","Button","Google Maps"],
+        ["storeMapHtml","HtmlComponent","Embedded map"],
+        ["storeSchemaHtml","HtmlComponent","JSON-LD"],
+        ["statusBadge","Text","Open/Closed"],["statusHours","Text","Today hours"],
+        ["statusNextOpen","Text","Opens at X"],
+        ["hoursRepeater","Repeater","Weekly hours"],
+        ["featuresRepeater","Repeater","Features"],["amenitiesRepeater","Repeater","Amenities"],
+        ["showroomGallery","Gallery","Photos"],["openInMapsBtn","Button","Open in Maps"],
+        ["directionsAddressInput","Input","From address"],
+        ["directionsGoBtn","Button","Get directions"],
+        ["directionsRepeater","Repeater","Directions"]
+      ]}
+    ]
+  },
+  {
+    name: "Style Quiz Result",
+    id: "style-quiz-result",
+    note: "Personalized recommendations from quiz + Futon Sommelier scoring. 4 elements.",
+    source: "src/pages/StyleQuizResult.js",
+    backend: "styleQuiz.web.js + futonSommelier.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["quizRepeater","Repeater","Recommended products"],
+        ["quizLoadingIndicator","Box","Loading"],["quizErrorMsg","Text","Error"],
+        ["sommelierRecommendations","Box","Sommelier section"]
+      ]}
+    ]
+  },
+  {
+    name: "Swatch Kit",
+    id: "swatch-kit",
+    note: "$5 refundable fabric swatch kit. Select swatches → pay $5 → refunded on $200+ purchase. 6 elements.",
+    source: "src/pages/Swatch Kit.js",
+    backend: "swatchKitService.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["swatchGrid","Repeater","Swatch cards"],["selectedCount","Text","X of 5 selected"],
+        ["selectionError","Text","Validation"],["addToCartBtn","Button","Order Kit — $5"],
+        ["creditBanner","Box","$5 credit banner"],["creditStatusBanner","Box","Redemption status"]
+      ]}
+    ]
+  },
+  {
+    name: "Trade In",
+    id: "trade-in",
+    note: "Trade-in valuation: select type+condition → estimate → submit with photos. 13 elements.",
+    source: "src/pages/Trade In.js",
+    backend: "tradeInService.web.js",
+    sections: [
+      { title: "Page Elements", elements: [
+        ["itemTypeDropdown","Dropdown","Item type"],["conditionDropdown","Dropdown","Condition"],
+        ["nextStep1Btn","Button","Get Estimate"],["loadingIndicator","Box","Loading"],
+        ["eligibilityError","Text","Not eligible"],
+        ["estimateBox","Box","Estimate display"],["estimateText","Text","$X–$Y value"],
+        ["photosUpload","UploadButton","Upload photos"],["submitBtn","Button","Submit"],
+        ["validationError","Text","Form error"],
+        ["confirmationEstimate","Text","Confirmed value"],
+        ["confirmationRequest","Text","Request #12345"],["backBtn","Button","Start over"]
+      ]}
+    ]
   }
 ];
 

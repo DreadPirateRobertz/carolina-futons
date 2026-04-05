@@ -2792,3 +2792,688 @@ Displays tier perks on the Loyalty page with a repeater of current perks and a n
 | `#perkNextTierPoints` | Text | Points needed to reach next tier |
 | `#perkNextTierList` | Text | Comma-separated names of perks unlocked at next tier |
 | `#bookAnotherBtn` | Button | Reset form to step 1 |
+
+---
+
+# COMPREHENSIVE PAGE ELEMENT REFERENCE (v4.0)
+
+Every `$w('#elementId')` in the codebase, organized by page. Use this as your wiring checklist — every ID listed here MUST exist as a named element in the Wix editor for the code to connect.
+
+**How to read this section:**
+- **Page-level elements** = elements placed directly on the page canvas
+- **Public module elements** = elements used by imported widget modules (placed on the same page)
+- **Repeater children** = elements placed INSIDE a repeater item template (marked with ↳)
+- **Backend** = which `.web.js` files power the page (for understanding data flow)
+
+---
+
+## ORDER TRACKING (`Order Tracking.js`) — 34 elements
+
+**Backend**: `orderTracking.web.js` (lookup, subscribe, timeline) | **Public**: `OrderTracker.js`
+
+Customers paste an order number to see real-time tracking, delivery timeline, freight scheduling, and notification opt-in. Deep-linked from order confirmation emails.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `orderNumberInput` | Input | Order # entry field |
+| `emailInput` | Input | Email verification field |
+| `trackOrderBtn` | Button | "Track Order" — triggers lookup |
+| `trackingLoader` | Box | Loading spinner during API call |
+| `trackingError` | Text | Error message (invalid order, not found) |
+| `trackingResultsSection` | Box | Results container — hidden until successful lookup |
+| `trackingTitle` | Text | "Order #12345" heading |
+| `trackingSubtitle` | Text | Order date + status summary |
+| `resultOrderNumber` | Text | Order number display |
+| `resultOrderDate` | Text | Order date |
+| `resultStatus` | Text | Current status badge (Processing / Shipped / Delivered) |
+| `resultStatusDescription` | Text | Human-readable status explanation |
+| `trackingNumberText` | Text | Carrier tracking number |
+| `upsTrackingBtn` | Button | "Track on UPS" — external link |
+| `carrierName` | Text | Carrier name (UPS / WWEX / Local) |
+| `serviceName` | Text | Service level (Ground / Freight / White Glove) |
+| `estimatedDelivery` | Text | Estimated delivery date |
+| `trackingTimeline` | Box | Visual timeline container |
+| `shippingDetailsSection` | Box | Shipping address + totals |
+| `shippingDestination` | Text | Delivery address |
+| `totalSubtotal` | Text | Subtotal |
+| `totalShipping` | Text | Shipping cost |
+| `totalAmount` | Text | Order total |
+| `lineItemsSection` | Box | Order items container |
+| `trackingItemsRepeater` | Repeater | Line items list |
+| `activitySection` | Box | Tracking activity log |
+| `activityRepeater` | Repeater | Activity events (scanned, in transit, delivered) |
+| `deliveryTimeline` | Box | Visual delivery progress |
+| `freightTrackingSection` | Box | Freight-specific tracking (LTL shipments) |
+| `freightTrackingTitle` | Text | "Freight Tracking" heading |
+| `freightTrackingMessage` | Text | Freight status details |
+| `freightScheduleMessage` | Text | White-glove scheduling info |
+| `notificationSection` | Box | Notification opt-in area |
+| `notificationToggle` | Switch | SMS/email notification toggle |
+| `notificationLabel` | Text | "Get delivery updates" label |
+| `noTrackingMessage` | Text | Shown when no tracking info available yet |
+| `newSearchBtn` | Button | "Track another order" — resets form |
+| `refreshTrackingBtn` | Button | Refresh tracking data |
+
+---
+
+## RETURNS (`Returns.js`) — 35 elements
+
+**Backend**: `returnsService.web.js` | **Public**: `ReturnsPortal.js`
+
+Self-service returns portal. Customers look up orders, select items to return, choose return type (refund/exchange/store credit), and track RMA status.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `returnsTitle` | Text | Page title |
+| `returnsSubtitle` | Text | Policy summary |
+| `returnOrderNumberInput` | Input | Order # for return lookup |
+| `returnEmailInput` | Input | Email verification |
+| `lookupReturnBtn` | Button | "Find My Order" |
+| `returnLoader` | Box | Loading spinner |
+| `returnError` | Text | Lookup error message |
+| `returnResultsSection` | Box | Results container |
+| `returnOrderNumber` | Text | Order # display |
+| `returnOrderDate` | Text | Order date |
+| `returnOrderTotal` | Text | Order total |
+| `returnWindowStatus` | Text | Return window status (eligible / expired) |
+| `returnFormSection` | Box | Return request form |
+| `returnItemsSelector` | Repeater | Selectable items from order |
+| `returnTypeSelect` | Dropdown | Refund / Exchange / Store Credit |
+| `returnReasonSelect` | Dropdown | Return reason |
+| `returnDetailsTextbox` | TextBox | Optional notes |
+| `submitGuestReturnBtn` | Button | Submit return request |
+| `returnFormError` | Text | Form validation error |
+| `returnSuccessMessage` | Text | Success confirmation |
+| `cancelReturnFormBtn` | Button | Cancel / go back |
+| `newReturnSearchBtn` | Button | Start new search |
+| `existingReturnsSection` | Box | Previous returns list |
+| `existingReturnsRepeater` | Repeater | Past return requests |
+| `rmaInput` | Input | RMA # for tracking |
+| `trackRmaBtn` | Button | "Track Return" |
+| `rmaResultsSection` | Box | RMA tracking results |
+| `rmaStatusNumber` | Text | RMA number |
+| `rmaStatusLabel` | Text | Current status |
+| `rmaTrackingSection` | Box | Return shipment tracking |
+| `rmaTrackingNumber` | Text | Return tracking # |
+| `rmaTrackingStatus` | Text | Shipment status |
+| `rmaNoTracking` | Text | "No tracking info yet" |
+| `rmaTimeline` | Box | Return progress timeline |
+| `rmaActivityRepeater` | Repeater | Return activity events |
+
+---
+
+## ADMIN RETURNS (`Admin Returns.js`) — 47 elements
+
+**Backend**: `returnsService.web.js` | **Public**: `ReturnsAdmin.js`
+
+Staff dashboard for managing return requests. Queue filtering, bulk actions, detail panel, refund processing, label generation.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `dashboardLoader` | Box | Initial loading spinner |
+| `dashboardError` | Text | Dashboard error message |
+| `statTotal` | Text | Total returns count |
+| `statTotalLabel` | Text | "Total" label |
+| `statInProgress` | Text | In-progress count |
+| `statProgressLabel` | Text | "In Progress" label |
+| `statActionRequired` | Text | Needs-action count |
+| `statActionLabel` | Text | "Action Required" label |
+| `statCompleted` | Text | Completed count |
+| `statCompletedLabel` | Text | "Completed" label |
+| `btnFilterAll` | Button | Show all returns |
+| `btnFilterPending` | Button | Filter: pending only |
+| `btnFilterApproved` | Button | Filter: approved only |
+| `btnFilterRejected` | Button | Filter: rejected only |
+| `statusFilterDropdown` | Dropdown | Status filter |
+| `returnsRepeater` | Repeater | Returns queue list |
+| `emptyState` | Box | "No returns" message |
+| `btnPrevPage` | Button | Pagination previous |
+| `btnNextPage` | Button | Pagination next |
+| `txtPageInfo` | Text | "Page X of Y" |
+| `btnSelectAll` | Button | Select all checkbox |
+| `containerBulkBar` | Box | Bulk action toolbar |
+| `txtSelectionCount` | Text | "X selected" |
+| `btnBulkApprove` | Button | Bulk approve |
+| `btnBulkReject` | Button | Bulk reject |
+| `btnClearSelection` | Button | Clear selection |
+| `detailPanel` | Box | Slide-out detail panel |
+| `closeDetailBtn` | Button | Close detail panel |
+| `detailRma` | Text | RMA number |
+| `detailDate` | Text | Request date |
+| `detailOrder` | Text | Order number |
+| `detailCustomer` | Text | Customer name |
+| `detailEmail` | Text | Customer email |
+| `detailStatus` | Text | Current status badge |
+| `detailType` | Text | Return type |
+| `detailReason` | Text | Return reason |
+| `detailDescription` | Text | Customer notes |
+| `detailNotes` | Text | Internal notes |
+| `detailTracking` | Text | Tracking number |
+| `statusActionsSection` | Box | Action buttons area |
+| `approveBtn` | Button | Approve return |
+| `denyBtn` | Button | Deny return |
+| `markShippedBtn` | Button | Mark as shipped |
+| `markReceivedBtn` | Button | Mark as received |
+| `generateLabelBtn` | Button | Generate return label |
+| `processRefundBtn` | Button | Open refund modal |
+| `trackShipmentBtn` | Button | Track return shipment |
+| `trackingSection` | Box | Tracking info area |
+| `trackingStatus` | Text | Tracking status |
+| `trackingEta` | Text | Estimated arrival |
+| `refundModal` | Box | Refund processing modal |
+| `refundRmaLabel` | Text | RMA for refund |
+| `refundCustomerLabel` | Text | Customer for refund |
+| `refundAmountInput` | Input | Refund amount |
+| `refundNotesInput` | Input | Refund notes |
+| `refundError` | Text | Refund error message |
+| `confirmRefundBtn` | Button | Confirm refund |
+| `cancelRefundBtn` | Button | Cancel refund |
+| `refreshBtn` | Button | Refresh dashboard |
+| `loadingSpinner` | Box | Action loading spinner |
+
+---
+
+## ADMIN REVIEW MODERATION (`Admin Review Moderation.js`) — 22 elements
+
+**Backend**: `reviewModeration.web.js`, `reviewsService.web.js`
+
+Staff review queue with bulk approve/reject, auto-approve eligible, spam detection.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `repeaterReviews` | Repeater | Review queue |
+| `loadingSpinner` | Box | Loading indicator |
+| `txtQueueEmpty` | Text | "No reviews to moderate" |
+| `txtPendingCount` | Text | Pending count |
+| `txtApprovedCount` | Text | Approved count |
+| `txtRejectedCount` | Text | Rejected count |
+| `txtFlaggedCount` | Text | Flagged count |
+| `btnFilterAll` | Button | Show all |
+| `btnFilterPending` | Button | Filter: pending |
+| `btnFilterApproved` | Button | Filter: approved |
+| `btnFilterRejected` | Button | Filter: rejected |
+| `btnSelectAll` | Button | Select all |
+| `containerBulkBar` | Box | Bulk action toolbar |
+| `txtSelectionCount` | Text | "X selected" |
+| `btnBulkApprove` | Button | Bulk approve |
+| `btnBulkReject` | Button | Bulk reject |
+| `btnClearSelection` | Button | Clear selection |
+| `btnAutoApprove` | Button | Auto-approve eligible |
+| `btnAutoRejectSpam` | Button | Auto-reject spam |
+| `btnPrevPage` | Button | Previous page |
+| `btnNextPage` | Button | Next page |
+| `txtPageInfo` | Text | "Page X of Y" |
+
+---
+
+## ADMIN VIRTUAL CONSULTATION (`Admin Virtual Consultation.js`) — 17 elements
+
+Staff dashboard for managing virtual consultation bookings. Filter by date range, view booking details, add notes.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `bookingsRepeater` | Repeater | Booking list |
+| `bookingsEmpty` | Text | "No bookings" message |
+| `bookingsCount` | Text | Total bookings count |
+| `bookingsRangeLabel` | Text | Date range display |
+| `filterFromDate` | DatePicker | Start date filter |
+| `filterToDate` | DatePicker | End date filter |
+| `filterBtn` | Button | Apply date filter |
+| `filterError` | Text | Filter error message |
+| `notesFormSection` | Box | Notes form panel |
+| `notesBookingId` | Text | Booking ID |
+| `notesInput` | TextBox | Staff notes |
+| `notesProductIds` | Input | Related product IDs |
+| `saveNotesBtn` | Button | Save notes |
+| `notesFormError` | Text | Notes save error |
+| `cancelNotesBtn` | Button | Cancel notes edit |
+| `avcErrorText` | Text | General error |
+| `avcRetryBtn` | Button | Retry on error |
+
+---
+
+## ASSEMBLY GUIDES (`Assembly Guides.js`) — 25 elements
+
+**Backend**: `assemblyGuides.web.js`
+
+Searchable assembly guide library. Browse by category, view step-by-step instructions, PDF downloads, embedded video guides, and care tips.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `guideSearchInput` | Input | Search assembly guides |
+| `guideCategoryRepeater` | Repeater | Category filter pills |
+| `guideListSection` | Box | Guide listing area |
+| `guideListRepeater` | Repeater | Guide cards |
+| `guideLoading` | Box | Loading spinner |
+| `guideNoResults` | Text | "No guides found" |
+| `guideDetailSection` | Box | Single guide detail view |
+| `guideBackBtn` | Button | Back to listing |
+| `detailTitle` | Text | Guide title |
+| `detailCategory` | Text | Category label |
+| `detailTime` | Text | Estimated assembly time |
+| `detailContent` | Text | Guide content body |
+| `detailStepsSection` | Box | Step-by-step container |
+| `detailSteps` | Repeater | Assembly steps |
+| `detailTipsSection` | Box | Tips container |
+| `detailTips` | Text | Assembly tips |
+| `detailVideoSection` | Box | Video container |
+| `detailVideo` | HtmlComponent | Embedded video player |
+| `detailPdfSection` | Box | PDF download area |
+| `detailPdfBtn` | Button | Download PDF guide |
+| `detailLoading` | Box | Detail loading spinner |
+| `detailError` | Text | Detail error message |
+| `careTipsSection` | Box | Care tips area |
+| `careTipsRepeater` | Repeater | Care tip cards |
+| `guideSchemaHtml` | HtmlComponent | JSON-LD structured data |
+
+---
+
+## BUYING GUIDE DETAIL (`Buying Guide.js`) — 31 elements
+
+**Backend**: `seoContentHub.web.js`, `seoHelpers.web.js`
+
+Individual buying guide page (e.g. /buying-guides/futon-mattresses). Long-form content with TOC, product recs, FAQ, comparison tables, and social sharing. SEO-optimized with breadcrumbs and schema.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `guideTitle` | Text | H1 guide title |
+| `guideCategoryLabel` | Text | Category badge |
+| `guideDate` | Text | Last updated date |
+| `guideReadTime` | Text | "X min read" |
+| `guideHeroImage` | Image | Hero image |
+| `guideContent` | Text | Main content body |
+| `tocContainer` | Box | Table of contents sidebar |
+| `tocRepeater` | Repeater | TOC section links |
+| `tocToggle` | Button | Collapse/expand TOC on mobile |
+| `sectionRepeater` | Repeater | Content sections |
+| `comparisonBox` | Box | Product comparison table |
+| `comparisonTitle` | Text | Comparison heading |
+| `comparisonHeaderRepeater` | Repeater | Column headers |
+| `comparisonRowRepeater` | Repeater | Comparison data rows |
+| `relatedProductsBox` | Box | Related products section |
+| `relatedProductRepeater` | Repeater | Product cards |
+| `relatedGuidesBox` | Box | Related guides section |
+| `relatedGuideRepeater` | Repeater | Guide links |
+| `faqBox` | Box | FAQ section |
+| `guideFaqRepeater` | Repeater | FAQ accordion items |
+| `breadcrumbRepeater` | Repeater | Breadcrumb trail |
+| `shareEmail` | Button | Share via email |
+| `shareFacebook` | Button | Share on Facebook |
+| `sharePinterest` | Button | Pin on Pinterest |
+| `shareTwitter` | Button | Share on Twitter/X |
+| `comingSoonBox` | Box | Placeholder for unpublished guides |
+| `comingSoonTitle` | Text | "Coming Soon" heading |
+| `comingSoonMessage` | Text | Placeholder message |
+| `notFoundBox` | Box | 404 fallback |
+| `guideMetaHtml` | HtmlComponent | OG meta tags |
+| `guideSeoSchema` | HtmlComponent | JSON-LD schema |
+
+---
+
+## BUYING GUIDES LISTING (`Buying Guides.js`) — 7 elements
+
+**Backend**: `buyingGuides.web.js`, `seoContentHub.web.js`
+
+Index page listing all available buying guides with category filtering.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `guidesRepeater` | Repeater | Guide cards grid |
+| `categoryFilterRepeater` | Repeater | Category filter pills |
+| `guideCountText` | Text | "X guides" count |
+| `emptyStateBox` | Box | "No guides" fallback |
+| `breadcrumbRepeater` | Repeater | Breadcrumb trail |
+| `hubMetaHtml` | HtmlComponent | OG meta tags |
+| `hubSeoSchema` | HtmlComponent | JSON-LD hub schema |
+
+---
+
+## CONSULTATION (`Consultation.js`) — 16 elements
+
+In-store styling appointment booking (distinct from Virtual Consultation which is video/phone). Select designer, choose date/time/type, get confirmation.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `designerSection` | Box | Designer selection area |
+| `designerRepeater` | Repeater | Designer cards |
+| `noDesignersMsg` | Text | "No designers available" |
+| `bookingForm` | Box | Booking form — hidden until designer selected |
+| `dateDropdown` | Dropdown | Available dates |
+| `slotSection` | Box | Time slot area |
+| `timeSlotDropdown` | Dropdown | Available time slots |
+| `noSlotsMsg` | Text | "No slots available" |
+| `consultTypePhone` | Button | Phone consultation option |
+| `consultTypeVideo` | Button | Video consultation option |
+| `bookBtn` | Button | Confirm booking |
+| `bookingErrorMsg` | Text | Error message |
+| `loadingIndicator` | Box | Loading spinner |
+| `confirmationSection` | Box | Booking confirmation |
+| `confirmCallSection` | Box | Video call info |
+| `confirmCallUrl` | Text | Meeting URL |
+
+---
+
+## FINANCING (`Financing.js`) — 18 elements
+
+**Backend**: `financingCalc.web.js`
+
+Standalone financing calculator page. Enter price → see monthly payments across all BNPL providers (Affirm, Afterpay, Klarna). Comparison table, FAQ, and "Shop Now" CTA.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `priceInput` | Input | Enter product price |
+| `calculateBtn` | Button | Calculate payments |
+| `priceError` | Text | Invalid price error |
+| `loadingIndicator` | Box | Calculation spinner |
+| `resultsSection` | Box | Results container |
+| `resultHeader` | Text | "Monthly payments for $X" |
+| `lowestMonthly` | Text | Lowest monthly highlight |
+| `providerRepeater` | Repeater | Provider comparison cards |
+| `quickPriceRepeater` | Repeater | Quick-select price buttons |
+| `priceRangeLabel` | Text | Price range display |
+| `comparisonRepeater` | Repeater | Side-by-side comparison table |
+| `afterpaySection` | Box | Afterpay detail area |
+| `afterpayMessage` | Text | Afterpay 4-payment breakdown |
+| `afterpayScheduleRepeater` | Repeater | Afterpay payment schedule |
+| `financingFaqRepeater` | Repeater | FAQ accordion |
+| `financingContactBtn` | Button | Contact for financing help |
+| `noResultsMessage` | Text | "No financing available" |
+| `shopNowBtn` | Button | CTA to shop products |
+
+---
+
+## GETTING IT HOME (`Getting It Home.js`) — 6 elements
+
+**Public**: `deliveryHelpers.js`
+
+Delivery options explainer page — service tiers, rates, minimum charges. Static content with dynamic tier display.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `serviceTierRepeater` | Repeater | Delivery tier cards (Standard, White Glove, Freight) |
+| `deliveryIntro` | Text | Page intro text |
+| `deliveryMinCharge` | Text | Minimum delivery charge |
+| `deliveryRateNote` | Text | Rate disclaimer |
+| `deliveryFaqLink` | Button | Link to FAQ delivery section |
+| `deliveryContactLink` | Button | Link to Contact page |
+
+---
+
+## LOYALTY (`Loyalty.js`) — 15 elements
+
+**Backend**: `loyaltyService.web.js`
+
+Loyalty program landing page. Join the program, view points/tier, calculate how many points for next tier, browse tier benefits FAQ.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `loyaltyHeroTitle` | Text | "Blue Ridge Rewards" heading |
+| `loyaltyHeroSubtitle` | Text | Program tagline |
+| `enrollmentSection` | Box | Join section — hidden for existing members |
+| `joinButton` | Button | "Join Now" CTA |
+| `memberStatusSection` | Box | Member dashboard — hidden for non-members |
+| `memberTier` | Text | Current tier name (Trail Blazer, Mountain Guide, etc.) |
+| `memberPoints` | Text | Current points balance |
+| `tierProgress` | Box | Progress bar container |
+| `tierProgressLabel` | Text | "X points to next tier" |
+| `tierRepeater` | Repeater | Tier cards with perks |
+| `calcInput` | Input | Points calculator input |
+| `calcButton` | Button | Calculate tier |
+| `calcResult` | Text | Calculator result |
+| `calcNextTier` | Text | Next tier from calculated points |
+| `faqRepeater` | Repeater | Loyalty FAQ accordion |
+
+---
+
+## NEWSLETTER (`Newsletter.js`) — 9 elements
+
+**Backend**: `newsletterService.web.js`
+
+Newsletter signup page with benefits list and social links.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `newsletterHeroTitle` | Text | Page title |
+| `newsletterHeroSubtitle` | Text | Signup incentive text |
+| `nlNameInput` | Input | First name |
+| `nlEmailInput` | Input | Email address |
+| `nlSubmitBtn` | Button | "Subscribe" |
+| `nlSuccessMessage` | Text | Success confirmation |
+| `nlErrorMessage` | Text | Error message |
+| `benefitsRepeater` | Repeater | Newsletter benefit cards |
+| `nlSocialTitle` | Text | "Follow us" section heading |
+
+---
+
+## SALE (`Sale.js`) — 5 elements
+
+**Backend**: `productRecommendations.web.js`, `promotions.web.js`
+
+Active sale/clearance page showing discounted products with promo banner.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `salePromoBanner` | Box | Promotional banner |
+| `salePromoTitle` | Text | Sale title |
+| `saleProductRepeater` | Repeater | Sale product cards |
+| `salePriceMatchNote` | Text | Price match guarantee note |
+| `saleShopLink` | Button | "Shop All" link |
+
+---
+
+## SHARED WISHLIST (`Shared Wishlist.js`) — 12 elements
+
+Shared wishlist view page (recipient view). Shows wishlisted items from a shared link.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `shareOwnerName` | Text | Wishlist owner's name |
+| `shareItemCount` | Text | Item count |
+| `shareContentSection` | Box | Content area |
+| `shareRepeater` | Repeater | Wishlist items |
+| `shareEmptyState` | Box | "No items" message |
+| `shareLoadingSection` | Box | Loading spinner |
+| `shareErrorSection` | Box | Error container |
+| `shareErrorText` | Text | Error message |
+| `shareMetaTitle` | Text | SEO title |
+| `shareNoIndex` | HtmlComponent | noindex meta tag |
+| `cartIcon` | Button | Cart icon (shared) |
+| `cartCount` | Text | Cart badge count |
+
+---
+
+## STORE LOCATOR (`Store Locator.js`) — 19 elements
+
+**Backend**: `storeLocatorService.web.js`
+
+Hendersonville showroom page with hours, directions, amenities, gallery, and embedded Google Map.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `storeAddress` | Text | Store address |
+| `storePhone` | Text | Phone number |
+| `storePhoneBtn` | Button | Click-to-call |
+| `storeEmail` | Text | Email address |
+| `storeEmailBtn` | Button | Click-to-email |
+| `storeDirectionsBtn` | Button | Open in Google Maps |
+| `storeMapHtml` | HtmlComponent | Embedded Google Map |
+| `storeSchemaHtml` | HtmlComponent | LocalBusiness JSON-LD |
+| `statusBadge` | Text | Open/Closed badge |
+| `statusHours` | Text | Today's hours |
+| `statusNextOpen` | Text | "Opens at X" (when closed) |
+| `hoursRepeater` | Repeater | Weekly hours table |
+| `featuresRepeater` | Repeater | Store features/amenities |
+| `amenitiesRepeater` | Repeater | Amenity icons |
+| `showroomGallery` | Gallery | Showroom photos |
+| `openInMapsBtn` | Button | "Open in Maps" CTA |
+| `directionsAddressInput` | Input | "Get directions from" address |
+| `directionsGoBtn` | Button | Calculate directions |
+| `directionsRepeater` | Repeater | Turn-by-turn directions |
+
+---
+
+## STYLE QUIZ RESULT (`StyleQuizResult.js`) — 4 elements
+
+**Backend**: `styleQuiz.web.js`, `futonSommelier.web.js` | **Public**: `StyleQuizRegistrationGate.js`
+
+Loads personalized recommendations from quiz answers + Futon Sommelier lifestyle scoring.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `quizRepeater` | Repeater | Recommended product cards |
+| `quizLoadingIndicator` | Box | Loading spinner |
+| `quizErrorMsg` | Text | Error message |
+| `sommelierRecommendations` | Box | Sommelier-powered section |
+
+---
+
+## SWATCH KIT (`Swatch Kit.js`) — 6 elements
+
+**Backend**: `swatchKitService.web.js`
+
+$5 refundable fabric swatch kit. Select swatches, pay $5, refunded on $200+ purchase.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `swatchGrid` | Repeater | Selectable swatch cards |
+| `selectedCount` | Text | "X of 5 selected" counter |
+| `selectionError` | Text | Validation error |
+| `addToCartBtn` | Button | "Order Swatch Kit — $5" |
+| `creditBanner` | Box | "$5 credit toward purchase" banner |
+| `creditStatusBanner` | Box | Credit redemption status |
+
+---
+
+## TRADE IN (`Trade In.js`) — 13 elements
+
+**Backend**: `tradeInService.web.js`
+
+Trade-in valuation tool. Select item type and condition → get instant estimate → submit trade-in request with photos.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `itemTypeDropdown` | Dropdown | Item type (Futon, Mattress, Sofa Bed, etc.) |
+| `conditionDropdown` | Dropdown | Condition (Excellent, Good, Fair, Poor) |
+| `nextStep1Btn` | Button | "Get Estimate" |
+| `loadingIndicator` | Box | Loading spinner |
+| `eligibilityError` | Text | "Not eligible" message |
+| `estimateBox` | Box | Estimate display area |
+| `estimateText` | Text | "$X–$Y estimated value" |
+| `photosUpload` | UploadButton | Upload item photos |
+| `submitBtn` | Button | Submit trade-in request |
+| `validationError` | Text | Form validation error |
+| `confirmationEstimate` | Text | Confirmed estimate value |
+| `confirmationRequest` | Text | "Request #12345 submitted" |
+| `backBtn` | Button | Start over |
+
+---
+
+## PUBLIC MODULE WIDGETS — Elements Added to Pages by Imported Modules
+
+These elements are used by public modules that page orchestrators import. They need to exist on the page that imports the module.
+
+### AddToCart.js (Product Page) — 34 additional elements
+
+Beyond the core `addToCartButton`, this module manages stock urgency, back-in-stock, bundles, wishlist, price drop alerts, and sticky bar.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `stockStatus` | Text | In Stock / Low Stock / Out of Stock |
+| `stockUrgency` | Text | "Only X left!" urgency message |
+| `popularityBadge` | Box | "Trending" / "Bestseller" badge |
+| `backInStockSection` | Box | Out-of-stock notification signup — hidden by default |
+| `backInStockEmail` | Input | Email for restock alert |
+| `backInStockBtn` | Button | "Notify Me" |
+| `backInStockSuccess` | Text | Confirmation message |
+| `backInStockError` | Text | Error message |
+| `bundleSection` | Box | Bundle display area |
+| `bundleName` | Text | Bundle name |
+| `bundlePrice` | Text | Bundle price |
+| `bundleSavings` | Text | Bundle savings |
+| `bundleImage` | Image | Bundle thumbnail |
+| `addBundleBtn` | Button | Add bundle to cart |
+| `addToCartSuccess` | Text | "Added to cart" confirmation |
+| `wishlistBtn` | Button | Add/remove wishlist |
+| `wishlistIcon` | Image | Heart icon (filled/outline state) |
+| `stickyCartBar` | Box | Fixed bottom bar — appears on scroll |
+| `stickyProductName` | Text | Product name in sticky bar |
+| `stickyPrice` | Text | Price in sticky bar |
+| `stickyAddBtn` | Button | Add to cart in sticky bar |
+| `sizeDropdown` | Dropdown | Size selector |
+| `finishDropdown` | Dropdown | Finish/color selector |
+| `priceDropNotifyBtn` | Button | "Price drop? Notify me" CTA |
+| `priceDropNotifyPopover` | Box | Notification signup popover |
+| `priceDropNotifyEmail` | Input | Email for price drop alert |
+| `priceDropNotifySubmit` | Button | Submit notification |
+| `priceDropNotifySuccess` | Text | Confirmation |
+| `priceDropNotifyError` | Text | Error |
+| `priceDropNotifyClose` | Button | Close popover |
+
+### FooterSection.js (masterPage) — 22 elements
+
+Global footer with newsletter signup, store info, payment badges, social links, and Living Sky frame.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `siteFooter` | Box | Footer container |
+| `footerLogo` | Image | CF logo |
+| `footerStoreName` | Text | "Carolina Futons" |
+| `footerStoreAddress` | Text | Full address |
+| `footerStorePhone` | Text | Phone number |
+| `footerStoreHours` | Text | Business hours |
+| `footerAddress` | Text | Address (compact) |
+| `footerPhone` | Text | Phone (compact) |
+| `footerHours` | Text | Hours (compact) |
+| `footerCopyright` | Text | © 2026 copyright |
+| `footerShopRepeater` | Repeater | Shop links column |
+| `footerServiceRepeater` | Repeater | Service links column |
+| `footerAboutRepeater` | Repeater | About links column |
+| `footerSocialRepeater` | Repeater | Social media icons |
+| `footerPaymentRepeater` | Repeater | Payment method badges |
+| `footerBadgeRepeater` | Repeater | Trust badges |
+| `footerEmailInput` | Input | Newsletter email |
+| `footerEmailSubmit` | Button | Subscribe button |
+| `footerEmailSuccess` | Text | Subscription confirmation |
+| `footerEmailError` | Text | Error message |
+| `footerMountainDivider` | Box | Mountain skyline SVG divider |
+| `livingSkyFrame` | HtmlComponent | Living Sky animation frame |
+
+### miniCartDrawer.js (masterPage) — 9 elements
+
+Slide-in mini cart overlay from header cart icon click.
+
+| Element ID | Type | Purpose |
+|---|---|---|
+| `miniCartDrawer` | Box | Slide-in drawer panel |
+| `miniCartOverlay` | Box | Dimmed background overlay |
+| `miniCartClose` | Button | Close drawer |
+| `miniCartRepeater` | Repeater | Cart item cards |
+| `miniCartSubtotal` | Text | Cart subtotal |
+| `miniCartCheckoutBtn` | Button | "Checkout" CTA |
+| `miniCartViewBtn` | Button | "View Full Cart" link |
+| `miniCartEmpty` | Text | "Your cart is empty" message |
+| `cartItemCount` | Text | Item count badge |
+
+### Gamification Widgets (Member Page / Loyalty Page) — Shared Elements
+
+These widgets are initialized by Member Page and Loyalty Page orchestrators:
+
+**PointsBalanceWidget**: `pointsBalanceTile` (Box), `pointsTierLabel` (Text), `pointsExpiryWarning` (Text)
+
+**RewardsTierWidget**: `tierBadge` (Image), `tierName` (Text), `tierProgress` (Box), `tierPointsNeeded` (Text), `tierNextBenefits` (Text), `tierBenefitsRepeater` (Repeater), `tierError` (Text)
+
+**BadgeDisplayWidget**: `badgeRepeater` (Repeater), `noBadgesMsg` (Text)
+
+**GamificationStatsWidget**: `statsPoints` (Text), `statsTier` (Text), `statsStreak` (Text), `statsBadges` (Text), `statsQuests` (Text), `statsRank` (Text), `statsError` (Text), `statsRetry` (Button)
+
+**LeaderboardWidget**: `leaderboardRepeater` (Repeater), `leaderboardTitle` (Text), `leaderboardYourRank` (Text), `leaderboardEmpty` (Text)
+
+**ActivityFeedWidget**: `activityRepeater` (Repeater), `activityTitle` (Text), `activityEmpty` (Text)
+
+**SpinWheelIntegration**: `spinWheelLightbox` (Box), `spinWheelCloseBtn` (Button), `spinEmailGate` (Box), `spinEmailInput` (Input), `spinEmailSubmitBtn` (Button), `spinEmailError` (Text), `bonusSpinCTA` (Button)
+
+**GamificationOnboarding**: `gamificationOnboardingOverlay` (Box), `onboardingCloseBtn` (Button), `onboardingNextBtn` (Button), `onboardingPrevBtn` (Button), `onboardingStepIndicator` (Text), `onboardingStepText` (Text)
+
+**StreakDisplay**: `streakCountChip` (Text)
+
+**TrailProgressWidget**: Check source `src/public/TrailProgressWidget.js` for element IDs — visual trail map of tier progression
