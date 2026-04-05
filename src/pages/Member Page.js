@@ -109,6 +109,10 @@ async function initMemberPage() {
       { name: 'addressBook', init: initAddressBook },
       { name: 'communicationPrefs', init: initCommunicationPrefs },
       { name: 'returns', init: () => initReturnsSection($w) },
+      { name: 'warrantySection', init: async () => {
+        const { initWarrantyList } = await import('public/WarrantyWidget.js');
+        await initWarrantyList({ $w });
+      }},
       { name: 'gamificationTour', init: async () => {
         const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
         await initGamificationTourOverlay();
