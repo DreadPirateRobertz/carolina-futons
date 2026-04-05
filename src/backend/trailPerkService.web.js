@@ -149,16 +149,21 @@ export const _TRAIL_PERKS_COLLECTION = TRAIL_PERKS_COLLECTION;
 // ── getTrailPerkStatus ────────────────────────────────────────────────────────
 
 /**
- * Returns all trail perks delivered to a member.
+ * Returns all trail perks delivered to the authenticated member.
+ * Uses currentMember.getMember() to prevent IDOR — callers cannot request
+ * another member's perks.
  *
- * @param {string} memberId
  * @returns {Promise<{ success: boolean, perks: Array<{perkId: string, deliveredAt: Date, couponCode?: string}>, error?: string }>}
  */
 export const getTrailPerkStatus = webMethod(
   Permissions.SiteMember,
-  async (memberId) => {
-    if (!memberId || typeof memberId !== 'string') {
-      return { success: false, perks: [], error: 'memberId is required.' };
+  async () => {
+    const { currentMember } = await import('wix-members-backend');
+    const caller = await currentMember.getMember();
+    const memberId = caller?._id;
+
+    if (!memberId) {
+      return { success: false, perks: [], error: 'Authentication required.' };
     }
 
     try {

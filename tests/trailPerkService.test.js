@@ -153,33 +153,39 @@ describe('deliverTrailPerk — webMethod (Admin permission)', () => {
 
 import { getTrailPerkStatus } from '../src/backend/trailPerkService.web.js';
 
-describe('getTrailPerkStatus — input validation', () => {
-  it('returns error for null memberId', async () => {
-    const r = await getTrailPerkStatus(null);
+// ── currentMember mock for getTrailPerkStatus ─────────────────────────────────
+
+import { vi as _vi } from 'vitest';
+const mockGetMember = _vi.fn(async () => ({ _id: 'mem-1' }));
+_vi.mock('wix-members-backend', () => ({
+  currentMember: { getMember: (...args) => mockGetMember(...args) },
+}));
+
+describe('getTrailPerkStatus — unauthenticated', () => {
+  it('returns error when currentMember.getMember returns no _id', async () => {
+    mockGetMember.mockResolvedValueOnce(null);
+    const r = await getTrailPerkStatus();
     expect(r.success).toBe(false);
     expect(r.error).toBeTruthy();
-  });
-
-  it('returns error for empty string memberId', async () => {
-    const r = await getTrailPerkStatus('');
-    expect(r.success).toBe(false);
   });
 });
 
 describe('getTrailPerkStatus — happy path', () => {
+  beforeEach(() => mockGetMember.mockResolvedValue({ _id: 'mem-1' }));
+
   it('returns success:true with empty perks when member has none', async () => {
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     expect(r.success).toBe(true);
     expect(Array.isArray(r.perks)).toBe(true);
     expect(r.perks).toHaveLength(0);
   });
 
-  it('returns delivered perks for a member', async () => {
+  it('returns delivered perks for the authenticated member', async () => {
     __seed(_TRAIL_PERKS_COLLECTION, [
       { _id: 'mem-1_perk-free-shipping', memberId: 'mem-1', perkId: 'perk-free-shipping', couponCode: 'TRAIL-ABCD1234', deliveredAt: new Date() },
       { _id: 'mem-1_perk-early-access', memberId: 'mem-1', perkId: 'perk-early-access', deliveredAt: new Date() },
     ]);
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     expect(r.success).toBe(true);
     expect(r.perks).toHaveLength(2);
     const perkIds = r.perks.map(p => p.perkId);
@@ -191,7 +197,7 @@ describe('getTrailPerkStatus — happy path', () => {
     __seed(_TRAIL_PERKS_COLLECTION, [
       { _id: 'mem-1_perk-free-shipping', memberId: 'mem-1', perkId: 'perk-free-shipping', couponCode: 'TRAIL-ABCD1234', deliveredAt: new Date() },
     ]);
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     const shipping = r.perks.find(p => p.perkId === 'perk-free-shipping');
     expect(shipping.couponCode).toBe('TRAIL-ABCD1234');
   });
@@ -200,7 +206,7 @@ describe('getTrailPerkStatus — happy path', () => {
     __seed(_TRAIL_PERKS_COLLECTION, [
       { _id: 'mem-2_perk-early-access', memberId: 'mem-2', perkId: 'perk-early-access', deliveredAt: new Date() },
     ]);
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     expect(r.perks).toHaveLength(0);
   });
 
@@ -209,16 +215,18 @@ describe('getTrailPerkStatus — happy path', () => {
     __seed(_TRAIL_PERKS_COLLECTION, [
       { _id: 'mem-1_perk-styling-call', memberId: 'mem-1', perkId: 'perk-styling-call', deliveredAt: date },
     ]);
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     expect(r.perks[0].deliveredAt).toBeTruthy();
   });
 });
 
 describe('getTrailPerkStatus — DB error handling', () => {
+  beforeEach(() => mockGetMember.mockResolvedValue({ _id: 'mem-1' }));
+
   it('returns success:false with empty perks on DB error', async () => {
     const { __setQueryError } = await import('./__mocks__/wix-data.js');
     __setQueryError(_TRAIL_PERKS_COLLECTION, new Error('DB read failed'));
-    const r = await getTrailPerkStatus('mem-1');
+    const r = await getTrailPerkStatus();
     expect(r.success).toBe(false);
     expect(r.perks).toEqual([]);
     expect(r.error).toBeTruthy();
