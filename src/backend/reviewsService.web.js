@@ -709,6 +709,7 @@ export const getVideoReviews = webMethod(
 // ── New video upload / fetch methods (CF-ou66.1) ─────────────────────────────
 
 const MAX_VIDEO_DURATION_MS = 30_000; // 30 seconds
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
 
 /**
  * Upload a video blob to Wix Media Manager and insert a VideoReviews record
@@ -733,6 +734,11 @@ export const uploadVideoReview = webMethod(
 
       if (typeof durationMs !== 'number' || isNaN(durationMs) || durationMs > MAX_VIDEO_DURATION_MS) {
         return { success: false, error: 'Video must be 30 seconds or less.' };
+      }
+
+      const blobSize = videoBlob?.size ?? videoBlob?.byteLength ?? 0;
+      if (blobSize > MAX_VIDEO_BYTES) {
+        return { success: false, error: 'Video file exceeds the 100 MB size limit.' };
       }
 
       // Duplicate check — one video review per member per product
