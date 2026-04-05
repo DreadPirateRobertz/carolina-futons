@@ -15,7 +15,7 @@
  *   email                  (text)
  *   subscribedAt           (dateTime)
  *   active                 (boolean)
- *   subscriberDeviceToken  (text, optional) — mobile push token (FCM/APNs); null for web-only subscribers
+ *   subscriberDeviceToken  (text, optional, indexed) — mobile push token (FCM/APNs); null for web-only subscribers
  * Set collection permissions to Anyone for read + write (webMethod handles authz).
  */
 import { Permissions, webMethod } from 'wix-web-module';
