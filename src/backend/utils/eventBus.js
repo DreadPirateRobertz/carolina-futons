@@ -8,9 +8,9 @@
  * Schema: { _id, memberId, sessionId, items: Array<{productId, qty, price}>,
  *           updatedAt: Date, source: 'web'|'mobile' }
  * Mobile queries: wixData.query('CartSessions').eq('memberId', memberId).find()
- * NOTE: As of CF-qe31.2 audit, CartSessions writes are not yet wired in this repo.
- * Dallas (cfutons_mobile) confirmed mobile reads this collection — web side
- * should write on cart update. Tracked as part of cf-qe31 convoy.
+ * CF-86gj: CartSessions writes now implemented in src/backend/cartSessionService.web.js.
+ * Call createSession on page load, updateCartItems on every cart mutation,
+ * and mergeGuestCart at login to preserve guest cart across auth boundary.
  */
 import wixData from 'wix-data';
 
