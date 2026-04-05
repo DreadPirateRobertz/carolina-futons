@@ -4,6 +4,92 @@ All notable changes to the Carolina Futons Wix Velo codebase.
 
 ---
 
+## [v1.4.0] — 2026-04-05
+
+38,123 tests | 1,034 test files | Waves 33–34 — 60 PRs merged ([#916](https://github.com/DreadPirateRobertz/carolina-futons/pull/916)–[#979](https://github.com/DreadPirateRobertz/carolina-futons/pull/979))
+
+### Video Reviews (CF-ou66 series)
+
+- **Video review submission**: `uploadVideoReview` webMethod — SiteMember upload with mediaUrl validation, caption, sanitization ([#972](https://github.com/DreadPirateRobertz/carolina-futons/pull/972))
+- **Video review grid**: Horizontal thumbnail row on PDP — approved reviews sorted newest-first ([#941](https://github.com/DreadPirateRobertz/carolina-futons/pull/941))
+- **Video review reward**: `video_review_approved` event — 500 pts + exclusive badge on moderation approval ([#940](https://github.com/DreadPirateRobertz/carolina-futons/pull/940))
+- **videoReviewService — Dallas mobile unblock**: `isWixMediaUrl` validation, full 5-method module, `VALID_VIDEO_URI_SCHEMES` allowlist ([#966](https://github.com/DreadPirateRobertz/carolina-futons/pull/966))
+- **getProductVideoReviews + getVideoReviewCount**: PDP query methods for approved video reviews ([#976](https://github.com/DreadPirateRobertz/carolina-futons/pull/976))
+- **Video review test hardening**: Edge cases, pagination, error paths ([#957](https://github.com/DreadPirateRobertz/carolina-futons/pull/957))
+
+### Trail & Loyalty (CF-mcyh / CF-c6el series)
+
+- **Trail Progress Widget**: 5-checkpoint visual trail UI — milestone markers, progress fill, completion state ([#958](https://github.com/DreadPirateRobertz/carolina-futons/pull/958))
+- **Trail completion perk unlock**: Free delivery / early access / styling call — unlocked on trail completion ([#942](https://github.com/DreadPirateRobertz/carolina-futons/pull/942))
+- **Tier perk definitions**: `TIER_PERK_CATALOG`, auto-delivery enrollment on tier promotion ([#951](https://github.com/DreadPirateRobertz/carolina-futons/pull/951))
+- **Loyalty page — Your Perks section**: Tier perk display + next-tier teaser widget ([#959](https://github.com/DreadPirateRobertz/carolina-futons/pull/959))
+- **PriceAlerts device token**: `subscriberDeviceToken` added to subscribe endpoint for mobile push ([#954](https://github.com/DreadPirateRobertz/carolina-futons/pull/954))
+- **Loyalty portability + API hardening**: Mobile-facing loyalty endpoints hardened for dallas cross-rig ([#970](https://github.com/DreadPirateRobertz/carolina-futons/pull/970))
+
+### Room Planner & Bundle Builder (CF-eqc5 series)
+
+- **Room Planner canvas**: 2D drag-and-drop HtmlComponent — postMessage protocol, product placement, layout export ([#948](https://github.com/DreadPirateRobertz/carolina-futons/pull/948), [#949](https://github.com/DreadPirateRobertz/carolina-futons/pull/949))
+- **BundleBuilder PDP widget**: Step picker with live price update, add bundle to cart, SiteMember permissions ([#955](https://github.com/DreadPirateRobertz/carolina-futons/pull/955))
+
+### Email & Marketing Automation (CF-5io3 / CF-hwr1 series)
+
+- **Email marketing queue**: `emailQueueService` — 5 lifecycle sequences (welcome, cart abandon, post-purchase, win-back, re-engagement) ([#971](https://github.com/DreadPirateRobertz/carolina-futons/pull/971))
+- **Price drop email notifications**: `triggeredEmails.emailMember` on price drop event for PriceAlerts subscribers ([#973](https://github.com/DreadPirateRobertz/carolina-futons/pull/973), [#939](https://github.com/DreadPirateRobertz/carolina-futons/pull/939))
+- **Weekly analytics digest**: Cron + data aggregation — revenue, orders, top products ([#956](https://github.com/DreadPirateRobertz/carolina-futons/pull/956), [#918](https://github.com/DreadPirateRobertz/carolina-futons/pull/918))
+
+### Commerce & Checkout
+
+- **CartSessions backend**: Session persistence for dallas mobile cart recovery ([#968](https://github.com/DreadPirateRobertz/carolina-futons/pull/968))
+- **BNPL Calculator Widget**: Interactive Affirm/Klarna/Afterpay comparison on PDPs ([#978](https://github.com/DreadPirateRobertz/carolina-futons/pull/978), [#936](https://github.com/DreadPirateRobertz/carolina-futons/pull/936))
+- **Trade-in / Trade-up program**: Backend + frontend for furniture trade-in credit flow ([#931](https://github.com/DreadPirateRobertz/carolina-futons/pull/931))
+- **Swatch kit micro-product**: $5 refundable swatch kit, credit applied on $200+ purchase ([#927](https://github.com/DreadPirateRobertz/carolina-futons/pull/927))
+
+### Analytics & Conversion
+
+- **Conversion funnel analytics**: Full backend — `trackFunnelEvent`, `getFunnelReport`, `getABTestResults`, rate limiting, pagination ([#965](https://github.com/DreadPirateRobertz/carolina-futons/pull/965), [#967](https://github.com/DreadPirateRobertz/carolina-futons/pull/967))
+- **A/B testing dashboard**: Frontend results dashboard wired to `abTestResults` backend ([#930](https://github.com/DreadPirateRobertz/carolina-futons/pull/930))
+- **funnelTracker branch coverage**: Fixed 84.97% → 85%+ threshold ([#974](https://github.com/DreadPirateRobertz/carolina-futons/pull/974))
+
+### SEO & Content
+
+- **SEO content optimization**: `seoAutoMeta` structured data, `sitemapEnhancer` dynamic sitemap, Google Merchant Center feed enhancements ([#969](https://github.com/DreadPirateRobertz/carolina-futons/pull/969), [#979](https://github.com/DreadPirateRobertz/carolina-futons/pull/979))
+- **Buying guide OG images**: Auto-generated OG card specs + SVG for all 8 buying guides ([#961](https://github.com/DreadPirateRobertz/carolina-futons/pull/961), [#928](https://github.com/DreadPirateRobertz/carolina-futons/pull/928))
+- **12-week content calendar**: 8 SEO-optimized category buying guides ([#921](https://github.com/DreadPirateRobertz/carolina-futons/pull/921))
+- **Buying guide SEO tests**: Schema + internal linking test coverage ([#960](https://github.com/DreadPirateRobertz/carolina-futons/pull/960))
+
+### Customer Experience
+
+- **NPS/CSAT survey system**: Post-purchase survey trigger, NPS analytics dashboard, response aggregation ([#963](https://github.com/DreadPirateRobertz/carolina-futons/pull/963), [#924](https://github.com/DreadPirateRobertz/carolina-futons/pull/924))
+- **Warranty system**: Registration page + widget, email confirmation, member page integration, auto-expire ([#962](https://github.com/DreadPirateRobertz/carolina-futons/pull/962), [#923](https://github.com/DreadPirateRobertz/carolina-futons/pull/923))
+- **Virtual consultation booking**: Booking page + frontend wire-up ([#929](https://github.com/DreadPirateRobertz/carolina-futons/pull/929), [#917](https://github.com/DreadPirateRobertz/carolina-futons/pull/917))
+- **Futon Sommelier hookup**: Wired to StyleQuizResult page ([#919](https://github.com/DreadPirateRobertz/carolina-futons/pull/919))
+- **Pre-sale chatbot**: Claude-powered backend for pre-sale Q&A ([#920](https://github.com/DreadPirateRobertz/carolina-futons/pull/920))
+- **Daily content rotation**: Featured product / review / tip / promo rotation ([#926](https://github.com/DreadPirateRobertz/carolina-futons/pull/926), [#933](https://github.com/DreadPirateRobertz/carolina-futons/pull/933))
+- **Share Your Room UGC**: CTA on PDP for UGC photo submit ([#938](https://github.com/DreadPirateRobertz/carolina-futons/pull/938))
+- **White-glove delivery SMS**: SMS notifications for white-glove appointment scheduling ([#916](https://github.com/DreadPirateRobertz/carolina-futons/pull/916))
+
+### Gamification
+
+- **Bear Lottie avatar**: Lottie animation upload script + smoke tests ([#935](https://github.com/DreadPirateRobertz/carolina-futons/pull/935), [#953](https://github.com/DreadPirateRobertz/carolina-futons/pull/953))
+- **BadgeDisplayWidget**: Inline SVG badges replacing broken PNG paths ([#943](https://github.com/DreadPirateRobertz/carolina-futons/pull/943), [#934](https://github.com/DreadPirateRobertz/carolina-futons/pull/934))
+
+### Bug Fixes
+
+- **HTML tag stripping**: Hardened against nested-tag bypass in sanitize layer ([#932](https://github.com/DreadPirateRobertz/carolina-futons/pull/932))
+- **lifecycleCron lookback**: Fixed float boundary causing missed lifecycle events ([#937](https://github.com/DreadPirateRobertz/carolina-futons/pull/937))
+- **announcementTrustBar**: Flush pending console logs in teardown to prevent test bleed ([#946](https://github.com/DreadPirateRobertz/carolina-futons/pull/946))
+- **Mobile nav hamburger**: Hidden at 375px viewport — CSS specificity fix ([#952](https://github.com/DreadPirateRobertz/carolina-futons/pull/952))
+- **getChallengeLeaderboard**: Corrected call signature in branch-coverage tests ([#975](https://github.com/DreadPirateRobertz/carolina-futons/pull/975))
+- **ugcTaxonomy productId**: Inline regex allowlist `/^[a-zA-Z0-9_-]+$/` enforced in src (was test-only)
+- **StyleQuizRegistrationGate**: Added `logError` to catch blocks — silent failures now surface ([#922](https://github.com/DreadPirateRobertz/carolina-futons/pull/922))
+
+### Dependencies
+
+- **@wix/cli**: 1.1.173 → 1.1.174 ([#945](https://github.com/DreadPirateRobertz/carolina-futons/pull/945))
+- **lodash**: 4.17.23 → 4.18.1 ([#950](https://github.com/DreadPirateRobertz/carolina-futons/pull/950))
+
+---
+
 ## [v1.3.0] — 2026-03-28
 
 36,434 tests | 982 test files | Waves 30–33 — 57 PRs merged ([#863](https://github.com/DreadPirateRobertz/carolina-futons/pull/863)–[#922](https://github.com/DreadPirateRobertz/carolina-futons/pull/922))

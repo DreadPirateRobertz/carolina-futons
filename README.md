@@ -8,11 +8,18 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 
 ## Current Status
 
-**v1.2.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
+**v1.4.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 34,600+ tests passing across 910+ test files (Vitest)
-- Gamification platform: 12 widgets (points, badges, streaks, quests, leaderboard, rewards store, milestones, notifications, social sharing, referrals, onboarding, stats)
-- Wave 29 features: Style Quiz registration gate, Will-It-Fit tool, Spin-to-Win email capture, cart tier progress, AR-gamification bridge, loyalty cart recovery, challenge notifications, post-purchase referral prompts, endowed progress, CF+ Premium upsell, auto-delivery subscriptions, crossRigEventBus
+- 38,123+ tests passing across 1,034 test files (Vitest)
+- Video Reviews: full submission → moderation → PDP grid pipeline with gamification reward
+- Trail system: 5-checkpoint Trail Progress Widget, perk unlock, tier perk catalog
+- Room Planner: 2D drag-and-drop canvas with postMessage protocol
+- BundleBuilder: PDP step picker with live price + add-to-cart
+- Email automation: 5 lifecycle sequences, price drop triggers, weekly analytics digest
+- Commerce: BNPL calculator (Affirm/Klarna), trade-in program, swatch kit micro-product
+- SEO: auto-meta, dynamic sitemap, Google Merchant Center feed, buying guide OG images
+- NPS/CSAT survey system, warranty registration, virtual consultation booking
+- Dallas mobile unblock: CartSessions backend, loyalty portability API, videoReviewService
 - Security: IDOR fixes on all member-facing webMethods (currentMember server-side identity)
 - Pre-commit hooks (husky + lint-staged), coverage thresholds enforced
 - Production repo: [DreadPirateRobertz/carolina-futons-stage3-velo](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo)
