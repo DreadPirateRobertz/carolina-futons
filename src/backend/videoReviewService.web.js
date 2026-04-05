@@ -21,7 +21,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { validateId } from 'backend/utils/sanitize';
 
 const VIDEO_REVIEWS_COLLECTION = 'VideoReviews';
 
@@ -39,7 +39,7 @@ export const getProductVideoReviews = webMethod(
   Permissions.Anyone,
   async (productId) => {
     try {
-      const cleanId = sanitize(productId, 50);
+      const cleanId = validateId(productId);
       if (!cleanId) return { success: false, reviews: [], error: 'Product ID is required.' };
 
       const result = await wixData.query(VIDEO_REVIEWS_COLLECTION)
@@ -79,7 +79,7 @@ export const getVideoReviewCount = webMethod(
   Permissions.Anyone,
   async (productId) => {
     try {
-      const cleanId = sanitize(productId, 50);
+      const cleanId = validateId(productId);
       if (!cleanId) return { success: false, count: 0, error: 'Product ID is required.' };
 
       const count = await wixData.query(VIDEO_REVIEWS_COLLECTION)
