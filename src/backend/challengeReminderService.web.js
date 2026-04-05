@@ -10,6 +10,7 @@
 
 import wixData from 'wix-data';
 import { logError } from 'backend/utils/errorHandler';
+import { validateId } from 'backend/utils/sanitize';
 
 const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -45,11 +46,13 @@ export function shouldSendChallengeReminder(notifiedAt, cadence, nowMs) {
  * Returns all MemberChallengeProgress records eligible for a reminder:
  * - progressValue > 0 (some progress made)
  * - completedAt is null (not yet completed)
+ * - deadlineAt is null or in the future (challenge still open)
+ * - reminderOptOut is not true (member has not opted out of reminders)
  * - cadence gate has elapsed since last notification
  *
  * Paginates through all records to avoid the 50-item default page cap.
- * The first two filters run server-side; the cadence gate runs in-memory
- * (wixData has no time-diff filter).
+ * The first two filters run server-side; the remaining checks run in-memory
+ * (wixData has no time-diff filter, and reminderOptOut/deadlineAt are sparse).
  *
  * @param {'daily'|'weekly'} cadence
  * @param {number} [nowMs]  Current time in ms (defaults to Date.now())
@@ -72,6 +75,8 @@ export async function getChallengesNeedingReminder(cadence, nowMs) {
         .find({ suppressAuth: true });
 
       for (const record of result.items) {
+        if (record.reminderOptOut === true) continue;
+        if (record.deadlineAt && new Date(record.deadlineAt).getTime() < now) continue;
         if (shouldSendChallengeReminder(record.notifiedAt, cadence, now)) {
           eligible.push(record);
         }
@@ -84,6 +89,86 @@ export async function getChallengesNeedingReminder(cadence, nowMs) {
     return eligible;
   } catch (err) {
     logError('getChallengesNeedingReminder — failed', err);
+    return [];
+  }
+}
+
+/**
+ * Sends reminders for all eligible challenges and marks each as notified.
+ *
+ * Iterates all records returned by getChallengesNeedingReminder, calling
+ * sendFn for each. Individual send failures are logged and counted but do
+ * not abort the batch — successful sends are always counted.
+ *
+ * @param {'daily'|'weekly'} cadence
+ * @param {Function} sendFn  Async function called with each eligible record. Should throw on failure.
+ * @param {number} [nowMs]  Current time in ms (defaults to Date.now())
+ * @returns {Promise<{sent: number, failed: number}>}
+ */
+export async function sendBatchReminders(cadence, sendFn, nowMs) {
+  const records = await getChallengesNeedingReminder(cadence, nowMs);
+  let sent = 0;
+  let failed = 0;
+
+  for (const record of records) {
+    try {
+      await sendFn(record);
+      await markReminderSent(record._id, nowMs);
+      sent++;
+    } catch (err) {
+      logError(`sendBatchReminders — failed for record ${record._id}`, err);
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
+
+/**
+ * Returns eligible reminder records scoped to a single challenge.
+ * Applies the same eligibility rules as getChallengesNeedingReminder.
+ * Returns [] if challengeId fails validation.
+ *
+ * @param {string} challengeId  ID of the challenge to query
+ * @param {'daily'|'weekly'} cadence
+ * @param {number} [nowMs]  Current time in ms (defaults to Date.now())
+ * @returns {Promise<Array>}
+ */
+export async function getChallengesNeedingReminderById(challengeId, cadence, nowMs) {
+  const cleanId = validateId(challengeId);
+  if (!cleanId) return [];
+
+  const now = nowMs !== undefined ? nowMs : Date.now();
+  try {
+    const eligible = [];
+    let skip = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const result = await wixData
+        .query(CHALLENGE_PROGRESS_COLLECTION)
+        .gt('progressValue', 0)
+        .eq('completedAt', null)
+        .eq('challengeId', cleanId)
+        .skip(skip)
+        .limit(BATCH_SIZE)
+        .find({ suppressAuth: true });
+
+      for (const record of result.items) {
+        if (record.reminderOptOut === true) continue;
+        if (record.deadlineAt && new Date(record.deadlineAt).getTime() < now) continue;
+        if (shouldSendChallengeReminder(record.notifiedAt, cadence, now)) {
+          eligible.push(record);
+        }
+      }
+
+      skip += result.items.length;
+      hasMore = result.items.length === BATCH_SIZE;
+    }
+
+    return eligible;
+  } catch (err) {
+    logError('getChallengesNeedingReminderById — failed', err);
     return [];
   }
 }
