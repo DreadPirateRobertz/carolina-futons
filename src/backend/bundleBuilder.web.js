@@ -686,7 +686,7 @@ export const addBundleToCart = webMethod(
  * @returns {Promise<{success: boolean, mattresses: Array, error?: string}>}
  */
 export const getCompatibleMattresses = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (frameId) => {
     try {
       const cleanId = validateId(frameId);
@@ -741,7 +741,7 @@ export const getCompatibleMattresses = webMethod(
  * @returns {Promise<{success: boolean, covers: Array, error?: string}>}
  */
 export const getCompatibleCovers = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (mattressId) => {
     try {
       const cleanId = validateId(mattressId);
@@ -798,7 +798,7 @@ export const getCompatibleCovers = webMethod(
  * @returns {Promise<{success: boolean, basePrice: number, bundlePrice: number, savings: number, discountPercent: number, error?: string}>}
  */
 export const getBundlePrice = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (frameId, mattressId, coverId) => {
     try {
       const cleanFrameId = validateId(frameId);
