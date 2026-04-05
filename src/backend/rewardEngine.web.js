@@ -15,7 +15,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_PERK_CATALOG, TIER_NAMES, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
+import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
+import { validateId } from 'backend/utils/sanitize';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
@@ -69,7 +70,8 @@ async function generateUniqueCouponCode() {
 export const deliverTierPerks = webMethod(
   Permissions.Admin,
   async (memberId, prevTier, newTier) => {
-    if (!memberId || !newTier) return { delivered: [], skipped: [], failed: [] };
+    const cleanId = validateId(memberId);
+    if (!cleanId || !newTier) return { delivered: [], skipped: [], failed: [] };
 
     const newPerks = getNewPerksOnPromotion(prevTier, newTier);
     if (!newPerks.length) return { delivered: [], skipped: [], failed: [] };
@@ -77,7 +79,7 @@ export const deliverTierPerks = webMethod(
     // Check which perks have already been delivered (dedup)
     const existingResult = await wixData
       .query(DELIVERIES_COLLECTION)
-      .eq('memberId', memberId)
+      .eq('memberId', cleanId)
       .find({ suppressAuth: true });
     const deliveredTypes = new Set(existingResult.items.map(d => d.perkType));
 
@@ -92,8 +94,8 @@ export const deliverTierPerks = webMethod(
       }
 
       const record = {
-        _id: `${memberId}_${perk.type}`,
-        memberId,
+        _id: `${cleanId}_${perk.type}`,
+        memberId: cleanId,
         perkType: perk.type,
         tier: newTier,
         deliveredAt: new Date().toISOString(),
@@ -120,7 +122,7 @@ export const deliverTierPerks = webMethod(
           skipped.push(perk.type);
           continue;
         }
-        logError(`insert failed for ${memberId} perk ${perk.type}`, err);
+        logError(`insert failed for ${cleanId} perk ${perk.type}`, err);
         failed.push(perk.type);
         continue;
       }
@@ -131,9 +133,9 @@ export const deliverTierPerks = webMethod(
     // Send tier-up notification email with perk summary (best-effort)
     if (delivered.length > 0) {
       try {
-        await sendTierPerkEmail(memberId, newTier, delivered);
+        await sendTierPerkEmail(cleanId, newTier, delivered);
       } catch (err) {
-        logError(`email failed for ${memberId}`, err);
+        logError(`email failed for ${cleanId}`, err);
       }
     }
 
@@ -181,21 +183,12 @@ async function sendTierPerkEmail(memberId, newTier, deliveredPerks) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Returns the index of a tier in TIER_NAMES by display name, or -1 if not found.
+ * Returns the index of a tier in TIER_PERK_CATALOG by tierName, or -1 if not found.
  * @param {string} tierName  Display name e.g. 'Mountain Guide'
  * @returns {number}
  */
 function tierIndex(tierName) {
-  return TIER_NAMES.findIndex(t => t.name === tierName);
-}
-
-/**
- * Returns the TIER_THRESHOLDS key (e.g. 'MOUNTAIN_GUIDE') for a tier display name.
- * @param {string} tierName
- * @returns {string}
- */
-function tierKey(tierName) {
-  return tierName.toUpperCase().replace(/ /g, '_');
+  return TIER_PERK_CATALOG.findIndex(t => t.tierName === tierName);
 }
 
 // ── getMemberDeliveredPerks ───────────────────────────────────────────────────
@@ -243,15 +236,12 @@ export const getMemberDeliveredPerks = webMethod(Permissions.SiteMember, async (
     const totalPoints = record?.totalPoints ?? 0;
     const currentTierName = getTierForPoints(totalPoints);
     const idx = tierIndex(currentTierName);
-    const currentTierKey = tierKey(currentTierName);
 
-    // Collect all display perks for tiers at or below the current tier (cumulative).
-    // TIER_PERK_CATALOG is the ordered array of display-layer perks (has perkId,
-    // label, description, icon). TIER_PERKS is the delivery-grants object — different.
+    // Collect all perks for tiers at or below the current tier (cumulative)
     const unlockedPerks = [];
     for (let i = 0; i <= idx; i++) {
       const group = TIER_PERK_CATALOG[i];
-      for (const perk of (group?.perks ?? [])) {
+      for (const perk of group.perks) {
         unlockedPerks.push({
           tierKey: group.tierKey,
           tierName: group.tierName,
@@ -265,23 +255,18 @@ export const getMemberDeliveredPerks = webMethod(Permissions.SiteMember, async (
 
     // Next tier teaser
     const nextGroup = idx < TIER_PERK_CATALOG.length - 1 ? TIER_PERK_CATALOG[idx + 1] : null;
-    const nextTierName = nextGroup?.tierName ?? null;
-    const nextTierKey = nextGroup?.tierKey ?? null;
-    const nextTierThreshold = nextTierKey ? (TIER_THRESHOLDS[nextTierKey] ?? null) : null;
-    const nextTierPerks = nextGroup
-      ? nextGroup.perks.map(p => ({ perkId: p.perkId, label: p.label, description: p.description, icon: p.icon }))
-      : null;
+    const nextTierThreshold = nextGroup ? (TIER_THRESHOLDS[nextGroup.tierKey] ?? null) : null;
 
     return {
       success: true,
       currentTierName,
-      currentTierKey,
+      currentTierKey: TIER_PERK_CATALOG[idx]?.tierKey ?? 'TRAIL_BLAZER',
       totalPoints,
       unlockedPerks,
-      nextTierName,
-      nextTierKey,
+      nextTierName: nextGroup?.tierName ?? null,
+      nextTierKey: nextGroup?.tierKey ?? null,
       nextTierPointsNeeded: nextTierThreshold !== null ? Math.max(0, nextTierThreshold - totalPoints) : null,
-      nextTierPerks,
+      nextTierPerks: nextGroup ? nextGroup.perks.map(p => ({ ...p })) : null,
     };
   } catch {
     return { success: false, error: 'Failed to load perks' };

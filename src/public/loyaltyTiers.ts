@@ -1,0 +1,403 @@
+/**
+ * @module loyaltyTiers
+ * @description Pure TypeScript port of gamificationTokens.js tier/points/badge config.
+ * Zero Wix or React Native imports — safe for the dallas mobile client to import directly.
+ *
+ * Values are kept byte-for-byte identical to gamificationTokens.js.
+ * Badge colors are inlined from sharedTokens.js (see comments).
+ *
+ * CF-znpj
+ */
+
+// ── Inlined badge colors (source: src/public/sharedTokens.js `colors`) ───────
+// Keep in sync if sharedTokens.js badge colors change.
+const BADGE_CORAL = '#E8634B';        // colors.badgeCoral   — Eastern Bluebird / URGENCY
+const BADGE_ESPRESSO = '#3D1C02';     // colors.badgeEspresso — Black Bear / PREMIUM
+const BADGE_FOREST_BLUE = '#2B5FA5'; // colors.badgeForestBlue — Luna Moth / ACHIEVEMENT
+const BADGE_GOLD = '#C8960C';         // colors.badgeGold    — Red-Tailed Hawk / Monarch
+const MOUNTAIN_BLUE = '#5B8FA8';      // colors.mountainBlue — Great Horned Owl
+
+// ── Tier thresholds (minimum points to reach each tier) ──────────────────────
+
+export const TIER_THRESHOLDS: Record<string, number> = {
+  TRAIL_BLAZER: 0,
+  MOUNTAIN_GUIDE: 500,
+  SUMMIT_MASTER: 2000,
+  BLUE_RIDGE_LEGEND: 5000,
+};
+
+// ── Point values per earning action ──────────────────────────────────────────
+
+export const POINT_VALUES: Record<string, number> = {
+  PURCHASE_PER_DOLLAR: 2,
+  REVIEW: 100,
+  PHOTO_REVIEW_BONUS: 50,
+  REVIEW_ACCURACY_BONUS: 10,
+  REFERRAL_ACCEPTED: 500,
+  AR_TRY_ON: 25,
+  STREAK_7_DAY: 100,
+  AR_USED: 10,
+  WISHLIST_ADD: 25,
+  VIDEO_REVIEW: 500,
+  // Mobile-unique actions (cross-rig spec with dallas, 2026-04-04)
+  VISUAL_SEARCH_USE: 15,
+  SHARE_PRODUCT: 10,
+  PUSH_NOTIFICATION_ENABLED: 50,
+};
+
+/** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */
+export const STREAK_RECOVERY_COST = 50;
+
+// ── Streak multiplier tiers ───────────────────────────────────────────────────
+
+export interface StreakMultiplierTier {
+  minDays: number;
+  multiplier: number;
+}
+
+export const STREAK_MULTIPLIER_TIERS: StreakMultiplierTier[] = [
+  { minDays: 7, multiplier: 3 },
+  { minDays: 3, multiplier: 2 },
+  { minDays: 1, multiplier: 1 },
+];
+
+/**
+ * Returns the streak multiplier for a given number of consecutive ET days.
+ * Tiers: 0-2 days → 1×, 3-6 days → 2×, 7+ days → 3×.
+ * Does NOT apply to fixed-award events (birthday, anniversary).
+ */
+export function getStreakMultiplier(days: number): number {
+  for (const tier of STREAK_MULTIPLIER_TIERS) {
+    if (days >= tier.minDays) return tier.multiplier;
+  }
+  return 1;
+}
+
+// ── Badge color palette ───────────────────────────────────────────────────────
+
+export const BADGE_COLORS: Record<string, string> = {
+  PREMIUM: BADGE_ESPRESSO,
+  ACHIEVEMENT: BADGE_FOREST_BLUE,
+  URGENCY: BADGE_CORAL,
+};
+
+// ── Badge registry ────────────────────────────────────────────────────────────
+
+export interface BadgeRegistryEntry {
+  label: string;
+  icon: string;
+  tier: string;
+  description: string;
+  earnCondition: string;
+  svgLabel?: string;
+  svgColor?: string;
+  svgPath?: string;
+}
+
+export const BADGE_REGISTRY: Record<string, BadgeRegistryEntry> = {
+  first_step: {
+    label: 'First Step',
+    icon: '🥾',
+    tier: 'TRAIL_BLAZER',
+    description: 'Made your first purchase.',
+    earnCondition: 'Complete your first order.',
+    svgLabel: 'Eastern Bluebird',
+    svgColor: BADGE_CORAL,
+    svgPath:
+      'M25 12 C22 11 19 12 18 15 L14 14 C12 13 11 15 13 17 L16 18 ' +
+      'C15 21 15 25 17 28 L13 33 L15 35 L19 31 ' +
+      'C20 33 22 36 24 37 C26 36 28 33 29 31 L33 35 L35 33 L31 28 ' +
+      'C33 25 33 21 32 18 L35 17 C37 15 36 13 34 14 L30 15 ' +
+      'C29 12 27 11 25 12Z',
+  },
+  trail_regular: {
+    label: 'Trail Regular',
+    icon: '🏕️',
+    tier: 'TRAIL_BLAZER',
+    description: 'Returned for 3 or more purchases.',
+    earnCondition: 'Complete 3 or more orders.',
+    svgLabel: 'Black Bear',
+    svgColor: BADGE_ESPRESSO,
+    svgPath:
+      'M16 14 C13 12 11 14 12 17 C10 17 9 19 10 21 ' +
+      'C8 22 8 25 10 27 L9 32 C9 35 11 37 13 37 L14 40 L16 40 L17 37 ' +
+      'L22 38 L24 40 L26 40 L28 38 L33 37 L34 40 L36 40 L37 37 ' +
+      'C39 37 41 35 41 32 L40 27 C42 25 42 22 40 21 ' +
+      'C41 19 40 17 38 17 C39 14 37 12 34 14 ' +
+      'C32 11 29 10 24 10 C20 10 18 11 16 14Z',
+  },
+  visualizer: {
+    label: 'Visualizer',
+    icon: '🔭',
+    tier: 'TRAIL_BLAZER',
+    description: 'Used AR try-on to preview a product.',
+    earnCondition: 'Try the AR viewer at least once.',
+    svgLabel: 'Great Horned Owl',
+    svgColor: MOUNTAIN_BLUE,
+    svgPath:
+      'M20 8 L19 11 L16 13 C13 15 12 18 14 20 ' +
+      'C11 22 11 26 14 27 C12 30 13 34 16 35 L14 39 L17 39 L19 36 ' +
+      'C21 38 24 39 27 39 C30 38 33 37 34 36 L36 39 L39 39 L37 35 ' +
+      'C40 34 41 30 39 27 C42 26 42 22 39 20 C41 18 40 15 37 13 L34 11 L28 8 ' +
+      'L26 11 C25 10 23 10 22 11 Z',
+  },
+  curator: {
+    label: 'Curator',
+    icon: '🎨',
+    tier: 'MOUNTAIN_GUIDE',
+    description: 'Purchased across 3 or more product lines.',
+    earnCondition: 'Buy from 3 different product categories.',
+    svgLabel: 'Luna Moth',
+    svgColor: BADGE_FOREST_BLUE,
+    svgPath:
+      'M24 15 C22 13 17 11 13 13 C9 15 8 19 10 22 ' +
+      'C7 23 6 27 9 29 C7 32 9 36 12 37 L11 40 L13 41 L15 38 ' +
+      'C18 40 21 41 24 41 C27 41 30 40 33 38 L35 41 L37 40 L36 37 ' +
+      'C39 36 41 32 39 29 C42 27 41 23 38 22 ' +
+      'C40 19 39 15 35 13 C31 11 26 13 24 15Z ' +
+      'M20 40 C19 43 17 45 16 47 L18 47 L22 42 Z ' +
+      'M28 40 C29 43 31 45 32 47 L30 47 L26 42 Z',
+  },
+  week_wanderer: {
+    label: 'Week Wanderer',
+    icon: '🗺️',
+    tier: 'TRAIL_BLAZER',
+    description: 'Active in the rewards program 7 days in a row.',
+    earnCondition: 'Earn points or spin the wheel for 7 consecutive days.',
+    svgLabel: 'Red-Tailed Hawk',
+    svgColor: BADGE_GOLD,
+    svgPath:
+      'M24 10 C22 10 20 12 19 14 L8 11 C6 10 5 13 7 14 L17 18 ' +
+      'C15 21 15 26 17 29 L10 35 L12 37 L19 32 ' +
+      'C20 35 22 38 24 39 C26 38 28 35 29 32 L36 37 L38 35 L31 29 ' +
+      'C33 26 33 21 31 18 L41 14 C43 13 42 10 40 11 L29 14 ' +
+      'C28 12 26 10 24 10Z',
+  },
+  voice_of_mountain: {
+    label: 'Voice of the Mountain',
+    icon: '🏔️',
+    tier: 'MOUNTAIN_GUIDE',
+    description: 'Submitted 3 or more product reviews.',
+    earnCondition: 'Write 3 reviews.',
+  },
+  video_reviewer: {
+    label: 'Video Reviewer',
+    icon: '🎬',
+    tier: 'MOUNTAIN_GUIDE',
+    description: 'Shared a video review of a product.',
+    earnCondition: 'Submit a video review that gets approved.',
+    svgLabel: 'Monarch Butterfly',
+    svgColor: BADGE_GOLD,
+    svgPath:
+      'M24 15 C22 13 17 11 13 13 C9 15 8 19 10 22 ' +
+      'C7 23 6 27 9 29 C8 32 10 36 13 37 L12 40 L14 41 L16 38 ' +
+      'C18 40 21 41 24 41 C27 41 30 40 32 38 L34 41 L36 40 L35 37 ' +
+      'C38 36 40 32 39 29 C42 27 41 23 38 22 ' +
+      'C40 19 39 15 35 13 C31 11 26 13 24 15Z ' +
+      'M21 39 C20 42 18 44 17 46 L19 46 L23 41 Z ' +
+      'M27 39 C28 42 30 44 31 46 L29 46 L25 41 Z',
+  },
+};
+
+// ── TIER_NAMES — ascending by threshold; getTierForPoints depends on this order ─
+
+export interface TierNameEntry {
+  threshold: number;
+  name: string;
+}
+
+export const TIER_NAMES: TierNameEntry[] = [
+  { threshold: TIER_THRESHOLDS.TRAIL_BLAZER, name: 'Trail Blazer' },
+  { threshold: TIER_THRESHOLDS.MOUNTAIN_GUIDE, name: 'Mountain Guide' },
+  { threshold: TIER_THRESHOLDS.SUMMIT_MASTER, name: 'Summit Master' },
+  { threshold: TIER_THRESHOLDS.BLUE_RIDGE_LEGEND, name: 'Blue Ridge Legend' },
+];
+
+// ── getTierForPoints ──────────────────────────────────────────────────────────
+
+/**
+ * Returns the tier name for a given point total.
+ * NaN / Infinity / negative input returns 'Trail Blazer'.
+ * null / undefined coerce to 0 via Number() and return 'Trail Blazer'.
+ */
+export function getTierForPoints(points: number): string {
+  const p = Number(points);
+  if (!Number.isFinite(p) || p < 0) return TIER_NAMES[0].name;
+  for (let i = TIER_NAMES.length - 1; i >= 0; i--) {
+    if (p >= TIER_NAMES[i].threshold) return TIER_NAMES[i].name;
+  }
+  return TIER_NAMES[0].name;
+}
+
+// ── GAMIFICATION_TIER_ORDER — avatar tier display order (ascending) ───────────
+
+export const GAMIFICATION_TIER_ORDER: string[] = [
+  'Trail Blazer',
+  'Mountain Guide',
+  'Summit Master',
+  'Blue Ridge Legend',
+];
+
+// ── Tier Perks — canonical perk definitions per tier ─────────────────────────
+
+export const PERK_TYPES: Record<string, string> = {
+  BIRTHDAY_DISCOUNT: 'BIRTHDAY_DISCOUNT',
+  ACCESSORY_DISCOUNT: 'ACCESSORY_DISCOUNT',
+  PRIORITY_SUPPORT: 'PRIORITY_SUPPORT',
+  FREE_WHITE_GLOVE: 'FREE_WHITE_GLOVE',
+  EARLY_ACCESS: 'EARLY_ACCESS',
+  STYLING_CALL: 'STYLING_CALL',
+};
+
+export interface Perk {
+  type: string;
+  value: number | null;
+  label: string;
+  delivery: string;
+}
+
+const TRAIL_BLAZER_PERKS: Perk[] = [
+  { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+];
+const MOUNTAIN_GUIDE_PERKS: Perk[] = [
+  ...TRAIL_BLAZER_PERKS,
+  { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+  { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+];
+const SUMMIT_MASTER_PERKS: Perk[] = [
+  ...MOUNTAIN_GUIDE_PERKS,
+  { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
+  { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
+  { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
+];
+
+export const TIER_PERKS: Record<string, Perk[]> = {
+  'Trail Blazer':      TRAIL_BLAZER_PERKS,
+  'Mountain Guide':    MOUNTAIN_GUIDE_PERKS,
+  'Summit Master':     SUMMIT_MASTER_PERKS,
+  'Blue Ridge Legend':  SUMMIT_MASTER_PERKS,
+};
+
+/**
+ * Returns the perks unlocked at a given tier.
+ */
+export function getPerksByTier(tierName: string): Perk[] {
+  return TIER_PERKS[tierName] ?? [];
+}
+
+/**
+ * Returns perks newly unlocked by a tier promotion (in newTier but not in prevTier).
+ */
+export function getNewPerksOnPromotion(prevTier: string | null, newTier: string): Perk[] {
+  const prevTypes = new Set((TIER_PERKS[prevTier ?? ''] ?? []).map((p: Perk) => p.type));
+  return (TIER_PERKS[newTier] ?? []).filter((p: Perk) => !prevTypes.has(p.type));
+}
+
+// ── isBonusPointsDayAvailable ─────────────────────────────────────────────────
+
+/**
+ * Returns true if the bonus points day feature is available for use.
+ * A bonus points day resets after a 7-day rolling window (strictly > 6 days ago).
+ *
+ * @param bonusPointsDayUsed  ISO date string 'YYYY-MM-DD' or falsy
+ * @param todayET  Current date in ET as 'YYYY-MM-DD'
+ */
+export function isBonusPointsDayAvailable(
+  bonusPointsDayUsed: string | null | undefined,
+  todayET: string
+): boolean {
+  if (!bonusPointsDayUsed) return true;
+  const [y, m, d] = bonusPointsDayUsed.split('-').map(Number);
+  const usedMs = Date.UTC(y, m - 1, d);
+  const [ty, tm, td] = todayET.split('-').map(Number);
+  const todayMs = Date.UTC(ty, tm - 1, td);
+  return Math.floor((todayMs - usedMs) / 86400000) > 6;
+}
+
+// ── getBadgesForAccount ───────────────────────────────────────────────────────
+
+export interface AccountHistory {
+  purchaseCount?: number;
+  productLines?: string[];
+  arTryOnUsed?: boolean;
+  reviewCount?: number;
+  loginStreakDays?: number;
+  currentStreakDays?: number;
+}
+
+/**
+ * Returns the list of badge IDs earned by an account based on its history.
+ */
+export function getBadgesForAccount(accountHistory: AccountHistory = {}): string[] {
+  const {
+    purchaseCount = 0,
+    productLines = [],
+    arTryOnUsed = false,
+    reviewCount = 0,
+    currentStreakDays = 0,
+  } = accountHistory;
+
+  const earned: string[] = [];
+
+  if (purchaseCount >= 1) earned.push('first_step');
+  if (purchaseCount >= 3) earned.push('trail_regular');
+  if (arTryOnUsed) earned.push('visualizer');
+  if (Array.isArray(productLines) && new Set(productLines).size >= 3) earned.push('curator');
+  if (currentStreakDays >= 7) earned.push('week_wanderer');
+  if (reviewCount >= 3) earned.push('voice_of_mountain');
+
+  return earned;
+}
+
+// ── BADGE_DISPLAY_NAMES ───────────────────────────────────────────────────────
+
+export const BADGE_DISPLAY_NAMES: Record<string, string> = {
+  week_wanderer: 'Week Wanderer',
+  trail_regular: 'Trail Regular',
+  top_reviewer: 'Top Reviewer',
+  ar_explorer: 'AR Explorer',
+  video_reviewer: 'Video Reviewer',
+};
+
+// ── TIER_PERK_CATALOG ─────────────────────────────────────────────────────────
+
+export interface TierPerkCatalogItem {
+  tierKey: string;
+  tierName: string;
+  perks: Array<{ perkId: string; label: string; description: string; icon: string }>;
+}
+
+export const TIER_PERK_CATALOG: TierPerkCatalogItem[] = [
+  {
+    tierKey: 'TRAIL_BLAZER',
+    tierName: 'Trail Blazer',
+    perks: [
+      { perkId: 'daily-spin', label: 'Daily Spin Wheel', description: 'Spin once per day to win bonus points and prizes.', icon: '🎡' },
+      { perkId: 'challenge-access', label: 'Challenge Trails', description: 'Access to Blue Ridge Trail challenges and seasonal missions.', icon: '🥾' },
+    ],
+  },
+  {
+    tierKey: 'MOUNTAIN_GUIDE',
+    tierName: 'Mountain Guide',
+    perks: [
+      { perkId: 'birthday-bonus', label: 'Birthday Bonus Points', description: 'Earn 150 bonus points during your birthday week.', icon: '🎂' },
+      { perkId: 'guide-badge-frame', label: 'Mountain Guide Badge Frame', description: 'Exclusive badge frame unlocked on your loyalty profile.', icon: '🏔️' },
+    ],
+  },
+  {
+    tierKey: 'SUMMIT_MASTER',
+    tierName: 'Summit Master',
+    perks: [
+      { perkId: 'styling-call', label: 'Free Styling Consultation', description: 'Book a free 30-minute styling call with our design team.', icon: '📞' },
+      { perkId: 'double-spin', label: 'Double Daily Spins', description: 'Spin the wheel twice per day instead of once.', icon: '🎰' },
+    ],
+  },
+  {
+    tierKey: 'BLUE_RIDGE_LEGEND',
+    tierName: 'Blue Ridge Legend',
+    perks: [
+      { perkId: 'free-shipping-all', label: 'Free Shipping Always', description: 'Free shipping on every order — no minimum required.', icon: '📦' },
+      { perkId: 'vip-early-access', label: 'VIP Early Access', description: 'Shop new arrivals 48 hours before the general public.', icon: '⭐' },
+    ],
+  },
+];
