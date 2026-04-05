@@ -619,4 +619,82 @@ describe('moderateRoomPhoto', () => {
     const result = await moderateRoomPhoto('photo-1', 'approve');
     expect(result.success).toBe(true);
   });
+
+  it('falls back to admin moderatorId when getMember throws', async () => {
+    // CF-rw9i coverage: moderator identity catch branch (line ~244)
+    const { currentMember } = await import('wix-members-backend');
+    currentMember.getMember.mockRejectedValueOnce(new Error('auth service down'));
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', status: 'pending' })]);
+    const result = await moderateRoomPhoto('photo-1', 'approve');
+    expect(result.success).toBe(true);
+  });
+});
+
+// ── Coverage gap tests (CF-rw9i peer review) ────────────────────────────────
+
+describe('submitRoomPhoto — member identity edge cases', () => {
+  it('uses "Customer" when getMember throws', async () => {
+    // CF-rw9i coverage: member identity catch branch (line ~91)
+    const { currentMember } = await import('wix-members-backend');
+    currentMember.getMember.mockRejectedValueOnce(new Error('network error'));
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+
+    let inserted;
+    __onInsert((col, item) => { if (col === _COLLECTION) inserted = item; });
+
+    const result = await submitRoomPhoto({
+      photoUrl: 'wix:image://v1/abc/room.jpg',
+      roomType: 'living-room',
+      productId: 'prod-1',
+      productName: 'Kodiak',
+      caption: 'Love it',
+    }, 'member-1');
+    expect(result.success).toBe(true);
+    expect(inserted.memberDisplayName).toBe('Customer');
+    expect(inserted.memberEmail).toBe('');
+  });
+
+  it('uses firstName only when lastName is empty', async () => {
+    // CF-rw9i coverage: no-lastName ternary else branch (line ~86-88)
+    __setMember({ ...MEMBER, contactDetails: { firstName: 'Sarah', lastName: '' } });
+    withRateLimit('CustomerRoomPhotosRateLimit', { key: 'member-1' });
+
+    let inserted;
+    __onInsert((col, item) => { if (col === _COLLECTION) inserted = item; });
+
+    const result = await submitRoomPhoto({
+      photoUrl: 'wix:image://v1/abc/room.jpg',
+      roomType: 'living-room',
+      productId: 'prod-1',
+      productName: 'Kodiak',
+      caption: 'Nice',
+    }, 'member-1');
+    expect(result.success).toBe(true);
+    expect(inserted.memberDisplayName).toBe('Sarah');
+  });
+});
+
+describe('likeRoomPhoto — non-duplicate insert error rethrows', () => {
+  it('propagates non-duplicate insert errors to outer catch', async () => {
+    // CF-rw9i coverage: throw dupErr path (line ~204)
+    __seed(_COLLECTION, [makePhoto({ _id: 'photo-1', status: 'approved' })]);
+    __onInsert(() => { throw new Error('network timeout'); });
+
+    const result = await likeRoomPhoto('photo-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Failed to like photo.');
+  });
+});
+
+describe('getAllRoomPhotos — invalid roomType silently returns all', () => {
+  it('ignores invalid roomType and returns all approved photos', async () => {
+    // CF-rw9i coverage: compound conditional false path (line ~161)
+    __seed(_COLLECTION, [
+      makePhoto({ _id: 'photo-1', roomType: 'living-room', status: 'approved' }),
+      makePhoto({ _id: 'photo-2', roomType: 'bedroom', status: 'approved' }),
+    ]);
+    const result = await getAllRoomPhotos({ roomType: 'castle' });
+    expect(result.success).toBe(true);
+    expect(result.photos.length).toBe(2);
+  });
 });
