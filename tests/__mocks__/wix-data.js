@@ -190,8 +190,35 @@ function createQueryBuilder(collection) {
       }
 
       const totalCount = items.length;
-      items = items.slice(skipVal, skipVal + limitVal);
-      return { items, totalCount, length: items.length };
+      const pageItems = items.slice(skipVal, skipVal + limitVal);
+      const nextSkip = skipVal + limitVal;
+      const result = {
+        items: pageItems,
+        totalCount,
+        length: pageItems.length,
+        hasNext() { return nextSkip < totalCount; },
+        async next() {
+          const nextItems = items.slice(nextSkip, nextSkip + limitVal);
+          const nextNextSkip = nextSkip + limitVal;
+          return {
+            items: nextItems,
+            totalCount,
+            length: nextItems.length,
+            hasNext() { return nextNextSkip < totalCount; },
+            async next() {
+              const moreItems = items.slice(nextNextSkip, nextNextSkip + limitVal);
+              return {
+                items: moreItems,
+                totalCount,
+                length: moreItems.length,
+                hasNext() { return false; },
+                async next() { return { items: [], totalCount, length: 0, hasNext() { return false; }, async next() { return this; } }; },
+              };
+            },
+          };
+        },
+      };
+      return result;
     },
     async distinct(field) {
       if (_queryErrors[collection]) throw _queryErrors[collection];

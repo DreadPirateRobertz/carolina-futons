@@ -1,13 +1,14 @@
 /**
  * @file gamificationNotifs.test.js
- * @description CF-tcqq — Full TDD coverage for gamificationNotifs.web.js:
+ * @description CF-tcqq / GH#991 — Full TDD coverage for gamificationNotifs.web.js:
  *   getNotificationPrefs()                [SiteMember]
  *   updateNotificationPrefs(prefs)        [SiteMember]
- *   notifyChallengePublished(challenge)   [Admin]
- *   checkStreakMilestoneNotifications()   [Admin/cron]
+ *   notifyChallengePublished(challenge)   [Admin] — fans out to EmailQueue/SMSQueue
+ *   checkStreakMilestoneNotifications()   [Admin/cron] — queues to EmailQueue
+ *   processChallengeNotifSMSQueue()       [Admin/cron] — dispatches SMSQueue items
  *
  * Acceptance: auth failure, default prefs creation, invalid pref key rejection,
- * streak milestone email trigger, challenge email+SMS fan-out. All paths covered.
+ * streak milestone queue insertion, challenge queue fan-out. All paths covered.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -15,8 +16,10 @@ import {
   __reset as resetData,
   __seed,
   __getInserted,
+  __getUpdated,
   __onInsert,
   __setQueryError,
+  __setInsertError,
 } from './__mocks__/wix-data.js';
 import {
   __reset as resetMembers,
@@ -25,8 +28,6 @@ import {
 } from './__mocks__/wix-members-backend.js';
 import {
   __reset as resetCrm,
-  __getEmailLog,
-  __failNextEmail,
 } from './__mocks__/wix-crm-backend.js';
 
 // Mock smsService dynamic import
@@ -40,6 +41,7 @@ import {
   updateNotificationPrefs,
   notifyChallengePublished,
   checkStreakMilestoneNotifications,
+  processChallengeNotifSMSQueue,
 } from '../src/backend/gamificationNotifs.web.js';
 
 const MEMBER_ID = 'mem-gn-001';
@@ -69,6 +71,9 @@ beforeEach(() => {
   resetCrm();
   vi.clearAllMocks();
   mockSendChallengeAlertSMS.mockResolvedValue({ success: true });
+  // Seed empty collections so queries don't return undefined
+  __seed('EmailQueue', []);
+  __seed('SMSQueue', []);
 });
 
 // ── getNotificationPrefs ──────────────────────────────────────────────────────
@@ -202,7 +207,7 @@ describe('updateNotificationPrefs', () => {
   });
 });
 
-// ── notifyChallengePublished ──────────────────────────────────────────────────
+// ── notifyChallengePublished (GH#991: queue fan-out) ─────────────────────────
 
 describe('notifyChallengePublished', () => {
   function makeChallenge(overrides = {}) {
@@ -222,81 +227,90 @@ describe('notifyChallengePublished', () => {
 
   it('returns success: false when challenge.title is missing', async () => {
     const result = await notifyChallengePublished({});
-    expect(result).toEqual({ success: false, emailsSent: 0, smsSent: 0 });
+    expect(result).toEqual({ success: false, queued: 0 });
   });
 
   it('returns success: false when challenge is null/undefined', async () => {
     const result = await notifyChallengePublished(null);
-    expect(result).toEqual({ success: false, emailsSent: 0, smsSent: 0 });
+    expect(result).toEqual({ success: false, queued: 0 });
   });
 
-  it('returns emailsSent: 0 and smsSent: 0 when no members opted in', async () => {
+  it('returns queued: 0 when no members opted in', async () => {
     __seed(PREFS_COLLECTION, []);
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result).toEqual({ success: true, emailsSent: 0, smsSent: 0 });
+    expect(result).toEqual({ success: true, queued: 0 });
   });
 
-  it('sends email to each opted-in member', async () => {
+  it('inserts an EmailQueue record for each opted-in member', async () => {
     seedOptedIn(['mem-a', 'mem-b', 'mem-c']);
 
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result.success).toBe(true);
-    expect(result.emailsSent).toBe(3);
+    expect(result).toEqual({ success: true, queued: 3 });
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(3);
-    expect(log.every(e => e.templateId === 'challenge_new_weekly')).toBe(true);
-    expect(log.map(e => e.memberId)).toEqual(expect.arrayContaining(['mem-a', 'mem-b', 'mem-c']));
+    const emails = __getInserted('EmailQueue');
+    expect(emails).toHaveLength(3);
+    expect(emails.every(e => e.templateId === 'challenge_new_weekly')).toBe(true);
+    expect(emails.every(e => e.sequenceType === 'challenge_notif')).toBe(true);
+    expect(emails.every(e => e.status === 'pending')).toBe(true);
+    expect(emails.map(e => e.recipientContactId).sort()).toEqual(['mem-a', 'mem-b', 'mem-c']);
   });
 
-  it('sends SMS to each opted-in member', async () => {
+  it('inserts an SMSQueue record for each opted-in member', async () => {
     seedOptedIn(['mem-a', 'mem-b']);
 
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result.smsSent).toBe(2);
-    expect(mockSendChallengeAlertSMS).toHaveBeenCalledTimes(2);
+    expect(result.queued).toBe(2);
+
+    const smsItems = __getInserted('SMSQueue');
+    expect(smsItems).toHaveLength(2);
+    expect(smsItems.every(s => s.messageType === 'challenge_alert')).toBe(true);
+    expect(smsItems.every(s => s.status === 'pending')).toBe(true);
+    expect(smsItems.map(s => s.memberId).sort()).toEqual(['mem-a', 'mem-b']);
   });
 
-  it('includes badge label in reward text when present', async () => {
+  it('does not call sendChallengeAlertSMS directly — fan-out only', async () => {
+    seedOptedIn(['mem-a']);
+    await notifyChallengePublished(makeChallenge());
+    expect(mockSendChallengeAlertSMS).not.toHaveBeenCalled();
+  });
+
+  it('includes badge label in EmailQueue variables when present', async () => {
     seedOptedIn(['mem-a']);
 
     await notifyChallengePublished(makeChallenge({ rewardBadgeLabel: 'Gold Reviewer' }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const emails = __getInserted('EmailQueue');
+    const vars = JSON.parse(emails[0].variables);
     expect(vars.rewardText).toContain('Gold Reviewer');
   });
 
-  it('uses points-only reward text when no badge', async () => {
+  it('uses points-only reward text in variables when no badge', async () => {
     seedOptedIn(['mem-a']);
 
     await notifyChallengePublished(makeChallenge({ rewardPoints: 150 }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const emails = __getInserted('EmailQueue');
+    const vars = JSON.parse(emails[0].variables);
     expect(vars.rewardText).toBe('150 pts');
   });
 
-  it('individual email failure does not stop the pipeline', async () => {
-    seedOptedIn(['mem-a', 'mem-b', 'mem-c']);
-    __failNextEmail(); // mem-a fails
+  it('SMS message includes challenge title and reward text', async () => {
+    seedOptedIn(['mem-a']);
 
-    const result = await notifyChallengePublished(makeChallenge());
-    expect(result.success).toBe(true);
-    expect(result.emailsSent).toBe(2); // mem-b, mem-c succeed
+    await notifyChallengePublished(makeChallenge({ title: 'Leave a Review', rewardPoints: 50 }));
+    const smsItems = __getInserted('SMSQueue');
+    expect(smsItems[0].message).toContain('Leave a Review');
+    expect(smsItems[0].message).toContain('50 pts');
   });
 
-  it('individual SMS failure does not stop the pipeline', async () => {
-    seedOptedIn(['mem-a', 'mem-b']);
-    mockSendChallengeAlertSMS
-      .mockRejectedValueOnce(new Error('SMS timeout'))
-      .mockResolvedValueOnce({ success: true });
+  it('returns success: false on queue insert failure', async () => {
+    seedOptedIn(['mem-a']);
+    __setInsertError('EmailQueue', new Error('DB write failed'));
 
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result.success).toBe(true);
-    expect(result.smsSent).toBe(1);
+    expect(result).toEqual({ success: false, queued: 0 });
   });
 });
 
-// ── checkStreakMilestoneNotifications ─────────────────────────────────────────
+// ── checkStreakMilestoneNotifications (GH#991: queue + pagination) ────────────
 
 describe('checkStreakMilestoneNotifications', () => {
   function seedStreakMembers(memberIds) {
@@ -320,23 +334,25 @@ describe('checkStreakMilestoneNotifications', () => {
     })));
   }
 
-  it('returns { sent: 0, skipped: 0, errors: 0 } when no members at day 7', async () => {
+  it('returns { queued: 0, skipped: 0, errors: 0 } when no members at day 7', async () => {
     __seed('MemberPoints', []);
     const result = await checkStreakMilestoneNotifications();
-    expect(result).toEqual({ sent: 0, skipped: 0, errors: 0 });
+    expect(result).toEqual({ queued: 0, skipped: 0, errors: 0 });
   });
 
-  it('sends streak milestone email to eligible members', async () => {
+  it('queues streak milestone email to EmailQueue for eligible members', async () => {
     seedStreakMembers(['mem-1', 'mem-2']);
 
     const result = await checkStreakMilestoneNotifications();
-    expect(result.sent).toBe(2);
+    expect(result.queued).toBe(2);
     expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(2);
-    expect(log.every(e => e.templateId === 'streak_milestone_day7')).toBe(true);
+    const emails = __getInserted('EmailQueue');
+    expect(emails).toHaveLength(2);
+    expect(emails.every(e => e.templateId === 'streak_milestone_day7')).toBe(true);
+    expect(emails.every(e => e.sequenceType === 'streak_milestone')).toBe(true);
+    expect(emails.every(e => e.status === 'pending')).toBe(true);
   });
 
   it('skips members who already received day-7 notification (idempotent)', async () => {
@@ -344,33 +360,32 @@ describe('checkStreakMilestoneNotifications', () => {
     seedAlreadySent(['mem-1']);
 
     const result = await checkStreakMilestoneNotifications();
-    expect(result.sent).toBe(1);
+    expect(result.queued).toBe(1);
     expect(result.skipped).toBe(1);
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(1);
-    expect(log[0].memberId).toBe('mem-2');
+    const emails = __getInserted('EmailQueue');
+    expect(emails).toHaveLength(1);
+    expect(emails[0].recipientContactId).toBe('mem-2');
   });
 
   it('skips members with streakReminders: false in prefs', async () => {
     seedStreakMembers(['mem-1', 'mem-2']);
-    // Seed both together — second __seed call overwrites first
     __seed(PREFS_COLLECTION, [
       makePrefRecord('mem-1', { streakReminders: false }),
       makePrefRecord('mem-2', { streakReminders: true }),
     ]);
 
     const result = await checkStreakMilestoneNotifications();
-    expect(result.sent).toBe(1);
+    expect(result.queued).toBe(1);
     expect(result.skipped).toBe(1);
   });
 
   it('defaults to opt-in when member has no prefs record', async () => {
     seedStreakMembers(['mem-1']);
-    // No prefs seeded — should default to sending
+    // No prefs seeded — should default to queuing
 
     const result = await checkStreakMilestoneNotifications();
-    expect(result.sent).toBe(1);
+    expect(result.queued).toBe(1);
     expect(result.skipped).toBe(0);
   });
 
@@ -386,18 +401,105 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(inserted[0].sentAt).toBeDefined();
   });
 
-  it('increments errors when email send fails, continues for other members', async () => {
+  it('increments errors when EmailQueue insert fails, continues for other members', async () => {
     seedStreakMembers(['mem-1', 'mem-2']);
-    __failNextEmail(); // mem-1 email fails
+
+    // Fail the first EmailQueue insert, then clear error so mem-2 succeeds
+    let insertCount = 0;
+    __onInsert((col) => {
+      if (col === 'EmailQueue') {
+        insertCount++;
+        if (insertCount === 1) throw new Error('queue write failed');
+      }
+    });
 
     const result = await checkStreakMilestoneNotifications();
-    expect(result.sent).toBe(1);
+    expect(result.queued).toBe(1);
     expect(result.errors).toBe(1);
   });
 
-  it('returns { sent: 0 } gracefully on top-level DB error', async () => {
+  it('returns { queued: 0 } gracefully on top-level DB error', async () => {
     __setQueryError('MemberPoints', new Error('DB down'));
     const result = await checkStreakMilestoneNotifications();
-    expect(result).toEqual({ sent: 0, skipped: 0, errors: 0 });
+    expect(result).toEqual({ queued: 0, skipped: 0, errors: 0 });
+  });
+});
+
+// ── processChallengeNotifSMSQueue (GH#991: SMS cron processor) ───────────────
+
+describe('processChallengeNotifSMSQueue', () => {
+  function seedSMSQueue(items) {
+    __seed('SMSQueue', items.map((item, i) => ({
+      _id: `sms-${i}`,
+      memberId: item.memberId,
+      message: item.message || 'Test challenge SMS',
+      messageType: 'challenge_alert',
+      status: 'pending',
+      scheduledFor: new Date(),
+      attempt: 0,
+      createdAt: new Date(),
+      ...item,
+    })));
+  }
+
+  it('returns { processed: 0, failed: 0 } when queue is empty', async () => {
+    const result = await processChallengeNotifSMSQueue();
+    expect(result).toEqual({ processed: 0, failed: 0 });
+  });
+
+  it('dispatches each pending SMS via sendChallengeAlertSMS', async () => {
+    seedSMSQueue([
+      { memberId: 'mem-a', message: 'Challenge A msg' },
+      { memberId: 'mem-b', message: 'Challenge B msg' },
+    ]);
+
+    const result = await processChallengeNotifSMSQueue();
+    expect(result).toEqual({ processed: 2, failed: 0 });
+    expect(mockSendChallengeAlertSMS).toHaveBeenCalledTimes(2);
+    expect(mockSendChallengeAlertSMS).toHaveBeenCalledWith(
+      expect.objectContaining({ memberId: 'mem-a', message: 'Challenge A msg' })
+    );
+  });
+
+  it('marks SMS as sent on success, failed on failure', async () => {
+    seedSMSQueue([
+      { memberId: 'mem-a', message: 'ok' },
+      { memberId: 'mem-b', message: 'fail' },
+    ]);
+    mockSendChallengeAlertSMS
+      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: false });
+
+    const result = await processChallengeNotifSMSQueue();
+    expect(result).toEqual({ processed: 1, failed: 1 });
+
+    const updated = __getUpdated('SMSQueue');
+    const sentItem = updated.find(u => u.memberId === 'mem-a');
+    const failedItem = updated.find(u => u.memberId === 'mem-b');
+    expect(sentItem.status).toBe('sent');
+    expect(failedItem.status).toBe('failed');
+  });
+
+  it('counts thrown SMS errors as failed and continues', async () => {
+    seedSMSQueue([
+      { memberId: 'mem-a' },
+      { memberId: 'mem-b' },
+    ]);
+    mockSendChallengeAlertSMS
+      .mockRejectedValueOnce(new Error('Twilio down'))
+      .mockResolvedValueOnce({ success: true });
+
+    const result = await processChallengeNotifSMSQueue();
+    expect(result).toEqual({ processed: 1, failed: 1 });
+  });
+
+  it('ignores non-challenge_alert items in the queue', async () => {
+    __seed('SMSQueue', [
+      { _id: 'sms-1', memberId: 'mem-a', message: 'x', messageType: 'promo', status: 'pending', scheduledFor: new Date(), attempt: 0, createdAt: new Date() },
+    ]);
+
+    const result = await processChallengeNotifSMSQueue();
+    expect(result).toEqual({ processed: 0, failed: 0 });
+    expect(mockSendChallengeAlertSMS).not.toHaveBeenCalled();
   });
 });
