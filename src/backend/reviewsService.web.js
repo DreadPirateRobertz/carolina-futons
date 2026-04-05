@@ -25,7 +25,6 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { mediaManager } from 'wix-media-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
@@ -701,101 +700,6 @@ export const getVideoReviews = webMethod(
       return { success: true, reviews, totalCount: result.totalCount };
     } catch (err) {
       console.error('[reviewsService] getVideoReviews error:', err);
-      return { success: false, error: 'Failed to load video reviews.', reviews: [] };
-    }
-  }
-);
-
-// ── New video upload / fetch methods (CF-ou66.1) ─────────────────────────────
-
-const MAX_VIDEO_DURATION_MS = 30_000; // 30 seconds
-
-/**
- * Upload a video blob to Wix Media Manager and insert a VideoReviews record
- * with status=pending_moderation.
- *
- * @param {string} productId
- * @param {string} memberId
- * @param {Buffer|Blob} videoBlob - Raw video binary.
- * @param {number} durationMs - Video duration in ms. Must be ≤ 30 000.
- * @returns {Promise<{success: boolean, reviewId?: string, error?: string}>}
- */
-export const uploadVideoReview = webMethod(
-  Permissions.SiteMember,
-  async (productId, memberId, videoBlob, durationMs) => {
-    try {
-      const cleanProductId = validateId(productId);
-      if (!cleanProductId) return { success: false, error: 'Valid product ID is required.' };
-
-      if (!memberId || typeof memberId !== 'string') {
-        return { success: false, error: 'Valid member ID is required.' };
-      }
-
-      if (typeof durationMs !== 'number' || isNaN(durationMs) || durationMs > MAX_VIDEO_DURATION_MS) {
-        return { success: false, error: 'Video must be 30 seconds or less.' };
-      }
-
-      // Duplicate check — one video review per member per product
-      const existing = await wixData.query(VIDEO_REVIEWS_COLLECTION)
-        .eq('productId', cleanProductId)
-        .eq('memberId', memberId)
-        .find();
-      if (existing.items.length > 0) {
-        return { success: false, error: 'A video review for this product already exists.' };
-      }
-
-      // Upload blob to Wix Media Manager
-      let uploadResult;
-      try {
-        uploadResult = await mediaManager.upload(
-          '/video-reviews/',
-          videoBlob,
-          `video_review_${cleanProductId}_${memberId}.mp4`,
-        );
-      } catch (uploadErr) {
-        console.error('[reviewsService] uploadVideoReview upload failed:', uploadErr);
-        return { success: false, error: 'Video upload failed. Please try again.' };
-      }
-
-      const inserted = await wixData.insert(VIDEO_REVIEWS_COLLECTION, {
-        productId: cleanProductId,
-        memberId,
-        videoFileId: uploadResult.fileName,
-        durationMs,
-        status: 'pending_moderation',
-        submittedAt: new Date(),
-      });
-
-      return { success: true, reviewId: inserted._id };
-    } catch (err) {
-      console.error('[reviewsService] uploadVideoReview error:', err);
-      return { success: false, error: 'Failed to submit video review.' };
-    }
-  }
-);
-
-/**
- * Get approved video reviews for a product.
- *
- * @param {string} productId
- * @returns {Promise<{success: boolean, reviews: Array, error?: string}>}
- */
-export const getVideoReviewsForProduct = webMethod(
-  Permissions.Anyone,
-  async (productId) => {
-    try {
-      const cleanId = validateId(productId);
-      if (!cleanId) return { success: false, error: 'Valid product ID is required.', reviews: [] };
-
-      const result = await wixData.query(VIDEO_REVIEWS_COLLECTION)
-        .eq('productId', cleanId)
-        .eq('status', 'approved')
-        .descending('submittedAt')
-        .find();
-
-      return { success: true, reviews: result.items };
-    } catch (err) {
-      console.error('[reviewsService] getVideoReviewsForProduct error:', err);
       return { success: false, error: 'Failed to load video reviews.', reviews: [] };
     }
   }

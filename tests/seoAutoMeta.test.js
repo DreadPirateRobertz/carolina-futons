@@ -275,4 +275,24 @@ describe('backfillProductMetaDescriptions', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
   });
+
+  it('paginates saved-descriptions fetch beyond 100 records', async () => {
+    // Seed 110 already-saved entries so the fetch must span two pages
+    const savedEntries = Array.from({ length: 110 }, (_, i) => ({
+      _id: `md-${i}`,
+      productId: `p${i}`,
+      description: 'Existing.',
+      generatedAt: new Date(),
+    }));
+    __seed('ProductMetaDescriptions', savedEntries);
+
+    // Only one product matches a saved entry — the other 109 are orphan descriptions
+    __seed('Stores/Products', [makeProduct({ _id: 'p0', visible: true })]);
+
+    const result = await backfillProductMetaDescriptions();
+    // p0 is in the saved set so it must be skipped (not double-inserted)
+    expect(result.success).toBe(true);
+    expect(result.skipped).toBe(1);
+    expect(result.generated).toBe(0);
+  });
 });

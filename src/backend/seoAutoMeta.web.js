@@ -166,12 +166,19 @@ export const backfillProductMetaDescriptions = webMethod(
         skip += pageSize;
       }
 
-      // Fetch all existing saved descriptions (up to 500) for dedup
-      const savedResult = await wixData
-        .query(COLLECTION)
-        .limit(500)
-        .find();
-      const savedIds = new Set(savedResult.items.map(i => i.productId));
+      // Fetch all existing saved descriptions (paginated) for dedup
+      const savedIds = new Set();
+      let savedSkip = 0;
+      while (true) {
+        const savedPage = await wixData
+          .query(COLLECTION)
+          .skip(savedSkip)
+          .limit(pageSize)
+          .find();
+        for (const item of savedPage.items) savedIds.add(item.productId);
+        if (savedPage.items.length < pageSize) break;
+        savedSkip += pageSize;
+      }
 
       let generated = 0;
       let skipped = 0;
