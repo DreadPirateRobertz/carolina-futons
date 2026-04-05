@@ -1,16 +1,21 @@
 #!/usr/bin/env node
 /**
- * IDOR guard: scan all SiteMember webMethods for ownership check pattern.
+ * IDOR guard: scan SiteMember webMethods AND plain exported functions in .web.js
+ * files for ownership check patterns.
  *
- * Flags any SiteMember webMethod that:
+ * Flags any function that:
  *   1. Accepts a memberId-like parameter (memberId, userId, contactId, etc.), AND
  *   2. Uses it in a wixData query (.eq(field, param)), AND
  *   3. Does NOT call currentMember.getMember() or getMember() in scope
  *
+ * Two extraction modes:
+ *   - webMethod(Permissions.SiteMember, ...) — original scanner (CF-2za7)
+ *   - export [async] function name(params) in .web.js — plain exports (GH-990 gap)
+ *
  * Exits with code 1 if violations found (for use in CI / pre-commit hook).
  * Run: node scripts/check-member-ownership.mjs
  *
- * CF-2za7: CI lint rule for SiteMember IDOR prevention
+ * CF-2za7, GH-990
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -57,21 +62,50 @@ export function extractSiteMemberMethods(source) {
 }
 
 /**
- * Check a single SiteMember method for IDOR risk.
+ * Extract plain exported functions from a .web.js file's source text.
+ * Matches: export [async] function name(params) { ... }
+ * These are callable from the frontend without a webMethod wrapper.
+ * Returns array of {name, params, body, lineNumber, kind: 'plain'}.
+ */
+export function extractPlainExportedFunctions(source) {
+  const functions = [];
+  const fnRe = /export\s+(async\s+)?function\s+(\w+)\s*\(([^)]*)\)\s*\{/g;
+  let match;
+  while ((match = fnRe.exec(source)) !== null) {
+    const name = match[2];
+    const params = match[3];
+    const startIdx = match.index + match[0].length - 1; // position of opening '{'
+    let depth = 1;
+    let i = startIdx + 1;
+    while (i < source.length && depth > 0) {
+      if (source[i] === '{') depth++;
+      else if (source[i] === '}') depth--;
+      i++;
+    }
+    const body = source.slice(startIdx, i);
+    const lineNumber = source.slice(0, match.index).split('\n').length;
+    functions.push({ name, params, body, lineNumber, kind: 'plain' });
+  }
+  return functions;
+}
+
+/**
+ * Check a single method for IDOR risk.
+ * Works for both webMethod-wrapped and plain exported functions.
  * Returns { violation: boolean, reason?: string }
  */
 export function checkMethodForIDOR(method) {
-  const { name, params, body } = method;
+  const { name, params, body, kind } = method;
   // Only flag if parameter looks like a memberId
   if (!MEMBER_ID_PARAMS.test(params)) return { violation: false };
   // Only flag if the body queries with that param
   if (!QUERY_PATTERN.test(body)) return { violation: false };
   // Check if ownership is verified
   if (OWNERSHIP_CHECK.test(body)) return { violation: false };
-  return {
-    violation: true,
-    reason: `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`,
-  };
+  const label = kind === 'plain'
+    ? `Plain export '${name}' accepts memberId-like param and queries data without getMember() ownership check`
+    : `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`;
+  return { violation: true, reason: label };
 }
 
 /**
@@ -86,12 +120,22 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
   for (const file of files) {
     const filePath = join(backendDir, file);
     const source = readFileSync(filePath, 'utf8');
-    const methods = extractSiteMemberMethods(source);
 
-    for (const method of methods) {
+    // Scan webMethod-wrapped SiteMember functions
+    const webMethods = extractSiteMemberMethods(source);
+    for (const method of webMethods) {
       const result = checkMethodForIDOR(method);
       if (result.violation) {
         violations.push({ file, name: method.name, line: method.lineNumber, reason: result.reason });
+      }
+    }
+
+    // Scan plain exported functions (GH-990 gap)
+    const plainFns = extractPlainExportedFunctions(source);
+    for (const fn of plainFns) {
+      const result = checkMethodForIDOR(fn);
+      if (result.violation) {
+        violations.push({ file, name: fn.name, line: fn.lineNumber, reason: result.reason });
       }
     }
   }
@@ -103,7 +147,7 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const violations = scanBackendFiles();
   if (violations.length === 0) {
-    console.log('✓ No IDOR violations found in SiteMember webMethods');
+    console.log('✓ No IDOR violations found in SiteMember webMethods or plain exports');
     process.exit(0);
   }
 
