@@ -25,8 +25,11 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const FUNNEL_COLLECTION = 'FunnelEvents';
+const RATE_LIMIT_COLLECTION = 'FunnelEventRateLimit';
+const PAGE_SIZE = 500;
 
 /** Ordered funnel stages — each must be traversed in sequence. */
 export const FUNNEL_STAGES = [
@@ -69,6 +72,9 @@ export const trackFunnelEvent = webMethod(
 
       const sessionId = sanitize(String(rawSession), 254);
       if (!sessionId) return { success: false, error: 'sessionId is required' };
+
+      const { allowed } = await checkRateLimit(RATE_LIMIT_COLLECTION, sessionId, { max: 10, windowMs: 60_000 });
+      if (!allowed) return { success: false, error: 'rate_limited' };
 
       const record = {
         _id: `${sessionId}_${stage}`,
@@ -116,13 +122,22 @@ export const getFunnelReport = webMethod(
       const days = Math.min(90, Math.max(1, options.days != null ? options.days : 7));
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      let query = wixData.query(FUNNEL_COLLECTION).ge('timestamp', since).limit(1000);
-      if (options.productId) {
-        query = query.eq('productId', sanitize(String(options.productId), 254));
-      }
+      const baseQuery = () => {
+        let q = wixData.query(FUNNEL_COLLECTION).ge('timestamp', since).limit(PAGE_SIZE);
+        if (options.productId) {
+          q = q.eq('productId', sanitize(String(options.productId), 254));
+        }
+        return q;
+      };
 
-      const result = await query.find({ suppressAuth: true });
-      const events = result.items;
+      const events = [];
+      let offset = 0;
+      while (true) {
+        const page = await baseQuery().skip(offset).find({ suppressAuth: true });
+        events.push(...page.items);
+        if (page.items.length < PAGE_SIZE) break;
+        offset += PAGE_SIZE;
+      }
 
       // Count per stage
       const stageCounts = {};

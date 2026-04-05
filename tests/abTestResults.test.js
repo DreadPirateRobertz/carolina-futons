@@ -207,6 +207,21 @@ describe('getAbTestResults', () => {
     const result = await getAbTestResults('hero-cta');
     expect(result.success).toBe(false);
   });
+
+  it('paginates revenue aggregation beyond 500 records', async () => {
+    // 501 purchase rows forces the while-loop to continue past the first page,
+    // covering the FALSE branch of `if (purchasePage.items.length < PAGE) break`
+    __seed('AbTests', SAMPLE_TEST);
+    __seed('AbEvents', SAMPLE_EVENTS);
+    __seed('FunnelEvents', Array.from({ length: 501 }, (_, i) => ({
+      stage: 'purchase', experimentId: 'hero-cta', variantId: 'variant-b',
+      revenue: 1, sessionId: `ps${i}`,
+    })));
+    const result = await getAbTestResults('hero-cta');
+    expect(result.success).toBe(true);
+    const varB = result.results.variants.find(v => v.id === 'variant-b');
+    expect(varB.revenue).toBe(501);
+  });
 });
 
 // ── getAllAbTestResults ─────────────────────────────────────────────
@@ -255,5 +270,43 @@ describe('getAllAbTestResults', () => {
     __setQueryError('AbTests', new Error('timeout'));
     const result = await getAllAbTestResults();
     expect(result.success).toBe(false);
+  });
+});
+
+// ── parseVariants edge cases (coverage gap flagged by Melania on PR #965) ────
+// parseVariants must guard against JSON.parse returning a non-array (e.g. a
+// number). Without the Array.isArray guard, calling variants.map() later throws.
+
+describe('parseVariants edge cases — via getAbTestResults', () => {
+  it('treats a numeric variants field as no-variants (does not crash)', async () => {
+    // JSON.parse('12345') returns 12345 (number). Without Array.isArray guard,
+    // the subsequent .map() throws. Fixed in parseVariants to return [].
+    __seed('AbTests', [{ testName: 'bad-variants', variants: 12345, active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('bad-variants');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
+  });
+
+  it('handles null variants field without throwing', async () => {
+    __seed('AbTests', [{ testName: 'null-variants', variants: null, active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('null-variants');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
+  });
+
+  it('handles invalid JSON string variants without throwing', async () => {
+    __seed('AbTests', [{ testName: 'bad-json', variants: '{not valid json}', active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('bad-json');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
   });
 });

@@ -8,7 +8,7 @@
  *  - getFunnelReport: stage counts, drop-off rates, overall conversion
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
@@ -17,6 +17,13 @@ import {
   __setQueryError,
   __setUniqueField,
 } from './__mocks__/wix-data.js';
+
+vi.mock('backend/utils/rateLimit', () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ allowed: true }),
+}));
+
+import { checkRateLimit } from '../src/backend/utils/rateLimit.js';
+
 import {
   trackFunnelEvent,
   getFunnelReport,
@@ -133,6 +140,40 @@ describe('trackFunnelEvent', () => {
     const row = __getInserted('FunnelEvents')[0];
     expect(row.sessionId.length).toBeLessThanOrEqual(254);
   });
+
+  it('coerces non-string sessionId (number) to string via String()', async () => {
+    // Code does String(rawSession) — numeric sessionIds must work without crashing.
+    const result = await trackFunnelEvent('page_view', { sessionId: 12345 });
+    expect(result.success).toBe(true);
+    const row = __getInserted('FunnelEvents')[0];
+    expect(row.sessionId).toBe('12345');
+    expect(row._id).toBe('12345_page_view');
+  });
+
+  it('calls checkRateLimit with the correct collection and sessionId', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: true });
+    await trackFunnelEvent('page_view', BASE);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'FunnelEventRateLimit',
+      'sess-abc',
+      expect.objectContaining({ max: 10, windowMs: 60_000 }),
+    );
+  });
+
+  it('returns { success: false, error: "rate_limited" } when rate limit is exceeded', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: false });
+    const result = await trackFunnelEvent('page_view', BASE);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('rate_limited');
+    expect(__getInserted('FunnelEvents')).toHaveLength(0);
+  });
+
+  it('inserts the record when rate limit allows', async () => {
+    checkRateLimit.mockResolvedValueOnce({ allowed: true });
+    const result = await trackFunnelEvent('checkout_start', BASE);
+    expect(result.success).toBe(true);
+    expect(__getInserted('FunnelEvents')).toHaveLength(1);
+  });
 });
 
 // ── getFunnelReport ────────────────────────────────────────────────
@@ -212,5 +253,26 @@ describe('getFunnelReport', () => {
     expect(report.period.days).toBe(90);
     const { report: r2 } = await getFunnelReport({ days: 0 });
     expect(r2.period.days).toBe(1);
+  });
+
+  it('paginates beyond PAGE_SIZE — fetches all events when dataset exceeds 500', async () => {
+    // 501 events forces two fetches (500 + 1), covering the while-loop continuation branch
+    const largeDataset = Array.from({ length: 501 }, (_, i) => ({
+      stage: 'page_view', sessionId: `s${i}`, memberId: null,
+      timestamp: YESTERDAY, productId: 'p1',
+    }));
+    __seed('FunnelEvents', largeDataset);
+    const { report } = await getFunnelReport();
+    expect(report.stages.page_view.count).toBe(501);
+  });
+
+  it('filters by productId when provided', async () => {
+    __seed('FunnelEvents', [
+      { stage: 'page_view', sessionId: 's1', memberId: null, timestamp: YESTERDAY, productId: 'p1' },
+      { stage: 'page_view', sessionId: 's2', memberId: null, timestamp: YESTERDAY, productId: 'p2' },
+      { stage: 'page_view', sessionId: 's3', memberId: null, timestamp: YESTERDAY, productId: 'p1' },
+    ]);
+    const { report } = await getFunnelReport({ productId: 'p1' });
+    expect(report.stages.page_view.count).toBe(2);
   });
 });
