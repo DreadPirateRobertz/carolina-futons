@@ -142,11 +142,6 @@ export const deliverTrailPerk = webMethod(
   }
 );
 
-// Export for testing
-export const _VALID_PERK_IDS = VALID_PERK_IDS;
-export const _PERK_EMAIL_TEMPLATES = PERK_EMAIL_TEMPLATES;
-export const _TRAIL_PERKS_COLLECTION = TRAIL_PERKS_COLLECTION;
-
 // ── getAvailableTrailPerks [Anyone] ──────────────────────────────────────────
 
 export const getAvailableTrailPerks = webMethod(
