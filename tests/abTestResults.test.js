@@ -207,6 +207,21 @@ describe('getAbTestResults', () => {
     const result = await getAbTestResults('hero-cta');
     expect(result.success).toBe(false);
   });
+
+  it('paginates revenue aggregation beyond 500 records', async () => {
+    // 501 purchase rows forces the while-loop to continue past the first page,
+    // covering the FALSE branch of `if (purchasePage.items.length < PAGE) break`
+    __seed('AbTests', SAMPLE_TEST);
+    __seed('AbEvents', SAMPLE_EVENTS);
+    __seed('FunnelEvents', Array.from({ length: 501 }, (_, i) => ({
+      stage: 'purchase', experimentId: 'hero-cta', variantId: 'variant-b',
+      revenue: 1, sessionId: `ps${i}`,
+    })));
+    const result = await getAbTestResults('hero-cta');
+    expect(result.success).toBe(true);
+    const varB = result.results.variants.find(v => v.id === 'variant-b');
+    expect(varB.revenue).toBe(501);
+  });
 });
 
 // ── getAllAbTestResults ─────────────────────────────────────────────

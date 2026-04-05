@@ -245,4 +245,25 @@ describe('getFunnelReport', () => {
     const { report: r2 } = await getFunnelReport({ days: 0 });
     expect(r2.period.days).toBe(1);
   });
+
+  it('paginates beyond PAGE_SIZE — fetches all events when dataset exceeds 500', async () => {
+    // 501 events forces two fetches (500 + 1), covering the while-loop continuation branch
+    const largeDataset = Array.from({ length: 501 }, (_, i) => ({
+      stage: 'page_view', sessionId: `s${i}`, memberId: null,
+      timestamp: YESTERDAY, productId: 'p1',
+    }));
+    __seed('FunnelEvents', largeDataset);
+    const { report } = await getFunnelReport();
+    expect(report.stages.page_view.count).toBe(501);
+  });
+
+  it('filters by productId when provided', async () => {
+    __seed('FunnelEvents', [
+      { stage: 'page_view', sessionId: 's1', memberId: null, timestamp: YESTERDAY, productId: 'p1' },
+      { stage: 'page_view', sessionId: 's2', memberId: null, timestamp: YESTERDAY, productId: 'p2' },
+      { stage: 'page_view', sessionId: 's3', memberId: null, timestamp: YESTERDAY, productId: 'p1' },
+    ]);
+    const { report } = await getFunnelReport({ productId: 'p1' });
+    expect(report.stages.page_view.count).toBe(2);
+  });
 });
