@@ -1,0 +1,14 @@
+{
+  "running": true,
+  "pid": 2531289,
+  "port": 3308,
+  "started_at": "2026-04-05T01:49:00.000000000-06:00",
+  "data_dir": "/home/halworker85/gt/cfutons/.dolt-data",
+  "databases": [
+    "alpha",
+    "cf",
+    "cfutons_mobile",
+    "hq",
+    "teachers_lounge"
+  ]
+}
