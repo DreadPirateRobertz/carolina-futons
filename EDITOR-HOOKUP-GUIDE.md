@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v4.1 — Room Planner Canvas HtmlComponent (CF-eqc5.3, PR #948/949) — full postMessage protocol documented. v4.0: 19 new pages. Previous: v3.3 — BundleBuilder PDP + Loyalty Perks Widget.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-05 (v5.0 — v1.4.0 release. Video Reviews PDP grid (CF-ou66.3), Trail Progress Widget (CF-mcyh.3), Loyalty Perks section (CF-c6el.3), NPS Survey (CF-1mlj), Warranty page (CF-46ct), Virtual Consultation (CF-3k1u/CF-ym1x), BNPL Widget (CF-nqb5.1/CF-zpf), BundleBuilder PDP (CF-eqc5.2). Previous: v4.1 — Room Planner Canvas postMessage protocol.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -34,9 +34,9 @@ All required dashboard/API configurations are now in place for editor hookup:
 - `src/public/premiumMembershipHelpers.js` — Premium display helpers
 - Plans expect slugs `cf-plus-monthly` and `cf-plus-annual` (now created on staging)
 
-**Current Dev Release**: v1.0.0 (2026-03-17) — 26,942 tests, 638 files, 65 src files
-- Dev: [carolina-futons v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v1.0.0)
-- Velo: [carolina-futons-stage3-velo v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.0.0) (synced 2026-03-17)
+**Current Dev Release**: v1.4.0 (2026-04-05) — 38,123 tests, 1,034 files, 60 PRs (#916–#979)
+- Dev: [carolina-futons v1.4.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v1.4.0)
+- Velo: [carolina-futons-stage3-velo v1.4.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.4.0) (synced 2026-04-05)
 - Pages synced to Wix page ID format (19 pages)
 - 65 src files synced (backend, public, pages, styles, assets)
 - **New PDP modules**: ProductOptions (variant swatches), ProductFinancing (BNPL), ProductReviews (full review system), ProductSizeGuide (dimensions + room fit checker)
