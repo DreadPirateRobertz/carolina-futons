@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   extractSiteMemberMethods,
+  extractPlainExportedFunctions,
   checkMethodForIDOR,
   scanBackendFiles,
 } from '../scripts/check-member-ownership.mjs';
@@ -84,6 +85,81 @@ export const getItem = webMethod(Permissions.SiteMember, async (memberId) => {
   it('returns empty array for source with no webMethods', () => {
     const methods = extractSiteMemberMethods('const x = 1;');
     expect(methods).toHaveLength(0);
+  });
+});
+
+// ── extractPlainExportedFunctions ────────────────────────────────
+
+describe('extractPlainExportedFunctions', () => {
+  it('finds a plain async exported function', () => {
+    const source = `
+export async function getTrailProgress(memberId) {
+  return await wixData.query('Trails').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(1);
+    expect(fns[0].name).toBe('getTrailProgress');
+    expect(fns[0].params).toBe('memberId');
+    expect(fns[0].kind).toBe('plain');
+  });
+
+  it('finds a plain sync exported function', () => {
+    const source = `
+export function buildQuery(userId) {
+  return wixData.query('Data').eq('userId', userId);
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(1);
+    expect(fns[0].name).toBe('buildQuery');
+    expect(fns[0].params).toBe('userId');
+  });
+
+  it('extracts body correctly', () => {
+    const source = `
+export async function doStuff(memberId) {
+  const r = await wixData.query('X').eq('memberId', memberId).find();
+  return r;
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns[0].body).toContain('wixData.query');
+  });
+
+  it('ignores non-exported functions', () => {
+    const source = `
+async function helperFunc(memberId) {
+  return wixData.query('X').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(0);
+  });
+
+  it('finds multiple exported functions', () => {
+    const source = `
+export async function getA(memberId) {
+  return wixData.query('A').eq('memberId', memberId).find();
+}
+export function getB(userId) {
+  return wixData.query('B').eq('userId', userId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(2);
+    expect(fns.map(f => f.name)).toEqual(['getA', 'getB']);
+  });
+
+  it('returns lineNumber for each function', () => {
+    const source = `
+// line 2
+
+export async function getItem(memberId) {
+  return wixData.get('Items', memberId);
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns[0].lineNumber).toBeGreaterThan(1);
+  });
+
+  it('returns empty array for source with no exports', () => {
+    const fns = extractPlainExportedFunctions('const x = 1;');
+    expect(fns).toHaveLength(0);
   });
 });
 
@@ -190,6 +266,35 @@ describe('checkMethodForIDOR', () => {
     const result = checkMethodForIDOR(method);
     expect(result.reason).toContain('myDangerousMethod');
   });
+
+  it('labels plain export violations differently from webMethod violations', () => {
+    const plain = {
+      name: 'getTrailProgress',
+      params: 'memberId',
+      body: `{ return await wixData.query('Trails').eq('memberId', memberId).find(); }`,
+      kind: 'plain',
+    };
+    const webMethod = {
+      name: 'getCredits',
+      params: 'memberId',
+      body: `{ return await wixData.query('Credits').eq('memberId', memberId).find(); }`,
+    };
+    expect(checkMethodForIDOR(plain).reason).toContain('Plain export');
+    expect(checkMethodForIDOR(webMethod).reason).toContain('SiteMember webMethod');
+  });
+
+  it('does not flag plain export with getMember() ownership check', () => {
+    const method = {
+      name: 'getTrailProgress',
+      params: 'memberId',
+      body: `{
+        const member = await currentMember.getMember();
+        return await wixData.query('Trails').eq('memberId', memberId).find();
+      }`,
+      kind: 'plain',
+    };
+    expect(checkMethodForIDOR(method).violation).toBe(false);
+  });
 });
 
 // ── scanBackendFiles (integration) ───────────────────────────────
@@ -220,10 +325,26 @@ describe('scanBackendFiles', () => {
     expect(storeCredit).toHaveLength(0);
   });
 
-  it('produces zero violations in current codebase (all ownership checks present)', () => {
+  it('catches plain exported functions with IDOR risk (GH-990 gap)', () => {
     const violations = scanBackendFiles(BACKEND_DIR);
-    // Document violations if any exist — this test acts as a ratchet:
-    // if violations are 0 now, any new IDOR will fail CI
-    expect(violations).toHaveLength(0);
+    const plainViolations = violations.filter(v => v.reason.includes('Plain export'));
+    expect(plainViolations.length).toBeGreaterThan(0);
+  });
+
+  it('flags challengeService.web.js getTrailProgress as plain export violation', () => {
+    const violations = scanBackendFiles(BACKEND_DIR);
+    const match = violations.find(
+      v => v.file.includes('challengeService') && v.name === 'getTrailProgress'
+    );
+    expect(match).toBeDefined();
+    expect(match.reason).toContain('Plain export');
+  });
+
+  it('ratchet: known violation count (15 plain-export violations pending remediation)', () => {
+    const violations = scanBackendFiles(BACKEND_DIR);
+    // GH-990: 15 plain-export violations found after extending scanner.
+    // This ratchet prevents new violations from sneaking in.
+    // As each is fixed with getMember() ownership checks, lower this number.
+    expect(violations).toHaveLength(15);
   });
 });
