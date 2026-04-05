@@ -271,8 +271,8 @@ export const getSurveyResponseAggregation = webMethod(
 
     try {
       // Fetch all scheduled surveys (total) and completed ones for the period.
-      // Both queries anchor on sentAt so numerator and denominator share the same
-      // cohort (surveys sent in the window), avoiding mixed date-axis skew.
+      // Both queries anchor on sentAt so the denominator and numerator share the
+      // same cohort (surveys sent in the window), avoiding mixed date-axis skew.
       const [completedResult, scheduledResult] = await Promise.all([
         wixData.query(SURVEY_COLLECTION)
           .ge('sentAt', since)

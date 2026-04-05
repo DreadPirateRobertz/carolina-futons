@@ -136,7 +136,7 @@ export const unsubscribe = webMethod(
  * Get all active subscribers for a product.
  *
  * @param {string} productId
- * @returns {Promise<{success: boolean, subscribers?: Array<{email: string, productId: string, subscribedAt: Date, subscriberDeviceToken: string|null}>, count?: number, error?: string}>}
+ * @returns {Promise<{success: boolean, subscribers?: Array<{email: string, productId: string, subscribedAt: Date}>, count?: number, error?: string}>}
  */
 export const getSubscribers = webMethod(
   Permissions.Anyone,
@@ -155,7 +155,7 @@ export const getSubscribers = webMethod(
         memberId: i.memberId ?? null,
         productId: i.productId,
         subscribedAt: i.subscribedAt,
-        subscriberDeviceToken: i.subscriberDeviceToken ?? null,
+        // deviceToken omitted — not safe to expose under Permissions.Anyone
       }));
 
       return { success: true, subscribers, count: subscribers.length };
