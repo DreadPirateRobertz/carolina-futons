@@ -85,7 +85,7 @@ export const submitVideoReview = webMethod(
       if (!member?._id) return { success: false, error: 'Authentication required.' };
 
       const cleanCaption = typeof caption === 'string'
-        ? caption.slice(0, MAX_CAPTION)
+        ? sanitize(caption, MAX_CAPTION)
         : '';
 
       const record = await wixData.insert(VIDEO_REVIEWS_COLLECTION, {
