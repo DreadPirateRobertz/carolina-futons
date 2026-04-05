@@ -220,10 +220,8 @@ describe('getBackend load failure', () => {
     vi.resetModules();
 
     const mockLogError = vi.fn();
-    vi.doMock('backend/errorMonitoring.web', () => ({ logError: mockLogError }));
-    vi.doMock('backend/conversionFunnel.web', () => {
-      throw new Error('backend unavailable');
-    });
+    vi.doMock('backend/errorMonitoring.web', () => ({ logError: mockLogError })); // vi-domock-legacy
+    vi.doMock('backend/conversionFunnel.web', () => { throw new Error('backend unavailable'); }); // vi-domock-legacy
 
     const { initFunnelTracker: freshInit } = await import('../src/public/funnelTracker.js');
 
