@@ -80,23 +80,47 @@ function getGoogleCategoryId(collections) {
   return '436';
 }
 
-// Get custom product type from collections
+// Get custom product type hierarchy from collections
+// Follows Google's recommended product_type format: top-level > mid > leaf
 function getProductType(collections) {
   if (!collections) return 'Furniture';
   const collArr = Array.isArray(collections) ? collections : [collections];
 
-  if (collArr.some(c => c.includes('murphy'))) return 'Beds > Murphy Cabinet Beds';
-  if (collArr.some(c => c.includes('platform'))) return 'Beds > Platform Beds';
-  if (collArr.some(c => c.includes('mattress'))) return 'Futon Mattresses';
-  if (collArr.some(c => c.includes('wall-hugger'))) return 'Futon Frames > Wall Hugger';
-  if (collArr.some(c => c.includes('unfinished'))) return 'Futon Frames > Unfinished Wood';
-  if (collArr.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
-  if (collArr.some(c => c.includes('cover'))) return 'Futon Covers';
-  if (collArr.some(c => c.includes('outdoor'))) return 'Outdoor Furniture';
-  if (collArr.some(c => c.includes('pillow'))) return 'Pillows & Bolsters';
-  if (collArr.some(c => c.includes('log'))) return 'Futon Frames > Log Futon';
-  if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frames';
+  if (collArr.some(c => c.includes('murphy'))) return 'Furniture > Beds > Murphy Cabinet Beds';
+  if (collArr.some(c => c.includes('platform'))) return 'Furniture > Beds > Platform Beds';
+  if (collArr.some(c => c.includes('mattress'))) return 'Furniture > Futon Mattresses';
+  if (collArr.some(c => c.includes('wall-hugger'))) return 'Furniture > Futon Frames > Wall Hugger Futons';
+  if (collArr.some(c => c.includes('unfinished'))) return 'Furniture > Futon Frames > Unfinished Wood';
+  if (collArr.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Furniture > Bedroom Furniture';
+  if (collArr.some(c => c.includes('cover'))) return 'Furniture > Futon Covers';
+  if (collArr.some(c => c.includes('outdoor'))) return 'Furniture > Outdoor Furniture';
+  if (collArr.some(c => c.includes('pillow'))) return 'Furniture > Pillows & Bolsters';
+  if (collArr.some(c => c.includes('log'))) return 'Furniture > Futon Frames > Log Futon';
+  if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return 'Furniture > Futon Frames';
   return 'Furniture';
+}
+
+// Validate GTIN format: must be 8, 12, 13, or 14 digits
+function isValidGtin(gtin) {
+  if (!gtin || typeof gtin !== 'string') return false;
+  const digits = gtin.trim().replace(/\D/g, '');
+  return [8, 12, 13, 14].includes(digits.length);
+}
+
+// Format sale_price_effective_date from start/end ISO strings or a pre-formatted string.
+// Returns GMC format: "YYYY-MM-DDThh:mm:ssZ/YYYY-MM-DDThh:mm:ssZ" or ''
+function formatSalePriceEffectiveDate(product) {
+  if (product.salePriceEffectiveDate && typeof product.salePriceEffectiveDate === 'string') {
+    return product.salePriceEffectiveDate.trim();
+  }
+  if (product.saleStartDate && product.saleEndDate) {
+    const start = new Date(product.saleStartDate);
+    const end = new Date(product.saleEndDate);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      return `${start.toISOString()}/${end.toISOString()}`;
+    }
+  }
+  return '';
 }
 
 // Escape XML special characters
@@ -160,6 +184,11 @@ function formatProductItem(product) {
   // Add sale price if discounted
   if (product.discountedPrice != null && product.discountedPrice < product.price) {
     item += `\n      <g:sale_price>${formatPrice(product.discountedPrice)}</g:sale_price>`;
+    // Add sale_price_effective_date when a date range is available
+    const saleDate = formatSalePriceEffectiveDate(product);
+    if (saleDate) {
+      item += `\n      <g:sale_price_effective_date>${escapeXml(saleDate)}</g:sale_price_effective_date>`;
+    }
   }
 
   // Add MPN (use SKU as MPN since furniture typically lacks GTINs)
@@ -167,8 +196,20 @@ function formatProductItem(product) {
     item += `\n      <g:mpn>${escapeXml(sku)}</g:mpn>`;
   }
 
-  // Most furniture items won't have GTINs
-  item += `\n      <g:identifier_exists>false</g:identifier_exists>`;
+  // Add GTIN when present (some products have UPC/EAN barcodes)
+  const gtin = product.gtin ? String(product.gtin).trim() : '';
+  if (isValidGtin(gtin)) {
+    item += `\n      <g:gtin>${escapeXml(gtin)}</g:gtin>`;
+    item += `\n      <g:identifier_exists>true</g:identifier_exists>`;
+  } else {
+    // Most furniture items won't have GTINs
+    item += `\n      <g:identifier_exists>false</g:identifier_exists>`;
+  }
+
+  // Add shipping weight when available
+  if (product.weight != null && Number(product.weight) > 0) {
+    item += `\n      <g:shipping_weight>${Number(product.weight).toFixed(2)} lb</g:shipping_weight>`;
+  }
 
   // Add additional images if available
   if (product.mediaItems && Array.isArray(product.mediaItems)) {
@@ -259,23 +300,32 @@ export const getFeedData = webMethod(
         skip += pageSize;
       }
 
-      return allProducts.map(product => ({
-        id: product._id,
-        title: product.name,
-        description: stripHtml(product.description || ''),
-        link: `${SITE_URL}/product-page/${product.slug}`,
-        imageLink: getImageUrl(product.mainMedia),
-        price: product.price,
-        salePrice: product.discountedPrice != null ? product.discountedPrice : null,
-        availability: product.inStock !== false ? 'in_stock' : 'out_of_stock',
-        brand: getBrand(product),
-        condition: 'new',
-        googleProductCategory: getGoogleCategory(product.collections),
-        productType: getProductType(product.collections),
-        sku: product.sku || '',
-        mpn: product.sku || '',
-        identifierExists: false,
-      }));
+      return allProducts.map(product => {
+        const gtin = product.gtin ? String(product.gtin).trim() : '';
+        const hasGtin = isValidGtin(gtin);
+        return {
+          id: product._id,
+          title: product.name,
+          description: stripHtml(product.description || ''),
+          link: `${SITE_URL}/product-page/${product.slug}`,
+          imageLink: getImageUrl(product.mainMedia),
+          price: product.price,
+          salePrice: product.discountedPrice != null ? product.discountedPrice : null,
+          salePriceEffectiveDate: formatSalePriceEffectiveDate(product) || null,
+          availability: product.inStock !== false ? 'in_stock' : 'out_of_stock',
+          brand: getBrand(product),
+          condition: 'new',
+          googleProductCategory: getGoogleCategory(product.collections),
+          productType: getProductType(product.collections),
+          sku: product.sku || '',
+          mpn: product.sku || '',
+          gtin: hasGtin ? gtin : null,
+          identifierExists: hasGtin,
+          shippingWeight: product.weight != null && Number(product.weight) > 0
+            ? Number(product.weight)
+            : null,
+        };
+      });
     } catch (err) {
       console.error('Error generating feed data:', err);
       return [];
