@@ -168,28 +168,43 @@ describe('getMemberDeliveredPerks', () => {
   beforeEach(() => {
     mockItems.length = 0;
     mockGetMember.mockClear();
+    mockGetMember.mockResolvedValue({ _id: 'm1' });
   });
 
-  it('returns empty array for no deliveries', async () => {
-    mockGetMember.mockResolvedValueOnce({ _id: 'm1' });
-    const result = await getMemberDeliveredPerks('m1');
-    expect(result).toEqual([]);
+  it('returns success with tier data for authenticated member', async () => {
+    const result = await getMemberDeliveredPerks();
+    expect(result.success).toBe(true);
+    expect(result).toHaveProperty('currentTierName');
+    expect(result).toHaveProperty('unlockedPerks');
+    expect(result).toHaveProperty('totalPoints');
+    expect(Array.isArray(result.unlockedPerks)).toBe(true);
   });
 
-  it('returns empty array for falsy memberId', async () => {
-    const result = await getMemberDeliveredPerks(null);
-    expect(result).toEqual([]);
+  it('returns not-authenticated error when getMember returns null', async () => {
+    mockGetMember.mockResolvedValueOnce(null);
+    const result = await getMemberDeliveredPerks();
+    expect(result).toEqual({ success: false, error: 'Not authenticated' });
   });
 
-  it('returns forbidden error when caller does not match memberId', async () => {
-    mockGetMember.mockResolvedValueOnce({ _id: 'other-member' });
-    const result = await getMemberDeliveredPerks('m1');
-    expect(result).toEqual({ error: 'forbidden' });
+  it('returns not-authenticated error when getMember throws', async () => {
+    mockGetMember.mockRejectedValueOnce(new Error('session expired'));
+    const result = await getMemberDeliveredPerks();
+    expect(result).toEqual({ success: false, error: 'Not authenticated' });
   });
 
-  it('returns empty array on query error (graceful degradation)', async () => {
-    mockGetMember.mockRejectedValueOnce(new Error('network error'));
-    const result = await getMemberDeliveredPerks('m1');
-    expect(result).toEqual([]);
+  it('returns failed-to-load error on query error', async () => {
+    mockQuery.mockImplementationOnce(() => ({
+      eq: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn(async () => { throw new Error('db error'); }),
+    }));
+    const result = await getMemberDeliveredPerks();
+    expect(result).toEqual({ success: false, error: 'Failed to load perks' });
+  });
+
+  it('totalPoints defaults to 0 when member has no points record', async () => {
+    const result = await getMemberDeliveredPerks();
+    expect(result.success).toBe(true);
+    expect(result.totalPoints).toBe(0);
   });
 });
