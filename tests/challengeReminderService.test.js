@@ -8,12 +8,14 @@
  * - null notifiedAt: always eligible (never been notified)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __reset, __seed, __getUpdated, __setQueryError, __setUpdateError, __getLastGetOptions, __getLastUpdateOptions } from './__mocks__/wix-data.js';
 import {
   shouldSendChallengeReminder,
   getChallengesNeedingReminder,
   markReminderSent,
+  sendBatchReminders,
+  getChallengesNeedingReminderById,
 } from '../src/backend/challengeReminderService.web.js';
 
 const NOW = new Date('2026-03-24T12:00:00Z').getTime();
@@ -249,5 +251,167 @@ describe('markReminderSent — suppressAuth', () => {
     // No seed — get returns null, update must not be called
     await markReminderSent('nonexistent', NOW);
     expect(__getLastUpdateOptions('MemberChallengeProgress')).toBeUndefined();
+  });
+});
+
+// ── Edge case 1: reminder skipped when member already completed challenge ──────
+
+describe('getChallengesNeedingReminder — completed challenge skipped', () => {
+  it('excludes a record that has completedAt set', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-done', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 3, targetCount: 3, completedAt: '2026-03-20T00:00:00Z', notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result).toHaveLength(0);
+  });
+
+  it('includes a matching record only when completedAt is null', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-done', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 3, targetCount: 3, completedAt: '2026-03-20T00:00:00Z', notifiedAt: null },
+      { _id: 'mcp-open', memberId: 'mem-2', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result.map(r => r._id)).toEqual(['mcp-open']);
+  });
+});
+
+// ── Edge case 2: reminder skipped when challenge deadline has passed ───────────
+
+describe('getChallengesNeedingReminder — deadline passed', () => {
+  it('excludes a record whose deadlineAt is in the past', async () => {
+    const pastDeadline = new Date(NOW - MS_PER_DAY).toISOString(); // yesterday
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null, deadlineAt: pastDeadline },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result).toHaveLength(0);
+  });
+
+  it('includes a record whose deadlineAt is in the future', async () => {
+    const futureDeadline = new Date(NOW + MS_PER_DAY).toISOString(); // tomorrow
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null, deadlineAt: futureDeadline },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result.map(r => r._id)).toContain('mcp-1');
+  });
+
+  it('includes a record with no deadlineAt field', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result.map(r => r._id)).toContain('mcp-1');
+  });
+});
+
+// ── Edge case 3: reminder suppressed when member opted out ────────────────────
+
+describe('getChallengesNeedingReminder — reminderOptOut suppression', () => {
+  it('excludes a record with reminderOptOut: true', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null, reminderOptOut: true },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result).toHaveLength(0);
+  });
+
+  it('includes a record with reminderOptOut: false', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null, reminderOptOut: false },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result.map(r => r._id)).toContain('mcp-1');
+  });
+
+  it('includes a record with no reminderOptOut field', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 2, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminder('daily', NOW);
+    expect(result.map(r => r._id)).toContain('mcp-1');
+  });
+});
+
+// ── Edge case 4: sendBatchReminders — partial failure ─────────────────────────
+
+describe('sendBatchReminders — partial failure handling', () => {
+  it('counts successful sends even when some fail', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+      { _id: 'mcp-2', memberId: 'mem-2', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+      { _id: 'mcp-3', memberId: 'mem-3', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const sendFn = vi.fn()
+      .mockResolvedValueOnce(undefined)           // mcp-1: success
+      .mockRejectedValueOnce(new Error('send failed'))  // mcp-2: failure
+      .mockResolvedValueOnce(undefined);           // mcp-3: success
+    const result = await sendBatchReminders('daily', sendFn, NOW);
+    expect(result.sent).toBe(2);
+    expect(result.failed).toBe(1);
+  });
+
+  it('marks only successfully sent records as notified', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+      { _id: 'mcp-2', memberId: 'mem-2', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const sendFn = vi.fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('send failed'));
+    await sendBatchReminders('daily', sendFn, NOW);
+    const updated = __getUpdated('MemberChallengeProgress');
+    expect(updated.map(r => r._id)).toContain('mcp-1');
+    expect(updated.map(r => r._id)).not.toContain('mcp-2');
+  });
+
+  it('returns { sent: 0, failed: 0 } when no eligible records exist', async () => {
+    // Empty collection — nothing eligible
+    const sendFn = vi.fn();
+    const result = await sendBatchReminders('daily', sendFn, NOW);
+    expect(result).toEqual({ sent: 0, failed: 0 });
+    expect(sendFn).not.toHaveBeenCalled();
+  });
+});
+
+// ── Edge case 5: getChallengesNeedingReminderById — challengeId sanitization ──
+
+describe('getChallengesNeedingReminderById — challengeId validation', () => {
+  it('returns [] for an empty challengeId', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminderById('', 'daily', NOW);
+    expect(result).toEqual([]);
+  });
+
+  it('returns [] for a challengeId with disallowed characters', async () => {
+    const result = await getChallengesNeedingReminderById('<script>alert(1)</script>', 'daily', NOW);
+    expect(result).toEqual([]);
+  });
+
+  it('returns [] for a null challengeId', async () => {
+    const result = await getChallengesNeedingReminderById(null, 'daily', NOW);
+    expect(result).toEqual([]);
+  });
+
+  it('returns only records matching the given challengeId', async () => {
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-1', memberId: 'mem-1', challengeId: 'ch-first-purchase', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+      { _id: 'mcp-2', memberId: 'mem-2', challengeId: 'ch-other', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+    ]);
+    const result = await getChallengesNeedingReminderById('ch-first-purchase', 'daily', NOW);
+    expect(result.map(r => r._id)).toEqual(['mcp-1']);
+  });
+
+  it('applies the same eligibility rules as getChallengesNeedingReminder', async () => {
+    const pastDeadline = new Date(NOW - MS_PER_DAY).toISOString();
+    __seed('MemberChallengeProgress', [
+      { _id: 'mcp-eligible',  memberId: 'mem-1', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null },
+      { _id: 'mcp-deadline',  memberId: 'mem-2', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null, deadlineAt: pastDeadline },
+      { _id: 'mcp-optout',    memberId: 'mem-3', challengeId: 'ch-1', progressValue: 1, targetCount: 3, completedAt: null, notifiedAt: null, reminderOptOut: true },
+    ]);
+    const result = await getChallengesNeedingReminderById('ch-1', 'daily', NOW);
+    expect(result.map(r => r._id)).toEqual(['mcp-eligible']);
   });
 });
