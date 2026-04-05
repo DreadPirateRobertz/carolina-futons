@@ -57,6 +57,18 @@ export const VALID_VIDEO_URI_SCHEMES = [
 const MAX_CAPTION = 200;
 const VALID_ACTIONS = ['approved', 'rejected'];
 
+/**
+ * Build a display name from member profile.
+ * Shows "FirstName L." format for privacy.
+ */
+function buildReviewerName(member) {
+  const first = member.contactDetails?.firstName || '';
+  const last = member.contactDetails?.lastName || '';
+  if (first && last) return `${first} ${last.charAt(0)}.`;
+  if (first) return first;
+  return 'Customer';
+}
+
 // ── submitVideoReview ─────────────────────────────────────────────────────────
 
 /**
@@ -89,12 +101,13 @@ export const submitVideoReview = webMethod(
         : '';
 
       const record = await wixData.insert(VIDEO_REVIEWS_COLLECTION, {
-        productId:   cleanProductId,
-        memberId:    member._id,
-        mediaUrl:    cleanUrl,
-        caption:     cleanCaption,
-        status:      'pending',
-        submittedAt: new Date(),
+        productId:    cleanProductId,
+        memberId:     member._id,
+        mediaUrl:     cleanUrl,
+        caption:      cleanCaption,
+        reviewerName: sanitize(buildReviewerName(member), 50),
+        status:       'pending',
+        submittedAt:  new Date(),
       });
 
       return { success: true, reviewId: record._id };
