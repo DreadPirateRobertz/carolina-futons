@@ -15,7 +15,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_NAMES, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
+import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERKS, TIER_PERK_CATALOG, TIER_NAMES, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
@@ -245,30 +245,31 @@ export const getMemberDeliveredPerks = webMethod(Permissions.SiteMember, async (
     const idx = tierIndex(currentTierName);
     const currentTierKey = tierKey(currentTierName);
 
-    // Collect all perks for tiers at or below the current tier (cumulative).
-    // TIER_PERKS is a plain object keyed by tier display name; TIER_NAMES
-    // provides the ordered array for iteration.
+    // Collect all display perks for tiers at or below the current tier (cumulative).
+    // TIER_PERK_CATALOG is the ordered array of display-layer perks (has perkId,
+    // label, description, icon). TIER_PERKS is the delivery-grants object — different.
     const unlockedPerks = [];
     for (let i = 0; i <= idx; i++) {
-      const tn = TIER_NAMES[i].name;
-      const tk = tierKey(tn);
-      for (const perk of (TIER_PERKS[tn] ?? [])) {
+      const group = TIER_PERK_CATALOG[i];
+      for (const perk of (group?.perks ?? [])) {
         unlockedPerks.push({
-          tierKey: tk,
-          tierName: tn,
-          perkId: perk.type,
+          tierKey: group.tierKey,
+          tierName: group.tierName,
+          perkId: perk.perkId,
           label: perk.label,
+          description: perk.description,
+          icon: perk.icon,
         });
       }
     }
 
     // Next tier teaser
-    const nextTierEntry = idx < TIER_NAMES.length - 1 ? TIER_NAMES[idx + 1] : null;
-    const nextTierName = nextTierEntry?.name ?? null;
-    const nextTierKey = nextTierName ? tierKey(nextTierName) : null;
+    const nextGroup = idx < TIER_PERK_CATALOG.length - 1 ? TIER_PERK_CATALOG[idx + 1] : null;
+    const nextTierName = nextGroup?.tierName ?? null;
+    const nextTierKey = nextGroup?.tierKey ?? null;
     const nextTierThreshold = nextTierKey ? (TIER_THRESHOLDS[nextTierKey] ?? null) : null;
-    const nextTierPerks = nextTierName
-      ? (TIER_PERKS[nextTierName] ?? []).map(p => ({ perkId: p.type, label: p.label }))
+    const nextTierPerks = nextGroup
+      ? nextGroup.perks.map(p => ({ perkId: p.perkId, label: p.label, description: p.description, icon: p.icon }))
       : null;
 
     return {
