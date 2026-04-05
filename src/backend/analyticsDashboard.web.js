@@ -261,6 +261,88 @@ export const getRevenueAttribution = webMethod(
   }
 );
 
+// ── NPS Dashboard Section ───────────────────────────────────────────
+
+/**
+ * Get NPS survey stats formatted for the analytics dashboard.
+ * Pulls completed SurveyResponses within the lookback window and returns
+ * a dashboard-ready object with score, tier breakdown, and response count.
+ *
+ * @function getNpsDashboardSection
+ * @param {number} [days=90] - Lookback window in days (1–365)
+ * @returns {Promise<{npsScore: number|null, count: number, promoterPct: number, detractorPct: number, periodDays: number}>}
+ * @permission Admin
+ */
+export const getNpsDashboardSection = webMethod(
+  Permissions.Admin,
+  async (days = 90) => {
+    const lookback = (Number.isFinite(Number(days)))
+      ? Math.min(Math.max(1, Number(days)), 365)
+      : 90;
+
+    const since = new Date(Date.now() - lookback * 24 * 60 * 60 * 1000);
+
+    try {
+      const result = await wixData.query('SurveyResponses')
+        .ge('completedAt', since)
+        .isNotEmpty('completedAt')
+        .limit(1000)
+        .find();
+
+      const responses = result.items;
+      if (responses.length === 0) {
+        return {
+          npsScore: null,
+          count: 0,
+          promoterPct: 0,
+          detractorPct: 0,
+          passivePct: 0,
+          promoters: 0,
+          passives: 0,
+          detractors: 0,
+          periodDays: lookback,
+        };
+      }
+
+      let promoters = 0;
+      let passives = 0;
+      let detractors = 0;
+      for (const r of responses) {
+        const s = r.npsScore;
+        if (s >= 9) promoters++;
+        else if (s >= 7) passives++;
+        else detractors++;
+      }
+
+      const total = responses.length;
+      return {
+        npsScore: Math.round(((promoters - detractors) / total) * 100),
+        count: total,
+        promoters,
+        passives,
+        detractors,
+        promoterPct: Math.round((promoters / total) * 100),
+        passivePct: Math.round((passives / total) * 100),
+        detractorPct: Math.round((detractors / total) * 100),
+        periodDays: lookback,
+      };
+    } catch (err) {
+      console.error('[analyticsDashboard] Error fetching NPS data:', err);
+      return {
+        npsScore: null,
+        count: 0,
+        promoterPct: 0,
+        passivePct: 0,
+        detractorPct: 0,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+        periodDays: lookback,
+      };
+    }
+  }
+);
+
 // ── Dashboard Summary ───────────────────────────────────────────────
 
 /**
@@ -275,11 +357,12 @@ export const getDashboardSummary = webMethod(
   Permissions.Admin,
   async (days = 30) => {
     try {
-      const [funnel, categories, emailMetrics, revenue] = await Promise.all([
+      const [funnel, categories, emailMetrics, revenue, nps] = await Promise.all([
         getConversionFunnel(days),
         getCategoryPerformance(),
         getEmailFunnelMetrics(days),
         getRevenueAttribution(5),
+        getNpsDashboardSection(90),
       ]);
 
       return {
@@ -290,6 +373,8 @@ export const getDashboardSummary = webMethod(
         topCategory: categories[0]?.category || 'none',
         emailsSent: Object.values(emailMetrics.metrics).reduce((sum, m) => sum + m.sent, 0),
         totalRevenue: revenue.totalAttributedRevenue,
+        npsScore: nps.npsScore,
+        npsResponseCount: nps.count,
         period: `${days} days`,
       };
     } catch (err) {
@@ -302,6 +387,8 @@ export const getDashboardSummary = webMethod(
         topCategory: 'none',
         emailsSent: 0,
         totalRevenue: 0,
+        npsScore: null,
+        npsResponseCount: 0,
         period: `${days} days`,
       };
     }

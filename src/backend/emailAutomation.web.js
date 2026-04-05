@@ -290,6 +290,16 @@ export function wixEcom_onOrderDelivered(event) {
   const primarySlug = extractPrimarySlug(lineItems);
   triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
     .catch(err => logError('wixEcom_onOrderDelivered:reviewReward', err));
+
+  // CF-1mlj: Queue 7-day NPS survey — fires after delivery, non-fatal
+  import('backend/surveyService.web')
+    .then(({ scheduleSurvey }) => scheduleSurvey({
+      memberId: contactId,
+      orderId: order._id || String(orderNumber),
+      email,
+      deliveredAt: new Date(),
+    }))
+    .catch(err => logError('wixEcom_onOrderDelivered:survey', err));
 }
 
 /**
