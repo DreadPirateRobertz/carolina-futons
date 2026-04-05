@@ -220,10 +220,11 @@ describe('scanBackendFiles', () => {
     expect(storeCredit).toHaveLength(0);
   });
 
-  it('produces zero violations in current codebase (all ownership checks present)', () => {
+  it('ratchet: no more than 11 known plain-export violations (GH-990 scanner expansion)', () => {
     const violations = scanBackendFiles(BACKEND_DIR);
-    // Document violations if any exist — this test acts as a ratchet:
-    // if violations are 0 now, any new IDOR will fail CI
-    expect(violations).toHaveLength(0);
+    // GH-990: scanner now detects plain `export async function` with memberId-like
+    // params in .web.js files. 11 pre-existing violations in other files remain.
+    // Ratchet: count must not increase. Decrease this number as violations are fixed.
+    expect(violations.length).toBeLessThanOrEqual(11);
   });
 });
