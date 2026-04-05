@@ -14,6 +14,7 @@
  *   deliverTrailPerk(memberId, perkId) — called on trail completion
  */
 
+import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { logError } from 'backend/utils/errorHandler';
 
@@ -61,7 +62,9 @@ const VALID_PERK_IDS = new Set(Object.keys(PERK_EMAIL_TEMPLATES));
  * @param {string} recipientEmail
  * @returns {Promise<{ success: boolean, alreadyDelivered?: boolean, couponCode?: string, error?: string }>}
  */
-export async function deliverTrailPerk(memberId, perkId, recipientEmail) {
+export const deliverTrailPerk = webMethod(
+  Permissions.Admin,
+  async (memberId, perkId, recipientEmail) => {
   if (!memberId || typeof memberId !== 'string') {
     return { success: false, error: 'memberId is required.' };
   }
@@ -134,10 +137,46 @@ export async function deliverTrailPerk(memberId, perkId, recipientEmail) {
     logError(`trailPerkService — email queue insert failed for ${memberId} / ${perkId}`, err);
   }
 
-  return { success: true, alreadyDelivered: false, couponCode };
-}
+    return { success: true, alreadyDelivered: false, couponCode };
+  }
+);
 
 // Export for testing
 export const _VALID_PERK_IDS = VALID_PERK_IDS;
 export const _PERK_EMAIL_TEMPLATES = PERK_EMAIL_TEMPLATES;
 export const _TRAIL_PERKS_COLLECTION = TRAIL_PERKS_COLLECTION;
+
+// ── getTrailPerkStatus ────────────────────────────────────────────────────────
+
+/**
+ * Returns all trail perks delivered to a member.
+ *
+ * @param {string} memberId
+ * @returns {Promise<{ success: boolean, perks: Array<{perkId: string, deliveredAt: Date, couponCode?: string}>, error?: string }>}
+ */
+export const getTrailPerkStatus = webMethod(
+  Permissions.SiteMember,
+  async (memberId) => {
+    if (!memberId || typeof memberId !== 'string') {
+      return { success: false, perks: [], error: 'memberId is required.' };
+    }
+
+    try {
+      const result = await wixData
+        .query(TRAIL_PERKS_COLLECTION)
+        .eq('memberId', memberId)
+        .find({ suppressAuth: true });
+
+      const perks = result.items.map(r => ({
+        perkId:      r.perkId,
+        deliveredAt: r.deliveredAt,
+        ...(r.couponCode ? { couponCode: r.couponCode } : {}),
+      }));
+
+      return { success: true, perks };
+    } catch (err) {
+      logError(`trailPerkService — getTrailPerkStatus failed for ${memberId}`, err);
+      return { success: false, perks: [], error: 'Failed to load perk status.' };
+    }
+  }
+);
