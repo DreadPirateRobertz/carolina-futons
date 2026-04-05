@@ -24,12 +24,19 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   __reset,
   __seed,
+  __getUpdated,
   __setQueryError,
   __getLastFindOptions,
 } from 'wix-data';
+import {
+  __reset as resetCrm,
+  __getEmailLog,
+  __failNextEmail,
+} from './__mocks__/wix-crm-backend.js';
 
 import {
   scanLifecycleMilestones,
+  runDailyChallengeReminders,
   _DAY7_WINDOW,
   _MONTH1_WINDOW,
   _YEAR1_WINDOW,
@@ -66,6 +73,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-01-15T12:00:00.000Z'));
   __reset();
+  resetCrm();
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -479,5 +487,158 @@ describe('error resilience', () => {
     __setQueryError('Stores/Orders', new Error('timeout'));
     await scanLifecycleMilestones();
     expect(console.error).toHaveBeenCalled();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// runDailyChallengeReminders — cron wiring (GH-994)
+// ═════════════════════════════════════════════════════════════════════════════
+
+/** Builds a MemberChallengeProgress record eligible for a daily reminder. */
+function challengeRecord(overrides = {}) {
+  return {
+    _id: `mcp-${Math.random().toString(36).slice(2, 6)}`,
+    memberId: 'mem-1',
+    challengeId: 'ch-weekly',
+    progressValue: 2,
+    targetCount: 5,
+    completedAt: null,
+    notifiedAt: null,
+    ...overrides,
+  };
+}
+
+describe('runDailyChallengeReminders — no eligible records', () => {
+  it('returns success:true with sent:0 when collection is empty', async () => {
+    __seed('MemberChallengeProgress', []);
+    const result = await runDailyChallengeReminders();
+    expect(result).toEqual({ success: true, sent: 0, failed: 0 });
+  });
+
+  it('sends no emails when collection is empty', async () => {
+    __seed('MemberChallengeProgress', []);
+    await runDailyChallengeReminders();
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+});
+
+describe('runDailyChallengeReminders — eligible records present', () => {
+  it('returns sent count matching eligible record count', async () => {
+    const rec1 = challengeRecord({ _id: 'mcp-a', memberId: 'mem-1' });
+    const rec2 = challengeRecord({ _id: 'mcp-b', memberId: 'mem-2' });
+    __seed('MemberChallengeProgress', [rec1, rec2]);
+    const result = await runDailyChallengeReminders();
+    expect(result).toEqual({ success: true, sent: 2, failed: 0 });
+  });
+
+  it('sends challenge_reminder email for each eligible record', async () => {
+    const rec = challengeRecord({ _id: 'mcp-a', memberId: 'mem-42', challengeId: 'ch-spring' });
+    __seed('MemberChallengeProgress', [rec]);
+    await runDailyChallengeReminders();
+    const log = __getEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].templateId).toBe('challenge_reminder');
+    expect(log[0].memberId).toBe('mem-42');
+  });
+
+  it('passes challengeId, progressValue, targetCount as email variables', async () => {
+    const rec = challengeRecord({
+      _id: 'mcp-a',
+      memberId: 'mem-1',
+      challengeId: 'ch-spring',
+      progressValue: 3,
+      targetCount: 7,
+    });
+    __seed('MemberChallengeProgress', [rec]);
+    await runDailyChallengeReminders();
+    const vars = __getEmailLog()[0].options.variables;
+    expect(vars.challengeId).toBe('ch-spring');
+    expect(vars.progressValue).toBe('3');
+    expect(vars.targetCount).toBe('7');
+  });
+
+  it('marks each sent record as notified (updates notifiedAt)', async () => {
+    const rec = challengeRecord({ _id: 'mcp-a', memberId: 'mem-1' });
+    __seed('MemberChallengeProgress', [rec]);
+    await runDailyChallengeReminders();
+    const updated = __getUpdated('MemberChallengeProgress');
+    expect(updated).toHaveLength(1);
+    expect(updated[0]._id).toBe('mcp-a');
+    expect(updated[0].notifiedAt).toBeTruthy();
+  });
+
+  it('excludes already-completed challenges', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-done', completedAt: '2026-01-10T00:00:00Z' }),
+    ]);
+    const result = await runDailyChallengeReminders();
+    expect(result).toEqual({ success: true, sent: 0, failed: 0 });
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+
+  it('excludes records with zero progress', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-zero', progressValue: 0 }),
+    ]);
+    const result = await runDailyChallengeReminders();
+    expect(result).toEqual({ success: true, sent: 0, failed: 0 });
+  });
+});
+
+describe('runDailyChallengeReminders — partial email failure', () => {
+  it('counts failure and continues sending remaining records', async () => {
+    const rec1 = challengeRecord({ _id: 'mcp-a', memberId: 'mem-1' });
+    const rec2 = challengeRecord({ _id: 'mcp-b', memberId: 'mem-2' });
+    __seed('MemberChallengeProgress', [rec1, rec2]);
+    __failNextEmail(); // first email throws
+    const result = await runDailyChallengeReminders();
+    expect(result.success).toBe(true);
+    expect(result.sent).toBe(1);
+    expect(result.failed).toBe(1);
+  });
+
+  it('does not mark failed records as notified', async () => {
+    const rec1 = challengeRecord({ _id: 'mcp-fail', memberId: 'mem-1' });
+    const rec2 = challengeRecord({ _id: 'mcp-ok',   memberId: 'mem-2' });
+    __seed('MemberChallengeProgress', [rec1, rec2]);
+    __failNextEmail(); // first record's email fails
+    await runDailyChallengeReminders();
+    const updatedIds = __getUpdated('MemberChallengeProgress').map(r => r._id);
+    expect(updatedIds).not.toContain('mcp-fail');
+    expect(updatedIds).toContain('mcp-ok');
+  });
+});
+
+describe('runDailyChallengeReminders — error resilience', () => {
+  it('returns success:true with sent:0 when DB query fails (service swallows and returns [])', async () => {
+    // getChallengesNeedingReminder catches DB errors internally and returns [].
+    // sendBatchReminders then runs over [] → {sent:0, failed:0}.
+    // The top-level cron returns success:true since no unhandled error occurred.
+    __setQueryError('MemberChallengeProgress', new Error('DB down'));
+    const result = await runDailyChallengeReminders();
+    expect(result).toEqual({ success: true, sent: 0, failed: 0 });
+  });
+
+  it('logs the DB error via challengeReminderService (not silenced)', async () => {
+    __setQueryError('MemberChallengeProgress', new Error('DB down'));
+    await runDailyChallengeReminders();
+    expect(console.error).toHaveBeenCalled();
+  });
+});
+
+describe('jobs.config — runDailyChallengeReminders entry', () => {
+  it('has a runDailyChallengeReminders job pointing to lifecycleCron.web.js', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+    expect(jobs.runDailyChallengeReminders).toBeDefined();
+    expect(jobs.runDailyChallengeReminders.functionLocation).toBe('/lifecycleCron.web.js');
+  });
+
+  it('schedules runDailyChallengeReminders on a daily cron', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+    const cron = jobs.runDailyChallengeReminders.executionConfig.cronExpression;
+    // Must run once per day (5 cron fields, hour and minute specified, no wildcards on day/month/weekday beyond *)
+    expect(cron).toMatch(/^\d+ \d+ \* \* \*$/);
   });
 });

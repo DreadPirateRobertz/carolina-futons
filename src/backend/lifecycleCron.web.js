@@ -30,6 +30,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { sendBatchReminders } from 'backend/challengeReminderService.web';
 
 const ORDERS_COLLECTION = 'Stores/Orders';
 const PAGE_SIZE = 100;
@@ -148,6 +149,50 @@ async function fetchAllOrders() {
 
   return results;
 }
+
+// ── Challenge reminder cron ────────────────────────────────────────────────────
+
+/**
+ * Send daily challenge reminders to all eligible members.
+ *
+ * Delegates eligibility + cadence gate to sendBatchReminders (challengeReminderService).
+ * Each eligible MemberChallengeProgress record receives a 'challenge_reminder' triggered
+ * email and is marked as notified to enforce the daily cadence gate.
+ *
+ * Called by jobs.config on the daily schedule. Returns sent/failed counts.
+ *
+ * @function runDailyChallengeReminders
+ * @returns {Promise<{ success: boolean, sent: number, failed: number }>}
+ * @permission Admin
+ */
+export const runDailyChallengeReminders = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const { triggeredEmails } = await import('wix-crm-backend');
+
+      const sendFn = async (record) => {
+        await triggeredEmails.emailMember(
+          'challenge_reminder',
+          record.memberId,
+          {
+            variables: {
+              challengeId: record.challengeId || '',
+              progressValue: String(record.progressValue ?? ''),
+              targetCount: String(record.targetCount ?? ''),
+            },
+          }
+        );
+      };
+
+      const { sent, failed } = await sendBatchReminders('daily', sendFn);
+      return { success: true, sent, failed };
+    } catch (err) {
+      console.error('[lifecycleCron] runDailyChallengeReminders failed:', err?.message);
+      return { success: false, sent: 0, failed: 0 };
+    }
+  }
+);
 
 // ── Test helpers ───────────────────────────────────────────────────────────────
 
