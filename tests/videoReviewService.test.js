@@ -101,6 +101,21 @@ describe('submitVideoReview — input edge cases', () => {
     expect(inserted[0].caption.length).toBeLessThanOrEqual(200);
   });
 
+  it('strips HTML tags from caption (GH#993 — stored XSS fix)', async () => {
+    await submitVideoReview(PRODUCT_ID, VIDEO_FILE_ID, '<b>Great</b> futon!');
+    const inserted = __getInserted('VideoReviews');
+    expect(inserted[0].caption).not.toContain('<b>');
+    expect(inserted[0].caption).not.toContain('</b>');
+    expect(inserted[0].caption).toBe('Great futon!');
+  });
+
+  it('strips HTML entities from caption', async () => {
+    await submitVideoReview(PRODUCT_ID, VIDEO_FILE_ID, '&lt;img src=x onerror=alert(1)&gt;');
+    const inserted = __getInserted('VideoReviews');
+    expect(inserted[0].caption).not.toContain('<img');
+    expect(inserted[0].caption).not.toContain('onerror');
+  });
+
   it('returns internal error when DB insert throws', async () => {
     __setInsertError('VideoReviews', new Error('DB write failed'));
     const result = await submitVideoReview(PRODUCT_ID, VIDEO_FILE_ID, 'caption');
