@@ -1,11 +1,12 @@
 /**
  * Tests for Futon Studio compatibility + pricing API in bundleBuilder.web.js
- * getCompatibleMattresses, getCompatibleCovers, getBundlePrice
+ * getCompatibleMattresses, getCompatibleCovers, getBundlePrice, addFutonStudioBundleToCart
  *
  * CF-eqc5.1
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData, __setQueryError } from './__mocks__/wix-data.js';
+import { cart as mockCart, __reset as resetCart, __setAddToCurrentCartError } from './__mocks__/wix-ecom-backend.js';
 import {
   futonFrame,
   futonMattress,
@@ -16,6 +17,7 @@ import {
   getCompatibleMattresses,
   getCompatibleCovers,
   getBundlePrice,
+  addFutonStudioBundleToCart,
 } from '../src/backend/bundleBuilder.web.js';
 
 // ── Fixtures ──────────────────────────────────────────────────────────
@@ -45,6 +47,7 @@ const studioProducts = [
 
 beforeEach(() => {
   resetData();
+  resetCart();
   __seed('Stores/Products', studioProducts);
   __seed('BundleTemplates', []);
 });
@@ -236,5 +239,75 @@ describe('getBundlePrice', () => {
     __seed('Stores/Products', []);
     const result = await getBundlePrice('frame-full', 'matt-full', null);
     expect(result.success).toBe(false);
+  });
+});
+
+// ── addFutonStudioBundleToCart ────────────────────────────────────────
+
+describe('addFutonStudioBundleToCart', () => {
+  it('adds frame + mattress at 10% discount', async () => {
+    // fullFrame.price = 499 (futonFrame base), fullMattress.price = 299 → base = 798
+    const result = await addFutonStudioBundleToCart('frame-full', 'matt-full', null);
+    expect(result.success).toBe(true);
+    expect(result.productsAdded).toBe(2);
+    expect(result.discountPercent).toBe(10);
+    expect(result.bundlePrice).toBeCloseTo(798 * 0.9, 2);
+    expect(result.savings).toBeCloseTo(798 * 0.1, 2);
+    expect(mockCart.addToCurrentCart).toHaveBeenCalledOnce();
+    const call = mockCart.addToCurrentCart.mock.calls[0][0];
+    expect(call.lineItems).toHaveLength(2);
+  });
+
+  it('adds frame + mattress + cover at 12% discount', async () => {
+    // fullFrame=499, fullMattress=299, fullCover=89 → base=887, 12% off=780.56
+    const result = await addFutonStudioBundleToCart('frame-full', 'matt-full', 'cover-full');
+    expect(result.success).toBe(true);
+    expect(result.productsAdded).toBe(3);
+    expect(result.discountPercent).toBe(12);
+    expect(result.bundlePrice).toBeCloseTo(887 * 0.88, 2);
+    expect(mockCart.addToCurrentCart).toHaveBeenCalledOnce();
+    const call = mockCart.addToCurrentCart.mock.calls[0][0];
+    expect(call.lineItems).toHaveLength(3);
+  });
+
+  it('falls back to 2-item bundle when cover ID is invalid', async () => {
+    // Invalid cover ID → treated as no cover → 10% discount
+    const result = await addFutonStudioBundleToCart('frame-full', 'matt-full', '');
+    expect(result.success).toBe(true);
+    expect(result.productsAdded).toBe(2);
+    expect(result.discountPercent).toBe(10);
+  });
+
+  it('returns error when frameId is empty', async () => {
+    const result = await addFutonStudioBundleToCart('', 'matt-full', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/required/i);
+    expect(mockCart.addToCurrentCart).not.toHaveBeenCalled();
+  });
+
+  it('returns error when mattressId is empty', async () => {
+    const result = await addFutonStudioBundleToCart('frame-full', '', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/required/i);
+    expect(mockCart.addToCurrentCart).not.toHaveBeenCalled();
+  });
+
+  it('returns error when frame not found', async () => {
+    const result = await addFutonStudioBundleToCart('nonexistent-frame', 'matt-full', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/frame not found/i);
+  });
+
+  it('returns error when mattress not found', async () => {
+    const result = await addFutonStudioBundleToCart('frame-full', 'nonexistent-matt', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/mattress not found/i);
+  });
+
+  it('returns error when cart add fails', async () => {
+    __setAddToCurrentCartError(new Error('Cart service unavailable'));
+    const result = await addFutonStudioBundleToCart('frame-full', 'matt-full', null);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/failed/i);
   });
 });
