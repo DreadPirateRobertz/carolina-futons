@@ -185,6 +185,16 @@ describe('updateCartItems', () => {
     const result = await updateCartItems(TOKEN_A, ITEMS_B);
     expect(result.success).toBe(false);
   });
+
+  it('defaults to empty array when items argument is not an array', async () => {
+    __seed(COLLECTION, [
+      { _id: TOKEN_A, sessionToken: TOKEN_A, memberId: null, items: ITEMS_A, createdAt: new Date(), updatedAt: new Date(), source: 'web' },
+    ]);
+    // Covers the FALSE branch of `Array.isArray(items) ? items : []`
+    const result = await updateCartItems(TOKEN_A, undefined);
+    expect(result.success).toBe(true);
+    expect(__getUpdated(COLLECTION)[0].items).toEqual([]);
+  });
 });
 
 // ── mergeGuestCart ─────────────────────────────────────────────────
@@ -273,5 +283,28 @@ describe('mergeGuestCart', () => {
     const rows = __getInserted(COLLECTION);
     const memberRow = rows.find(r => r.memberId === MEMBER_1);
     expect(memberRow.memberId).toBe(MEMBER_1);
+  });
+
+  it('handles null items on member session (memberSession.items || [] fallback)', async () => {
+    const memberToken = 'member-token-nullitems';
+    __seed(COLLECTION, [
+      { _id: TOKEN_A, sessionToken: TOKEN_A, memberId: null, items: ITEMS_B, createdAt: new Date(), updatedAt: new Date(), source: 'web' },
+      { _id: memberToken, sessionToken: memberToken, memberId: MEMBER_1, items: null, createdAt: new Date(), updatedAt: new Date(), source: 'web' },
+    ]);
+    // mergeItems(null || [], ITEMS_B) — exercises the `memberSession.items || []` branch
+    const result = await mergeGuestCart(TOKEN_A, MEMBER_1);
+    expect(result.success).toBe(true);
+    expect(result.merged).toBe(true);
+    const updated = __getUpdated(COLLECTION);
+    expect(updated[0].items).toEqual(expect.arrayContaining([expect.objectContaining({ productId: 'prod-3' })]));
+  });
+
+  it('returns { success: false } on DB error during merge', async () => {
+    __seed(COLLECTION, [
+      { _id: TOKEN_A, sessionToken: TOKEN_A, memberId: null, items: ITEMS_A, createdAt: new Date(), updatedAt: new Date(), source: 'web' },
+    ]);
+    __setInsertError(COLLECTION, new Error('insert failed'));
+    const result = await mergeGuestCart(TOKEN_A, MEMBER_1);
+    expect(result.success).toBe(false);
   });
 });
