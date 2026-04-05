@@ -242,7 +242,8 @@ function parseVariants(variantsField) {
   if (!variantsField) return [];
   if (Array.isArray(variantsField)) return variantsField;
   try {
-    return JSON.parse(variantsField);
+    const parsed = JSON.parse(variantsField);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }

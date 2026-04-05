@@ -141,6 +141,15 @@ describe('trackFunnelEvent', () => {
     expect(row.sessionId.length).toBeLessThanOrEqual(254);
   });
 
+  it('coerces non-string sessionId (number) to string via String()', async () => {
+    // Code does String(rawSession) — numeric sessionIds must work without crashing.
+    const result = await trackFunnelEvent('page_view', { sessionId: 12345 });
+    expect(result.success).toBe(true);
+    const row = __getInserted('FunnelEvents')[0];
+    expect(row.sessionId).toBe('12345');
+    expect(row._id).toBe('12345_page_view');
+  });
+
   it('calls checkRateLimit with the correct collection and sessionId', async () => {
     checkRateLimit.mockResolvedValueOnce({ allowed: true });
     await trackFunnelEvent('page_view', BASE);

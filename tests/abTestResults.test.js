@@ -272,3 +272,41 @@ describe('getAllAbTestResults', () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ── parseVariants edge cases (coverage gap flagged by Melania on PR #965) ────
+// parseVariants must guard against JSON.parse returning a non-array (e.g. a
+// number). Without the Array.isArray guard, calling variants.map() later throws.
+
+describe('parseVariants edge cases — via getAbTestResults', () => {
+  it('treats a numeric variants field as no-variants (does not crash)', async () => {
+    // JSON.parse('12345') returns 12345 (number). Without Array.isArray guard,
+    // the subsequent .map() throws. Fixed in parseVariants to return [].
+    __seed('AbTests', [{ testName: 'bad-variants', variants: 12345, active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('bad-variants');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
+  });
+
+  it('handles null variants field without throwing', async () => {
+    __seed('AbTests', [{ testName: 'null-variants', variants: null, active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('null-variants');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
+  });
+
+  it('handles invalid JSON string variants without throwing', async () => {
+    __seed('AbTests', [{ testName: 'bad-json', variants: '{not valid json}', active: true }]);
+    __seed('AbEvents', []);
+    __seed('FunnelEvents', []);
+
+    const result = await getAbTestResults('bad-json');
+    expect(result.success).toBe(true);
+    expect(result.results.variants).toEqual([]);
+  });
+});
