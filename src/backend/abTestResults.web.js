@@ -33,7 +33,7 @@ const CHI_SQ_95 = 3.841;
  *   |    c1     |   n1 - c1     |   variant 1
  *   |    c2     |   n2 - c2     |   variant 2
  *
- * Uses Yates' continuity correction for small samples.
+ * Uses standard Pearson chi-squared (no Yates' correction — appropriate for n≥30).
  *
  * @param {number} n1 - Impressions for variant 1
  * @param {number} c1 - Conversions for variant 1
@@ -149,15 +149,22 @@ export const getAbTestResults = webMethod(
           .eq('eventType', 'conversion')
           .count();
 
-        // Revenue: sum of FunnelEvents purchase rows tagged to this experiment variant
-        const purchaseResult = await wixData.query(FUNNEL_COLLECTION)
-          .eq('stage', 'purchase')
-          .eq('experimentId', cleanName)
-          .eq('variantId', v.id)
-          .limit(500)
-          .find({ suppressAuth: true });
-
-        const revenue = purchaseResult.items.reduce((sum, r) => sum + (r.revenue || 0), 0);
+        // Revenue: paginated sum of FunnelEvents purchase rows tagged to this experiment variant
+        const PAGE = 500;
+        let revenue = 0;
+        let revOffset = 0;
+        while (true) {
+          const purchasePage = await wixData.query(FUNNEL_COLLECTION)
+            .eq('stage', 'purchase')
+            .eq('experimentId', cleanName)
+            .eq('variantId', v.id)
+            .limit(PAGE)
+            .skip(revOffset)
+            .find({ suppressAuth: true });
+          revenue += purchasePage.items.reduce((sum, r) => sum + (r.revenue || 0), 0);
+          if (purchasePage.items.length < PAGE) break;
+          revOffset += PAGE;
+        }
 
         const rate = impressions > 0 ? (conversions / impressions) * 100 : 0;
 
