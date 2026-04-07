@@ -120,10 +120,10 @@ export function initFooterColumns($w) {
         const links = getFooterShopLinks();
         shopRepeater.data = links.map((l, i) => ({ ...l, _id: `shop-${i}` }));
         shopRepeater.onItemReady(($item, itemData) => {
-          try { $item('#footerLink').text = itemData.label; } catch (e) {}
-          try { $item('#footerLink').accessibility.ariaLabel = `Shop ${itemData.label}`; } catch (e) {}
+          try { $item('#shopLink').text = itemData.label; } catch (e) {}
+          try { $item('#shopLink').accessibility.ariaLabel = `Shop ${itemData.label}`; } catch (e) {}
           try {
-            $item('#footerLink').onClick(() => {
+            $item('#shopLink').onClick(() => {
               import('wix-location-frontend').then(({ to }) => to(itemData.path));
             });
           } catch (e) {}
@@ -138,10 +138,10 @@ export function initFooterColumns($w) {
         const links = getFooterServiceLinks();
         serviceRepeater.data = links.map((l, i) => ({ ...l, _id: `svc-${i}` }));
         serviceRepeater.onItemReady(($item, itemData) => {
-          try { $item('#footerLink').text = itemData.label; } catch (e) {}
-          try { $item('#footerLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
+          try { $item('#serviceLink').text = itemData.label; } catch (e) {}
+          try { $item('#serviceLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
           try {
-            $item('#footerLink').onClick(() => {
+            $item('#serviceLink').onClick(() => {
               import('wix-location-frontend').then(({ to }) => to(itemData.path));
             });
           } catch (e) {}
@@ -156,10 +156,10 @@ export function initFooterColumns($w) {
         const links = getFooterAboutLinks();
         aboutRepeater.data = links.map((l, i) => ({ ...l, _id: `about-${i}` }));
         aboutRepeater.onItemReady(($item, itemData) => {
-          try { $item('#footerLink').text = itemData.label; } catch (e) {}
-          try { $item('#footerLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
+          try { $item('#aboutLink').text = itemData.label; } catch (e) {}
+          try { $item('#aboutLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
           try {
-            $item('#footerLink').onClick(() => {
+            $item('#aboutLink').onClick(() => {
               import('wix-location-frontend').then(({ to }) => to(itemData.path));
             });
           } catch (e) {}
@@ -244,44 +244,7 @@ export function initFooterSocial($w) {
   try {
     const links = getFooterSocialLinks();
 
-    // Repeater-based social icons (legacy pattern)
-    try {
-      const socialRepeater = $w('#footerSocialRepeater');
-      if (socialRepeater) {
-        socialRepeater.data = links.map((l, i) => ({ ...l, _id: `social-${i}` }));
-        socialRepeater.onItemReady(($item, itemData) => {
-          try { $item('#socialIcon').text = itemData.platform; } catch (e) {}
-          try { $item('#socialIcon').accessibility.ariaLabel = itemData.ariaLabel; } catch (e) {}
-          try {
-            $item('#socialIcon').onClick(() => {
-              if (typeof window !== 'undefined') window.open(itemData.url, '_blank');
-            });
-          } catch (e) {}
-        });
-      }
-    } catch (e) {}
-
-    // Individual BUILD-SPEC social button elements
-    const socialMap = {
-      '#socialFacebook': links.find(l => l.platform === 'facebook'),
-      '#socialInstagram': links.find(l => l.platform === 'instagram'),
-      '#socialPinterest': links.find(l => l.platform === 'pinterest'),
-    };
-
-    Object.entries(socialMap).forEach(([selector, linkData]) => {
-      if (!linkData) return;
-      try {
-        const el = $w(selector);
-        if (!el) return;
-        try { el.accessibility.ariaLabel = linkData.ariaLabel; } catch (e) {}
-        el.onClick(() => {
-          if (typeof window !== 'undefined') window.open(linkData.url, '_blank');
-        });
-      } catch (e) {}
-    });
-
-    // Fallback: fix template social bar links (http → https, missing Pinterest).
-    // The Tera template social bar uses http:// and omits Pinterest.
+    // Fix native SocialBar links (http → https, set canonical URLs).
     fixTemplateSocialBar($w, links);
   } catch (e) {}
 }
@@ -437,37 +400,28 @@ export function applyFooterStyles($w) {
     try { $w('#footerEmailSubmit').style.color = colors.espresso; } catch (e) {}
 
     // Link repeaters: mountainBlue default, coral on hover
-    const linkRepeaters = ['#footerShopRepeater', '#footerServiceRepeater', '#footerAboutRepeater'];
-    linkRepeaters.forEach((sel) => {
+    const linkRepeaters = [
+      { repeater: '#footerShopRepeater', link: '#shopLink' },
+      { repeater: '#footerServiceRepeater', link: '#serviceLink' },
+      { repeater: '#footerAboutRepeater', link: '#aboutLink' },
+    ];
+    linkRepeaters.forEach(({ repeater, link }) => {
       try {
-        $w(sel).onItemReady(($item) => {
+        $w(repeater).onItemReady(($item) => {
           try {
-            $item('#footerLink').style.color = colors.mountainBlue;
-            $item('#footerLink').onMouseIn(() => {
-              try { $item('#footerLink').style.color = colors.sunsetCoral; } catch (e) {}
+            $item(link).style.color = colors.mountainBlue;
+            $item(link).onMouseIn(() => {
+              try { $item(link).style.color = colors.sunsetCoral; } catch (e) {}
             });
-            $item('#footerLink').onMouseOut(() => {
-              try { $item('#footerLink').style.color = colors.mountainBlue; } catch (e) {}
+            $item(link).onMouseOut(() => {
+              try { $item(link).style.color = colors.mountainBlue; } catch (e) {}
             });
           } catch (e) {}
         });
       } catch (e) {}
     });
 
-    // Social icons: sandLight default, coral on hover
-    try {
-      $w('#footerSocialRepeater').onItemReady(($item) => {
-        try {
-          $item('#socialIcon').style.color = colors.sandLight;
-          $item('#socialIcon').onMouseIn(() => {
-            try { $item('#socialIcon').style.color = colors.sunsetCoral; } catch (e) {}
-          });
-          $item('#socialIcon').onMouseOut(() => {
-            try { $item('#socialIcon').style.color = colors.sandLight; } catch (e) {}
-          });
-        } catch (e) {}
-      });
-    } catch (e) {}
+    // Social bar styling is handled by the native Wix SocialBar widget
   } catch (e) {}
 }
 
