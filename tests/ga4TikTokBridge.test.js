@@ -9,11 +9,19 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { fireTrackedTikTokEvent } = vi.hoisted(() => ({ fireTrackedTikTokEvent: vi.fn() }));
+const { fireTrackedTikTokEvent, getCurrentConsentPolicy } = vi.hoisted(() => ({
+  fireTrackedTikTokEvent: vi.fn(),
+  getCurrentConsentPolicy: vi.fn(() => ({ policy: { analytics: true, advertising: true } })),
+}));
 
 vi.mock('public/pixelConsentService', () => ({
   fireTrackedTikTokEvent,
   initConsentGate: vi.fn(),
+}));
+
+vi.mock('wix-privacy-frontend', () => ({
+  default: { getCurrentConsentPolicy },
+  getCurrentConsentPolicy,
 }));
 
 vi.mock('backend/analyticsHelpers.web', () => ({
@@ -36,6 +44,7 @@ import {
 
 beforeEach(() => {
   fireTrackedTikTokEvent.mockClear();
+  getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: true, advertising: true } });
 });
 
 describe('ga4 → TikTok bridge', () => {
@@ -74,5 +83,49 @@ describe('ga4 → TikTok bridge', () => {
   it('TikTok fan-out failures do not propagate to the caller', async () => {
     fireTrackedTikTokEvent.mockImplementationOnce(() => { throw new Error('consent service offline'); });
     await expect(fireViewContent({ _id: 'p4', price: 10 })).resolves.not.toThrow();
+  });
+});
+
+// ── cf-5rt: TikTok fires must be decoupled from GA4 analytics consent ──
+// pixelConsentService is the sole arbiter of TikTok consent (analytics +
+// advertising + queueing). Advertising-only users must still reach TikTok
+// even though their analytics grant is absent; conversely denying both at
+// wix-privacy is handled downstream in fireTrackedTikTokEvent.
+
+describe('ga4 → TikTok bridge — consent decoupling', () => {
+  it('fires TikTok even when analytics consent is denied (advertising-only user)', async () => {
+    getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: false, advertising: true } });
+    await fireViewContent({ _id: 'p1', price: 100 });
+    expect(fireTrackedTikTokEvent).toHaveBeenCalledWith(
+      'ViewContent',
+      expect.objectContaining({ content_id: 'p1' }),
+    );
+  });
+
+  it('fireAddToCart still dispatches TikTok when analytics consent is denied', async () => {
+    getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: false, advertising: true } });
+    await fireAddToCart({ _id: 'p2', price: 50 }, 2);
+    expect(fireTrackedTikTokEvent).toHaveBeenCalledWith(
+      'AddToCart',
+      expect.objectContaining({ content_id: 'p2', quantity: 2, value: 100 }),
+    );
+  });
+
+  it('firePurchase still dispatches TikTok when analytics consent is denied', async () => {
+    getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: false, advertising: true } });
+    await firePurchase({ _id: 'ord-7', totals: { total: 499 } });
+    expect(fireTrackedTikTokEvent).toHaveBeenCalledWith(
+      'Purchase',
+      expect.objectContaining({ order_id: 'ord-7', value: 499 }),
+    );
+  });
+
+  it('fireAddToWishlist still dispatches TikTok when analytics consent is denied', async () => {
+    getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: false, advertising: true } });
+    await fireAddToWishlist({ _id: 'p3', price: 299 });
+    expect(fireTrackedTikTokEvent).toHaveBeenCalledWith(
+      'AddToWishlist',
+      expect.objectContaining({ content_id: 'p3', value: 299 }),
+    );
   });
 });
