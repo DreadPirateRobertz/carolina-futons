@@ -966,12 +966,28 @@ describe('Navigation Helpers', () => {
 // ── masterPage.js integration tests ─────────────────────────────────
 
 describe('masterPage.js', () => {
+  // Track real-timer setInterval handles so tests can't leak the 5s announcement
+  // bar rotation into later tests and race with their assertions (cf-bgh).
+  const _trackedIntervals = new Set();
+  let _origSetInterval;
+
   beforeAll(async () => {
+    _origSetInterval = globalThis.setInterval;
+    globalThis.setInterval = (fn, ms, ...args) => {
+      const id = _origSetInterval.call(globalThis, fn, ms, ...args);
+      _trackedIntervals.add(id);
+      return id;
+    };
     await import('../src/pages/masterPage.js');
   });
 
   beforeEach(() => {
     elements.clear();
+  });
+
+  afterEach(() => {
+    _trackedIntervals.forEach(id => clearInterval(id));
+    _trackedIntervals.clear();
   });
 
   describe('$w.onReady', () => {
