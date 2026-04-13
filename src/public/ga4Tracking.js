@@ -15,6 +15,7 @@ import {
   buildSearchEvent,
   buildViewCartEvent,
 } from 'backend/analyticsHelpers.web';
+import wixPrivacy from 'wix-privacy-frontend';
 
 let _wixWindow = null;
 
@@ -29,12 +30,25 @@ async function getWixWindow() {
   return _wixWindow;
 }
 
+// GA4 is classified analytics-only under GDPR; advertising consent is not
+// required. Every fire* entry point gates on this to ensure raw callers
+// that don't route through pixelConsentService still respect user consent.
+export function _hasAnalyticsConsent() {
+  try {
+    const { policy } = wixPrivacy.getCurrentConsentPolicy();
+    return policy.analytics === true;
+  } catch (e) {
+    return false;
+  }
+}
+
 /**
  * Fire a GA4/Meta Pixel ViewContent event for a product page view.
  * @param {Object} product - Wix product object
  */
 export async function fireViewContent(product) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildViewContentEvent(product);
@@ -53,6 +67,7 @@ export async function fireViewContent(product) {
  */
 export async function fireAddToCart(product, quantity = 1) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildAddToCartEvent(product, quantity);
@@ -69,6 +84,7 @@ export async function fireAddToCart(product, quantity = 1) {
  */
 export async function fireInitiateCheckout(cartItems, cartTotal) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildCheckoutEvent(cartItems, cartTotal);
@@ -84,6 +100,7 @@ export async function fireInitiateCheckout(cartItems, cartTotal) {
  */
 export async function firePurchase(order) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildPurchaseEvent(order);
@@ -99,6 +116,7 @@ export async function firePurchase(order) {
  */
 export async function fireAddToWishlist(product) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildWishlistEvent(product);
@@ -117,9 +135,14 @@ export async function fireAddToWishlist(product) {
 export async function fireGA4Event(eventName, params = {}) {
   try {
     if (!eventName || typeof eventName !== 'string') return;
+    // GA4 event names allow alphanumeric + underscore only; mirror the
+    // fireCustomEvent sanitizer so callers can't smuggle arbitrary strings.
+    const sanitized = eventName.replace(/[^a-zA-Z0-9_]/g, '');
+    if (!sanitized) return;
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
-    ww.trackEvent(eventName, params);
+    ww.trackEvent(sanitized, params);
   } catch (e) {}
 }
 
@@ -134,6 +157,7 @@ export async function fireCustomEvent(eventName, params = {}) {
     // Sanitize event name: only alphanumeric and underscores
     const sanitized = eventName.replace(/[^a-zA-Z0-9_]/g, '');
     if (!sanitized) return;
+    if (!_hasAnalyticsConsent()) return;
 
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
@@ -151,6 +175,7 @@ export async function fireCustomEvent(eventName, params = {}) {
  */
 export async function fireViewItemList(items, listName) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildViewItemListEvent(items, listName);
@@ -170,6 +195,7 @@ export async function fireViewItemList(items, listName) {
  */
 export async function fireSearch(query, resultCount) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildSearchEvent(query, resultCount);
@@ -189,6 +215,7 @@ export async function fireSearch(query, resultCount) {
  */
 export async function fireViewCart(cartItems, cartTotal) {
   try {
+    if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     const payload = await buildViewCartEvent(cartItems, cartTotal);
@@ -221,6 +248,7 @@ export function initScrollDepthTracking() {
       for (const threshold of thresholds) {
         if (pct >= threshold && !fired.has(threshold)) {
           fired.add(threshold);
+          if (!_hasAnalyticsConsent()) continue;
           getWixWindow().then(ww => {
             if (ww?.trackEvent) {
               ww.trackEvent('CustomEvent', {

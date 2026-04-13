@@ -10,6 +10,9 @@ vi.mock('wix-window-frontend', () => ({
   default: { trackEvent: mockTrackEvent },
   trackEvent: mockTrackEvent,
 }));
+// wix-privacy-frontend is mapped to tests/__mocks__/wix-privacy-frontend.js
+// which defaults to analytics: true (consent granted). Tests that want to
+// exercise the denied path call __setPolicy({ analytics: false }).
 
 // Mock analyticsHelpers to return predictable payloads
 vi.mock('backend/analyticsHelpers.web', () => ({
@@ -354,6 +357,127 @@ describe('initScrollDepthTracking', () => {
 
     // Should not throw — docHeight is 0
     scrollHandler();
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+});
+
+// ── consent gate — raw fire* functions block when analytics consent denied (cf-x7n) ──
+
+describe('ga4Tracking consent gate — analytics consent required', () => {
+  let wixPrivacy;
+
+  beforeEach(async () => {
+    mockTrackEvent.mockClear();
+    const mod = await import('wix-privacy-frontend');
+    wixPrivacy = mod.default;
+    mod.__reset();
+  });
+
+  afterEach(async () => {
+    const mod = await import('wix-privacy-frontend');
+    mod.__reset();
+  });
+
+  const denied = async () => {
+    const mod = await import('wix-privacy-frontend');
+    mod.__setPolicy({ analytics: false, advertising: false });
+  };
+
+  it('fireViewContent does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireViewContent({ _id: 'p1', name: 'X', price: 100 });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireAddToCart does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireAddToCart({ _id: 'p1', name: 'X', price: 100 }, 1);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireInitiateCheckout does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireInitiateCheckout([{ _id: 'p1' }], 100);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('firePurchase does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await firePurchase({ _id: 'o1', totals: { total: 500 } });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireAddToWishlist does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireAddToWishlist({ _id: 'p1', name: 'X' });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireCustomEvent does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireCustomEvent('newsletter_signup', { source: 'footer' });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireViewItemList does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireViewItemList([{ _id: 'p1' }], 'futon-frames');
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireSearch does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireSearch('kodiak', 5);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fireViewCart does NOT call trackEvent when analytics consent is denied', async () => {
+    await denied();
+    await fireViewCart([{ _id: 'p1' }], 100);
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('fires normally when analytics consent is granted (advertising denied OK for GA4)', async () => {
+    const mod = await import('wix-privacy-frontend');
+    mod.__setPolicy({ analytics: true, advertising: false });
+    await fireAddToCart({ _id: 'p1', name: 'X', price: 100 }, 1);
+    expect(mockTrackEvent).toHaveBeenCalledWith('AddToCart', expect.any(Object));
+  });
+});
+
+// ── fireGA4Event sanitization (cf-x7n) ────────────────────────────────
+
+describe('fireGA4Event — name sanitization and consent gate', () => {
+  let fireGA4Event;
+
+  beforeEach(async () => {
+    mockTrackEvent.mockClear();
+    const mod = await import('wix-privacy-frontend');
+    mod.__reset();
+    ({ fireGA4Event } = await import('../src/public/ga4Tracking.js'));
+  });
+
+  it('strips non-alphanumeric/underscore chars from event name', async () => {
+    await fireGA4Event('Add-To;Cart!', { value: 10 });
+    expect(mockTrackEvent).toHaveBeenCalledWith('AddToCart', { value: 10 });
+  });
+
+  it('drops event when name is empty after sanitization', async () => {
+    await fireGA4Event('---!!!', { value: 10 });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not fire when analytics consent is denied', async () => {
+    const mod = await import('wix-privacy-frontend');
+    mod.__setPolicy({ analytics: false });
+    await fireGA4Event('AddToCart', { value: 10 });
+    expect(mockTrackEvent).not.toHaveBeenCalled();
+  });
+
+  it('ignores null / non-string event names', async () => {
+    await fireGA4Event(null, {});
+    await fireGA4Event(undefined, {});
+    await fireGA4Event(123, {});
     expect(mockTrackEvent).not.toHaveBeenCalled();
   });
 });
