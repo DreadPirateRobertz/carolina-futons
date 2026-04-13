@@ -2893,3 +2893,23 @@ Backend: `gamificationChipsService.web.js` — `getGamificationChipsForProducts(
 | `gamificationChip` | Box | Hidden by default; shown when member earned relevant badge |
 | `chipBadgeIcon` | Image | Badge icon, 24×24px |
 | `chipLabel` | Text | e.g. "You've earned a badge here!" |
+
+---
+
+## Feature Log
+
+### Phase 7 Shipped (2026-04-13)
+
+- **GA4 consent gate** (`ga4Tracking.js`): all `fire*` analytics events are now gated behind `wixPrivacy.getCurrentConsentPolicy().analytics === true`. `fireGA4Event` added with event-name sanitization matching `fireCustomEvent`. Raw callers auto-gated — no call-site migration needed.
+- **TikTok consent decoupling** (PR #1050): TikTok fires via the `pixelConsentService` queue regardless of analytics consent; retargeting requires `analytics && advertising`.
+- **Local SEO data fix** (PR #1046): phone `+1-828-252-9449`, hours Wed–Sat 10–17.
+- **Blog post topic cluster backlink** (PR #1048): `Blog Post.js` injects `isPartOf` schema + cluster nav.
+- **OG image CDN normalize** (PR #1045): `wix:image://` URIs resolved to CDN URLs.
+
+### Phase 8 Shipped (2026-04-13)
+
+- **Tier upgrade email + push** (PR #1051): `gamificationNotifs.web.js::notifyTierUpgrade()`.
+- **Phase 8 trigger verification** complete (audit cf-4hs / cf-538): welcome (`wixMembers_onMemberCreated`), cart-abandon (hourly cron `triggerAbandonedCartRecovery`), post-purchase (`wixEcom_onOrderDelivered`) all wired.
+- **Merchant Center + sitemap verification** (cf-xe8): feed service live with all GMC required fields; 249 tests green.
+
+> No editor hookup action required for this phase. Element nicknames and hookup status are unchanged — this log is informational only.
