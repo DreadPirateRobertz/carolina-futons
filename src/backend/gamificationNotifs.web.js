@@ -9,14 +9,16 @@
  *   notifyChallengePublished(challenge) — queue email + SMS for opted-in members (CF-qhdo)
  *   processChallengeNotifSMSQueue() — drain ChallengeNotifSMSQueue; in-flight guard (CF-qhdo)
  *
- *   checkStreakMilestoneNotifications() — cron: day-7 streak milestone email (CF-tcqq)
+ *   checkStreakMilestoneNotifications() — cron: day-7 streak milestone email + push (CF-tcqq)
+ *   runStreakAtRiskPushNotifications() — cron: push to members whose streak is at risk (cf-2yd)
  *
- * CF-rpsx, CF-jz4r, CF-qhdo, CF-tcqq
+ * CF-rpsx, CF-jz4r, CF-qhdo, CF-tcqq, cf-2yd
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { logError } from 'backend/utils/errorHandler';
 import { queryAll } from 'backend/utils/queryAll';
+import { getYesterdayET } from 'backend/utils/dateUtils';
 import wixData from 'wix-data';
 
 const MEMBER_NOTIFICATION_PREFS_COLLECTION = 'MemberNotificationPrefs';
@@ -408,6 +410,14 @@ export async function checkStreakMilestoneNotifications() {
           }
         );
 
+        // Also send push notification — failure is non-fatal (email already sent)
+        try {
+          const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+          await sendPushToMember(memberId, PUSH_EVENTS.STREAK_MILESTONE, { days: String(STREAK_MILESTONE_DAY) });
+        } catch (pushErr) {
+          logError(`checkStreakMilestoneNotifications — push failed for ${memberId}`, pushErr);
+        }
+
         // Record notification to prevent duplicates
         await wixData.insert(STREAK_NOTIFICATIONS_COLLECTION, {
           memberId,
@@ -425,6 +435,94 @@ export async function checkStreakMilestoneNotifications() {
     return result;
   } catch (err) {
     logError('checkStreakMilestoneNotifications — pipeline failed', err);
+    return result;
+  }
+}
+
+// ── cf-2yd: Daily streak-at-risk push notifications ───────────────────────────
+
+/**
+ * Send push reminders to members whose streak is at risk.
+ *
+ * A streak is "at risk" when the member was active yesterday but has not yet
+ * been active today — i.e. MemberPoints.lastActivityDate equals yesterday's ET
+ * date and currentStreakDays > 0. The cron fires once per day in the morning,
+ * giving members time to take a qualifying action before their streak resets.
+ *
+ * Opt-out model: defaults to sending unless the member has explicitly set
+ * `streakReminders: false` in MemberNotificationPrefs (missing prefs = opted in).
+ *
+ * Push dispatch uses sendPushToMember (pushNotificationService), which looks up
+ * device tokens via pushTokenRegistry internally.
+ *
+ * cf-2yd
+ *
+ * @returns {Promise<{ sent: number, skipped: number, errors: number }>}
+ *   sent    — push notifications dispatched this run
+ *   skipped — members with no eligible tokens or opted out
+ *   errors  — per-member failures (pipeline continues)
+ */
+export async function runStreakAtRiskPushNotifications() {
+  const result = { sent: 0, skipped: 0, errors: 0 };
+
+  try {
+    const yesterdayET = getYesterdayET();
+
+    // Members whose streak is intact (> 0) but who haven't acted today (lastActivityDate = yesterday)
+    const atRiskMembers = await queryAll(
+      wixData.query('MemberPoints')
+        .gt('currentStreakDays', 0)
+        .eq('lastActivityDate', yesterdayET)
+        .limit(1000),
+      { suppressAuth: true }
+    );
+
+    if (atRiskMembers.length === 0) return result;
+
+    const memberIds = atRiskMembers.map(r => r.memberId).filter(Boolean);
+
+    // Check notification prefs — skip members with streakReminders: false
+    const prefsResult = await wixData
+      .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
+      .hasSome('memberId', memberIds)
+      .limit(1000)
+      .find({ suppressAuth: true });
+
+    const prefsMap = Object.fromEntries(
+      prefsResult.items.map(p => [p.memberId, p])
+    );
+
+    const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+
+    for (const record of atRiskMembers) {
+      const memberId = record.memberId;
+      if (!memberId) continue;
+
+      // Strict === false: undefined/null/missing prefs = opted IN by default.
+      const prefs = prefsMap[memberId];
+      if (prefs && prefs.streakReminders === false) {
+        result.skipped++;
+        continue;
+      }
+
+      try {
+        const { sent } = await sendPushToMember(memberId, PUSH_EVENTS.STREAK_MILESTONE, {
+          days: String(record.currentStreakDays),
+        });
+        if (sent > 0) {
+          result.sent++;
+        } else {
+          result.skipped++; // no active tokens
+        }
+      } catch (err) {
+        logError(`runStreakAtRiskPushNotifications — push failed for ${memberId}`, err);
+        result.errors++;
+      }
+    }
+
+    return result;
+  } catch (err) {
+    logError('runStreakAtRiskPushNotifications — pipeline failed', err);
     return result;
   }
 }
