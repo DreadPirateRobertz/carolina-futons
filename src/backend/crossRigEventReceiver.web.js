@@ -138,6 +138,8 @@ export const crossRigEvent = webMethod(
     }
 
     // ── Post-analytics push side effects ──────────────────────────────────
+    // badge_earned routes through syncBadgeEarnedToPush so the dispatch is
+    // also recorded in CrossRigSyncLog (cross-rig audit trail).
     if (body.event === 'badge_earned' && body.badgeId) {
       try {
         await syncBadgeEarnedToPush(memberId, body.badgeId);
@@ -146,6 +148,7 @@ export const crossRigEvent = webMethod(
         // Non-fatal: analytics logged, push failure does not fail the event
       }
     }
+    // tier_changed fires directly — web-side trigger, no cross-rig sync log needed.
     if (body.event === 'tier_changed' && body.newTier) {
       try {
         await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: body.newTier });
