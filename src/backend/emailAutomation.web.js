@@ -1039,6 +1039,12 @@ export const triggerAbandonedCartRecovery = webMethod(
  * staggered scheduledFor offsets (day 0 / day 7 / day 21), mirroring the
  * welcome/cart_recovery multi-step pattern.
  *
+ * @note Single-page cap: the dormant query is capped at 1 000 records per
+ *   invocation (Wix CMS page-size ceiling). If the dormant cohort exceeds
+ *   1 000 in one cron tick, overflow members slip to the next run — they
+ *   remain dormant and are picked up then. Queue a queryAll-style pagination
+ *   follow-up if the dormant backlog regularly exceeds this ceiling.
+ *
  * @function triggerReengagement
  * @returns {Promise<{success: boolean, contacted: number}>}
  * @permission Admin
@@ -1089,6 +1095,10 @@ export const triggerReengagement = webMethod(
         }
 
         if (!email) continue;
+        // Refuse to queue without a contactId: downstream Wix triggeredEmails
+        // dispatch resolves the recipient via contactId — an empty value would
+        // either drop the send silently or target the wrong member.
+        if (!contactId) continue;
         if (await isUnsubscribed(email, 'reengagement')) continue;
 
         // Dedup: skip members we've already queued/sent reengagement to.

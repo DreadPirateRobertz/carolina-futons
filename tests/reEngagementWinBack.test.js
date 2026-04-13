@@ -92,6 +92,24 @@ describe('triggerReengagement — non-purchaser seeding from MemberPoints', () =
     const result = await triggerReengagement();
     expect(result.contacted).toBe(0);
   });
+
+  it('skips members whose PrivateMembersData row has an email but no contactId', async () => {
+    // Without contactId, triggeredEmails can't resolve the recipient — queuing
+    // anyway would silently drop the send or mis-target.
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-nocid', lastActivityAt: HUNDRED_DAYS_AGO },
+    ]);
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mem-nocid', loginEmail: 'noc@test.com', contactId: '', firstName: 'NoCid' },
+    ]);
+
+    const inserted = [];
+    __onInsert((_c, item) => { if (item.sequenceType === 'reengagement') inserted.push(item); });
+
+    const result = await triggerReengagement();
+    expect(result.contacted).toBe(0);
+    expect(inserted).toHaveLength(0);
+  });
 });
 
 describe('triggerReengagement — queues all 3 steps with correct delays', () => {
