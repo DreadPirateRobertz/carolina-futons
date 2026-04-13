@@ -1,6 +1,6 @@
 // contentOrchestratorEvents.test.js — CF-tap5: Wix Events integration + dry-run + dashboard
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed } from 'wix-data';
+import { __reset, __seed, __setQueryError } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
 import { __setSecrets, __reset as __resetSecrets } from 'wix-secrets-backend';
 
@@ -120,6 +120,15 @@ describe('triggerEventOrchestration', () => {
     const result = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
     expect(result.scheduled.map(s => s.contentType)).not.toContain('newsletter');
     expect(result.skipped).toBeGreaterThan(0);
+  });
+
+  it('returns success false and safe fallback when DB throws (catch branch)', async () => {
+    // Covers the catch(err) block in triggerEventOrchestration (lines ~214-216)
+    __setQueryError('ContentSchedule', new Error('DB timeout'));
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
+    expect(result.success).toBe(false);
+    expect(typeof result.error).toBe('string');
+    expect(result.scheduled).toEqual([]);
   });
 });
 
