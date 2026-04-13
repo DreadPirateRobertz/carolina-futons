@@ -415,6 +415,43 @@ describe('getProductOgTags — edge cases', () => {
     const tags = JSON.parse(getProductOgTags({ name: 'Test' }));
     expect(tags['og:image']).toBe('');
   });
+
+  // ── CF-94s: og:image must resolve to an absolute CDN URL ──────────
+  // Wix Stores products can expose mainMedia as a `wix:image://v1/<id>`
+  // URI. Crawlers (Google / Facebook / Pinterest) cannot resolve that
+  // scheme, so og:image must be normalized to https://static.wixstatic...
+
+  it('converts wix:image:// mainMedia to https CDN URL for og:image', () => {
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Trail Futon',
+      slug: 'trail-futon',
+      mainMedia: 'wix:image://v1/abc123_def/original.jpg#w=800',
+    }));
+    expect(tags['og:image']).toMatch(/^https:\/\/static\.wixstatic\.com\/media\//);
+    expect(tags['og:image']).toContain('abc123_def');
+    expect(tags['og:image']).not.toContain('wix:image');
+  });
+
+  it('mirrors the CDN-normalized image on twitter:image', () => {
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Trail Futon',
+      slug: 'trail-futon',
+      mainMedia: 'wix:image://v1/abc123_def/original.jpg',
+    }));
+    expect(tags['twitter:image']).toBe(tags['og:image']);
+    expect(tags['twitter:image']).toMatch(/^https:\/\/static\.wixstatic\.com\/media\//);
+  });
+
+  it('passes through an already-absolute https mainMedia untouched', () => {
+    const https = 'https://example.com/eureka.jpg';
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Eureka',
+      slug: 'eureka',
+      mainMedia: https,
+    }));
+    expect(tags['og:image']).toBe(https);
+    expect(tags['twitter:image']).toBe(https);
+  });
 });
 
 // ── getProductMetaTags — HTML meta tags ──────────────────────────────

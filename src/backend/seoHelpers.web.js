@@ -10,6 +10,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { getBlogFaqs, getAllBlogPosts } from 'backend/blogContent';
 import { detectProductBrand } from 'public/productPageUtils.js';
+import { getImageUrl } from 'backend/utils/mediaHelpers';
 
 const BUSINESS_INFO = {
   name: 'Carolina Futons',
@@ -351,7 +352,7 @@ export const getCollectionSchema = webMethod(
           position: index + 1,
           url: `${BUSINESS_INFO.url}/product-page/${product.slug}`,
           name: product.name,
-          image: product.mainMedia || '',
+          image: getImageUrl(product.mainMedia),
         })),
       },
     };
@@ -667,22 +668,26 @@ function detectMaterial(product) {
   return '';
 }
 
-// Helper: build image array from product media
+// Helper: build image array from product media.
+// Normalizes wix:image:// URIs to absolute HTTPS CDN URLs so crawlers
+// (Google / Facebook / Pinterest) can fetch them. CF-94s.
 function buildImageArray(product) {
   if (!product) return [];
 
   const images = [];
-  if (product.mainMedia) images.push(product.mainMedia);
+  const mainUrl = getImageUrl(product.mainMedia);
+  if (mainUrl) images.push(mainUrl);
 
   if (product.mediaItems && Array.isArray(product.mediaItems)) {
     product.mediaItems.forEach(item => {
-      if (item.src && !images.includes(item.src)) {
-        images.push(item.src);
+      const src = getImageUrl(item.src || item);
+      if (src && !images.includes(src)) {
+        images.push(src);
       }
     });
   }
 
-  return images.length > 0 ? images : (product.mainMedia ? [product.mainMedia] : []);
+  return images.length > 0 ? images : (mainUrl ? [mainUrl] : []);
 }
 
 // Helper: strip HTML tags from text
@@ -714,7 +719,8 @@ export const getProductOgTags = webMethod(
     const description = product.description
       ? stripHtml(product.description).substring(0, 200)
       : `Shop ${product.name} at Carolina Futons. Quality furniture since 1991.`;
-    const image = product.mainMedia || '';
+    // Normalize wix:image:// URIs to absolute CDN URLs so crawlers can fetch. CF-94s
+    const image = getImageUrl(product.mainMedia);
     const url = `https://www.carolinafutons.com/product-page/${product.slug || ''}`;
     const price = product.price || 0;
     const brand = detectProductBrand(product);
@@ -822,7 +828,7 @@ export const getProductMetaTags = webMethod(
     const url = `${BUSINESS_INFO.url}/product-page/${product.slug || ''}`;
     const title = `${product.name || 'Product'} | Carolina Futons`;
     const description = (product.description || '').replace(/<[^>]*>/g, '').substring(0, 200);
-    const image = product.mainMedia || BUSINESS_INFO.logo;
+    const image = getImageUrl(product.mainMedia) || BUSINESS_INFO.logo;
     const price = (product.price || 0).toFixed(2);
     const availability = product.inStock !== false ? 'instock' : 'oos';
 
