@@ -71,7 +71,7 @@ export const getMyPointsHistory = webMethod(
         .limit(pageSize)
         .find({ suppressAuth: true });
 
-      const total   = result.totalCount ?? result.items.length;
+      const total   = result.totalCount ?? Infinity;
       const hasMore = skip + result.items.length < total;
 
       return {
