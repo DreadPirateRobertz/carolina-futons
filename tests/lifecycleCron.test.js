@@ -34,6 +34,20 @@ import {
   __failNextEmail,
 } from './__mocks__/wix-crm-backend.js';
 
+// cf-h6w: push dispatch mock — runDailyChallengeReminders fires push alongside email
+const mockSendPushToMember = vi.fn(async () => ({ sent: 1, failed: 0 }));
+vi.mock('backend/pushNotificationService.web', () => ({
+  sendPushToMember: (...args) => mockSendPushToMember(...args),
+  PUSH_EVENTS: {
+    BADGE_EARNED: 'badge_earned',
+    TIER_CHANGED: 'tier_changed',
+    CHALLENGE_COMPLETE: 'challenge_complete',
+    CHALLENGE_REMINDER: 'challenge_reminder',
+    STREAK_MILESTONE: 'streak_milestone',
+    PRICE_DROP: 'price_drop',
+  },
+}));
+
 import {
   scanLifecycleMilestones,
   runDailyChallengeReminders,
@@ -74,6 +88,8 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2026-01-15T12:00:00.000Z'));
   __reset();
   resetCrm();
+  mockSendPushToMember.mockClear();
+  mockSendPushToMember.mockResolvedValue({ sent: 1, failed: 0 });
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -582,6 +598,51 @@ describe('runDailyChallengeReminders — eligible records present', () => {
     ]);
     const result = await runDailyChallengeReminders();
     expect(result).toEqual({ success: true, sent: 0, failed: 0 });
+  });
+});
+
+describe('runDailyChallengeReminders — push dispatch (cf-h6w)', () => {
+  it('calls sendPushToMember once per eligible record', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-a', memberId: 'mem-1' }),
+      challengeRecord({ _id: 'mcp-b', memberId: 'mem-2' }),
+    ]);
+    await runDailyChallengeReminders();
+    expect(mockSendPushToMember).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes memberId and PUSH_EVENTS.CHALLENGE_REMINDER to sendPushToMember with empty payload', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-a', memberId: 'mem-42' }),
+    ]);
+    await runDailyChallengeReminders();
+    expect(mockSendPushToMember).toHaveBeenCalledWith(
+      'mem-42',
+      'challenge_reminder',
+      {},
+    );
+    // MemberChallengeProgress has no currentStreakDays — payload must not carry a days field
+    const [, , payload] = mockSendPushToMember.mock.calls[0];
+    expect(payload).not.toHaveProperty('days');
+  });
+
+  it('push failure does not affect sent count or skip notifiedAt mark', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-a', memberId: 'mem-1' }),
+    ]);
+    mockSendPushToMember.mockRejectedValueOnce(new Error('FCM down'));
+    const result = await runDailyChallengeReminders();
+    // Email succeeded → counted as sent; push failure is swallowed
+    expect(result).toEqual({ success: true, sent: 1, failed: 0 });
+    expect(__getUpdated('MemberChallengeProgress')).toHaveLength(1);
+  });
+
+  it('does not send push for ineligible records', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-done', completedAt: '2026-01-10T00:00:00Z' }),
+    ]);
+    await runDailyChallengeReminders();
+    expect(mockSendPushToMember).not.toHaveBeenCalled();
   });
 });
 

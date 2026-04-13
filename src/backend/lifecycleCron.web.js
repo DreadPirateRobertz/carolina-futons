@@ -170,6 +170,7 @@ export const runDailyChallengeReminders = webMethod(
   async () => {
     try {
       const { triggeredEmails } = await import('wix-crm-backend');
+      const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
 
       const sendFn = async (record) => {
         await triggeredEmails.emailMember(
@@ -183,6 +184,16 @@ export const runDailyChallengeReminders = webMethod(
             },
           }
         );
+
+        // Push is supplementary — email is the primary reminder channel.
+        // Failures are logged but do not affect send/failed counting or the
+        // notifiedAt mark (otherwise a flaky FCM response would re-send the
+        // entire batch on the next cron tick). cf-h6w
+        try {
+          await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
+        } catch (pushErr) {
+          console.error(`[lifecycleCron] challenge reminder push failed for ${record.memberId}:`, pushErr?.message);
+        }
       };
 
       const { sent, failed } = await sendBatchReminders('daily', sendFn);
