@@ -10,7 +10,7 @@
 export const SITE_URL = 'https://www.carolinafutons.com';
 export const STORE_CITY = 'hendersonville-nc';
 
-export const STORE_PHONE = '+1-828-693-1935';
+export const STORE_PHONE = '+1-828-252-9449';
 export const STORE_ADDRESS = {
   streetAddress: '824 Locust St',
   addressLocality: 'Hendersonville',
@@ -19,7 +19,7 @@ export const STORE_ADDRESS = {
   addressCountry: 'US',
 };
 export const STORE_GEO = { latitude: 35.3162, longitude: -82.4609 };
-export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
+export const STORE_HOURS = ['We-Sa 10:00-17:00'];
 
 /**
  * Approximate city-center geo coordinates for each /near/[city] page.
