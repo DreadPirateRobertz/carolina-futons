@@ -6,7 +6,9 @@
 // Setup: Set your TikTok Pixel ID in the PIXEL_ID constant below, or
 // configure it via Wix Dashboard > Marketing Integrations.
 
-let PIXEL_ID = ''; // Set TikTok Pixel ID here when obtained
+// Placeholder — real ID pending from Stilgar / Wix Dashboard > Marketing Integrations.
+// initTikTokPixel() short-circuits on the placeholder value so no broken script loads.
+let PIXEL_ID = 'TIKTOK_PIXEL_ID';
 
 /**
  * Set the TikTok Pixel ID at runtime (useful for tests and dynamic config).
@@ -27,7 +29,7 @@ export function initTikTokPixel() {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
     if (window.ttq) return; // Already initialized
 
-    if (!PIXEL_ID) return; // No pixel ID configured
+    if (!PIXEL_ID || PIXEL_ID === 'TIKTOK_PIXEL_ID') return; // No real pixel ID configured yet
 
     /* eslint-disable */
     !function (w, d, t) {

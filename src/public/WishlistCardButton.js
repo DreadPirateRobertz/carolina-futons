@@ -10,6 +10,7 @@
  * @module WishlistCardButton
  */
 import { trackEvent } from 'public/engagementTracker';
+import { fireAddToWishlist } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 
 // SVG heart icons — same visual language as socialWishlist.js
@@ -104,6 +105,7 @@ export function initCardWishlistButton($item, product, isWishlisted) {
           wishlisted = true;
           setHeartState($item, true, product.name);
           trackEvent('wishlist_add', { productId: product._id, source: 'product_card' });
+          fireAddToWishlist(product);
         }
       } catch (e) {
         console.error('[WishlistCardButton] toggle failed for product:', product._id, e);
