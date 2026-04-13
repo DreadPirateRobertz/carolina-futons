@@ -16,6 +16,7 @@ import {
   __reset as resetData,
   __seed,
   __getInserted,
+  __setInsertError,
   __onInsert,
   __setQueryError,
 } from './__mocks__/wix-data.js';
@@ -245,10 +246,11 @@ describe('notifyChallengePublished', () => {
     expect(result.success).toBe(true);
     expect(result.emailsSent).toBe(3);
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(3);
-    expect(log.every(e => e.templateId === 'challenge_new_weekly')).toBe(true);
-    expect(log.map(e => e.memberId)).toEqual(expect.arrayContaining(['mem-a', 'mem-b', 'mem-c']));
+    // Queue-based: implementation inserts into EmailQueue instead of calling triggeredEmails directly
+    const queue = __getInserted('EmailQueue');
+    expect(queue).toHaveLength(3);
+    expect(queue.every(e => e.templateId === 'challenge_new_weekly')).toBe(true);
+    expect(queue.map(e => e.recipientContactId)).toEqual(expect.arrayContaining(['mem-a', 'mem-b', 'mem-c']));
   });
 
   it('sends SMS to each opted-in member', async () => {
@@ -256,15 +258,16 @@ describe('notifyChallengePublished', () => {
 
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.smsSent).toBe(2);
-    expect(mockSendChallengeAlertSMS).toHaveBeenCalledTimes(2);
+    // Queue-based: inserts into ChallengeNotifSMSQueue instead of calling Twilio directly
+    expect(__getInserted('ChallengeNotifSMSQueue')).toHaveLength(2);
   });
 
   it('includes badge label in reward text when present', async () => {
     seedOptedIn(['mem-a']);
 
     await notifyChallengePublished(makeChallenge({ rewardBadgeLabel: 'Gold Reviewer' }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const queue = __getInserted('EmailQueue');
+    const vars = queue[0].variables;
     expect(vars.rewardText).toContain('Gold Reviewer');
   });
 
@@ -272,14 +275,14 @@ describe('notifyChallengePublished', () => {
     seedOptedIn(['mem-a']);
 
     await notifyChallengePublished(makeChallenge({ rewardPoints: 150 }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const queue = __getInserted('EmailQueue');
+    const vars = queue[0].variables;
     expect(vars.rewardText).toBe('150 pts');
   });
 
   it('individual email failure does not stop the pipeline', async () => {
     seedOptedIn(['mem-a', 'mem-b', 'mem-c']);
-    __failNextEmail(); // mem-a fails
+    __setInsertError('EmailQueue', new Error('email insert failed')); // mem-a insert fails
 
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
@@ -288,13 +291,11 @@ describe('notifyChallengePublished', () => {
 
   it('individual SMS failure does not stop the pipeline', async () => {
     seedOptedIn(['mem-a', 'mem-b']);
-    mockSendChallengeAlertSMS
-      .mockRejectedValueOnce(new Error('SMS timeout'))
-      .mockResolvedValueOnce({ success: true });
+    __setInsertError('ChallengeNotifSMSQueue', new Error('sms insert failed')); // mem-a insert fails
 
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
-    expect(result.smsSent).toBe(1);
+    expect(result.smsSent).toBe(1); // mem-b succeeds
   });
 });
 
