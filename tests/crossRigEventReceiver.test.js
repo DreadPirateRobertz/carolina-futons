@@ -24,7 +24,7 @@ import {
 import { crossRigEvent } from '../src/backend/crossRigEventReceiver.web.js';
 import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
 
-vi.mock('backend/crossRigSyncService.web', () => ({
+vi.mock('backend/utils/crossRigSyncUtils', () => ({
   syncBadgeEarnedToPush: vi.fn(async () => ({ success: true, pushSent: 1 })),
 }));
 
@@ -531,7 +531,7 @@ describe('crossRigEvent — badge_earned push dispatch (cf-bdl)', () => {
   beforeEach(() => { __setMember({ _id: 'mem-push-1' }); vi.clearAllMocks(); });
 
   it('calls syncBadgeEarnedToPush with memberId and badgeId', async () => {
-    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    const { syncBadgeEarnedToPush } = await import('backend/utils/crossRigSyncUtils');
     await crossRigEvent({
       schemaVersion: '1.0',
       event: 'badge_earned',
@@ -541,7 +541,7 @@ describe('crossRigEvent — badge_earned push dispatch (cf-bdl)', () => {
   });
 
   it('still returns success even if push dispatch throws', async () => {
-    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    const { syncBadgeEarnedToPush } = await import('backend/utils/crossRigSyncUtils');
     syncBadgeEarnedToPush.mockRejectedValueOnce(new Error('push service down'));
     const result = await crossRigEvent({
       schemaVersion: '1.0',
@@ -552,7 +552,7 @@ describe('crossRigEvent — badge_earned push dispatch (cf-bdl)', () => {
   });
 
   it('does not call syncBadgeEarnedToPush when badgeId is missing', async () => {
-    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    const { syncBadgeEarnedToPush } = await import('backend/utils/crossRigSyncUtils');
     await crossRigEvent({
       schemaVersion: '1.0',
       event: 'badge_earned',

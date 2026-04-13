@@ -1,8 +1,9 @@
 /**
- * crossRigSyncService — bidirectional web↔mobile gamification sync.
+ * @module crossRigSyncUtils
+ * @description Internal backend utilities for cross-rig gamification sync.
  *
- * syncMobilePoints: logs points earned on CFM devices into CrossRigSyncLog.
- * syncBadgeEarnedToPush: fires push notification to member devices on badge earn.
+ * Not a .web.js module — these functions are backend-only helpers called by
+ * crossRigEventReceiver. They are NOT exposed as public web endpoints.
  *
  * CF-z51
  */
@@ -48,7 +49,7 @@ export async function syncMobilePoints(memberId, points, eventType, sourceRig) {
     );
     return { success: true, points };
   } catch (err) {
-    console.error('[crossRigSyncService] syncMobilePoints error:', err);
+    console.error('[crossRigSyncUtils] syncMobilePoints error:', err);
     return { success: false, error: err.message };
   }
 }
@@ -65,7 +66,7 @@ export async function syncBadgeEarnedToPush(memberId, badgeId) {
     const { sent } = await sendPushToMember(memberId, PUSH_EVENTS.BADGE_EARNED, { badgeId });
     return { success: true, pushSent: sent };
   } catch (err) {
-    console.error('[crossRigSyncService] syncBadgeEarnedToPush error:', err);
+    console.error('[crossRigSyncUtils] syncBadgeEarnedToPush error:', err);
     return { success: false, error: err.message };
   }
 }
