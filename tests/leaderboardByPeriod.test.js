@@ -22,6 +22,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __setQueryError } from 'wix-data';
+import { __setMember, __reset as resetMember } from 'wix-members-backend';
 import { getLeaderboardByPeriod, getMyRank } from '../src/backend/leaderboardService.web.js';
 
 const NOW = new Date('2026-04-13T12:00:00.000Z');
@@ -45,6 +46,7 @@ function makeLedgerEntry(memberId, delta, timestamp) {
 
 beforeEach(() => {
   __reset();
+  resetMember();
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
@@ -173,45 +175,52 @@ describe('getLeaderboardByPeriod — invalid period', () => {
 // ── getMyRank ─────────────────────────────────────────────────────────────────
 
 describe('getMyRank', () => {
-  it('returns null for falsy memberId', async () => {
-    expect(await getMyRank(null)).toBeNull();
-    expect(await getMyRank('')).toBeNull();
+  it('returns null when unauthenticated (no session)', async () => {
+    // No __setMember call — getMember throws → returns null
+    __seed('MemberPoints', [makeMember({ memberId: 'mem-top', totalPoints: 1000, leaderboardOptIn: true })]);
+    const result = await getMyRank();
+    expect(result).toBeNull();
   });
 
   it('returns null when member has no MemberPoints record', async () => {
+    __setMember({ _id: 'mem-unknown' });
     __seed('MemberPoints', []);
-    const result = await getMyRank('mem-unknown');
+    const result = await getMyRank();
     expect(result).toBeNull();
   });
 
   it('returns rank 1 when member has the most points', async () => {
+    __setMember({ _id: 'mem-top' });
     __seed('MemberPoints', [
       makeMember({ memberId: 'mem-top', totalPoints: 1000, leaderboardOptIn: true }),
       makeMember({ memberId: 'mem-low', totalPoints: 100,  leaderboardOptIn: true }),
     ]);
-    const result = await getMyRank('mem-top');
+    const result = await getMyRank();
     expect(result).toMatchObject({ rank: 1, points: 1000 });
   });
 
   it('returns correct rank when others have more points', async () => {
+    __setMember({ _id: 'mem-me' });
     __seed('MemberPoints', [
       makeMember({ memberId: 'mem-1', totalPoints: 900, leaderboardOptIn: true }),
       makeMember({ memberId: 'mem-2', totalPoints: 700, leaderboardOptIn: true }),
       makeMember({ memberId: 'mem-me', totalPoints: 300, leaderboardOptIn: true }),
     ]);
-    const result = await getMyRank('mem-me');
+    const result = await getMyRank();
     expect(result).toMatchObject({ rank: 3, points: 300 });
   });
 
   it('includes tier in the result', async () => {
+    __setMember({ _id: 'mem-a' });
     __seed('MemberPoints', [makeMember({ memberId: 'mem-a', tier: 'Mountain Guide', totalPoints: 500, leaderboardOptIn: true })]);
-    const result = await getMyRank('mem-a');
+    const result = await getMyRank();
     expect(result.tier).toBe('Mountain Guide');
   });
 
   it('returns null on query error', async () => {
+    __setMember({ _id: 'mem-a' });
     __setQueryError('MemberPoints', new Error('DB down'));
-    const result = await getMyRank('mem-a');
+    const result = await getMyRank();
     expect(result).toBeNull();
   });
 });

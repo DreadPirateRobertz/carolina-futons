@@ -91,7 +91,7 @@ export async function _getTrailProgressForMember(memberId) {
       .query(TRAIL_PROGRESS_COLLECTION)
       .eq('memberId', memberId)
       .limit(100)
-      .find();
+      .find({ suppressAuth: true });
 
     // Index saved progress by trailId for O(1) lookup
     const progressByTrailId = {};
