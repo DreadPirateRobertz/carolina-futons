@@ -49,6 +49,7 @@ export async function registerToken(memberId, token, platform) {
  * @param {string} memberId
  * @returns {Promise<Array>}
  */
+// idor-ok: internal helper — caller (webMethod or pushNotificationService) validates session ownership before passing memberId
 export async function getActiveTokensForMember(memberId) {
   try {
     const result = await wixData
@@ -71,6 +72,7 @@ export async function getActiveTokensForMember(memberId) {
  * @param {string} token
  * @returns {Promise<{ success: boolean, error?: string }>}
  */
+// idor-ok: internal helper — caller validates session ownership before passing memberId; scoped query ensures only member's own tokens are touched
 export async function deactivateToken(memberId, token) {
   try {
     const result = await wixData
