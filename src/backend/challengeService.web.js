@@ -22,8 +22,6 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
-import { currentMember } from 'wix-members-backend';
-import { Permissions, webMethod } from 'wix-web-module';
 import { logError } from 'backend/utils/errorHandler';
 import { deliverTrailPerk } from 'backend/trailPerkService.web';
 
