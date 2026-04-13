@@ -19,8 +19,8 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
-import { syncBadgeEarnedToPush } from 'backend/crossRigSyncService.web.js';
-import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web.js';
+import { syncBadgeEarnedToPush } from 'backend/crossRigSyncService.web';
+import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
 
 const SUPPORTED_EVENTS = new Set([
   'streak_extended',
