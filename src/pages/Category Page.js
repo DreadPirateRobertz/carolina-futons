@@ -40,6 +40,8 @@ let _debounceTimer = null;
 let _basicFilterTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
 let _wishlistSet = new Set(); // cached wishlist status for product cards
+let _loyaltyAccount = null; // cached loyalty account for per-card gamification chip (CF-pyw)
+let _renderCardChipFn = null; // lazy-loaded render helper (dynamic import keeps page import budget)
 
 // sanitizeInput aliased from shared module
 const sanitizeInput = sanitizeFilterInput;
@@ -109,6 +111,7 @@ $w.onReady(async function () {
     { name: 'filterControls', init: () => initFilterControls(), critical: false },
     { name: 'advancedFilters', init: () => initAdvancedFilters(currentPath), critical: false },
     { name: 'wishlistStatus', init: () => preloadWishlistStatus(), critical: false },
+    { name: 'loyaltyAccount', init: () => preloadLoyaltyAccount(), critical: false },
     { name: 'recentlyViewed', init: () => initRecentlyViewed(), critical: false },
     { name: 'quickView', init: () => initQuickViewHandlers(), critical: false },
     { name: 'categoryMeta', init: () => injectCategoryMeta(currentPath), critical: false },
@@ -525,6 +528,34 @@ async function preloadWishlistStatus() {
   } catch (e) {}
 }
 
+// ── Loyalty Account Preload ─────────────────────────────────────────
+// Fetch the member's loyalty account once per page so product cards can
+// show a gamification chip (tier + points) in browse context.
+// Silently no-ops for unauthenticated visitors. CF-pyw
+
+async function preloadLoyaltyAccount() {
+  try {
+    const [loyaltyMod, chipMod] = await Promise.all([
+      import('backend/loyaltyService.web'),
+      import('public/GamificationProductChip.js'),
+    ]);
+    _renderCardChipFn = chipMod.renderCardGamificationChip;
+    _loyaltyAccount = await loyaltyMod.getMyLoyaltyAccount();
+    // Refresh already-rendered cards — onItemReady fires before this resolves
+    // for items visible at page load, so chips would be blank without this. (CF-pyw)
+    try {
+      const repeater = $w('#productGridRepeater');
+      if (repeater && _renderCardChipFn) {
+        repeater.forEachItem(($item) => {
+          _renderCardChipFn($item, _loyaltyAccount);
+        });
+      }
+    } catch (e) {}
+  } catch (e) {
+    _loyaltyAccount = null;
+  }
+}
+
 // ── Product Grid ────────────────────────────────────────────────────
 // Enhanced product cards with hover effects, quick-view, and badges
 
@@ -569,6 +600,9 @@ function initProductGrid() {
       // Card container structure: white bg, 12px radius, shadow, hover
       try { styleCardContainer($item('#gridCard')); } catch (e) {}
       try { initCardHover($item('#gridCard')); } catch (e) {}
+
+      // Gamification chip: member's tier + points in browse context (CF-pyw)
+      if (_renderCardChipFn) _renderCardChipFn($item, _loyaltyAccount);
 
       // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';

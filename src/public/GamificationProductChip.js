@@ -82,6 +82,52 @@ export function renderTierChip($wFn, account) {
 }
 
 /**
+ * Format the compact card chip label used on collection/category product
+ * grids. Combines tier and points so a member sees their standing while
+ * browsing. Exported for unit testing.
+ *
+ * CF-pyw
+ *
+ * @param {Object|null} account - Loyalty account from getMyLoyaltyAccount
+ * @returns {string} e.g. "🔵 Trail Blazer · 200 pts", or tier-only, or points-only, or ''
+ */
+export function formatCardChipLabel(account) {
+  const tierLabel   = formatTierChipLabel(account);
+  const pointsLabel = formatPointsChipLabel(account);
+  if (tierLabel && pointsLabel) return `${tierLabel} · ${pointsLabel}`;
+  return tierLabel || pointsLabel || '';
+}
+
+/**
+ * Render the gamification chip on a single product card within a
+ * collection/category repeater. Called from the repeater's onItemReady
+ * with the per-item selector ($item). No-ops gracefully if the chip
+ * element is absent (template without the chip) or if $item throws
+ * (item not mounted). Hides the chip for unauthenticated visitors.
+ *
+ * CF-pyw
+ *
+ * @param {Function} $item - Repeater item selector
+ * @param {Object|null} account - Loyalty account from getMyLoyaltyAccount
+ */
+export function renderCardGamificationChip($item, account) {
+  try {
+    const chip = $item('#gridGamificationChip');
+    if (!chip) return;
+    const label = formatCardChipLabel(account);
+    if (label) {
+      chip.text = label;
+      if (account?.tier) chip.style.color = getTierColor(account.tier);
+      chip.show();
+    } else {
+      chip.hide();
+    }
+  } catch (err) {
+    console.warn('[GamificationProductChip] renderCardGamificationChip failed:', err?.message ?? err);
+  }
+}
+
+/**
  * Initialise the member tier chip on any page.
  * Fetches the loyalty account and renders the chip elements.
  * Silently no-ops for unauthenticated visitors (null account).
