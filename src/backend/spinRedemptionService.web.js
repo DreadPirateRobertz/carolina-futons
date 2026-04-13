@@ -55,6 +55,7 @@ export async function grantSpin(memberId) {
  * @param {string} memberId
  * @returns {Promise<Array>}
  */
+// idor-ok: internal helper — caller (webMethod) validates session ownership before passing memberId; results scoped to member
 export async function getPendingSpins(memberId) {
   try {
     const result = await wixData

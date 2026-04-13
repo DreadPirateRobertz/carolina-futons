@@ -47,6 +47,7 @@ function _todayStart() {
  * @param {object} params        - { productId?, score?, total?, platform? }
  * @returns {Promise<{ success: boolean, alreadyAwarded?: boolean, pointsAwarded?: number, error?: string }>}
  */
+// idor-ok: called from crossRigEventReceiver webMethod which resolves memberId from authenticated session (hq-u35ub)
 export async function completeMobileChallenge(memberId, challengeType, params = {}) {
   if (!memberId) return { success: false, error: 'memberId is required' };
   if (!VALID_TYPES.has(challengeType)) {
@@ -95,6 +96,7 @@ export async function completeMobileChallenge(memberId, challengeType, params = 
  * @param {string} memberId
  * @returns {Promise<{ success: boolean, counts: object, error?: string }>}
  */
+// idor-ok: internal helper — caller (webMethod) validates session before passing memberId; read-only aggregate, no mutation
 export async function getMobileChallengeProgress(memberId) {
   try {
     const result = await wixData
