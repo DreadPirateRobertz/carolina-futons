@@ -78,20 +78,19 @@ export function buildCheckpoints(challengeIds, completedChallengeIds) {
 /**
  * Initialises the Trail Progress widget for a single trail.
  *
- * Fetches progress for `memberId`, locates `trailId` in the response, then
- * populates the checkpoint repeater and perk section.  Hides the outer section
- * and returns early on any error or missing trail so the page is unaffected.
+ * Fetches progress for the authenticated member (server-side), locates `trailId`
+ * in the response, then populates the checkpoint repeater and perk section.
+ * Hides the outer section and returns early on any error or missing trail.
  *
- * @param {string}   memberId   — authenticated member ID
  * @param {string}   trailId    — trail to display (e.g. 'trail-spring')
  * @param {Object}   [opts]     — injectable overrides for testing
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getTrailProgress]
  * @returns {Promise<void>}
  */
-export async function initTrailProgressWidget(memberId, trailId, opts = {}) {
+export async function initTrailProgressWidget(trailId, opts = {}) {
   const $w               = opts.$w               ?? globalThis.$w;
-  const getTrailProgress = opts.getTrailProgress  ?? (() => getMyTrailProgress());
+  const getTrailProgress = opts.getTrailProgress  ?? (() => _defaultGetTrailProgress());
 
   // Start hidden — reveal once we have data.
   try { $w('#trailProgressSection').hide(); } catch (e) {}
@@ -99,7 +98,7 @@ export async function initTrailProgressWidget(memberId, trailId, opts = {}) {
   // ── Fetch trail progress ────────────────────────────────────────────────────
   let trail;
   try {
-    const response = await getTrailProgress(memberId);
+    const response = await getTrailProgress();
     if (!response?.success) return;
     trail = (response.trails || []).find(t => t.trailId === trailId);
     if (!trail) return;

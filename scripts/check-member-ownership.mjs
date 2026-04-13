@@ -34,6 +34,36 @@ const QUERY_PATTERN = /\.eq\s*\(/;
 const OWNERSHIP_CHECK = /getMember\s*\(\)|currentMember\s*\.|requireOwnMember\s*\(/;
 
 /**
+ * Extract plain `export async function` from .web.js source.
+ * These bypass webMethod auth entirely — invisible to the original scanner.
+ * Returns array of {name, params, body, lineNumber, isPlainExport: true}.
+ */
+export function extractPlainExports(source) {
+  const methods = [];
+  // Match plain exported async functions; skip _-prefixed (internal helpers)
+  const fnRe = /export\s+async\s+function\s+(\w+)\s*\(([^)]*)\)\s*\{/g;
+  let match;
+  while ((match = fnRe.exec(source)) !== null) {
+    const name = match[1];
+    // Skip _-prefixed functions: convention for internal backend-to-backend helpers
+    if (name.startsWith('_')) continue;
+    const params = match[2];
+    const startIdx = match.index + match[0].length - 1;
+    let depth = 1;
+    let i = startIdx + 1;
+    while (i < source.length && depth > 0) {
+      if (source[i] === '{') depth++;
+      else if (source[i] === '}') depth--;
+      i++;
+    }
+    const body = source.slice(startIdx, i);
+    const lineNumber = source.slice(0, match.index).split('\n').length;
+    methods.push({ name, params, body, lineNumber, isPlainExport: true });
+  }
+  return methods;
+}
+
+/**
  * Extract all SiteMember webMethod function bodies from a file's source text.
  * Returns array of {name, params, body, lineNumber} for each SiteMember webMethod.
  */
@@ -102,10 +132,13 @@ export function checkMethodForIDOR(method) {
   if (!QUERY_PATTERN.test(body)) return { violation: false };
   // Check if ownership is verified
   if (OWNERSHIP_CHECK.test(body)) return { violation: false };
-  const label = kind === 'plain'
-    ? `Plain export '${name}' accepts memberId-like param and queries data without getMember() ownership check`
-    : `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`;
-  return { violation: true, reason: label };
+  const isPlain = method.isPlainExport === true || kind === 'plain';
+  return {
+    violation: true,
+    reason: isPlain
+      ? `Plain export '${name}' in .web.js accepts memberId-like param — bypasses webMethod auth; wrap in webMethod() and derive memberId server-side`
+      : `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`,
+  };
 }
 
 /**
@@ -120,17 +153,15 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
   for (const file of files) {
     const filePath = join(backendDir, file);
     const source = readFileSync(filePath, 'utf8');
-
     // Scan webMethod-wrapped SiteMember functions
-    const webMethods = extractSiteMemberMethods(source);
-    for (const method of webMethods) {
+    for (const method of extractSiteMemberMethods(source)) {
       const result = checkMethodForIDOR(method);
       if (result.violation) {
         violations.push({ file, name: method.name, line: method.lineNumber, reason: result.reason });
       }
     }
 
-    // Scan plain exported functions (GH-990 gap)
+    // Scan plain exported functions (GH-990 gap) — honors // idor-ok: annotations
     const sourceLines = source.split('\n');
     const plainFns = extractPlainExportedFunctions(source);
     for (const fn of plainFns) {

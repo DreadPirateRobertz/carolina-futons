@@ -26,8 +26,8 @@ vi.mock('wix-members-backend', () => ({
 }));
 
 vi.mock('backend/challengeService.web', () => ({
-  getTrailProgress: mockGetTrailProgress,
-  recordTrailChallengeCompletion: mockRecordTrailChallengeCompletion,
+  _getTrailProgressForMember: mockGetTrailProgress,
+  _recordTrailChallengeCompletion: mockRecordTrailChallengeCompletion,
 }));
 
 // ── Import SUT ────────────────────────────────────────────────────────────────
