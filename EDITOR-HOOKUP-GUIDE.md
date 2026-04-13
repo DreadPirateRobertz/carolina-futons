@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-04 (v3.1 — Warranty Registration (CF-46ct, PR #923) — 9 elements; NPS Survey (CF-1mlj, PR #924) — 8 elements; Video Review Grid on PDP (CF-ou66.3, PR #941) — 6 elements + 3 repeater children; Style Quiz Result / Futon Sommelier hookup (cf-p1c9, PR #919) — 11 elements + 8 children. Also merged: Video Review Badge backend (CF-ou66.2), Trail Perk Unlock backend (CF-mcyh.2), Content Calendar/Buying Guides (cf-6ika/cf-vyvy), Delivery SMS backend (CF-rjxq). Previous: v3.0 — BNPL Widget + Share Your Room.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-13 (v4.0 — Phase 6 App-Forward: push notifications (cf-push-1/cf-push-2), deep links (cf-deeplink), spin redemption (cf-spin), mobile challenges AR/quiz/social (cf-mobile-challenges), cross-rig sync (cf-cross-rig), Challenge of Week backend (cf-rsr ✅), Leaderboard backend (cf-73p ✅), gamification chips (cf-tcs ✅), streak cron (cf-2yd ✅). New CMS collections: PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. Previous: v3.1 — Warranty/NPS/VideoReviewGrid/StyleQuizResult.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -2836,3 +2836,60 @@ Recommendations and personalized copy fetched in parallel via `Promise.allSettle
 | AI Room Staging | 🔲 Backend merged (commit 17a72f85) — PDP "See It In Your Room" button TBD | CF-s22f — photo upload + AI composite |
 | Live Showroom Camera | 🔲 Backend merged (commit f72ddb7e) — PDP "See It Live" toggle TBD | CF-gt99 — webcam feed + reserve button |
 | App Download Banner | 🔲 Backend merged (PR #884) — Android elements need editor wiring | CF-e2ib — iOS auto via meta tag; Android needs #appDownloadBanner |
+| Leaderboard | 🔲 Backend complete (cf-73p ✅ 2026-04-13) — new `/leaderboard` page TBD | `getLeaderboardByPeriod()` + `getMyRank()` ready — see Phase 6 section |
+| Challenge of the Week | 🔲 Backend complete (cf-rsr ✅ 2026-04-13) — Homepage section wiring TBD | `getActiveChallengeOfWeek()` ready — see Phase 6 section |
+| Gamification Chips | 🔲 Backend complete (cf-tcs ✅ 2026-04-13) — Collection/Category card overlay TBD | Add `#gamificationChip` inside `#collectionRepeater` item template |
+
+---
+
+## PHASE 6 — App-Forward Services (v4.0, 2026-04-13)
+
+> All Phase 6 features are **app/mobile-focused backend services — no editor elements yet** (Stilgar-independent). CMS collections must be created in Wix CMS. Frontend wiring elements documented below for when hookup begins.
+
+### ⚠️ New CMS Collections — Stilgar must create
+
+| Collection | Fields | Purpose |
+|---|---|---|
+| `PushTokens` | `memberId`, `token` (FCM/APNs), `platform` (ios\|android\|web), `active` (Boolean) | Device push token registry for FCM/APNs dispatch |
+| `SpinGrants` | `memberId`, `grantedAt`, `expiresAt`, `redeemedAt`, `reward` (coupon\|bonus_points\|free_ship), `rewardValue`, `status` (pending\|redeemed\|expired) | Bonus spin grant/redeem — 30-day expiry |
+| `MobileChallengeCompletions` | `memberId`, `challengeType` (ar_discovery\|quiz_completion\|social_share), `completedAt`, `pointsAwarded`, `productId`, `score`, `platform` | App challenge log. Points: AR=75, Quiz=50, Social=100. Daily cap per type+product |
+| `CrossRigSyncLog` | `memberId`, `points`, `eventType`, `sourceRig` (cfutons_mobile), `syncedAt`, `direction` (mobile_to_web) | Cross-rig point sync audit trail |
+
+### Future Wiring — Leaderboard Page (`/leaderboard`)
+
+Backend: `leaderboardService.web.js` — `getLeaderboardByPeriod(period, limit)` + `getMyRank()`
+
+| Element ID | Type | Notes |
+|---|---|---|
+| `leaderboardRepeater` | Repeater | Top N members |
+| `leaderRank` | Text | Rank number (inside repeater) |
+| `leaderName` | Text | Display name |
+| `leaderPoints` | Text | Points total |
+| `leaderTier` | Text | bronze/silver/gold/platinum |
+| `myRankSection` | Box | Personal rank widget — logged-in only |
+| `myRank` | Text | My rank |
+| `myPoints` | Text | My points |
+| `periodSelector` | Dropdown | week / month / alltime |
+
+### Future Wiring — Challenge of the Week (Homepage)
+
+Backend: `challengeOfWeekService.web.js` — `getActiveChallengeOfWeek()`
+
+| Element ID | Type | Notes |
+|---|---|---|
+| `challengeOfWeekSection` | Box | Hidden by default; shown when active challenge exists |
+| `challengeTitle` | Text | Challenge name |
+| `challengeDescription` | Text | Challenge details |
+| `challengeProgressBar` | Progress bar | Member completion % |
+| `challengeProgressLabel` | Text | e.g. "342 / 500 points" |
+| `challengeCTA` | Button | → navigates to challenge detail |
+
+### Future Wiring — Gamification Chips (inside `#collectionRepeater` item)
+
+Backend: `gamificationChipsService.web.js` — `getGamificationChipsForProducts(productIds, memberId)`
+
+| Element ID | Type | Notes |
+|---|---|---|
+| `gamificationChip` | Box | Hidden by default; shown when member earned relevant badge |
+| `chipBadgeIcon` | Image | Badge icon, 24×24px |
+| `chipLabel` | Text | e.g. "You've earned a badge here!" |

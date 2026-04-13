@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v3.1 · Updated 2026-04-04 — Warranty Registration (CF-46ct, PR #923) — 9 elements; NPS Survey (CF-1mlj, PR #924) — 8 elements; Video Review Grid on PDP (CF-ou66.3, PR #941) — 6 elements + 3 repeater children; Style Quiz Result / Futon Sommelier hookup (cf-p1c9, PR #919) — 11 elements + 6 repeater children; Room Planner Canvas update (CF-eqc5.3, PR #949). Also merged: Video Review Badge backend (CF-ou66.2, PR #940), Trail Perk Unlock backend (CF-mcyh.2, PR #942), Content Calendar/Buying Guides (cf-6ika/cf-vyvy, PR #921), Delivery SMS backend (CF-rjxq, PR #916), Flaky test fix (CF-0ypu, PR #946). Previous: v3.0 — BNPL Widget + Share Your Room. Phase 8 COMPLETE ✅</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v4.0 · Updated 2026-04-13 — Phase 6 App-Forward: push notifications, deep links, spin redemption, mobile challenges (AR/quiz/social), cross-rig sync, Challenge of the Week (cf-rsr ✅), Leaderboard (cf-73p ✅), gamification chips (cf-tcs ✅), streak cron (cf-2yd ✅). New CMS collections: PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. Previous: v3.1 — Warranty (CF-46ct) · NPS (CF-1mlj) · VideoReviewGrid (CF-ou66.3) · StyleQuizResult (cf-p1c9). Phase 8 COMPLETE ✅</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -5901,6 +5901,87 @@ function render() {
     '</div>',
   ].join('');
   main.appendChild(hookupSteps);
+
+  // ── PHASE 6 APP-FORWARD — CMS COLLECTIONS + FUTURE WIRING ──
+  const phase6Section = document.createElement('div');
+  phase6Section.className = 'howto';
+  phase6Section.style.cssText = 'border-left:4px solid #5B8FA8;';
+  const p6h = document.createElement('h2');
+  p6h.textContent = '📱 Phase 6 — App-Forward Services (v4.0, 2026-04-13)';
+  phase6Section.appendChild(p6h);
+
+  const p6intro = document.createElement('p');
+  p6intro.style.cssText = 'color:#555;font-size:0.9em;margin-bottom:14px;';
+  p6intro.textContent = 'All Phase 6 features are app/mobile-focused backend services — no editor elements yet (Stilgar-independent). CMS collections below must be created in Wix CMS. Future wiring elements are documented so they\'re ready when hookup begins.';
+  phase6Section.appendChild(p6intro);
+
+  const p6warn = document.createElement('div');
+  p6warn.style.cssText = 'background:#fff8e1;border:2px solid #f9a825;border-radius:8px;padding:14px 18px;margin-bottom:18px;';
+  p6warn.innerHTML = '<strong style="color:#e65100;font-size:1.05em;">⚠️ Action Required — Stilgar must create these CMS Collections</strong><p style="font-size:0.88em;margin:8px 0 0;">4 new collections needed for Phase 6 features to work in production.</p>';
+  phase6Section.appendChild(p6warn);
+
+  const p6cms = document.createElement('table');
+  p6cms.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:20px;font-size:0.87em;';
+  p6cms.innerHTML = [
+    '<tr style="background:#e8d5b7;"><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;width:220px;">Collection</th><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;">Fields</th><th style="text-align:left;padding:7px 10px;border:1px solid #c8b89a;width:210px;">Purpose</th></tr>',
+    '<tr><td style="padding:7px 10px;border:1px solid #ddd;font-weight:600;vertical-align:top;"><code>PushTokens</code></td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;"><code>memberId</code> · <code>token</code> (FCM/APNs) · <code>platform</code> (ios|android|web) · <code>active</code> (Boolean)</td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;">Device push token registry for FCM dispatch.</td></tr>',
+    '<tr style="background:#fafaf8;"><td style="padding:7px 10px;border:1px solid #ddd;font-weight:600;vertical-align:top;"><code>SpinGrants</code></td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;"><code>memberId</code> · <code>grantedAt</code> · <code>expiresAt</code> · <code>redeemedAt</code> · <code>reward</code> (coupon|bonus_points|free_ship) · <code>rewardValue</code> · <code>status</code> (pending|redeemed|expired)</td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;">Bonus spin grant/redeem. Expires 30 days after grant.</td></tr>',
+    '<tr><td style="padding:7px 10px;border:1px solid #ddd;font-weight:600;vertical-align:top;"><code>MobileChallengeCompletions</code></td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;"><code>memberId</code> · <code>challengeType</code> (ar_discovery|quiz_completion|social_share) · <code>completedAt</code> · <code>pointsAwarded</code> · <code>productId</code> · <code>score</code> · <code>platform</code></td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;">App challenge log. Points: AR=75, Quiz=50, Social=100. Daily cap.</td></tr>',
+    '<tr style="background:#fafaf8;"><td style="padding:7px 10px;border:1px solid #ddd;font-weight:600;vertical-align:top;"><code>CrossRigSyncLog</code></td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;"><code>memberId</code> · <code>points</code> · <code>eventType</code> · <code>sourceRig</code> (cfutons_mobile) · <code>syncedAt</code> · <code>direction</code> (mobile_to_web)</td><td style="padding:7px 10px;border:1px solid #ddd;vertical-align:top;">Cross-rig point sync audit trail.</td></tr>',
+  ].join('');
+  phase6Section.appendChild(p6cms);
+
+  const p6future = document.createElement('h3');
+  p6future.style.cssText = 'margin:0 0 10px;color:#3A2518;';
+  p6future.textContent = 'Future Editor Wiring — Coming After Hookup';
+  phase6Section.appendChild(p6future);
+
+  const p6futurep = document.createElement('p');
+  p6futurep.style.cssText = 'font-size:0.88em;color:#555;margin-bottom:12px;';
+  p6futurep.textContent = 'Backend is live. Add these elements when hookup session begins.';
+  phase6Section.appendChild(p6futurep);
+
+  const p6items = [
+    {
+      color:'#e3f2fd', border:'#90caf9',
+      title:'🏆 Leaderboard Page — /leaderboard',
+      sub:'leaderboardService.web.js · getLeaderboardByPeriod() + getMyRank() (cf-73p ✅ merged)',
+      rows:[['leaderboardRepeater','Repeater','Top N members'],['leaderRank','Text','Rank number (inside repeater)'],['leaderName','Text','Display name'],['leaderPoints','Text','Points total'],['leaderTier','Text','bronze/silver/gold/platinum'],['myRankSection','Box','Personal rank widget — logged-in only'],['myRank','Text','My rank number'],['myPoints','Text','My points'],['periodSelector','Dropdown','week / month / alltime']],
+    },
+    {
+      color:'#e8f5e9', border:'#a5d6a7',
+      title:'📅 Challenge of the Week — Homepage Section',
+      sub:'challengeOfWeekService.web.js · getActiveChallengeOfWeek() (cf-rsr ✅ merged)',
+      rows:[['challengeOfWeekSection','Box','Hidden by default; shown when active challenge exists'],['challengeTitle','Text','Challenge name'],['challengeDescription','Text','Challenge details'],['challengeProgressBar','Progress bar','Member completion %'],['challengeProgressLabel','Text','e.g. "342 / 500 points"'],['challengeCTA','Button','→ navigates to challenge detail']],
+    },
+    {
+      color:'#f3e5f5', border:'#ce93d8',
+      title:'🏷️ Gamification Chips — inside #collectionRepeater item',
+      sub:'gamificationChipsService.web.js · getGamificationChipsForProducts() (cf-tcs ✅ merged)',
+      rows:[['gamificationChip','Box','Hidden by default; shown when member earned relevant badge'],['chipBadgeIcon','Image','Badge icon 24×24px'],['chipLabel','Text','e.g. "You\'ve earned a badge here!"']],
+    },
+  ];
+
+  p6items.forEach(item => {
+    const box = document.createElement('div');
+    box.style.cssText = 'background:' + item.color + ';border:1px solid ' + item.border + ';border-radius:6px;padding:12px 16px;margin-bottom:14px;';
+    const bh = document.createElement('strong');
+    bh.textContent = item.title;
+    box.appendChild(bh);
+    box.appendChild(document.createElement('br'));
+    const bs = document.createElement('span');
+    bs.style.cssText = 'font-size:0.88em;color:#555;';
+    bs.textContent = item.sub;
+    box.appendChild(bs);
+    const bt = document.createElement('table');
+    bt.style.cssText = 'width:100%;border-collapse:collapse;margin-top:10px;font-size:0.85em;';
+    bt.innerHTML = '<tr style="background:rgba(0,0,0,0.06);"><th style="text-align:left;padding:5px 8px;border:1px solid rgba(0,0,0,0.1);">Element ID</th><th style="text-align:left;padding:5px 8px;border:1px solid rgba(0,0,0,0.1);">Type</th><th style="text-align:left;padding:5px 8px;border:1px solid rgba(0,0,0,0.1);">Notes</th></tr>' +
+      item.rows.map((r,i) => '<tr' + (i%2===1?' style="background:rgba(255,255,255,0.5);"':'') + '><td style="padding:5px 8px;border:1px solid rgba(0,0,0,0.1);font-family:monospace;">#' + r[0] + '</td><td style="padding:5px 8px;border:1px solid rgba(0,0,0,0.1);">' + r[1] + '</td><td style="padding:5px 8px;border:1px solid rgba(0,0,0,0.1);">' + r[2] + '</td></tr>').join('');
+    box.appendChild(bt);
+    phase6Section.appendChild(box);
+  });
+
+  main.appendChild(phase6Section);
 
   // ── HOW TO ──
   const howto = document.createElement('div');
