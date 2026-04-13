@@ -7,7 +7,7 @@
  * CF-z51
  */
 import wixData from 'wix-data';
-import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web.js';
+import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
 
 export const SYNC_LOG_COLLECTION = 'CrossRigSyncLog';
 const ALLOWED_SOURCE_RIGS = ['cfutons_mobile'];
@@ -24,6 +24,9 @@ const ALLOWED_SOURCE_RIGS = ['cfutons_mobile'];
  * @returns {Promise<{ success: boolean, points?: number, error?: string }>}
  */
 export async function syncMobilePoints(memberId, points, eventType, sourceRig) {
+  if (!memberId) {
+    return { success: false, error: 'memberId is required' };
+  }
   if (!ALLOWED_SOURCE_RIGS.includes(sourceRig)) {
     return { success: false, error: `unknown source rig: ${sourceRig}` };
   }

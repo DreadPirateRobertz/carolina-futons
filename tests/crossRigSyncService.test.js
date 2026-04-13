@@ -10,7 +10,7 @@ import {
 const MEMBER_ID = 'member-sync-1';
 function setMember() { __setMember({ _id: MEMBER_ID }); }
 
-vi.mock('backend/pushNotificationService.web.js', () => ({
+vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: vi.fn(async () => ({ sent: 1, failed: 0 })),
   PUSH_EVENTS: {
     BADGE_EARNED: 'badge_earned',
@@ -34,6 +34,17 @@ describe('syncMobilePoints', () => {
     const result = await syncMobilePoints(MEMBER_ID, 150, 'quiz_completed', 'cfutons_mobile');
     expect(result.success).toBe(true);
     expect(result.points).toBe(150);
+  });
+
+  it('rejects empty memberId', async () => {
+    const result = await syncMobilePoints('', 100, 'quiz_completed', 'cfutons_mobile');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/memberId/i);
+  });
+
+  it('rejects null memberId', async () => {
+    const result = await syncMobilePoints(null, 100, 'quiz_completed', 'cfutons_mobile');
+    expect(result.success).toBe(false);
   });
 
   it('rejects unknown source rig', async () => {
@@ -95,7 +106,7 @@ describe('syncBadgeEarnedToPush', () => {
 
   it('calls sendPushToMember with correct args', async () => {
     setMember();
-    const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web.js');
+    const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
     await syncBadgeEarnedToPush(MEMBER_ID, 'first_purchase');
     expect(sendPushToMember).toHaveBeenCalledWith(
       MEMBER_ID,
@@ -106,7 +117,7 @@ describe('syncBadgeEarnedToPush', () => {
 
   it('returns success: false on push service error', async () => {
     setMember();
-    const { sendPushToMember } = await import('backend/pushNotificationService.web.js');
+    const { sendPushToMember } = await import('backend/pushNotificationService.web');
     sendPushToMember.mockRejectedValueOnce(new Error('push service down'));
     const result = await syncBadgeEarnedToPush(MEMBER_ID, 'badge-x');
     expect(result.success).toBe(false);
@@ -115,7 +126,7 @@ describe('syncBadgeEarnedToPush', () => {
 
   it('returns pushSent 0 when member has no tokens', async () => {
     setMember();
-    const { sendPushToMember } = await import('backend/pushNotificationService.web.js');
+    const { sendPushToMember } = await import('backend/pushNotificationService.web');
     sendPushToMember.mockResolvedValueOnce({ sent: 0, failed: 0 });
     const result = await syncBadgeEarnedToPush(MEMBER_ID, 'new_badge');
     expect(result.success).toBe(true);
