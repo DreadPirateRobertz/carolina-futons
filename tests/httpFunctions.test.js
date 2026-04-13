@@ -328,6 +328,36 @@ describe('get_pinterestProductFeed', () => {
     await get_pinterestProductFeed();
     expect(__getLastFindOptions('Stores/Products')).toEqual({ suppressAuth: true });
   });
+
+  it('normalizes wix:image:// URIs in image_link to static.wixstatic.com CDN URLs', async () => {
+    __seed('Stores/Products', [{
+      _id: 'prod-wix',
+      name: 'Wix Image Product',
+      slug: 'wix-image-product',
+      price: 499,
+      discountedPrice: null,
+      mainMedia: 'wix:image://v1/abc123.jpg/photo.jpg#originWidth=1200',
+      description: 'Test product.',
+      inStock: true,
+      collections: ['futon-frames'],
+      _updatedDate: new Date('2026-01-15'),
+      mediaItems: [
+        { src: 'wix:image://v1/main_abc123.jpg/photo.jpg' }, // index 0 — skipped
+        { src: 'wix:image://v1/side_def456.jpg/side.jpg#w=800' },
+        { src: 'wix:image://v1/back_ghi789.jpg/back.jpg#w=800' },
+      ],
+    }]);
+
+    const result = await get_pinterestProductFeed();
+    expect(result.status).toBe(200);
+    // image_link for mainMedia must be a CDN URL, not the raw wix:image:// URI
+    expect(result.body).toContain('https://static.wixstatic.com/media/abc123.jpg');
+    // additional_image_link must also be normalized (mediaItems index 1+)
+    expect(result.body).toContain('https://static.wixstatic.com/media/side_def456.jpg');
+    expect(result.body).toContain('https://static.wixstatic.com/media/back_ghi789.jpg');
+    // No raw wix:image:// URIs should leak into the feed — Pinterest would reject them
+    expect(result.body).not.toContain('wix:image://');
+  });
 });
 
 // ── Cron Endpoint Auth Tests ────────────────────────────────────────
