@@ -57,8 +57,8 @@ export async function initRatingsRollup($w, state, opts = {}) {
     $w('#ratingsNoReviews').show();
   } else {
     // Round to 1 decimal — Math.round(x * 10) / 10 avoids floating-point artefacts
-    // (e.g. 4.25 → 4.3, not 4.250000000000001).
-    const average = rating.average;
+    // (e.g. 4.25000000001 → 4.3). Guard against missing average with ?? 0.
+    const average = Math.round((rating.average ?? 0) * 10) / 10;
     $w('#ratingsStarBar').text = generateStarString(average);
     $w('#ratingsStarBar').show();
     $w('#ratingsAverage').text = String(average);

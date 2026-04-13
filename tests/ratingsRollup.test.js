@@ -200,4 +200,37 @@ describe('initRatingsRollup — rating display', () => {
     await initRatingsRollup($w, makeState(), { getAggregateRating });
     expect($w('#ratingsCount').text).toBe('(1 review)');
   });
+
+  it('rounds average to 1 decimal place', async () => {
+    const getAggregateRating = vi.fn().mockResolvedValue(makeRatingResult({ average: 4.25, total: 2 }));
+    await initRatingsRollup($w, makeState(), { getAggregateRating });
+    expect($w('#ratingsAverage').text).toBe('4.3');
+  });
+
+  it('treats missing average field as 0', async () => {
+    const getAggregateRating = vi.fn().mockResolvedValue({ total: 3, breakdown: {} });
+    await initRatingsRollup($w, makeState(), { getAggregateRating });
+    expect($w('#ratingsAverage').text).toBe('0');
+  });
+});
+
+// ── Error path exclusivity ────────────────────────────────────────────────────
+
+describe('initRatingsRollup — error path exclusivity', () => {
+  let $w;
+
+  beforeEach(() => { $w = make$w(); });
+
+  it('does not expand section when getAggregateRating throws', async () => {
+    const getAggregateRating = vi.fn().mockRejectedValue(new Error('fail'));
+    await initRatingsRollup($w, makeState(), { getAggregateRating });
+    expect($w('#ratingsRollupSection').expand).not.toHaveBeenCalled();
+  });
+
+  it('shows zero-review CTA when getAggregateRating returns null', async () => {
+    const getAggregateRating = vi.fn().mockResolvedValue(null);
+    await initRatingsRollup($w, makeState(), { getAggregateRating });
+    expect($w('#ratingsNoReviews').show).toHaveBeenCalled();
+    expect($w('#ratingsRollupSection').expand).toHaveBeenCalled();
+  });
 });
