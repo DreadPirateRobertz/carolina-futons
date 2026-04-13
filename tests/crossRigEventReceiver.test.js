@@ -36,6 +36,15 @@ vi.mock('backend/pushNotificationService.web', () => ({
   },
 }));
 
+vi.mock('backend/mobileChallengeService.web', () => ({
+  completeMobileChallenge: vi.fn(async () => ({ success: true, alreadyAwarded: false, pointsAwarded: 75 })),
+  MOBILE_CHALLENGE_TYPES: {
+    AR_DISCOVERY: 'ar_discovery',
+    QUIZ_COMPLETION: 'quiz_completion',
+    SOCIAL_SHARE: 'social_share',
+  },
+}));
+
 beforeEach(() => {
   __reset();
   __resetMembers();
@@ -589,5 +598,118 @@ describe('crossRigEvent — tier_changed push dispatch (cf-bdl)', () => {
       event: 'tier_changed',
     });
     expect(sendPushToMember).not.toHaveBeenCalled();
+  });
+});
+
+// ── cf-cn2: mobile challenge events wire to completeMobileChallenge ───────────
+
+describe('crossRigEvent — quiz_completed routes to completeMobileChallenge (cf-cn2)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-quiz-1' }); vi.clearAllMocks(); });
+
+  it('calls completeMobileChallenge with QUIZ_COMPLETION type and score', async () => {
+    const { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } = await import('backend/mobileChallengeService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      quizId: 'q-001',
+      resultSlug: 'result-a',
+      score: 3,
+      total: 3,
+    });
+    expect(completeMobileChallenge).toHaveBeenCalledWith(
+      'mem-quiz-1',
+      MOBILE_CHALLENGE_TYPES.QUIZ_COMPLETION,
+      expect.objectContaining({ score: 3, total: 3 })
+    );
+  });
+
+  it('still returns success if completeMobileChallenge throws', async () => {
+    const { completeMobileChallenge } = await import('backend/mobileChallengeService.web');
+    completeMobileChallenge.mockRejectedValueOnce(new Error('db down'));
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'quiz_completed',
+      quizId: 'q-002',
+      resultSlug: 'result-b',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('crossRigEvent — ar_discovery_completed routes to completeMobileChallenge (cf-cn2)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-ar-1' }); vi.clearAllMocks(); });
+
+  it('accepts ar_discovery_completed event', async () => {
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'ar_discovery_completed',
+      productId: 'prod-123',
+    });
+    expect(result.success).toBe(true);
+    expect(result.status).not.toBe(400);
+  });
+
+  it('calls completeMobileChallenge with AR_DISCOVERY type and productId', async () => {
+    const { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } = await import('backend/mobileChallengeService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'ar_discovery_completed',
+      productId: 'prod-456',
+    });
+    expect(completeMobileChallenge).toHaveBeenCalledWith(
+      'mem-ar-1',
+      MOBILE_CHALLENGE_TYPES.AR_DISCOVERY,
+      expect.objectContaining({ productId: 'prod-456' })
+    );
+  });
+
+  it('still returns success if completeMobileChallenge throws', async () => {
+    const { completeMobileChallenge } = await import('backend/mobileChallengeService.web');
+    completeMobileChallenge.mockRejectedValueOnce(new Error('service error'));
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'ar_discovery_completed',
+      productId: 'prod-789',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('crossRigEvent — social_share_completed routes to completeMobileChallenge (cf-cn2)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-social-1' }); vi.clearAllMocks(); });
+
+  it('accepts social_share_completed event', async () => {
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'social_share_completed',
+      platform: 'instagram',
+    });
+    expect(result.success).toBe(true);
+    expect(result.status).not.toBe(400);
+  });
+
+  it('calls completeMobileChallenge with SOCIAL_SHARE type and platform', async () => {
+    const { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } = await import('backend/mobileChallengeService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'social_share_completed',
+      platform: 'tiktok',
+    });
+    expect(completeMobileChallenge).toHaveBeenCalledWith(
+      'mem-social-1',
+      MOBILE_CHALLENGE_TYPES.SOCIAL_SHARE,
+      expect.objectContaining({ platform: 'tiktok' })
+    );
+  });
+
+  it('still returns success if completeMobileChallenge throws', async () => {
+    const { completeMobileChallenge } = await import('backend/mobileChallengeService.web');
+    completeMobileChallenge.mockRejectedValueOnce(new Error('challenge svc down'));
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'social_share_completed',
+      platform: 'instagram',
+    });
+    expect(result.success).toBe(true);
   });
 });

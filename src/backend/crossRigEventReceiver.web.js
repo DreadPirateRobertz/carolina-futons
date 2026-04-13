@@ -21,6 +21,7 @@ import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
 import { syncBadgeEarnedToPush } from 'backend/crossRigSyncService.web';
 import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
+import { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } from 'backend/mobileChallengeService.web';
 
 const SUPPORTED_EVENTS = new Set([
   'streak_extended',
@@ -36,6 +37,8 @@ const SUPPORTED_EVENTS = new Set([
   'sommelier_completed',
   'price_drop_watching',
   'wishlist_synced',
+  'ar_discovery_completed',
+  'social_share_completed',
 ]);
 
 /**
@@ -155,6 +158,32 @@ export const crossRigEvent = webMethod(
       } catch (err) {
         logError('crossRigEvent — tier_changed push failed', err);
         // Non-fatal
+      }
+    }
+
+    // ── Mobile challenge completions (cf-cn2) ─────────────────────────────
+    // quiz_completed, ar_discovery_completed, social_share_completed all route
+    // to completeMobileChallenge for idempotent point award + completion logging.
+    const MOBILE_CHALLENGE_EVENT_MAP = {
+      quiz_completed: MOBILE_CHALLENGE_TYPES.QUIZ_COMPLETION,
+      ar_discovery_completed: MOBILE_CHALLENGE_TYPES.AR_DISCOVERY,
+      social_share_completed: MOBILE_CHALLENGE_TYPES.SOCIAL_SHARE,
+    };
+    if (MOBILE_CHALLENGE_EVENT_MAP[body.event]) {
+      try {
+        await completeMobileChallenge(
+          memberId,
+          MOBILE_CHALLENGE_EVENT_MAP[body.event],
+          {
+            productId: body.productId,
+            score: body.score,
+            total: body.total,
+            platform: body.platform,
+          }
+        );
+      } catch (err) {
+        logError(`crossRigEvent — completeMobileChallenge(${body.event}) failed`, err);
+        // Non-fatal: analytics already logged
       }
     }
 
