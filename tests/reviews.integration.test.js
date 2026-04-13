@@ -42,7 +42,7 @@ function review(overrides = {}) {
     verifiedPurchase: true,
     helpful: 3,
     status: 'approved',
-    _createdDate: new Date('2026-03-10'),
+    _createdDate: new Date(), // always "today" — avoids date-rot in date-windowed queries
     ...overrides,
   };
 }
