@@ -29,7 +29,7 @@ function makeStub() {
 function makeItemStub() {
   const inner = {};
   function get(sel) {
-    if (!inner[sel]) inner[sel] = { src: '', text: '' };
+    if (!inner[sel]) inner[sel] = { src: '', text: '', onClick: vi.fn((cb) => { inner[sel]._clickCb = cb; }) };
     return inner[sel];
   }
   return { $item: vi.fn(get), inner };
@@ -138,5 +138,24 @@ describe('initCompleteTheLook', () => {
     await initCompleteTheLook($w, 'futon-a', { getCompleteTheLook });
     expect(elements['#ctlHeroImage']).toBeUndefined();
     expect(elements['#ctlContainer'].expand).toHaveBeenCalled();
+  });
+
+  it('wires add-to-cart CTA for each repeater item', async () => {
+    const { $w, elements } = makeStub();
+    const addToCart = vi.fn().mockResolvedValue({ success: true });
+    getCompleteTheLook.mockResolvedValue({
+      productId: 'futon-a',
+      roomHeroImage: 'h.jpg',
+      roomItems: [{ productId: 'rug-1', imageUrl: 'r.jpg', name: 'Rug', price: 99 }],
+    });
+    await initCompleteTheLook($w, 'futon-a', { getCompleteTheLook, addToCart });
+
+    const itemStub = makeItemStub();
+    elements['#ctlItemsRepeater']._onItemReady(itemStub.$item, elements['#ctlItemsRepeater'].data[0]);
+
+    expect(itemStub.inner['#itemAddToCart'].onClick).toHaveBeenCalled();
+    // Simulate click
+    await itemStub.inner['#itemAddToCart']._clickCb?.();
+    expect(addToCart).toHaveBeenCalledWith('rug-1', 1);
   });
 });

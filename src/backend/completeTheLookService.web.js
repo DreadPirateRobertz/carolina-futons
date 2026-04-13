@@ -100,12 +100,17 @@ export const updateLook = webMethod(
     const _id = validateId(data._id);
     const productId = validateId(data.productId);
     if (!_id || !productId) return { success: false, error: 'invalid-input' };
-    const roomHeroImage = isWixMediaUrl(data.roomHeroImage) ? data.roomHeroImage : '';
+    // Only overwrite roomHeroImage when caller explicitly provides it; preserve existing value otherwise.
+    const heroUpdate = data.roomHeroImage !== undefined
+      ? { roomHeroImage: isWixMediaUrl(data.roomHeroImage) ? data.roomHeroImage : '' }
+      : {};
     try {
+      const existing = await wixData.get(COLLECTION, _id, { suppressAuth: true });
       const look = await wixData.update(COLLECTION, {
+        ...(existing || {}),
         _id,
         productId,
-        roomHeroImage,
+        ...heroUpdate,
         roomItems: normalizeItems(data.roomItems),
       }, { suppressAuth: true });
       return { success: true, look };
