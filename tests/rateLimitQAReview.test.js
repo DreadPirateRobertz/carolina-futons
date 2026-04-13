@@ -15,6 +15,7 @@ import { describe, it, expect } from 'vitest';
 import { __seed, __setQueryError } from './__mocks__/wix-data.js';
 import {
   checkRateLimit,
+  hashRateLimitKey,
   RATE_LIMIT_MAX,
   RATE_LIMIT_WINDOW_MS,
 } from '../src/backend/utils/rateLimit.js';
@@ -27,7 +28,7 @@ const COLLECTION_QA = 'QARateLimit';
 const COLLECTION_REVIEW = 'ReviewRateLimit';
 
 function makeRateLimitRecord(collection, email, count, windowStart = NOW) {
-  return { _id: `rl-${collection}-1`, key: email.toLowerCase(), count, windowStart: new Date(windowStart) };
+  return { _id: `rl-${collection}-1`, key: hashRateLimitKey(email.toLowerCase()), count, windowStart: new Date(windowStart) };
 }
 
 // ── checkRateLimit utility ────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ describe('insertGuestQuestion — rate limiting', () => {
   // Seed a rate-limit record with windowStart in the recent past (within window)
   function seedMaxed(collection, email) {
     __seed(collection, [{
-      _id: 'rl-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      _id: 'rl-1', key: hashRateLimitKey(email.toLowerCase()), count: RATE_LIMIT_MAX,
       windowStart: new Date(Date.now() - 1000), // 1s ago — well within 1-hour window
     }]);
   }
@@ -111,7 +112,7 @@ describe('insertGuestQuestion — rate limiting', () => {
   // Seed an expired rate-limit record (window has passed)
   function seedExpired(collection, email) {
     __seed(collection, [{
-      _id: 'rl-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      _id: 'rl-1', key: hashRateLimitKey(email.toLowerCase()), count: RATE_LIMIT_MAX,
       windowStart: new Date(Date.now() - RATE_LIMIT_WINDOW_MS - 5000), // expired
     }]);
   }
@@ -177,14 +178,14 @@ describe('submitReview — rate limiting', () => {
 
   function seedMaxed(email) {
     __seed(COLLECTION_REVIEW, [{
-      _id: 'rl-rev-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      _id: 'rl-rev-1', key: hashRateLimitKey(email.toLowerCase()), count: RATE_LIMIT_MAX,
       windowStart: new Date(Date.now() - 1000),
     }]);
   }
 
   function seedExpired(email) {
     __seed(COLLECTION_REVIEW, [{
-      _id: 'rl-rev-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      _id: 'rl-rev-1', key: hashRateLimitKey(email.toLowerCase()), count: RATE_LIMIT_MAX,
       windowStart: new Date(Date.now() - RATE_LIMIT_WINDOW_MS - 5000),
     }]);
   }

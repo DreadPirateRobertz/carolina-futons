@@ -6,7 +6,8 @@
  * Exported webMethods:
  *   getNotificationPrefs() — returns prefs for authenticated caller
  *   updateNotificationPrefs(prefs) — updates prefs for authenticated caller
- *   notifyChallengePublished(challenge) — send email + SMS to opted-in members (CF-qhdo)
+ *   notifyChallengePublished(challenge) — queue email + SMS for opted-in members (CF-qhdo)
+ *   processChallengeNotifSMSQueue() — drain ChallengeNotifSMSQueue; in-flight guard (CF-qhdo)
  *
  *   checkStreakMilestoneNotifications() — cron: day-7 streak milestone email (CF-tcqq)
  *
@@ -149,14 +150,20 @@ export const updateNotificationPrefs = webMethod(
 // ── CF-qhdo: Challenge notification pipeline ──────────────────────────────────
 
 const SITE_URL = 'https://www.carolinafutons.com';
+const CHALLENGE_NOTIF_SMS_QUEUE = 'ChallengeNotifSMSQueue';
+
+// In-flight guard for processChallengeNotifSMSQueue — prevents double-send
+// when a long batch overlaps the next cron tick.
+let _processingChallengeNotifSMS = false;
 
 /**
- * Notify opted-in members about a new weekly challenge via email + SMS.
- * Called when a new challenge is published (admin action or automation).
+ * Queue email + SMS notifications for opted-in members when a new weekly
+ * challenge is published.
  *
- * - Email: uses triggered email template `challenge_new_weekly`
- * - SMS: sends to members with SMS enabled in SMSPreferences
- * - Only notifies members with `questAlerts: true` in MemberNotificationPrefs
+ * - Email: inserts into EmailQueue (consumed by processEmailQueue cron)
+ * - SMS: inserts into ChallengeNotifSMSQueue (consumed by processChallengeNotifSMSQueue)
+ * - Both fan-outs use Promise.allSettled so one failed insert doesn't block others
+ * - Only queues members with `questAlerts: true` in MemberNotificationPrefs
  *
  * CF-qhdo
  *
@@ -188,9 +195,7 @@ export const notifyChallengePublished = webMethod(
         return { success: true, emailsSent: 0, smsSent: 0 };
       }
 
-      const memberIds = prefsResult.items
-        .map(p => p.memberId)
-        .filter(Boolean);
+      const memberIds = prefsResult.items.map(p => p.memberId).filter(Boolean);
 
       const rewardText = challenge.rewardBadgeLabel
         ? `${challenge.rewardPoints} pts + ${challenge.rewardBadgeLabel} badge`
@@ -198,45 +203,55 @@ export const notifyChallengePublished = webMethod(
 
       const challengeUrl = `${SITE_URL}/account/my-account#challenges`;
 
-      // 2. Send emails via triggeredEmails.emailMember (best-effort per member)
-      let emailsSent = 0;
-      const { triggeredEmails } = await import('wix-crm-backend');
+      // 2. Fan-out into EmailQueue — Promise.allSettled so a single insert failure
+      //    doesn't block the remaining members from being queued.
+      const emailInserts = memberIds.map(memberId =>
+        wixData.insert('EmailQueue', {
+          templateId: 'challenge_new_weekly',
+          recipientContactId: memberId,
+          variables: {
+            challengeTitle: challenge.title,
+            challengeDescription: challenge.description || '',
+            rewardText,
+            challengeUrl,
+            expiresAt: challenge.expiresAt || '',
+          },
+          sequenceType: 'challenge_notify',
+          status: 'pending',
+          scheduledFor: new Date(),
+          attempt: 0,
+          createdAt: new Date(),
+        }, { suppressAuth: true })
+      );
 
-      for (const memberId of memberIds) {
-        try {
-          await triggeredEmails.emailMember(
-            'challenge_new_weekly',
-            memberId,
-            {
-              variables: {
-                challengeTitle: challenge.title,
-                challengeDescription: challenge.description || '',
-                rewardText,
-                challengeUrl,
-                expiresAt: challenge.expiresAt || '',
-              },
-            }
-          );
-          emailsSent++;
-        } catch (err) {
-          logError(`notifyChallengePublished — email failed for ${memberId}`, err);
-        }
-      }
+      const emailResults = await Promise.allSettled(emailInserts);
+      const emailsSent = emailResults.filter(r => r.status === 'fulfilled').length;
+      emailResults
+        .filter(r => r.status === 'rejected')
+        .forEach((r, i) =>
+          logError(`notifyChallengePublished — EmailQueue insert failed for ${memberIds[i]}`, r.reason)
+        );
 
-      // 3. Send SMS to opted-in members via smsService (best-effort)
-      let smsSent = 0;
-      const { sendChallengeAlertSMS } = await import('backend/smsService.web');
-
+      // 3. Fan-out into ChallengeNotifSMSQueue — same pattern.
+      //    processChallengeNotifSMSQueue (cron) handles actual Twilio delivery.
       const smsBody = `Carolina Futons Challenge: "${challenge.title}" — complete it to earn ${rewardText}! Details: ${challengeUrl}`;
 
-      for (const memberId of memberIds) {
-        try {
-          const result = await sendChallengeAlertSMS({ memberId, message: smsBody });
-          if (result.success) smsSent++;
-        } catch (err) {
-          logError(`notifyChallengePublished — SMS failed for ${memberId}`, err);
-        }
-      }
+      const smsInserts = memberIds.map(memberId =>
+        wixData.insert(CHALLENGE_NOTIF_SMS_QUEUE, {
+          memberId,
+          message: smsBody,
+          status: 'pending',
+          createdAt: new Date(),
+        }, { suppressAuth: true })
+      );
+
+      const smsResults = await Promise.allSettled(smsInserts);
+      const smsSent = smsResults.filter(r => r.status === 'fulfilled').length;
+      smsResults
+        .filter(r => r.status === 'rejected')
+        .forEach((r, i) =>
+          logError(`notifyChallengePublished — ChallengeNotifSMSQueue insert failed for ${memberIds[i]}`, r.reason)
+        );
 
       return { success: true, emailsSent, smsSent };
     } catch (err) {
@@ -246,26 +261,90 @@ export const notifyChallengePublished = webMethod(
   }
 );
 
+/**
+ * Drain ChallengeNotifSMSQueue: send pending SMS via smsService and mark each
+ * item sent or failed. Should be called by a scheduled job after
+ * notifyChallengePublished runs.
+ *
+ * In-flight lock (_processingChallengeNotifSMS) prevents double-send when a
+ * long batch overlaps the next cron tick.
+ *
+ * CF-qhdo
+ *
+ * @returns {Promise<{ sent: number, failed: number } | { skipped: true, reason: string }>}
+ */
+export const processChallengeNotifSMSQueue = webMethod(
+  Permissions.Admin,
+  async () => {
+    if (_processingChallengeNotifSMS) {
+      return { skipped: true, reason: 'in_flight' };
+    }
+    _processingChallengeNotifSMS = true;
+    try {
+      const { sendChallengeAlertSMS } = await import('backend/smsService.web');
+
+      const pending = await wixData
+        .query(CHALLENGE_NOTIF_SMS_QUEUE)
+        .eq('status', 'pending')
+        .limit(500)
+        .find({ suppressAuth: true });
+
+      let sent = 0;
+      let failed = 0;
+
+      for (const item of pending.items) {
+        try {
+          const result = await sendChallengeAlertSMS({ memberId: item.memberId, message: item.message });
+          await wixData.update(CHALLENGE_NOTIF_SMS_QUEUE, {
+            ...item,
+            status: result.success ? 'sent' : 'failed',
+          }, { suppressAuth: true });
+          if (result.success) sent++;
+          else failed++;
+        } catch (err) {
+          logError(`processChallengeNotifSMSQueue — failed for ${item.memberId}`, err);
+          failed++;
+        }
+      }
+
+      return { sent, failed };
+    } finally {
+      _processingChallengeNotifSMS = false;
+    }
+  }
+);
+
 // ── CF-tcqq: Day 7 streak milestone notification ─────────────────────────────
 
+// 7 days is the first streak milestone in the Carolina Futons loyalty programme.
+// Business rule: members who maintain a 7-day login/engagement streak earn 2× points
+// the following day. Day 7 is the only automated notification checkpoint; longer streaks
+// are recognised via tier upgrades, not additional cron emails. (CF-tcqq product spec)
 const STREAK_MILESTONE_DAY = 7;
 const STREAK_NOTIFICATIONS_COLLECTION = 'StreakMilestoneNotifications';
 
 /**
  * Check for members at day-7 streak and send milestone notification.
- * Called by daily cron. Idempotent — tracks sent notifications to prevent duplicates.
+ * Called by daily cron. Idempotent — dedup record inserted per member per milestone
+ * prevents re-sending across runs.
  *
- * Only sends to members with `streakReminders: true` in MemberNotificationPrefs.
+ * Opt-out model: defaults to sending unless the member has explicitly set
+ * `streakReminders: false` in MemberNotificationPrefs (missing prefs = opted in).
  *
  * CF-tcqq
  *
  * @returns {Promise<{ sent: number, skipped: number, errors: number }>}
+ *   sent    — emails dispatched this run
+ *   skipped — members already notified or opted out
+ *   errors  — per-member failures (pipeline continues)
  */
 export async function checkStreakMilestoneNotifications() {
   const result = { sent: 0, skipped: 0, errors: 0 };
 
   try {
     // Find members at exactly day 7 streak
+    // limit(1000): Wix CMS query cap is 1000 items per call. We expect well under
+    // 1000 members to hit day 7 on any given day — this is a safe ceiling.
     const streakResult = await wixData
       .query('MemberPoints')
       .eq('currentStreakDays', STREAK_MILESTONE_DAY)
@@ -307,6 +386,11 @@ export async function checkStreakMilestoneNotifications() {
 
       // Default to true if no prefs record (opt-out model)
       const prefs = prefsMap[memberId];
+      // Strict === false (not falsy): undefined/null/missing prefs = opted IN by default.
+      // Only an explicit boolean false opts the member out. This preserves the
+      // "send unless told not to" contract without penalising members who have never
+      // set preferences. Using falsy (!prefs.streakReminders) would incorrectly block
+      // members with no prefs record.
       if (prefs && prefs.streakReminders === false) {
         result.skipped++;
         continue;

@@ -4,13 +4,16 @@
  * AnalyticsEvents CMS collection and returns a structured report.
  *
  * Intended to run weekly (Monday 9am MT) via Wix scheduled job.
- * CF-w62s
+ * CF-w62s, CF-u30i
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { CUSTOM_EVENTS } from 'backend/customEvents.web';
 import { ANALYTICS_EVENTS_COLLECTION } from 'backend/utils/analyticsEvents';
+
+const ORDERS_COLLECTION = 'Stores/Orders';
+const TOP_PRODUCTS_LIMIT = 5;
 
 /**
  * Generate a weekly analytics digest covering the last 7 days.
@@ -89,6 +92,9 @@ export const generateWeeklyDigest = webMethod(
         },
       };
 
+      // cf-u30i: orders, revenue, and top products for the same window
+      const orderMetrics = await fetchOrderMetrics(since);
+
       const digest = {
         generatedAt: new Date().toISOString(),
         period: { days, since: since.toISOString() },
@@ -96,6 +102,7 @@ export const generateWeeklyDigest = webMethod(
         uniqueEventTypes: Object.keys(eventCounts).length,
         topEvents,
         funnelMetrics,
+        orderMetrics,
         dailyTrend: Object.entries(dailyCounts)
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([date, count]) => ({ date, count })),
@@ -106,6 +113,8 @@ export const generateWeeklyDigest = webMethod(
 
       logAuditEvent('AnalyticsDigest', 'generate', 'system', {
         totalEvents: digest.totalEvents,
+        orderCount: orderMetrics.orderCount,
+        totalRevenue: orderMetrics.totalRevenue,
         period: days,
       });
 
@@ -176,6 +185,64 @@ export const sendWeeklyDigestEmail = webMethod(
   }
 );
 
+// ── Order metrics (cf-u30i) ──────────────────────────────────────────
+
+/**
+ * Fetch order metrics for the digest period: revenue, order count, AOV,
+ * and top products by revenue.
+ *
+ * @param {Date} since - Start of the window
+ * @returns {Promise<{orderCount:number, totalRevenue:number, avgOrderValue:number, topProducts:Array}>}
+ */
+export async function fetchOrderMetrics(since) {
+  try {
+    const result = await wixData
+      .query(ORDERS_COLLECTION)
+      .ge('_createdDate', since)
+      .limit(500)
+      .find({ suppressAuth: true });
+
+    const orders = result.items;
+
+    let totalRevenue = 0;
+    const productRevenue = {};  // productName -> { revenue, units }
+
+    for (const order of orders) {
+      const orderTotal = order.totals?.total || 0;
+      totalRevenue += orderTotal;
+
+      for (const li of order.lineItems || []) {
+        const name = li.name || li.productName || 'Unknown';
+        const lineTotal = (li.price || 0) * (li.quantity || 1);
+        if (!productRevenue[name]) {
+          productRevenue[name] = { revenue: 0, units: 0 };
+        }
+        productRevenue[name].revenue += lineTotal;
+        productRevenue[name].units += li.quantity || 1;
+      }
+    }
+
+    const orderCount = orders.length;
+    const avgOrderValue = orderCount > 0
+      ? Math.round((totalRevenue / orderCount) * 100) / 100
+      : 0;
+
+    const topProducts = Object.entries(productRevenue)
+      .sort((a, b) => b[1].revenue - a[1].revenue)
+      .slice(0, TOP_PRODUCTS_LIMIT)
+      .map(([name, stats]) => ({
+        name,
+        revenue: Math.round(stats.revenue * 100) / 100,
+        units: stats.units,
+      }));
+
+    return { orderCount, totalRevenue: Math.round(totalRevenue * 100) / 100, avgOrderValue, topProducts };
+  } catch (err) {
+    console.error('[analyticsDigest] fetchOrderMetrics error:', err);
+    return { orderCount: 0, totalRevenue: 0, avgOrderValue: 0, topProducts: [] };
+  }
+}
+
 /**
  * Build HTML email body from digest data.
  * @param {Object} digest
@@ -184,16 +251,44 @@ export const sendWeeklyDigestEmail = webMethod(
 function buildDigestEmailHtml(digest) {
   const topEvents = (digest.topEvents || []).slice(0, 10);
   const funnelMetrics = digest.funnelMetrics || {};
+  const orderMetrics = digest.orderMetrics || {};
   const dailyTrend = (digest.dailyTrend || []).slice(-7);
+
+  const quizFunnel = funnelMetrics.quiz || {};
+  const spinFunnel = funnelMetrics.spin || {};
+
+  // Revenue/orders summary row
+  const revenueHtml = `
+    <div style="background:#F0F4F8;padding:16px;border-radius:4px;margin:16px 0;">
+      <h3 style="margin:0 0 8px;color:#1E3A5F;font-size:16px;">Revenue &amp; Orders</h3>
+      <p style="margin:4px 0;font-size:14px;">Orders: <strong>${orderMetrics.orderCount || 0}</strong> &nbsp;|&nbsp; Revenue: <strong>$${(orderMetrics.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> &nbsp;|&nbsp; AOV: <strong>$${(orderMetrics.avgOrderValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
+    </div>`;
+
+  // Top products table
+  const topProductRows = (orderMetrics.topProducts || []).map((p, i) =>
+    `<tr style="background:${i % 2 === 0 ? '#fff' : '#fafafa'};">
+       <td style="padding:5px 8px;font-family:Arial,sans-serif;font-size:13px;">${p.name}</td>
+       <td style="padding:5px 8px;text-align:right;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">$${p.revenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+       <td style="padding:5px 8px;text-align:right;font-family:Arial,sans-serif;font-size:12px;color:#666;">${p.units} unit${p.units !== 1 ? 's' : ''}</td>
+     </tr>`
+  ).join('');
+
+  const topProductsHtml = topProductRows ? `
+    <h3 style="color:#1E3A5F;font-size:15px;">Top Products</h3>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+      <tr style="background:#E8D5B7;">
+        <th style="padding:6px 8px;text-align:left;font-size:12px;">Product</th>
+        <th style="padding:6px 8px;text-align:right;font-size:12px;">Revenue</th>
+        <th style="padding:6px 8px;text-align:right;font-size:12px;">Units</th>
+      </tr>
+      ${topProductRows}
+    </table>` : '';
 
   const topEventsRows = topEvents.map(e =>
     `<tr><td style="padding:4px 8px;font-family:Arial,sans-serif;font-size:13px;">${e.event}</td>
      <td style="padding:4px 8px;text-align:right;font-family:Arial,sans-serif;font-size:13px;font-weight:bold;">${e.count}</td>
      <td style="padding:4px 8px;font-family:Arial,sans-serif;font-size:12px;color:#666;">${e.category}</td></tr>`
   ).join('');
-
-  const quizFunnel = funnelMetrics.quiz || {};
-  const spinFunnel = funnelMetrics.spin || {};
 
   const trendRows = dailyTrend.map(d =>
     `<tr><td style="padding:2px 6px;font-family:Arial,sans-serif;font-size:12px;">${d.date}</td>
@@ -205,11 +300,9 @@ function buildDigestEmailHtml(digest) {
       <h2 style="color:#1E3A5F;font-family:Georgia,serif;">Weekly Analytics Digest</h2>
       <p style="color:#666;font-size:13px;">Period: ${digest.period?.days || 7} days | Generated: ${new Date().toLocaleDateString()}</p>
 
-      <div style="background:#F0F4F8;padding:16px;border-radius:4px;margin:16px 0;">
-        <h3 style="margin:0 0 8px;color:#1E3A5F;font-size:16px;">Summary</h3>
-        <p style="margin:4px 0;font-size:14px;"><strong>${digest.totalEvents}</strong> total events across <strong>${digest.uniqueEventTypes}</strong> event types</p>
-        <p style="margin:4px 0;font-size:14px;">Overall avg: <strong>${digest.overallAvg || 0}</strong> events/product</p>
-      </div>
+      ${revenueHtml}
+
+      ${topProductsHtml}
 
       ${quizFunnel.started ? `
       <div style="margin:16px 0;">
@@ -224,7 +317,7 @@ function buildDigestEmailHtml(digest) {
         <p style="font-size:13px;">Played: ${spinFunnel.played} → Won: ${spinFunnel.won} → Converted: ${spinFunnel.converted}</p>
       </div>` : ''}
 
-      <h3 style="color:#1E3A5F;font-size:15px;">Top Events</h3>
+      <h3 style="color:#1E3A5F;font-size:15px;">Traffic &amp; Engagement</h3>
       <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
         <tr style="background:#E8D5B7;">
           <th style="padding:6px 8px;text-align:left;font-size:12px;">Event</th>
@@ -235,7 +328,7 @@ function buildDigestEmailHtml(digest) {
       </table>
 
       ${trendRows ? `
-      <h3 style="color:#1E3A5F;font-size:15px;margin-top:16px;">Daily Trend</h3>
+      <h3 style="color:#1E3A5F;font-size:15px;margin-top:16px;">Daily Traffic Trend</h3>
       <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
         ${trendRows}
       </table>` : ''}

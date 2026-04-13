@@ -4,6 +4,7 @@ import {
   decodeHtmlEntities,
   stripHtmlSafe,
   escapeXml,
+  securityHeaders,
 } from '../src/backend/utils/httpHelpers.js';
 
 // ── timingSafeEqual ─────────────────────────────────────────────────
@@ -146,5 +147,47 @@ describe('escapeXml', () => {
     expect(escapeXml('8" Futon Mattress — Full & Queen')).toBe(
       '8&quot; Futon Mattress — Full &amp; Queen'
     );
+  });
+});
+
+// ── securityHeaders (CF-sec1) ───────────────────────────────────────
+
+describe('securityHeaders', () => {
+  it('returns an object', () => {
+    expect(typeof securityHeaders()).toBe('object');
+  });
+
+  it('includes Content-Security-Policy header', () => {
+    const h = securityHeaders();
+    expect(h).toHaveProperty('Content-Security-Policy');
+  });
+
+  it('CSP restricts script-src to none', () => {
+    const csp = securityHeaders()['Content-Security-Policy'];
+    expect(csp).toContain("script-src 'none'");
+  });
+
+  it('CSP blocks frame-ancestors', () => {
+    const csp = securityHeaders()['Content-Security-Policy'];
+    expect(csp).toContain("frame-ancestors 'none'");
+  });
+
+  it('CSP blocks object-src', () => {
+    const csp = securityHeaders()['Content-Security-Policy'];
+    expect(csp).toContain("object-src 'none'");
+  });
+
+  it('includes X-Content-Type-Options: nosniff', () => {
+    expect(securityHeaders()['X-Content-Type-Options']).toBe('nosniff');
+  });
+
+  it('includes X-Frame-Options: DENY', () => {
+    expect(securityHeaders()['X-Frame-Options']).toBe('DENY');
+  });
+
+  it('returns a new object on each call (no shared reference)', () => {
+    const a = securityHeaders();
+    const b = securityHeaders();
+    expect(a).not.toBe(b);
   });
 });

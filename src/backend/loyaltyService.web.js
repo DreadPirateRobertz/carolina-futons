@@ -571,13 +571,16 @@ const BADGE_LABELS = {
  * @param {number} currentStreakDays
  * @returns {Promise<number[]>}
  */
+// idor-ok: internal backend helper — called from streak update pipeline only
 export async function checkStreakAchievements(memberId, currentStreakDays) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) return [];
   try {
     const reached = STREAK_MILESTONES.filter(m => currentStreakDays >= m);
     if (reached.length === 0) return [];
 
     const existing = await wixData.query('StreakAchievements')
-      .eq('memberId', memberId)
+      .eq('memberId', cleanId)
       .find({ suppressAuth: true });
     const earned = new Set(existing.items.map(r => r.milestone));
     return reached.filter(m => !earned.has(m));
@@ -595,23 +598,27 @@ export async function checkStreakAchievements(memberId, currentStreakDays) {
  * @param {number} streakDays
  * @returns {Promise<void>}
  */
+// idor-ok: internal backend helper — called from streak update pipeline only
 export async function insertStreakAchievement(memberId, milestone, streakDays) {
+  const cleanId = validateId(memberId);
+  if (!cleanId) throw new TypeError('insertStreakAchievement: invalid memberId');
   try {
     const existing = await wixData.query('StreakAchievements')
-      .eq('memberId', memberId)
+      .eq('memberId', cleanId)
       .eq('milestone', milestone)
       .limit(1)
       .find({ suppressAuth: true });
     if (existing.items.length > 0) return;
 
     await wixData.insert('StreakAchievements', {
-      memberId,
+      memberId: cleanId,
       milestone,
       streakDays,
       earnedAt: new Date(),
       notified: false,
     }, { suppressAuth: true });
   } catch (err) {
+    if (isDuplicateKeyError(err)) return; // concurrent insert — already recorded
     console.error('Error inserting streak achievement:', err);
     throw err;
   }
@@ -692,6 +699,7 @@ function isDuplicateKeyError(err) {
  * @returns {Promise<void>}
  * @throws {TypeError} if memberId is invalid or milestone/points are not positive numbers
  */
+// idor-ok: internal backend helper — called from loyalty points pipeline only
 export async function recordStreakMilestoneEvent(memberId, milestone, points) {
   const cleanId = validateId(memberId);
   if (!cleanId) throw new TypeError('recordStreakMilestoneEvent: invalid memberId');
@@ -740,6 +748,7 @@ export async function recordStreakMilestoneEvent(memberId, milestone, points) {
  * @returns {Promise<void>}
  * @throws {TypeError} if memberId or challengeId are invalid, or points is not a positive finite number
  */
+// idor-ok: internal backend helper — called from challenge completion pipeline only
 export async function recordChallengeCompleteEvent(memberId, challengeId, points) {
   const cleanId = validateId(memberId);
   if (!cleanId) throw new TypeError('recordChallengeCompleteEvent: invalid memberId');
@@ -765,14 +774,20 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
     .find({ suppressAuth: true });
   const title = challengeRes.items[0]?.title ?? cleanChallengeId;
 
-  await wixData.insert(POINTS_LEDGER_COLLECTION, {
-    memberId: cleanId,
-    type: 'challenge_complete',
-    challengeId: cleanChallengeId,
-    description: `${title} completed`,
-    points,
-    earnedAt: new Date(),
-  }, { suppressAuth: true });
+  try {
+    await wixData.insert(POINTS_LEDGER_COLLECTION, {
+      memberId: cleanId,
+      type: 'challenge_complete',
+      challengeId: cleanChallengeId,
+      description: `${title} completed`,
+      points,
+      earnedAt: new Date(),
+    }, { suppressAuth: true });
+  } catch (err) {
+    // DB-level unique constraint: concurrent write already recorded this event.
+    if (isDuplicateKeyError(err)) return;
+    throw err;
+  }
 }
 
 /**
@@ -792,6 +807,7 @@ export async function recordChallengeCompleteEvent(memberId, challengeId, points
  * @returns {Promise<void>}
  * @throws {TypeError} if memberId/challengeId are invalid or points is not a positive finite number
  */
+// idor-ok: internal backend helper — called from challenge completion pipeline only
 export async function recordChallengeCompletionEvent(memberId, challengeId, points) {
   const cleanId = validateId(memberId);
   if (!cleanId) throw new TypeError('recordChallengeCompletionEvent: invalid memberId');

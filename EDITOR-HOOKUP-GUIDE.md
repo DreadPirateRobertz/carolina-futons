@@ -34,9 +34,9 @@ All required dashboard/API configurations are now in place for editor hookup:
 - `src/public/premiumMembershipHelpers.js` — Premium display helpers
 - Plans expect slugs `cf-plus-monthly` and `cf-plus-annual` (now created on staging)
 
-**Current Dev Release**: v1.0.0 (2026-03-17) — 26,942 tests, 638 files, 65 src files
-- Dev: [carolina-futons v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v1.0.0)
-- Velo: [carolina-futons-stage3-velo v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.0.0) (synced 2026-03-17)
+**Current Dev Release**: v1.4.0 (2026-04-05) — 38,123 tests, 1,034 files, 60 PRs (#916–#979)
+- Dev: [carolina-futons v1.4.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v1.4.0)
+- Velo: [carolina-futons-stage3-velo v1.4.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.4.0) (synced 2026-04-05)
 - Pages synced to Wix page ID format (19 pages)
 - 65 src files synced (backend, public, pages, styles, assets)
 - **New PDP modules**: ProductOptions (variant swatches), ProductFinancing (BNPL), ProductReviews (full review system), ProductSizeGuide (dimensions + room fit checker)
@@ -1324,6 +1324,25 @@ Displays Affirm (price/12) and Klarna (price/4) monthly estimate text on the Pro
 
 **Placement:** Place `#bnplContainer` on Product Page below the price display. Wire via `Product Page.js` orchestrator — called with current product price on page load and on variant change.
 
+### BNPL Calculator Widget (CF-zpf — in progress)
+*Source: `src/public/BNPLCalculatorWidget.js` — `initBNPLCalculator($w, price)`, `updateBNPLCalculatorPrice($w, price)`*
+*Backend: `src/backend/financingCalc.web.js` — `getFinancingWidget(price)`*
+
+Interactive multi-provider comparison widget. Shows real in-house financing terms (6/12/18/24 months with APR), Afterpay breakdown, plus Affirm and Klarna estimates — all in a compact expandable widget embeddable on any page. Distinct from the full-page `Financing.js` calculator and from the static-text `BNPLWidget.js`.
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `bnplCalcContainer` | Box | Wrapper — hidden by default; shown when ≥1 option is available |
+| `bnplCalcLowest` | Text | "As low as $X/mo" headline from backend |
+| `bnplCalcRepeater` | Repeater | One card per provider/term; item elements below |
+| `providerName` | Text (item) | Provider/term label e.g. "In-house 12 mo", "Afterpay", "Klarna" |
+| `providerAmount` | Text (item) | Payment amount e.g. "$42/mo" or "4 × $125" |
+| `providerNote` | Text (item) | Qualifier e.g. "0% APR" or "pay-in-4, 0% interest" |
+| `bnplCalcDetails` | Box | Expanded breakdown — collapsed by default |
+| `bnplCalcToggle` | Button | "See all options" / "Hide options" toggle |
+
+**Placement:** Embeddable on Product Page, Cart Page, or any page where a price is available. Call `initBNPLCalculator($w, price)` on page load; call `updateBNPLCalculatorPrice($w, newPrice)` on variant/quantity changes.
+
 ### Share Your Room — UGC Photo Submit (CF-rw9i.1 — PR #938 ✅ MERGED 2026-03-29)
 *Source: `src/public/ShareYourRoom.js` — `initShareYourRoom($w, productId)`*
 *Backend: `src/backend/ugcService.web.js` — `submitUGCPhoto()`*
@@ -2262,8 +2281,15 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 `paletteCategoryRepeater` (Repeater)
 **↳ Inside:** `paletteCategoryName` (Text)
 
-### Canvas
-`plannerCanvas` (HtmlComponent)
+### Canvas — CF-eqc5.3 (PR #948/949)
+`plannerCanvas` (HtmlComponent) — self-contained 2D drag-and-drop room layout with origin-pinned security.
+
+**postMessage API (page → canvas):**
+- `{ type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed } }` — place furniture at (x, y) in inches
+- `{ type: 'updateRoom', roomWidth, roomLength, scale }` — resize room, re-renders canvas
+
+**onMessage (canvas → page):**
+- `{ type: 'canvasUpdate', products: [{ id, fits, isBedMode, rotation, x, y }] }` — fired after drag/drop; use `fits` flag to update `#plannerStatusText`
 
 ### Save/Share
 `layoutNameInput` (Input), `saveLayoutBtn` (Button), `shareLayoutBtn` (Button), `shareUrlText` (Text)

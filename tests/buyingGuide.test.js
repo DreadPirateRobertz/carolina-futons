@@ -184,10 +184,34 @@ describe('page initialization', () => {
     expect(initBackToTop).toHaveBeenCalledWith($w);
   });
 
-  it('calls initPageSeo with guide name and slug', async () => {
+  it('calls initPageSeo with guide name, slug, image, and category', async () => {
     await loadPage();
     const { initPageSeo } = await import('public/pageSeo.js');
-    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', { name: mockGuide.title, slug: 'futon-frames' });
+    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
+      name: mockGuide.title,
+      slug: 'futon-frames',
+      image: mockGuide.heroImage,
+      category: mockGuide.categoryLabel,
+    }));
+  });
+
+  it('falls back to heroImage when ogImage is absent', async () => {
+    const guideWithoutOg = { ...mockGuide, ogImage: undefined };
+    await loadPage({ guide: { success: true, guide: guideWithoutOg } });
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
+      image: mockGuide.heroImage,
+    }));
+  });
+
+  it('uses ogImage over heroImage when ogImage is present', async () => {
+    const ogUrl = 'https://www.carolinafutons.com/og-images/buying-guides/futon-frames-social.jpg';
+    const guideWithOg = { ...mockGuide, ogImage: ogUrl };
+    await loadPage({ guide: { success: true, guide: guideWithOg } });
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('buyingGuide', expect.objectContaining({
+      image: ogUrl,
+    }));
   });
 
   it('fetches all guide data in parallel', async () => {

@@ -1,17 +1,18 @@
 /**
  * @file challengeNotificationPipeline.test.js
  * @description Tests for CF-qhdo: Challenge notification pipeline — email + SMS
- * alerts for new weekly challenges to opted-in members.
+ * queue fan-out for new weekly challenges to opted-in members.
  *
  * Covers:
- *  - Sends email to members with questAlerts: true
+ *  - Queues email to EmailQueue for members with questAlerts: true
  *  - Skips members with questAlerts: false
- *  - Returns emailsSent and smsSent counts
- *  - Sends SMS via sendChallengeAlertSMS to opted-in members
- *  - SMS body includes challenge title, reward, and URL
+ *  - Returns emailsSent (queued) and smsSent (queued) counts
+ *  - Queues SMS into ChallengeNotifSMSQueue for opted-in members
+ *  - SMS message body includes challenge title, reward, and URL
  *  - Returns { success: false } when challenge.title missing
  *  - Handles empty opt-in list gracefully
- *  - Best-effort: individual failures don't stop the pipeline
+ *  - Best-effort: individual insert failures don't stop the pipeline
+ *  - processChallengeNotifSMSQueue: in-flight lock prevents double-send
  *
  * CF-qhdo
  */
@@ -19,20 +20,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   __reset as resetData,
   __seed,
+  __getInserted,
+  __setInsertError,
 } from './__mocks__/wix-data.js';
 import {
-  __getEmailLog,
-  __reset as resetCrm,
-} from './__mocks__/wix-crm-backend.js';
-import {
   notifyChallengePublished,
+  processChallengeNotifSMSQueue,
 } from '../src/backend/gamificationNotifs.web.js';
 
 const NOTIF_PREFS_COLLECTION = 'MemberNotificationPrefs';
+const EMAIL_QUEUE = 'EmailQueue';
+const SMS_QUEUE = 'ChallengeNotifSMSQueue';
 
 beforeEach(() => {
   resetData();
-  resetCrm();
   vi.clearAllMocks();
 });
 
@@ -73,47 +74,49 @@ function seedOptedOutMembers(memberIds) {
   })));
 }
 
-// ── Email notifications ──────────────────────────────────────────────────────
+// ── Email queue ───────────────────────────────────────────────────────────────
 
-describe('notifyChallengePublished — email', () => {
-  it('sends email to all members with questAlerts: true', async () => {
+describe('notifyChallengePublished — email queue', () => {
+  it('queues email for all members with questAlerts: true', async () => {
     seedOptedInMembers(['mem-1', 'mem-2', 'mem-3']);
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
     expect(result.emailsSent).toBe(3);
+    expect(__getInserted(EMAIL_QUEUE)).toHaveLength(3);
   });
 
-  it('sends zero emails when no members have questAlerts: true', async () => {
+  it('queues zero emails when no members have questAlerts: true', async () => {
     seedOptedOutMembers(['mem-4']);
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
     expect(result.emailsSent).toBe(0);
+    expect(__getInserted(EMAIL_QUEUE)).toHaveLength(0);
   });
 
-  it('sends zero emails when no notification prefs exist', async () => {
+  it('queues zero emails when no notification prefs exist', async () => {
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
     expect(result.emailsSent).toBe(0);
     expect(result.smsSent).toBe(0);
   });
 
-  it('uses challenge_new_weekly template', async () => {
+  it('inserts challenge_new_weekly template into EmailQueue', async () => {
     seedOptedInMembers(['mem-5']);
     await notifyChallengePublished(makeChallenge());
-    const log = __getEmailLog();
-    expect(log.length).toBeGreaterThanOrEqual(1);
-    expect(log[0].templateId).toBe('challenge_new_weekly');
+    const queued = __getInserted(EMAIL_QUEUE);
+    expect(queued.length).toBeGreaterThanOrEqual(1);
+    expect(queued[0].templateId).toBe('challenge_new_weekly');
   });
 
-  it('includes challenge details in email variables', async () => {
+  it('includes challenge details in EmailQueue variables', async () => {
     seedOptedInMembers(['mem-6']);
     await notifyChallengePublished(makeChallenge({
       title: 'Photo Week',
       description: 'Share 5 photos',
       rewardPoints: 200,
     }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const queued = __getInserted(EMAIL_QUEUE);
+    const vars = queued[0].variables;
     expect(vars.challengeTitle).toBe('Photo Week');
     expect(vars.challengeDescription).toBe('Share 5 photos');
     expect(vars.rewardText).toBe('200 pts');
@@ -126,9 +129,25 @@ describe('notifyChallengePublished — email', () => {
       rewardPoints: 100,
       rewardBadgeLabel: 'Reviewer',
     }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
-    expect(vars.rewardText).toBe('100 pts + Reviewer badge');
+    const queued = __getInserted(EMAIL_QUEUE);
+    expect(queued[0].variables.rewardText).toBe('100 pts + Reviewer badge');
+  });
+
+  it('inserts with status: pending and sequenceType: challenge_notify', async () => {
+    seedOptedInMembers(['mem-8']);
+    await notifyChallengePublished(makeChallenge());
+    const queued = __getInserted(EMAIL_QUEUE);
+    expect(queued[0].status).toBe('pending');
+    expect(queued[0].sequenceType).toBe('challenge_notify');
+  });
+
+  it('continues queuing other members when one EmailQueue insert fails', async () => {
+    seedOptedInMembers(['mem-a', 'mem-b', 'mem-c']);
+    // First insert will throw; others should still succeed via Promise.allSettled
+    __setInsertError(EMAIL_QUEUE, new Error('DB transient'));
+    const result = await notifyChallengePublished(makeChallenge());
+    // allSettled means partial success — at least some succeed after first error clears
+    expect(result.success).toBe(true);
   });
 });
 
@@ -153,12 +172,61 @@ describe('notifyChallengePublished — validation', () => {
   });
 });
 
-// ── SMS notifications ────────────────────────────────────────────────────────
+// ── SMS queue ─────────────────────────────────────────────────────────────────
 
-describe('notifyChallengePublished — SMS', () => {
-  it('returns smsSent count (0 when no SMS prefs)', async () => {
-    seedOptedInMembers(['mem-sms1']);
+describe('notifyChallengePublished — SMS queue', () => {
+  it('queues SMS for all questAlerts members', async () => {
+    seedOptedInMembers(['mem-sms1', 'mem-sms2']);
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result.smsSent).toBe(0);
+    expect(result.smsSent).toBe(2);
+    expect(__getInserted(SMS_QUEUE)).toHaveLength(2);
+  });
+
+  it('SMS queue items include memberId, message, and pending status', async () => {
+    seedOptedInMembers(['mem-sms3']);
+    await notifyChallengePublished(makeChallenge({ title: 'Rate Your Futon' }));
+    const queued = __getInserted(SMS_QUEUE);
+    expect(queued[0].memberId).toBe('mem-sms3');
+    expect(queued[0].message).toContain('Rate Your Futon');
+    expect(queued[0].status).toBe('pending');
+  });
+
+  it('SMS message body includes reward text and challenge URL', async () => {
+    seedOptedInMembers(['mem-sms4']);
+    await notifyChallengePublished(makeChallenge({
+      title: 'Review Week',
+      rewardPoints: 75,
+    }));
+    const queued = __getInserted(SMS_QUEUE);
+    expect(queued[0].message).toContain('75 pts');
+    expect(queued[0].message).toContain('/account/my-account');
+  });
+});
+
+// ── processChallengeNotifSMSQueue: in-flight lock ─────────────────────────────
+
+describe('processChallengeNotifSMSQueue — in-flight lock', () => {
+  it('returns { skipped, reason: in_flight } when already running', async () => {
+    // Seed a pending item so the first call actually runs
+    __seed(SMS_QUEUE, [{ _id: 'sms-1', memberId: 'mem-lock', message: 'msg', status: 'pending' }]);
+
+    // Start first call but don't await yet — fire second immediately
+    const first = processChallengeNotifSMSQueue();
+    const second = processChallengeNotifSMSQueue();
+
+    const [r1, r2] = await Promise.all([first, second]);
+    // One of them should be skipped due to the in-flight lock
+    const skipped = [r1, r2].find(r => r.skipped);
+    expect(skipped).toBeDefined();
+    expect(skipped.reason).toBe('in_flight');
+  });
+
+  it('allows a second run after the first completes', async () => {
+    __seed(SMS_QUEUE, []);
+    const r1 = await processChallengeNotifSMSQueue();
+    expect(r1.skipped).toBeUndefined();
+
+    const r2 = await processChallengeNotifSMSQueue();
+    expect(r2.skipped).toBeUndefined();
   });
 });

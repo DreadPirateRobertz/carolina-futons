@@ -515,7 +515,7 @@ export const getReferralLinkOwnerName = webMethod(
 // ── _getReferralLinkForMember ───────────────────────────────────────────
 // Internal helper (not a webMethod) — looks up or creates a referral link
 // for a given memberId without requiring a session context.
-
+// idor-ok: internal backend helper — called from Thank You page server-side flow only
 export async function _getReferralLinkForMember(memberId) {
   if (!memberId) return null;
   try {
@@ -554,7 +554,7 @@ export async function _getReferralLinkForMember(memberId) {
 // ── _processReferralOnOrderCreated ─────────────────────────────────────
 // Backend-callable (not a webMethod) — invoked from wixEcom_onOrderCreated.
 // Issues credits when a referred member completes their first qualifying order.
-
+// idor-ok: internal backend helper — called from wixEcom_onOrderCreated event handler only
 export async function _processReferralOnOrderCreated(memberId, orderNumber, isFirstPurchase = false) {
   if (!memberId || !orderNumber) return { skipped: true };
   try {

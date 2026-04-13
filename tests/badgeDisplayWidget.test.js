@@ -6,7 +6,7 @@
  *  - no badges: shows #noBadgesMsg, hides #badgeRepeater
  *  - badges present: hides #noBadgesMsg, shows #badgeRepeater
  *  - repeater data set to badges array
- *  - #badgeIcon src set from getBadgeIcon() inline SVG (not broken PNG path)
+ *  - #badgeIcon html set to inline SVG from getBadgeIcon()
  *  - #badgeName text set from label
  *  - #badgeDate formatted as "Earned MM/DD/YYYY"
  *  - new badge (notified:false) gets "badge-new" class on item container
@@ -141,23 +141,16 @@ describe('badges present', () => {
 });
 
 describe('repeater item rendering', () => {
-  it('sets #badgeIcon src as data URI wrapping getBadgeIcon() SVG', async () => {
+  it('sets #badgeIcon html to inline SVG from getBadgeIcon()', async () => {
     const $w = make$w();
-    const badge = makeBadge({ badgeId: 'first_step' }); // first_step is in BADGE_REGISTRY
+    const badge = makeBadge({ badgeId: 'first_step' });
     await initBadgeDisplayWidget(MEMBER_ID, makeOpts($w, [badge]));
     const $item = fireItemReady($w, badge);
-    const src = $item._els['#badgeIcon'].src;
-    expect(src).toMatch(/^data:image\/svg\+xml;charset=utf-8,/);
-    expect(src).not.toContain('/images/badges/');
-  });
+    // Should be SVG markup (or emoji fallback), not a /images/ path
+    const html = $item._els['#badgeIcon'].html;
+    expect(typeof html).toBe('string');
+    expect(html).not.toMatch(/\/images\/badges\//);
 
-  it('sets #badgeIcon src to empty string when getBadgeIcon returns non-SVG', async () => {
-    // badge ID not in registry → getBadgeIcon returns '' (no <svg prefix)
-    const $w = make$w();
-    const badge = makeBadge({ badgeId: 'unknown_badge_xyz' });
-    await initBadgeDisplayWidget(MEMBER_ID, makeOpts($w, [badge]));
-    const $item = fireItemReady($w, badge);
-    expect($item._els['#badgeIcon'].src).toBe('');
   });
 
   it('sets #badgeName text from badge label', async () => {

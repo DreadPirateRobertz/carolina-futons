@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   extractSiteMemberMethods,
+  extractPlainExportedFunctions,
   checkMethodForIDOR,
   scanBackendFiles,
 } from '../scripts/check-member-ownership.mjs';
@@ -84,6 +85,81 @@ export const getItem = webMethod(Permissions.SiteMember, async (memberId) => {
   it('returns empty array for source with no webMethods', () => {
     const methods = extractSiteMemberMethods('const x = 1;');
     expect(methods).toHaveLength(0);
+  });
+});
+
+// ── extractPlainExportedFunctions ────────────────────────────────
+
+describe('extractPlainExportedFunctions', () => {
+  it('finds a plain async exported function', () => {
+    const source = `
+export async function getTrailProgress(memberId) {
+  return await wixData.query('Trails').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(1);
+    expect(fns[0].name).toBe('getTrailProgress');
+    expect(fns[0].params).toBe('memberId');
+    expect(fns[0].kind).toBe('plain');
+  });
+
+  it('finds a plain sync exported function', () => {
+    const source = `
+export function buildQuery(userId) {
+  return wixData.query('Data').eq('userId', userId);
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(1);
+    expect(fns[0].name).toBe('buildQuery');
+    expect(fns[0].params).toBe('userId');
+  });
+
+  it('extracts body correctly', () => {
+    const source = `
+export async function doStuff(memberId) {
+  const r = await wixData.query('X').eq('memberId', memberId).find();
+  return r;
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns[0].body).toContain('wixData.query');
+  });
+
+  it('ignores non-exported functions', () => {
+    const source = `
+async function helperFunc(memberId) {
+  return wixData.query('X').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(0);
+  });
+
+  it('finds multiple exported functions', () => {
+    const source = `
+export async function getA(memberId) {
+  return wixData.query('A').eq('memberId', memberId).find();
+}
+export function getB(userId) {
+  return wixData.query('B').eq('userId', userId).find();
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns).toHaveLength(2);
+    expect(fns.map(f => f.name)).toEqual(['getA', 'getB']);
+  });
+
+  it('returns lineNumber for each function', () => {
+    const source = `
+// line 2
+
+export async function getItem(memberId) {
+  return wixData.get('Items', memberId);
+}`;
+    const fns = extractPlainExportedFunctions(source);
+    expect(fns[0].lineNumber).toBeGreaterThan(1);
+  });
+
+  it('returns empty array for source with no exports', () => {
+    const fns = extractPlainExportedFunctions('const x = 1;');
+    expect(fns).toHaveLength(0);
   });
 });
 
@@ -190,6 +266,35 @@ describe('checkMethodForIDOR', () => {
     const result = checkMethodForIDOR(method);
     expect(result.reason).toContain('myDangerousMethod');
   });
+
+  it('labels plain export violations differently from webMethod violations', () => {
+    const plain = {
+      name: 'getTrailProgress',
+      params: 'memberId',
+      body: `{ return await wixData.query('Trails').eq('memberId', memberId).find(); }`,
+      kind: 'plain',
+    };
+    const webMethod = {
+      name: 'getCredits',
+      params: 'memberId',
+      body: `{ return await wixData.query('Credits').eq('memberId', memberId).find(); }`,
+    };
+    expect(checkMethodForIDOR(plain).reason).toContain('Plain export');
+    expect(checkMethodForIDOR(webMethod).reason).toContain('SiteMember webMethod');
+  });
+
+  it('does not flag plain export with getMember() ownership check', () => {
+    const method = {
+      name: 'getTrailProgress',
+      params: 'memberId',
+      body: `{
+        const member = await currentMember.getMember();
+        return await wixData.query('Trails').eq('memberId', memberId).find();
+      }`,
+      kind: 'plain',
+    };
+    expect(checkMethodForIDOR(method).violation).toBe(false);
+  });
 });
 
 // ── scanBackendFiles (integration) ───────────────────────────────
@@ -220,10 +325,44 @@ describe('scanBackendFiles', () => {
     expect(storeCredit).toHaveLength(0);
   });
 
-  it('produces zero violations in current codebase (all ownership checks present)', () => {
+  it('catches plain exported functions with IDOR risk (GH-990 gap, unit test)', () => {
+    // Use a synthetic fixture so this test is independent of live remediation state
+    const { extractPlainExportedFunctions, checkMethodForIDOR } = require
+      ? require('../scripts/check-member-ownership.mjs')
+      : { extractPlainExportedFunctions, checkMethodForIDOR };
+    const src = `export async function riskyFn(memberId) {
+  return wixData.query('X').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(src);
+    const results = fns.map(f => checkMethodForIDOR(f));
+    expect(results.some(r => r.violation)).toBe(true);
+  });
+
+  it('does not flag _-prefixed internal helpers', () => {
     const violations = scanBackendFiles(BACKEND_DIR);
-    // Document violations if any exist — this test acts as a ratchet:
-    // if violations are 0 now, any new IDOR will fail CI
+    const underscoreViolations = violations.filter(v => v.name.startsWith('_'));
+    expect(underscoreViolations).toHaveLength(0);
+  });
+
+  it('does not flag functions annotated with // idor-ok:', () => {
+    const violations = scanBackendFiles(BACKEND_DIR);
+    // All known internal helpers are annotated — none should appear as violations
+    const knownInternals = [
+      'createTimeline', 'findMemberRecord', 'updateChallengeProgress',
+      'checkWishlistMonthlyCap', 'checkStreakAchievements', 'insertStreakAchievement',
+      'recordStreakMilestoneEvent', 'recordChallengeCompleteEvent',
+      'recordChallengeCompletionEvent', 'getGamePrefsForMember', 'sendChallengeReminder',
+      'recordTrailChallengeCompletion',
+    ];
+    const falsePositives = violations.filter(v => knownInternals.includes(v.name));
+    expect(falsePositives).toHaveLength(0);
+  });
+
+  it('ratchet: zero violations — all IDORs fixed or annotated as internal-only', () => {
+    const violations = scanBackendFiles(BACKEND_DIR);
+    // CF-dk9: all 15 findings resolved:
+    //   1 real IDOR (getTrailProgress) → wrapped in webMethod getMyTrailProgress
+    //   14 internal helpers → annotated with // idor-ok:
     expect(violations).toHaveLength(0);
   });
 });

@@ -28,6 +28,11 @@ export const POINT_VALUES = {
   STREAK_7_DAY: 100,
   AR_USED: 10,           // gamification_ar_used event
   WISHLIST_ADD: 25,      // gamification_wishlist_add event (1/month cap enforced in receiver)
+  VIDEO_REVIEW: 500,     // video_review_approved event (exclusive badge + 500 pts)
+  // Mobile-unique actions (cross-rig spec with dallas, 2026-04-04)
+  VISUAL_SEARCH_USE: 15, // camera snap to find products (mobile only)
+  SHARE_PRODUCT: 10,     // native share sheet (mobile only)
+  PUSH_NOTIFICATION_ENABLED: 50, // one-time bonus for enabling push (mobile only)
 };
 
 /** Points deducted to restore a broken streak via recoverStreak(). Once per 30 days. */
@@ -157,6 +162,25 @@ export const BADGE_REGISTRY = {
     earnCondition: 'Write 3 reviews.',
     // Keeps emoji icon — no SVG replacement for this badge
   },
+  video_reviewer: {
+    label: 'Video Reviewer',
+    icon: '🎬',
+    tier: 'MOUNTAIN_GUIDE',
+    description: 'Shared a video review of a product.',
+    earnCondition: 'Submit a video review that gets approved.',
+    // Exclusive badge — awarded once per member on first approved video review
+    // Monarch Butterfly — spread wings, iconic orange + black pattern
+    svgLabel: 'Monarch Butterfly',
+    svgColor: colors.badgeGold,
+    svgPath:
+      'M24 15 C22 13 17 11 13 13 C9 15 8 19 10 22 ' +
+      'C7 23 6 27 9 29 C8 32 10 36 13 37 L12 40 L14 41 L16 38 ' +
+      'C18 40 21 41 24 41 C27 41 30 40 32 38 L34 41 L36 40 L35 37 ' +
+      'C38 36 40 32 39 29 C42 27 41 23 38 22 ' +
+      'C40 19 39 15 35 13 C31 11 26 13 24 15Z ' +
+      'M21 39 C20 42 18 44 17 46 L19 46 L23 41 Z ' +
+      'M27 39 C28 42 30 44 31 46 L29 46 L25 41 Z',
+  },
 };
 
 // ── TIER_NAMES — ascending by threshold; getTierForPoints depends on this order ─
@@ -191,11 +215,64 @@ export function getTierForPoints(points) {
 
 export const GAMIFICATION_TIER_ORDER = [
   'Trail Blazer',
-  'Blue Ridge Explorer',
-  'Summit Seeker',
-  'Peak Performer',
+  'Mountain Guide',
+  'Summit Master',
   'Blue Ridge Legend',
 ];
+
+// ── Tier Perks — canonical perk definitions per tier ─────────────────────────
+// CF-c6el.1: Each tier unlocks cumulative perks (higher tiers inherit lower).
+
+export const PERK_TYPES = {
+  BIRTHDAY_DISCOUNT: 'BIRTHDAY_DISCOUNT',
+  ACCESSORY_DISCOUNT: 'ACCESSORY_DISCOUNT',
+  PRIORITY_SUPPORT: 'PRIORITY_SUPPORT',
+  FREE_WHITE_GLOVE: 'FREE_WHITE_GLOVE',
+  EARLY_ACCESS: 'EARLY_ACCESS',
+  STYLING_CALL: 'STYLING_CALL',
+};
+
+const TRAIL_BLAZER_PERKS = [
+  { type: PERK_TYPES.BIRTHDAY_DISCOUNT, value: 10, label: '10% birthday discount', delivery: 'coupon_email' },
+];
+const MOUNTAIN_GUIDE_PERKS = [
+  ...TRAIL_BLAZER_PERKS,
+  { type: PERK_TYPES.ACCESSORY_DISCOUNT, value: 15, label: '15% off accessories', delivery: 'coupon_email' },
+  { type: PERK_TYPES.PRIORITY_SUPPORT, value: null, label: 'Priority support', delivery: 'flag' },
+];
+const SUMMIT_MASTER_PERKS = [
+  ...MOUNTAIN_GUIDE_PERKS,
+  { type: PERK_TYPES.FREE_WHITE_GLOVE, value: null, label: 'Free white-glove delivery', delivery: 'shipping_rule' },
+  { type: PERK_TYPES.EARLY_ACCESS, value: 48, label: '48h early access to clearance', delivery: 'flag' },
+  { type: PERK_TYPES.STYLING_CALL, value: null, label: 'Personal styling call with Brenda', delivery: 'booking_link' },
+];
+
+export const TIER_PERKS = {
+  'Trail Blazer':      TRAIL_BLAZER_PERKS,
+  'Mountain Guide':    MOUNTAIN_GUIDE_PERKS,
+  'Summit Master':     SUMMIT_MASTER_PERKS,
+  'Blue Ridge Legend':  SUMMIT_MASTER_PERKS, // same perks as Summit Master
+};
+
+/**
+ * Returns the perks unlocked at a given tier.
+ * @param {string} tierName
+ * @returns {Array<{type: string, value: number|null, label: string, delivery: string}>}
+ */
+export function getPerksByTier(tierName) {
+  return TIER_PERKS[tierName] ?? [];
+}
+
+/**
+ * Returns perks newly unlocked by a tier promotion (in newTier but not in prevTier).
+ * @param {string} prevTier
+ * @param {string} newTier
+ * @returns {Array<{type: string, value: number|null, label: string, delivery: string}>}
+ */
+export function getNewPerksOnPromotion(prevTier, newTier) {
+  const prevTypes = new Set((TIER_PERKS[prevTier] ?? []).map(p => p.type));
+  return (TIER_PERKS[newTier] ?? []).filter(p => !prevTypes.has(p.type));
+}
 
 // ── isBonusPointsDayAvailable ─────────────────────────────────────────────────
 
@@ -259,4 +336,25 @@ export const BADGE_DISPLAY_NAMES = {
   trail_regular: 'Trail Regular',
   top_reviewer: 'Top Reviewer',
   ar_explorer: 'AR Explorer',
+  video_reviewer: 'Video Reviewer',
 };
+
+// ── TIER_PERK_CATALOG — display catalog for Loyalty page perks widget (CF-c6el.3) ─
+
+/**
+ * Ordered array of tier perk display definitions, ascending by tier threshold.
+ * Used by LoyaltyPerksWidget to render unlocked perks and next-tier teaser.
+ * Perks are cumulative — reaching Mountain Guide unlocks Trail Blazer AND
+ * Mountain Guide perks.
+ *
+ * Distinct from TIER_PERKS (delivery grants): TIER_PERK_CATALOG drives the
+ * display layer only; actual perk delivery uses TIER_PERKS + deliverTierPerks.
+ *
+ * @type {Array<{tierKey:string,tierName:string,perks:Array<{perkId:string,label:string,description:string,icon:string}>}>}
+ */
+export const TIER_PERK_CATALOG = [
+  { tierKey: 'TRAIL_BLAZER', tierName: 'Trail Blazer', perks: [{ perkId: 'daily-spin', label: 'Daily Spin Wheel', description: 'Spin once per day to win bonus points and prizes.', icon: '🎡' }, { perkId: 'challenge-access', label: 'Challenge Trails', description: 'Access to Blue Ridge Trail challenges and seasonal missions.', icon: '🥾' }] },
+  { tierKey: 'MOUNTAIN_GUIDE', tierName: 'Mountain Guide', perks: [{ perkId: 'birthday-bonus', label: 'Birthday Bonus Points', description: 'Earn 150 bonus points during your birthday week.', icon: '🎂' }, { perkId: 'guide-badge-frame', label: 'Mountain Guide Badge Frame', description: 'Exclusive badge frame unlocked on your loyalty profile.', icon: '🏔️' }] },
+  { tierKey: 'SUMMIT_MASTER', tierName: 'Summit Master', perks: [{ perkId: 'styling-call', label: 'Free Styling Consultation', description: 'Book a free 30-minute styling call with our design team.', icon: '📞' }, { perkId: 'double-spin', label: 'Double Daily Spins', description: 'Spin the wheel twice per day instead of once.', icon: '🎰' }] },
+  { tierKey: 'BLUE_RIDGE_LEGEND', tierName: 'Blue Ridge Legend', perks: [{ perkId: 'free-shipping-all', label: 'Free Shipping Always', description: 'Free shipping on every order — no minimum required.', icon: '📦' }, { perkId: 'vip-early-access', label: 'VIP Early Access', description: 'Shop new arrivals 48 hours before the general public.', icon: '⭐' }] },
+];

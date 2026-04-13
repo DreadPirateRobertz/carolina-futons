@@ -11,6 +11,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 beforeEach(() => {
   __reset();
@@ -225,7 +226,7 @@ describe('validateBundleCoupon', () => {
   it('rate-limits per member', async () => {
     __seed('CouponValidationRateLimit', [{
       _id: 'rl-1',
-      key: 'anon',
+      key: hashRateLimitKey('anon'),
       count: 10,
       windowStart: new Date(),
     }]);

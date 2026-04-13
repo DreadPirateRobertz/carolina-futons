@@ -61,6 +61,7 @@ const BREAK_IN_COMPLETE_DAY = 30;
  * @param {string} params.productName - Product display name
  * @returns {Promise<{success: boolean, timelineId?: string, error?: string}>}
  */
+// idor-ok: internal backend helper — called from wixEcom_onOrderCreated event handler only
 export async function createTimeline({ orderId, memberId, productId, productName }) {
   try {
     if (!orderId || !memberId || !productId) {

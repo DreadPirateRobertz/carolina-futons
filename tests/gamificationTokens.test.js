@@ -462,28 +462,13 @@ describe('BADGE_DISPLAY_NAMES', () => {
 // ── GAMIFICATION_TIER_ORDER ───────────────────────────────────────────────────
 
 describe('GAMIFICATION_TIER_ORDER', () => {
-  it('has 5 entries', () => {
-    expect(GAMIFICATION_TIER_ORDER).toHaveLength(5);
-  });
-
-  it('first entry is Trail Blazer', () => {
-    expect(GAMIFICATION_TIER_ORDER[0]).toBe('Trail Blazer');
-  });
-
-  it('second entry is Blue Ridge Explorer', () => {
-    expect(GAMIFICATION_TIER_ORDER[1]).toBe('Blue Ridge Explorer');
-  });
-
-  it('third entry is Summit Seeker', () => {
-    expect(GAMIFICATION_TIER_ORDER[2]).toBe('Summit Seeker');
-  });
-
-  it('fourth entry is Peak Performer', () => {
-    expect(GAMIFICATION_TIER_ORDER[3]).toBe('Peak Performer');
-  });
-
-  it('fifth entry is Blue Ridge Legend', () => {
-    expect(GAMIFICATION_TIER_ORDER[4]).toBe('Blue Ridge Legend');
+  it('has 4 entries matching canonical tier names', () => {
+    expect(GAMIFICATION_TIER_ORDER).toEqual([
+      'Trail Blazer',
+      'Mountain Guide',
+      'Summit Master',
+      'Blue Ridge Legend',
+    ]);
   });
 
   it('is an array', () => {

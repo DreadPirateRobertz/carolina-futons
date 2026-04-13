@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted, __getUpdated, __setUpdateError, __setQueryError, __setInsertError } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
 
@@ -173,7 +174,7 @@ describe('logComfortRating', () => {
   it('rate-limits per timeline', async () => {
     __seed('ComfortTimelineRateLimit', [{
       _id: 'rl-1',
-      key: 'tl-1',
+      key: hashRateLimitKey('tl-1'),
       count: 10,
       windowStart: new Date(),
     }]);

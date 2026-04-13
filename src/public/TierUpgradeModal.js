@@ -8,16 +8,22 @@
  *   #tierUpgradeBenefits — Tier-specific benefit text
  *   #tierUpgradeCloseBtn — Hides the modal on click
  *
- * CF-u81k
+ * CF-u81k, CF-c6el.1
  */
+import { getNewPerksOnPromotion } from './gamificationTokens.js';
 
-/** Benefit copy shown in the modal for each tier. */
-export const TIER_BENEFITS = {
-  'Trail Blazer':   '',
-  'Mountain Guide': 'Early access to sales + 2x review points',
-  'Summit Seeker':  'Free shipping on orders over $150 + priority support',
-  'Peak Pioneer':   'VIP events + dedicated support + 3x review points',
-};
+/**
+ * Build benefit summary text from the tier perk definitions.
+ * Shows only the NEW perks unlocked by this promotion.
+ * @param {string} prevTier
+ * @param {string} newTier
+ * @returns {string}
+ */
+export function buildBenefitText(prevTier, newTier) {
+  const newPerks = getNewPerksOnPromotion(prevTier, newTier);
+  if (!newPerks.length) return '';
+  return newPerks.map(p => p.label).join(' + ');
+}
 
 /**
  * Show the tier upgrade celebration modal when newTier !== prevTier.
@@ -32,7 +38,7 @@ export async function initTierUpgradeModal(prevTier, newTier, opts = {}) {
   if (prevTier === newTier) return;
 
   const $w = opts.$w ?? globalThis.$w;
-  const benefits = TIER_BENEFITS[newTier] ?? '';
+  const benefits = buildBenefitText(prevTier, newTier);
 
   try { $w('#tierUpgradeHeading').text = `You reached ${newTier}!`; } catch (e) {}
   try { $w('#tierUpgradeBenefits').text = benefits; } catch (e) {}

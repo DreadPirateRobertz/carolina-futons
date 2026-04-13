@@ -13,6 +13,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 beforeEach(() => {
   __reset();
@@ -163,7 +164,7 @@ describe('getExportData', () => {
     // Seed rate limit at max
     __seed('VisualSearchExportRateLimit', [{
       _id: 'rl-1',
-      key: 'flood-client',
+      key: hashRateLimitKey('flood-client'),
       count: 10,
       windowStart: new Date(),
     }]);

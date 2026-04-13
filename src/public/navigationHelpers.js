@@ -295,16 +295,16 @@ export function initMobileDrawer($w, currentPath) {
     } catch (e) { console.error('[navigationHelpers] mobileDrawer close:', e); }
   }
 
-  // Responsive: show/hide nav elements based on viewport
+  // Responsive: show/hide nav elements based on viewport.
+  // Each element is wrapped in its own try/catch so a missing #mobileMenuButton
+  // never silently prevents #desktopNavBar from being hidden (cf-3zs3).
+  const _mobile = isMobile();
   try {
-    if (isMobile()) {
-      $w('#mobileMenuButton').show();
-      try { $w('#desktopNavBar').hide(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer desktopNavBar hide:', e); }
-    } else {
-      $w('#mobileMenuButton').hide();
-      try { $w('#desktopNavBar').show(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer desktopNavBar show:', e); }
-    }
-  } catch (e) { console.error('[navigationHelpers] mobileDrawer responsive setup:', e); }
+    if (_mobile) { $w('#mobileMenuButton').show(); } else { $w('#mobileMenuButton').hide(); }
+  } catch (e) { console.warn('[navigationHelpers] mobileDrawer mobileMenuButton responsive:', e); }
+  try {
+    if (_mobile) { $w('#desktopNavBar').hide(); } else { $w('#desktopNavBar').show(); }
+  } catch (e) { console.warn('[navigationHelpers] mobileDrawer desktopNavBar responsive:', e); }
 
   // Style overlay with design tokens
   try {

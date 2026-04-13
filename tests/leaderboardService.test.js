@@ -21,6 +21,7 @@ import { __reset, __seed, __getInserted, __setQueryError, __setInsertError } fro
 import {
   getLeaderboard,
   snapshotLeaderboard,
+  getTopEarners,
 } from '../src/backend/leaderboardService.web.js';
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
@@ -170,5 +171,207 @@ describe('snapshotLeaderboard', () => {
     await snapshotLeaderboard();
     const [record] = __getInserted('LeaderboardSnapshots');
     expect(JSON.parse(record.entries)).toEqual([]);
+  });
+});
+
+// ── getTopEarners — pagination ────────────────────────────────────────────────
+
+function makeTopEarner(overrides = {}) {
+  return {
+    memberId:         overrides.memberId         || 'mem-1',
+    displayName:      overrides.displayName      || 'Alice',
+    totalPoints:      overrides.totalPoints      ?? 100,
+    tier:             overrides.tier             || 'Silver',
+    leaderboardOptIn: overrides.leaderboardOptIn ?? true,
+    lastActivityAt:   overrides.lastActivityAt   || '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function makeEarnerPool(count) {
+  return Array.from({ length: count }, (_, i) => makeTopEarner({
+    memberId:      `mem-${String(i + 1).padStart(3, '0')}`,
+    displayName:   `Member ${i + 1}`,
+    totalPoints:   (count - i) * 100,
+    lastActivityAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00.000Z`,
+  }));
+}
+
+describe('getTopEarners — pagination', () => {
+  it('returns first page with correct entries and ranks', async () => {
+    __seed('MemberPoints', makeEarnerPool(20));
+    const result = await getTopEarners(5, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(5);
+    expect(result.entries[0].rank).toBe(1);
+    expect(result.entries[4].rank).toBe(5);
+    const points = result.entries.map(e => e.totalPoints);
+    expect(points).toEqual([...points].sort((a, b) => b - a));
+  });
+
+  it('page 2 returns correct slice and ranks starting at offset+1', async () => {
+    __seed('MemberPoints', makeEarnerPool(20));
+    const page1 = await getTopEarners(5, 0);
+    const page2 = await getTopEarners(5, 5);
+    expect(page2.success).toBe(true);
+    expect(page2.entries).toHaveLength(5);
+    expect(page2.entries[0].rank).toBe(6);
+    expect(page2.entries[4].rank).toBe(10);
+    // No overlap between pages
+    const ids1 = new Set(page1.entries.map(e => e.memberId));
+    expect(page2.entries.every(e => !ids1.has(e.memberId))).toBe(true);
+    // Page 2 max points < page 1 min points
+    const maxPts2 = Math.max(...page2.entries.map(e => e.totalPoints));
+    const minPts1 = Math.min(...page1.entries.map(e => e.totalPoints));
+    expect(maxPts2).toBeLessThan(minPts1);
+  });
+
+  it('returns empty entries when offset exceeds total', async () => {
+    __seed('MemberPoints', makeEarnerPool(5));
+    const result = await getTopEarners(10, 100);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(0);
+  });
+
+  it('reports total count of all matching opted-in members', async () => {
+    __seed('MemberPoints', makeEarnerPool(15));
+    const result = await getTopEarners(5, 0);
+    expect(result.total).toBe(15);
+  });
+
+  it('each entry includes rank, memberId, displayName, totalPoints, tier, lastActivityAt', async () => {
+    __seed('MemberPoints', makeEarnerPool(3));
+    const result = await getTopEarners(3, 0);
+    for (const entry of result.entries) {
+      expect(entry).toHaveProperty('rank');
+      expect(entry).toHaveProperty('memberId');
+      expect(entry).toHaveProperty('displayName');
+      expect(entry).toHaveProperty('totalPoints');
+      expect(entry).toHaveProperty('tier');
+      expect(entry).toHaveProperty('lastActivityAt');
+    }
+  });
+
+  it('uses default limit=10 offset=0 when called with no arguments', async () => {
+    __seed('MemberPoints', makeEarnerPool(20));
+    const result = await getTopEarners();
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(10);
+    expect(result.entries[0].rank).toBe(1);
+  });
+});
+
+// ── getTopEarners — tie-breaking ──────────────────────────────────────────────
+
+describe('getTopEarners — tie-breaking', () => {
+  it('breaks ties by lastActivityAt ascending (earlier activity ranks higher)', async () => {
+    __seed('MemberPoints', [
+      makeTopEarner({ memberId: 'mem-late',  totalPoints: 500, lastActivityAt: '2026-03-15T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-early', totalPoints: 500, lastActivityAt: '2026-01-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-mid',   totalPoints: 500, lastActivityAt: '2026-02-10T00:00:00.000Z' }),
+    ]);
+    const result = await getTopEarners(3, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries[0].memberId).toBe('mem-early');
+    expect(result.entries[1].memberId).toBe('mem-mid');
+    expect(result.entries[2].memberId).toBe('mem-late');
+  });
+
+  it('primary sort is totalPoints desc — tie-break only applies among equal-points members', async () => {
+    __seed('MemberPoints', [
+      makeTopEarner({ memberId: 'mem-a', totalPoints: 1000, lastActivityAt: '2026-03-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-b', totalPoints: 500,  lastActivityAt: '2026-01-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-c', totalPoints: 500,  lastActivityAt: '2026-02-01T00:00:00.000Z' }),
+    ]);
+    const result = await getTopEarners(3, 0);
+    expect(result.entries[0].memberId).toBe('mem-a');
+    expect(result.entries[1].memberId).toBe('mem-b');
+    expect(result.entries[2].memberId).toBe('mem-c');
+  });
+
+  it('tie-breaking is stable across page boundaries', async () => {
+    __seed('MemberPoints', [
+      makeTopEarner({ memberId: 'mem-d', totalPoints: 500, lastActivityAt: '2026-04-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-a', totalPoints: 500, lastActivityAt: '2026-01-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-c', totalPoints: 500, lastActivityAt: '2026-03-01T00:00:00.000Z' }),
+      makeTopEarner({ memberId: 'mem-b', totalPoints: 500, lastActivityAt: '2026-02-01T00:00:00.000Z' }),
+    ]);
+    const page1 = await getTopEarners(2, 0);
+    const page2 = await getTopEarners(2, 2);
+    expect(page1.entries[0].memberId).toBe('mem-a');
+    expect(page1.entries[1].memberId).toBe('mem-b');
+    expect(page2.entries[0].memberId).toBe('mem-c');
+    expect(page2.entries[1].memberId).toBe('mem-d');
+  });
+});
+
+// ── getTopEarners — input validation ─────────────────────────────────────────
+
+describe('getTopEarners — input validation', () => {
+  it('rejects limit=0', async () => {
+    __seed('MemberPoints', makeEarnerPool(5));
+    const result = await getTopEarners(0, 0);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/limit/i);
+  });
+
+  it('rejects negative limit', async () => {
+    __seed('MemberPoints', makeEarnerPool(5));
+    const result = await getTopEarners(-5, 0);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/limit/i);
+  });
+
+  it('clamps limit to max 100', async () => {
+    __seed('MemberPoints', makeEarnerPool(200));
+    const result = await getTopEarners(999, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(100);
+  });
+
+  it('rejects negative offset', async () => {
+    __seed('MemberPoints', makeEarnerPool(5));
+    const result = await getTopEarners(10, -1);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/offset/i);
+  });
+
+  it('clamps offset to max 10000 — beyond total returns empty', async () => {
+    __seed('MemberPoints', makeEarnerPool(5));
+    const result = await getTopEarners(10, 99999);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(0);
+  });
+});
+
+// ── getTopEarners — error handling / opt-in filter ────────────────────────────
+
+describe('getTopEarners — error handling', () => {
+  it('returns success:false when wixData query throws', async () => {
+    __setQueryError('MemberPoints', new Error('DB unavailable'));
+    const result = await getTopEarners(10, 0);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('excludes members who have opted out of the leaderboard', async () => {
+    __seed('MemberPoints', [
+      makeTopEarner({ memberId: 'mem-in',  totalPoints: 500, leaderboardOptIn: true  }),
+      makeTopEarner({ memberId: 'mem-out', totalPoints: 900, leaderboardOptIn: false }),
+    ]);
+    const result = await getTopEarners(10, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].memberId).toBe('mem-in');
+  });
+
+  it('returns empty entries when no members have opted in', async () => {
+    __seed('MemberPoints', [
+      makeTopEarner({ memberId: 'mem-1', leaderboardOptIn: false }),
+    ]);
+    const result = await getTopEarners(10, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(0);
+    expect(result.total).toBe(0);
   });
 });

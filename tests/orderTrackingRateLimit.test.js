@@ -20,6 +20,7 @@ import {
   checkRateLimit,
   RATE_LIMIT_MAX,
   RATE_LIMIT_WINDOW_MS,
+  hashRateLimitKey,
 } from '../src/backend/utils/rateLimit.js';
 import { subscribeToNotifications, unsubscribeFromNotifications } from '../src/backend/orderTracking.web.js';
 
@@ -33,7 +34,7 @@ const TRACKING_RATE_COLLECTION = 'TrackingRateLimit';
 function makeRateLimitRecord(email, count, windowStart = Date.now()) {
   return {
     _id: 'rl-tracking-1',
-    key: email.toLowerCase(),
+    key: hashRateLimitKey(email.toLowerCase()),
     count,
     windowStart: new Date(windowStart),
   };

@@ -25,6 +25,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { mediaManager } from 'wix-media-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
@@ -705,6 +706,109 @@ export const getVideoReviews = webMethod(
   }
 );
 
+// ── New video upload / fetch methods (CF-ou66.1) ─────────────────────────────
+
+const MAX_VIDEO_DURATION_MS = 30_000; // 30 seconds
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024; // 100 MB
+
+/**
+ * Upload a video blob to Wix Media Manager and insert a VideoReviews record
+ * with status=pending_moderation. Ownership is enforced via currentMember —
+ * the caller-supplied memberId hint is overridden by the authenticated session ID.
+ *
+ * @param {string} productId
+ * @param {string} _memberIdHint - Ignored; retained for backwards-compat call sites.
+ * @param {Buffer|Blob} videoBlob - Raw video binary.
+ * @param {number} durationMs - Video duration in ms. Must be ≤ 30 000.
+ * @returns {Promise<{success: boolean, reviewId?: string, error?: string}>}
+ */
+export const uploadVideoReview = webMethod(
+  Permissions.SiteMember,
+  async (productId, _memberIdHint, videoBlob, durationMs) => {
+    try {
+      const cleanProductId = validateId(productId);
+      if (!cleanProductId) return { success: false, error: 'Valid product ID is required.' };
+
+      // Ownership guard — always derive memberId from the authenticated session
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Member not found.' };
+      const memberId = member._id;
+
+      if (typeof durationMs !== 'number' || isNaN(durationMs) || durationMs > MAX_VIDEO_DURATION_MS) {
+        return { success: false, error: 'Video must be 30 seconds or less.' };
+      }
+
+      const blobSize = videoBlob?.size ?? videoBlob?.byteLength ?? 0;
+      if (blobSize > MAX_VIDEO_BYTES) {
+        return { success: false, error: 'Video file exceeds the 100 MB size limit.' };
+      }
+
+      // Duplicate check — one video review per member per product
+      const existing = await wixData.query(VIDEO_REVIEWS_COLLECTION)
+        .eq('productId', cleanProductId)
+        .eq('memberId', memberId)
+        .find();
+      if (existing.items.length > 0) {
+        return { success: false, error: 'A video review for this product already exists.' };
+      }
+
+      // Upload blob to Wix Media Manager
+      let uploadResult;
+      try {
+        uploadResult = await mediaManager.upload(
+          '/video-reviews/',
+          videoBlob,
+          `video_review_${cleanProductId}_${memberId}.mp4`,
+        );
+      } catch (uploadErr) {
+        console.error('[reviewsService] uploadVideoReview upload failed:', uploadErr);
+        return { success: false, error: 'Video upload failed. Please try again.' };
+      }
+
+      const inserted = await wixData.insert(VIDEO_REVIEWS_COLLECTION, {
+        productId: cleanProductId,
+        memberId,
+        videoFileId: uploadResult.fileName,
+        durationMs,
+        status: 'pending_moderation',
+        submittedAt: new Date(),
+      });
+
+      return { success: true, reviewId: inserted._id };
+    } catch (err) {
+      console.error('[reviewsService] uploadVideoReview error:', err);
+      return { success: false, error: 'Failed to submit video review.' };
+    }
+  }
+);
+
+/**
+ * Get approved video reviews for a product.
+ *
+ * @param {string} productId
+ * @returns {Promise<{success: boolean, reviews: Array, error?: string}>}
+ */
+export const getVideoReviewsForProduct = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    try {
+      const cleanId = validateId(productId);
+      if (!cleanId) return { success: false, error: 'Valid product ID is required.', reviews: [] };
+
+      const result = await wixData.query(VIDEO_REVIEWS_COLLECTION)
+        .eq('productId', cleanId)
+        .eq('status', 'approved')
+        .descending('submittedAt')
+        .find();
+
+      return { success: true, reviews: result.items };
+    } catch (err) {
+      console.error('[reviewsService] getVideoReviewsForProduct error:', err);
+      return { success: false, error: 'Failed to load video reviews.', reviews: [] };
+    }
+  }
+);
+
 /**
  * Approve or reject a video review. On approval, triggers badge award via gamification.
  *
@@ -741,6 +845,51 @@ export const moderateVideoReview = webMethod(
     } catch (err) {
       console.error('[reviewsService] moderateVideoReview error:', err);
       return { success: false, error: 'Failed to moderate video review.' };
+    }
+  }
+);
+
+// ── getFeaturedReviews ────────────────────────────────────────────────────────
+
+/**
+ * Return the most recent approved reviews across all products for the
+ * homepage ReviewsCarousel widget.
+ *
+ * @param {Object|null} [opts]
+ * @param {number}      [opts.limit=10]  Max reviews to return; clamped to [1, 50].
+ * @returns {Promise<{success: boolean, reviews: Object[], error?: string}>}
+ * @permission Anyone
+ */
+export const getFeaturedReviews = webMethod(
+  Permissions.Anyone,
+  async (opts) => {
+    try {
+      const rawLimit = (opts && typeof opts.limit === 'number' && !isNaN(opts.limit))
+        ? opts.limit
+        : 10;
+      const limit = Math.min(50, Math.max(1, rawLimit));
+
+      const result = await wixData.query(COLLECTION)
+        .eq('status', 'approved')
+        .descending('_createdDate')
+        .limit(limit)
+        .find();
+
+      const reviews = result.items.map(r => ({
+        _id:          r._id,
+        authorName:   r.authorName || 'Customer',
+        rating:       typeof r.rating === 'number' ? r.rating : null,
+        title:        r.title || '',
+        body:         r.body || '',
+        productId:    r.productId,
+        productName:  r.productName || '',
+        _createdDate: r._createdDate,
+      }));
+
+      return { success: true, reviews };
+    } catch (err) {
+      console.error('[reviewsService] getFeaturedReviews error:', err);
+      return { success: false, reviews: [], error: 'internal_error' };
     }
   }
 );

@@ -36,6 +36,8 @@ import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
+import { logAuditEvent } from 'backend/utils/auditLog';
 import { colors } from 'public/sharedTokens';
 
 // Category relationships for smart bundling
@@ -686,7 +688,7 @@ export const addBundleToCart = webMethod(
  * @returns {Promise<{success: boolean, mattresses: Array, error?: string}>}
  */
 export const getCompatibleMattresses = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (frameId) => {
     try {
       const cleanId = validateId(frameId);
@@ -727,7 +729,7 @@ export const getCompatibleMattresses = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[bundleBuilder] getCompatibleMattresses failed:', err);
+      logError('bundleBuilder.getCompatibleMattresses', err);
       return { success: false, error: 'Failed to load mattresses.', mattresses: [] };
     }
   }
@@ -741,7 +743,7 @@ export const getCompatibleMattresses = webMethod(
  * @returns {Promise<{success: boolean, covers: Array, error?: string}>}
  */
 export const getCompatibleCovers = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (mattressId) => {
     try {
       const cleanId = validateId(mattressId);
@@ -782,7 +784,7 @@ export const getCompatibleCovers = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[bundleBuilder] getCompatibleCovers failed:', err);
+      logError('bundleBuilder.getCompatibleCovers', err);
       return { success: false, error: 'Failed to load covers.', covers: [] };
     }
   }
@@ -798,7 +800,7 @@ export const getCompatibleCovers = webMethod(
  * @returns {Promise<{success: boolean, basePrice: number, bundlePrice: number, savings: number, discountPercent: number, error?: string}>}
  */
 export const getBundlePrice = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (frameId, mattressId, coverId) => {
     try {
       const cleanFrameId = validateId(frameId);
@@ -842,8 +844,81 @@ export const getBundlePrice = webMethod(
         discountPercent,
       };
     } catch (err) {
-      console.error('[bundleBuilder] getBundlePrice failed:', err);
+      logError('bundleBuilder.getBundlePrice', err);
       return { success: false, error: 'Failed to calculate bundle price.', basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0 };
+    }
+  }
+);
+
+
+/**
+ * Add a Futon Studio custom selection (frame + mattress + optional cover) to the cart.
+ * Discount is server-derived: 10% for frame+mattress, 12% for frame+mattress+cover.
+ * No client-supplied pricing is accepted.
+ *
+ * @param {string} frameId    - Wix product ID of the futon frame
+ * @param {string} mattressId - Wix product ID of the mattress
+ * @param {string|null} [coverId] - Wix product ID of the cover (optional)
+ * @returns {Promise<{success: boolean, productsAdded: number, bundlePrice: number,
+ *   savings: number, discountPercent: number, error?: string}>}
+ */
+export const addFutonStudioBundleToCart = webMethod(
+  Permissions.SiteMember,
+  async (frameId, mattressId, coverId = null) => {
+    try {
+      const cleanFrameId    = validateId(frameId);
+      const cleanMattressId = validateId(mattressId);
+      if (!cleanFrameId || !cleanMattressId) {
+        return { success: false, error: 'Frame and mattress IDs are required.' };
+      }
+
+      const [frame, mattress] = await Promise.all([
+        wixData.get('Stores/Products', cleanFrameId),
+        wixData.get('Stores/Products', cleanMattressId),
+      ]);
+
+      if (!frame)    return { success: false, error: 'Frame not found.' };
+      if (!mattress) return { success: false, error: 'Mattress not found.' };
+
+      let basePrice       = (frame.price || 0) + (mattress.price || 0);
+      let discountPercent = 10;
+      const lineItems     = [
+        { catalogReference: { catalogItemId: cleanFrameId,    appId: '1380b703-ce81-ff05-f115-39571d94dfcd' }, quantity: 1 },
+        { catalogReference: { catalogItemId: cleanMattressId, appId: '1380b703-ce81-ff05-f115-39571d94dfcd' }, quantity: 1 },
+      ];
+
+      const cleanCoverId = validateId(coverId);
+      if (cleanCoverId) {
+        const cover = await wixData.get('Stores/Products', cleanCoverId);
+        if (cover) {
+          basePrice       += cover.price || 0;
+          discountPercent  = 12;
+          lineItems.push({ catalogReference: { catalogItemId: cleanCoverId, appId: '1380b703-ce81-ff05-f115-39571d94dfcd' }, quantity: 1 });
+        }
+      }
+
+      const bundlePrice = Math.round(basePrice * (1 - discountPercent / 100) * 100) / 100;
+      const savings     = Math.round((basePrice - bundlePrice) * 100) / 100;
+
+      await ecomCart.addToCurrentCart({ lineItems });
+
+      logAuditEvent('Stores/Products', 'futon_studio_add_to_cart', cleanFrameId, {
+        mattressId: cleanMattressId,
+        coverId: cleanCoverId || null,
+        discountPercent,
+        savings,
+      });
+
+      return {
+        success: true,
+        productsAdded: lineItems.length,
+        bundlePrice,
+        savings,
+        discountPercent,
+      };
+    } catch (err) {
+      logError('bundleBuilder.addFutonStudioBundleToCart', err);
+      return { success: false, error: 'Failed to add Futon Studio bundle to cart.' };
     }
   }
 );

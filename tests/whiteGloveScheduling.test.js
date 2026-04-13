@@ -151,9 +151,13 @@ describe('getWhiteGloveSlots', () => {
 
   it('does not include past dates', async () => {
     const result = await getWhiteGloveSlots(null);
-    const today = new Date().toISOString().split('T')[0];
+    // Use local-midnight string (same basis as the source) to avoid
+    // UTC-vs-local mismatch: "tomorrow local" can equal "today UTC" on MT evenings.
+    const todayLocal = new Date();
+    todayLocal.setHours(0, 0, 0, 0);
+    const today = todayLocal.toISOString().split('T')[0];
     for (const slot of result.slots) {
-      expect(slot.date > today).toBe(true);
+      expect(slot.date >= today).toBe(true);
     }
   });
 });

@@ -68,6 +68,8 @@ vi.mock('backend/loyaltyService.web', () => ({
   getLoyaltyTiers: vi.fn().mockResolvedValue([]),
   redeemReward: vi.fn().mockResolvedValue({ success: true }),
   getMyStreakData: vi.fn().mockResolvedValue({ currentStreakDays: 0, streakMultiplier: 1, streakStartDate: null, lastActivityDate: null }),
+  getMyAchievements: vi.fn().mockResolvedValue({ achievements: [] }),
+  getMyDailyQuests: vi.fn().mockResolvedValue({ quests: [] }),
 }));
 
 vi.mock('backend/accountDashboard.web', () => ({

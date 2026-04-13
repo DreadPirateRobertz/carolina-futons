@@ -1,0 +1,587 @@
+2026/04/05 00:57:18 Warning: failed to set GT_TOWN_ROOT in tmux global env: no tmux server running
+2026/04/05 00:57:18 Loaded patrol config from /home/halworker85/gt/cfutons/mayor/daemon.json
+2026/04/05 00:57:18 Set GT_DOLT_PORT=3307 from Dolt config (fallback)
+2026/04/05 00:57:18 Daemon starting (PID 1945917)
+2026/04/05 00:57:18 Daemon running, recovery heartbeat interval 3m0s
+2026/04/05 00:57:18 Feed curator started
+2026/04/05 00:57:18 Convoy: opened 1 beads store(s): [hq]
+2026/04/05 00:57:18 Convoy manager started
+2026/04/05 00:57:18 KRC pruner started
+2026/04/05 00:57:18 Dolt backup ticker started (interval 15m0s)
+2026/04/05 00:57:18 JSONL git backup ticker started (interval 15m0s)
+2026/04/05 00:57:18 Wisp reaper ticker started (interval 30m0s)
+2026/04/05 00:57:18 Doctor dog ticker started (interval 5m0s)
+2026/04/05 00:57:18 Compactor dog ticker started (interval 24h0m0s)
+2026/04/05 00:57:18 Checkpoint dog ticker started (interval 10m0s)
+2026/04/05 00:57:18 Scheduled maintenance ticker started (check interval 5m0s, window 03:00)
+2026/04/05 00:57:18 Main branch test ticker started (interval 30m0s)
+2026/04/05 00:57:18 Heartbeat starting (recovery-focused)
+2026/04/05 00:57:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:57:20 Deacon started successfully
+2026/04/05 00:57:20 Spawning Boot for triage...
+2026/04/05 00:57:20 Boot spawned successfully
+2026/04/05 00:57:20 Deacon started 0s ago, awaiting first heartbeat...
+2026/04/05 00:57:22 Mayor started successfully
+2026/04/05 00:57:24 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 00:57:24 Heartbeat complete (#1)
+2026/04/05 00:57:28 Convoy: running startup sweep for stranded convoys
+2026/04/05 00:57:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:57:33 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 00:57:33 Convoy: poll backoff → 10s
+2026/04/05 00:57:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 00:57:43 Convoy: poll backoff → 20s
+2026/04/05 00:57:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:57:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:57:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:03 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 00:58:03 Convoy: poll backoff → 40s
+2026/04/05 00:58:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 00:58:43 Convoy: poll backoff → 1m0s
+2026/04/05 00:58:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:58:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:59:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:59:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:59:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 00:59:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:00:18 Heartbeat starting (recovery-focused)
+2026/04/05 01:00:18 Spawning Boot for triage...
+2026/04/05 01:00:22 Boot spawned successfully
+2026/04/05 01:00:24 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:00:24 Heartbeat complete (#2)
+2026/04/05 01:00:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:01:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:02:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:02:18 dog_molecule: poured mol-dog-doctor → hq-wisp-r5r9 (0 steps)
+2026/04/05 01:02:18 doctor_dog: poured mol-dog-doctor → hq-wisp-r5r9
+2026/04/05 01:02:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:03:24 Heartbeat starting (recovery-focused)
+2026/04/05 01:03:24 Spawning Boot for triage...
+2026/04/05 01:03:28 Boot spawned successfully
+2026/04/05 01:03:28 Deacon heartbeat is stale (6m0s old), checking session...
+2026/04/05 01:03:28 Deacon stuck for 6m0s - nudging session
+2026/04/05 01:03:31 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:03:31 Heartbeat complete (#3)
+2026/04/05 01:03:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:04:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:05:43 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:06:31 Heartbeat starting (recovery-focused)
+2026/04/05 01:06:31 Spawning Boot for triage...
+2026/04/05 01:06:36 Boot spawned successfully
+2026/04/05 01:06:38 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+
+⚠️  WARNING: Town root is on branch 'feat/cf-5io3-email-marketing-automation' (should be 'main')
+   This can cause gt commands to fail. Run: gt doctor --fix
+
+2026/04/05 01:06:38 Heartbeat complete (#4)
+2026/04/05 01:06:45 Convoy: poll recovered, interval reset to 5s
+2026/04/05 01:07:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:07:18 dog_molecule: poured mol-dog-doctor → hq-wisp-j7o0 (0 steps)
+2026/04/05 01:07:18 doctor_dog: poured mol-dog-doctor → hq-wisp-j7o0
+2026/04/05 01:07:19 checkpoint_dog: starting cycle
+2026/04/05 01:07:19 dog_molecule: poured mol-dog-checkpoint → hq-wisp-oof0 (0 steps)
+2026/04/05 01:07:19 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:07:19 dog_molecule: closeStep "checkpoint": unknown step (known: [])
+2026/04/05 01:07:19 checkpoint_dog: cycle complete — scanned 0 worktrees, checkpointed 0
+2026/04/05 01:07:19 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:09:38 Heartbeat starting (recovery-focused)
+2026/04/05 01:09:38 Spawning Boot for triage...
+2026/04/05 01:09:43 Boot spawned successfully
+2026/04/05 01:09:43 Deacon heartbeat is stale (6m0s old), checking session...
+2026/04/05 01:09:43 Deacon stuck for 6m0s - nudging session
+2026/04/05 01:09:46 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+
+⚠️  WARNING: Town root is on branch 'feat/cf-5io3-email-marketing-automation' (should be 'main')
+   This can cause gt commands to fail. Run: gt doctor --fix
+
+2026/04/05 01:09:46 Heartbeat complete (#5)
+2026/04/05 01:12:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:12:18 dog_molecule: poured mol-dog-doctor → hq-wisp-zrsd (0 steps)
+2026/04/05 01:12:18 doctor_dog: poured mol-dog-doctor → hq-wisp-zrsd
+2026/04/05 01:12:19 dog_molecule: poured mol-dog-jsonl → hq-wisp-muro (0 steps)
+2026/04/05 01:12:19 jsonl_git_backup: git repo /home/halworker85/.dolt-archive/git does not exist, skipping
+2026/04/05 01:12:46 Heartbeat starting (recovery-focused)
+2026/04/05 01:12:46 Spawning Boot for triage...
+2026/04/05 01:12:50 Boot spawned successfully
+2026/04/05 01:12:52 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+
+⚠️  WARNING: Town root is on branch 'feat/cf-znpj-loyalty-portability' (should be 'main')
+   This can cause gt commands to fail. Run: gt doctor --fix
+
+2026/04/05 01:12:52 Heartbeat complete (#6)
+2026/04/05 01:15:52 Heartbeat starting (recovery-focused)
+2026/04/05 01:15:52 Spawning Boot for triage...
+2026/04/05 01:15:57 Boot spawned successfully
+2026/04/05 01:15:57 Deacon heartbeat is stale (6m0s old), checking session...
+2026/04/05 01:15:57 Deacon stuck for 6m0s - nudging session
+2026/04/05 01:16:00 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+
+⚠️  WARNING: Town root is on branch 'feat/cf-5io3-email-marketing-automation' (should be 'main')
+   This can cause gt commands to fail. Run: gt doctor --fix
+
+2026/04/05 01:16:00 Heartbeat complete (#7)
+2026/04/05 01:17:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:17:18 dog_molecule: poured mol-dog-doctor → CF-wisp-w56i (0 steps)
+2026/04/05 01:17:18 doctor_dog: poured mol-dog-doctor → CF-wisp-w56i
+2026/04/05 01:17:18 checkpoint_dog: starting cycle
+2026/04/05 01:17:18 dog_molecule: poured mol-dog-checkpoint → CF-wisp-nb1b (0 steps)
+2026/04/05 01:17:18 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:17:18 dog_molecule: closeStep "checkpoint": unknown step (known: [])
+2026/04/05 01:17:18 checkpoint_dog: cycle complete — scanned 0 worktrees, checkpointed 0
+2026/04/05 01:17:18 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:18:54 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:18:54 Convoy: poll backoff → 10s
+2026/04/05 01:18:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:00 Heartbeat starting (recovery-focused)
+2026/04/05 01:19:00 Spawning Boot for triage...
+2026/04/05 01:19:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:04 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:19:04 Convoy: poll backoff → 20s
+2026/04/05 01:19:04 Boot spawned successfully
+2026/04/05 01:19:04 Warning: failed to fetch deacon inbox: exit status 1
+2026/04/05 01:19:05 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:19:05 Heartbeat complete (#8)
+2026/04/05 01:19:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:19:24 Convoy: poll backoff → 40s
+2026/04/05 01:19:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:19:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:20:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:20:04 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:20:04 Convoy: poll backoff → 1m0s
+2026/04/05 01:20:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:20:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:20:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:20:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:21:04 Convoy: poll recovered, interval reset to 5s
+2026/04/05 01:22:05 Heartbeat starting (recovery-focused)
+2026/04/05 01:22:05 Spawning Boot for triage...
+2026/04/05 01:22:10 Boot spawned successfully
+2026/04/05 01:22:11 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:22:11 Heartbeat complete (#9)
+2026/04/05 01:22:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:22:18 dog_molecule: poured mol-dog-doctor → CF-wisp-on4x (0 steps)
+2026/04/05 01:22:18 doctor_dog: poured mol-dog-doctor → CF-wisp-on4x
+2026/04/05 01:25:11 Heartbeat starting (recovery-focused)
+2026/04/05 01:25:11 Spawning Boot for triage...
+2026/04/05 01:25:15 Boot spawned successfully
+2026/04/05 01:25:17 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:25:17 Heartbeat complete (#10)
+2026/04/05 01:27:18 dog_molecule: poured mol-dog-jsonl → CF-wisp-t5hj (0 steps)
+2026/04/05 01:27:18 jsonl_git_backup: git repo /home/halworker85/.dolt-archive/git does not exist, skipping
+2026/04/05 01:27:18 main_branch_test: starting patrol cycle
+2026/04/05 01:27:18 main_branch_test: no rigs found
+2026/04/05 01:27:18 checkpoint_dog: starting cycle
+2026/04/05 01:27:18 dog_molecule: poured mol-dog-checkpoint → CF-wisp-cf0l (0 steps)
+2026/04/05 01:27:18 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:27:18 dog_molecule: closeStep "checkpoint": unknown step (known: [])
+2026/04/05 01:27:18 checkpoint_dog: cycle complete — scanned 0 worktrees, checkpointed 0
+2026/04/05 01:27:18 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:27:19 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:27:19 dog_molecule: poured mol-dog-doctor → CF-wisp-r0tj (0 steps)
+2026/04/05 01:27:19 doctor_dog: poured mol-dog-doctor → CF-wisp-r0tj
+2026/04/05 01:27:19 dog_molecule: poured mol-dog-reaper → CF-wisp-z3ad (0 steps)
+2026/04/05 01:27:19 wisp_reaper: Dog dispatch failed (gt sling: exit status 1), running inline fallback
+2026/04/05 01:27:19 wisp_reaper: scanning 17 databases (inline fallback)
+2026/04/05 01:27:19 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:27:19 dog_molecule: closeStep "reap": unknown step (known: [])
+2026/04/05 01:27:19 dog_molecule: closeStep "purge": unknown step (known: [])
+2026/04/05 01:27:20 wisp_reaper: beads_hq: closed 2 plugin dispatches
+2026/04/05 01:27:20 dog_molecule: closeStep "auto-close": unknown step (known: [])
+2026/04/05 01:27:20 wisp_reaper: cycle complete — reaped=0 purged=0 mail_purged=0 plugin_closed=0 dispatch_closed=2 auto_closed=4 open=322 databases=17 dryRun=false
+2026/04/05 01:27:20 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:28:04 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:28:04 Convoy: poll backoff → 10s
+2026/04/05 01:28:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:28:14 Convoy: poll backoff → 20s
+2026/04/05 01:28:17 Heartbeat starting (recovery-focused)
+2026/04/05 01:28:17 Spawning Boot for triage...
+2026/04/05 01:28:21 Boot spawned successfully
+2026/04/05 01:28:21 Warning: failed to fetch deacon inbox: exit status 1
+2026/04/05 01:28:22 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:28:22 Heartbeat complete (#11)
+2026/04/05 01:28:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:28:34 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:28:34 Convoy: poll backoff → 40s
+2026/04/05 01:28:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:28:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:28:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:28:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:28:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:29:14 Convoy: poll backoff → 1m0s
+2026/04/05 01:29:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:29:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:30:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:30:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:31:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:22 Heartbeat starting (recovery-focused)
+2026/04/05 01:31:22 Spawning Boot for triage...
+2026/04/05 01:31:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:26 Boot spawned successfully
+2026/04/05 01:31:28 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:31:28 Heartbeat complete (#12)
+2026/04/05 01:31:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:31:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:32:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:32:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:32:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:32:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:32:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:32:18 dog_molecule: pour mol-dog-doctor failed (non-fatal): exit status 1: Error: failed to open database: Dolt server unreachable at 127.0.0.1:3307 and auto-start failed: Dolt server is not running on port 3307, and auto-start is suppressed because the server is externally managed (dolt.auto-start: false or explicit port configured).
+
+Start the external server, or enable auto-start to allow bd to manage the server.
+  To start manually: bd dolt start
+  To check status: bd dolt status
+
+To start manually: bd dolt start
+To disable auto-start: set dolt.auto-start: false in .beads/config.yaml
+2026/04/05 01:32:18 doctor_dog: molecule pour failed (non-fatal), skipping cycle
+2026/04/05 01:32:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:33:14 Convoy: poll recovered, interval reset to 5s
+2026/04/05 01:34:14 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:34:14 Convoy: poll backoff → 10s
+2026/04/05 01:34:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:34:24 Convoy: poll backoff → 20s
+2026/04/05 01:34:28 Heartbeat starting (recovery-focused)
+2026/04/05 01:34:28 Spawning Boot for triage...
+2026/04/05 01:34:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:32 Boot spawned successfully
+2026/04/05 01:34:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:33 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:34:33 Heartbeat complete (#13)
+2026/04/05 01:34:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:44 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:34:44 Convoy: poll backoff → 40s
+2026/04/05 01:34:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:34:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:35:24 Convoy: poll backoff → 1m0s
+2026/04/05 01:35:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:35:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:36:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:36:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:37:18 dog_molecule: poured mol-dog-doctor → CF-wisp-uqtv (0 steps)
+2026/04/05 01:37:18 doctor_dog: poured mol-dog-doctor → CF-wisp-uqtv
+2026/04/05 01:37:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:18 checkpoint_dog: starting cycle
+2026/04/05 01:37:18 dog_molecule: poured mol-dog-checkpoint → CF-wisp-yeth (0 steps)
+2026/04/05 01:37:18 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:37:18 dog_molecule: closeStep "checkpoint": unknown step (known: [])
+2026/04/05 01:37:18 checkpoint_dog: cycle complete — scanned 0 worktrees, checkpointed 0
+2026/04/05 01:37:18 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:37:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:37:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:33 Heartbeat starting (recovery-focused)
+2026/04/05 01:37:33 Spawning Boot for triage...
+2026/04/05 01:37:38 Boot spawned successfully
+2026/04/05 01:37:38 Warning: failed to fetch deacon inbox: exit status 1
+2026/04/05 01:37:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:39 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:37:39 Heartbeat complete (#14)
+2026/04/05 01:37:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:37:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:38:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:38:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:39:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:39:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:39:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:39:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:39:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:39:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:40:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:39 Heartbeat starting (recovery-focused)
+2026/04/05 01:40:39 Spawning Boot for triage...
+2026/04/05 01:40:43 Boot spawned successfully
+2026/04/05 01:40:43 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:44 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:40:44 Heartbeat complete (#15)
+2026/04/05 01:40:48 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:53 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:40:58 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:03 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:08 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:13 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:18 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:23 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:24 Convoy: event poll error (hq): failed to get events since 2026-03-29 14:29:57 +0000 UTC: Error 1049 (HY000): database not found: beads
+2026/04/05 01:41:28 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:33 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:41:38 Convoy: stranded scan failed: WARNING: This binary was built with 'go build' directly.
+2026/04/05 01:42:18 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:42:18 dog_molecule: poured mol-dog-doctor → CF-wisp-nzmj (0 steps)
+2026/04/05 01:42:18 doctor_dog: poured mol-dog-doctor → CF-wisp-nzmj
+2026/04/05 01:42:18 dog_molecule: poured mol-dog-jsonl → CF-wisp-y9f3 (0 steps)
+2026/04/05 01:42:18 jsonl_git_backup: git repo /home/halworker85/.dolt-archive/git does not exist, skipping
+2026/04/05 01:42:24 Convoy: poll recovered, interval reset to 5s
+2026/04/05 01:43:44 Heartbeat starting (recovery-focused)
+2026/04/05 01:43:44 Spawning Boot for triage...
+2026/04/05 01:43:49 Boot spawned successfully
+2026/04/05 01:43:49 Deacon heartbeat is stale (5m0s old), checking session...
+2026/04/05 01:43:49 Deacon stuck for 5m0s - nudging session
+2026/04/05 01:43:52 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+2026/04/05 01:43:52 Heartbeat complete (#16)
+2026/04/05 01:44:11 Received signal terminated, shutting down
+2026/04/05 01:44:11 Daemon shutting down
+2026/04/05 01:44:11 Feed curator stopped
+2026/04/05 01:44:11 Convoy: closed beads store (hq)
+2026/04/05 01:44:11 Convoy manager stopped
+2026/04/05 01:44:11 KRC pruner stopped
+2026/04/05 01:44:11 Daemon stopped
+2026/04/05 01:44:16 Loaded patrol config from /home/halworker85/gt/cfutons/mayor/daemon.json
+2026/04/05 01:44:16 Set env GT_DOLT_PORT=3308 from daemon.json
+2026/04/05 01:44:16 Daemon starting (PID 2502148)
+2026/04/05 01:44:16 Daemon running, recovery heartbeat interval 3m0s
+2026/04/05 01:44:16 Feed curator started
+2026/04/05 01:44:16 Convoy: closed beads store (hq)
+2026/04/05 01:44:16 Daemon startup failed (PID 2502148): daemon startup blocked: incompatible beads workspace / gt binary combination
+
+  town-root beads store: workspace bd_version 1.0.0 is newer than embedded beads 0.62.0
+
+Upgrade or rebuild `gt` against a newer beads release, or switch to a workspace created by a matching release, then retry `gt daemon start`.
+2026/04/05 01:44:29 Loaded patrol config from /home/halworker85/gt/cfutons/mayor/daemon.json
+2026/04/05 01:44:29 Set env GT_DOLT_PORT=3308 from daemon.json
+2026/04/05 01:44:29 Daemon starting (PID 2503300)
+2026/04/05 01:44:29 Daemon running, recovery heartbeat interval 3m0s
+2026/04/05 01:44:29 Feed curator started
+2026/04/05 01:44:29 Convoy: closed beads store (hq)
+2026/04/05 01:44:29 Daemon startup failed (PID 2503300): daemon startup blocked: incompatible beads workspace / gt binary combination
+
+  town-root beads store: workspace bd_version 1.0.0 is newer than embedded beads 0.62.0
+
+Upgrade or rebuild `gt` against a newer beads release, or switch to a workspace created by a matching release, then retry `gt daemon start`.
+2026/04/05 01:44:50 Loaded patrol config from /home/halworker85/gt/cfutons/mayor/daemon.json
+2026/04/05 01:44:50 Set env GT_DOLT_PORT=3308 from daemon.json
+2026/04/05 01:44:50 Daemon starting (PID 2505930)
+2026/04/05 01:44:50 Daemon running, recovery heartbeat interval 3m0s
+2026/04/05 01:44:50 Feed curator started
+2026/04/05 01:44:50 Convoy: closed beads store (hq)
+2026/04/05 01:44:50 Daemon startup failed (PID 2505930): daemon startup blocked: incompatible beads workspace / gt binary combination
+
+  town-root beads store: workspace bd_version 1.0.0 is newer than embedded beads 0.62.0
+
+Upgrade or rebuild `gt` against a newer beads release, or switch to a workspace created by a matching release, then retry `gt daemon start`.
+2026/04/05 01:47:55 Loaded patrol config from /home/halworker85/gt/cfutons/mayor/daemon.json
+2026/04/05 01:47:55 Set env GT_DOLT_PORT=3308 from daemon.json
+2026/04/05 01:47:55 Daemon starting (PID 2524061)
+2026/04/05 01:47:55 Daemon running, recovery heartbeat interval 3m0s
+2026/04/05 01:47:55 Feed curator started
+2026/04/05 01:47:55 Convoy: opened 1 beads store(s): [hq]
+2026/04/05 01:47:55 Convoy manager started
+2026/04/05 01:47:55 KRC pruner started
+2026/04/05 01:47:55 Dolt backup ticker started (interval 15m0s)
+2026/04/05 01:47:55 JSONL git backup ticker started (interval 15m0s)
+2026/04/05 01:47:55 Wisp reaper ticker started (interval 30m0s)
+2026/04/05 01:47:55 Doctor dog ticker started (interval 5m0s)
+2026/04/05 01:47:55 Compactor dog ticker started (interval 24h0m0s)
+2026/04/05 01:47:55 Checkpoint dog ticker started (interval 10m0s)
+2026/04/05 01:47:55 Scheduled maintenance ticker started (check interval 5m0s, window 03:00)
+2026/04/05 01:47:55 Main branch test ticker started (interval 30m0s)
+2026/04/05 01:47:55 Heartbeat starting (recovery-focused)
+2026/04/05 01:47:55 Spawning Boot for triage...
+2026/04/05 01:48:00 Boot spawned successfully
+2026/04/05 01:48:01 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+2026/04/05 01:48:01 Heartbeat complete (#1)
+2026/04/05 01:48:05 Convoy: running startup sweep for stranded convoys
+2026/04/05 01:48:05 Convoy: close detected: hq-wisp-76n (from hq)
+2026/04/05 01:48:20 Convoy: close detected: hq-wisp-3gc (from hq)
+2026/04/05 01:48:45 Convoy: close detected: hq-an1 (from hq)
+2026/04/05 01:48:50 Convoy: close detected: hq-wisp-3uam (from hq)
+2026/04/05 01:50:15 Convoy: close detected: hq-wisp-1e8h (from hq)
+2026/04/05 01:50:55 Heartbeat starting (recovery-focused)
+2026/04/05 01:50:55 Spawning Boot for triage...
+2026/04/05 01:51:00 Boot spawned successfully
+2026/04/05 01:51:04 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+2026/04/05 01:51:04 Heartbeat complete (#2)
+2026/04/05 01:51:20 Convoy: close detected: hq-wisp-d04b (from hq)
+2026/04/05 01:51:25 Convoy: close detected: hq-wisp-bb9o (from hq)
+2026/04/05 01:51:35 Convoy: close detected: hq-wisp-ylml (from hq)
+2026/04/05 01:52:30 Convoy: close detected: hq-wisp-fm2m (from hq)
+2026/04/05 01:52:55 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:52:55 dog_molecule: poured mol-dog-doctor → hq-wisp-mdeb (0 steps)
+2026/04/05 01:52:55 doctor_dog: poured mol-dog-doctor → hq-wisp-mdeb
+2026/04/05 01:53:00 Convoy: close detected: hq-wisp-mdeb (from hq)
+2026/04/05 01:53:15 Convoy: close detected: hq-wisp-yig (from hq)
+2026/04/05 01:54:04 Heartbeat starting (recovery-focused)
+2026/04/05 01:54:04 Spawning Boot for triage...
+2026/04/05 01:54:08 Boot spawned successfully
+2026/04/05 01:54:10 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+2026/04/05 01:54:10 Heartbeat complete (#3)
+2026/04/05 01:54:55 Convoy: close detected: hq-wisp-sq1 (from hq)
+2026/04/05 01:55:35 Convoy: close detected: hq-wisp-pi8r (from hq)
+2026/04/05 01:55:35 Convoy: close detected: hq-wisp-5fd8 (from hq)
+2026/04/05 01:56:25 Convoy: close detected: hq-wisp-4osl (from hq)
+2026/04/05 01:56:25 Convoy: close detected: hq-wisp-v3kq (from hq)
+2026/04/05 01:56:30 Convoy: close detected: hq-wisp-9l3y (from hq)
+2026/04/05 01:57:10 Heartbeat starting (recovery-focused)
+2026/04/05 01:57:10 Spawning Boot for triage...
+2026/04/05 01:57:14 Boot spawned successfully
+2026/04/05 01:57:15 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+2026/04/05 01:57:15 Heartbeat complete (#4)
+2026/04/05 01:57:45 Convoy: close detected: hq-wisp-hjhf (from hq)
+2026/04/05 01:57:55 doctor_dog: pouring molecule for agent execution
+2026/04/05 01:57:55 dog_molecule: poured mol-dog-doctor → hq-wisp-xb0i (0 steps)
+2026/04/05 01:57:55 doctor_dog: poured mol-dog-doctor → hq-wisp-xb0i
+2026/04/05 01:57:55 checkpoint_dog: starting cycle
+2026/04/05 01:57:56 dog_molecule: poured mol-dog-checkpoint → hq-wisp-ryb4 (0 steps)
+2026/04/05 01:57:56 dog_molecule: closeStep "scan": unknown step (known: [])
+2026/04/05 01:57:56 dog_molecule: closeStep "checkpoint": unknown step (known: [])
+2026/04/05 01:57:56 checkpoint_dog: cycle complete — scanned 0 worktrees, checkpointed 0
+2026/04/05 01:57:56 dog_molecule: closeStep "report": unknown step (known: [])
+2026/04/05 01:58:00 Convoy: close detected: hq-wisp-xb0i (from hq)
+2026/04/05 01:58:00 Convoy: close detected: hq-wisp-ryb4 (from hq)
+2026/04/05 01:58:40 Convoy: close detected: hq-wisp-6xm (from hq)
+2026/04/05 02:00:00 Convoy: close detected: hq-wisp-3kam (from hq)
+2026/04/05 02:00:15 Heartbeat starting (recovery-focused)
+2026/04/05 02:00:15 Spawning Boot for triage...
+2026/04/05 02:00:20 Boot spawned successfully
+2026/04/05 02:00:21 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+
+⚠️  WARNING: Town root is on branch 'feat/cf-rw9i-real-rooms-gallery' (should be 'main')
+   This can cause gt commands to fail. Run: gt doctor --fix
+
+2026/04/05 02:00:21 Heartbeat complete (#5)
+2026/04/05 02:01:10 Convoy: close detected: hq-wisp-au9x (from hq)
+2026/04/05 02:01:20 Convoy: close detected: hq-wisp-fucu (from hq)
+2026/04/05 02:01:25 Convoy: close detected: hq-wisp-pzvk (from hq)
+2026/04/05 02:01:45 Convoy: close detected: hq-wisp-l2z (from hq)
+2026/04/05 02:01:45 Convoy: close detected: hq-wisp-omd (from hq)
+2026/04/05 02:02:55 dog_molecule: poured mol-dog-jsonl → hq-wisp-cxvp (0 steps)
+2026/04/05 02:02:55 jsonl_git_backup: git repo /home/halworker85/.dolt-archive/git does not exist, skipping
+2026/04/05 02:02:55 doctor_dog: pouring molecule for agent execution
+2026/04/05 02:02:56 dog_molecule: poured mol-dog-doctor → hq-wisp-lpyu (0 steps)
+2026/04/05 02:02:56 doctor_dog: poured mol-dog-doctor → hq-wisp-lpyu
+2026/04/05 02:03:00 Convoy: close detected: hq-wisp-cxvp (from hq)
+2026/04/05 02:03:00 Convoy: close detected: hq-wisp-lpyu (from hq)
+2026/04/05 02:03:21 Heartbeat starting (recovery-focused)
+2026/04/05 02:03:21 Spawning Boot for triage...
+2026/04/05 02:03:25 Boot spawned successfully
+2026/04/05 02:03:25 Handler: failed to load rigs config: config file not found: /home/halworker85/gt/cfutons/mayor/rigs.json
+2026/04/05 02:03:27 Scheduler dispatch: WARNING: This binary was built with 'go build' directly.
+         Use 'make build' to create a properly signed binary.
+         Run from: /home/halworker85/gt/cfutons
+2026/04/05 02:03:27 Heartbeat complete (#6)
+2026/04/05 02:03:50 Convoy: close detected: hq-wisp-586 (from hq)

@@ -6,6 +6,7 @@ let _cart = { lineItems: [], appliedCoupon: null };
 export const cart = {
   getCurrentCart: vi.fn(async () => ({ ..._cart })),
   addProducts: vi.fn(async () => ({ ..._cart })),
+  addToCurrentCart: vi.fn(async () => ({ ..._cart })),
   applyCoupon: vi.fn(async (code) => {
     _cart = { ..._cart, appliedCoupon: { code } };
     return { ..._cart };
@@ -57,6 +58,11 @@ export function __setAddProductsError(err) {
   cart.addProducts.mockRejectedValueOnce(err);
 }
 
+/** Make addToCurrentCart throw on the next call. */
+export function __setAddToCurrentCartError(err) {
+  cart.addToCurrentCart.mockRejectedValueOnce(err);
+}
+
 /** Make applyCoupon throw on the next call. */
 export function __setApplyCouponError(err) {
   cart.applyCoupon.mockRejectedValueOnce(err);
@@ -68,9 +74,11 @@ export function __reset() {
   _cart = { lineItems: [], appliedCoupon: null };
   cart.getCurrentCart.mockReset();
   cart.addProducts.mockReset();
+  cart.addToCurrentCart.mockReset();
   cart.applyCoupon.mockReset();
   cart.getCurrentCart.mockImplementation(async () => ({ ..._cart }));
   cart.addProducts.mockImplementation(async () => ({ ..._cart }));
+  cart.addToCurrentCart.mockImplementation(async () => ({ ..._cart }));
   cart.applyCoupon.mockImplementation(async (code) => {
     _cart = { ..._cart, appliedCoupon: { code } };
     return { ..._cart };

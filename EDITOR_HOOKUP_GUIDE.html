@@ -1667,6 +1667,43 @@ Right column:
         ["shareYourRoomSubmitBtn","Button","Submit photo — disabled until upload+roomType set"],
         ["shareYourRoomSuccess","Section","Success message — collapsed by default"]
       ]},
+      { name: "Video Review Grid (CF-ou66.3, PR #941)", impl: `<h4>🎬 Implementation — Video Review Grid (Product Page)</h4>
+<p><strong>CF-ou66.3</strong>: TikTok-style horizontal thumbnail row of approved customer video reviews on PDPs. Customers can play videos in a full-screen overlay. Backend: <code>videoReviewService.web.js</code> → <em>VideoReviews</em> CMS collection (status=approved only). Module: <code>src/public/VideoReviewGrid.js</code>.</p>
+<p><strong>Data flow</strong>: On page load, <code>initVideoReviewGrid()</code> calls <code>getVideoReviews(productId)</code> which returns approved videos sorted by newest first. If no videos exist, the entire section stays collapsed. Clicking a thumbnail opens a custom HTML video player in an overlay (uses HtmlComponent, NOT Wix Video — required for <code>wix:</code> media URIs).</p>
+<div class="layer-diagram">LAYOUT:
+  #videoReviewSection    (Box — collapsed by default, expands when videos exist)
+    ├─ #videoReviewTitle (Text — "Customer Videos")
+    └─ #videoReviewRepeater (Repeater — horizontal scroll)
+          ├─ #vrThumbnail    (Image — video thumbnail, clickable)
+          ├─ #vrPlayIcon     (Image/Icon — play triangle overlay)
+          └─ #vrReviewerName (Text — reviewer display name, truncated 30 chars)
+
+  #videoPlayerOverlay  (Box — full-screen dimmed overlay, collapsed by default)
+    ├─ #videoPlayerEmbed (HtmlComponent — custom HTML5 video player, NOT Wix Video)
+    └─ #closeVideoOverlay (Button — "×" close, top-right)
+</div>
+<ul>
+  <li><strong>#videoReviewSection</strong>: Box — container for the entire grid. Collapsed on load; expanded by code only when approved videos exist. Has <code>role="region"</code> and <code>aria-label="Customer video reviews"</code>.</li>
+  <li><strong>#videoReviewTitle</strong>: Text — "Customer Videos" heading.</li>
+  <li><strong>#videoReviewRepeater</strong>: Repeater — horizontal layout. Each item shows a thumbnail+overlay+name. Data set via <code>.data = reviews.map(...)</code>.</li>
+  <li><strong>#vrThumbnail</strong>: Image (repeater child) — video thumbnail. Alt text auto-set to "Video review by {name}". Click opens video overlay.</li>
+  <li><strong>#vrPlayIcon</strong>: Image (repeater child) — play button overlay on thumbnail. Also clickable, opens same overlay.</li>
+  <li><strong>#vrReviewerName</strong>: Text (repeater child) — reviewer name, truncated to 30 chars.</li>
+  <li><strong>#videoPlayerOverlay</strong>: Box — page-level dimmed overlay, NOT inside repeater. Collapsed by default.</li>
+  <li><strong>#videoPlayerEmbed</strong>: HtmlComponent (NOT Wix Video!) — receives video file ID via <code>.src</code>, builds custom HTML5 player. Must be HtmlComponent because Wix media URIs require the embed pattern.</li>
+  <li><strong>#closeVideoOverlay</strong>: Button — "×" close, collapses overlay and resets player to <code>about:blank</code>.</li>
+</ul>
+<p><strong>Gamification tie-in</strong>: Submitting a video review (CF-ou66.2) awards 500 loyalty points + an exclusive "Video Reviewer" badge. The video must be approved by admin before it appears in this grid.</p>`, elements: [
+        ["videoReviewSection","Box","Container — collapsed unless videos exist"],
+        ["videoReviewTitle","Text","'Customer Videos' heading"],
+        ["videoReviewRepeater","Repeater","Horizontal thumbnail row"],
+        ["vrThumbnail","Image","Video thumbnail (repeater child) — clickable"],
+        ["vrPlayIcon","Image","Play button overlay (repeater child)"],
+        ["vrReviewerName","Text","Reviewer name (repeater child)"],
+        ["videoPlayerOverlay","Box","Full-screen overlay — page level"],
+        ["videoPlayerEmbed","HtmlComponent","HTML5 video player — NOT Wix Video"],
+        ["closeVideoOverlay","Button","Close overlay button"]
+      ]},
       { name: "Q&A Section", impl: `<h4>❓ Implementation — Customer Q&A Widget (Product Page)</h4>
 <p><strong>CF-q7nt / CF-qa8c</strong>: Replaces retired <code>ProductQA.js</code> (which used <code>#qa*</code> IDs). All new element nicknames use the <code>#qna*</code> prefix. Backend: <code>productQA.web.js</code> → <em>ProductQuestions</em> CMS collection.</p>
 <div class="layer-diagram">LAYOUT:
@@ -4857,11 +4894,21 @@ SHARING:
       ], children: [
         ["paletteCategoryName","Text","Category name"]
       ]},
-      { name: "Canvas", impl: `<h4>🖼️ Implementation — Canvas (Room Planner)</h4>
+      { name: "Canvas", impl: `<h4>🖼️ Implementation — Canvas (Room Planner) — CF-eqc5.3 (PR #948/949)</h4>
 <ul>
-  <li><strong>#plannerCanvas</strong>: HtmlComponent — the interactive room canvas. Receives product data via <code>postMessage({ type: 'addProduct', product: {...} })</code>.</li>
-</ul>`, elements: [
-        ["plannerCanvas","HtmlComponent","Interactive room canvas (postMessage API)"]
+  <li><strong>#plannerCanvas</strong>: HtmlComponent — self-contained 2D drag-and-drop room layout canvas with origin-pinned security.</li>
+</ul>
+<h5>postMessage Protocol (page → canvas)</h5>
+<ul>
+  <li><code>{ type: 'addProduct', product: { id, productType, label, x, y, width, depth, depthBed } }</code> — adds a furniture piece at position (x, y) in inches.</li>
+  <li><code>{ type: 'updateRoom', roomWidth, roomLength, scale }</code> — updates room dimensions and re-renders at new scale.</li>
+</ul>
+<h5>onMessage Protocol (canvas → page)</h5>
+<ul>
+  <li><code>{ type: 'canvasUpdate', products: [{ id, fits, isBedMode, rotation, x, y, width, depth }] }</code> — fired after any drag/drop. Use <code>fits</code> flag to update <code>#plannerStatusText</code>.</li>
+</ul>
+<p><em>Note: status text ("N piece(s) placed — all fit!" / "N piece(s) outside room bounds") is rendered to <code>#plannerStatusText</code> in Room Setup section via the <code>onMessage</code> handler.</em></p>`, elements: [
+        ["plannerCanvas","HtmlComponent","2D drag-and-drop canvas (postMessage API, origin-pinned)"]
       ]},
       { name: "Save/Share", impl: `<h4>💾 Implementation — Save/Share (Room Planner)</h4>
 <ul>

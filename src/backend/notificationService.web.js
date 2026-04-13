@@ -551,6 +551,7 @@ export async function sendStreakDangerNotification(memberId, lastActivityDate) {
  * @param {string} message
  * @returns {Promise<void>}
  */
+// idor-ok: internal backend helper — called from gamification cron/event handlers only
 export async function sendChallengeReminder(memberId, message) {
   if (!memberId) return;
   const prefs = await getGamePrefsForMember(memberId);

@@ -1,0 +1,136 @@
+Starting server with Config HP="localhost:3308"|T="300000"|R="false"|L="warning"|S="/tmp/mysql.sock"
+time="2026-04-05T01:49:37-06:00" level=warning msg="secure_file_priv is set to \"\", which is insecure."
+time="2026-04-05T01:49:37-06:00" level=warning msg="Any user with GRANT FILE privileges will be able to read any file which the sql-server process can read."
+time="2026-04-05T01:49:37-06:00" level=warning msg="Please consider restarting the server with secure_file_priv set to a safe (or non-existent) directory."
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 22 (127.0.0.1:52266): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 23 (127.0.0.1:52274): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 24 (127.0.0.1:52288): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 25 (127.0.0.1:52294): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 26 (127.0.0.1:52298): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 27 (127.0.0.1:52304): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 28 (127.0.0.1:52312): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 29 (127.0.0.1:52328): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 30 (127.0.0.1:52334): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 31 (127.0.0.1:52338): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 33 (127.0.0.1:52356): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 34 (127.0.0.1:52364): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 35 (127.0.0.1:52380): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 36 (127.0.0.1:52386): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 37 (127.0.0.1:52388): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 38 (127.0.0.1:52394): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 39 (127.0.0.1:52406): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 40 (127.0.0.1:52418): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 41 (127.0.0.1:52432): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 42 (127.0.0.1:52442): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 43 (127.0.0.1:52446): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:55:20-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:55:20-06:00" level=error msg="failed to set the database client 44 (127.0.0.1:52458): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 49 (127.0.0.1:40750): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 50 (127.0.0.1:40756): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 51 (127.0.0.1:40766): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 52 (127.0.0.1:40776): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 53 (127.0.0.1:40790): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 54 (127.0.0.1:40798): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 55 (127.0.0.1:40814): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 56 (127.0.0.1:40830): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 57 (127.0.0.1:40836): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 58 (127.0.0.1:40846): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 60 (127.0.0.1:40860): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 61 (127.0.0.1:40862): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 62 (127.0.0.1:40872): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 63 (127.0.0.1:40880): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 64 (127.0.0.1:40890): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 65 (127.0.0.1:40894): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 66 (127.0.0.1:40908): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 67 (127.0.0.1:40918): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 68 (127.0.0.1:40922): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 69 (127.0.0.1:40938): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 70 (127.0.0.1:40940): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T01:57:34-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T01:57:34-06:00" level=error msg="failed to set the database client 71 (127.0.0.1:40950): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 76 (127.0.0.1:53012): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 77 (127.0.0.1:53016): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 78 (127.0.0.1:53022): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 79 (127.0.0.1:53032): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 80 (127.0.0.1:53046): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 81 (127.0.0.1:53058): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 82 (127.0.0.1:53066): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 83 (127.0.0.1:53082): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 84 (127.0.0.1:53096): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 85 (127.0.0.1:53104): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 87 (127.0.0.1:53110): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 88 (127.0.0.1:53112): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 89 (127.0.0.1:53128): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 90 (127.0.0.1:53142): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 91 (127.0.0.1:53158): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: gt" database=gt
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 92 (127.0.0.1:53172): database not found: gt (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 93 (127.0.0.1:53174): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 94 (127.0.0.1:53186): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 95 (127.0.0.1:53188): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 96 (127.0.0.1:53200): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 97 (127.0.0.1:53216): database not found: mo (errno 1049) (sqlstate HY000)"
+time="2026-04-05T02:00:58-06:00" level=error msg="unable to process ComInitDB: database not found: mo" database=mo
+time="2026-04-05T02:00:58-06:00" level=error msg="failed to set the database client 98 (127.0.0.1:53228): database not found: mo (errno 1049) (sqlstate HY000)"

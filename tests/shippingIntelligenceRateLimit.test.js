@@ -32,6 +32,7 @@ import {
   checkRateLimit,
   RATE_LIMIT_MAX,
   RATE_LIMIT_WINDOW_MS,
+  hashRateLimitKey,
 } from '../src/backend/utils/rateLimit.js';
 import {
   getShippingEstimate,
@@ -52,7 +53,7 @@ function makeMember(id = 'member-abc') {
 function makeRateLimitRecord(memberId, count, windowStart = Date.now()) {
   return {
     _id: `rl-${memberId}`,
-    key: memberId,
+    key: hashRateLimitKey(memberId),
     count,
     windowStart: new Date(windowStart),
   };

@@ -75,6 +75,7 @@ const REFERRAL_SHARED_POINTS = 100; // distinct from REFERRAL_ACCEPTED (200 pts 
 const FIXED_AWARD_EVENTS = new Set([
   'gamification_birthday_bonus',
   'gamification_anniversary_bonus',
+  'video_review_approved', // 500 pts, not streak-multiplied — one-time exclusive award
 ]);
 
 /**
@@ -237,6 +238,11 @@ export const receiveGamificationEvent = webMethod(
       }
       if (tierChanged) {
         try { await dispatchBusEvent({ event: 'tier_upgraded', userId: memberId, newTier, previousTier: oldTier }); } catch (_) {}
+        // CF-c6el.2: Auto-deliver tier perks (coupon codes, emails, booking links)
+        try {
+          const { deliverTierPerks } = await import('backend/rewardEngine.web');
+          await deliverTierPerks(memberId, oldTier, newTier);
+        } catch (e) { logError(`gamificationEventReceiver — deliverTierPerks failed for ${memberId}`, e); }
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
@@ -267,6 +273,22 @@ export const receiveGamificationEvent = webMethod(
         }
       }
 
+      // CF-ou66.2: video_reviewer exclusive badge — one-time award on video review approval
+      if (eventName === 'video_review_approved') {
+        try {
+          await wixData.insert(MEMBER_BADGES_COLLECTION, {
+            _id: `${memberId}_video_reviewer`,
+            memberId,
+            badgeId: 'video_reviewer',
+          });
+          badgeUnlocked = 'video_reviewer';
+        } catch (err) {
+          const msg = String(err?.message ?? err).toLowerCase();
+          const isDuplicate = msg.includes('duplicate') || msg.includes('unique constraint');
+          logError(`gamificationEventReceiver — video_reviewer badge award failed for ${memberId}`, err, { silent: isDuplicate });
+        }
+      }
+
       // CF-3wl: AnalyticsEvents pipeline — best-effort, never throws
       const prevStreakDays = record ? (record.currentStreakDays || 0) : 0;
       try {
@@ -275,6 +297,9 @@ export const receiveGamificationEvent = webMethod(
         }
         if (streakState.milestoneBonus > 0) {
           await insertAnalyticsEvent({ memberId, eventType: 'badge_earned', source: 'gamification', payload: { badgeId: 'week_wanderer' } });
+        }
+        if (badgeUnlocked === 'video_reviewer') {
+          await insertAnalyticsEvent({ memberId, eventType: 'badge_earned', source: 'gamification', payload: { badgeId: 'video_reviewer' } });
         }
         if (streakState.currentStreakDays === prevStreakDays + 1) {
           await insertAnalyticsEvent({ memberId, eventType: 'streak_extended', source: 'gamification', payload: { currentStreakDays: streakState.currentStreakDays } });
@@ -337,6 +362,8 @@ function resolvePoints(eventName, payload) {
       return POINT_VALUES.AR_TRY_ON; // 25 pts — first AR session only (cap enforced in receiver)
     case 'gamification_wishlist_add':
       return POINT_VALUES.WISHLIST_ADD;
+    case 'video_review_approved':
+      return POINT_VALUES.VIDEO_REVIEW;
     default:
       return null;
   }
@@ -348,6 +375,7 @@ function resolvePoints(eventName, payload) {
  * @param {string} memberId
  * @returns {Promise<Object|null>}
  */
+// idor-ok: internal backend helper — called from gamification pipeline only, no frontend import
 export async function findMemberRecord(memberId) {
   const results = await wixData.query(MEMBER_POINTS_COLLECTION)
     .eq('memberId', memberId)
@@ -553,6 +581,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
  *   progressError?: boolean,
  * }>}
  */
+// idor-ok: internal backend helper — called from gamification event handlers only
 export async function updateChallengeProgress(memberId, challenge, eventId, now) {
   const { challengeId, title, targetCount } = challenge;
   const base = { challengeId, title, targetCount };
@@ -631,6 +660,7 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
  * @param {string} todayET  - ET date string e.g. "2026-03-22"
  * @returns {Promise<{ canEarn: boolean, count: number }>}
  */
+// idor-ok: internal backend helper — called from wishlist add event handler only
 export async function checkWishlistMonthlyCap(memberId, todayET) {
   try {
     const monthStart = todayET.slice(0, 7) + '-01'; // "2026-03-01"

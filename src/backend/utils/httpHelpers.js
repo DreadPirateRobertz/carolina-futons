@@ -57,6 +57,30 @@ export function stripHtmlSafe(html) {
 }
 
 /**
+ * Return a standard set of Content-Security-Policy and framing security headers
+ * for public-facing HTTP function responses (CF-sec1).
+ *
+ * Apply to every ok() / response() call in http-functions.js that is publicly
+ * reachable. Wix webMethods (wix-web-module) do not support custom HTTP headers —
+ * CSP for those endpoints is controlled by the Wix platform.
+ *
+ * Directives:
+ *   script-src 'none'      — no scripts may load from these responses
+ *   frame-ancestors 'none' — prevents clickjacking via iframe embedding
+ *   object-src 'none'      — blocks Flash / plugin execution
+ *
+ * @returns {Object} Header key/value pairs ready for Wix HTTP function responses.
+ */
+export function securityHeaders() {
+  return {
+    'Content-Security-Policy':
+      "default-src 'none'; script-src 'none'; frame-ancestors 'none'; object-src 'none'",
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+  };
+}
+
+/**
  * Escape special XML characters for safe inclusion in XML documents.
  * @param {string} str
  * @returns {string}
