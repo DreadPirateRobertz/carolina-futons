@@ -47,3 +47,27 @@ export async function insertLedgerEntry({
     { suppressAuth: true }
   );
 }
+
+/**
+ * Query paginated points history for a member.
+ *
+ * @param {string} memberId
+ * @param {number} [limit=20]  - Max entries to return
+ * @param {number} [offset=0]  - Number of entries to skip (pagination)
+ * @returns {Promise<{ success: boolean, entries: Array, total: number, error?: string }>}
+ */
+export async function getPointsHistory(memberId, limit = 20, offset = 0) {
+  try {
+    const result = await wixData
+      .query(MEMBER_POINTS_LEDGER_COLLECTION)
+      .eq('memberId', memberId)
+      .descending('_createdDate')
+      .skip(offset)
+      .limit(limit)
+      .find({ suppressAuth: true });
+    return { success: true, entries: result.items, total: result.totalCount };
+  } catch (err) {
+    console.error('[memberPointsLedger] getPointsHistory error:', err);
+    return { success: false, entries: [], error: err.message };
+  }
+}

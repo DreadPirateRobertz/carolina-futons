@@ -1,9 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { insertLedgerEntry, MEMBER_POINTS_LEDGER_COLLECTION } from '../src/backend/utils/memberPointsLedger.js';
+import { insertLedgerEntry, getPointsHistory, MEMBER_POINTS_LEDGER_COLLECTION } from '../src/backend/utils/memberPointsLedger.js';
+
+// Chainable query mock — each call to query() returns a fresh builder whose
+// find() resolves to _queryResult. Reset _queryResult per test.
+let _queryResult = { items: [], totalCount: 0 };
+
+const queryBuilder = {
+  eq:         vi.fn().mockReturnThis(),
+  descending: vi.fn().mockReturnThis(),
+  skip:       vi.fn().mockReturnThis(),
+  limit:      vi.fn().mockReturnThis(),
+  find:       vi.fn(() => Promise.resolve(_queryResult)),
+};
 
 vi.mock('wix-data', () => ({
   default: {
     insert: vi.fn().mockResolvedValue({ _id: 'ledger-1' }),
+    query:  vi.fn(() => queryBuilder),
   },
 }));
 
@@ -102,5 +115,89 @@ describe('insertLedgerEntry', () => {
 
   it('exports MEMBER_POINTS_LEDGER_COLLECTION constant as MemberPointsLedger', () => {
     expect(MEMBER_POINTS_LEDGER_COLLECTION).toBe('MemberPointsLedger');
+  });
+});
+
+// ── getPointsHistory ──────────────────────────────────────────────────────────
+
+describe('getPointsHistory', () => {
+  const MEMBER_ID = 'member-hist-1';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryBuilder.eq.mockReturnThis();
+    queryBuilder.descending.mockReturnThis();
+    queryBuilder.skip.mockReturnThis();
+    queryBuilder.limit.mockReturnThis();
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+  });
+
+  it('returns success: true with entries for member', async () => {
+    const items = [
+      { _id: 'l1', memberId: MEMBER_ID, delta: 50, operationType: 'earn', _createdDate: new Date() },
+      { _id: 'l2', memberId: MEMBER_ID, delta: 100, operationType: 'earn', _createdDate: new Date() },
+    ];
+    queryBuilder.find.mockResolvedValue({ items, totalCount: 2 });
+
+    const result = await getPointsHistory(MEMBER_ID, 10, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toHaveLength(2);
+    expect(result.total).toBe(2);
+  });
+
+  it('queries the MemberPointsLedger collection filtered by memberId', async () => {
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+
+    await getPointsHistory(MEMBER_ID, 10, 0);
+
+    expect(wixData.query).toHaveBeenCalledWith(MEMBER_POINTS_LEDGER_COLLECTION);
+    expect(queryBuilder.eq).toHaveBeenCalledWith('memberId', MEMBER_ID);
+  });
+
+  it('applies descending _createdDate sort', async () => {
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+
+    await getPointsHistory(MEMBER_ID, 10, 0);
+
+    expect(queryBuilder.descending).toHaveBeenCalledWith('_createdDate');
+  });
+
+  it('applies limit and skip for pagination', async () => {
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+
+    await getPointsHistory(MEMBER_ID, 5, 10);
+
+    expect(queryBuilder.limit).toHaveBeenCalledWith(5);
+    expect(queryBuilder.skip).toHaveBeenCalledWith(10);
+  });
+
+  it('returns empty entries when member has no history', async () => {
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+
+    const result = await getPointsHistory(MEMBER_ID, 10, 0);
+    expect(result.success).toBe(true);
+    expect(result.entries).toEqual([]);
+    expect(result.total).toBe(0);
+  });
+
+  it('defaults limit to 20 and offset to 0 when not provided', async () => {
+    queryBuilder.find.mockResolvedValue({ items: [], totalCount: 0 });
+
+    await getPointsHistory(MEMBER_ID);
+
+    expect(queryBuilder.limit).toHaveBeenCalledWith(20);
+    expect(queryBuilder.skip).toHaveBeenCalledWith(0);
+  });
+
+  it('returns success: false and empty entries on DB error', async () => {
+    queryBuilder.find.mockRejectedValue(new Error('DB timeout'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const result = await getPointsHistory(MEMBER_ID, 10, 0);
+
+    expect(result.success).toBe(false);
+    expect(result.entries).toEqual([]);
+    expect(result.error).toBeTruthy();
+    expect(consoleSpy).toHaveBeenCalled();
   });
 });
