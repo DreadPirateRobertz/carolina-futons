@@ -2,6 +2,8 @@
 // Wix Blog app renders the post content — this code adds SEO schema,
 // reading time, social share buttons, author bio, and related posts
 import { getBlogArticleSchema, getBlogFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
+import { getClusterForPost } from 'backend/topicClusters.web';
+import { buildBlogPostClusterNav, buildIsPartOfSchema } from 'public/topicClusterHelpers';
 import { getGuidePinData } from 'backend/pinterestRichPins.web';
 // eslint-disable-next-line @wix/cli/no-invalid-backend-import
 import { getBlogPost, getAllBlogPosts } from 'backend/blogContent';
@@ -51,11 +53,17 @@ $w.onReady(async function () {
     // ── Related Posts ─────────────────────────────────────────────────
     initRelatedPosts(post);
 
+    // ── Topic Cluster Backlink (CF-bjv) ───────────────────────────────
+    const clusterResult = await getClusterForPost(slug).catch(() => null);
+    const cluster = clusterResult && clusterResult.success ? clusterResult.cluster : null;
+    initClusterBacklink(cluster);
+
     // ── SEO Schema Injection ──────────────────────────────────────────
     const schemas = [];
     const articleSchema = await getBlogArticleSchema(post);
     if (articleSchema) {
-      schemas.push(`<script type="application/ld+json">${articleSchema}</script>`);
+      const withIsPartOf = injectIsPartOf(articleSchema, cluster);
+      schemas.push(`<script type="application/ld+json">${withIsPartOf}</script>`);
     }
     const faqSchema = await getBlogFaqSchema(slug);
     if (faqSchema) {
@@ -89,6 +97,49 @@ $w.onReady(async function () {
     console.error('Blog post page init error:', err);
   }
 });
+
+// ── Topic Cluster Backlink ────────────────────────────────────────────
+// If the post is a spoke in a topic cluster, render "Part of: {pillar}"
+// nav + sibling-post links. CF-bjv.
+
+function initClusterBacklink(cluster) {
+  const nav = buildBlogPostClusterNav(cluster);
+  if (!nav) {
+    try { $w('#clusterBacklinkContainer').collapse(); } catch (e) {}
+    return;
+  }
+  try { $w('#clusterBacklinkContainer').expand(); } catch (e) {}
+  try { $w('#clusterBacklinkLabel').text = nav.label; } catch (e) {}
+  try {
+    const link = $w('#clusterBacklinkPillar');
+    link.label = 'View pillar guide';
+    link.link = nav.pillarUrl;
+  } catch (e) {}
+  try {
+    const repeater = $w('#clusterSiblingRepeater');
+    repeater.data = nav.siblings.map((s, i) => ({ _id: `sib-${i}`, ...s }));
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#siblingTitle').text = itemData.title; } catch (e) {}
+      try {
+        const sl = $item('#siblingLink');
+        sl.label = itemData.title;
+        sl.link = itemData.url;
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+function injectIsPartOf(articleSchemaJson, cluster) {
+  const isPartOf = buildIsPartOfSchema(cluster);
+  if (!isPartOf) return articleSchemaJson;
+  try {
+    const parsed = JSON.parse(articleSchemaJson);
+    parsed.isPartOf = isPartOf;
+    return JSON.stringify(parsed);
+  } catch (e) {
+    return articleSchemaJson;
+  }
+}
 
 // ── Post Header ───────────────────────────────────────────────────────
 // Sets the post title, excerpt body, author byline, and date near the top of the page

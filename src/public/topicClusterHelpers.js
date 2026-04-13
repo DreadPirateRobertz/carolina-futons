@@ -99,3 +99,38 @@ export function buildRelatedClusterNav(currentSlug, allClusters) {
       url: `${GUIDES_URL}/${slug}`,
     }));
 }
+
+/**
+ * Build "Part of: {pillar}" backlink + sibling-spoke nav for Blog Post pages.
+ * (CF-bjv) Takes the cluster shape returned by getClusterForPost().
+ *
+ * @param {{ pillarTitle: string, pillarUrl: string, siblingSpokes: Array }} cluster
+ * @returns {{ label: string, pillarUrl: string, siblings: Array }|null}
+ */
+export function buildBlogPostClusterNav(cluster) {
+  if (!cluster || typeof cluster !== 'object' || !cluster.pillarTitle) return null;
+  return {
+    label: `Part of: ${cluster.pillarTitle}`,
+    pillarUrl: cluster.pillarUrl,
+    siblings: Array.isArray(cluster.siblingSpokes)
+      ? cluster.siblingSpokes.map(s => ({ title: s.title, url: s.url }))
+      : [],
+  };
+}
+
+/**
+ * Build schema.org isPartOf linkage for a spoke (blog post) that belongs
+ * to a topic cluster. Returns a plain object (callers JSON-stringify into
+ * JSON-LD alongside BlogPosting). (CF-bjv)
+ *
+ * @param {{ pillarTitle: string, pillarUrl: string }} cluster
+ * @returns {{ '@type': 'WebPage', name: string, url: string }|null}
+ */
+export function buildIsPartOfSchema(cluster) {
+  if (!cluster || !cluster.pillarUrl) return null;
+  return {
+    '@type': 'WebPage',
+    name: cluster.pillarTitle || '',
+    url: cluster.pillarUrl,
+  };
+}
