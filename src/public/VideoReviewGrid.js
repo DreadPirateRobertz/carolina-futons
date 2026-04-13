@@ -1,6 +1,7 @@
 /**
  * VideoReviewGrid.js — Horizontal scrollable row of customer video reviews on PDP.
  * TikTok-style thumbnail row; click plays inline in an overlay player.
+ * Authenticated members see an upload form; guests see the grid only.
  *
  * Required Wix Studio elements:
  *   #videoReviewSection     Box  — outer wrapper (starts collapsed)
@@ -9,13 +10,22 @@
  *     #vrThumbnail          Image  — poster frame / placeholder
  *     #vrPlayIcon           Image  — play button overlay
  *     #vrReviewerName       Text   — reviewer display name
+ *     #vrStarRating         Text   — star rating (hidden when review has no rating)
  *   #videoPlayerOverlay     Box  — full-screen overlay (starts collapsed)
  *   #videoPlayerEmbed       HtmlComponent — iframe player injected here
  *   #closeVideoOverlay      Button — closes overlay
+ *   #videoUploadSection     Box  — member-only upload form (collapsed for guests)
+ *     #videoMediaPicker     MediaPicker — video/image file selector
+ *     #videoUploadCaption   TextInput — optional caption (max 200 chars)
+ *     #videoUploadBtn       Button — submit the selected media
+ *     #videoUploadError     Text — inline error message
+ *     #videoUploadSuccess   Text — confirmation after successful submission
  *
- * CF-ou66.3
+ * CF-ou66.3, CF-8jk
  */
 import { getVideoReviews } from 'backend/reviewsService.web';
+import { submitVideoReview } from 'backend/videoReviewService.web';
+import { currentMember } from 'wix-members-frontend';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -37,10 +47,26 @@ function buildPlayerHtml(fileId) {
   </body></html>`;
 }
 
-/** Truncate a string to maxLen characters. */
+/**
+ * Truncate a string to maxLen characters, appending an ellipsis if truncated.
+ * @param {string|null|undefined} str
+ * @param {number} maxLen
+ * @returns {string}
+ */
 function truncate(str, maxLen) {
   if (!str) return '';
   return str.length <= maxLen ? str : str.slice(0, maxLen - 1) + '\u2026';
+}
+
+/**
+ * Build a star rating string from a numeric score (1–5).
+ * Returns filled stars followed by empty stars, e.g. "★★★★☆" for 4.
+ * @param {number} rating  Value 0–5; non-integers are rounded.
+ * @returns {string}
+ */
+function buildStarRating(rating) {
+  const n = Math.round(Math.min(5, Math.max(0, rating)));
+  return '\u2605'.repeat(n) + '\u2606'.repeat(5 - n);
 }
 
 // ── Module init ───────────────────────────────────────────────────────────────
@@ -68,6 +94,9 @@ export async function initVideoReviewGrid($w, state) {
 
     let result;
     try {
+      // Why: only 'approved' reviews are returned by getVideoReviews — pending and
+      // rejected reviews are withheld until a moderator approves them, preventing
+      // unvetted content from appearing on the PDP. (CF-8jk, CF-ou66.3)
       result = await getVideoReviews(productId, { limit: 12 });
     } catch (err) {
       collapse();
@@ -96,6 +125,15 @@ export async function initVideoReviewGrid($w, state) {
         // Reviewer name
         try {
           $item('#vrReviewerName').text = truncate(itemData.reviewerName || 'Customer', 30);
+        } catch (_) {}
+
+        // Star rating — shown only when the review includes a numeric rating field
+        try {
+          if (typeof itemData.rating === 'number') {
+            $item('#vrStarRating').text = buildStarRating(itemData.rating);
+          } else {
+            try { $item('#vrStarRating').hide(); } catch (_) {}
+          }
         } catch (_) {}
 
         // Thumbnail — Wix Video player can derive a poster from the wix: URI;
@@ -140,6 +178,55 @@ export async function initVideoReviewGrid($w, state) {
       });
     } catch (_) {}
 
+    // ── Member-only upload section ────────────────────────────────────────────
+    // Why: submitVideoReview is a SiteMember webMethod — only authenticated members
+    // may submit reviews. Guests see the grid but not the upload form. (CF-8jk)
+
+    try {
+      const member = await currentMember.getMember();
+      if (member?._id) {
+        // Member: show upload form
+        try { $w('#videoUploadSection').expand(); } catch (_) {}
+
+        let pendingMediaUrl = null;
+
+        try {
+          $w('#videoMediaPicker').onChange((event) => {
+            pendingMediaUrl = event?.target?.value?.[0]?.src || null;
+          });
+        } catch (_) {}
+
+        try {
+          $w('#videoUploadBtn').onClick(async () => {
+            if (!pendingMediaUrl) return;
+
+            let caption = '';
+            try { caption = $w('#videoUploadCaption').value || ''; } catch (_) {}
+
+            try {
+              const uploadResult = await submitVideoReview(productId, pendingMediaUrl, caption);
+              if (uploadResult.success) {
+                try { $w('#videoUploadSuccess').text = 'Your review is pending approval.'; } catch (_) {}
+                try { $w('#videoUploadError').text = ''; } catch (_) {}
+                pendingMediaUrl = null;
+                try { $w('#videoUploadCaption').value = ''; } catch (_) {}
+              } else {
+                try { $w('#videoUploadError').text = uploadResult.error || 'Upload failed. Please try again.'; } catch (_) {}
+              }
+            } catch (err) {
+              try { $w('#videoUploadError').text = 'Upload failed. Please try again.'; } catch (_) {}
+            }
+          });
+        } catch (_) {}
+      } else {
+        // Guest: hide upload section
+        try { $w('#videoUploadSection').collapse(); } catch (_) {}
+      }
+    } catch (_) {
+      // If member check fails, hide upload section (fail safe)
+      try { $w('#videoUploadSection').collapse(); } catch (_) {}
+    }
+
     return {
       destroy() {
         mounted = false;
@@ -154,6 +241,12 @@ export async function initVideoReviewGrid($w, state) {
 
 // ── Overlay player ────────────────────────────────────────────────────────────
 
+/**
+ * Open the inline video overlay and load the specified video.
+ * Resets the embed to about:blank first to stop any previously playing video.
+ * @param {Function} $w          Wix selector
+ * @param {string}   videoFileId  Wix media URI (wix:video://...)
+ */
 function openPlayer($w, videoFileId) {
   try {
     $w('#videoPlayerEmbed').postMessage = undefined; // reset any prior content
@@ -174,6 +267,10 @@ function openPlayer($w, videoFileId) {
   } catch (_) {}
 }
 
+/**
+ * Collapse the video overlay and clear the embed src to stop playback.
+ * @param {Function} $w  Wix selector
+ */
 function closePlayer($w) {
   try { $w('#videoPlayerOverlay').collapse(); } catch (_) {}
   try { $w('#videoPlayerEmbed').src = 'about:blank'; } catch (_) {}

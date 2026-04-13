@@ -6,12 +6,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-const { mockGetVideoReviews } = vi.hoisted(() => ({
+const { mockGetVideoReviews, mockSubmitVideoReview, mockGetMember } = vi.hoisted(() => ({
   mockGetVideoReviews: vi.fn(),
+  mockSubmitVideoReview: vi.fn(),
+  mockGetMember: vi.fn(),
 }));
 
 vi.mock('backend/reviewsService.web', () => ({
   getVideoReviews: mockGetVideoReviews,
+}));
+
+vi.mock('backend/videoReviewService.web', () => ({
+  submitVideoReview: mockSubmitVideoReview,
+}));
+
+vi.mock('wix-members-frontend', () => ({
+  currentMember: { getMember: mockGetMember },
 }));
 
 import { initVideoReviewGrid } from '../src/public/VideoReviewGrid.js';
@@ -26,6 +36,8 @@ function makeEl(overrides = {}) {
     data: [],
     collapse: vi.fn(),
     expand: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
     onClick: vi.fn(),
     onItemReady: vi.fn(),
     scrollTo: vi.fn(),
@@ -205,9 +217,10 @@ function makeSmartRepeater() {
         for (const item of items) {
           if (!el._itemEls[item._id]) {
             el._itemEls[item._id] = {
-              vrThumbnail:   makeEl(),
-              vrPlayIcon:    makeEl(),
+              vrThumbnail:    makeEl(),
+              vrPlayIcon:     makeEl(),
               vrReviewerName: makeEl(),
+              vrStarRating:   makeEl(),
             };
           }
           const itemEls = el._itemEls[item._id];
@@ -233,6 +246,12 @@ function makeSmartElements() {
     '#videoPlayerOverlay':  makeEl(),
     '#videoPlayerEmbed':    embedEl,
     '#closeVideoOverlay':   makeEl(),
+    '#videoUploadSection':  makeEl(),
+    '#videoUploadBtn':      makeEl(),
+    '#videoUploadCaption':  { ...makeEl(), value: '' },
+    '#videoMediaPicker':    { ...makeEl(), onChange: vi.fn() },
+    '#videoUploadError':    makeEl(),
+    '#videoUploadSuccess':  makeEl(),
   };
   return {
     $w: (id) => elements[id] || makeEl(),
@@ -541,5 +560,155 @@ describe('initVideoReviewGrid — section accessibility', () => {
     const { $w, elements } = makeSmartElements();
     await initVideoReviewGrid($w, makeState());
     expect(elements['#videoReviewSection'].accessibility.ariaLabel).toBe('Customer video reviews');
+  });
+});
+
+// ── Star rating display ───────────────────────────────────────────────────────
+
+describe('initVideoReviewGrid — star rating display', () => {
+  it('sets star rating text when review has a numeric rating', async () => {
+    const reviews = [{ _id: 'vr-r4', videoFileId: 'wix:video://v1/r4.mp4', reviewerName: 'Ray', rating: 4 }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-r4'].vrStarRating.text).toBe('\u2605\u2605\u2605\u2605\u2606');
+  });
+
+  it('does not set star rating text when review has no rating', async () => {
+    const reviews = [{ _id: 'vr-nr', videoFileId: 'wix:video://v1/nr.mp4', reviewerName: 'Nina' }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-nr'].vrStarRating.text).toBe('');
+  });
+
+  it('hides star rating element when review has no rating', async () => {
+    const reviews = [{ _id: 'vr-nh', videoFileId: 'wix:video://v1/nh.mp4', reviewerName: 'Nina' }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-nh'].vrStarRating.hide).toHaveBeenCalled();
+  });
+
+  it('renders 5 stars for rating of 5', async () => {
+    const reviews = [{ _id: 'vr-5s', videoFileId: 'wix:video://v1/5.mp4', reviewerName: 'Five', rating: 5 }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-5s'].vrStarRating.text).toBe('\u2605\u2605\u2605\u2605\u2605');
+  });
+
+  it('renders 1 star for rating of 1', async () => {
+    const reviews = [{ _id: 'vr-1s', videoFileId: 'wix:video://v1/1.mp4', reviewerName: 'One', rating: 1 }];
+    mockGetVideoReviews.mockResolvedValue({ success: true, reviews });
+    const { $w, repeater } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(repeater._itemEls['vr-1s'].vrStarRating.text).toBe('\u2605\u2606\u2606\u2606\u2606');
+  });
+});
+
+// ── Guest vs member upload section ────────────────────────────────────────────
+
+describe('initVideoReviewGrid — guest vs member upload section', () => {
+  it('collapses upload section for guest (getMember returns null)', async () => {
+    mockGetMember.mockResolvedValue(null);
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoUploadSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses upload section when getMember returns member without _id', async () => {
+    mockGetMember.mockResolvedValue({});
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoUploadSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('expands upload section for authenticated member', async () => {
+    mockGetMember.mockResolvedValue({ _id: 'mem-1' });
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoUploadSection'].expand).toHaveBeenCalled();
+  });
+
+  it('collapses upload section when getMember throws', async () => {
+    mockGetMember.mockRejectedValue(new Error('auth error'));
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+    expect(elements['#videoUploadSection'].collapse).toHaveBeenCalled();
+  });
+});
+
+// ── Upload flow ───────────────────────────────────────────────────────────────
+
+describe('initVideoReviewGrid — upload flow', () => {
+  beforeEach(() => {
+    mockGetMember.mockResolvedValue({ _id: 'mem-1' });
+    mockSubmitVideoReview.mockResolvedValue({ success: true, reviewId: 'new-vr-1' });
+  });
+
+  it('calls submitVideoReview with productId and selected mediaUrl', async () => {
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState('prod-test'));
+
+    const onChangeHandler = elements['#videoMediaPicker'].onChange.mock.calls[0]?.[0];
+    onChangeHandler?.({ target: { value: [{ src: 'wix:video://v1/test.mp4' }] } });
+
+    const onClickHandler = elements['#videoUploadBtn'].onClick.mock.calls[0]?.[0];
+    await onClickHandler?.();
+
+    expect(mockSubmitVideoReview).toHaveBeenCalledWith('prod-test', 'wix:video://v1/test.mp4', '');
+  });
+
+  it('does not call submitVideoReview when no media is selected', async () => {
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+
+    // No media picker event fired before clicking submit
+    const onClickHandler = elements['#videoUploadBtn'].onClick.mock.calls[0]?.[0];
+    await onClickHandler?.();
+
+    expect(mockSubmitVideoReview).not.toHaveBeenCalled();
+  });
+
+  it('shows success message on successful upload', async () => {
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+
+    const onChangeHandler = elements['#videoMediaPicker'].onChange.mock.calls[0]?.[0];
+    onChangeHandler?.({ target: { value: [{ src: 'wix:video://v1/ok.mp4' }] } });
+
+    const onClickHandler = elements['#videoUploadBtn'].onClick.mock.calls[0]?.[0];
+    await onClickHandler?.();
+
+    expect(elements['#videoUploadSuccess'].text).toContain('pending approval');
+  });
+
+  it('shows error message when submitVideoReview returns success:false', async () => {
+    mockSubmitVideoReview.mockResolvedValue({ success: false, error: 'Must be a Wix media URL.' });
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+
+    const onChangeHandler = elements['#videoMediaPicker'].onChange.mock.calls[0]?.[0];
+    onChangeHandler?.({ target: { value: [{ src: 'bad-url' }] } });
+
+    const onClickHandler = elements['#videoUploadBtn'].onClick.mock.calls[0]?.[0];
+    await onClickHandler?.();
+
+    expect(elements['#videoUploadError'].text).toContain('Wix media URL');
+  });
+
+  it('shows error message when submitVideoReview throws', async () => {
+    mockSubmitVideoReview.mockRejectedValue(new Error('network'));
+    const { $w, elements } = makeSmartElements();
+    await initVideoReviewGrid($w, makeState());
+
+    const onChangeHandler = elements['#videoMediaPicker'].onChange.mock.calls[0]?.[0];
+    onChangeHandler?.({ target: { value: [{ src: 'wix:video://v1/e.mp4' }] } });
+
+    const onClickHandler = elements['#videoUploadBtn'].onClick.mock.calls[0]?.[0];
+    await onClickHandler?.();
+
+    expect(elements['#videoUploadError'].text).toMatch(/failed/i);
   });
 });
