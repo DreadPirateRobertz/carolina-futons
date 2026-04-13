@@ -893,6 +893,15 @@ export const recordChallengeProgress = webMethod(
           await wixData.insert(MEMBER_POINTS_COLLECTION, {
             memberId,
             totalPoints: pointsAwarded,
+            currentStreakDays: 0,
+            streakStartDate: null,
+            lastActivityDate: getTodayET(),
+            streakMultiplier: 1,
+            milestoneBonus: 0,
+            graceTokenUsedDate: null,
+            graceApplied: false,
+            tier: getTierForPoints(pointsAwarded),
+            bonusSpinsAvailable: 0,
           });
         }
       }
