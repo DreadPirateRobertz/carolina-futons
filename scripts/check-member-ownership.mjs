@@ -132,9 +132,10 @@ export function checkMethodForIDOR(method) {
   if (!QUERY_PATTERN.test(body)) return { violation: false };
   // Check if ownership is verified
   if (OWNERSHIP_CHECK.test(body)) return { violation: false };
+  const isPlain = method.isPlainExport === true || kind === 'plain';
   return {
     violation: true,
-    reason: method.isPlainExport
+    reason: isPlain
       ? `Plain export '${name}' in .web.js accepts memberId-like param — bypasses webMethod auth; wrap in webMethod() and derive memberId server-side`
       : `SiteMember webMethod '${name}' accepts memberId-like param and queries data without getMember() ownership check`,
   };
@@ -152,19 +153,15 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
   for (const file of files) {
     const filePath = join(backendDir, file);
     const source = readFileSync(filePath, 'utf8');
-    const allMethods = [
-      ...extractSiteMemberMethods(source),
-      ...extractPlainExports(source),
-    ];
-
-    for (const method of allMethods) {
+    // Scan webMethod-wrapped SiteMember functions
+    for (const method of extractSiteMemberMethods(source)) {
       const result = checkMethodForIDOR(method);
       if (result.violation) {
         violations.push({ file, name: method.name, line: method.lineNumber, reason: result.reason });
       }
     }
 
-    // Scan plain exported functions (GH-990 gap)
+    // Scan plain exported functions (GH-990 gap) — honors // idor-ok: annotations
     const sourceLines = source.split('\n');
     const plainFns = extractPlainExportedFunctions(source);
     for (const fn of plainFns) {
