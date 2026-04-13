@@ -20,6 +20,6 @@ export function getImageUrl(media) {
     return media;
   }
   if (media.src) return getImageUrl(media.src);
-  if (media.url) return media.url;
+  if (media.url) return getImageUrl(media.url);
   return '';
 }

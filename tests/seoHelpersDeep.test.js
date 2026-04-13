@@ -139,6 +139,22 @@ describe('getProductSchema — edge cases', () => {
     expect(schema.image).toContain('back.jpg');
   });
 
+  it('normalizes wix:image:// URIs in mediaItems to static.wixstatic.com URLs', () => {
+    const schema = JSON.parse(getProductSchema({
+      name: 'Wix Image Gallery',
+      mainMedia: 'wix:image://v1/main_abc.jpg/photo.jpg#originWidth=1200',
+      mediaItems: [
+        { src: 'wix:image://v1/side_def.jpg/side.jpg#w=800' },
+        { src: 'wix:image://v1/back_ghi.jpg/back.jpg#w=800' },
+      ],
+    }));
+    expect(schema.image).toContain('https://static.wixstatic.com/media/main_abc.jpg');
+    expect(schema.image).toContain('https://static.wixstatic.com/media/side_def.jpg');
+    expect(schema.image).toContain('https://static.wixstatic.com/media/back_ghi.jpg');
+    // no raw wix:image:// URIs should leak into the schema
+    expect(schema.image.some(i => typeof i === 'string' && i.startsWith('wix:image:'))).toBe(false);
+  });
+
   it('deduplicates mainMedia in image array', () => {
     const schema = JSON.parse(getProductSchema({
       name: 'Dupe Image',

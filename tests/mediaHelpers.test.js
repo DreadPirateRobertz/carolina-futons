@@ -110,10 +110,9 @@ describe('getImageUrl', () => {
     expect(getImageUrl(media)).toBe('');
   });
 
-  it('handles object with url being a wix:image URI (url is returned directly, not recursed)', () => {
+  it('recursively resolves url with wix:image:// URI', () => {
     const media = { url: 'wix:image://v1/directurl.jpg/thumb.jpg#w=300' };
-    // url property is returned as-is without recursive conversion
-    expect(getImageUrl(media)).toBe('wix:image://v1/directurl.jpg/thumb.jpg#w=300');
+    expect(getImageUrl(media)).toBe('https://static.wixstatic.com/media/directurl.jpg');
   });
 
   it('handles object with boolean src (truthy, non-string, no properties)', () => {
