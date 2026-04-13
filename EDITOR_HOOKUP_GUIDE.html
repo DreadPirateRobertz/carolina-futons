@@ -6547,5 +6547,28 @@ document.getElementById('priorityFilter').addEventListener('change', render);
 // Initial render
 render();
 </script>
+
+<section style="max-width:1200px;margin:32px auto;padding:24px;background:var(--off-white);border:1px solid var(--espresso-light);border-radius:var(--radius-lg);font-family:var(--font-body);color:var(--espresso);">
+  <h2 style="font-family:var(--font-heading);margin-top:0;">Feature Log</h2>
+
+  <h3 id="phase-7-shipped-2026-04-13">Phase 7 Shipped (2026-04-13)</h3>
+  <ul>
+    <li><strong>GA4 consent gate</strong> (<code>ga4Tracking.js</code>): all fire* analytics events are now gated behind <code>wixPrivacy.getCurrentConsentPolicy().analytics === true</code>. <code>fireGA4Event</code> added with event-name sanitization matching <code>fireCustomEvent</code>. Raw callers auto-gated — no call-site migration needed.</li>
+    <li><strong>TikTok consent decoupling</strong> (PR #1050): TikTok fires via the pixelConsentService queue regardless of analytics consent; retargeting gated on <code>analytics &amp;&amp; advertising</code>.</li>
+    <li><strong>Local SEO data fix</strong> (PR #1046): phone <code>+1-828-252-9449</code>, hours Wed–Sat 10–17.</li>
+    <li><strong>Blog post topic cluster backlink</strong> (PR #1048): <code>Blog Post.js</code> injects <code>isPartOf</code> schema + cluster nav.</li>
+    <li><strong>OG image CDN normalize</strong> (PR #1045): <code>wix:image://</code> URIs resolved to CDN URLs.</li>
+  </ul>
+
+  <h3 id="phase-8-shipped-2026-04-13">Phase 8 Shipped (2026-04-13)</h3>
+  <ul>
+    <li><strong>Tier upgrade email + push</strong> (PR #1051): <code>gamificationNotifs.web.js::notifyTierUpgrade()</code>.</li>
+    <li><strong>Phase 8 trigger verification</strong> complete (audit cf-4hs / cf-538): welcome (<code>wixMembers_onMemberCreated</code>), cart-abandon (hourly cron), post-purchase (<code>wixEcom_onOrderDelivered</code>) all wired.</li>
+    <li><strong>Merchant Center + sitemap verification</strong> (cf-xe8): feed service live with all GMC required fields; 249 tests green.</li>
+  </ul>
+
+  <p style="font-size:13px;color:var(--espresso-light);margin-bottom:0;"><em>No editor hookup action required for this phase. Element nicknames and hookup status are unchanged — this log is informational only.</em></p>
+</section>
+
 </body>
 </html>
