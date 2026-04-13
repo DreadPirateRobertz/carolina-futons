@@ -42,6 +42,7 @@ vi.mock('backend/pushNotificationService.web', () => ({
     BADGE_EARNED: 'badge_earned',
     TIER_CHANGED: 'tier_changed',
     CHALLENGE_COMPLETE: 'challenge_complete',
+    CHALLENGE_REMINDER: 'challenge_reminder',
     STREAK_MILESTONE: 'streak_milestone',
     PRICE_DROP: 'price_drop',
   },
@@ -610,16 +611,19 @@ describe('runDailyChallengeReminders — push dispatch (cf-h6w)', () => {
     expect(mockSendPushToMember).toHaveBeenCalledTimes(2);
   });
 
-  it('passes memberId and PUSH_EVENTS.STREAK_MILESTONE to sendPushToMember', async () => {
+  it('passes memberId and PUSH_EVENTS.CHALLENGE_REMINDER to sendPushToMember with empty payload', async () => {
     __seed('MemberChallengeProgress', [
       challengeRecord({ _id: 'mcp-a', memberId: 'mem-42' }),
     ]);
     await runDailyChallengeReminders();
     expect(mockSendPushToMember).toHaveBeenCalledWith(
       'mem-42',
-      'streak_milestone',
-      expect.objectContaining({ days: expect.any(String) }),
+      'challenge_reminder',
+      {},
     );
+    // MemberChallengeProgress has no currentStreakDays — payload must not carry a days field
+    const [, , payload] = mockSendPushToMember.mock.calls[0];
+    expect(payload).not.toHaveProperty('days');
   });
 
   it('push failure does not affect sent count or skip notifiedAt mark', async () => {

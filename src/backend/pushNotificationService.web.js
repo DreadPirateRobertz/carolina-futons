@@ -12,6 +12,7 @@ export const PUSH_EVENTS = {
   BADGE_EARNED:       'badge_earned',
   TIER_CHANGED:       'tier_changed',
   CHALLENGE_COMPLETE: 'challenge_complete',
+  CHALLENGE_REMINDER: 'challenge_reminder',
   STREAK_MILESTONE:   'streak_milestone',
   PRICE_DROP:         'price_drop',
 };
@@ -26,6 +27,8 @@ function _buildMessage(event, payload) {
       return { title: 'Tier Upgrade!', body: `You reached ${payload.tier} tier.` };
     case PUSH_EVENTS.CHALLENGE_COMPLETE:
       return { title: 'Challenge Complete!', body: payload.challengeName || 'You finished a challenge.' };
+    case PUSH_EVENTS.CHALLENGE_REMINDER:
+      return { title: 'Challenge Reminder', body: payload.challengeName ? `Don't forget: ${payload.challengeName}` : 'You have an active challenge to complete.' };
     case PUSH_EVENTS.STREAK_MILESTONE:
       return { title: 'Streak Milestone!', body: `${payload.days}-day streak achieved.` };
     case PUSH_EVENTS.PRICE_DROP:

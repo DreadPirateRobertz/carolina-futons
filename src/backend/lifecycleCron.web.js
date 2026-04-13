@@ -190,9 +190,7 @@ export const runDailyChallengeReminders = webMethod(
         // notifiedAt mark (otherwise a flaky FCM response would re-send the
         // entire batch on the next cron tick). cf-h6w
         try {
-          await sendPushToMember(record.memberId, PUSH_EVENTS.STREAK_MILESTONE, {
-            days: String(record.currentStreakDays ?? ''),
-          });
+          await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
         } catch (pushErr) {
           console.error(`[lifecycleCron] challenge reminder push failed for ${record.memberId}:`, pushErr?.message);
         }
