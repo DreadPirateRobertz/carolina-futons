@@ -161,9 +161,26 @@ describe('generateLocalBusinessSchema — FurnitureStore schema', () => {
     expect(schema.telephone).toContain('+1');
   });
 
+  it('telephone is the correct store number (+1-828-252-9449)', () => {
+    const schema = generateLocalBusinessSchema(ASHEVILLE);
+    // Strip formatting to normalize and compare digits only
+    const digits = schema.telephone.replace(/\D/g, '');
+    expect(digits).toBe('18282529449');
+  });
+
   it('includes openingHours from SCHEMA_OPENING_HOURS', () => {
     const schema = generateLocalBusinessSchema(ASHEVILLE);
     expect(schema.openingHours).toEqual(SCHEMA_OPENING_HOURS);
+  });
+
+  it('openingHours reflects Wed-Sat 10am-5pm schedule', () => {
+    const schema = generateLocalBusinessSchema(ASHEVILLE);
+    expect(schema.openingHours).toEqual(['We-Sa 10:00-17:00']);
+  });
+
+  it('address street is 824 Locust St (matches physical storefront)', () => {
+    const schema = generateLocalBusinessSchema(ASHEVILLE);
+    expect(schema.address.streetAddress).toBe('824 Locust St');
   });
 
   it('includes areaServed with city and state', () => {
