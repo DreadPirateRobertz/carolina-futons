@@ -12,7 +12,7 @@
  * webMethod getLeaderboardByPeriod(period, limit) — ranked top-N with period support.
  *   period: 'allTime' | 'weekly' (default 'allTime'), limit: 1–50 (default 20).
  *   Returns {rank, memberId, displayName, points, tier}[].
- * webMethod getMyRank(memberId) — personal rank lookup for a single member.
+ * webMethod getMyRank() — personal rank lookup; memberId resolved from session (IDOR guard).
  *
  * CMS collections:
  *   MemberPoints (read)          — memberId, displayName, totalPoints, tier, lastActivityAt
