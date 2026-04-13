@@ -12,7 +12,7 @@
  * webMethod getLeaderboardByPeriod(period, limit) — ranked top-N with period support.
  *   period: 'allTime' | 'weekly' (default 'allTime'), limit: 1–50 (default 20).
  *   Returns {rank, memberId, displayName, points, tier}[].
- * webMethod getMyRank(memberId) — personal rank lookup for a single member.
+ * webMethod getMyRank() — personal rank lookup; memberId resolved from session (IDOR guard).
  *
  * CMS collections:
  *   MemberPoints (read)          — memberId, displayName, totalPoints, tier, lastActivityAt
@@ -24,6 +24,7 @@
  * @requires wix-data
  */
 import { webMethod, Permissions } from 'wix-web-module';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { logError } from 'backend/utils/errorHandler';
 import { MEMBER_POINTS_LEDGER_COLLECTION } from 'backend/utils/memberPointsLedger';
@@ -286,16 +287,23 @@ export const getLeaderboardByPeriod = webMethod(
 );
 
 /**
- * Returns the rank, points, and tier for a single member.
+ * Returns the rank, points, and tier for the currently authenticated member.
  * Rank is the count of opted-in members with strictly more points, plus 1.
- * Returns null if the member has no MemberPoints record or has not opted in.
+ * Returns null if unauthenticated or if the member has no MemberPoints record.
+ * memberId is resolved from the Wix session — never accepted from the caller (IDOR guard).
  *
- * @param {string} memberId
  * @returns {Promise<{rank: number, points: number, tier: string|null} | null>}
  */
 export const getMyRank = webMethod(
   Permissions.SiteMember,
-  async (memberId) => {
+  async () => {
+    let memberId;
+    try {
+      const member = await currentMember.getMember();
+      memberId = member?._id ?? null;
+    } catch (err) {
+      logError('leaderboardService.getMyRank — getMember failed', err);
+    }
     if (!memberId) return null;
 
     try {
