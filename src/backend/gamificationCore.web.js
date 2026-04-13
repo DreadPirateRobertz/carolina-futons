@@ -187,6 +187,10 @@ export const receiveGamificationEvent = webMethod(
         lastActivityDate: streakState.lastActivityDate,
         streakMultiplier: streakState.streakMultiplier,
         graceTokenUsedDate: streakState.graceTokenUsedDate ?? null,
+        // cf-bvn: authoritative "last activity" timestamp used by re-engagement
+        // dormancy detection. Written on every gamification event so browse-only
+        // members (quiz/login/wishlist with no purchase) are still reachable.
+        lastActivityAt: new Date(),
       };
 
       if (record) {
@@ -418,6 +422,7 @@ export async function seedWelcomePoints(memberId, welcomePoints = 50) {
       graceApplied: false,
       tier: getTierForPoints(welcomePoints),
       bonusSpinsAvailable: 0,
+      lastActivityAt: new Date(), // cf-bvn: seed dormancy timestamp on signup
     }, { suppressAuth: true });
 
     try {
@@ -888,6 +893,7 @@ export const recordChallengeProgress = webMethod(
           await wixData.update(MEMBER_POINTS_COLLECTION, {
             ...mp,
             totalPoints: mp.totalPoints + pointsAwarded,
+            lastActivityAt: new Date(), // cf-bvn
           }, { suppressAuth: true });
         } else {
           await wixData.insert(MEMBER_POINTS_COLLECTION, {
@@ -902,6 +908,7 @@ export const recordChallengeProgress = webMethod(
             graceApplied: false,
             tier: getTierForPoints(pointsAwarded),
             bonusSpinsAvailable: 0,
+            lastActivityAt: new Date(), // cf-bvn
           }, { suppressAuth: true });
         }
       }
@@ -988,6 +995,7 @@ export const recoverStreak = webMethod(
         currentStreakDays: 1,
         streakStartDate: todayET,    // reset so derived streak length stays accurate
         lastStreakRecoveryDate: todayET,
+        lastActivityAt: new Date(),  // cf-bvn: user-initiated action
       };
       // NOTE: When CF-ledger lands this will become two sequential wixData writes
       // with no rollback. If the ledger insert fails after the points deduction,
