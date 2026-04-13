@@ -1,0 +1,68 @@
+/**
+ * crossRigSyncService — bidirectional web↔mobile gamification sync.
+ *
+ * syncMobilePoints: logs points earned on CFM devices into CrossRigSyncLog.
+ * syncBadgeEarnedToPush: fires push notification to member devices on badge earn.
+ *
+ * CF-z51
+ */
+import wixData from 'wix-data';
+import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web.js';
+
+export const SYNC_LOG_COLLECTION = 'CrossRigSyncLog';
+const ALLOWED_SOURCE_RIGS = ['cfutons_mobile'];
+
+/**
+ * Log a mobile-side points award into the cross-rig sync log.
+ * Called by crossRigEventReceiver on quiz_completed, ar_discovery_completed,
+ * social_share_completed events.
+ *
+ * @param {string} memberId
+ * @param {number} points    - Must be >= 0
+ * @param {string} eventType - e.g. 'quiz_completed'
+ * @param {string} sourceRig - Must be 'cfutons_mobile'
+ * @returns {Promise<{ success: boolean, points?: number, error?: string }>}
+ */
+export async function syncMobilePoints(memberId, points, eventType, sourceRig) {
+  if (!ALLOWED_SOURCE_RIGS.includes(sourceRig)) {
+    return { success: false, error: `unknown source rig: ${sourceRig}` };
+  }
+  if (typeof points !== 'number' || points < 0) {
+    return { success: false, error: 'points must be a non-negative number' };
+  }
+  try {
+    await wixData.insert(
+      SYNC_LOG_COLLECTION,
+      {
+        memberId,
+        points,
+        eventType,
+        sourceRig,
+        syncedAt: new Date(),
+        direction: 'mobile_to_web',
+      },
+      { suppressAuth: true }
+    );
+    return { success: true, points };
+  } catch (err) {
+    console.error('[crossRigSyncService] syncMobilePoints error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Send a push notification to all member devices when a badge is earned.
+ *
+ * @param {string} memberId
+ * @param {string} badgeId
+ * @returns {Promise<{ success: boolean, pushSent?: number, error?: string }>}
+ */
+export async function syncBadgeEarnedToPush(memberId, badgeId) {
+  try {
+    const { sent } = await sendPushToMember(memberId, PUSH_EVENTS.BADGE_EARNED, { badgeId });
+    return { success: true, pushSent: sent };
+  } catch (err) {
+    console.error('[crossRigSyncService] syncBadgeEarnedToPush error:', err);
+    return { success: false, error: err.message };
+  }
+}
