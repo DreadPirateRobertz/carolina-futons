@@ -538,11 +538,12 @@ describe('Reviews & Ratings Integration', () => {
 
   describe('review stats (admin)', () => {
     it('returns counts by status and overall stats', async () => {
+      const now = new Date();
       __seed('Reviews', [
-        review({ _id: 'r1', status: 'approved', verifiedPurchase: true, photos: ['a.jpg'] }),
-        review({ _id: 'r2', status: 'approved', rating: 3, memberId: 'm2', verifiedPurchase: false, photos: [] }),
-        review({ _id: 'r3', status: 'pending', memberId: 'm3' }),
-        review({ _id: 'r4', status: 'rejected', memberId: 'm4' }),
+        review({ _id: 'r1', status: 'approved', verifiedPurchase: true, photos: ['a.jpg'], _createdDate: now }),
+        review({ _id: 'r2', status: 'approved', rating: 3, memberId: 'm2', verifiedPurchase: false, photos: [], _createdDate: now }),
+        review({ _id: 'r3', status: 'pending', memberId: 'm3', _createdDate: now }),
+        review({ _id: 'r4', status: 'rejected', memberId: 'm4', _createdDate: now }),
       ]);
 
       const stats = await getReviewStats(30);
