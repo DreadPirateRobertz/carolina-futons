@@ -541,6 +541,16 @@ async function preloadLoyaltyAccount() {
     ]);
     _renderCardChipFn = chipMod.renderCardGamificationChip;
     _loyaltyAccount = await loyaltyMod.getMyLoyaltyAccount();
+    // Refresh already-rendered cards — onItemReady fires before this resolves
+    // for items visible at page load, so chips would be blank without this. (CF-pyw)
+    try {
+      const repeater = $w('#productGridRepeater');
+      if (repeater && _renderCardChipFn) {
+        repeater.forEachItem(($item) => {
+          _renderCardChipFn($item, _loyaltyAccount);
+        });
+      }
+    } catch (e) {}
   } catch (e) {
     _loyaltyAccount = null;
   }
