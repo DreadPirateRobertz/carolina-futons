@@ -473,11 +473,47 @@ describe('processChallengeNotifSMSQueue', () => {
     const result = await processChallengeNotifSMSQueue();
     expect(result).toEqual({ processed: 1, failed: 1 });
 
-    const updated = __getUpdated('SMSQueue');
-    const sentItem = updated.find(u => u.memberId === 'mem-a');
-    const failedItem = updated.find(u => u.memberId === 'mem-b');
+    // Two-phase: each item gets a 'processing' update then a final status update.
+    // Use the last update per member to get the final status.
+    const allUpdated = __getUpdated('SMSQueue');
+    const sentItem = [...allUpdated].reverse().find(u => u.memberId === 'mem-a');
+    const failedItem = [...allUpdated].reverse().find(u => u.memberId === 'mem-b');
     expect(sentItem.status).toBe('sent');
     expect(failedItem.status).toBe('failed');
+  });
+
+  it('skips items already in processing status (two-phase in-flight lock)', async () => {
+    // Seed a mix: one pending (should be dispatched), one processing (should be skipped)
+    __seed('SMSQueue', [
+      {
+        _id: 'sms-pending',
+        memberId: 'mem-a',
+        message: 'pending msg',
+        messageType: 'challenge_alert',
+        status: 'pending',
+        scheduledFor: new Date(),
+        attempt: 0,
+        createdAt: new Date(),
+      },
+      {
+        _id: 'sms-processing',
+        memberId: 'mem-b',
+        message: 'in-flight msg',
+        messageType: 'challenge_alert',
+        status: 'processing',
+        scheduledFor: new Date(),
+        attempt: 0,
+        createdAt: new Date(),
+      },
+    ]);
+
+    const result = await processChallengeNotifSMSQueue();
+    // Only the pending item is dispatched; processing item is not queried
+    expect(result).toEqual({ processed: 1, failed: 0 });
+    expect(mockSendChallengeAlertSMS).toHaveBeenCalledTimes(1);
+    expect(mockSendChallengeAlertSMS).toHaveBeenCalledWith(
+      expect.objectContaining({ memberId: 'mem-a' })
+    );
   });
 
   it('counts thrown SMS errors as failed and continues', async () => {

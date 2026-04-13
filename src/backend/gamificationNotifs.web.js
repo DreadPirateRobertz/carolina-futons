@@ -220,9 +220,10 @@ export const notifyChallengePublished = webMethod(
       });
       const now = new Date();
 
-      // 2. Fan out: insert EmailQueue + SMSQueue records (fast DB writes, not API calls)
-      await Promise.all([
-        ...memberIds.map(memberId =>
+      // 2. Fan out: insert EmailQueue + SMSQueue records per collection via allSettled
+      // (prevents partial-write data loss from a single Promise.all rejection)
+      const emailResults = await Promise.allSettled(
+        memberIds.map(memberId =>
           wixData.insert('EmailQueue', {
             templateId: 'challenge_new_weekly',
             recipientContactId: memberId,
@@ -234,8 +235,10 @@ export const notifyChallengePublished = webMethod(
             attempt: 0,
             createdAt: now,
           }, { suppressAuth: true })
-        ),
-        ...memberIds.map(memberId =>
+        )
+      );
+      const smsResults = await Promise.allSettled(
+        memberIds.map(memberId =>
           wixData.insert(SMS_QUEUE_COLLECTION, {
             memberId,
             message: smsBody,
@@ -245,10 +248,17 @@ export const notifyChallengePublished = webMethod(
             attempt: 0,
             createdAt: now,
           }, { suppressAuth: true })
-        ),
-      ]);
+        )
+      );
 
-      return { success: true, queued: memberIds.length };
+      const emailsFailed = emailResults.filter(r => r.status === 'rejected').length;
+      const smsFailed = smsResults.filter(r => r.status === 'rejected').length;
+      const queued = emailResults.filter(r => r.status === 'fulfilled').length;
+
+      if (emailsFailed) logError(`notifyChallengePublished — ${emailsFailed} email queue inserts failed`);
+      if (smsFailed) logError(`notifyChallengePublished — ${smsFailed} SMS queue inserts failed`);
+
+      return { success: emailsFailed === 0 && smsFailed === 0, queued };
     } catch (err) {
       logError('notifyChallengePublished — pipeline failed', err);
       return { success: false, queued: 0 };
@@ -284,7 +294,16 @@ export const processChallengeNotifSMSQueue = webMethod(
 
       for (const item of items) {
         try {
+          // Phase 1: claim the item — prevents double-send if next cron fires before this batch completes
+          await wixData.update(SMS_QUEUE_COLLECTION, {
+            ...item,
+            status: 'processing',
+          }, { suppressAuth: true });
+
+          // Phase 2: dispatch
           const res = await sendChallengeAlertSMS({ memberId: item.memberId, message: item.message });
+
+          // Phase 3: mark final status
           await wixData.update(SMS_QUEUE_COLLECTION, {
             ...item,
             status: res.success ? 'sent' : 'failed',
@@ -366,6 +385,13 @@ export async function checkStreakMilestoneNotifications() {
       }
 
       try {
+        // Idempotency gate first: record before queuing so a retry can't double-send
+        await wixData.insert(STREAK_NOTIFICATIONS_COLLECTION, {
+          memberId,
+          milestone: STREAK_MILESTONE_DAY,
+          sentAt: new Date().toISOString(),
+        }, { suppressAuth: true });
+
         // Queue email for processing by processEmailQueue cron
         await wixData.insert('EmailQueue', {
           templateId: 'streak_milestone_day7',
@@ -380,13 +406,6 @@ export async function checkStreakMilestoneNotifications() {
           scheduledFor: new Date(),
           attempt: 0,
           createdAt: new Date(),
-        }, { suppressAuth: true });
-
-        // Record notification to prevent duplicates
-        await wixData.insert(STREAK_NOTIFICATIONS_COLLECTION, {
-          memberId,
-          milestone: STREAK_MILESTONE_DAY,
-          sentAt: new Date().toISOString(),
         }, { suppressAuth: true });
 
         result.queued++;

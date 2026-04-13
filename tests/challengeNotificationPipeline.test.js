@@ -19,9 +19,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   __reset as resetData,
   __seed,
+  __getInserted,
 } from './__mocks__/wix-data.js';
 import {
-  __getEmailLog,
   __reset as resetCrm,
 } from './__mocks__/wix-crm-backend.js';
 import {
@@ -34,6 +34,9 @@ beforeEach(() => {
   resetData();
   resetCrm();
   vi.clearAllMocks();
+  // Seed empty queues so __getInserted returns [] not undefined
+  __seed('EmailQueue', []);
+  __seed('SMSQueue', []);
 });
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -73,47 +76,51 @@ function seedOptedOutMembers(memberIds) {
   })));
 }
 
-// ── Email notifications ──────────────────────────────────────────────────────
+// ── EmailQueue fan-out (GH#991: queue-based, not inline send) ────────────────
 
 describe('notifyChallengePublished — email', () => {
-  it('sends email to all members with questAlerts: true', async () => {
+  it('queues EmailQueue record for each opted-in member', async () => {
     seedOptedInMembers(['mem-1', 'mem-2', 'mem-3']);
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
-    expect(result.emailsSent).toBe(3);
+    expect(result.queued).toBe(3);
+    const emails = __getInserted('EmailQueue');
+    expect(emails).toHaveLength(3);
   });
 
-  it('sends zero emails when no members have questAlerts: true', async () => {
+  it('queues zero emails when no members have questAlerts: true', async () => {
     seedOptedOutMembers(['mem-4']);
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
-    expect(result.emailsSent).toBe(0);
+    expect(result.queued).toBe(0);
+    expect(__getInserted('EmailQueue')).toHaveLength(0);
   });
 
-  it('sends zero emails when no notification prefs exist', async () => {
+  it('queues zero when no notification prefs exist', async () => {
     const result = await notifyChallengePublished(makeChallenge());
     expect(result.success).toBe(true);
-    expect(result.emailsSent).toBe(0);
-    expect(result.smsSent).toBe(0);
+    expect(result.queued).toBe(0);
+    expect(__getInserted('EmailQueue')).toHaveLength(0);
+    expect(__getInserted('SMSQueue')).toHaveLength(0);
   });
 
-  it('uses challenge_new_weekly template', async () => {
+  it('uses challenge_new_weekly template in EmailQueue record', async () => {
     seedOptedInMembers(['mem-5']);
     await notifyChallengePublished(makeChallenge());
-    const log = __getEmailLog();
-    expect(log.length).toBeGreaterThanOrEqual(1);
-    expect(log[0].templateId).toBe('challenge_new_weekly');
+    const emails = __getInserted('EmailQueue');
+    expect(emails.length).toBeGreaterThanOrEqual(1);
+    expect(emails[0].templateId).toBe('challenge_new_weekly');
   });
 
-  it('includes challenge details in email variables', async () => {
+  it('includes challenge details in EmailQueue variables', async () => {
     seedOptedInMembers(['mem-6']);
     await notifyChallengePublished(makeChallenge({
       title: 'Photo Week',
       description: 'Share 5 photos',
       rewardPoints: 200,
     }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const emails = __getInserted('EmailQueue');
+    const vars = JSON.parse(emails[0].variables);
     expect(vars.challengeTitle).toBe('Photo Week');
     expect(vars.challengeDescription).toBe('Share 5 photos');
     expect(vars.rewardText).toBe('200 pts');
@@ -126,8 +133,8 @@ describe('notifyChallengePublished — email', () => {
       rewardPoints: 100,
       rewardBadgeLabel: 'Reviewer',
     }));
-    const log = __getEmailLog();
-    const vars = log[0].options.variables;
+    const emails = __getInserted('EmailQueue');
+    const vars = JSON.parse(emails[0].variables);
     expect(vars.rewardText).toBe('100 pts + Reviewer badge');
   });
 });
@@ -153,12 +160,16 @@ describe('notifyChallengePublished — validation', () => {
   });
 });
 
-// ── SMS notifications ────────────────────────────────────────────────────────
+// ── SMSQueue fan-out (GH#991) ─────────────────────────────────────────────────
 
 describe('notifyChallengePublished — SMS', () => {
-  it('returns smsSent count (0 when no SMS prefs)', async () => {
-    seedOptedInMembers(['mem-sms1']);
+  it('queues SMSQueue record for each opted-in member', async () => {
+    seedOptedInMembers(['mem-sms1', 'mem-sms2']);
     const result = await notifyChallengePublished(makeChallenge());
-    expect(result.smsSent).toBe(0);
+    expect(result.queued).toBe(2);
+    const smsItems = __getInserted('SMSQueue');
+    expect(smsItems).toHaveLength(2);
+    expect(smsItems.every(s => s.messageType === 'challenge_alert')).toBe(true);
+    expect(smsItems.every(s => s.status === 'pending')).toBe(true);
   });
 });
