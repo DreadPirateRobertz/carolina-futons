@@ -439,6 +439,108 @@ export async function checkStreakMilestoneNotifications() {
   }
 }
 
+// ── cf-1d3: Post-upgrade tier email + push notification ──────────────────────
+
+const TIER_UPGRADE_NOTIFICATIONS_COLLECTION = 'TierUpgradeNotifications';
+const TIER_UPGRADE_EMAIL_TEMPLATE = 'tier_upgrade_congratulations';
+
+/**
+ * Send congratulations email + push to a member who has just been upgraded to
+ * a new loyalty tier. Invoked by the gamificationCore tier-change path (which
+ * also dispatches the `tier_upgraded` bus event for the mobile rig).
+ *
+ * Idempotent: a dedup record keyed on (memberId, newTier) is inserted on
+ * success. Repeat calls with the same pair are a no-op.
+ *
+ * Opt-out: defaults to sending unless the member has explicitly set
+ * `tierUpdates: false` in MemberNotificationPrefs.
+ *
+ * Push failure is non-fatal — the email is the primary artifact, so the dedup
+ * record is still written to prevent a retry from double-emailing.
+ *
+ * cf-1d3
+ *
+ * @param {string} memberId     — target member
+ * @param {string} newTier      — tier the member was upgraded to
+ * @param {string} [previousTier] — prior tier (for email copy)
+ * @returns {Promise<{ sent: boolean, reason?: string }>}
+ */
+export async function notifyTierUpgrade(memberId, newTier, previousTier) {
+  if (!memberId || !newTier) {
+    return { sent: false, reason: 'invalid_input' };
+  }
+
+  try {
+    // Dedup: (memberId, newTier) already notified?
+    const existing = await wixData
+      .query(TIER_UPGRADE_NOTIFICATIONS_COLLECTION)
+      .eq('memberId', memberId)
+      .eq('newTier', newTier)
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (existing.items.length > 0) {
+      return { sent: false, reason: 'already_sent' };
+    }
+
+    // Opt-out: tierUpdates === false (strict) opts out; missing prefs = opted in.
+    const prefsResult = await wixData
+      .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
+      .eq('memberId', memberId)
+      .limit(1)
+      .find({ suppressAuth: true });
+    const prefs = prefsResult.items[0];
+    if (prefs && prefs.tierUpdates === false) {
+      return { sent: false, reason: 'opted_out' };
+    }
+
+    try {
+      const { triggeredEmails } = await import('wix-crm-backend');
+      await triggeredEmails.emailMember(TIER_UPGRADE_EMAIL_TEMPLATE, memberId, {
+        variables: {
+          newTier,
+          previousTier: previousTier || '',
+          message: `Congratulations — you've been upgraded to ${newTier}!`,
+        },
+      });
+    } catch (emailErr) {
+      logError(`notifyTierUpgrade — email failed for ${memberId}`, emailErr);
+      return { sent: false, reason: 'email_failed' };
+    }
+
+    // Push is best-effort — email already sent, so we still record dedup below.
+    try {
+      const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+      await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: newTier });
+    } catch (pushErr) {
+      logError(`notifyTierUpgrade — push failed for ${memberId}`, pushErr);
+    }
+
+    try {
+      await wixData.insert(TIER_UPGRADE_NOTIFICATIONS_COLLECTION, {
+        memberId,
+        newTier,
+        previousTier: previousTier || '',
+        sentAt: new Date().toISOString(),
+      }, { suppressAuth: true });
+    } catch (dedupErr) {
+      // Uniqueness violation = another concurrent invocation won the dedup race
+      // and already recorded the notification. Surface sent:false so the caller
+      // does not treat our race-duplicate as a fresh send and retry.
+      const msg = dedupErr?.message || '';
+      if (msg.includes('duplicate') || msg.includes('unique')) {
+        logError(`notifyTierUpgrade — race-duplicate for ${memberId} tier=${newTier}`, dedupErr);
+        return { sent: false, reason: 'race_duplicate' };
+      }
+      logError(`notifyTierUpgrade — dedup insert failed for ${memberId}`, dedupErr);
+    }
+
+    return { sent: true };
+  } catch (err) {
+    logError(`notifyTierUpgrade — pipeline failed for ${memberId}`, err);
+    return { sent: false, reason: 'pipeline_error' };
+  }
+}
+
 // ── cf-2yd: Daily streak-at-risk push notifications ───────────────────────────
 
 /**

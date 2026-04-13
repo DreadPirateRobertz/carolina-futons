@@ -243,6 +243,11 @@ export const receiveGamificationEvent = webMethod(
           const { deliverTierPerks } = await import('backend/rewardEngine.web');
           await deliverTierPerks(memberId, oldTier, newTier);
         } catch (e) { logError(`gamificationEventReceiver — deliverTierPerks failed for ${memberId}`, e); }
+        // cf-1d3: Personal tier-upgrade email + push (idempotent + opt-out aware)
+        try {
+          const { notifyTierUpgrade } = await import('backend/gamificationNotifs.web');
+          await notifyTierUpgrade(memberId, newTier, oldTier);
+        } catch (e) { logError(`gamificationEventReceiver — notifyTierUpgrade failed for ${memberId}`, e); }
       }
 
       // Phase 4: record wishlist add AFTER MemberPoints (best-effort)
