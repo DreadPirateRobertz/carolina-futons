@@ -14,7 +14,7 @@ vi.mock('wix-web-module', () => ({
 
 vi.mock('public/productPageUtils.js', () => ({
   isCallForPrice: vi.fn((p) => p.price <= 1),
-  CALL_FOR_PRICE_TEXT: 'Call for Price',
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 252-9449',
 }));
 
 vi.mock('wix-location-frontend', () => ({
@@ -121,6 +121,18 @@ describe('initYouMightAlsoLike — collapse paths', () => {
     await initYouMightAlsoLike($w, makeState(), { getSimilarProducts });
     expect($w('#youMightAlsoLikeSection').collapse).toHaveBeenCalled();
   });
+
+  it('collapses section when getSimilarProducts returns null', async () => {
+    const getSimilarProducts = vi.fn().mockResolvedValue(null);
+    await initYouMightAlsoLike($w, makeState(), { getSimilarProducts });
+    expect($w('#youMightAlsoLikeSection').collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when result has success:true but no products key', async () => {
+    const getSimilarProducts = vi.fn().mockResolvedValue({ success: true });
+    await initYouMightAlsoLike($w, makeState(), { getSimilarProducts });
+    expect($w('#youMightAlsoLikeSection').collapse).toHaveBeenCalled();
+  });
 });
 
 // ── Happy path ────────────────────────────────────────────────────────────────
@@ -211,7 +223,7 @@ describe('initYouMightAlsoLike — onItemReady', () => {
     const handler = await runAndGetHandler({ price: 0 });
     const $item = make$w();
     handler($item, { _id: 'p1', name: 'Frame', formattedPrice: '$0.00', price: 0, mainMedia: null, slug: 'frame' });
-    expect($item('#ymItem_price').text).toBe('Call for Price');
+    expect($item('#ymItem_price').text).toBe('Call for Pricing \u2014 (828) 252-9449');
   });
 
   it('sets image src when mainMedia present', async () => {
@@ -226,5 +238,18 @@ describe('initYouMightAlsoLike — onItemReady', () => {
     const $item = make$w();
     handler($item, { _id: 'p1', name: 'Frame', formattedPrice: '$499.00', price: 499, mainMedia: null, slug: 'frame' });
     expect($item('#ymItem_image').src).toBe(''); // unchanged
+  });
+
+  it('wires onClick on image to navigate to product slug', async () => {
+    const { to: mockTo } = await import('wix-location-frontend');
+    mockTo.mockResolvedValue(undefined);
+    const handler = await runAndGetHandler({ slug: 'comfy-futon', mainMedia: null });
+    const $item = make$w();
+    handler($item, { _id: 'p1', name: 'Frame', formattedPrice: '$499.00', price: 499, mainMedia: null, slug: 'comfy-futon' });
+    // Simulate click
+    const clickHandler = $item('#ymItem_image').onClick.mock.calls[0]?.[0];
+    expect(typeof clickHandler).toBe('function');
+    await clickHandler();
+    expect(mockTo).toHaveBeenCalledWith('/comfy-futon');
   });
 });
