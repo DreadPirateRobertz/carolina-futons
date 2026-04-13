@@ -12,10 +12,9 @@ import {
 } from './__mocks__/wix-data.js';
 import {
   deliverTrailPerk,
-  _VALID_PERK_IDS,
-  _PERK_EMAIL_TEMPLATES,
-  _TRAIL_PERKS_COLLECTION,
 } from '../src/backend/trailPerkService.web.js';
+
+const COLLECTION = 'MemberTrailPerks';
 
 beforeEach(() => {
   __reset();
@@ -49,7 +48,7 @@ describe('deliverTrailPerk — perk-free-shipping', () => {
   it('inserts a MemberTrailPerks record', async () => {
     const r = await deliverTrailPerk('mem-1', 'perk-free-shipping', 'a@b.com');
     expect(r.success).toBe(true);
-    const inserted = __getInserted(_TRAIL_PERKS_COLLECTION);
+    const inserted = __getInserted(COLLECTION);
     expect(inserted).toHaveLength(1);
     expect(inserted[0].perkId).toBe('perk-free-shipping');
     expect(inserted[0].memberId).toBe('mem-1');
@@ -62,7 +61,7 @@ describe('deliverTrailPerk — perk-free-shipping', () => {
 
   it('uses computed _id for idempotency', async () => {
     await deliverTrailPerk('mem-1', 'perk-free-shipping', 'a@b.com');
-    const inserted = __getInserted(_TRAIL_PERKS_COLLECTION);
+    const inserted = __getInserted(COLLECTION);
     expect(inserted[0]._id).toBe('mem-1_perk-free-shipping');
   });
 
@@ -81,19 +80,19 @@ describe('deliverTrailPerk — perk-free-shipping', () => {
   });
 
   it('returns alreadyDelivered:true when perk already exists', async () => {
-    __seed(_TRAIL_PERKS_COLLECTION, [{
+    __seed(COLLECTION, [{
       _id: 'mem-1_perk-free-shipping',
       memberId: 'mem-1',
       perkId: 'perk-free-shipping',
       couponCode: 'TRAIL-EXISTING',
     }]);
-    const before = __getInserted(_TRAIL_PERKS_COLLECTION).length;
+    const before = __getInserted(COLLECTION).length;
     const r = await deliverTrailPerk('mem-1', 'perk-free-shipping', 'a@b.com');
     expect(r.success).toBe(true);
     expect(r.alreadyDelivered).toBe(true);
     expect(r.couponCode).toBe('TRAIL-EXISTING');
     // Should not insert another record or email
-    expect(__getInserted(_TRAIL_PERKS_COLLECTION)).toHaveLength(before);
+    expect(__getInserted(COLLECTION)).toHaveLength(before);
     expect(__getInserted('EmailQueue')).toHaveLength(0);
   });
 });
@@ -180,7 +179,7 @@ describe('getTrailPerkStatus — happy path', () => {
   });
 
   it('returns delivered perks for the authenticated member', async () => {
-    __seed(_TRAIL_PERKS_COLLECTION, [
+    __seed(COLLECTION, [
       { _id: 'mem-1_perk-free-shipping', memberId: 'mem-1', perkId: 'perk-free-shipping', couponCode: 'TRAIL-ABCD1234', deliveredAt: new Date() },
       { _id: 'mem-1_perk-early-access', memberId: 'mem-1', perkId: 'perk-early-access', deliveredAt: new Date() },
     ]);
@@ -193,7 +192,7 @@ describe('getTrailPerkStatus — happy path', () => {
   });
 
   it('includes couponCode on perk-free-shipping result', async () => {
-    __seed(_TRAIL_PERKS_COLLECTION, [
+    __seed(COLLECTION, [
       { _id: 'mem-1_perk-free-shipping', memberId: 'mem-1', perkId: 'perk-free-shipping', couponCode: 'TRAIL-ABCD1234', deliveredAt: new Date() },
     ]);
     const r = await getTrailPerkStatus();
@@ -202,7 +201,7 @@ describe('getTrailPerkStatus — happy path', () => {
   });
 
   it('does not return perks belonging to other members', async () => {
-    __seed(_TRAIL_PERKS_COLLECTION, [
+    __seed(COLLECTION, [
       { _id: 'mem-2_perk-early-access', memberId: 'mem-2', perkId: 'perk-early-access', deliveredAt: new Date() },
     ]);
     const r = await getTrailPerkStatus();
@@ -211,7 +210,7 @@ describe('getTrailPerkStatus — happy path', () => {
 
   it('includes deliveredAt on each perk', async () => {
     const date = new Date('2026-03-01');
-    __seed(_TRAIL_PERKS_COLLECTION, [
+    __seed(COLLECTION, [
       { _id: 'mem-1_perk-styling-call', memberId: 'mem-1', perkId: 'perk-styling-call', deliveredAt: date },
     ]);
     const r = await getTrailPerkStatus();
@@ -224,7 +223,7 @@ describe('getTrailPerkStatus — DB error handling', () => {
 
   it('returns success:false with empty perks on DB error', async () => {
     const { __setQueryError } = await import('./__mocks__/wix-data.js');
-    __setQueryError(_TRAIL_PERKS_COLLECTION, new Error('DB read failed'));
+    __setQueryError(COLLECTION, new Error('DB read failed'));
     const r = await getTrailPerkStatus();
     expect(r.success).toBe(false);
     expect(r.perks).toEqual([]);

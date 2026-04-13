@@ -24,9 +24,9 @@ import {
   getAvailableTrailPerks,
   getPublicTrailPerkStatus,
   claimTrailPerk,
-  _VALID_PERK_IDS,
-  _TRAIL_PERKS_COLLECTION,
 } from '../src/backend/trailPerkService.web.js';
+
+const KNOWN_PERK_IDS = new Set(['perk-free-shipping', 'perk-early-access', 'perk-styling-call']);
 
 const COLLECTION = 'MemberTrailPerks';
 const MEMBER_ID = 'mem-trail-001';
@@ -58,7 +58,7 @@ describe('getAvailableTrailPerks', () => {
   it('all returned perk IDs are valid', async () => {
     const result = await getAvailableTrailPerks();
     for (const perk of result.perks) {
-      expect(_VALID_PERK_IDS.has(perk.id)).toBe(true);
+      expect(KNOWN_PERK_IDS.has(perk.id)).toBe(true);
     }
   });
 });
