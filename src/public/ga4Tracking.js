@@ -56,6 +56,15 @@ export function _hasAnalyticsConsent() {
  */
 export async function fireViewContent(product) {
   try {
+    // TikTok fan-out runs before the analytics-only guard: pixelConsentService
+    // enforces its own (analytics + advertising + queueing) consent contract,
+    // so advertising-only users still reach TikTok. (cf-5rt)
+    _fireTikTok('ViewContent', {
+      content_id: product?._id,
+      content_name: product?.name,
+      value: product?.price,
+      currency: 'USD',
+    });
     if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
@@ -63,12 +72,6 @@ export async function fireViewContent(product) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('ViewContent', payload);
     }
-    _fireTikTok('ViewContent', {
-      content_id: product?._id,
-      content_name: product?.name,
-      value: product?.price,
-      currency: 'USD',
-    });
   } catch (e) {
     // GA4 tracking is non-critical
   }
@@ -81,6 +84,12 @@ export async function fireViewContent(product) {
  */
 export async function fireAddToCart(product, quantity = 1) {
   try {
+    _fireTikTok('AddToCart', {
+      content_id: product?._id,
+      quantity,
+      value: (product?.price || 0) * quantity,
+      currency: 'USD',
+    });
     if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
@@ -88,12 +97,6 @@ export async function fireAddToCart(product, quantity = 1) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('AddToCart', payload);
     }
-    _fireTikTok('AddToCart', {
-      content_id: product?._id,
-      quantity,
-      value: (product?.price || 0) * quantity,
-      currency: 'USD',
-    });
   } catch (e) {}
 }
 
@@ -120,6 +123,11 @@ export async function fireInitiateCheckout(cartItems, cartTotal) {
  */
 export async function firePurchase(order) {
   try {
+    _fireTikTok('Purchase', {
+      order_id: order?._id,
+      value: order?.totals?.total,
+      currency: 'USD',
+    });
     if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
@@ -127,11 +135,6 @@ export async function firePurchase(order) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('Purchase', payload);
     }
-    _fireTikTok('Purchase', {
-      order_id: order?._id,
-      value: order?.totals?.total,
-      currency: 'USD',
-    });
   } catch (e) {}
 }
 
@@ -141,6 +144,11 @@ export async function firePurchase(order) {
  */
 export async function fireAddToWishlist(product) {
   try {
+    _fireTikTok('AddToWishlist', {
+      content_id: product?._id,
+      value: product?.price,
+      currency: 'USD',
+    });
     if (!_hasAnalyticsConsent()) return;
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
@@ -148,11 +156,6 @@ export async function fireAddToWishlist(product) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('AddToWishlist', payload);
     }
-    _fireTikTok('AddToWishlist', {
-      content_id: product?._id,
-      value: product?.price,
-      currency: 'USD',
-    });
   } catch (e) {}
 }
 
