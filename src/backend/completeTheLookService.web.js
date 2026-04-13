@@ -8,7 +8,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { validateId } from 'backend/utils/sanitize';
+import { validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 
 const COLLECTION = 'CompleteTheLook';
 const MAX_ITEMS = 12;
@@ -41,7 +41,7 @@ export const getCompleteTheLook = webMethod(
       const res = await wixData.query(COLLECTION)
         .eq('productId', cleanId)
         .limit(1)
-        .find();
+        .find({ suppressAuth: true });
       const look = res.items && res.items[0];
       if (!look) return null;
       return {
@@ -70,12 +70,13 @@ export const createLook = webMethod(
     }
     const productId = validateId(data.productId);
     if (!productId) return { success: false, error: 'invalid-productId' };
+    const roomHeroImage = isWixMediaUrl(data.roomHeroImage) ? data.roomHeroImage : '';
     try {
       const look = await wixData.insert(COLLECTION, {
         productId,
-        roomHeroImage: typeof data.roomHeroImage === 'string' ? data.roomHeroImage : '',
+        roomHeroImage,
         roomItems: normalizeItems(data.roomItems),
-      });
+      }, { suppressAuth: true });
       return { success: true, look };
     } catch (err) {
       console.error('[completeTheLookService] createLook failed', err);
@@ -99,13 +100,14 @@ export const updateLook = webMethod(
     const _id = validateId(data._id);
     const productId = validateId(data.productId);
     if (!_id || !productId) return { success: false, error: 'invalid-input' };
+    const roomHeroImage = isWixMediaUrl(data.roomHeroImage) ? data.roomHeroImage : '';
     try {
       const look = await wixData.update(COLLECTION, {
         _id,
         productId,
-        roomHeroImage: typeof data.roomHeroImage === 'string' ? data.roomHeroImage : '',
+        roomHeroImage,
         roomItems: normalizeItems(data.roomItems),
-      });
+      }, { suppressAuth: true });
       return { success: true, look };
     } catch (err) {
       console.error('[completeTheLookService] updateLook failed', err);
