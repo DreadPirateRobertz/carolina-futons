@@ -118,9 +118,9 @@ export async function initHomeBlogTeasers($w, state) {
     const container = $w('#blogTeaserSection');
     if (!container) return;
 
-    // Fetch blog posts from backend
-    const { fetchAllBlogPosts } = await import('backend/blogService.web');
-    const posts = await fetchAllBlogPosts();
+    // Fetch recent posts from CMS backend
+    const { getRecentPosts } = await import('backend/blogService.web');
+    const posts = await getRecentPosts(MAX_TEASERS);
 
     if (!posts || posts.length === 0) {
       try { container.collapse(); } catch (_) {}
@@ -163,16 +163,17 @@ export async function initBlogTeaserRepeater($w, state) {
   if (!section) return;
 
   try {
-    const { fetchAllBlogPosts } = await import('backend/blogService.web');
-    const posts = await fetchAllBlogPosts();
+    const { getRecentPosts } = await import('backend/blogService.web');
+    const posts = await getRecentPosts(MAX_TEASERS);
 
     if (!posts || posts.length === 0) {
       try { section.collapse(); } catch (_) {}
       return;
     }
 
+    // Posts from getRecentPosts are already CMS-ordered; sort defensively
     const sorted = [...posts].sort((a, b) =>
-      (b.publishDate || '').localeCompare(a.publishDate || ''));
+      (b.publishDate || b.publishedDate || '').localeCompare(a.publishDate || a.publishedDate || ''));
     const teasers = sorted.slice(0, MAX_TEASERS).map(buildTeaserData).filter(Boolean);
 
     if (teasers.length === 0) {

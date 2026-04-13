@@ -78,6 +78,85 @@ export const getPublishedBlogPosts = webMethod(
   }
 );
 
+/**
+ * Fetch the most recent N published posts from the Wix Blog CMS.
+ * Returns a flat array of normalized post objects (not a pagination wrapper).
+ * Fails open — returns [] on error.
+ *
+ * @function getRecentPosts
+ * @param {number} [count=3] Number of posts to fetch (clamped to 1–50)
+ * @returns {Promise<Array>} Array of normalized post objects
+ * @permission Anyone
+ */
+export const getRecentPosts = webMethod(
+  Permissions.Anyone,
+  async (count = DEFAULT_PER_PAGE) => {
+    const safeCount = Math.min(50, Math.max(1, Math.floor(count)));
+    try {
+      const response = await blogPosts.listPosts({
+        paging: { limit: safeCount, offset: 0 },
+      });
+      return (response.posts ?? []).map(normalizePost);
+    } catch (err) {
+      console.error('[blogService] getRecentPosts failed:', err?.message);
+      return [];
+    }
+  }
+);
+
+/**
+ * Fetch a single published post from the Wix Blog CMS by its slug.
+ * Returns a normalized post object, or null if not found or on error.
+ *
+ * @function getPostBySlug
+ * @param {string} slug Post slug (from URL path)
+ * @returns {Promise<Object|null>} Normalized post or null
+ * @permission Anyone
+ */
+export const getPostBySlug = webMethod(
+  Permissions.Anyone,
+  async (slug) => {
+    if (!slug || typeof slug !== 'string') return null;
+    try {
+      const response = await blogPosts.getPost(slug.trim());
+      return response.post ? normalizePost(response.post) : null;
+    } catch (err) {
+      if (err?.code === 404 || err?.message?.includes('not found')) return null;
+      console.error('[blogService] getPostBySlug failed:', err?.message);
+      return null;
+    }
+  }
+);
+
+/**
+ * Return the sorted list of unique category labels found in recent posts.
+ * Fetches up to 50 posts to collect categories; fails open → returns [].
+ *
+ * @function getCategories
+ * @returns {Promise<string[]>} Sorted array of category label strings
+ * @permission Anyone
+ */
+export const getCategories = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const response = await blogPosts.listPosts({
+        paging: { limit: 50, offset: 0 },
+      });
+      const posts = response.posts ?? [];
+      const seen = new Set();
+      for (const post of posts) {
+        const label = post.categories?.[0]?.label;
+        if (label) seen.add(label);
+      }
+      return [...seen].sort();
+    } catch (err) {
+      console.error('[blogService] getCategories failed:', err?.message);
+      return [];
+    }
+  }
+);
+
 // ── Static data wrappers (legacy — used by Blog Post page and RSS) ────
 
 export const fetchAllBlogPosts = webMethod(Permissions.Anyone, () => getAllBlogPosts());
