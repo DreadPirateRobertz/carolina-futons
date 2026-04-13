@@ -308,6 +308,21 @@ describe('notifyChallengePublished', () => {
     const result = await notifyChallengePublished(makeChallenge());
     expect(result).toEqual({ success: false, queued: 0 });
   });
+
+  it('queryAll multi-page: collects all members when count exceeds 1 000-item page limit', async () => {
+    // queryAll() calls .limit(1000).find() — seed 1 001 opted-in members so
+    // page 1 returns 1 000 items with hasNext()=true, page 2 returns the
+    // remaining 1 item.  All 1 001 EmailQueue + SMSQueue rows must be inserted.
+    const memberIds = Array.from({ length: 1001 }, (_, i) => `mem-page-${i}`);
+    seedOptedIn(memberIds);
+
+    const result = await notifyChallengePublished(makeChallenge());
+
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(1001);
+    expect(__getInserted('EmailQueue')).toHaveLength(1001);
+    expect(__getInserted('SMSQueue')).toHaveLength(1001);
+  });
 });
 
 // ── checkStreakMilestoneNotifications (GH#991: queue + pagination) ────────────
@@ -422,6 +437,26 @@ describe('checkStreakMilestoneNotifications', () => {
     __setQueryError('MemberPoints', new Error('DB down'));
     const result = await checkStreakMilestoneNotifications();
     expect(result).toEqual({ queued: 0, skipped: 0, errors: 0 });
+  });
+
+  it('queryAll multi-page: queues all members when streak count exceeds 1 000-item page limit', async () => {
+    // queryAll() calls .limit(1000).find() — seed 1 001 members at day-7 so
+    // page 1 has hasNext()=true and page 2 delivers the 1 001st member.
+    // All 1 001 EmailQueue rows must be inserted.
+    const memberIds = Array.from({ length: 1001 }, (_, i) => `mem-streak-${i}`);
+    __seed('MemberPoints', memberIds.map(id => ({
+      _id: `mp-${id}`,
+      memberId: id,
+      currentStreakDays: 7,
+    })));
+
+    const result = await checkStreakMilestoneNotifications();
+
+    expect(result.queued).toBe(1001);
+    expect(result.skipped).toBe(0);
+    expect(result.errors).toBe(0);
+    expect(__getInserted('EmailQueue')).toHaveLength(1001);
+    expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(1001);
   });
 });
 
