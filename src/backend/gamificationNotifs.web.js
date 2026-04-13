@@ -343,18 +343,17 @@ export async function checkStreakMilestoneNotifications() {
   const result = { sent: 0, skipped: 0, errors: 0 };
 
   try {
-    // Find members at exactly day 7 streak
-    // limit(1000): Wix CMS query cap is 1000 items per call. We expect well under
-    // 1000 members to hit day 7 on any given day — this is a safe ceiling.
-    const streakResult = await wixData
-      .query('MemberPoints')
-      .eq('currentStreakDays', STREAK_MILESTONE_DAY)
-      .limit(1000)
-      .find({ suppressAuth: true });
+    // Find all members at exactly day 7 streak — queryAll traverses hasNext/next
+    // because membership can exceed the 1 000-item Wix CMS page limit. (CF-n16)
+    const allMemberPoints = await queryAll(
+      wixData.query('MemberPoints')
+        .eq('currentStreakDays', STREAK_MILESTONE_DAY)
+        .limit(1000),
+    );
 
-    if (streakResult.items.length === 0) return result;
+    if (allMemberPoints.length === 0) return result;
 
-    const memberIds = streakResult.items.map(r => r.memberId).filter(Boolean);
+    const memberIds = allMemberPoints.map(r => r.memberId).filter(Boolean);
 
     // Check which members already received this notification
     const sentResult = await wixData

@@ -306,9 +306,9 @@ describe('notifyChallengePublished', () => {
     const result = await notifyChallengePublished(makeChallenge());
 
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(1000);
+    expect(result.emailsSent).toBe(1000);
     expect(__getInserted('EmailQueue')).toHaveLength(1000);
-    expect(__getInserted('SMSQueue')).toHaveLength(1000);
+    expect(__getInserted('ChallengeNotifSMSQueue')).toHaveLength(1000);
   });
 
   it('queryAll multi-page (2 pages): collects all members when count exceeds 1 000-item page limit', async () => {
@@ -322,9 +322,9 @@ describe('notifyChallengePublished', () => {
     const result = await notifyChallengePublished(makeChallenge());
 
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(OVER_PAGE_LIMIT);
+    expect(result.emailsSent).toBe(OVER_PAGE_LIMIT);
     expect(__getInserted('EmailQueue')).toHaveLength(OVER_PAGE_LIMIT);
-    expect(__getInserted('SMSQueue')).toHaveLength(OVER_PAGE_LIMIT);
+    expect(__getInserted('ChallengeNotifSMSQueue')).toHaveLength(OVER_PAGE_LIMIT);
   });
 
   it('queryAll multi-page (3 pages): while loop continues past the second page', async () => {
@@ -337,9 +337,9 @@ describe('notifyChallengePublished', () => {
     const result = await notifyChallengePublished(makeChallenge());
 
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(THREE_PAGES);
+    expect(result.emailsSent).toBe(THREE_PAGES);
     expect(__getInserted('EmailQueue')).toHaveLength(THREE_PAGES);
-    expect(__getInserted('SMSQueue')).toHaveLength(THREE_PAGES);
+    expect(__getInserted('ChallengeNotifSMSQueue')).toHaveLength(THREE_PAGES);
   });
 });
 
@@ -454,10 +454,10 @@ describe('checkStreakMilestoneNotifications', () => {
 
     const result = await checkStreakMilestoneNotifications();
 
-    expect(result.queued).toBe(1000);
+    expect(result.sent).toBe(1000);
     expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
-    expect(__getInserted('EmailQueue')).toHaveLength(1000);
+    expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(1000);
   });
 
   it('queryAll multi-page (2 pages): queues all members when streak count exceeds 1 000-item page limit', async () => {
@@ -469,10 +469,9 @@ describe('checkStreakMilestoneNotifications', () => {
 
     const result = await checkStreakMilestoneNotifications();
 
-    expect(result.queued).toBe(OVER_PAGE_LIMIT);
+    expect(result.sent).toBe(OVER_PAGE_LIMIT);
     expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
-    expect(__getInserted('EmailQueue')).toHaveLength(OVER_PAGE_LIMIT);
     expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(OVER_PAGE_LIMIT);
   });
 
@@ -484,10 +483,9 @@ describe('checkStreakMilestoneNotifications', () => {
 
     const result = await checkStreakMilestoneNotifications();
 
-    expect(result.queued).toBe(THREE_PAGES);
+    expect(result.sent).toBe(THREE_PAGES);
     expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
-    expect(__getInserted('EmailQueue')).toHaveLength(THREE_PAGES);
     expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(THREE_PAGES);
   });
 });
