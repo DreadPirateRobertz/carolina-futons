@@ -53,6 +53,10 @@ vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
 }));
 
+vi.mock('public/ga4Tracking', () => ({
+  fireAddToWishlist: vi.fn(),
+}));
+
 import { trackEvent } from 'public/engagementTracker';
 
 // ── Mock helpers ────────────────────────────────────────────────────

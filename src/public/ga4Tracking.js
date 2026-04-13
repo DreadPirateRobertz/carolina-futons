@@ -16,6 +16,14 @@ import {
   buildViewCartEvent,
 } from 'backend/analyticsHelpers.web';
 import wixPrivacy from 'wix-privacy-frontend';
+import { fireTrackedTikTokEvent } from 'public/pixelConsentService';
+
+// Fire a TikTok pixel event alongside a GA4 event. Consent gating
+// (analytics + advertising) is enforced inside fireTrackedTikTokEvent;
+// swallow errors so TikTok failures never break GA4 or the caller.
+function _fireTikTok(eventName, params) {
+  try { fireTrackedTikTokEvent(eventName, params); } catch (e) {}
+}
 
 let _wixWindow = null;
 
@@ -55,6 +63,12 @@ export async function fireViewContent(product) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('ViewContent', payload);
     }
+    _fireTikTok('ViewContent', {
+      content_id: product?._id,
+      content_name: product?.name,
+      value: product?.price,
+      currency: 'USD',
+    });
   } catch (e) {
     // GA4 tracking is non-critical
   }
@@ -74,6 +88,12 @@ export async function fireAddToCart(product, quantity = 1) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('AddToCart', payload);
     }
+    _fireTikTok('AddToCart', {
+      content_id: product?._id,
+      quantity,
+      value: (product?.price || 0) * quantity,
+      currency: 'USD',
+    });
   } catch (e) {}
 }
 
@@ -107,6 +127,11 @@ export async function firePurchase(order) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('Purchase', payload);
     }
+    _fireTikTok('Purchase', {
+      order_id: order?._id,
+      value: order?.totals?.total,
+      currency: 'USD',
+    });
   } catch (e) {}
 }
 
@@ -123,6 +148,11 @@ export async function fireAddToWishlist(product) {
     if (payload && Object.keys(payload).length > 0) {
       ww.trackEvent('AddToWishlist', payload);
     }
+    _fireTikTok('AddToWishlist', {
+      content_id: product?._id,
+      value: product?.price,
+      currency: 'USD',
+    });
   } catch (e) {}
 }
 
