@@ -215,6 +215,38 @@ export const likeRoomPhoto = webMethod(
   }
 );
 
+/**
+ * Paginated approved-photo feed (CF-ndx). Thin positional-args wrapper around
+ * the approved-status query — simpler surface for clients that only need
+ * "give me the next N approved photos". The CustomerRoomPhotos collection
+ * itself serves as the moderation queue via its `status` field.
+ *
+ * @param {number} [limit=20]  max photos to return (clamped 1..GALLERY_MAX_LIMIT)
+ * @param {number} [offset=0]  pagination offset (>=0)
+ * @returns {Promise<{success:boolean, photos:Array, total:number}>}
+ * @permission Anyone
+ */
+export const getApprovedPhotos = webMethod(
+  Permissions.Anyone,
+  async (limit = 20, offset = 0) => {
+    try {
+      const safeLimit  = Math.min(Math.max(1, Number(limit)  || 1), GALLERY_MAX_LIMIT);
+      const safeOffset = Math.max(0, Number(offset) || 0);
+
+      const result = await wixData.query(COLLECTION)
+        .hasSome('status', APPROVED_STATUSES)
+        .descending('submittedAt')
+        .limit(safeLimit).skip(safeOffset)
+        .find({ suppressAuth: true });
+
+      return { success: true, photos: result.items.map(toPublicPhoto), total: result.totalCount };
+    } catch (err) {
+      logError('customerRoomPhotos.getApprovedPhotos', err);
+      return { success: false, photos: [], total: 0 };
+    }
+  }
+);
+
 export const moderateRoomPhoto = webMethod(
   Permissions.Admin,
   async (photoId, action, notes = '') => {

@@ -23,6 +23,7 @@ import {
   submitRoomPhoto,
   getProductRoomPhotos,
   getAllRoomPhotos,
+  getApprovedPhotos,
   likeRoomPhoto,
   moderateRoomPhoto,
   _COLLECTION,
@@ -466,6 +467,86 @@ describe('getAllRoomPhotos', () => {
     ]);
     const result = await getAllRoomPhotos();
     expect(result.total).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ── getApprovedPhotos (CF-ndx) ────────────────────────────────────────────────
+
+describe('getApprovedPhotos', () => {
+  it('returns approved + featured photos only', async () => {
+    __seed(_COLLECTION, [
+      makePhoto({ _id: 'p1', status: 'approved' }),
+      makePhoto({ _id: 'p2', status: 'pending' }),
+      makePhoto({ _id: 'p3', status: 'featured' }),
+      makePhoto({ _id: 'p4', status: 'rejected' }),
+    ]);
+    const result = await getApprovedPhotos();
+    expect(result.success).toBe(true);
+    expect(result.photos).toHaveLength(2);
+    expect(result.photos.every(p => p.status === 'approved' || p.status === 'featured')).toBe(true);
+  });
+
+  it('uses positional limit + offset args', async () => {
+    const photos = Array.from({ length: 5 }, (_, i) =>
+      makePhoto({ _id: `p${i}`, status: 'approved', submittedAt: new Date(2026, 0, i + 1) })
+    );
+    __seed(_COLLECTION, photos);
+    const result = await getApprovedPhotos(2, 1);
+    expect(result.success).toBe(true);
+    expect(result.photos.length).toBeLessThanOrEqual(2);
+    expect(result.total).toBeGreaterThanOrEqual(5);
+  });
+
+  it('defaults to limit=20 offset=0 when no args', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'approved' })]);
+    const result = await getApprovedPhotos();
+    expect(result.success).toBe(true);
+    expect(result.photos).toHaveLength(1);
+  });
+
+  it('clamps limit to GALLERY_MAX_LIMIT (50)', async () => {
+    const photos = Array.from({ length: 60 }, (_, i) =>
+      makePhoto({ _id: `p${i}`, status: 'approved' })
+    );
+    __seed(_COLLECTION, photos);
+    const result = await getApprovedPhotos(999, 0);
+    expect(result.photos.length).toBeLessThanOrEqual(50);
+  });
+
+  it('clamps negative limit/offset to safe minimums', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'approved' })]);
+    const result = await getApprovedPhotos(-5, -10);
+    expect(result.success).toBe(true);
+    expect(result.photos).toHaveLength(1);
+  });
+
+  it('coerces non-numeric args to defaults', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'approved' })]);
+    const result = await getApprovedPhotos('abc', 'xyz');
+    expect(result.success).toBe(true);
+  });
+
+  it('does not expose memberEmail/memberId', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'approved' })]);
+    const result = await getApprovedPhotos();
+    expect(result.photos[0]).not.toHaveProperty('memberEmail');
+    expect(result.photos[0]).not.toHaveProperty('memberId');
+  });
+
+  it('returns success:false on query error', async () => {
+    const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setQueryError(_COLLECTION, new Error('db down'));
+    const result = await getApprovedPhotos();
+    expect(result.success).toBe(false);
+    expect(result.photos).toHaveLength(0);
+    expect(result.total).toBe(0);
+  });
+
+  it('returns empty array when no approved photos exist', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'pending' })]);
+    const result = await getApprovedPhotos();
+    expect(result.success).toBe(true);
+    expect(result.photos).toHaveLength(0);
   });
 });
 
