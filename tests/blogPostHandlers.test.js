@@ -115,6 +115,19 @@ vi.mock('wix-seo-frontend', () => ({
   head: { setMetaTag: vi.fn() },
 }));
 
+vi.mock('backend/topicClusters.web', () => ({
+  getClusterForPost: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('public/topicClusterHelpers', () => ({
+  buildBlogPostClusterNav: vi.fn().mockReturnValue(null),
+  buildIsPartOfSchema: vi.fn().mockReturnValue(null),
+}));
+
+vi.mock('public/navigationHelpers', () => ({
+  renderBreadcrumbs: vi.fn(),
+}));
+
 // ── Import mock refs ─────────────────────────────────────────────────
 
 let initBackToTop, trackEvent, fireCustomEvent, makeClickable;

@@ -223,7 +223,7 @@ function run() {
   // Ratchet: known gap count at time of script creation.
   // This number should only go DOWN over time as mocks are added.
   // CI fails only if gaps INCREASE beyond this baseline.
-  const KNOWN_GAP_BASELINE = 378; // bumped 2026-04-13: +8 from cf-bjv (blog post topic cluster imports in Blog Post.js — 4 test files need vi.mock updates, tracked in cf-mcv)
+  const KNOWN_GAP_BASELINE = 367; // ratcheted 2026-04-13: cf-90d closed 11 gaps across 4 Blog Post test files (topic cluster + navigation mocks)
 
   if (totalGaps === 0) {
     console.log(`✅ Mock coverage check passed — ${testFiles.length} test files scanned, no gaps found.`);

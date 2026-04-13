@@ -120,6 +120,15 @@ vi.mock('public/navigationHelpers', () => ({
   renderBreadcrumbs: vi.fn(),
 }));
 
+vi.mock('backend/topicClusters.web', () => ({
+  getClusterForPost: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('public/topicClusterHelpers', () => ({
+  buildBlogPostClusterNav: vi.fn().mockReturnValue(null),
+  buildIsPartOfSchema: vi.fn().mockReturnValue(null),
+}));
+
 vi.mock('wix-window-frontend', () => ({
   openUrl: vi.fn(),
 }));
