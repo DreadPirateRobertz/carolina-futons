@@ -848,3 +848,48 @@ export const moderateVideoReview = webMethod(
     }
   }
 );
+
+// ── getFeaturedReviews ────────────────────────────────────────────────────────
+
+/**
+ * Return the most recent approved reviews across all products for the
+ * homepage ReviewsCarousel widget.
+ *
+ * @param {Object|null} [opts]
+ * @param {number}      [opts.limit=10]  Max reviews to return; clamped to [1, 50].
+ * @returns {Promise<{success: boolean, reviews: Object[], error?: string}>}
+ * @permission Anyone
+ */
+export const getFeaturedReviews = webMethod(
+  Permissions.Anyone,
+  async (opts) => {
+    try {
+      const rawLimit = (opts && typeof opts.limit === 'number' && !isNaN(opts.limit))
+        ? opts.limit
+        : 10;
+      const limit = Math.min(50, Math.max(1, rawLimit));
+
+      const result = await wixData.query(COLLECTION)
+        .eq('status', 'approved')
+        .descending('_createdDate')
+        .limit(limit)
+        .find();
+
+      const reviews = result.items.map(r => ({
+        _id:          r._id,
+        authorName:   r.authorName || 'Customer',
+        rating:       typeof r.rating === 'number' ? r.rating : null,
+        title:        r.title || '',
+        body:         r.body || '',
+        productId:    r.productId,
+        productName:  r.productName || '',
+        _createdDate: r._createdDate,
+      }));
+
+      return { success: true, reviews };
+    } catch (err) {
+      console.error('[reviewsService] getFeaturedReviews error:', err);
+      return { success: false, reviews: [], error: 'internal_error' };
+    }
+  }
+);
