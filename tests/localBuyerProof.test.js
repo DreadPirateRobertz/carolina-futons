@@ -150,4 +150,11 @@ describe('initLocalBuyerProof widget (CF-rhqm)', () => {
     getLocalBuyerCountMock.mockRejectedValue(new Error('fail'));
     await expect(init()).resolves.toBeUndefined();
   });
+
+  it('uses globalThis.$w when $w not provided in opts', async () => {
+    vi.stubGlobal('$w', mock$w);
+    await initLocalBuyerProof('287', { getLocalBuyerCount: getLocalBuyerCountMock });
+    expect(getEl('#localBuyerProof').text).toContain('Hendersonville');
+    vi.unstubAllGlobals();
+  });
 });
