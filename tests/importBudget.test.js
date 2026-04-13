@@ -22,6 +22,7 @@ const IMPORT_BUDGET = 20;
 const KNOWN_OVERBUDGET = {
   'Cart Page.js': 23, // CF-qgg0: +1 renderSimplePrice from productCardHelpers
   'Category Page.js': 27,
+  'Home.js': 21, // cf-nqq: +1 initChallengeOfTheWeekWidget
   'Product Page.js': 29, // CF-7byz: +1 getProductVideos; CF-06xu: +1 getProductStructuredData; hq-kgno: +1 wix-data; CF-wzv8: +1 subscribeAndSave; CF-qgg0: +1 renderSimplePrice
   'masterPage.js': 22, // CF-qgg0: +1 formatCardPrice/renderSimplePrice from productCardHelpers; CF-e2ib: +1 initAppDownloadBanner
   'Thank You Page.js': 23, // CF-2zr3: +1 getSoftPromptConfig; CF-y7lp: +2 getWhiteGloveSlots + wixLocationFrontend
