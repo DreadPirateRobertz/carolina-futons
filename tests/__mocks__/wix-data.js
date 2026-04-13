@@ -174,12 +174,12 @@ function createQueryBuilder(collection) {
     async find(options) {
       _lastFindOptions[collection] = options;
       if (_queryErrors[collection]) throw _queryErrors[collection];
-      let items = (_store[collection] || []).filter(item =>
+      let allItems = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
       );
 
       if (sortKeys.length > 0) {
-        items.sort((a, b) => {
+        allItems.sort((a, b) => {
           for (const { field, dir } of sortKeys) {
             const av = getField(a, field), bv = getField(b, field);
             if (av < bv) return dir === 'asc' ? -1 : 1;
@@ -189,9 +189,21 @@ function createQueryBuilder(collection) {
         });
       }
 
-      const totalCount = items.length;
-      items = items.slice(skipVal, skipVal + limitVal);
-      return { items, totalCount, length: items.length };
+      const totalCount = allItems.length;
+
+      function makePage(offset) {
+        const pageItems = allItems.slice(offset, offset + limitVal);
+        const hasMore = (offset + limitVal) < totalCount;
+        return {
+          items: pageItems,
+          totalCount,
+          length: pageItems.length,
+          hasNext: () => hasMore,
+          next: async () => makePage(offset + limitVal),
+        };
+      }
+
+      return makePage(skipVal);
     },
     async distinct(field) {
       if (_queryErrors[collection]) throw _queryErrors[collection];

@@ -16,6 +16,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { logError } from 'backend/utils/errorHandler';
+import { queryAll } from 'backend/utils/queryAll';
 import wixData from 'wix-data';
 
 const MEMBER_NOTIFICATION_PREFS_COLLECTION = 'MemberNotificationPrefs';
@@ -184,18 +185,18 @@ export const notifyChallengePublished = webMethod(
     }
 
     try {
-      // 1. Find all members with questAlerts enabled
-      const prefsResult = await wixData
-        .query(MEMBER_NOTIFICATION_PREFS_COLLECTION)
-        .eq('questAlerts', true)
-        .limit(1000)
-        .find({ suppressAuth: true });
+      // 1. Find all members with questAlerts enabled — queryAll traverses hasNext/next
+      //    pages so members beyond the first page are not silently dropped. cf-n16
+      const optedIn = await queryAll(
+        wixData.query(MEMBER_NOTIFICATION_PREFS_COLLECTION).eq('questAlerts', true).limit(500),
+        { suppressAuth: true }
+      );
 
-      if (prefsResult.items.length === 0) {
+      if (optedIn.length === 0) {
         return { success: true, emailsSent: 0, smsSent: 0 };
       }
 
-      const memberIds = prefsResult.items.map(p => p.memberId).filter(Boolean);
+      const memberIds = optedIn.map(p => p.memberId).filter(Boolean);
 
       const rewardText = challenge.rewardBadgeLabel
         ? `${challenge.rewardPoints} pts + ${challenge.rewardBadgeLabel} badge`

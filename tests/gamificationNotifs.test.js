@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import wixData from './__mocks__/wix-data.js';
 import {
   __reset as resetData,
   __seed,
@@ -18,6 +19,7 @@ import {
   __onInsert,
   __setQueryError,
 } from './__mocks__/wix-data.js';
+import { queryAll } from '../src/backend/utils/queryAll.js';
 import {
   __reset as resetMembers,
   __setMember,
@@ -399,5 +401,97 @@ describe('checkStreakMilestoneNotifications', () => {
     __setQueryError('MemberPoints', new Error('DB down'));
     const result = await checkStreakMilestoneNotifications();
     expect(result).toEqual({ sent: 0, skipped: 0, errors: 0 });
+  });
+});
+
+// ── cf-n16: queryAll multi-page pagination ────────────────────────────────────
+// The wix-data mock's default limitVal is 50. Seeding >50 items forces the
+// hasNext→next cursor chain — verifies queryAll collects all pages.
+
+describe('queryAll — multi-page cursor traversal', () => {
+  const TEST_COLLECTION = 'MemberNotificationPrefs';
+
+  beforeEach(() => {
+    resetData();
+  });
+
+  it('fetches all items when result spans multiple pages (>50 default limit)', async () => {
+    const total = 51;
+    const items = Array.from({ length: total }, (_, i) => ({
+      _id: `pref-${i}`,
+      memberId: `mem-${i}`,
+      questAlerts: true,
+    }));
+    __seed(TEST_COLLECTION, items);
+
+    // limit(25) forces ceil(51/25)=3 pages; default limitVal=50 also exercises pagination
+    const result = await queryAll(
+      wixData.query(TEST_COLLECTION).eq('questAlerts', true).limit(25),
+      { suppressAuth: true }
+    );
+
+    expect(result).toHaveLength(total);
+    expect(result.map(r => r.memberId).sort()).toEqual(
+      items.map(i => i.memberId).sort()
+    );
+  });
+
+  it('returns all items when exactly on page boundary', async () => {
+    // 50 items with limit(25) = exactly 2 pages
+    const total = 50;
+    __seed(TEST_COLLECTION, Array.from({ length: total }, (_, i) => ({
+      _id: `pref-${i}`,
+      memberId: `mem-${i}`,
+      questAlerts: true,
+    })));
+
+    const result = await queryAll(
+      wixData.query(TEST_COLLECTION).limit(25),
+      { suppressAuth: true }
+    );
+
+    expect(result).toHaveLength(total);
+  });
+
+  it('works correctly when all items fit in a single page', async () => {
+    __seed(TEST_COLLECTION, [
+      { _id: 'p1', memberId: 'mem-1', questAlerts: true },
+      { _id: 'p2', memberId: 'mem-2', questAlerts: true },
+    ]);
+
+    const result = await queryAll(
+      wixData.query(TEST_COLLECTION).limit(25),
+      { suppressAuth: true }
+    );
+
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns empty array when collection has no matching items', async () => {
+    const result = await queryAll(
+      wixData.query(TEST_COLLECTION).eq('questAlerts', true).limit(25)
+    );
+    expect(result).toEqual([]);
+  });
+
+  it('notifyChallengePublished notifies all members across pages', async () => {
+    // Seed 51 opted-in members — exceeds default limitVal=50
+    const total = 51;
+    __seed(TEST_COLLECTION, Array.from({ length: total }, (_, i) => ({
+      _id: `pref-${i}`,
+      memberId: `mem-${i}`,
+      questAlerts: true,
+    })));
+
+    const { notifyChallengePublished } = await import('../src/backend/gamificationNotifs.web.js');
+    const result = await notifyChallengePublished({
+      title: 'Big Sale Challenge',
+      rewardPoints: 200,
+    });
+
+    expect(result.success).toBe(true);
+    // All 51 members should have an EmailQueue entry
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(total);
   });
 });
