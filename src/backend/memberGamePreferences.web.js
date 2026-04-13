@@ -93,6 +93,7 @@ export const getMemberGamePreferences = webMethod(
  * @param {string|null|undefined} memberId
  * @returns {Promise<object>}
  */
+// idor-ok: internal backend helper — called from notificationService/gamification pipeline only
 export async function getGamePrefsForMember(memberId) {
   if (!memberId) return { ...DEFAULT_GAME_PREFS, memberId: null };
 

@@ -13,12 +13,15 @@
  * Exports:
  *   - TRAIL_REGISTRY    — static trail definitions
  *   - TRAIL_PROGRESS_COLLECTION — CMS collection name
- *   - getTrailProgress(memberId) — webMethod: progress for all trails for a member
+ *   - getMyTrailProgress() — webMethod: trail progress for the current session member
+ *   - _getTrailProgress(memberId) — internal backend helper (server-side use only)
  *   - recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail)
  *       — marks a challenge done; if trail now complete, triggers perk delivery
  */
 
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
+import { Permissions, webMethod } from 'wix-web-module';
 import { logError } from 'backend/utils/errorHandler';
 import { deliverTrailPerk } from 'backend/trailPerkService.web';
 
@@ -76,15 +79,14 @@ export const TRAIL_REGISTRY = [
 
 /**
  * Returns trail progress for all trails for a given member.
- * Each entry includes the trail definition fields plus:
- *   - completedChallengeIds: string[] (from saved progress, or [] if none)
- *   - isComplete: boolean (all trail challenges completed)
- *   - completedAt: Date | null
+ * Internal backend helper — called from server-side event handlers and crons.
+ * Frontend callers must use getMyTrailProgress() instead.
  *
  * @param {string} memberId
  * @returns {Promise<{ success: boolean, trails: Array, error?: string }>}
  */
-export async function getTrailProgress(memberId) {
+// idor-ok: internal backend helper — server-side use only; frontend uses getMyTrailProgress()
+export async function _getTrailProgress(memberId) {
   try {
     const { items } = await wixData
       .query(TRAIL_PROGRESS_COLLECTION)
@@ -124,6 +126,18 @@ export async function getTrailProgress(memberId) {
   }
 }
 
+/**
+ * Returns trail progress for all trails for the currently logged-in member.
+ * Derives memberId from the session — callers cannot supply an arbitrary memberId.
+ *
+ * @returns {Promise<{ success: boolean, trails: Array, error?: string }>}
+ */
+export const getMyTrailProgress = webMethod(Permissions.SiteMember, async () => {
+  const member = await currentMember.getMember();
+  if (!member?._id) return { success: false, trails: [], error: 'Not authenticated.' };
+  return _getTrailProgress(member._id);
+});
+
 // ── recordTrailChallengeCompletion ────────────────────────────────────────────
 
 /**
@@ -143,6 +157,7 @@ export async function getTrailProgress(memberId) {
  *   error?: string
  * }>}
  */
+// idor-ok: internal backend helper — called from gamification event handlers only, no frontend import
 export async function recordTrailChallengeCompletion(memberId, trailId, challengeId, recipientEmail) {
   if (!memberId || typeof memberId !== 'string') {
     return { success: false, error: 'memberId is required.' };

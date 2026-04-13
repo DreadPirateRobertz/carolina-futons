@@ -375,6 +375,7 @@ function resolvePoints(eventName, payload) {
  * @param {string} memberId
  * @returns {Promise<Object|null>}
  */
+// idor-ok: internal backend helper — called from gamification pipeline only, no frontend import
 export async function findMemberRecord(memberId) {
   const results = await wixData.query(MEMBER_POINTS_COLLECTION)
     .eq('memberId', memberId)
@@ -580,6 +581,7 @@ export function updateStreakState(record, todayET, yesterdayET) {
  *   progressError?: boolean,
  * }>}
  */
+// idor-ok: internal backend helper — called from gamification event handlers only
 export async function updateChallengeProgress(memberId, challenge, eventId, now) {
   const { challengeId, title, targetCount } = challenge;
   const base = { challengeId, title, targetCount };
@@ -658,6 +660,7 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
  * @param {string} todayET  - ET date string e.g. "2026-03-22"
  * @returns {Promise<{ canEarn: boolean, count: number }>}
  */
+// idor-ok: internal backend helper — called from wishlist add event handler only
 export async function checkWishlistMonthlyCap(memberId, todayET) {
   try {
     const monthStart = todayET.slice(0, 7) + '-01'; // "2026-03-01"

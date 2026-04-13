@@ -21,7 +21,7 @@
  * CF-mcyh.3
  */
 
-import { getTrailProgress as _defaultGetTrailProgress } from 'backend/challengeService.web';
+import { getMyTrailProgress } from 'backend/challengeService.web';
 import { formatPerkLabel } from 'public/TrailProgressDisplay.js';
 
 // ── Challenge label map ───────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ export function buildCheckpoints(challengeIds, completedChallengeIds) {
  */
 export async function initTrailProgressWidget(memberId, trailId, opts = {}) {
   const $w               = opts.$w               ?? globalThis.$w;
-  const getTrailProgress = opts.getTrailProgress  ?? ((id) => _defaultGetTrailProgress(id));
+  const getTrailProgress = opts.getTrailProgress  ?? (() => getMyTrailProgress());
 
   // Start hidden — reveal once we have data.
   try { $w('#trailProgressSection').hide(); } catch (e) {}

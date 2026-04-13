@@ -325,26 +325,44 @@ describe('scanBackendFiles', () => {
     expect(storeCredit).toHaveLength(0);
   });
 
-  it('catches plain exported functions with IDOR risk (GH-990 gap)', () => {
-    const violations = scanBackendFiles(BACKEND_DIR);
-    const plainViolations = violations.filter(v => v.reason.includes('Plain export'));
-    expect(plainViolations.length).toBeGreaterThan(0);
+  it('catches plain exported functions with IDOR risk (GH-990 gap, unit test)', () => {
+    // Use a synthetic fixture so this test is independent of live remediation state
+    const { extractPlainExportedFunctions, checkMethodForIDOR } = require
+      ? require('../scripts/check-member-ownership.mjs')
+      : { extractPlainExportedFunctions, checkMethodForIDOR };
+    const src = `export async function riskyFn(memberId) {
+  return wixData.query('X').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExportedFunctions(src);
+    const results = fns.map(f => checkMethodForIDOR(f));
+    expect(results.some(r => r.violation)).toBe(true);
   });
 
-  it('flags challengeService.web.js getTrailProgress as plain export violation', () => {
+  it('does not flag _-prefixed internal helpers', () => {
     const violations = scanBackendFiles(BACKEND_DIR);
-    const match = violations.find(
-      v => v.file.includes('challengeService') && v.name === 'getTrailProgress'
-    );
-    expect(match).toBeDefined();
-    expect(match.reason).toContain('Plain export');
+    const underscoreViolations = violations.filter(v => v.name.startsWith('_'));
+    expect(underscoreViolations).toHaveLength(0);
   });
 
-  it('ratchet: known violation count (15 plain-export violations pending remediation)', () => {
+  it('does not flag functions annotated with // idor-ok:', () => {
     const violations = scanBackendFiles(BACKEND_DIR);
-    // GH-990: 15 plain-export violations found after extending scanner.
-    // This ratchet prevents new violations from sneaking in.
-    // As each is fixed with getMember() ownership checks, lower this number.
-    expect(violations).toHaveLength(15);
+    // All known internal helpers are annotated — none should appear as violations
+    const knownInternals = [
+      'createTimeline', 'findMemberRecord', 'updateChallengeProgress',
+      'checkWishlistMonthlyCap', 'checkStreakAchievements', 'insertStreakAchievement',
+      'recordStreakMilestoneEvent', 'recordChallengeCompleteEvent',
+      'recordChallengeCompletionEvent', 'getGamePrefsForMember', 'sendChallengeReminder',
+      'recordTrailChallengeCompletion',
+    ];
+    const falsePositives = violations.filter(v => knownInternals.includes(v.name));
+    expect(falsePositives).toHaveLength(0);
+  });
+
+  it('ratchet: zero violations — all IDORs fixed or annotated as internal-only', () => {
+    const violations = scanBackendFiles(BACKEND_DIR);
+    // CF-dk9: all 15 findings resolved:
+    //   1 real IDOR (getTrailProgress) → wrapped in webMethod getMyTrailProgress
+    //   14 internal helpers → annotated with // idor-ok:
+    expect(violations).toHaveLength(0);
   });
 });

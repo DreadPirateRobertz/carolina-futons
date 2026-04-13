@@ -131,8 +131,14 @@ export function scanBackendFiles(backendDir = BACKEND_DIR) {
     }
 
     // Scan plain exported functions (GH-990 gap)
+    const sourceLines = source.split('\n');
     const plainFns = extractPlainExportedFunctions(source);
     for (const fn of plainFns) {
+      // Skip _-prefixed internal helpers (never callable from Wix frontend)
+      if (fn.name.startsWith('_')) continue;
+      // Skip functions annotated with // idor-ok: on the immediately preceding line
+      const precedingLine = (sourceLines[fn.lineNumber - 2] ?? '').trim();
+      if (precedingLine.startsWith('// idor-ok:')) continue;
       const result = checkMethodForIDOR(fn);
       if (result.violation) {
         violations.push({ file, name: fn.name, line: fn.lineNumber, reason: result.reason });
