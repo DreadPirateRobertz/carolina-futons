@@ -21,7 +21,7 @@
  * CF-eo88, CF-9l0
  *
  * Permission model (CF-cvez):
- *   Anyone:      getLeaderboard (public opt-in data)
+ *   Anyone:      getLeaderboard (public opt-in data), getActiveChallengeOfWeek
  *   SiteMember:  getStreakData, getMemberTier, getActivityFeed, getGamificationStats
  *   Member:      receiveGamificationEvent, getActiveChallenges, recordChallengeProgress, recoverStreak
  */
@@ -1179,5 +1179,95 @@ export const getActivityFeed = webMethod(
         iconType: ACTIVITY_ICONS[item.eventType] ?? 'cart',
       };
     });
+  }
+);
+
+// ── getActiveChallengeOfWeek (cf-rsr) ─────────────────────────────────────────
+
+/**
+ * Returns the current featured Challenge of the Week with the authenticated
+ * member's individual progress. Accessible to anyone (homepage widget); progress
+ * fields default to 0 for unauthenticated visitors.
+ *
+ * The CMS editor marks a challenge as featured by setting `isFeatured: true`
+ * on the Challenges collection item.
+ *
+ * @returns {Promise<{
+ *   challengeId: string,
+ *   title: string,
+ *   description: string|null,
+ *   conditionType: string,
+ *   targetCount: number,
+ *   rewardPoints: number,
+ *   progressValue: number,
+ *   completedAt: string|null,
+ *   expiresAt: string,
+ *   ctaUrl: string|null,
+ * } | null>}
+ */
+export const getActiveChallengeOfWeek = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const nowDate = new Date();
+
+      const result = await wixData
+        .query(CHALLENGES_COLLECTION)
+        .eq('active', true)
+        .eq('isFeatured', true)
+        .gt('expiresAt', nowDate.toISOString())
+        .descending('_createdDate')
+        .limit(1)
+        .find({ suppressAuth: true });
+
+      if (result.items.length === 0) return null;
+
+      const challenge = result.items[0];
+      const cId = challenge.challengeId || challenge._id;
+
+      let memberId = null;
+      try {
+        const { currentMember: cm } = await import('wix-members-backend');
+        const member = await cm.getMember();
+        memberId = member?._id ?? null;
+      } catch { /* visitor or unauthenticated — progress stays 0 */ }
+
+      let progressValue = 0;
+      let completedAt = null;
+
+      if (memberId) {
+        try {
+          const progResult = await wixData
+            .query(CHALLENGE_PROGRESS_COLLECTION)
+            .eq('memberId', memberId)
+            .eq('challengeId', cId)
+            .limit(1)
+            .find({ suppressAuth: true });
+          const rec = progResult.items[0];
+          if (rec) {
+            progressValue = rec.progressValue ?? 0;
+            completedAt = rec.completedAt ?? null;
+          }
+        } catch { /* progress unavailable — return 0 */ }
+      }
+
+      return {
+        challengeId: cId,
+        title: challenge.title,
+        description: challenge.description || null,
+        conditionType: challenge.conditionType,
+        targetCount: challenge.targetCount,
+        rewardPoints: challenge.rewardPoints ?? 0,
+        progressValue,
+        completedAt,
+        expiresAt: challenge.expiresAt instanceof Date
+          ? challenge.expiresAt.toISOString()
+          : challenge.expiresAt,
+        ctaUrl: challenge.ctaUrl || null,
+      };
+    } catch (err) {
+      logError('getActiveChallengeOfWeek — failed', err);
+      return null;
+    }
   }
 );

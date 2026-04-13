@@ -18,6 +18,7 @@ export {
   checkWishlistMonthlyCap,
   recordWishlistAdd,
   getActiveChallenges,
+  getActiveChallengeOfWeek,
   recordChallengeProgress,
   recoverStreak,
   getStreakData,

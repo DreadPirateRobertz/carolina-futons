@@ -1,24 +1,33 @@
 /**
  * @module ChallengeOfTheWeekWidget
- * @description Community collective challenge with shared progress bar.
- * All members contribute toward a single weekly goal.
+ * @description Renders two homepage challenge sections:
  *
- * Elements:
- *   #weeklyTitle       — Challenge title (e.g. "Community Challenge: 500 Orders!")
- *   #weeklyDesc        — Challenge description
- *   #weeklyProgress    — Progress text (e.g. "342 / 500")
- *   #weeklyProgressBar — Progress bar element (width set as percentage)
- *   #weeklyReward      — Reward label (e.g. "Everyone earns 200 pts!")
- *   #weeklyTimer       — Time remaining (e.g. "3d 14h left")
+ * 1. Community collective challenge (CF-8lj8) — all members share one goal:
+ *   #weeklyTitle        — Challenge title (e.g. "Community Challenge: 500 Orders!")
+ *   #weeklyDesc         — Challenge description
+ *   #weeklyProgress     — Progress text (e.g. "342 / 500")
+ *   #weeklyProgressBar  — Progress bar element (width set as percentage)
+ *   #weeklyReward       — Reward label (e.g. "Everyone earns 200 pts!")
+ *   #weeklyTimer        — Time remaining (e.g. "3d 14h left")
  *   #weeklyContributors — Contributor count (e.g. "127 members contributing")
- *   #weeklyComplete    — Shown when challenge is complete, hidden otherwise
- *   #weeklyContainer   — Outer container (collapsed when no active challenge)
- *   #weeklyError       — Shown on fetch error
+ *   #weeklyComplete     — Shown when challenge is complete, hidden otherwise
+ *   #weeklyContainer    — Outer container (collapsed when no active challenge)
+ *   #weeklyError        — Shown on fetch error
  *
- * CF-8lj8
+ * 2. Featured individual Challenge of the Week (cf-rsr) — member's own progress:
+ *   #cotwContainer      — Outer container (collapsed when no active challenge)
+ *   #cotwTitle          — Challenge name
+ *   #cotwDesc           — Challenge description
+ *   #cotwProgressText   — Progress text (e.g. "2 / 5")
+ *   #cotwProgressBar    — Progress bar (width as member completion %)
+ *   #cotwReward         — Reward label (e.g. "Earn 150 pts!")
+ *   #cotwCtaBtn         — CTA button (linked to ctaUrl; hidden when no URL)
+ *   #cotwError          — Shown on fetch error
+ *
+ * CF-8lj8, cf-rsr
  */
 
-import { getWeeklyChallenge as _defaultGetWeeklyChallenge } from 'backend/gamificationEventReceiver.web';
+import { getWeeklyChallenge as _defaultGetWeeklyChallenge, getActiveChallengeOfWeek as _defaultGetActiveChallengeOfWeek } from 'backend/gamificationEventReceiver.web';
 
 const TIMER_INTERVAL_MS = 60_000;
 
@@ -43,12 +52,23 @@ function formatTimeRemaining(expiresAt) {
  * @param {Object}   [opts]
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getWeeklyChallenge]
+ * @param {Function} [opts.getActiveChallengeOfWeek]
  */
 export async function initChallengeOfTheWeekWidget(opts = {}) {
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
 
   const $w = opts.$w ?? globalThis.$w;
   const getWeeklyChallenge = opts.getWeeklyChallenge ?? _defaultGetWeeklyChallenge;
+  const getActiveChallengeOfWeek = opts.getActiveChallengeOfWeek ?? _defaultGetActiveChallengeOfWeek;
+
+  // Render both sections in parallel
+  await Promise.all([
+    _renderCommunityChallenge($w, getWeeklyChallenge),
+    _renderFeaturedChallenge($w, getActiveChallengeOfWeek),
+  ]);
+}
+
+async function _renderCommunityChallenge($w, getWeeklyChallenge) {
 
   let challenge;
   try {
@@ -108,5 +128,52 @@ export async function initChallengeOfTheWeekWidget(opts = {}) {
     _timerInterval = setInterval(() => {
       try { $w('#weeklyTimer').text = formatTimeRemaining(challenge.expiresAt); } catch {}
     }, TIMER_INTERVAL_MS);
+  }
+}
+
+async function _renderFeaturedChallenge($w, getActiveChallengeOfWeek) {
+  let challenge;
+  try {
+    challenge = await getActiveChallengeOfWeek();
+  } catch (err) {
+    console.error('[ChallengeOfTheWeekWidget] featured challenge failed to load', err);
+    try { $w('#cotwError').show(); } catch {}
+    try { $w('#cotwContainer').collapse(); } catch {}
+    return;
+  }
+
+  if (!challenge) {
+    try { $w('#cotwContainer').collapse(); } catch {}
+    return;
+  }
+
+  try { $w('#cotwError').hide(); } catch {}
+  try { $w('#cotwContainer').expand(); } catch {}
+
+  // Title & description
+  try { $w('#cotwTitle').text = challenge.title; } catch {}
+  try { $w('#cotwDesc').text = challenge.description ?? ''; } catch {}
+
+  // Member progress bar
+  const progress = challenge.progressValue ?? 0;
+  const target = challenge.targetCount || 1; // guard division by zero
+  const pct = Math.min(Math.round((progress / target) * 100), 100);
+
+  try { $w('#cotwProgressText').text = `${progress.toLocaleString()} / ${target.toLocaleString()}`; } catch {}
+  try { $w('#cotwProgressBar').style.width = `${pct}%`; } catch {}
+
+  // Reward
+  if (challenge.rewardPoints > 0) {
+    try { $w('#cotwReward').text = `Earn ${challenge.rewardPoints.toLocaleString()} pts!`; } catch {}
+  }
+
+  // CTA button
+  if (challenge.ctaUrl) {
+    try {
+      $w('#cotwCtaBtn').link = challenge.ctaUrl;
+      $w('#cotwCtaBtn').show();
+    } catch {}
+  } else {
+    try { $w('#cotwCtaBtn').hide(); } catch {}
   }
 }

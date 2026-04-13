@@ -1,6 +1,7 @@
 /**
  * challengeOfTheWeekWidget.test.js
  * CF-8lj8 — ChallengeOfTheWeekWidget: community collective challenge
+ * cf-rsr  — featured individual Challenge of the Week section
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -13,6 +14,7 @@ const elements = new Map();
 function createMockElement() {
   return {
     text: '',
+    link: '',
     style: { width: '' },
     show: vi.fn(() => Promise.resolve()),
     hide: vi.fn(() => Promise.resolve()),
@@ -46,11 +48,13 @@ const CHALLENGE = {
 
 describe('ChallengeOfTheWeekWidget (CF-8lj8)', () => {
   let getWeeklyChallenge;
+  let getActiveChallengeOfWeek;
 
   beforeEach(() => {
     elements.clear();
     vi.useFakeTimers();
     getWeeklyChallenge = vi.fn().mockResolvedValue(CHALLENGE);
+    getActiveChallengeOfWeek = vi.fn().mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -60,6 +64,7 @@ describe('ChallengeOfTheWeekWidget (CF-8lj8)', () => {
   async function init(overrides = {}) {
     await initChallengeOfTheWeekWidget({
       getWeeklyChallenge,
+      getActiveChallengeOfWeek,
       $w: mock$w,
       ...overrides,
     });
@@ -194,5 +199,126 @@ describe('ChallengeOfTheWeekWidget (CF-8lj8)', () => {
     await init();
     expect(getEl('#weeklyProgress').text).toBe('0 / 1');
     expect(getEl('#weeklyProgressBar').style.width).toBe('0%');
+  });
+});
+
+// ── Featured individual Challenge of the Week (cf-rsr) ────────────────────────
+
+const FEATURED = {
+  challengeId: 'cotw-apr-w3',
+  title: 'Write a Review',
+  description: 'Share your experience this week!',
+  conditionType: 'write_review',
+  targetCount: 1,
+  progressValue: 0,
+  completedAt: null,
+  rewardPoints: 150,
+  expiresAt: new Date(Date.now() + 5 * 86_400_000).toISOString(),
+  ctaUrl: '/reviews',
+};
+
+describe('ChallengeOfTheWeekWidget — featured challenge section (cf-rsr)', () => {
+  let getWeeklyChallenge;
+  let getActiveChallengeOfWeek;
+
+  beforeEach(() => {
+    elements.clear();
+    vi.useFakeTimers();
+    getWeeklyChallenge = vi.fn().mockResolvedValue(null);
+    getActiveChallengeOfWeek = vi.fn().mockResolvedValue(FEATURED);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function init(overrides = {}) {
+    await initChallengeOfTheWeekWidget({
+      getWeeklyChallenge,
+      getActiveChallengeOfWeek,
+      $w: mock$w,
+      ...overrides,
+    });
+  }
+
+  it('expands #cotwContainer when featured challenge is active', async () => {
+    await init();
+    expect(getEl('#cotwContainer').expand).toHaveBeenCalled();
+  });
+
+  it('sets #cotwTitle to challenge name', async () => {
+    await init();
+    expect(getEl('#cotwTitle').text).toBe('Write a Review');
+  });
+
+  it('sets #cotwDesc to challenge description', async () => {
+    await init();
+    expect(getEl('#cotwDesc').text).toBe('Share your experience this week!');
+  });
+
+  it('sets #cotwProgressText as "progressValue / targetCount"', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, progressValue: 0, targetCount: 1 });
+    await init();
+    expect(getEl('#cotwProgressText').text).toBe('0 / 1');
+  });
+
+  it('sets #cotwProgressBar width as member completion percent', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, progressValue: 1, targetCount: 2 });
+    await init();
+    expect(getEl('#cotwProgressBar').style.width).toBe('50%');
+  });
+
+  it('caps progress bar at 100%', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, progressValue: 5, targetCount: 1 });
+    await init();
+    expect(getEl('#cotwProgressBar').style.width).toBe('100%');
+  });
+
+  it('sets #cotwReward text', async () => {
+    await init();
+    expect(getEl('#cotwReward').text).toContain('150');
+    expect(getEl('#cotwReward').text).toContain('pts');
+  });
+
+  it('shows #cotwCtaBtn with link when ctaUrl is present', async () => {
+    await init();
+    expect(getEl('#cotwCtaBtn').link).toBe('/reviews');
+    expect(getEl('#cotwCtaBtn').show).toHaveBeenCalled();
+  });
+
+  it('hides #cotwCtaBtn when ctaUrl is absent', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, ctaUrl: null });
+    await init();
+    expect(getEl('#cotwCtaBtn').hide).toHaveBeenCalled();
+  });
+
+  it('collapses #cotwContainer when no featured challenge', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue(null);
+    await init();
+    expect(getEl('#cotwContainer').collapse).toHaveBeenCalled();
+  });
+
+  it('shows #cotwError and collapses on fetch failure', async () => {
+    getActiveChallengeOfWeek.mockRejectedValue(new Error('Network error'));
+    await init();
+    expect(getEl('#cotwError').show).toHaveBeenCalled();
+    expect(getEl('#cotwContainer').collapse).toHaveBeenCalled();
+  });
+
+  it('does not throw on fetch failure', async () => {
+    getActiveChallengeOfWeek.mockRejectedValue(new Error('fail'));
+    await expect(init()).resolves.toBeUndefined();
+  });
+
+  it('guards against targetCount of 0 (no NaN in width)', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, targetCount: 0, progressValue: 0 });
+    await init();
+    expect(getEl('#cotwProgressBar').style.width).toBe('0%');
+  });
+
+  it('handles missing description', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, description: null });
+    await init();
+    expect(getEl('#cotwDesc').text).toBe('');
   });
 });
