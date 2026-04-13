@@ -309,7 +309,20 @@ describe('notifyChallengePublished', () => {
     expect(result).toEqual({ success: false, queued: 0 });
   });
 
-  it('queryAll multi-page: collects all members when count exceeds 1 000-item page limit', async () => {
+  it('queryAll exact-boundary: 1 000 members fit in one page with no cursor follow', async () => {
+    // Exactly at the limit — hasNext() returns false, no cursor traversal occurs.
+    const memberIds = Array.from({ length: 1000 }, (_, i) => `mem-exact-${i}`);
+    seedOptedIn(memberIds);
+
+    const result = await notifyChallengePublished(makeChallenge());
+
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(1000);
+    expect(__getInserted('EmailQueue')).toHaveLength(1000);
+    expect(__getInserted('SMSQueue')).toHaveLength(1000);
+  });
+
+  it('queryAll multi-page (2 pages): collects all members when count exceeds 1 000-item page limit', async () => {
     // queryAll() calls .limit(1000).find() — seed OVER_PAGE_LIMIT opted-in
     // members so page 1 returns 1 000 items with hasNext()=true and page 2
     // delivers the final member.  All rows must appear in EmailQueue + SMSQueue.
@@ -323,6 +336,21 @@ describe('notifyChallengePublished', () => {
     expect(result.queued).toBe(OVER_PAGE_LIMIT);
     expect(__getInserted('EmailQueue')).toHaveLength(OVER_PAGE_LIMIT);
     expect(__getInserted('SMSQueue')).toHaveLength(OVER_PAGE_LIMIT);
+  });
+
+  it('queryAll multi-page (3 pages): while loop continues past the second page', async () => {
+    // 2 001 items require 3 cursor fetches.  A queryAll() using `if` instead of
+    // `while` would stop after page 2 and return only 2 000 — this test catches that.
+    const THREE_PAGES = 2001;
+    const memberIds = Array.from({ length: THREE_PAGES }, (_, i) => `mem-3pg-${i}`);
+    seedOptedIn(memberIds);
+
+    const result = await notifyChallengePublished(makeChallenge());
+
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(THREE_PAGES);
+    expect(__getInserted('EmailQueue')).toHaveLength(THREE_PAGES);
+    expect(__getInserted('SMSQueue')).toHaveLength(THREE_PAGES);
   });
 });
 
@@ -440,10 +468,21 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(result).toEqual({ queued: 0, skipped: 0, errors: 0 });
   });
 
-  it('queryAll multi-page: queues all members when streak count exceeds 1 000-item page limit', async () => {
+  it('queryAll exact-boundary: 1 000 streak members fit in one page with no cursor follow', async () => {
+    const memberIds = Array.from({ length: 1000 }, (_, i) => `mem-sbound-${i}`);
+    seedStreakMembers(memberIds);
+
+    const result = await checkStreakMilestoneNotifications();
+
+    expect(result.queued).toBe(1000);
+    expect(result.skipped).toBe(0);
+    expect(result.errors).toBe(0);
+    expect(__getInserted('EmailQueue')).toHaveLength(1000);
+  });
+
+  it('queryAll multi-page (2 pages): queues all members when streak count exceeds 1 000-item page limit', async () => {
     // queryAll() calls .limit(1000).find() — seed OVER_PAGE_LIMIT day-7 members
     // so page 1 has hasNext()=true and page 2 delivers the final member.
-    // All rows must appear in EmailQueue and StreakMilestoneNotifications.
     const OVER_PAGE_LIMIT = 1001;
     const memberIds = Array.from({ length: OVER_PAGE_LIMIT }, (_, i) => `mem-streak-${i}`);
     seedStreakMembers(memberIds);
@@ -455,6 +494,21 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(result.errors).toBe(0);
     expect(__getInserted('EmailQueue')).toHaveLength(OVER_PAGE_LIMIT);
     expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(OVER_PAGE_LIMIT);
+  });
+
+  it('queryAll multi-page (3 pages): while loop continues past the second page', async () => {
+    // 2 001 streak members require 3 cursor fetches — verifies `while` not `if`.
+    const THREE_PAGES = 2001;
+    const memberIds = Array.from({ length: THREE_PAGES }, (_, i) => `mem-s3pg-${i}`);
+    seedStreakMembers(memberIds);
+
+    const result = await checkStreakMilestoneNotifications();
+
+    expect(result.queued).toBe(THREE_PAGES);
+    expect(result.skipped).toBe(0);
+    expect(result.errors).toBe(0);
+    expect(__getInserted('EmailQueue')).toHaveLength(THREE_PAGES);
+    expect(__getInserted(STREAK_NOTIFS_COLLECTION)).toHaveLength(THREE_PAGES);
   });
 });
 
