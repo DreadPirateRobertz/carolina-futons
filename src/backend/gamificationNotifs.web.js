@@ -248,24 +248,35 @@ export const notifyChallengePublished = webMethod(
 
 // ── CF-tcqq: Day 7 streak milestone notification ─────────────────────────────
 
+// 7 days is the first streak milestone in the Carolina Futons loyalty programme.
+// Business rule: members who maintain a 7-day login/engagement streak earn 2× points
+// the following day. Day 7 is the only automated notification checkpoint; longer streaks
+// are recognised via tier upgrades, not additional cron emails. (CF-tcqq product spec)
 const STREAK_MILESTONE_DAY = 7;
 const STREAK_NOTIFICATIONS_COLLECTION = 'StreakMilestoneNotifications';
 
 /**
  * Check for members at day-7 streak and send milestone notification.
- * Called by daily cron. Idempotent — tracks sent notifications to prevent duplicates.
+ * Called by daily cron. Idempotent — dedup record inserted per member per milestone
+ * prevents re-sending across runs.
  *
- * Only sends to members with `streakReminders: true` in MemberNotificationPrefs.
+ * Opt-out model: defaults to sending unless the member has explicitly set
+ * `streakReminders: false` in MemberNotificationPrefs (missing prefs = opted in).
  *
  * CF-tcqq
  *
  * @returns {Promise<{ sent: number, skipped: number, errors: number }>}
+ *   sent    — emails dispatched this run
+ *   skipped — members already notified or opted out
+ *   errors  — per-member failures (pipeline continues)
  */
 export async function checkStreakMilestoneNotifications() {
   const result = { sent: 0, skipped: 0, errors: 0 };
 
   try {
     // Find members at exactly day 7 streak
+    // limit(1000): Wix CMS query cap is 1000 items per call. We expect well under
+    // 1000 members to hit day 7 on any given day — this is a safe ceiling.
     const streakResult = await wixData
       .query('MemberPoints')
       .eq('currentStreakDays', STREAK_MILESTONE_DAY)
@@ -307,6 +318,11 @@ export async function checkStreakMilestoneNotifications() {
 
       // Default to true if no prefs record (opt-out model)
       const prefs = prefsMap[memberId];
+      // Strict === false (not falsy): undefined/null/missing prefs = opted IN by default.
+      // Only an explicit boolean false opts the member out. This preserves the
+      // "send unless told not to" contract without penalising members who have never
+      // set preferences. Using falsy (!prefs.streakReminders) would incorrectly block
+      // members with no prefs record.
       if (prefs && prefs.streakReminders === false) {
         result.skipped++;
         continue;
