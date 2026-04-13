@@ -32,10 +32,16 @@ vi.mock('../src/public/pinterestTag.js', () => ({
   firePinterestEvent: vi.fn(),
 }));
 
+vi.mock('../src/public/ga4Tracking.js', () => ({
+  fireGA4Event: vi.fn(),
+}));
+
 import { fireTikTokEvent } from '../src/public/tikTokPixel.js';
 import { firePinterestEvent } from '../src/public/pinterestTag.js';
+import { fireGA4Event } from '../src/public/ga4Tracking.js';
 import {
   initConsentGate,
+  fireTrackedGA4Event,
   fireTrackedTikTokEvent,
   fireTrackedPinterestEvent,
   getQueueLength,
@@ -542,5 +548,84 @@ describe('purchase deduplication — same order_id fires only once', () => {
     fireTrackedTikTokEvent('ViewContent', { content_id: 'sku-x' });
     fireTrackedTikTokEvent('ViewContent', { content_id: 'sku-x' });
     expect(fireTikTokEvent).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ── GA4 consent gate (cf-x7n) ──────────────────────────────────────────
+
+describe('GA4 consent gate — analytics-only requirement', () => {
+  it('GA4 event is queued when no consent granted', () => {
+    fireTrackedGA4Event('AddToCart', { value: 100 });
+    expect(fireGA4Event).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('GA4 event fires immediately when analytics consent is granted (advertising not required)', () => {
+    _currentPolicy = { analytics: true, advertising: false };
+    fireTrackedGA4Event('AddToCart', { value: 100 });
+    expect(fireGA4Event).toHaveBeenCalledWith('AddToCart', { value: 100 });
+    expect(getQueueLength()).toBe(0);
+  });
+
+  it('GA4 event fires when full consent granted', () => {
+    _currentPolicy = { analytics: true, advertising: true };
+    fireTrackedGA4Event('Purchase', { order_id: 'o-1', value: 500 });
+    expect(fireGA4Event).toHaveBeenCalledWith('Purchase', { order_id: 'o-1', value: 500 });
+  });
+
+  it('GA4 event is NOT fired on advertising-only consent', () => {
+    _currentPolicy = { analytics: false, advertising: true };
+    fireTrackedGA4Event('ViewContent', {});
+    expect(fireGA4Event).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('queued GA4 events flush when analytics consent granted (advertising still off)', () => {
+    fireTrackedGA4Event('ViewContent', { content_id: 'a' });
+    fireTrackedGA4Event('AddToCart', { content_id: 'a' });
+    expect(getQueueLength()).toBe(2);
+    grantAnalyticsOnly();
+    expect(fireGA4Event).toHaveBeenCalledTimes(2);
+    expect(fireGA4Event).toHaveBeenNthCalledWith(1, 'ViewContent', { content_id: 'a' });
+    expect(fireGA4Event).toHaveBeenNthCalledWith(2, 'AddToCart', { content_id: 'a' });
+    expect(getQueueLength()).toBe(0);
+  });
+
+  it('analytics-only grant flushes GA4 but NOT queued TikTok/Pinterest', () => {
+    fireTrackedGA4Event('AddToCart', { value: 10 });
+    fireTrackedTikTokEvent('AddToCart', { value: 10 });
+    fireTrackedPinterestEvent('addtocart', { value: 10 });
+    expect(getQueueLength()).toBe(3);
+    grantAnalyticsOnly();
+    expect(fireGA4Event).toHaveBeenCalledTimes(1);
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+    // TikTok + Pinterest still queued awaiting advertising consent
+    expect(getQueueLength()).toBe(2);
+  });
+
+  it('full consent after analytics-only grant flushes remaining retargeting events', () => {
+    fireTrackedGA4Event('AddToCart', { value: 10 });
+    fireTrackedTikTokEvent('AddToCart', { value: 10 });
+    grantAnalyticsOnly();
+    expect(fireGA4Event).toHaveBeenCalledTimes(1);
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    grantConsent();
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+    expect(getQueueLength()).toBe(0);
+  });
+
+  it('GA4 Purchase dedupe: same order_id fires once across repeated calls', () => {
+    _currentPolicy = { analytics: true, advertising: false };
+    fireTrackedGA4Event('Purchase', { order_id: 'o-42', value: 100 });
+    fireTrackedGA4Event('Purchase', { order_id: 'o-42', value: 100 });
+    expect(fireGA4Event).toHaveBeenCalledTimes(1);
+  });
+
+  it('GA4 queue respects MAX_QUEUE_SIZE of 50', () => {
+    for (let i = 0; i < 60; i++) {
+      fireTrackedGA4Event('ViewContent', { i });
+    }
+    expect(getQueueLength()).toBe(50);
   });
 });

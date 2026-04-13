@@ -109,6 +109,21 @@ export async function fireAddToWishlist(product) {
 }
 
 /**
+ * Fire a generic GA4 event by name. Used by pixelConsentService to route
+ * consent-gated events through the same wixWindow.trackEvent bridge.
+ * @param {string} eventName - GA4 event name (e.g., 'AddToCart', 'Purchase')
+ * @param {Object} [params={}] - Event parameters
+ */
+export async function fireGA4Event(eventName, params = {}) {
+  try {
+    if (!eventName || typeof eventName !== 'string') return;
+    const ww = await getWixWindow();
+    if (!ww?.trackEvent) return;
+    ww.trackEvent(eventName, params);
+  } catch (e) {}
+}
+
+/**
  * Fire a custom GA4 event (for non-standard events like newsletter signup).
  * @param {string} eventName - Custom event name
  * @param {Object} [params={}] - Event parameters

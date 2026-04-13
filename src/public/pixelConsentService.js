@@ -1,27 +1,34 @@
 /**
  * @module pixelConsentService
- * @description Consent gate for TikTok and Pinterest pixel events.
+ * @description Consent gate for GA4, TikTok, and Pinterest pixel events.
  *
  * All pixel fires must pass through this module. Events fired before the
- * user grants analytics/advertising consent are queued and flushed
- * automatically when consent is granted (via onCurrentConsentPolicyChanged).
+ * user grants the required consent are queued and flushed automatically
+ * when consent is granted (via onCurrentConsentPolicyChanged).
  *
  * Consent model (wix-privacy-frontend):
- *   policy.analytics    — required for analytics pixels (TikTok, Pinterest)
- *   policy.advertising  — required for ad retargeting pixels
+ *   policy.analytics    — required for GA4 and analytics pixels
+ *   policy.advertising  — additionally required for ad retargeting pixels
+ *                         (TikTok, Pinterest are analytics + retargeting)
+ *
+ * Platform consent matrix:
+ *   GA4       — analytics only (flushed as soon as analytics consent granted)
+ *   TikTok    — analytics AND advertising (retargeting pixel)
+ *   Pinterest — analytics AND advertising (retargeting pixel)
  *
  * Usage:
- *   import { initConsentGate, fireTrackedTikTokEvent, fireTrackedPinterestEvent } from 'public/pixelConsentService';
+ *   import { initConsentGate, fireTrackedGA4Event, fireTrackedTikTokEvent, fireTrackedPinterestEvent } from 'public/pixelConsentService';
  *   $w.onReady(() => { initConsentGate(); });
- *   fireTrackedTikTokEvent('ViewContent', { value: 100 });
+ *   fireTrackedGA4Event('AddToCart', { value: 100 });
  */
 import wixPrivacy from 'wix-privacy-frontend';
+import { fireGA4Event } from 'public/ga4Tracking';
 import { fireTikTokEvent } from 'public/tikTokPixel';
 import { firePinterestEvent } from 'public/pinterestTag';
 
 // ── Internal state ────────────────────────────────────────────────────
 
-/** @type {Array<{platform: 'tiktok'|'pinterest', eventName: string, params: Object}>} */
+/** @type {Array<{platform: 'ga4'|'tiktok'|'pinterest', eventName: string, params: Object}>} */
 let _queue = [];
 let _listenerRegistered = false;
 
@@ -50,13 +57,34 @@ function _hasConsent() {
   }
 }
 
+function _hasAnalyticsConsent() {
+  try {
+    const { policy } = wixPrivacy.getCurrentConsentPolicy();
+    // GA4 is analytics-only — advertising consent is not required.
+    return policy.analytics === true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function _canFire(platform, policy) {
+  if (platform === 'ga4') return policy.analytics === true;
+  return policy.analytics === true && policy.advertising === true;
+}
+
 // ── Queue flush ────────────────────────────────────────────────────────
 
-function _flushQueue() {
-  const pending = _queue.splice(0);
-  for (const entry of pending) {
+function _flushQueue(policy) {
+  const remaining = [];
+  for (const entry of _queue) {
+    if (!_canFire(entry.platform, policy)) {
+      remaining.push(entry);
+      continue;
+    }
     try {
-      if (entry.platform === 'tiktok') {
+      if (entry.platform === 'ga4') {
+        fireGA4Event(entry.eventName, entry.params);
+      } else if (entry.platform === 'tiktok') {
         fireTikTokEvent(entry.eventName, entry.params);
       } else if (entry.platform === 'pinterest') {
         firePinterestEvent(entry.eventName, entry.params);
@@ -65,6 +93,7 @@ function _flushQueue() {
       console.warn('[pixelConsentService] flush error for', entry.platform, entry.eventName, e);
     }
   }
+  _queue = remaining;
 }
 
 // ── Public API ─────────────────────────────────────────────────────────
@@ -85,8 +114,9 @@ export function initConsentGate() {
   try {
     wixPrivacy.onCurrentConsentPolicyChanged((event) => {
       const policy = event?.policy ?? {};
-      if (policy.analytics === true && policy.advertising === true) {
-        _flushQueue();
+      // Analytics-only grant flushes GA4; full grant also flushes retargeting pixels.
+      if (policy.analytics === true) {
+        _flushQueue(policy);
       }
     });
   } catch (e) {
@@ -111,6 +141,23 @@ function _isDuplicatePurchase(eventName, params) {
   if (_firedPurchaseOrderIds.has(String(orderId))) return true;
   _firedPurchaseOrderIds.add(String(orderId));
   return false;
+}
+
+/**
+ * Fire a GA4 event, gated by analytics consent only (not advertising).
+ * If analytics consent is not yet granted, the event is queued until it is.
+ * Purchase events with a duplicate order_id are silently dropped.
+ *
+ * @param {string} eventName - GA4 event name (e.g., 'ViewContent', 'AddToCart', 'Purchase')
+ * @param {Object} [params={}] - Event parameters
+ */
+export function fireTrackedGA4Event(eventName, params = {}) {
+  if (_isDuplicatePurchase(eventName, params)) return;
+  if (_hasAnalyticsConsent()) {
+    fireGA4Event(eventName, params);
+  } else if (_queue.length < MAX_QUEUE_SIZE) {
+    _queue.push({ platform: 'ga4', eventName, params });
+  }
 }
 
 /**

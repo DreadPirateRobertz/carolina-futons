@@ -139,6 +139,22 @@ describe('getProductSchema — edge cases', () => {
     expect(schema.image).toContain('back.jpg');
   });
 
+  it('normalizes wix:image:// URIs in mediaItems to static.wixstatic.com URLs', () => {
+    const schema = JSON.parse(getProductSchema({
+      name: 'Wix Image Gallery',
+      mainMedia: 'wix:image://v1/main_abc.jpg/photo.jpg#originWidth=1200',
+      mediaItems: [
+        { src: 'wix:image://v1/side_def.jpg/side.jpg#w=800' },
+        { src: 'wix:image://v1/back_ghi.jpg/back.jpg#w=800' },
+      ],
+    }));
+    expect(schema.image).toContain('https://static.wixstatic.com/media/main_abc.jpg');
+    expect(schema.image).toContain('https://static.wixstatic.com/media/side_def.jpg');
+    expect(schema.image).toContain('https://static.wixstatic.com/media/back_ghi.jpg');
+    // no raw wix:image:// URIs should leak into the schema
+    expect(schema.image.some(i => typeof i === 'string' && i.startsWith('wix:image:'))).toBe(false);
+  });
+
   it('deduplicates mainMedia in image array', () => {
     const schema = JSON.parse(getProductSchema({
       name: 'Dupe Image',
@@ -414,6 +430,43 @@ describe('getProductOgTags — edge cases', () => {
   it('uses empty string for missing mainMedia', () => {
     const tags = JSON.parse(getProductOgTags({ name: 'Test' }));
     expect(tags['og:image']).toBe('');
+  });
+
+  // ── CF-94s: og:image must resolve to an absolute CDN URL ──────────
+  // Wix Stores products can expose mainMedia as a `wix:image://v1/<id>`
+  // URI. Crawlers (Google / Facebook / Pinterest) cannot resolve that
+  // scheme, so og:image must be normalized to https://static.wixstatic...
+
+  it('converts wix:image:// mainMedia to https CDN URL for og:image', () => {
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Trail Futon',
+      slug: 'trail-futon',
+      mainMedia: 'wix:image://v1/abc123_def/original.jpg#w=800',
+    }));
+    expect(tags['og:image']).toMatch(/^https:\/\/static\.wixstatic\.com\/media\//);
+    expect(tags['og:image']).toContain('abc123_def');
+    expect(tags['og:image']).not.toContain('wix:image');
+  });
+
+  it('mirrors the CDN-normalized image on twitter:image', () => {
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Trail Futon',
+      slug: 'trail-futon',
+      mainMedia: 'wix:image://v1/abc123_def/original.jpg',
+    }));
+    expect(tags['twitter:image']).toBe(tags['og:image']);
+    expect(tags['twitter:image']).toMatch(/^https:\/\/static\.wixstatic\.com\/media\//);
+  });
+
+  it('passes through an already-absolute https mainMedia untouched', () => {
+    const https = 'https://example.com/eureka.jpg';
+    const tags = JSON.parse(getProductOgTags({
+      name: 'Eureka',
+      slug: 'eureka',
+      mainMedia: https,
+    }));
+    expect(tags['og:image']).toBe(https);
+    expect(tags['twitter:image']).toBe(https);
   });
 });
 
