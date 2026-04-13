@@ -327,4 +327,29 @@ describe('jobs.config cron registration', () => {
     expect(result).toHaveProperty('priceDrops');
     expect(result).toHaveProperty('errors');
   });
+
+  // ── cf-ddd: dailyContentRotation parity ─────────────────────────────
+  // The Wix Jobs Scheduler invokes the function whose *export name* matches
+  // the jobs.config key. dailyContentRotation is registered in jobs.config
+  // but the scheduler file exports it as runDailyContentRotation internally,
+  // so a matching alias export must exist or the cron silently fails.
+
+  it('jobs.config includes dailyContentRotation cron entry', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+    expect(jobs).toHaveProperty('dailyContentRotation');
+    expect(jobs.dailyContentRotation.functionLocation).toBe('/socialStoryScheduler.web.js');
+    expect(jobs.dailyContentRotation.executionConfig.cronExpression).toMatch(/\d+ \d+ \* \* \*/);
+  });
+
+  it('dailyContentRotation alias export resolves to a callable function', async () => {
+    const mod = await import('../src/backend/socialStoryScheduler.web.js');
+    expect(mod).toHaveProperty('dailyContentRotation');
+    expect(typeof mod.dailyContentRotation).toBe('function');
+  });
+
+  it('dailyContentRotation and runDailyContentRotation refer to the same implementation', async () => {
+    const { dailyContentRotation, runDailyContentRotation } = await import('../src/backend/socialStoryScheduler.web.js');
+    expect(dailyContentRotation).toBe(runDailyContentRotation);
+  });
 });
