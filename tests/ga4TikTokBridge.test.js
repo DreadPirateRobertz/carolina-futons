@@ -128,4 +128,19 @@ describe('ga4 → TikTok bridge — consent decoupling', () => {
       expect.objectContaining({ content_id: 'p3', value: 299 }),
     );
   });
+
+  // Guard regression: even with BOTH analytics and advertising denied, the GA4
+  // layer must still dispatch to pixelConsentService so the event can be queued
+  // for later consent grants. pixelConsentService — not ga4Tracking — is the
+  // sole arbiter of whether the pixel actually fires / queues / drops.
+  it('fires TikTok unconditionally when analytics AND advertising are both denied (pixelConsentService queues)', async () => {
+    getCurrentConsentPolicy.mockReturnValue({ policy: { analytics: false, advertising: false } });
+    await fireViewContent({ _id: 'p-both-deny', price: 10 });
+    await fireAddToCart({ _id: 'p-both-deny', price: 10 }, 1);
+    await firePurchase({ _id: 'ord-both-deny', totals: { total: 10 } });
+    await fireAddToWishlist({ _id: 'p-both-deny', price: 10 });
+    expect(fireTrackedTikTokEvent).toHaveBeenCalledTimes(4);
+    const events = fireTrackedTikTokEvent.mock.calls.map(c => c[0]);
+    expect(events).toEqual(['ViewContent', 'AddToCart', 'Purchase', 'AddToWishlist']);
+  });
 });
