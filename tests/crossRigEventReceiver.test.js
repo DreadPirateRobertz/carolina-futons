@@ -24,6 +24,18 @@ import {
 import { crossRigEvent } from '../src/backend/crossRigEventReceiver.web.js';
 import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
 
+vi.mock('backend/crossRigSyncService.web', () => ({
+  syncBadgeEarnedToPush: vi.fn(async () => ({ success: true, pushSent: 1 })),
+}));
+
+vi.mock('backend/pushNotificationService.web', () => ({
+  sendPushToMember: vi.fn(async () => ({ sent: 1, failed: 0 })),
+  PUSH_EVENTS: {
+    BADGE_EARNED: 'badge_earned',
+    TIER_CHANGED: 'tier_changed',
+  },
+}));
+
 beforeEach(() => {
   __reset();
   __resetMembers();
@@ -501,5 +513,81 @@ describe('crossRigEvent — new mobile events (cf-l8xt)', () => {
     });
     expect(result.success).toBe(false);
     expect(result.status).toBe(400);
+  });
+});
+
+// ── cf-bdl: badge_earned + tier_changed fire push notifications ───────────
+
+describe('crossRigEvent — badge_earned push dispatch (cf-bdl)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-push-1' }); vi.clearAllMocks(); });
+
+  it('calls syncBadgeEarnedToPush with memberId and badgeId', async () => {
+    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'badge_earned',
+      badgeId: 'first_purchase',
+    });
+    expect(syncBadgeEarnedToPush).toHaveBeenCalledWith('mem-push-1', 'first_purchase');
+  });
+
+  it('still returns success even if push dispatch throws', async () => {
+    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    syncBadgeEarnedToPush.mockRejectedValueOnce(new Error('push service down'));
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'badge_earned',
+      badgeId: 'streak_7',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('does not call syncBadgeEarnedToPush when badgeId is missing', async () => {
+    const { syncBadgeEarnedToPush } = await import('backend/crossRigSyncService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'badge_earned',
+    });
+    expect(syncBadgeEarnedToPush).not.toHaveBeenCalled();
+  });
+});
+
+describe('crossRigEvent — tier_changed push dispatch (cf-bdl)', () => {
+  beforeEach(() => { __setMember({ _id: 'mem-push-2' }); vi.clearAllMocks(); });
+
+  it('calls sendPushToMember with TIER_CHANGED and newTier', async () => {
+    const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'tier_changed',
+      newTier: 'gold',
+      prevTier: 'silver',
+    });
+    expect(sendPushToMember).toHaveBeenCalledWith(
+      'mem-push-2',
+      PUSH_EVENTS.TIER_CHANGED,
+      { tier: 'gold' }
+    );
+  });
+
+  it('still returns success even if tier push throws', async () => {
+    const { sendPushToMember } = await import('backend/pushNotificationService.web');
+    sendPushToMember.mockRejectedValueOnce(new Error('FCM down'));
+    const result = await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'tier_changed',
+      newTier: 'silver',
+      prevTier: 'bronze',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('does not call sendPushToMember when newTier is missing', async () => {
+    const { sendPushToMember } = await import('backend/pushNotificationService.web');
+    await crossRigEvent({
+      schemaVersion: '1.0',
+      event: 'tier_changed',
+    });
+    expect(sendPushToMember).not.toHaveBeenCalled();
   });
 });

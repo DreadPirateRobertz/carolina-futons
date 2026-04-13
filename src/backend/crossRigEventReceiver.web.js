@@ -19,6 +19,8 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
+import { syncBadgeEarnedToPush } from 'backend/crossRigSyncService.web';
+import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
 
 const SUPPORTED_EVENTS = new Set([
   'streak_extended',
@@ -133,6 +135,27 @@ export const crossRigEvent = webMethod(
     } catch (err) {
       logError('crossRigEvent — insertAnalyticsEvent failed', err);
       return { success: false, error: 'analytics write failed' };
+    }
+
+    // ── Post-analytics push side effects ──────────────────────────────────
+    // badge_earned routes through syncBadgeEarnedToPush so the dispatch is
+    // also recorded in CrossRigSyncLog (cross-rig audit trail).
+    if (body.event === 'badge_earned' && body.badgeId) {
+      try {
+        await syncBadgeEarnedToPush(memberId, body.badgeId);
+      } catch (err) {
+        logError('crossRigEvent — syncBadgeEarnedToPush failed', err);
+        // Non-fatal: analytics logged, push failure does not fail the event
+      }
+    }
+    // tier_changed fires directly — web-side trigger, no cross-rig sync log needed.
+    if (body.event === 'tier_changed' && body.newTier) {
+      try {
+        await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: body.newTier });
+      } catch (err) {
+        logError('crossRigEvent — tier_changed push failed', err);
+        // Non-fatal
+      }
     }
 
     return { success: true };
