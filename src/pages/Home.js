@@ -20,6 +20,7 @@ import { initSocialFeeds } from 'public/SocialFeedEmbed.js';
 import { initBlogTeaserRepeater } from 'public/HomeBlogTeasers.js';
 import { initGiftCardSection } from 'public/giftCardSection.js';
 import { initContinueShoppingSection } from 'public/ContinueShoppingSection.js';
+import { initChallengeOfTheWeekWidget } from 'public/ChallengeOfTheWeekWidget.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,6 +76,7 @@ $w.onReady(async function () {
     { name: 'featuredQuickView', init: initFeaturedQuickView, critical: false },
     { name: 'swatchPromo', init: initSwatchPromo, critical: false },
     { name: 'blogTeasers', init: () => initBlogTeaserRepeater($w, {}), critical: false },
+    { name: 'challengeOfTheWeek', init: () => initChallengeOfTheWeekWidget({ $w }), critical: false },
     { name: 'socialFeeds', init: () => initSocialFeeds($w, {}), critical: false },
     { name: 'giftCardSection', init: () => initGiftCardSection($w), critical: false },
     { name: 'newsletter', init: initNewsletterSection, critical: false },
