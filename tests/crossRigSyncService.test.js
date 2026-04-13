@@ -5,7 +5,7 @@ import {
   syncMobilePoints,
   syncBadgeEarnedToPush,
   SYNC_LOG_COLLECTION,
-} from '../src/backend/crossRigSyncService.web.js';
+} from '../src/backend/utils/crossRigSyncUtils.js';
 
 const MEMBER_ID = 'member-sync-1';
 function setMember() { __setMember({ _id: MEMBER_ID }); }

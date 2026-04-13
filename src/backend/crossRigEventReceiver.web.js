@@ -19,7 +19,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
-import { syncBadgeEarnedToPush } from 'backend/crossRigSyncService.web';
+import { syncBadgeEarnedToPush } from 'backend/utils/crossRigSyncUtils';
 import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
 import { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } from 'backend/mobileChallengeService.web';
 
