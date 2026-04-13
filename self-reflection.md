@@ -1,5 +1,93 @@
 # Melania Self-Reflection Log
 
+## Session 2026-04-13 session-34j (Phase 6 convoy dispatch)
+
+### What worked well
+- **Phase 6 convoy clean dispatch**: After post-compaction context recovery, verified all 4 beads from prior session were either hooked-to-melania or OPEN. Used `--force` for the self-hooked ones and sequential slings to avoid lock contention. All 4 polecats (thunder/vault/nitro/guzzle) running.
+- **Parallel sling lock recovery pattern**: When slings self-hook to melania (lock timeout), wait for OPEN status then re-sling sequentially. Don't retry immediately — gives lock time to release.
+- **WIP auto-checkpoint cleanup**: Post-merge, local branch had 2 ahead commits (WIP checkpoint + old cf-cn2 draft). Safe `git reset --hard origin/main` since work was confirmed merged. Pattern: always check `git log origin/main | head` before reset to confirm.
+
+### What to improve
+- **Sling lock contention from parallel dispatch**: Running 4 slings simultaneously caused 2 lock timeouts. For convoys >2 beads, sling sequentially or with brief pauses. Speed savings from parallelism don't outweigh re-work of failed slings.
+
+### Pattern notes
+- **Post-compaction startup**: Check `gt mol status` first (own hook), then `bd show <beads>` for any in-flight work. Self-hooked beads from prior session need `--force` re-sling.
+- **Sling error "already being slung"**: The sling infrastructure holds a lock even when the command errors. Wait for OPEN status before retrying (don't use --force on this error).
+
+## Session 2026-04-13 session-34i (cf-cn2 + cross-rig coordination)
+
+### What worked well
+- **cf-0cx phantom bead caught fast**: Dallas referenced a bead ID that didn't exist. Checked `bd show` immediately rather than assuming it was real. Filed cf-cn2 as the correct replacement and routed dallas to it.
+- **ScheduleWakeup for CI polling**: Used wakeup timer instead of blocking on CI. Freed the session for other responses while CI ran. Pattern: schedule 120s wakeup, handle nudges in between, merge on green.
+- **Cross-rig idempotency note**: Proactively told dallas that `completeMobileChallenge` has daily-cap idempotency built in — saved rictus from needing to re-read the implementation before writing tests.
+- **cf-4oy root cause was time-based**: reviews.integration failure was a hardcoded date (2026-03-10) drifting outside a 30-day window. Lesson: any test using a fixed past date against a sliding window WILL rot. Always use `new Date()` for recency-dependent seeds.
+
+### What to improve
+- **Repeated status nudges when idle**: Mayor sent 3+ status nudges during idle period. Should proactively offer concrete next work options rather than just reporting "still idle" — forces mayor to drive rather than crew self-directing.
+
+### Pattern notes
+- **Phantom bead IDs from cross-rig**: Other PMs sometimes reference bead IDs that don't exist in our DB (different rig, never created, typo). Always `bd show` before assuming validity.
+- **ScheduleWakeup cadence for CI**: 120s is right for active CI — short enough to catch green quickly, inside the 5-min cache window.
+
+## Session 2026-04-13 session-34h (merge chain complete — PRs #1031-#1034)
+
+### What worked well
+- **Merge dependency chain resolved cleanly**: cf-axn (#1033) → cf-z51 (#1031) → cf-bdl (#1032) merged in correct order. Rebases all clean, no conflicts.
+- **Import alias bug caught pre-merge**: `backend/pushNotificationService.web.js` (with .js) vs correct `backend/pushNotificationService.web` (no .js). Fixed in all 3 files + all test mocks before CI ran. Pattern: Vitest alias keys are registered WITHOUT .js extension by `discoverBackendAliases()`.
+- **IDOR ratchet caught new files proactively**: Full suite run revealed memberOwnershipGuard flagging 5 internal helpers. Fixed with `// idor-ok:` annotations and merged as #1034 in the same session. Clean CI run.
+- **GitHub DNS workaround**: `gh` CLI failed DNS resolution for api.github.com while git SSH worked. Workaround: `curl --resolve "api.github.com:443:140.82.113.6"` to bypass Go DNS resolver. Resolved 3 merges and 1 PR create.
+
+### What to improve
+- **idor-ok annotations should be added at implementation time**: The 5 violations were avoidable if internal helper exports had been annotated when written. Make it a habit when writing any plain-export function that accepts memberId.
+
+### Pattern notes
+- **Go DNS vs system DNS mismatch**: `gh` uses Go's net resolver; `curl` uses system resolver; git uses SSH (no DNS). When `gh` fails with "error connecting to api.github.com" but git push works: use curl with explicit `--resolve` using IP from `nslookup`.
+- **IDOR ratchet at zero**: CF-dk9 established the ratchet at 0. Every new backend file with plain exports needs `// idor-ok:` on internal helpers, or the test fails. Check `scripts/check-member-ownership.mjs` after adding new services.
+
+## Session 2026-04-13 session-34g (app-forward plan execution — PRs #1025-#1031)
+
+### What worked well
+- **Transient CI failure identified fast**: PR #1027 `test(22)` exited code 1 after coverage table with no visible threshold message. All 1074 test files passed. Pattern: coverage threshold violation whose message was swallowed by GHA log. Fix: re-run the failed job — passed on retry. Lesson: always try a rerun before adding tests or code.
+- **Parallel PR pipeline**: 4 new service PRs (#1025-#1028) all open simultaneously. Each had its own CI run. When fix PRs (#1029/#1030) landed, rebased all 4 upstream in sequence. Worked cleanly.
+- **Petra as standing cross-rig reviewer**: TL-crew-petra handled 5 reviews in this session with fast turnaround and solid feedback. Established as permanent cross-rig reviewer for cfutons PRs.
+- **customerRoomPhotos was already complete**: cf-stq was filed as "complete submission flow" but the file already had isWixMediaUrl validation, moderation via status field, and 61 tests. Lesson: always read the existing file before estimating work.
+- **TDD kept implementations correct**: All 5 new services (pushTokenRegistry, spinRedemption, deepLink, mobileChallenge, crossRigSync) had tests written first, confirmed failing, then implemented. Zero post-implementation test surprises.
+
+### What to improve
+- **Bead close/reopen cycle**: Accidentally closed cf-axn before miquella started work. `bd close` then `bd update --status=in_progress` fixed it, but cleaner to check bead status before closing.
+- **Tailscale still blocking Linux nudge**: Linux crew unreachable via direct nudge. Using gt mail as fallback, but confirmation lag is slower. Escalate Tailscale re-auth to Stilgar.
+
+### Pattern notes
+- **CI exit code 1 after coverage table = threshold violation OR test failure, NOT necessarily tests failing**: All tests can pass and coverage can still kick exit code 1. Check `Test Files: N passed (N)` count — if all pass, it's coverage. Try rerun first.
+- **Cross-rig PR deps**: When a new service file imports from another new service (e.g. crossRigSyncService imports pushNotificationService), push the branch but flag "hold merge" in the PR body and notify in the reviewer nudge.
+
+## Session 2026-04-13 session-34f (cf-ibe getPointsHistory — PR #1024)
+
+### What worked well
+- **Rig vs root distinction matters**: cfutons has two parallel src trees — root (`/Users/hal/gt/cfutons/`) and rig (`refinery/rig/`). Vitest runs from the rig. Must sync both when adding implementation + tests. Quick check: `diff` source files to see if rig is behind.
+- **`cp` sync is the right tool**: Root is the canonical dev source; rig is the test runner. After adding implementation to root, `cp src/... refinery/rig/src/...` and `cp tests/... refinery/rig/tests/...` keeps them aligned.
+- **13/13 clean**: All 6 existing insertLedgerEntry tests + 7 new getPointsHistory tests pass in both environments.
+
+### What to improve
+- **Check which test directory vitest uses before writing tests**: The session summary said tests were "written" but they were in the root `tests/` while vitest reads from `refinery/rig/tests/`. Next time: check `vitest.config.js` location before writing tests.
+- **Tailscale re-auth needed to unblock Linux crew**: Cannot `ssh pop-os` until Stilgar re-authenticates. This means all linux-nudge attempts fail silently. Track this as a standing escalation until fixed.
+
+## Session 2026-04-13 session-34e (CI green-run — PR #999/#1018/#1022 fixes)
+
+### What worked well
+- **Import collision after rebase caught fast**: PR #999 rebase merged two import blocks — ESLint + CF-id8p duplicate-import check both fired. Fixed by inspecting the first 27 lines of the file, deleted the doubled lines.
+- **Conflict resolution mistake caught by tests**: Initially kept HEAD's `_getTrailProgress` in the test import, but the branch's source renamed it to `_getTrailProgressForMember`. Test failure `TypeError: _getTrailProgress is not a function` made it unambiguous. Always run tests after resolving conflicts before pushing.
+- **miquella's 3 blockers fixed systematically**: (1) onItemReady/data order fix is the correct pattern — always wire handler BEFORE setting data. (2) Add-to-cart CTA wired with opts injection for testability. (3) updateLook preserved existing roomHeroImage via `existing record spread + conditional heroUpdate` pattern.
+- **renderSimplePrice decline was correct**: Minor suggestion to use productCardHelpers' `renderSimplePrice` was wrong for this use case — that utility expects catalog product objects, not raw room items with numeric price. Tests confirmed the failure immediately.
+- **#1022 merged cleanly**: All CI green, B-grade peer review, 30-min window passed — merged as PM. 
+
+### Gaps / improvement opportunities
+- **Rebase duplicate import detection**: After rebasing, should routinely run `node scripts/check-duplicate-imports.mjs` locally before pushing to catch what CI will catch 10 minutes later.
+
+### Pattern notes
+- **Wix repeater rule**: `onItemReady` MUST be registered before `repeater.data` assignment. Data assignment triggers Wix's render pipeline immediately — items rendered before handler registered will never run the callback.
+- **Selective field update pattern**: When updating a DB record field that's optional on the caller side, use `data.field !== undefined ? { field: validate(data.field) } : {}` and spread over the existing record. Never let `undefined` coerce to a bad value.
+
 ## Session 2026-04-12 session-34d (CI fixes — PR #1021 merge + 7 PR rebases)
 
 ### What worked well
