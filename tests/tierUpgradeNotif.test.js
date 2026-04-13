@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __getInserted, __setInsertError } from './__mocks__/wix-data.js';
 import {
   __reset as resetCrm,
   __getEmailLog,
@@ -154,5 +154,20 @@ describe('notifyTierUpgrade — failure modes', () => {
     const result = await notifyTierUpgrade('mem-1', '', 'silver');
     expect(result.sent).toBe(false);
     expect(result.reason).toBe('invalid_input');
+  });
+
+  it('returns { sent: false, reason: race_duplicate } on dedup unique-constraint violation', async () => {
+    // Simulate a concurrent invocation winning the race: initial dedup query
+    // sees no record, but the insert fails with a uniqueness violation because
+    // another worker inserted between our read and our write.
+    __setInsertError(TIER_NOTIFS_COLLECTION, new Error('duplicate key on unique index'));
+
+    const result = await notifyTierUpgrade('mem-1', 'gold', 'silver');
+
+    expect(result.sent).toBe(false);
+    expect(result.reason).toBe('race_duplicate');
+    // Email + push did fire on this branch (race-duplicate by definition), but
+    // caller must NOT treat this as a successful fresh send and retry.
+    expect(__getEmailLog()).toHaveLength(1);
   });
 });

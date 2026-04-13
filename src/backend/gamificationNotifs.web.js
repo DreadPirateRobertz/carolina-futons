@@ -523,6 +523,14 @@ export async function notifyTierUpgrade(memberId, newTier, previousTier) {
         sentAt: new Date().toISOString(),
       }, { suppressAuth: true });
     } catch (dedupErr) {
+      // Uniqueness violation = another concurrent invocation won the dedup race
+      // and already recorded the notification. Surface sent:false so the caller
+      // does not treat our race-duplicate as a fresh send and retry.
+      const msg = dedupErr?.message || '';
+      if (msg.includes('duplicate') || msg.includes('unique')) {
+        logError(`notifyTierUpgrade — race-duplicate for ${memberId} tier=${newTier}`, dedupErr);
+        return { sent: false, reason: 'race_duplicate' };
+      }
       logError(`notifyTierUpgrade — dedup insert failed for ${memberId}`, dedupErr);
     }
 
