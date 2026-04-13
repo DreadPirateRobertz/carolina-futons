@@ -190,9 +190,9 @@ export const receiveGamificationEvent = webMethod(
       };
 
       if (record) {
-        await wixData.update(MEMBER_POINTS_COLLECTION, { ...record, ...updatedRecord });
+        await wixData.update(MEMBER_POINTS_COLLECTION, { ...record, ...updatedRecord }, { suppressAuth: true });
       } else {
-        await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord });
+        await wixData.insert(MEMBER_POINTS_COLLECTION, { memberId, ...updatedRecord }, { suppressAuth: true });
       }
 
       // Audit ledger — write separate entries for earn and milestone bonus
@@ -269,7 +269,7 @@ export const receiveGamificationEvent = webMethod(
             _id: `${memberId}_week_wanderer`,
             memberId,
             badgeId: 'week_wanderer',
-          });
+          }, { suppressAuth: true });
           badgeUnlocked = 'week_wanderer';
         } catch (err) {
           const msg = String(err?.message ?? err).toLowerCase();
@@ -285,7 +285,7 @@ export const receiveGamificationEvent = webMethod(
             _id: `${memberId}_video_reviewer`,
             memberId,
             badgeId: 'video_reviewer',
-          });
+          }, { suppressAuth: true });
           badgeUnlocked = 'video_reviewer';
         } catch (err) {
           const msg = String(err?.message ?? err).toLowerCase();
@@ -596,7 +596,7 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
       .query(CHALLENGE_PROGRESS_COLLECTION)
       .eq('memberId', memberId)
       .eq('challengeId', challengeId)
-      .find();
+      .find({ suppressAuth: true });
 
     let record = results.items[0];
 
@@ -642,9 +642,9 @@ export async function updateChallengeProgress(memberId, challenge, eventId, now)
     };
 
     if (record._id) {
-      await wixData.update(CHALLENGE_PROGRESS_COLLECTION, updatedRecord);
+      await wixData.update(CHALLENGE_PROGRESS_COLLECTION, updatedRecord, { suppressAuth: true });
     } else {
-      await wixData.insert(CHALLENGE_PROGRESS_COLLECTION, updatedRecord);
+      await wixData.insert(CHALLENGE_PROGRESS_COLLECTION, updatedRecord, { suppressAuth: true });
     }
 
     return { ...base, progressValue: newProgress, justCompleted, completedAt };
@@ -696,7 +696,7 @@ export async function checkWishlistMonthlyCap(memberId, todayET) {
  * @param {string} todayET  - ET date string e.g. "2026-03-22"
  */
 export async function recordWishlistAdd(memberId, todayET) {
-  await wixData.insert(WISHLIST_ADD_LOG_COLLECTION, { memberId, date: todayET });
+  await wixData.insert(WISHLIST_ADD_LOG_COLLECTION, { memberId, date: todayET }, { suppressAuth: true });
 }
 // ── getActiveChallenges ───────────────────────────────────────────────────────
 
@@ -837,7 +837,7 @@ export const recordChallengeProgress = webMethod(
       const challengeQuery = await wixData
         .query(CHALLENGES_COLLECTION)
         .eq('challengeId', challengeId)
-        .find();
+        .find({ suppressAuth: true });
       const challenge = challengeQuery.items[0];
       if (!challenge) return { success: false, error: 'challenge_not_found' };
       if (challenge.expiresAt && new Date(challenge.expiresAt) <= new Date()) {
@@ -849,7 +849,7 @@ export const recordChallengeProgress = webMethod(
         .query(CHALLENGE_PROGRESS_COLLECTION)
         .eq('memberId', memberId)
         .eq('challengeId', challengeId)
-        .find();
+        .find({ suppressAuth: true });
       const existing = progressQuery.items[0];
 
       // Idempotent: already completed
@@ -866,14 +866,14 @@ export const recordChallengeProgress = webMethod(
           ...existing,
           progressValue: newProgress,
           completedAt,
-        });
+        }, { suppressAuth: true });
       } else {
         await wixData.insert(CHALLENGE_PROGRESS_COLLECTION, {
           memberId,
           challengeId,
           progressValue: newProgress,
           completedAt,
-        });
+        }, { suppressAuth: true });
       }
 
       let pointsAwarded = 0;
@@ -882,13 +882,13 @@ export const recordChallengeProgress = webMethod(
         const mpQuery = await wixData
           .query(MEMBER_POINTS_COLLECTION)
           .eq('memberId', memberId)
-          .find();
+          .find({ suppressAuth: true });
         const mp = mpQuery.items[0];
         if (mp) {
           await wixData.update(MEMBER_POINTS_COLLECTION, {
             ...mp,
             totalPoints: mp.totalPoints + pointsAwarded,
-          });
+          }, { suppressAuth: true });
         } else {
           await wixData.insert(MEMBER_POINTS_COLLECTION, {
             memberId,
@@ -902,7 +902,7 @@ export const recordChallengeProgress = webMethod(
             graceApplied: false,
             tier: getTierForPoints(pointsAwarded),
             bonusSpinsAvailable: 0,
-          });
+          }, { suppressAuth: true });
         }
       }
 
@@ -992,7 +992,7 @@ export const recoverStreak = webMethod(
       // NOTE: When CF-ledger lands this will become two sequential wixData writes
       // with no rollback. If the ledger insert fails after the points deduction,
       // the member is debited with no audit trail. Track in CF-ledger story.
-      await wixData.update(MEMBER_POINTS_COLLECTION, updatedRecord);
+      await wixData.update(MEMBER_POINTS_COLLECTION, updatedRecord, { suppressAuth: true });
 
       try {
         await insertLedgerEntry({
