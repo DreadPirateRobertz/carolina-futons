@@ -208,6 +208,10 @@ async function initProductPage() {
           } catch (e) { console.error('[ProductQnA] qnaSubmitBtn wiring failed:', e); }
         },
       },
+      // CF-gbv: Per-product care instructions — material-specific or generic fallback
+      // Requires: #careGuideSection (Box) + #careGuideTitle (Text) + #careGuideMaterial (Text)
+      //           #careGuideCleaning (Text) + #careGuideMaintenance (Text) + #careGuideWarnings (Text) in Studio
+      { name: 'furnitureCareGuide', init: async () => { const m = await import('public/FurnitureCareGuideWidget.js'); await m.initFurnitureCareGuideWidget($w, state); }, critical: false },
       { name: 'feelAndComfort', init: async () => { const m = await import('public/FeelAndComfort.js'); m.initFeelAndComfort($w, state); }, critical: false },
       { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
