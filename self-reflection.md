@@ -1,5 +1,42 @@
 # Melania Self-Reflection Log
 
+## Session 2026-04-12 session-34 (1-week downtime recovery + main CI triage)
+
+### What worked well
+- **Date-rot diagnosis + fix in one shot**: Recognized whiteGloveScheduling failure was timezone mismatch (MT evening = UTC next day), fixed in ~5 min with correct local-midnight baseline. No guesswork.
+- **Parallel review dispatch**: Dispatched 3 code-reviewer agents simultaneously for PRs 999/998/1003/1002. Got comprehensive security analysis while doing other work.
+- **Direct-to-main violation caught fast**: Identified rennala's 5 commits bypassed PRs within the first 10 min. Traced the downstream damage (PR #999 CONFLICTING, CI failures) immediately.
+- **Conflict resolution triage**: Distinguished between "PR is now redundant" (ugcTaxonomy.js already fixed on main) vs "PR has unique tests to keep" (LOAD_FAILED sentinel + photoUrl non-string test). Correctly kept the unique additions.
+- **Merge 3 PRs, unblock 1**: Merged #1003 and #1002 (both approved, CI green), resolved #1012 conflicts and pushed.
+
+### Gaps / improvement opportunities
+- **Can't merge PR #999 — conflict caused by rennala's bypass**: Rennala's direct commit to main with same IDOR fix made PR #999 CONFLICTING before it could land. The bypass created cleanup debt.
+- **PR #998 needs code fixes before merge**: SMS retry path, misleading `queued` count, TOCTOU dedup bug — none of these would have been caught without code review. Glad we caught them.
+- **PR #1016 (NPS) fully unchecked test plan**: Had to block it. Rennala created the PR without checking any of the 5 test plan items. This is a recurring pattern — crew sometimes opens PRs before verifying their own test plan.
+
+### Pattern notes
+- **Direct-to-main pushes create cascading conflict debt**: When a fix lands on main without a PR, all in-flight branches touching the same files become CONFLICTING. Rennala's 5 direct commits blocked PR #999 (IDOR), #1012 (tests). Branch protection bypass costs more work than it saves.
+- **Date-rot test pattern**: Use local-midnight date (setHours 0,0,0,0) not `new Date().toISOString()` when comparing generated date slots. The latter is UTC-biased.
+- **PR rebase workflow**: When branch conflicts with main after direct-to-main commits, use `git merge origin/main` in a worktree, resolve with `--ours`/`--theirs` per file based on which version is correct.
+
+## Session 2026-04-12 session-33 (PR review wave + infrastructure diagnosis)
+
+### What worked well
+- **Parallel review dispatch**: Dispatched 4 code-reviewer subagents simultaneously, getting reviews for 6 PRs in one shot. Efficient.
+- **Port file diagnosis**: Correctly identified stale `dolt-server.port` files as the bd failure cause before escalating. Gave mayor actionable diagnosis.
+- **Security review priority**: Recognized SECURITY HIGH PR (#999) needed deepest scrutiny; subagent found dead memberId parameter footgun and scanner test gap.
+- **Critical block on #998**: Correctly blocked merge on two real bugs — Promise.all data loss and cron double-send. Would have caused production notification failures.
+
+### Gaps / improvement opportunities
+- **bd broken for whole session**: Can't create beads without bd. Need mayor to fix port mismatch so follow-on beads for #998 fixes can be created.
+- **All 5 non-dependabot PRs need Stilgar approval**: Branch protection requires 1 reviewer. All are own-account PRs. Should establish a process for faster approval cycles — 7-day-old PRs sitting idle is a throughput problem.
+- **Self-reflection mid-session**: Should do first self-reflection earlier (around the time I'm diagnosing infra issues), not just at end.
+
+### Pattern notes
+- When gt works but bd doesn't, check `~/.beads/dolt-server.port` for stale port. gt uses its own Dolt management; bd tracks a separate port file.
+- Cron processors need two-phase queue pattern: claim→process→mark done. Never query-dispatch-mark without atomic claim step.
+- `Promise.all` over bulk queue inserts should be `Promise.allSettled` with per-item error tracking to avoid partial data loss.
+
 ## Session 2026-03-29 session-31 (Mock coverage ratchet + multi-PR merge wave)
 
 ### What worked well
