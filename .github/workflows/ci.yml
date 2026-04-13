@@ -78,7 +78,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 22
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage/lcov.info
           flags: unit
@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload nightly coverage to Codecov
         if: steps.integration.outcome == 'success'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage/lcov.info
           flags: nightly
