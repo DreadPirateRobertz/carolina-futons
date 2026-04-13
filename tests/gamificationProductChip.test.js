@@ -9,6 +9,8 @@ import {
   formatPointsChipLabel,
   renderTierChip,
   initMemberTierChip,
+  formatCardChipLabel,
+  renderCardGamificationChip,
 } from '../src/public/GamificationProductChip.js';
 
 // ── formatTierChipLabel ───────────────────────────────────────────────
@@ -170,5 +172,113 @@ describe('initMemberTierChip', () => {
       getMyLoyaltyAccount: async () => { throw new Error('x'); },
     });
     expect(result).toBeNull();
+  });
+});
+
+// ── formatCardChipLabel ───────────────────────────────────────────────
+// CF-pyw: per-card chip shown on collection/category product grids.
+
+describe('formatCardChipLabel', () => {
+  it('returns empty string for null account', () => {
+    expect(formatCardChipLabel(null)).toBe('');
+  });
+
+  it('returns empty string when account has neither tier nor points', () => {
+    expect(formatCardChipLabel({})).toBe('');
+  });
+
+  it('returns tier-only label when points are absent', () => {
+    const label = formatCardChipLabel({ tier: 'Trail Blazer' });
+    expect(label).toContain('Trail Blazer');
+    expect(label).not.toContain('pts');
+  });
+
+  it('returns points-only label when tier is absent', () => {
+    const label = formatCardChipLabel({ points: { balance: 120 } });
+    expect(label).toBe('120 pts');
+  });
+
+  it('combines tier and points with a separator', () => {
+    const label = formatCardChipLabel({ tier: 'Trail Blazer', points: { balance: 200 } });
+    expect(label).toContain('Trail Blazer');
+    expect(label).toContain('200 pts');
+    expect(label).toMatch(/[·•|·\-]/); // some separator between
+  });
+
+  it('handles zero balance alongside tier', () => {
+    const label = formatCardChipLabel({ tier: 'Bronze', points: { balance: 0 } });
+    expect(label).toContain('Bronze');
+    expect(label).toContain('0 pts');
+  });
+});
+
+// ── renderCardGamificationChip ────────────────────────────────────────
+
+describe('renderCardGamificationChip', () => {
+  function makeEl() {
+    return {
+      text:  null,
+      style: { color: null },
+      show:  vi.fn(),
+      hide:  vi.fn(),
+    };
+  }
+
+  function make$item(chip) {
+    return (id) => (id === '#gridGamificationChip' ? chip : null);
+  }
+
+  it('shows the card chip with tier + points when account is present', () => {
+    const chip = makeEl();
+    renderCardGamificationChip(make$item(chip), {
+      tier: 'Trail Blazer',
+      points: { balance: 200 },
+    });
+    expect(chip.text).toContain('Trail Blazer');
+    expect(chip.text).toContain('200 pts');
+    expect(chip.show).toHaveBeenCalledOnce();
+    expect(chip.hide).not.toHaveBeenCalled();
+  });
+
+  it('applies tier color when account has a known tier', () => {
+    const chip = makeEl();
+    renderCardGamificationChip(make$item(chip), { tier: 'Mountain Guide' });
+    expect(chip.style.color).toBeTruthy();
+  });
+
+  it('hides the card chip when account is null', () => {
+    const chip = makeEl();
+    renderCardGamificationChip(make$item(chip), null);
+    expect(chip.hide).toHaveBeenCalledOnce();
+    expect(chip.show).not.toHaveBeenCalled();
+  });
+
+  it('hides the card chip when account has neither tier nor points', () => {
+    const chip = makeEl();
+    renderCardGamificationChip(make$item(chip), {});
+    expect(chip.hide).toHaveBeenCalledOnce();
+  });
+
+  it('shows points-only label without setting tier color', () => {
+    const chip = makeEl();
+    renderCardGamificationChip(make$item(chip), { points: { balance: 50 } });
+    expect(chip.text).toBe('50 pts');
+    expect(chip.show).toHaveBeenCalledOnce();
+    expect(chip.style.color).toBeNull();
+  });
+
+  it('logs a non-Error thrown value without crashing', () => {
+    const $item = () => { throw 'string-error'; };
+    expect(() => renderCardGamificationChip($item, { tier: 'Bronze' })).not.toThrow();
+  });
+
+  it('no-ops when #gridGamificationChip element is absent', () => {
+    const $item = () => null;
+    expect(() => renderCardGamificationChip($item, { tier: 'Bronze' })).not.toThrow();
+  });
+
+  it('no-ops gracefully when $item throws', () => {
+    const $item = () => { throw new Error('not mounted'); };
+    expect(() => renderCardGamificationChip($item, { tier: 'Bronze' })).not.toThrow();
   });
 });
