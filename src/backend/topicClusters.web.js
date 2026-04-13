@@ -242,6 +242,62 @@ export const generateInternalLinks = webMethod(
   }
 );
 
+// ── getClusterForPost ─────────────────────────────────────────────────
+
+/**
+ * Reverse lookup: given a spoke (blog post) slug, return its parent
+ * topic cluster + sibling spokes. Used by Blog Post pages to render
+ * "Part of: {pillar}" backlink nav and isPartOf JSON-LD. (CF-bjv)
+ *
+ * @param {string} postSlug — spoke page slug (e.g. "wood-vs-metal-frames")
+ * @returns {Promise<{success:boolean, cluster:Object|null}>}
+ */
+export const getClusterForPost = webMethod(
+  Permissions.Anyone,
+  async (postSlug) => {
+    try {
+      const slug = validateSlug(postSlug) || sanitize(postSlug, 100);
+      if (!slug) return { success: false, error: 'Post slug is required.', cluster: null };
+
+      for (const [pillarSlug, cluster] of Object.entries(CLUSTERS)) {
+        const spoke = cluster.spokePages.find(sp => sp.slug === slug);
+        if (!spoke) continue;
+
+        const siblings = cluster.spokePages
+          .filter(sp => sp.slug !== slug)
+          .map(sp => ({
+            slug: sp.slug,
+            title: sp.title,
+            type: sp.type,
+            url: `${SITE_URL}/buying-guides/${sp.slug}`,
+          }));
+
+        return {
+          success: true,
+          cluster: {
+            pillarSlug,
+            pillarTitle: cluster.pillarTitle,
+            pillarUrl: `${GUIDES_URL}/${pillarSlug}`,
+            topic: cluster.topic,
+            currentSpoke: {
+              slug: spoke.slug,
+              title: spoke.title,
+              type: spoke.type,
+              url: `${SITE_URL}/buying-guides/${spoke.slug}`,
+            },
+            siblingSpokes: siblings,
+          },
+        };
+      }
+
+      return { success: true, cluster: null };
+    } catch (err) {
+      console.error('[topicClusters] Error resolving cluster for post:', err);
+      return { success: false, error: 'Failed to resolve cluster.', cluster: null };
+    }
+  }
+);
+
 // ── getSchemaMarkup ───────────────────────────────────────────────────
 
 /**
