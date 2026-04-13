@@ -526,11 +526,12 @@ describe('getApprovedPhotos', () => {
     expect(result.success).toBe(true);
   });
 
-  it('does not expose memberEmail/memberId', async () => {
-    __seed(_COLLECTION, [makePhoto({ status: 'approved' })]);
+  it('does not expose memberEmail/memberId/moderatorNotes', async () => {
+    __seed(_COLLECTION, [makePhoto({ status: 'approved', moderatorNotes: 'INTERNAL: spam suspicion' })]);
     const result = await getApprovedPhotos();
     expect(result.photos[0]).not.toHaveProperty('memberEmail');
     expect(result.photos[0]).not.toHaveProperty('memberId');
+    expect(result.photos[0]).not.toHaveProperty('moderatorNotes');
   });
 
   it('returns success:false on query error', async () => {
