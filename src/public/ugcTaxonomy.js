@@ -34,11 +34,11 @@ const MAX_NAME_LENGTH    = 200;
  * Validate photo submission metadata before persisting.
  *
  * @param {object} obj
- * @param {string}      obj.photoUrl    - Wix media URL of the uploaded photo (required)
+ * @param {string}      obj.photoUrl    - Wix media URL (wix:image://) or HTTPS URL (required)
  * @param {string}      obj.roomType    - One of ROOM_TYPE_VALUES (required)
  * @param {string}      [obj.caption]   - Optional caption, max 200 chars
- * @param {string|null} [obj.productId] - Associated product ID (optional)
- * @param {string|null} [obj.productName] - Associated product name (optional)
+ * @param {string|null} [obj.productId] - Associated product ID, max 50 chars, alphanumeric/hyphen/underscore (optional)
+ * @param {string|null} [obj.productName] - Associated product name, max 200 chars (optional)
  * @returns {{ valid: true } | { valid: false, error: string }}
  */
 export function validatePhotoMetadata(obj) {
@@ -46,26 +46,25 @@ export function validatePhotoMetadata(obj) {
     return { valid: false, error: 'Metadata must be an object.' };
   }
 
-  const photoUrl = (obj.photoUrl || '').trim();
-  if (!photoUrl) {
+  if (typeof obj.photoUrl !== 'string' || !obj.photoUrl.trim()) {
     return { valid: false, error: 'photoUrl is required.' };
   }
+  const photoUrl = obj.photoUrl.trim();
   if (!photoUrl.startsWith('wix:image://') && !photoUrl.startsWith('https://')) {
     return { valid: false, error: 'photoUrl must be a Wix media URL or HTTPS URL.' };
   }
 
-  const roomType = (obj.roomType || '').trim();
-  if (!roomType) {
+  if (typeof obj.roomType !== 'string' || !obj.roomType.trim()) {
     return { valid: false, error: 'roomType is required.' };
   }
+  const roomType = obj.roomType.trim();
   if (!ROOM_TYPE_VALUES.includes(roomType)) {
     return { valid: false, error: `Invalid roomType. Must be one of: ${ROOM_TYPE_VALUES.join(', ')}.` };
   }
 
   if (obj.caption !== undefined && obj.caption !== null) {
-    const caption = String(obj.caption);
-    if (caption.length > MAX_CAPTION_LENGTH) {
-      return { valid: false, error: `caption must be ${MAX_CAPTION_LENGTH} characters or fewer.` };
+    if (typeof obj.caption !== 'string' || obj.caption.length > MAX_CAPTION_LENGTH) {
+      return { valid: false, error: `caption must be a string of ${MAX_CAPTION_LENGTH} characters or fewer.` };
     }
   }
 

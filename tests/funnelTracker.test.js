@@ -240,4 +240,32 @@ describe('getBackend load failure', () => {
     vi.doUnmock('backend/errorMonitoring.web');
     vi.resetModules();
   });
+
+  it('LOAD_FAILED sentinel prevents re-import on subsequent track calls', async () => {
+    // Verifies that once _backend is LOAD_FAILED, further track() calls skip the
+    // dynamic import entirely — logError fires exactly once, not once per call.
+    vi.resetModules();
+
+    const mockLogError = vi.fn();
+    vi.doMock('backend/errorMonitoring.web', () => ({ logError: mockLogError })); // vi-domock-legacy
+    vi.doMock('backend/conversionFunnel.web', () => { throw new Error('backend unavailable'); }); // vi-domock-legacy
+
+    const { initFunnelTracker: freshInit } = await import('../src/public/funnelTracker.js');
+
+    const tracker = freshInit('sess-sentinel');
+    tracker.track('page_view');
+    await vi.advanceTimersByTimeAsync(400);
+
+    // First call triggered the import failure
+    expect(mockLogError).toHaveBeenCalledTimes(1);
+
+    // Second track() should hit the LOAD_FAILED sentinel — no additional import, no additional logError
+    tracker.track('add_to_cart');
+    await vi.advanceTimersByTimeAsync(400);
+    expect(mockLogError).toHaveBeenCalledTimes(1);
+
+    vi.doUnmock('backend/conversionFunnel.web');
+    vi.doUnmock('backend/errorMonitoring.web');
+    vi.resetModules();
+  });
 });

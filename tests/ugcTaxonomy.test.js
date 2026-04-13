@@ -58,6 +58,12 @@ describe('validatePhotoMetadata', () => {
     expect(r.error).toMatch(/photoUrl is required/i);
   });
 
+  it('returns error when photoUrl is a truthy non-string (number)', () => {
+    const r = validatePhotoMetadata({ ...VALID, photoUrl: 42 });
+    expect(r.valid).toBe(false);
+    expect(r.error).toMatch(/photoUrl is required/i);
+  });
+
   it('returns error when photoUrl is neither wix:image:// nor https://', () => {
     const r = validatePhotoMetadata({ ...VALID, photoUrl: 'http://insecure.com/img.jpg' });
     expect(r.valid).toBe(false);
@@ -66,6 +72,12 @@ describe('validatePhotoMetadata', () => {
 
   it('returns error when roomType is missing', () => {
     const r = validatePhotoMetadata({ photoUrl: VALID.photoUrl });
+    expect(r.valid).toBe(false);
+    expect(r.error).toMatch(/roomType is required/i);
+  });
+
+  it('returns error when roomType is a truthy non-string (object)', () => {
+    const r = validatePhotoMetadata({ ...VALID, roomType: { value: 'office' } });
     expect(r.valid).toBe(false);
     expect(r.error).toMatch(/roomType is required/i);
   });
@@ -82,10 +94,16 @@ describe('validatePhotoMetadata', () => {
     expect(validatePhotoMetadata({ ...VALID, caption: 'Cozy corner' })).toEqual({ valid: true });
   });
 
+  it('returns error when caption is a non-string', () => {
+    const r = validatePhotoMetadata({ ...VALID, caption: 42 });
+    expect(r.valid).toBe(false);
+    expect(r.error).toMatch(/caption must be a string/i);
+  });
+
   it('returns error when caption exceeds 200 chars', () => {
     const r = validatePhotoMetadata({ ...VALID, caption: 'x'.repeat(201) });
     expect(r.valid).toBe(false);
-    expect(r.error).toMatch(/caption must be 200/i);
+    expect(r.error).toMatch(/caption must be a string of 200/i);
   });
 
   it('skips caption check when caption is null', () => {
@@ -119,6 +137,7 @@ describe('validatePhotoMetadata', () => {
     expect(r.valid).toBe(false);
     expect(r.error).toMatch(/productId must be a string/i);
   });
+
 
 
   it('skips productId check when productId is null', () => {
