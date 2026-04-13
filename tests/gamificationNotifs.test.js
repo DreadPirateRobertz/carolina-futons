@@ -373,7 +373,7 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(result).toEqual({ sent: 0, skipped: 0, errors: 0 });
   });
 
-  it('sends streak milestone email to eligible members', async () => {
+  it('enqueues streak milestone email (EmailQueue row) for eligible members', async () => {
     seedStreakMembers(['mem-1', 'mem-2']);
 
     const result = await checkStreakMilestoneNotifications();
@@ -381,9 +381,13 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(result.skipped).toBe(0);
     expect(result.errors).toBe(0);
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(2);
-    expect(log.every(e => e.templateId === 'streak_milestone_day7')).toBe(true);
+    // cf-cin / GH #991: EmailQueue insert replaces inline triggeredEmails.emailMember
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(2);
+    expect(queued.every(e => e.templateId === 'streak_milestone_day7')).toBe(true);
+    expect(queued.every(e => e.sequenceType === 'streak_milestone')).toBe(true);
+    expect(queued.every(e => e.status === 'pending')).toBe(true);
+    expect(__getEmailLog()).toHaveLength(0);
   });
 
   it('skips members who already received day-7 notification (idempotent)', async () => {
@@ -394,9 +398,9 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(result.sent).toBe(1);
     expect(result.skipped).toBe(1);
 
-    const log = __getEmailLog();
-    expect(log).toHaveLength(1);
-    expect(log[0].memberId).toBe('mem-2');
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(1);
+    expect(queued[0].recipientContactId).toBe('mem-2');
   });
 
   it('skips members with streakReminders: false in prefs', async () => {
@@ -433,9 +437,9 @@ describe('checkStreakMilestoneNotifications', () => {
     expect(inserted[0].sentAt).toBeDefined();
   });
 
-  it('increments errors when email send fails, continues for other members', async () => {
+  it('increments errors when EmailQueue insert fails, continues for other members', async () => {
     seedStreakMembers(['mem-1', 'mem-2']);
-    __failNextEmail(); // mem-1 email fails
+    __setInsertError('EmailQueue', new Error('queue insert failed')); // first EmailQueue insert fails
 
     const result = await checkStreakMilestoneNotifications();
     expect(result.sent).toBe(1);

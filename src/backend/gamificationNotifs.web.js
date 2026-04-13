@@ -378,8 +378,10 @@ export async function checkStreakMilestoneNotifications() {
       prefsResult.items.map(p => [p.memberId, p])
     );
 
-    const { triggeredEmails } = await import('wix-crm-backend');
-
+    // Queue-based dispatch (GH #991 / cf-cin): enqueue EmailQueue rows rather
+    // than calling triggeredEmails.emailMember() inline. Per-member synchronous
+    // sends in a loop of up to 1 000 members exceeded the Wix 14 s serverless
+    // limit and silently cut the cron short. processEmailQueue drains the queue.
     for (const memberId of memberIds) {
       if (alreadySent.has(memberId)) {
         result.skipped++;
@@ -399,18 +401,22 @@ export async function checkStreakMilestoneNotifications() {
       }
 
       try {
-        await triggeredEmails.emailMember(
-          'streak_milestone_day7',
-          memberId,
-          {
-            variables: {
-              streakDays: String(STREAK_MILESTONE_DAY),
-              message: `You're on a ${STREAK_MILESTONE_DAY}-day streak! Come back tomorrow to keep it going and earn 2x points.`,
-            },
-          }
-        );
+        await wixData.insert('EmailQueue', {
+          templateId: 'streak_milestone_day7',
+          recipientContactId: memberId,
+          variables: {
+            streakDays: String(STREAK_MILESTONE_DAY),
+            message: `You're on a ${STREAK_MILESTONE_DAY}-day streak! Come back tomorrow to keep it going and earn 2x points.`,
+          },
+          sequenceType: 'streak_milestone',
+          status: 'pending',
+          scheduledFor: new Date(),
+          attempt: 0,
+          createdAt: new Date(),
+        }, { suppressAuth: true });
 
-        // Also send push notification — failure is non-fatal (email already sent)
+        // Push notification remains inline — it's best-effort and cheap compared
+        // to the email triggeredEmails call that caused the original timeout.
         try {
           const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
           await sendPushToMember(memberId, PUSH_EVENTS.STREAK_MILESTONE, { days: String(STREAK_MILESTONE_DAY) });
