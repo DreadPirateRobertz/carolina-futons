@@ -159,7 +159,7 @@ jobs:
 
       - name: Check for failures and create issue
         if: steps.integration.outcome == 'failure'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { readFileSync } = await import('node:fs');
