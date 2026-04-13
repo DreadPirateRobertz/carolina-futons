@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   extractSiteMemberMethods,
-  extractPlainExportedFunctions,
+  extractPlainExports,
   checkMethodForIDOR,
   scanBackendFiles,
 } from '../scripts/check-member-ownership.mjs';
@@ -88,62 +88,56 @@ export const getItem = webMethod(Permissions.SiteMember, async (memberId) => {
   });
 });
 
-// ── extractPlainExportedFunctions ────────────────────────────────
+// ── extractPlainExports ───────────────────────────────────────────
 
-describe('extractPlainExportedFunctions', () => {
+describe('extractPlainExports', () => {
   it('finds a plain async exported function', () => {
     const source = `
 export async function getTrailProgress(memberId) {
   return await wixData.query('Trails').eq('memberId', memberId).find();
 }`;
-    const fns = extractPlainExportedFunctions(source);
+    const fns = extractPlainExports(source);
     expect(fns).toHaveLength(1);
     expect(fns[0].name).toBe('getTrailProgress');
     expect(fns[0].params).toBe('memberId');
-    expect(fns[0].kind).toBe('plain');
+    expect(fns[0].isPlainExport).toBe(true);
   });
 
-  it('finds a plain sync exported function', () => {
+  it('skips _-prefixed functions (internal helper convention)', () => {
+    const source = `
+export async function _getTrailProgressForMember(memberId) {
+  return await wixData.query('Trails').eq('memberId', memberId).find();
+}`;
+    expect(extractPlainExports(source)).toHaveLength(0);
+  });
+
+  it('skips _-prefixed among mixed functions, returns only non-prefixed', () => {
+    const source = `
+export async function _internalHelper(memberId) {
+  return wixData.query('X').eq('memberId', memberId).find();
+}
+export async function publicMethod(memberId) {
+  return wixData.query('Y').eq('memberId', memberId).find();
+}`;
+    const fns = extractPlainExports(source);
+    expect(fns).toHaveLength(1);
+    expect(fns[0].name).toBe('publicMethod');
+  });
+
+  it('does not match sync exported functions (async only)', () => {
     const source = `
 export function buildQuery(userId) {
   return wixData.query('Data').eq('userId', userId);
 }`;
-    const fns = extractPlainExportedFunctions(source);
-    expect(fns).toHaveLength(1);
-    expect(fns[0].name).toBe('buildQuery');
-    expect(fns[0].params).toBe('userId');
+    expect(extractPlainExports(source)).toHaveLength(0);
   });
 
-  it('extracts body correctly', () => {
-    const source = `
-export async function doStuff(memberId) {
-  const r = await wixData.query('X').eq('memberId', memberId).find();
-  return r;
-}`;
-    const fns = extractPlainExportedFunctions(source);
-    expect(fns[0].body).toContain('wixData.query');
-  });
-
-  it('ignores non-exported functions', () => {
+  it('does not match non-exported async functions', () => {
     const source = `
 async function helperFunc(memberId) {
   return wixData.query('X').eq('memberId', memberId).find();
 }`;
-    const fns = extractPlainExportedFunctions(source);
-    expect(fns).toHaveLength(0);
-  });
-
-  it('finds multiple exported functions', () => {
-    const source = `
-export async function getA(memberId) {
-  return wixData.query('A').eq('memberId', memberId).find();
-}
-export function getB(userId) {
-  return wixData.query('B').eq('userId', userId).find();
-}`;
-    const fns = extractPlainExportedFunctions(source);
-    expect(fns).toHaveLength(2);
-    expect(fns.map(f => f.name)).toEqual(['getA', 'getB']);
+    expect(extractPlainExports(source)).toHaveLength(0);
   });
 
   it('returns lineNumber for each function', () => {
@@ -153,13 +147,12 @@ export function getB(userId) {
 export async function getItem(memberId) {
   return wixData.get('Items', memberId);
 }`;
-    const fns = extractPlainExportedFunctions(source);
+    const fns = extractPlainExports(source);
     expect(fns[0].lineNumber).toBeGreaterThan(1);
   });
 
-  it('returns empty array for source with no exports', () => {
-    const fns = extractPlainExportedFunctions('const x = 1;');
-    expect(fns).toHaveLength(0);
+  it('returns empty array for source with no async exports', () => {
+    expect(extractPlainExports('const x = 1;')).toHaveLength(0);
   });
 });
 

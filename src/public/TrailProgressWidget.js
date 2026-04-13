@@ -82,14 +82,13 @@ export function buildCheckpoints(challengeIds, completedChallengeIds) {
  * in the response, then populates the checkpoint repeater and perk section.
  * Hides the outer section and returns early on any error or missing trail.
  *
- * @param {string}   memberId   — (legacy, unused — memberId derived server-side)
  * @param {string}   trailId    — trail to display (e.g. 'trail-spring')
  * @param {Object}   [opts]     — injectable overrides for testing
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getTrailProgress]
  * @returns {Promise<void>}
  */
-export async function initTrailProgressWidget(memberId, trailId, opts = {}) {
+export async function initTrailProgressWidget(trailId, opts = {}) {
   const $w               = opts.$w               ?? globalThis.$w;
   const getTrailProgress = opts.getTrailProgress  ?? (() => _defaultGetTrailProgress());
 

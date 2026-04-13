@@ -234,26 +234,26 @@ describe('initTrailProgressWidget', () => {
 
   it('returns early and hides section when getTrailProgress returns success:false', async () => {
     const getFn = vi.fn().mockResolvedValue({ success: false, trails: [] });
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressSection').hide).toHaveBeenCalled();
     expect($w('#trailProgressSection').show).not.toHaveBeenCalled();
   });
 
   it('returns early when the requested trailId is not in the response', async () => {
     const getFn = makeGetFn([makeTrail({ trailId: 'trail-summer' })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressSection').show).not.toHaveBeenCalled();
   });
 
   it('returns early and keeps section hidden when getTrailProgress throws', async () => {
     const getFn = vi.fn().mockRejectedValue(new Error('Network error'));
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressSection').show).not.toHaveBeenCalled();
   });
 
   it('returns early when trails array is empty', async () => {
     const getFn = makeGetFn([]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressSection').show).not.toHaveBeenCalled();
   });
 
@@ -261,26 +261,26 @@ describe('initTrailProgressWidget', () => {
 
   it('sets trail name', async () => {
     const getFn = makeGetFn([makeTrail({ name: 'Spring Awakening' })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressTitle').text).toBe('Spring Awakening');
   });
 
   it('sets trail theme', async () => {
     const getFn = makeGetFn([makeTrail({ theme: 'new beginnings' })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressTheme').text).toBe('new beginnings');
   });
 
   it('sets progress count as "X / Y challenges"', async () => {
     const trail = makeTrail({ completedChallengeIds: ['ch-first-purchase', 'ch-write-review'] });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressCount').text).toBe('2 / 5 challenges');
   });
 
   it('sets progress count as "0 / 5 challenges" when none completed', async () => {
     const getFn = makeGetFn([makeTrail({ completedChallengeIds: [] })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressCount').text).toBe('0 / 5 challenges');
   });
 
@@ -288,7 +288,7 @@ describe('initTrailProgressWidget', () => {
     const ids = ['ch-first-purchase', 'ch-write-review', 'ch-share-room-photo', 'ch-refer-friend', 'ch-sleep-quiz'];
     const trail = makeTrail({ completedChallengeIds: ids, isComplete: true });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressCount').text).toBe('5 / 5 challenges');
   });
 
@@ -296,21 +296,21 @@ describe('initTrailProgressWidget', () => {
 
   it('wires onItemReady on the checkpoint repeater', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     const repeater = $w('#checkpointRepeater');
     expect(repeater.onItemReady).toHaveBeenCalled();
   });
 
   it('sets repeater data with 5 checkpoints for Spring trail', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     const repeater = $w('#checkpointRepeater');
     expect(repeater.data).toHaveLength(5);
   });
 
   it('each checkpoint has _id, label, isComplete, index', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     const { data } = $w('#checkpointRepeater');
     for (const cp of data) {
       expect(cp).toHaveProperty('_id');
@@ -323,7 +323,7 @@ describe('initTrailProgressWidget', () => {
   it('marks completed checkpoints as isComplete:true', async () => {
     const trail = makeTrail({ completedChallengeIds: ['ch-first-purchase'] });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     const { data } = $w('#checkpointRepeater');
     expect(data[0].isComplete).toBe(true);
     expect(data[1].isComplete).toBe(false);
@@ -332,7 +332,7 @@ describe('initTrailProgressWidget', () => {
   it('onItemReady callback shows completeIcon and hides incompleteIcon for done checkpoint', async () => {
     const trail = makeTrail({ completedChallengeIds: ['ch-first-purchase'] });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
 
     const repeater = $w('#checkpointRepeater');
     const handler = repeater.onItemReady.mock.calls[0][0];
@@ -351,7 +351,7 @@ describe('initTrailProgressWidget', () => {
 
   it('onItemReady callback hides completeIcon and shows incompleteIcon for pending checkpoint', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
 
     const repeater = $w('#checkpointRepeater');
     const handler = repeater.onItemReady.mock.calls[0][0];
@@ -369,7 +369,7 @@ describe('initTrailProgressWidget', () => {
 
   it('onItemReady sets checkpoint label text', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
 
     const repeater = $w('#checkpointRepeater');
     const handler = repeater.onItemReady.mock.calls[0][0];
@@ -388,21 +388,21 @@ describe('initTrailProgressWidget', () => {
 
   it('hides perkSection when trail is not complete', async () => {
     const getFn = makeGetFn([makeTrail({ isComplete: false })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailPerkSection').hide).toHaveBeenCalled();
     expect($w('#trailPerkSection').show).not.toHaveBeenCalled();
   });
 
   it('hides trailCompleteMsg when trail is not complete', async () => {
     const getFn = makeGetFn([makeTrail({ isComplete: false })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailCompleteMsg').hide).toHaveBeenCalled();
     expect($w('#trailCompleteMsg').show).not.toHaveBeenCalled();
   });
 
   it('still sets perkReward label when trail is not complete (shows as target)', async () => {
     const getFn = makeGetFn([makeTrail({ perkId: 'perk-free-shipping', isComplete: false })]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailPerkReward').text).toBe('Free Shipping');
   });
 
@@ -412,7 +412,7 @@ describe('initTrailProgressWidget', () => {
     const ids = ['ch-first-purchase', 'ch-write-review', 'ch-share-room-photo', 'ch-refer-friend', 'ch-sleep-quiz'];
     const trail = makeTrail({ completedChallengeIds: ids, isComplete: true });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailPerkSection').show).toHaveBeenCalled();
   });
 
@@ -420,7 +420,7 @@ describe('initTrailProgressWidget', () => {
     const ids = ['ch-first-purchase', 'ch-write-review', 'ch-share-room-photo', 'ch-refer-friend', 'ch-sleep-quiz'];
     const trail = makeTrail({ completedChallengeIds: ids, isComplete: true });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailCompleteMsg').show).toHaveBeenCalled();
   });
 
@@ -428,14 +428,14 @@ describe('initTrailProgressWidget', () => {
     const ids = ['ch-first-purchase', 'ch-write-review', 'ch-share-room-photo', 'ch-refer-friend', 'ch-sleep-quiz'];
     const trail = makeTrail({ completedChallengeIds: ids, isComplete: true, perkId: 'perk-early-access' });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailPerkReward').text).toBe('Early Access');
   });
 
   it('sets perk label "Free Styling Call" for perk-styling-call', async () => {
     const trail = makeTrail({ perkId: 'perk-styling-call', isComplete: false });
     const getFn = makeGetFn([trail]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailPerkReward').text).toBe('Free Styling Call');
   });
 
@@ -443,13 +443,13 @@ describe('initTrailProgressWidget', () => {
 
   it('shows trailProgressSection after successful render', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressSection').show).toHaveBeenCalled();
   });
 
   it('hides trailProgressSection before async load (initial state)', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-1', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     // hide should have been called first (before show), in the right order
     const hideCalls = $w('#trailProgressSection').hide.mock.invocationCallOrder;
     const showCalls = $w('#trailProgressSection').show.mock.invocationCallOrder;
@@ -460,7 +460,7 @@ describe('initTrailProgressWidget', () => {
 
   it('calls getTrailProgress with no arguments (memberId derived server-side)', async () => {
     const getFn = makeGetFn([makeTrail()]);
-    await initTrailProgressWidget('member-xyz', 'trail-spring', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-spring', { $w, getTrailProgress: getFn });
     expect(getFn).toHaveBeenCalledWith();
   });
 
@@ -470,7 +470,7 @@ describe('initTrailProgressWidget', () => {
       makeTrail({ trailId: 'trail-summer', name: 'Summer Stride' }),
     ];
     const getFn = makeGetFn(trails);
-    await initTrailProgressWidget('member-1', 'trail-summer', { $w, getTrailProgress: getFn });
+    await initTrailProgressWidget('trail-summer', { $w, getTrailProgress: getFn });
     expect($w('#trailProgressTitle').text).toBe('Summer Stride');
   });
 
@@ -484,7 +484,7 @@ describe('initTrailProgressWidget', () => {
     const getFn = makeGetFn([makeTrail()]);
     // Should not throw despite the element error
     await expect(
-      initTrailProgressWidget('member-1', 'trail-spring', { $w: throwingW, getTrailProgress: getFn })
+      initTrailProgressWidget('trail-spring', { $w: throwingW, getTrailProgress: getFn })
     ).resolves.toBeUndefined();
   });
 
@@ -502,7 +502,7 @@ describe('initTrailProgressWidget', () => {
     });
     const getFn = makeGetFn([makeTrail()]);
     await expect(
-      initTrailProgressWidget('member-1', 'trail-spring', { $w: broken$w, getTrailProgress: getFn })
+      initTrailProgressWidget('trail-spring', { $w: broken$w, getTrailProgress: getFn })
     ).resolves.toBeUndefined();
   });
 });
