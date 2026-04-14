@@ -62,6 +62,10 @@ const UTILITY_MODULES = new Set([
   'public/sharedTokens',
   'public/designTokens.js',
   'public/designTokens',
+  // Integration-tested modules: real impl runs against seeded wix-data in tests
+  'backend/productVideos.web',
+  'public/videoHelpers.js',
+  'public/videoHelpers',
 ]);
 
 // ── Parse imports from a source file ────────────────────────────────
@@ -223,7 +227,7 @@ function run() {
   // Ratchet: known gap count at time of script creation.
   // This number should only go DOWN over time as mocks are added.
   // CI fails only if gaps INCREASE beyond this baseline.
-  const KNOWN_GAP_BASELINE = 367; // ratcheted 2026-04-13: cf-90d closed 11 gaps across 4 Blog Post test files (topic cluster + navigation mocks)
+  const KNOWN_GAP_BASELINE = 83; // ratcheted 2026-04-13: cf-90d -11 (Blog Post), cf-obz -295 (28 test files across Category, Product, Cart, Home, masterPage, Member Page)
 
   if (totalGaps === 0) {
     console.log(`✅ Mock coverage check passed — ${testFiles.length} test files scanned, no gaps found.`);

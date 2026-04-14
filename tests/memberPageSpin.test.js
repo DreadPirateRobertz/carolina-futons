@@ -5,6 +5,7 @@
  * pending prizes panel, safeSession prize cache.
  */
 import { describe, it, expect, vi } from 'vitest';
+vi.mock('public/SpinWheel.js', async () => await vi.importActual('../src/public/SpinWheel.js'));
 import { __seed } from './__mocks__/wix-data.js';
 
 // ── $w mock ──────────────────────────────────────────────────────────────────
@@ -149,6 +150,27 @@ vi.mock('wix-window-frontend', () => ({ copyToClipboard: vi.fn(), openUrl: vi.fn
 
 // ── Import page module once ──────────────────────────────────────────────────
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+}));
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  getActiveChallenges: vi.fn().mockResolvedValue([]),
+  recoverStreak: vi.fn().mockResolvedValue({ success: false }),
+}));
+vi.mock('public/ChallengesDisplay.js', () => ({
+  initChallengesDisplay: vi.fn().mockResolvedValue(undefined),
+}));
+// SpinWheel NOT mocked — tests assert real buildWheelSegments,
+// computeCountdown, renderPendingPrizes, renderSpinResult behavior.
+vi.mock('public/StreakDisplay.js', () => ({
+  initStreakDisplay: vi.fn().mockResolvedValue(undefined),
+  renderStreakWidget: vi.fn(),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
 await import('../src/pages/Member Page.js');
 
 const { trackEvent } = await import('public/engagementTracker');

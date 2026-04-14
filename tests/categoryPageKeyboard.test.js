@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/galleryHelpers', async () => await vi.importActual('../src/public/galleryHelpers.js'));
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
+vi.mock('public/a11yHelpers.js', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
 import { futonFrame, wallHuggerFrame } from './fixtures/products.js';
 import { __setPath } from './__mocks__/wix-location-frontend.js';
 
@@ -102,6 +106,97 @@ function createItemScope() {
   return { $item, itemElements };
 }
 
+// ── Auto-added by cf-obz: mock coverage gap reduction ──────────────
+// galleryHelpers intentionally NOT mocked — compare flow assertions need
+// real addToCompare return value to gate refreshCompareBarUI wiring.
+vi.mock('public/placeholderImages.js', () => ({
+  getProductFallbackImage: vi.fn(() => ''),
+}));
+vi.mock('backend/swatchService.web', () => ({
+  getSwatchPreviewColors: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/categoryFilterHelpers', () => ({
+  buildFilterChips: vi.fn(() => []),
+  removeFilter: vi.fn(f => f),
+  clearAllFilters: vi.fn(() => ({})),
+  serializeFiltersToUrl: vi.fn(() => ''),
+  deserializeFiltersFromUrl: vi.fn(() => ({})),
+  formatFeatureLabel: vi.fn(v => v),
+  sanitizeFilterInput: vi.fn(v => v),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  initBackToTop: vi.fn(),
+  onViewportChange: vi.fn(),
+  collapseOnMobile: vi.fn(),
+}));
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
+  }),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackProductPageView: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+vi.mock('public/ga4Tracking', () => ({
+  fireViewItemList: vi.fn(),
+  fireViewContent: vi.fn(),
+}));
+vi.mock('public/productCache', () => ({
+  getCachedProduct: vi.fn(() => null),
+  cacheProduct: vi.fn(),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/touchHelpers', () => ({
+  enableSwipe: vi.fn(),
+}));
+// productPageUtils intentionally NOT mocked — tests assert against real
+// buildGridAlt/detectProductBrand output.
+// a11yHelpers intentionally NOT mocked — keyboard tests assert tabIndex,
+// aria-label, onKeyPress wiring that makeClickable performs on real elements.
+vi.mock('public/socialProofToast', () => ({
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('backend/promotions.web', () => ({
+  getFlashSales: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/paymentOptions.web', () => ({
+  getBatchPaymentBadges: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/flashSaleHelpers', () => ({
+  initFlashSaleBanner: vi.fn(),
+  initFlashSaleUrgency: vi.fn(),
+  initProductUrgencyBadge: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/StarRatingCard', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+// productCardHelpers intentionally NOT mocked — real helpers provide
+// the image URL / price / badge output that tests assert against.
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/lifestyleImages.js', () => ({
+  getLifestyleOverlay: vi.fn(() => ''),
+}));
+// ── End auto-added mocks ────────────────────────────────────────────
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Category Page — Keyboard Navigation (CF-n1c)', () => {

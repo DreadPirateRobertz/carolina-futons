@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+vi.mock('public/FooterSection', async () => await vi.importActual('../src/public/FooterSection.js'));
+vi.mock('public/carolinaFutonsLogo', async () => await vi.importActual('../src/public/carolinaFutonsLogo.js'));
+vi.mock('public/a11yHelpers', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
+vi.mock('public/navigationHelpers', async () => await vi.importActual('../src/public/navigationHelpers.js'));
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -218,6 +223,29 @@ import {
 
 // ── Active Page Indicator ───────────────────────────────────────────
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/performanceHelpers', () => ({
+  sharePromise: vi.fn(fn => fn),
+  deferInit: vi.fn(fn => fn()),
+  prioritizeSections: vi.fn(async (sections) => {
+    for (const s of sections) { try { await s.init(); } catch (_) {} }
+  }),
+}));
+vi.mock('public/AppDownloadBanner', () => ({
+  initAppDownloadBanner: vi.fn(() => Promise.resolve()),
+}));
+// FooterSection NOT mocked — tests assert real onClick wiring on
+// #footerEmailSubmit and real mountain divider HTML injection.
+vi.mock('public/CartUpsell', () => ({
+  initCartUpsell: vi.fn().mockResolvedValue(undefined),
+}));
+// carolinaFutonsLogo NOT mocked — tests assert truthy getLogoImageUrl output.
+// a11yHelpers NOT mocked — navigation tests assert real makeClickable
+// wiring of onClick handlers on mobile drawer, accordions, announcement bar.
+// productCardHelpers NOT mocked — promo lightbox asserts real price formatting.
+// navigationHelpers NOT mocked — tests import and exercise real exports
+// (getActiveNavId, applyActiveNavState).
+// ── End auto-added ─────────────────────────────────────────────────
 describe('Navigation Helpers', () => {
   beforeEach(() => {
     elements.clear();

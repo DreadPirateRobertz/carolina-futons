@@ -87,6 +87,30 @@ vi.mock('wix-location-frontend', () => ({
 }));
 
 // ── Import source (triggers $w.onReady registration) ─────────────────
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+vi.mock('public/CartDeliveryEstimates.js', () => ({
+  initCartDelivery: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/FreightUpsellBanner.js', () => ({
+  initFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+  updateFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartShippingEstimate.js', () => ({
+  initCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  initSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartSpendToTierBar.js', () => ({
+  initSpendToTierBar: vi.fn().mockResolvedValue(undefined),
+  updateSpendToTierBar: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
 beforeAll(async () => {
   elements.clear();
   await import('../src/pages/Side Cart.js');

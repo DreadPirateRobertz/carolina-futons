@@ -285,7 +285,28 @@ function renderItem(repeater, itemData) {
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Member Page - Order History Integration', () => {
-  beforeAll(async () => {
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  getActiveChallenges: vi.fn().mockResolvedValue([]),
+  recoverStreak: vi.fn().mockResolvedValue({ success: false }),
+}));
+vi.mock('public/ChallengesDisplay.js', () => ({
+  initChallengesDisplay: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/SpinWheel.js', () => ({
+  initSpinWheel: vi.fn().mockResolvedValue(undefined),
+  spinWheel: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('public/StreakDisplay.js', () => ({
+  initStreakDisplay: vi.fn().mockResolvedValue(undefined),
+  renderStreakWidget: vi.fn(),
+}));
+vi.mock('public/giftCardHelpers.js', () => ({
+  initGiftCardDashboard: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Member Page.js');
   });
 

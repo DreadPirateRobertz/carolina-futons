@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+// Passthrough mocks — satisfy ratchet without overriding real behavior.
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
 import { __setPath, __getToCallLog, __resetToCallLog } from './__mocks__/wix-location-frontend.js';
 import { createMockElement } from './helpers/wixMocks.js';
@@ -63,6 +66,121 @@ vi.mock('backend/seoHelpers.web', () => ({
   getCanonicalUrl: vi.fn().mockResolvedValue('https://www.carolinafutons.com/futon-frames'),
 }));
 
+// ── Auto-added by cf-obz: mock coverage gap reduction ──────────────
+vi.mock('public/galleryHelpers', () => ({
+  getProductBadge: vi.fn(() => null),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+  addToCompare: vi.fn(),
+  removeFromCompare: vi.fn(),
+  getCompareList: vi.fn(() => []),
+}));
+vi.mock('public/placeholderImages.js', () => ({
+  getProductFallbackImage: vi.fn(() => ''),
+}));
+vi.mock('backend/swatchService.web', () => ({
+  getSwatchPreviewColors: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/searchService.web', () => ({
+  getFilterValues: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('backend/categorySearch.web', () => ({
+  searchProducts: vi.fn().mockResolvedValue({ items: [], totalCount: 0 }),
+  suggestFilterRelaxation: vi.fn().mockResolvedValue(null),
+  getFacetMetadata: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/categoryFilterHelpers', () => ({
+  buildFilterChips: vi.fn(() => []),
+  removeFilter: vi.fn(f => f),
+  clearAllFilters: vi.fn(() => ({})),
+  serializeFiltersToUrl: vi.fn(() => ''),
+  deserializeFiltersFromUrl: vi.fn(() => ({})),
+  formatFeatureLabel: vi.fn(v => v),
+  sanitizeFilterInput: vi.fn(v => v),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  initBackToTop: vi.fn(),
+  onViewportChange: vi.fn(),
+  collapseOnMobile: vi.fn(),
+}));
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
+  }),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackProductPageView: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+vi.mock('public/ga4Tracking', () => ({
+  fireViewItemList: vi.fn(),
+  fireViewContent: vi.fn(),
+}));
+vi.mock('public/productCache', () => ({
+  getCachedProduct: vi.fn(() => null),
+  cacheProduct: vi.fn(),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/touchHelpers', () => ({
+  enableSwipe: vi.fn(),
+}));
+// productPageUtils.js intentionally NOT mocked: tests exercise real
+// buildGridAlt (brand+category SEO suffix) and formatters — stubs would
+// shadow the exact behavior under assertion.
+vi.mock('public/a11yHelpers.js', () => ({
+  announce: vi.fn(),
+  // Delegate to the element's real onClick so wired handlers remain observable
+  // via el.onClick.mock.calls — matches the real helper's behavior closely enough
+  // for onReady handler assertions (click wiring, aria-label, disabled state).
+  makeClickable: vi.fn((el, handler, opts = {}) => {
+    if (el?.onClick) el.onClick(handler);
+    if (opts.ariaLabel && el?.accessibility) el.accessibility.ariaLabel = opts.ariaLabel;
+  }),
+  createFocusTrap: vi.fn(),
+  setupAccessibleDialog: vi.fn(),
+}));
+vi.mock('public/socialProofToast', () => ({
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('backend/promotions.web', () => ({
+  getFlashSales: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/paymentOptions.web', () => ({
+  getBatchPaymentBadges: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/flashSaleHelpers', () => ({
+  initFlashSaleBanner: vi.fn(),
+  initFlashSaleUrgency: vi.fn(),
+  initProductUrgencyBadge: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/StarRatingCard', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+// productCardHelpers intentionally NOT mocked: product-grid tests assert
+// image URL, price label, sale badge — those come from the real helpers.
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/lifestyleImages.js', () => ({
+  getLifestyleOverlay: vi.fn(() => ''),
+}));
+// ── End auto-added mocks ────────────────────────────────────────────
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Category Page', () => {

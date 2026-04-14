@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/a11yHelpers', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('backend/ups-shipping.web', async () => await vi.importActual('../src/backend/ups-shipping.web.js'));
 import { futonFrame, futonMattress, wallHuggerFrame, saleProduct } from './fixtures/products.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
@@ -80,7 +82,79 @@ vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 // ── Home Page Tests ─────────────────────────────────────────────────
 
 describe('Promise.allSettled — Home Page partial failures', () => {
-  beforeAll(async () => {
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  collapseOnMobile: vi.fn(),
+  initBackToTop: vi.fn(),
+  limitForViewport: vi.fn(n => n),
+  onViewportChange: vi.fn(),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+// a11yHelpers NOT mocked — tests assert real makeClickable onClick wiring.
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const critical = [], deferred = [];
+    for (const s of sections) {
+      try { await s.init(); (s.critical ? critical : deferred).push({ status: 'fulfilled', value: undefined }); }
+      catch (err) { (s.critical ? critical : deferred).push({ status: 'rejected', reason: err }); }
+    }
+    return { critical, deferred };
+  }),
+  lazyLoadImage: vi.fn(),
+}));
+vi.mock('public/StarRatingCard.js', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton.js', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+  setCardImage: vi.fn(),
+  getBadgeColor: vi.fn(() => ''),
+  renderSimplePrice: vi.fn(),
+}));
+vi.mock('public/productPageUtils.js', () => ({
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+}));
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/SocialFeedEmbed.js', () => ({
+  initSocialFeeds: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/HomeBlogTeasers.js', () => ({
+  initBlogTeaserRepeater: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/giftCardSection.js', () => ({
+  initGiftCardSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ContinueShoppingSection.js', () => ({
+  initContinueShoppingSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
+  initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
+}));
+// ups-shipping NOT mocked — fulfillment tests exercise real trackShipment
+// against the wix-fetch handler (OAuth + /track/ endpoints).
+vi.mock('backend/utils/validateSchema', () => ({
+  validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

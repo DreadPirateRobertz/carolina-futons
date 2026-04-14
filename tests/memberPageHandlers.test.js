@@ -103,6 +103,36 @@ let initBackToTop;
 let initPageSeo;
 let trackEvent;
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+}));
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn().mockResolvedValue(null),
+  getMyStreakData: vi.fn().mockResolvedValue(null),
+  getMyAchievements: vi.fn().mockResolvedValue([]),
+  getMyDailyQuests: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/gamificationEventReceiver.web', () => ({
+  getActiveChallenges: vi.fn().mockResolvedValue([]),
+  recoverStreak: vi.fn().mockResolvedValue({ success: false }),
+}));
+vi.mock('public/ChallengesDisplay.js', () => ({
+  initChallengesDisplay: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/SpinWheel.js', () => ({
+  initSpinWheel: vi.fn().mockResolvedValue(undefined),
+  spinWheel: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('public/StreakDisplay.js', () => ({
+  initStreakDisplay: vi.fn().mockResolvedValue(undefined),
+  renderStreakWidget: vi.fn(),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
 beforeAll(async () => {
   ({ collapseOnMobile } = await import('public/mobileHelpers'));
   ({ initBackToTop } = await import('public/mobileHelpers'));

@@ -180,6 +180,39 @@ describe('FAQ Page', () => {
       expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('Shipping'));
     });
 
+    it('category onKeyPress triggers selection on Enter', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, { _id: 'cat-shipping', id: 'shipping', label: 'Shipping' });
+      trackEvent.mockClear();
+      const keyCb = els.get('#categoryLabel').onKeyPress.mock.calls[0][0];
+      keyCb({ key: 'Enter' });
+      expect(trackEvent).toHaveBeenCalledWith('faq_category', { category: 'Shipping' });
+    });
+
+    it('category onKeyPress triggers selection on Space', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, { _id: 'cat-products', id: 'products', label: 'Products' });
+      trackEvent.mockClear();
+      const keyCb = els.get('#categoryLabel').onKeyPress.mock.calls[0][0];
+      keyCb({ key: ' ' });
+      expect(trackEvent).toHaveBeenCalledWith('faq_category', { category: 'Products' });
+    });
+
+    it('category onKeyPress ignores non-activation keys', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, { _id: 'cat-products', id: 'products', label: 'Products' });
+      trackEvent.mockClear();
+      const keyCb = els.get('#categoryLabel').onKeyPress.mock.calls[0][0];
+      keyCb({ key: 'a' });
+      expect(trackEvent).not.toHaveBeenCalled();
+    });
+
     it('category click filters FAQ repeater data', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
@@ -244,6 +277,39 @@ describe('FAQ Page', () => {
 
       itemReadyCb($item, mockFaqData[0]);
       expect(els.get('#faqToggle').accessibility.ariaExpanded).toBe(false);
+    });
+
+    it('faqQuestion onKeyPress Space toggles answer', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, mockFaqData[0]);
+      els.get('#faqAnswer').collapse();
+      const keyCb = els.get('#faqQuestion').onKeyPress.mock.calls[0][0];
+      keyCb({ key: ' ' });
+      expect(els.get('#faqAnswer').expand).toHaveBeenCalled();
+    });
+
+    it('faqToggle onKeyPress Enter toggles answer', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, mockFaqData[0]);
+      els.get('#faqAnswer').collapse();
+      const keyCb = els.get('#faqToggle').onKeyPress.mock.calls[0][0];
+      keyCb({ key: 'Enter' });
+      expect(els.get('#faqAnswer').expand).toHaveBeenCalled();
+    });
+
+    it('faqQuestion onKeyPress ignores non-activation keys', async () => {
+      await onReadyHandler();
+      const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
+      const { $item, elements: els } = createItemScope();
+      itemReadyCb($item, mockFaqData[0]);
+      const keyCb = els.get('#faqQuestion').onKeyPress.mock.calls[0][0];
+      els.get('#faqAnswer').expand.mockClear();
+      keyCb({ key: 'Tab' });
+      expect(els.get('#faqAnswer').expand).not.toHaveBeenCalled();
     });
 
     it('clicking question expands answer and updates toggle', async () => {

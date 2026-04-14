@@ -156,6 +156,32 @@ vi.mock('public/flashSaleHelpers', () => ({
 
 // ── Import page & run onReady ──────────────────────────────────────
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('backend/announcementBarService.web', () => ({
+  getActiveAnnouncementBars: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/miniCartDrawer', () => ({
+  initMiniCartDrawer: vi.fn(),
+  openMiniCart: vi.fn(),
+  closeMiniCart: vi.fn(),
+  updateCartCount: vi.fn(),
+}));
+vi.mock('public/AppDownloadBanner', () => ({
+  initAppDownloadBanner: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('public/CartUpsell', () => ({
+  initCartUpsell: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/pixelConsentService', () => ({
+  initConsentGate: vi.fn(),
+  fireTrackedTikTokEvent: vi.fn(),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  formatCardPrice: vi.fn(),
+  renderSimplePrice: vi.fn(),
+  styleCardContainer: vi.fn(),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
 describe('masterPage handlers', () => {
   beforeAll(async () => {
     await import('../src/pages/masterPage.js');

@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
 import { futonFrame, futonMattress, wallHuggerFrame, saleProduct, outdoorFrame } from './fixtures/products.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
@@ -219,7 +221,46 @@ const flushDeferred = () => new Promise(r => setTimeout(r, 0));
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — Product Card Grid', () => {
-  beforeAll(async () => {
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/StarRatingCard.js', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton.js', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+// productCardHelpers + productPageUtils NOT mocked — card rendering tests
+// assert real image/price/badge output.
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/SocialFeedEmbed.js', () => ({
+  initSocialFeeds: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/HomeBlogTeasers.js', () => ({
+  initBlogTeaserRepeater: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/giftCardSection.js', () => ({
+  initGiftCardSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ContinueShoppingSection.js', () => ({
+  initContinueShoppingSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
+  initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/ups-shipping.web', () => ({
+  getShippingRate: vi.fn().mockResolvedValue(null),
+  getEstimatedDelivery: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('backend/utils/validateSchema', () => ({
+  validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

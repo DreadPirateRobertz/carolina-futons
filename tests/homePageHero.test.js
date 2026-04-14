@@ -201,7 +201,32 @@ const flushDeferred = () => Promise.resolve();
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
-  beforeAll(async () => {
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/SocialFeedEmbed.js', () => ({
+  initSocialFeeds: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/HomeBlogTeasers.js', () => ({
+  initBlogTeaserRepeater: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/giftCardSection.js', () => ({
+  initGiftCardSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ContinueShoppingSection.js', () => ({
+  initContinueShoppingSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
+  initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/ups-shipping.web', () => ({
+  getShippingRate: vi.fn().mockResolvedValue(null),
+  getEstimatedDelivery: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('backend/utils/validateSchema', () => ({
+  validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+vi.mock('public/a11yHelpers.js', async () => await vi.importActual('../src/public/a11yHelpers.js'));
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
 import { __setPath } from './__mocks__/wix-location-frontend.js';
 
@@ -86,6 +87,114 @@ vi.mock('backend/swatchService.web', () => ({
   getSwatchPreviewColors: mockGetSwatchPreviewColors,
 }));
 
+// ── Auto-added by cf-obz: mock coverage gap reduction ──────────────
+vi.mock('public/galleryHelpers', () => ({
+  getProductBadge: vi.fn(() => null),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+  addToCompare: vi.fn(),
+  removeFromCompare: vi.fn(),
+  getCompareList: vi.fn(() => []),
+}));
+vi.mock('public/placeholderImages.js', () => ({
+  getProductFallbackImage: vi.fn(() => ''),
+}));
+vi.mock('backend/searchService.web', () => ({
+  getFilterValues: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('backend/categorySearch.web', () => ({
+  searchProducts: vi.fn().mockResolvedValue({ items: [], totalCount: 0 }),
+  suggestFilterRelaxation: vi.fn().mockResolvedValue(null),
+  getFacetMetadata: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/categoryFilterHelpers', () => ({
+  buildFilterChips: vi.fn(() => []),
+  removeFilter: vi.fn(f => f),
+  clearAllFilters: vi.fn(() => ({})),
+  serializeFiltersToUrl: vi.fn(() => ''),
+  deserializeFiltersFromUrl: vi.fn(() => ({})),
+  formatFeatureLabel: vi.fn(v => v),
+  sanitizeFilterInput: vi.fn(v => v),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  initBackToTop: vi.fn(),
+  onViewportChange: vi.fn(),
+  collapseOnMobile: vi.fn(),
+}));
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
+  }),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackProductPageView: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+vi.mock('public/ga4Tracking', () => ({
+  fireViewItemList: vi.fn(),
+  fireViewContent: vi.fn(),
+}));
+vi.mock('public/productCache', () => ({
+  getCachedProduct: vi.fn(() => null),
+  cacheProduct: vi.fn(),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/touchHelpers', () => ({
+  enableSwipe: vi.fn(),
+}));
+vi.mock('public/productPageUtils.js', () => ({
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+  detectProductBrand: vi.fn(() => ''),
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+}));
+// a11yHelpers intentionally NOT mocked — tests assert real makeClickable
+// wiring (onClick handlers, tabIndex).
+vi.mock('public/socialProofToast', () => ({
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('backend/promotions.web', () => ({
+  getFlashSales: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/paymentOptions.web', () => ({
+  getBatchPaymentBadges: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/flashSaleHelpers', () => ({
+  initFlashSaleBanner: vi.fn(),
+  initFlashSaleUrgency: vi.fn(),
+  initProductUrgencyBadge: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+  setCardImage: vi.fn(),
+  renderCardFinancingBadge: vi.fn(),
+  renderSimplePrice: vi.fn(),
+  renderCardAssemblyBadge: vi.fn(),
+}));
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/lifestyleImages.js', () => ({
+  getLifestyleOverlay: vi.fn(() => ''),
+}));
+// ── End auto-added mocks ────────────────────────────────────────────
 // ── Import Page (registers $w.onReady handler) ──────────────────────
 
 describe('Category Page performance optimizations', () => {

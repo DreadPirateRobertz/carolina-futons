@@ -149,6 +149,102 @@ async function loadWithProduct(product) {
   const { __seed, __reset } = await import('wix-data');
   __reset();
   __seed('Stores/Products', [product]);
+// ── Auto-added by cf-obz: mock coverage gap reduction ──────────────
+vi.mock('public/galleryHelpers.js', () => ({
+  trackProductView: vi.fn(),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  collapseOnMobile: vi.fn(),
+  initBackToTop: vi.fn(),
+  isMobile: vi.fn(() => false),
+}));
+vi.mock('public/productPageUtils.js', () => ({
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+}));
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    for (const s of sections) { try { await s.init(); } catch (_) {} }
+  }),
+}));
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/ProductGallery.js', () => ({
+  initImageGallery: vi.fn(),
+  initProductBadge: vi.fn(),
+  initProductVideo: vi.fn(),
+}));
+vi.mock('public/ProductOptions.js', () => ({
+  initVariantSelector: vi.fn().mockResolvedValue(undefined),
+  initSwatchSelector: vi.fn(),
+}));
+vi.mock('public/ProductDetails.js', () => ({
+  initBreadcrumbs: vi.fn(),
+  initProductInfoAccordion: vi.fn(),
+  initSocialShare: vi.fn(),
+  initDeliveryEstimate: vi.fn(),
+  injectProductSchema: vi.fn(),
+  initSwatchRequest: vi.fn(),
+  initSwatchCTA: vi.fn(),
+}));
+vi.mock('public/AddToCart.js', () => ({
+  initQuantitySelector: vi.fn(),
+  initAddToCartEnhancements: vi.fn(),
+  initStickyCartBar: vi.fn(),
+  initBundleSection: vi.fn().mockResolvedValue(undefined),
+  initStockUrgency: vi.fn(),
+  initBackInStockNotification: vi.fn(),
+  initWishlistButton: vi.fn(),
+  initPriceDropNotify: vi.fn(),
+}));
+vi.mock('public/a11yHelpers.js', () => ({
+  makeClickable: vi.fn(),
+  announce: vi.fn(),
+}));
+vi.mock('public/socialProofToast', () => ({
+  initProductSocialProof: vi.fn(),
+  initCategorySocialProof: vi.fn(),
+}));
+vi.mock('backend/promotions.web', () => ({
+  getFlashSales: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('backend/productVideos.web', () => ({
+  getProductVideos: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/flashSaleHelpers', () => ({
+  initProductUrgencyBadge: vi.fn(),
+  initFlashSaleBanner: vi.fn(),
+  initFlashSaleUrgency: vi.fn(),
+}));
+vi.mock('public/product/productSchema.js', () => ({
+  injectProductMeta: vi.fn(),
+  injectPinterestMeta: vi.fn(),
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+}));
+vi.mock('public/giftProductBtn.js', () => ({
+  initGiftProductButton: vi.fn(),
+}));
+vi.mock('public/videoHelpers.js', () => ({
+  buildYouTubeEmbed: vi.fn(() => ''),
+}));
+vi.mock('public/PDPSocialProofBadge.js', () => ({
+  initPDPSocialProofBadge: vi.fn(),
+}));
+vi.mock('public/productStructuredData.js', () => ({
+  initProductStructuredData: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added mocks ────────────────────────────────────────────
   await import('../src/pages/Product Page.js');
   if (onReadyHandler) await onReadyHandler();
 }

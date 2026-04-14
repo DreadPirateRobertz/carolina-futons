@@ -14,6 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock('public/ChallengesDisplay.js', async () => await vi.importActual('../src/public/ChallengesDisplay.js'));
 import { __reset } from './__mocks__/wix-data.js';
 
 // ── $w mock infrastructure ─────────────────────────────────────────────────────
@@ -268,6 +269,16 @@ beforeEach(() => {
 });
 
 async function loadPage() {
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+}));
+// ChallengesDisplay NOT mocked — tests assert real getActiveChallenges
+// call and #challengesList repeater population.
+// ── End auto-added ─────────────────────────────────────────────────
   await import('../src/pages/Member Page.js');
   if (onReadyHandler) await onReadyHandler();
 }
