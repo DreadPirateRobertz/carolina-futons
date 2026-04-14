@@ -240,3 +240,59 @@ export const triggerWinbackSequence = webMethod(Permissions.Admin, async (params
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 });
+
+// ── scanAndTriggerWinback ─────────────────────────────────────────────────────
+
+const ORDERS_COLLECTION = 'Stores/Orders';
+// Weekly Monday cron. Window must cover at least one week so a customer who
+// hit day 30 the day after last Monday's run isn't silently skipped. 30–37
+// days picks up every lapsed buyer exactly once without backfilling history.
+const WINBACK_WINDOW_MIN_DAYS = 30;
+const WINBACK_WINDOW_MAX_DAYS = 37;
+
+/**
+ * Cron orchestrator: scans Stores/Orders for buyers whose most recent order
+ * landed in the winback window (30–37 days ago) and fires triggerWinbackSequence
+ * per unique buyer. enqueueEmail-level dedup in EmailQueue prevents double-sends
+ * across runs; an in-run Set prevents double-triggering for buyers with multiple
+ * orders in the same window.
+ *
+ * @function scanAndTriggerWinback
+ * @returns {Promise<{success: boolean, scanned: number, triggered: number, error?: string}>}
+ * @permission Admin
+ */
+export const scanAndTriggerWinback = webMethod(Permissions.Admin, async () => {
+  try {
+    const now = Date.now();
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const minDate = new Date(now - WINBACK_WINDOW_MAX_DAYS * DAY_MS);
+    const maxDate = new Date(now - WINBACK_WINDOW_MIN_DAYS * DAY_MS);
+
+    const orders = await wixData.query(ORDERS_COLLECTION)
+      .ge('_createdDate', minDate)
+      .le('_createdDate', maxDate)
+      .limit(1000)
+      .find({ suppressAuth: true });
+
+    const scanned = orders.items.length;
+    const seenEmails = new Set();
+    let triggered = 0;
+
+    for (const order of orders.items) {
+      const email = order?.buyerInfo?.email || '';
+      const contactId = order?.buyerInfo?.contactId || '';
+      const firstName = order?.buyerInfo?.firstName || '';
+      if (!email || !contactId) continue;
+      if (seenEmails.has(email)) continue;
+      seenEmails.add(email);
+
+      const result = await triggerWinbackSequence({ email, contactId, firstName });
+      if (result?.success && result?.enqueued > 0) triggered++;
+    }
+
+    return { success: true, scanned, triggered };
+  } catch (err) {
+    logError('scanAndTriggerWinback failed', err);
+    return { success: false, scanned: 0, triggered: 0, error: err?.message ?? 'unknown error' };
+  }
+});
