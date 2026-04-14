@@ -207,7 +207,6 @@ import { addToCart } from 'public/cartService.js';
 // ---------------------------------------------------------------------------
 // Import the page (triggers $w.onReady registration)
 // ---------------------------------------------------------------------------
-beforeAll(async () => {
 // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('backend/productVideos.web', () => ({
   getProductVideos: vi.fn().mockResolvedValue([]),
@@ -225,6 +224,8 @@ vi.mock('public/productStructuredData.js', () => ({
   initProductStructuredData: vi.fn().mockResolvedValue(undefined),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
   await import('../src/pages/Product Page.js');
 });
 

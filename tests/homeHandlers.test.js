@@ -161,7 +161,6 @@ let initBackToTop;
 let collapseOnMobile;
 let onViewportChange;
 
-beforeAll(async () => {
 // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/SocialFeedEmbed.js', () => ({
   initSocialFeeds: vi.fn().mockResolvedValue(undefined),
@@ -186,6 +185,8 @@ vi.mock('backend/utils/validateSchema', () => ({
   validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
   await import('../src/pages/Home.js');
   resetRatingsCache = (await import('public/StarRatingCard.js'))._resetCache;
   prioritizeSections = (await import('public/performanceHelpers.js')).prioritizeSections;

@@ -62,6 +62,10 @@ const UTILITY_MODULES = new Set([
   'public/sharedTokens',
   'public/designTokens.js',
   'public/designTokens',
+  // Integration-tested modules: real impl runs against seeded wix-data in tests
+  'backend/productVideos.web',
+  'public/videoHelpers.js',
+  'public/videoHelpers',
 ]);
 
 // ── Parse imports from a source file ────────────────────────────────

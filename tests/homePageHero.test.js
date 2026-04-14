@@ -201,8 +201,7 @@ const flushDeferred = () => Promise.resolve();
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
-  beforeAll(async () => {
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/SocialFeedEmbed.js', () => ({
   initSocialFeeds: vi.fn().mockResolvedValue(undefined),
 }));
@@ -226,6 +225,8 @@ vi.mock('backend/utils/validateSchema', () => ({
   validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

@@ -104,11 +104,15 @@ vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 // ── Import Home Page (registers $w.onReady) ─────────────────────────
 
 describe('CF-c94m: Announcement Bar + Trust Bar', () => {
-  beforeAll(async () => {
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
-    for (const s of sections) { try { await s.init(); } catch (_) {} }
+    const critical = [], deferred = [];
+    for (const s of sections) {
+      try { await s.init(); (s.critical ? critical : deferred).push({ status: 'fulfilled', value: undefined }); }
+      catch (err) { (s.critical ? critical : deferred).push({ status: 'rejected', reason: err }); }
+    }
+    return { critical, deferred };
   }),
   lazyLoadImage: vi.fn(),
 }));
@@ -161,6 +165,8 @@ vi.mock('backend/utils/validateSchema', () => ({
   validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

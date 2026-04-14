@@ -147,12 +147,7 @@ vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 describe('Cart Page — ARIA Live Regions (CF-7ll)', () => {
   let onReadyHandler = null;
 
-  beforeAll(async () => {
-    globalThis.$w = Object.assign(
-      (sel) => getEl(sel),
-      { onReady: (fn) => { onReadyHandler = fn; } }
-    );
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/galleryHelpers', () => ({
   getRecentlyViewed: vi.fn().mockResolvedValue([]),
   getProductBadge: vi.fn(() => null),
@@ -220,6 +215,12 @@ vi.mock('backend/loyaltyService.web', () => ({
   getMyDailyQuests: vi.fn().mockResolvedValue([]),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
+    globalThis.$w = Object.assign(
+      (sel) => getEl(sel),
+      { onReady: (fn) => { onReadyHandler = fn; } }
+    );
     await import('../src/pages/Cart Page.js');
   });
 

@@ -87,8 +87,6 @@ vi.mock('wix-location-frontend', () => ({
 }));
 
 // ── Import source (triggers $w.onReady registration) ─────────────────
-beforeAll(async () => {
-  elements.clear();
 // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
@@ -112,6 +110,9 @@ vi.mock('public/CartSpendToTierBar.js', () => ({
   updateSpendToTierBar: vi.fn().mockResolvedValue(undefined),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
+  elements.clear();
   await import('../src/pages/Side Cart.js');
 });
 

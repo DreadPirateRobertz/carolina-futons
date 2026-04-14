@@ -285,8 +285,7 @@ function renderItem(repeater, itemData) {
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Member Page - Order History Integration', () => {
-  beforeAll(async () => {
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('backend/gamificationEventReceiver.web', () => ({
   getActiveChallenges: vi.fn().mockResolvedValue([]),
   recoverStreak: vi.fn().mockResolvedValue({ success: false }),
@@ -306,6 +305,8 @@ vi.mock('public/giftCardHelpers.js', () => ({
   initGiftCardDashboard: vi.fn().mockResolvedValue(undefined),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Member Page.js');
   });
 

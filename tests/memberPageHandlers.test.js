@@ -103,12 +103,6 @@ let initBackToTop;
 let initPageSeo;
 let trackEvent;
 
-beforeAll(async () => {
-  ({ collapseOnMobile } = await import('public/mobileHelpers'));
-  ({ initBackToTop } = await import('public/mobileHelpers'));
-  ({ initPageSeo } = await import('public/pageSeo.js'));
-  ({ trackEvent } = await import('public/engagementTracker'));
-
 // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/productCardHelpers.js', () => ({
   renderSimplePrice: vi.fn(),
@@ -138,6 +132,13 @@ vi.mock('public/StreakDisplay.js', () => ({
   renderStreakWidget: vi.fn(),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
+  ({ collapseOnMobile } = await import('public/mobileHelpers'));
+  ({ initBackToTop } = await import('public/mobileHelpers'));
+  ({ initPageSeo } = await import('public/pageSeo.js'));
+  ({ trackEvent } = await import('public/engagementTracker'));
+
   await import('../src/pages/Member Page.js');
 });
 

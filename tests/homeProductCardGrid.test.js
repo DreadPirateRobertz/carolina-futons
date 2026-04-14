@@ -219,8 +219,7 @@ const flushDeferred = () => new Promise(r => setTimeout(r, 0));
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — Product Card Grid', () => {
-  beforeAll(async () => {
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/StarRatingCard.js', () => ({
   batchLoadRatings: vi.fn().mockResolvedValue({}),
   renderCardStarRating: vi.fn(),
@@ -270,6 +269,8 @@ vi.mock('backend/utils/validateSchema', () => ({
   validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Home.js');
   });
 

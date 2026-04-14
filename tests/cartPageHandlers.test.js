@@ -140,8 +140,7 @@ const { initPageSeo } = await import('public/pageSeo.js');
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Cart Page — handler behavior', () => {
-  beforeAll(async () => {
-// ── Auto-added by cf-obz ──────────────────────────────────────────
+  // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/RecentlyViewedWidget.js', () => ({
   renderWidget: vi.fn().mockResolvedValue(undefined),
 }));
@@ -186,6 +185,8 @@ vi.mock('backend/loyaltyService.web', () => ({
   getMyDailyQuests: vi.fn().mockResolvedValue([]),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
     await import('../src/pages/Cart Page.js');
   });
 

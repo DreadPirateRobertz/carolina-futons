@@ -131,7 +131,6 @@ const VIDEO_MP4_ONLY = {
 
 let initCatalogVideos;
 
-beforeAll(async () => {
 // ── Auto-added by cf-obz ──────────────────────────────────────────
 vi.mock('public/galleryHelpers.js', () => ({
   trackProductView: vi.fn(),
@@ -187,16 +186,12 @@ vi.mock('public/a11yHelpers.js', () => ({
   makeClickable: vi.fn(),
   announce: vi.fn(),
 }));
-vi.mock('backend/productVideos.web', () => ({
-  getProductVideos: vi.fn().mockResolvedValue([]),
-}));
-vi.mock('public/videoHelpers.js', () => ({
-  buildYouTubeEmbed: vi.fn(() => ''),
-}));
 vi.mock('public/productStructuredData.js', () => ({
   initProductStructuredData: vi.fn().mockResolvedValue(undefined),
 }));
 // ── End auto-added ─────────────────────────────────────────────────
+
+beforeAll(async () => {
   const mod = await import('../src/pages/Product Page.js');
   initCatalogVideos = mod.initCatalogVideos;
 });
