@@ -309,48 +309,11 @@ describe('initFooterNewsletter', () => {
 // ── initFooterSocial ────────────────────────────────────────────────
 
 describe('initFooterSocial', () => {
-  it('populates social repeater with platform data', () => {
-    initFooterSocial($w);
-    const repeater = $w('#footerSocialRepeater');
-    expect(repeater.data.length).toBeGreaterThan(0);
-    expect(repeater.data[0]).toHaveProperty('platform');
-    expect(repeater.data[0]).toHaveProperty('url');
-  });
-
-  it('registers onItemReady for social repeater', () => {
-    initFooterSocial($w);
-    expect($w('#footerSocialRepeater').onItemReady).toHaveBeenCalledTimes(1);
-  });
-
-  it('onItemReady sets icon text and ARIA label', () => {
-    initFooterSocial($w);
-    const cb = $w('#footerSocialRepeater').onItemReady.mock.calls[0][0];
-    const mockItem = createMockElement();
-    const $item = () => mockItem;
-    cb($item, {
-      platform: 'facebook',
-      url: 'https://www.facebook.com/carolinafutons',
-      ariaLabel: 'Visit Carolina Futons on Facebook',
-    });
-    expect(mockItem.text).toBe('facebook');
-    expect(mockItem.accessibility.ariaLabel).toContain('Facebook');
-  });
-
-  it('onItemReady registers onClick that opens link', () => {
-    initFooterSocial($w);
-    const cb = $w('#footerSocialRepeater').onItemReady.mock.calls[0][0];
-    const mockItem = createMockElement();
-    const $item = () => mockItem;
-    cb($item, {
-      platform: 'instagram',
-      url: 'https://www.instagram.com/carolinafutons',
-      ariaLabel: 'Follow on Instagram',
-    });
-    expect(mockItem.onClick).toHaveBeenCalled();
-  });
-
-  it('survives when social repeater is missing', () => {
-    const broken$w = () => null;
+  it('survives when social bar is missing', () => {
+    const broken$w = (sel) => {
+      if (sel === 'SocialBar') return { length: 0 };
+      return null;
+    };
     expect(() => initFooterSocial(broken$w)).not.toThrow();
   });
 });
@@ -507,99 +470,7 @@ describe('initFooterColumns — BUILD-SPEC contact IDs', () => {
   });
 });
 
-// ── Individual social buttons (cf-0z2w) ──────────────────────────────
-
-describe('initFooterSocial — individual social buttons', () => {
-  it('wires onClick on #socialFacebook', () => {
-    initFooterSocial($w);
-    expect($w('#socialFacebook').onClick).toHaveBeenCalled();
-  });
-
-  it('sets ariaLabel on #socialFacebook', () => {
-    initFooterSocial($w);
-    expect($w('#socialFacebook').accessibility.ariaLabel).toContain('Facebook');
-  });
-
-  it('wires onClick on #socialInstagram', () => {
-    initFooterSocial($w);
-    expect($w('#socialInstagram').onClick).toHaveBeenCalled();
-  });
-
-  it('sets ariaLabel on #socialInstagram', () => {
-    initFooterSocial($w);
-    expect($w('#socialInstagram').accessibility.ariaLabel).toContain('Instagram');
-  });
-
-  it('wires onClick on #socialPinterest', () => {
-    initFooterSocial($w);
-    expect($w('#socialPinterest').onClick).toHaveBeenCalled();
-  });
-
-  it('sets ariaLabel on #socialPinterest', () => {
-    initFooterSocial($w);
-    expect($w('#socialPinterest').accessibility.ariaLabel).toContain('Pinterest');
-  });
-});
-
-// ── initFooterSocial — invoke onClick handlers ───────────────────────
-
-describe('initFooterSocial — onClick handler invocation', () => {
-  it('onClick handler on #socialFacebook opens Facebook URL', () => {
-    const open = vi.fn();
-    global.window = { open };
-    initFooterSocial($w);
-    const handler = $w('#socialFacebook').onClick.mock.calls[0][0];
-    handler();
-    expect(open).toHaveBeenCalledWith('https://www.facebook.com/carolinafutons', '_blank');
-    delete global.window;
-  });
-
-  it('onClick handler on #socialInstagram opens Instagram URL', () => {
-    const open = vi.fn();
-    global.window = { open };
-    initFooterSocial($w);
-    const handler = $w('#socialInstagram').onClick.mock.calls[0][0];
-    handler();
-    expect(open).toHaveBeenCalledWith('https://www.instagram.com/carolinafutons', '_blank');
-    delete global.window;
-  });
-
-  it('onClick handler on #socialPinterest opens Pinterest URL', () => {
-    const open = vi.fn();
-    global.window = { open };
-    initFooterSocial($w);
-    const handler = $w('#socialPinterest').onClick.mock.calls[0][0];
-    handler();
-    expect(open).toHaveBeenCalledWith('https://www.pinterest.com/carolinafutons', '_blank');
-    delete global.window;
-  });
-
-  it('social repeater onItemReady callback sets icon text and aria', () => {
-    initFooterSocial($w);
-    const repeater = $w('#footerSocialRepeater');
-    const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
-    const mockIcon = createMockElement();
-    const $item = () => mockIcon;
-    onItemReadyCb($item, { platform: 'facebook', ariaLabel: 'Visit on Facebook', url: 'https://www.facebook.com/carolinafutons' });
-    expect(mockIcon.text).toBe('facebook');
-    expect(mockIcon.accessibility.ariaLabel).toBe('Visit on Facebook');
-  });
-
-  it('social repeater onItemReady onClick handler opens URL', () => {
-    const open = vi.fn();
-    global.window = { open };
-    initFooterSocial($w);
-    const repeater = $w('#footerSocialRepeater');
-    const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
-    const mockIcon = createMockElement();
-    const $item = () => mockIcon;
-    onItemReadyCb($item, { platform: 'instagram', ariaLabel: 'Follow on Instagram', url: 'https://www.instagram.com/carolinafutons' });
-    const iconClickHandler = mockIcon.onClick.mock.calls[0][0];
-    iconClickHandler();
-    expect(open).toHaveBeenCalledWith('https://www.instagram.com/carolinafutons', '_blank');
-    delete global.window;
-  });
-});
+// ── Social bar handled by fixTemplateSocialBar (native Wix SocialBar) ──
 
 // ── initFooterColumns — onItemReady branch coverage ─────────────────
 
@@ -1187,25 +1058,7 @@ describe('applyFooterStyles', () => {
     expect(mockLink.style.color).toBe(baseColor);
   });
 
-  it('registers onItemReady with hover on social repeater', () => {
-    applyFooterStyles($w);
-    expect($w('#footerSocialRepeater').onItemReady).toHaveBeenCalled();
-  });
-
-  it('social icon mouseIn/mouseOut toggles color', () => {
-    applyFooterStyles($w);
-    const cb = $w('#footerSocialRepeater').onItemReady.mock.calls[0][0];
-    const mockIcon = createMockElement();
-    const $item = () => mockIcon;
-    cb($item);
-    const baseColor = mockIcon.style.color;
-    const mouseInHandler = mockIcon.onMouseIn.mock.calls[0][0];
-    mouseInHandler();
-    expect(mockIcon.style.color).not.toBe(baseColor);
-    const mouseOutHandler = mockIcon.onMouseOut.mock.calls[0][0];
-    mouseOutHandler();
-    expect(mockIcon.style.color).toBe(baseColor);
-  });
+  // Social bar styling handled by native Wix SocialBar widget
 
   it('survives when all elements throw', () => {
     const broken$w = () => { throw new Error('nope'); };
