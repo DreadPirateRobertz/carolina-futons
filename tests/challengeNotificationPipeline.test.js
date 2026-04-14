@@ -230,3 +230,18 @@ describe('processChallengeNotifSMSQueue — in-flight lock', () => {
     expect(r2.skipped).toBeUndefined();
   });
 });
+
+describe('jobs.config — processChallengeNotifSMSQueue entry', () => {
+  it('registers processChallengeNotifSMSQueue pointing to gamificationNotifs.web.js', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+    expect(jobs.processChallengeNotifSMSQueue).toBeDefined();
+    expect(jobs.processChallengeNotifSMSQueue.functionLocation).toBe('/gamificationNotifs.web.js');
+  });
+
+  it('schedules processChallengeNotifSMSQueue every 15 minutes to match processEmailQueue cadence', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+    expect(jobs.processChallengeNotifSMSQueue.executionConfig.cronExpression).toBe('*/15 * * * *');
+  });
+});
