@@ -54,6 +54,8 @@ const SEQUENCES = {
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
       { step: 2, templateId: 'welcome_series_2', delayHours: 48, description: 'Best sellers showcase (Day 2 — CF-o63p)' },
       { step: 3, templateId: 'welcome_series_3', delayHours: 120, description: 'Buying guide + purchase nudge (Day 5 — CF-o63p)' },
+      { step: 4, templateId: 'welcome_series_4', delayHours: 336, description: 'Day 14 engagement check — browse reminder + activity-based nudge (cf-20c)' },
+      { step: 5, templateId: 'welcome_series_5', delayHours: 504, description: 'Day 21 final value email — social proof + last nudge before series ends (cf-20c)' },
     ],
     abTestStep: 1,
     abVariants: {

@@ -62,7 +62,7 @@ describe('triggerWelcomeSequence — edge-case inputs', () => {
 
     const result = await triggerWelcomeSequence('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'test@example.com', '');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
     expect(insertedItems[0].variables.firstName).toBe('');
   });
 
@@ -80,7 +80,7 @@ describe('triggerWelcomeSequence — edge-case inputs', () => {
   it('handles empty contactId without error', async () => {
     const result = await triggerWelcomeSequence('', 'test@example.com', 'Alice');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 
   it('replaces {firstName} in A/B variant B subject line', async () => {
@@ -885,7 +885,7 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     });
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeEmails.length).toBe(3);
+    expect(welcomeEmails.length).toBe(5);
     expect(welcomeEmails[0].variables.firstName).toBe('NickName');
   });
 
@@ -900,7 +900,7 @@ describe('wixMembers_onMemberCreated — event shape edge cases', () => {
     });
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeEmails.length).toBe(3);
+    expect(welcomeEmails.length).toBe(5);
   });
 });
 

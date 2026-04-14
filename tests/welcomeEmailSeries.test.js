@@ -38,15 +38,15 @@ describe('triggerWelcomeSeries — happy path', () => {
     expect(result.success).toBe(true);
   });
 
-  it('returns queued:3 (all three welcome steps)', async () => {
+  it('returns queued:5 (all five welcome steps — cf-20c)', async () => {
     const result = await triggerWelcomeSeries(EMAIL, FIRST_NAME);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 
-  it('inserts 3 records into EmailQueue', async () => {
+  it('inserts 5 records into EmailQueue', async () => {
     await triggerWelcomeSeries(EMAIL, FIRST_NAME);
     const records = __getInserted('EmailQueue');
-    expect(records).toHaveLength(3);
+    expect(records).toHaveLength(5);
   });
 
   it('queued records have sequenceType:welcome', async () => {
@@ -55,10 +55,10 @@ describe('triggerWelcomeSeries — happy path', () => {
     expect(records.every(r => r.sequenceType === 'welcome')).toBe(true);
   });
 
-  it('queued records have sequenceSteps 1, 2, 3', async () => {
+  it('queued records have sequenceSteps 1, 2, 3, 4, 5', async () => {
     await triggerWelcomeSeries(EMAIL, FIRST_NAME);
     const steps = __getInserted('EmailQueue').map(r => r.sequenceStep).sort();
-    expect(steps).toEqual([1, 2, 3]);
+    expect(steps).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('queued records have correct recipientEmail', async () => {
@@ -161,7 +161,7 @@ describe('triggerWelcomeSeries — dedup guard', () => {
     ]);
     const result = await triggerWelcomeSeries('bob@example.com', 'Bob');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 });
 
@@ -235,7 +235,7 @@ describe('triggerWelcomeSeries — input validation', () => {
   it('accepts valid email and queues successfully', async () => {
     const result = await triggerWelcomeSeries('valid@test.com', 'Test');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 });
 
@@ -255,7 +255,7 @@ describe('triggerWelcomeSeries — discount secret fallback', () => {
     // No secrets set — getSecret will throw
     const result = await triggerWelcomeSeries(EMAIL, FIRST_NAME);
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 
   it('stores empty discountCode when secret is unavailable', async () => {
