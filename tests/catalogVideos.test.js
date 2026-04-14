@@ -132,6 +132,71 @@ const VIDEO_MP4_ONLY = {
 let initCatalogVideos;
 
 beforeAll(async () => {
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/galleryHelpers.js', () => ({
+  trackProductView: vi.fn(),
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  collapseOnMobile: vi.fn(),
+  initBackToTop: vi.fn(),
+  isMobile: vi.fn(() => false),
+}));
+vi.mock('public/productPageUtils.js', () => ({
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+}));
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/ProductGallery.js', () => ({
+  initImageGallery: vi.fn(),
+  initProductBadge: vi.fn(),
+  initProductVideo: vi.fn(),
+}));
+vi.mock('public/ProductOptions.js', () => ({
+  initVariantSelector: vi.fn().mockResolvedValue(undefined),
+  initSwatchSelector: vi.fn(),
+}));
+vi.mock('public/ProductDetails.js', () => ({
+  initBreadcrumbs: vi.fn(),
+  initProductInfoAccordion: vi.fn(),
+  initSocialShare: vi.fn(),
+  initDeliveryEstimate: vi.fn(),
+  injectProductSchema: vi.fn(),
+  initSwatchRequest: vi.fn(),
+  initSwatchCTA: vi.fn(),
+}));
+vi.mock('public/AddToCart.js', () => ({
+  initQuantitySelector: vi.fn(),
+  initAddToCartEnhancements: vi.fn(),
+  initStickyCartBar: vi.fn(),
+  initBundleSection: vi.fn().mockResolvedValue(undefined),
+  initStockUrgency: vi.fn(),
+  initBackInStockNotification: vi.fn(),
+  initWishlistButton: vi.fn(),
+  initPriceDropNotify: vi.fn(),
+}));
+vi.mock('public/a11yHelpers.js', () => ({
+  makeClickable: vi.fn(),
+  announce: vi.fn(),
+}));
+vi.mock('backend/productVideos.web', () => ({
+  getProductVideos: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/videoHelpers.js', () => ({
+  buildYouTubeEmbed: vi.fn(() => ''),
+}));
+vi.mock('public/productStructuredData.js', () => ({
+  initProductStructuredData: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
   const mod = await import('../src/pages/Product Page.js');
   initCatalogVideos = mod.initCatalogVideos;
 });

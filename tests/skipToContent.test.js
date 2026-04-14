@@ -78,6 +78,82 @@ vi.mock('backend/contactSubmissions.web', () => ({
 
 // ── Import Page ─────────────────────────────────────────────────────
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('backend/announcementBarService.web', () => ({
+  getActiveAnnouncementBars: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/cartService', () => ({
+  getCurrentCart: vi.fn().mockResolvedValue(null),
+  onCartChanged: vi.fn(),
+  getShippingProgress: vi.fn(() => ({ remaining: 0, progressPct: 100, qualifies: true })),
+  isFreeShippingEnabled: vi.fn(() => false),
+}));
+vi.mock('public/miniCartDrawer', () => ({
+  initMiniCartDrawer: vi.fn(),
+  openMiniCart: vi.fn(),
+  closeMiniCart: vi.fn(),
+  updateCartCount: vi.fn(),
+}));
+vi.mock('public/performanceHelpers', () => ({
+  sharePromise: vi.fn(fn => fn()),
+  deferInit: vi.fn(fn => fn()),
+  prioritizeSections: vi.fn(async (sections) => {
+    for (const s of sections) { try { await s.init(); } catch (_) {} }
+  }),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  getViewport: vi.fn(() => 'desktop'),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+}));
+vi.mock('public/ga4Tracking', () => ({
+  fireCustomEvent: vi.fn(),
+  initScrollDepthTracking: vi.fn(),
+}));
+vi.mock('public/pwaHelpers', () => ({
+  captureInstallPrompt: vi.fn(),
+  canShowInstallPrompt: vi.fn(() => false),
+  showInstallPrompt: vi.fn(),
+  isInstalledPWA: vi.fn(() => false),
+}));
+vi.mock('public/AppDownloadBanner', () => ({
+  initAppDownloadBanner: vi.fn(),
+}));
+vi.mock('backend/coreWebVitals.web', () => ({
+  reportMetrics: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/FooterSection', () => ({
+  initFooter: vi.fn(),
+  initMountainDividerWithSkyWiring: vi.fn(),
+}));
+vi.mock('public/CartUpsell', () => ({
+  initCartUpsell: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/pixelConsentService', () => ({
+  initConsentGate: vi.fn(),
+  fireTrackedTikTokEvent: vi.fn(),
+}));
+vi.mock('public/carolinaFutonsLogo', () => ({
+  getLogoImageUrl: vi.fn(() => ''),
+}));
+vi.mock('public/a11yHelpers', () => ({
+  initSkipNav: vi.fn(),
+  setupAccessibleDialog: vi.fn(),
+  announce: vi.fn(),
+  makeClickable: vi.fn(),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  formatCardPrice: vi.fn(),
+  renderSimplePrice: vi.fn(),
+  styleCardContainer: vi.fn(),
+}));
+vi.mock('public/navigationHelpers', () => ({
+  initNavHighlight: vi.fn(),
+  buildBreadcrumb: vi.fn(() => []),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
 describe('Skip-to-Content Link (CF-29d)', () => {
   beforeAll(async () => {
     await import('../src/pages/masterPage.js');

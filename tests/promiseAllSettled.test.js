@@ -81,6 +81,78 @@ vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
 describe('Promise.allSettled — Home Page partial failures', () => {
   beforeAll(async () => {
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/mobileHelpers', () => ({
+  isMobile: vi.fn(() => false),
+  collapseOnMobile: vi.fn(),
+  initBackToTop: vi.fn(),
+  limitForViewport: vi.fn(n => n),
+  onViewportChange: vi.fn(),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackCartAdd: vi.fn(),
+}));
+vi.mock('public/a11yHelpers', () => ({
+  announce: vi.fn(),
+  makeClickable: vi.fn(),
+  setupAccessibleDialog: vi.fn(),
+}));
+vi.mock('public/performanceHelpers.js', () => ({
+  prioritizeSections: vi.fn(async (sections) => {
+    for (const s of sections) { try { await s.init(); } catch (_) {} }
+  }),
+  lazyLoadImage: vi.fn(),
+}));
+vi.mock('public/StarRatingCard.js', () => ({
+  batchLoadRatings: vi.fn().mockResolvedValue({}),
+  renderCardStarRating: vi.fn(),
+  _resetCache: vi.fn(),
+}));
+vi.mock('public/WishlistCardButton.js', () => ({
+  initCardWishlistButton: vi.fn(),
+  batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+  setCardImage: vi.fn(),
+  getBadgeColor: vi.fn(() => ''),
+  renderSimplePrice: vi.fn(),
+}));
+vi.mock('public/productPageUtils.js', () => ({
+  isCallForPrice: vi.fn(() => false),
+  CALL_FOR_PRICE_TEXT: 'Call for Price',
+  buildGridAlt: vi.fn(p => p?.name ?? ''),
+}));
+vi.mock('public/galleryConfig.js', () => ({
+  getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
+}));
+vi.mock('public/SocialFeedEmbed.js', () => ({
+  initSocialFeeds: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/HomeBlogTeasers.js', () => ({
+  initBlogTeaserRepeater: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/giftCardSection.js', () => ({
+  initGiftCardSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ContinueShoppingSection.js', () => ({
+  initContinueShoppingSection: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
+  initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/ups-shipping.web', () => ({
+  getShippingRate: vi.fn().mockResolvedValue(null),
+  getEstimatedDelivery: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('backend/utils/validateSchema', () => ({
+  validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
     await import('../src/pages/Home.js');
   });
 

@@ -168,6 +168,23 @@ import { cacheProduct } from 'public/productCache';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 
 beforeAll(async () => {
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('backend/productVideos.web', () => ({
+  getProductVideos: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('public/giftProductBtn.js', () => ({
+  initGiftProductButton: vi.fn(),
+}));
+vi.mock('public/videoHelpers.js', () => ({
+  buildYouTubeEmbed: vi.fn(() => ''),
+}));
+vi.mock('public/PDPSocialProofBadge.js', () => ({
+  initPDPSocialProofBadge: vi.fn(),
+}));
+vi.mock('public/productStructuredData.js', () => ({
+  initProductStructuredData: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
   await import('../src/pages/Product Page.js');
 });
 

@@ -218,6 +218,43 @@ import {
 
 // ── Active Page Indicator ───────────────────────────────────────────
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/performanceHelpers', () => ({
+  sharePromise: vi.fn(fn => fn()),
+  deferInit: vi.fn(fn => fn()),
+  prioritizeSections: vi.fn(async (sections) => {
+    for (const s of sections) { try { await s.init(); } catch (_) {} }
+  }),
+}));
+vi.mock('public/AppDownloadBanner', () => ({
+  initAppDownloadBanner: vi.fn(),
+}));
+vi.mock('public/FooterSection', () => ({
+  initFooter: vi.fn(),
+  initMountainDividerWithSkyWiring: vi.fn(),
+}));
+vi.mock('public/CartUpsell', () => ({
+  initCartUpsell: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/carolinaFutonsLogo', () => ({
+  getLogoImageUrl: vi.fn(() => ''),
+}));
+vi.mock('public/a11yHelpers', () => ({
+  initSkipNav: vi.fn(),
+  setupAccessibleDialog: vi.fn(),
+  announce: vi.fn(),
+  makeClickable: vi.fn(),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  formatCardPrice: vi.fn(),
+  renderSimplePrice: vi.fn(),
+  styleCardContainer: vi.fn(),
+}));
+vi.mock('public/navigationHelpers', () => ({
+  initNavHighlight: vi.fn(),
+  buildBreadcrumb: vi.fn(() => []),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
 describe('Navigation Helpers', () => {
   beforeEach(() => {
     elements.clear();

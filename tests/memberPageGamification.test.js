@@ -268,6 +268,17 @@ beforeEach(() => {
 });
 
 async function loadPage() {
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+}));
+vi.mock('public/ChallengesDisplay.js', () => ({
+  initChallengesDisplay: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
   await import('../src/pages/Member Page.js');
   if (onReadyHandler) await onReadyHandler();
 }

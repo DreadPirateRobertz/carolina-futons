@@ -152,6 +152,74 @@ describe('Cart Page — ARIA Live Regions (CF-7ll)', () => {
       (sel) => getEl(sel),
       { onReady: (fn) => { onReadyHandler = fn; } }
     );
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/galleryHelpers', () => ({
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+  getProductBadge: vi.fn(() => null),
+  addToCompare: vi.fn(),
+  removeFromCompare: vi.fn(),
+  getCompareList: vi.fn(() => []),
+}));
+vi.mock('public/RecentlyViewedWidget.js', () => ({
+  renderWidget: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/mobileHelpers', () => ({
+  initBackToTop: vi.fn(),
+  collapseOnMobile: vi.fn(),
+  limitForViewport: vi.fn(n => n),
+  isMobile: vi.fn(() => false),
+}));
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+  trackCartAdd: vi.fn(),
+  trackProductPageView: vi.fn(),
+}));
+vi.mock('public/ga4Tracking', () => ({
+  fireViewCart: vi.fn(),
+  fireViewContent: vi.fn(),
+  fireViewItemList: vi.fn(),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+}));
+vi.mock('public/CartDeliveryEstimates.js', () => ({
+  initCartDelivery: vi.fn().mockResolvedValue(undefined),
+  updateCartDelivery: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartRecentlyViewed.js', () => ({
+  initCartRecentlyViewed: vi.fn().mockResolvedValue(undefined),
+  updateCartRecentlyViewed: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/FreightUpsellBanner.js', () => ({
+  initFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+  updateFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartShippingEstimate.js', () => ({
+  initCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  initSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartLoyaltyBar.js', () => ({
+  initCartLoyaltyBar: vi.fn().mockResolvedValue(undefined),
+  updateCartLoyaltyBar: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartSpendToTierBar.js', () => ({
+  initSpendToTierBar: vi.fn().mockResolvedValue(undefined),
+  updateSpendToTierBar: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('backend/loyaltyService.web', () => ({
+  getMyLoyaltyAccount: vi.fn().mockResolvedValue(null),
+  getMyStreakData: vi.fn().mockResolvedValue(null),
+  getMyAchievements: vi.fn().mockResolvedValue([]),
+  getMyDailyQuests: vi.fn().mockResolvedValue([]),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
     await import('../src/pages/Cart Page.js');
   });
 

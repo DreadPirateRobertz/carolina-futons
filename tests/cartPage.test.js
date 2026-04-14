@@ -178,6 +178,41 @@ async function loadPage(overrides = {}) {
   const { getCartFinancing } = await import('backend/financingCalc.web');
   getCartFinancing.mockResolvedValue(overrides.financing ?? { success: false });
 
+// ── Auto-added by cf-obz ──────────────────────────────────────────
+vi.mock('public/galleryHelpers', () => ({
+  getRecentlyViewed: vi.fn().mockResolvedValue([]),
+  getProductBadge: vi.fn(() => null),
+  addToCompare: vi.fn(),
+  removeFromCompare: vi.fn(),
+  getCompareList: vi.fn(() => []),
+}));
+vi.mock('public/productCardHelpers.js', () => ({
+  renderSimplePrice: vi.fn(),
+  setCardImage: vi.fn(),
+  styleCardContainer: vi.fn(),
+  styleBadge: vi.fn(),
+  initCardHover: vi.fn(),
+  formatCardPrice: vi.fn(),
+}));
+vi.mock('public/CartDeliveryEstimates.js', () => ({
+  initCartDelivery: vi.fn().mockResolvedValue(undefined),
+  updateCartDelivery: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartRecentlyViewed.js', () => ({
+  initCartRecentlyViewed: vi.fn().mockResolvedValue(undefined),
+  updateCartRecentlyViewed: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/FreightUpsellBanner.js', () => ({
+  initFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+  updateFreightUpsellBanner: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock('public/CartShippingEstimate.js', () => ({
+  initCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  initSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+  updateSideCartShippingEstimate: vi.fn().mockResolvedValue(undefined),
+}));
+// ── End auto-added ─────────────────────────────────────────────────
   await import('../src/pages/Cart Page.js');
   if (onReadyHandler) await onReadyHandler();
 }
