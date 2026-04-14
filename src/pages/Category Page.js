@@ -42,6 +42,8 @@ let _filterSessionState = {}; // persists across category nav within session
 let _wishlistSet = new Set(); // cached wishlist status for product cards
 let _loyaltyAccount = null; // cached loyalty account for per-card gamification chip (CF-pyw)
 let _renderCardChipFn = null; // lazy-loaded render helper (dynamic import keeps page import budget)
+let _gamificationChips = null; // cached chip data for badge/streak overlays (cf-tcs)
+let _renderBadgeStreakChipFn = null; // lazy-loaded from GamificationProductChip (cf-tcs)
 
 // sanitizeInput aliased from shared module
 const sanitizeInput = sanitizeFilterInput;
@@ -540,7 +542,23 @@ async function preloadLoyaltyAccount() {
       import('public/GamificationProductChip.js'),
     ]);
     _renderCardChipFn = chipMod.renderCardGamificationChip;
+    _renderBadgeStreakChipFn = chipMod.renderBadgeStreakChip;
     _loyaltyAccount = await loyaltyMod.getMyLoyaltyAccount();
+
+    // cf-tcs: load badge/streak chip data for logged-in members
+    const memberId = _loyaltyAccount?.memberId ?? null;
+    if (memberId) {
+      try {
+        const repeater = $w('#productGridRepeater');
+        const productIds = (repeater?.data || []).map(p => p._id).filter(Boolean).slice(0, 50);
+        if (productIds.length > 0) {
+          const { getGamificationChipsForProducts } = await import('backend/gamificationChipService.web');
+          const chipResult = await getGamificationChipsForProducts(productIds, memberId);
+          _gamificationChips = chipResult.success ? chipResult.chips : null;
+        }
+      } catch (e) {}
+    }
+
     // Refresh already-rendered cards — onItemReady fires before this resolves
     // for items visible at page load, so chips would be blank without this. (CF-pyw)
     try {
@@ -548,6 +566,7 @@ async function preloadLoyaltyAccount() {
       if (repeater && _renderCardChipFn) {
         repeater.forEachItem(($item) => {
           _renderCardChipFn($item, _loyaltyAccount);
+          if (_renderBadgeStreakChipFn) _renderBadgeStreakChipFn($item, _gamificationChips);
         });
       }
     } catch (e) {}
@@ -603,6 +622,8 @@ function initProductGrid() {
 
       // Gamification chip: member's tier + points in browse context (CF-pyw)
       if (_renderCardChipFn) _renderCardChipFn($item, _loyaltyAccount);
+      // Badge/streak/points chip overlay (cf-tcs)
+      if (_renderBadgeStreakChipFn) _renderBadgeStreakChipFn($item, _gamificationChips);
 
       // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';

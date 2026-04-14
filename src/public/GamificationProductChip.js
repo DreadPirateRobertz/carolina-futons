@@ -128,6 +128,85 @@ export function renderCardGamificationChip($item, account) {
 }
 
 /**
+ * Format a compact chip label combining badge count, streak, and points.
+ * Used by renderBadgeStreakChip for the richer category-page overlay.
+ *
+ * cf-tcs
+ *
+ * @param {{ points: number, tier: string|null, streak: number, badges: string[], hasActivity: boolean }|null} chips
+ * @returns {string} e.g. "🏅 2 badges · 🔥 5d streak · 420 pts", or ''
+ */
+export function formatBadgeStreakChipLabel(chips) {
+  if (!chips || !chips.hasActivity) return '';
+  const parts = [];
+  if (chips.badges && chips.badges.length > 0) {
+    parts.push(`🏅 ${chips.badges.length} badge${chips.badges.length === 1 ? '' : 's'}`);
+  }
+  if (chips.streak > 0) {
+    parts.push(`🔥 ${chips.streak}d streak`);
+  }
+  if (chips.points > 0) {
+    parts.push(`${chips.points} pts`);
+  }
+  return parts.join(' · ');
+}
+
+/**
+ * Render badge, streak, and points chips on a single product card.
+ * Targets #gridGamificationChip (combined label) and optionally
+ * #gridBadgeChip, #gridStreakChip as separate elements.
+ * No-ops gracefully if elements are absent.
+ *
+ * cf-tcs
+ *
+ * @param {Function} $item - Repeater item selector
+ * @param {{ points: number, tier: string|null, streak: number, badges: string[], hasActivity: boolean }|null} chips
+ */
+export function renderBadgeStreakChip($item, chips) {
+  try {
+    const label = formatBadgeStreakChipLabel(chips);
+    const chip = $item('#gridGamificationChip');
+    if (!chip) return;
+    if (label) {
+      chip.text = label;
+      chip.show();
+    } else {
+      chip.hide();
+    }
+  } catch (err) {
+    console.warn('[GamificationProductChip] renderBadgeStreakChip failed:', err?.message ?? err);
+  }
+
+  // Optional separate badge chip
+  try {
+    const badgeChip = $item('#gridBadgeChip');
+    if (badgeChip) {
+      const count = chips?.badges?.length ?? 0;
+      if (count > 0) {
+        badgeChip.text = `🏅 ${count} badge${count === 1 ? '' : 's'}`;
+        badgeChip.show();
+      } else {
+        badgeChip.hide();
+      }
+    }
+  } catch (_) {}
+
+  // Optional separate streak chip
+  try {
+    const streakChip = $item('#gridStreakChip');
+    if (streakChip) {
+      const streak = chips?.streak ?? 0;
+      if (streak > 0) {
+        streakChip.text = `🔥 ${streak}d`;
+        streakChip.show();
+      } else {
+        streakChip.hide();
+      }
+    }
+  } catch (_) {}
+}
+
+/**
  * Initialise the member tier chip on any page.
  * Fetches the loyalty account and renders the chip elements.
  * Silently no-ops for unauthenticated visitors (null account).
