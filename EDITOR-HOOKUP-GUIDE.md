@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-13 (v4.1 — Stamped.io setup expanded: full 4-step Stilgar hookup guide (webhook URL, 4 secrets, app install, productReviewWidget placement), StarRatingCard batch integration note for Home/Category. Previous: v4.0 — Phase 6 App-Forward push/deep-link/spin/mobile-challenges/cross-rig, cf-3z1 Challenge of Week, cf-73p Leaderboard, cf-tcs gamification chips, cf-2yd streak cron.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-14 (v4.2 — Night shift: 5 PRs merged (#1052 win-back, #1060 ShareYourRoom a11y, #1053 lastActivityAt, #1007 footer/SocialBar, #1061 SMS cron). Phase 8 audit: 5 sequences wired, 2 gaps filed (cf-fsm review-request, cf-amx winback). Dashboard items needed: 3 Secrets Manager entries + 2 CMS collections (ChallengeOfTheWeek, PushTokens). Previous: v4.1 — Stamped.io 4-step hookup guide.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
