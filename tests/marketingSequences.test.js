@@ -26,6 +26,7 @@ import {
   triggerPostPurchaseSequence,
   triggerReviewRequestSequence,
   triggerWinbackSequence,
+  scanAndTriggerWinback,
   EMAIL_SEQUENCES_COLLECTION,
 } from '../src/backend/marketingSequences.web.js';
 
@@ -652,5 +653,136 @@ describe('triggerWinbackSequence — null params', () => {
     const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
     const vars = JSON.parse(queued[0].variables);
     expect(vars.firstName).toBe('');
+  });
+});
+
+// ── scanAndTriggerWinback — cf-amx cron scanner ───────────────────────────────
+
+describe('scanAndTriggerWinback — cf-amx', () => {
+  const ORDERS = 'Stores/Orders';
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  function makeOrder(overrides = {}) {
+    return {
+      _id: overrides._id ?? `order-${Math.random().toString(36).slice(2, 8)}`,
+      _createdDate: overrides._createdDate ?? new Date(Date.now() - 30 * DAY_MS),
+      buyerInfo: overrides.buyerInfo ?? {
+        email: 'buyer@example.com',
+        contactId: 'contact-1',
+        firstName: 'Alice',
+      },
+    };
+  }
+
+  it('triggers winback for an order placed ~30 days ago', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    __seed(ORDERS, [makeOrder({ _createdDate: new Date(Date.now() - 30 * DAY_MS) })]);
+
+    const result = await scanAndTriggerWinback();
+
+    expect(result.success).toBe(true);
+    expect(result.triggered).toBe(1);
+    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
+    expect(queued).toHaveLength(1);
+    expect(queued[0].sequenceType).toBe('winback');
+  });
+
+  it('skips orders outside the 30–37 day lookback window', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    __seed(ORDERS, [
+      makeOrder({ _id: 'too-recent', _createdDate: new Date(Date.now() - 20 * DAY_MS) }),
+      makeOrder({ _id: 'too-old',    _createdDate: new Date(Date.now() - 60 * DAY_MS) }),
+    ]);
+
+    const result = await scanAndTriggerWinback();
+    expect(result.triggered).toBe(0);
+    expect(__getInserted(EMAIL_QUEUE_COLLECTION)).toHaveLength(0);
+  });
+
+  it('dedups multiple orders from the same buyer to a single winback trigger', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    const buyer = { email: 'repeat@example.com', contactId: 'c-repeat', firstName: 'Repeat' };
+    __seed(ORDERS, [
+      makeOrder({ _id: 'o1', _createdDate: new Date(Date.now() - 30 * DAY_MS), buyerInfo: buyer }),
+      makeOrder({ _id: 'o2', _createdDate: new Date(Date.now() - 32 * DAY_MS), buyerInfo: buyer }),
+    ]);
+
+    const result = await scanAndTriggerWinback();
+    expect(result.triggered).toBe(1);
+    expect(__getInserted(EMAIL_QUEUE_COLLECTION)).toHaveLength(1);
+  });
+
+  it('skips buyers whose winback is already in EmailQueue (idempotent re-run)', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(ORDERS, [makeOrder({ _createdDate: new Date(Date.now() - 30 * DAY_MS) })]);
+    __seed(EMAIL_QUEUE_COLLECTION, [{
+      _id: 'dup-wb',
+      recipientEmail: 'buyer@example.com',
+      sequenceType: 'winback',
+      sequenceStep: 1,
+      status: 'pending',
+    }]);
+
+    await scanAndTriggerWinback();
+    // enqueueEmail dedup prevents a second queue row — only the pre-seeded row
+    // should remain.
+    const winbackRows = __getInserted(EMAIL_QUEUE_COLLECTION)
+      .filter(r => r.sequenceType === 'winback');
+    expect(winbackRows).toHaveLength(1);
+    expect(winbackRows[0]._id).toBe('dup-wb');
+  });
+
+  it('skips orders missing buyerInfo.email', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    __seed(ORDERS, [makeOrder({
+      _createdDate: new Date(Date.now() - 30 * DAY_MS),
+      buyerInfo: { email: '', contactId: 'c-1', firstName: '' },
+    })]);
+
+    const result = await scanAndTriggerWinback();
+    expect(result.triggered).toBe(0);
+  });
+
+  it('skips orders missing buyerInfo.contactId', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    __seed(ORDERS, [makeOrder({
+      _createdDate: new Date(Date.now() - 30 * DAY_MS),
+      buyerInfo: { email: 'no-cid@example.com', contactId: '', firstName: '' },
+    })]);
+
+    const result = await scanAndTriggerWinback();
+    expect(result.triggered).toBe(0);
+  });
+
+  it('returns { success: false } on query error', async () => {
+    __setQueryError(ORDERS, new Error('query boom'));
+    const result = await scanAndTriggerWinback();
+    expect(result.success).toBe(false);
+    expect(result.triggered).toBe(0);
+  });
+
+  it('reports scanned and triggered counts', async () => {
+    seedSequence('winback', [{ delayHours: 720, templateId: 'tpl-wb' }]);
+    __seed(EMAIL_QUEUE_COLLECTION, []);
+    __seed(ORDERS, [
+      makeOrder({ _id: 'o1', _createdDate: new Date(Date.now() - 30 * DAY_MS),
+        buyerInfo: { email: 'a@x.com', contactId: 'c-a', firstName: 'A' } }),
+      makeOrder({ _id: 'o2', _createdDate: new Date(Date.now() - 31 * DAY_MS),
+        buyerInfo: { email: 'b@x.com', contactId: 'c-b', firstName: 'B' } }),
+      makeOrder({ _id: 'o3', _createdDate: new Date(Date.now() - 10 * DAY_MS), // out of window
+        buyerInfo: { email: 'c@x.com', contactId: 'c-c', firstName: 'C' } }),
+    ]);
+
+    const result = await scanAndTriggerWinback();
+    expect(result.success).toBe(true);
+    // scanned counts orders returned by the range query (window filter),
+    // so the out-of-window order is excluded.
+    expect(result.scanned).toBe(2);
+    expect(result.triggered).toBe(2);
   });
 });

@@ -9,6 +9,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
+import { scanAndTriggerWinback } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
@@ -802,6 +803,46 @@ export async function get_triggerReengagementCron(request) {
     });
   } catch (err) {
     console.error('HTTP function error (triggerReengagementCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── cf-amx: Winback Scanner Cron ───────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/scanAndTriggerWinbackCron
+// Weekly Monday 10 AM EST via jobs.config. Also callable by external cron.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_scanAndTriggerWinbackCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await scanAndTriggerWinback();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        scanned: result.scanned || 0,
+        triggered: result.triggered || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (scanAndTriggerWinbackCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
