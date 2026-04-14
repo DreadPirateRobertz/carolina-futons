@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-14 (v4.2 — Night shift: 5 PRs merged (#1052 win-back, #1060 ShareYourRoom a11y, #1053 lastActivityAt, #1007 footer/SocialBar, #1061 SMS cron). Phase 8 audit: 5 sequences wired, 2 gaps filed (cf-fsm review-request, cf-amx winback). Dashboard items needed: 3 Secrets Manager entries + 2 CMS collections (ChallengeOfTheWeek, PushTokens). Previous: v4.1 — Stamped.io 4-step hookup guide.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-14 (v4.3 — Phase 8 COMPLETE: all 6 email sequences wired + 2 crons live (review-request daily #1062, winback weekly #1063). Welcome drip extended to 5 steps (#1064). 9 PRs merged this session. Dashboard needed: Secrets Manager (STAMPED_API_KEY, STAMPED_STORE_HASH, STAMPED_WEBHOOK_SECRET) + CMS collections (ChallengeOfTheWeek, PushTokens) + Wix Email Marketing templates (welcome_series_4 Day 14, welcome_series_5 Day 21). Previous: v4.2 — Night shift 5 merges.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
