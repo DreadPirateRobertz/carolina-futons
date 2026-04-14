@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+vi.mock('public/a11yHelpers.js', async () => await vi.importActual('../src/public/a11yHelpers.js'));
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
 import { __setPath } from './__mocks__/wix-location-frontend.js';
 
@@ -122,7 +123,15 @@ vi.mock('public/mobileHelpers', () => ({
 }));
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
-    for (const s of sections) { try { await s.init(); } catch (_) {} }
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
   }),
 }));
 vi.mock('public/engagementTracker', () => ({
@@ -148,15 +157,11 @@ vi.mock('public/productPageUtils.js', () => ({
   isCallForPrice: vi.fn(() => false),
   CALL_FOR_PRICE_TEXT: 'Call for Price',
 }));
-vi.mock('public/a11yHelpers.js', () => ({
-  announce: vi.fn(),
-  makeClickable: vi.fn(),
-  createFocusTrap: vi.fn(),
-  setupAccessibleDialog: vi.fn(),
-}));
+// a11yHelpers intentionally NOT mocked — tests assert real makeClickable
+// wiring (onClick handlers, tabIndex).
 vi.mock('public/socialProofToast', () => ({
-  initCategorySocialProof: vi.fn(),
-  initProductSocialProof: vi.fn(),
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('backend/promotions.web', () => ({
   getFlashSales: vi.fn().mockResolvedValue([]),

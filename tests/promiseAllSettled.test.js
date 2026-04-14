@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/a11yHelpers', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('backend/ups-shipping.web', async () => await vi.importActual('../src/backend/ups-shipping.web.js'));
 import { futonFrame, futonMattress, wallHuggerFrame, saleProduct } from './fixtures/products.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
@@ -92,11 +94,7 @@ vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
   trackCartAdd: vi.fn(),
 }));
-vi.mock('public/a11yHelpers', () => ({
-  announce: vi.fn(),
-  makeClickable: vi.fn(),
-  setupAccessibleDialog: vi.fn(),
-}));
+// a11yHelpers NOT mocked — tests assert real makeClickable onClick wiring.
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
     const critical = [], deferred = [];
@@ -149,10 +147,8 @@ vi.mock('public/ContinueShoppingSection.js', () => ({
 vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
   initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock('backend/ups-shipping.web', () => ({
-  getShippingRate: vi.fn().mockResolvedValue(null),
-  getEstimatedDelivery: vi.fn().mockResolvedValue(null),
-}));
+// ups-shipping NOT mocked — fulfillment tests exercise real trackShipment
+// against the wix-fetch handler (OAuth + /track/ endpoints).
 vi.mock('backend/utils/validateSchema', () => ({
   validateSchema: vi.fn(() => ({ valid: true, errors: [] })),
 }));

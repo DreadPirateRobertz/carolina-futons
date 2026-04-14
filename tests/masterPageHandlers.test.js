@@ -167,7 +167,7 @@ vi.mock('public/miniCartDrawer', () => ({
   updateCartCount: vi.fn(),
 }));
 vi.mock('public/AppDownloadBanner', () => ({
-  initAppDownloadBanner: vi.fn(),
+  initAppDownloadBanner: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('public/CartUpsell', () => ({
   initCartUpsell: vi.fn().mockResolvedValue(undefined),

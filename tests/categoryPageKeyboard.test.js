@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/galleryHelpers', async () => await vi.importActual('../src/public/galleryHelpers.js'));
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
+vi.mock('public/a11yHelpers.js', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
 import { futonFrame, wallHuggerFrame } from './fixtures/products.js';
 import { __setPath } from './__mocks__/wix-location-frontend.js';
 

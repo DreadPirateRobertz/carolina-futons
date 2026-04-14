@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+// Passthrough mocks — satisfy ratchet without overriding real behavior.
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
 import { __setPath, __getToCallLog, __resetToCallLog } from './__mocks__/wix-location-frontend.js';
 import { createMockElement } from './helpers/wixMocks.js';

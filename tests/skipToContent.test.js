@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/a11yHelpers', async () => await vi.importActual('../src/public/a11yHelpers.js'));
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -119,7 +120,7 @@ vi.mock('public/pwaHelpers', () => ({
   isInstalledPWA: vi.fn(() => false),
 }));
 vi.mock('public/AppDownloadBanner', () => ({
-  initAppDownloadBanner: vi.fn(),
+  initAppDownloadBanner: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('backend/coreWebVitals.web', () => ({
   reportMetrics: vi.fn().mockResolvedValue(undefined),
@@ -138,12 +139,8 @@ vi.mock('public/pixelConsentService', () => ({
 vi.mock('public/carolinaFutonsLogo', () => ({
   getLogoImageUrl: vi.fn(() => ''),
 }));
-vi.mock('public/a11yHelpers', () => ({
-  initSkipNav: vi.fn(),
-  setupAccessibleDialog: vi.fn(),
-  announce: vi.fn(),
-  makeClickable: vi.fn(),
-}));
+// a11yHelpers NOT mocked — tests assert real initSkipNav wiring of
+// onClick/onFocus/onBlur/onKeyPress/tabIndex/aria-label/role on skip link.
 vi.mock('public/productCardHelpers.js', () => ({
   formatCardPrice: vi.fn(),
   renderSimplePrice: vi.fn(),

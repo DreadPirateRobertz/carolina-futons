@@ -5,6 +5,7 @@
  * pending prizes panel, safeSession prize cache.
  */
 import { describe, it, expect, vi } from 'vitest';
+vi.mock('public/SpinWheel.js', async () => await vi.importActual('../src/public/SpinWheel.js'));
 import { __seed } from './__mocks__/wix-data.js';
 
 // ── $w mock ──────────────────────────────────────────────────────────────────
@@ -163,10 +164,8 @@ vi.mock('backend/gamificationEventReceiver.web', () => ({
 vi.mock('public/ChallengesDisplay.js', () => ({
   initChallengesDisplay: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock('public/SpinWheel.js', () => ({
-  initSpinWheel: vi.fn().mockResolvedValue(undefined),
-  spinWheel: vi.fn().mockResolvedValue(null),
-}));
+// SpinWheel NOT mocked — tests assert real buildWheelSegments,
+// computeCountdown, renderPendingPrizes, renderSpinResult behavior.
 vi.mock('public/StreakDisplay.js', () => ({
   initStreakDisplay: vi.fn().mockResolvedValue(undefined),
   renderStreakWidget: vi.fn(),

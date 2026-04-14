@@ -23,6 +23,7 @@
  * #prefBackInStock, #memberErrorFallback, #memberErrorText
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -285,12 +286,7 @@ async function loadPage() {
   onReadyHandler = null;
   vi.resetModules();
 // ── Auto-added by cf-obz ──────────────────────────────────────────
-vi.mock('public/productCardHelpers.js', () => ({
-  renderSimplePrice: vi.fn(),
-  setCardImage: vi.fn(),
-  styleCardContainer: vi.fn(),
-  styleBadge: vi.fn(),
-}));
+// productCardHelpers NOT mocked — wishlist test asserts real price/image rendering.
 vi.mock('backend/gamificationEventReceiver.web', () => ({
   getActiveChallenges: vi.fn().mockResolvedValue([]),
   recoverStreak: vi.fn().mockResolvedValue({ success: false }),

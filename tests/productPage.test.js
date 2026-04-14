@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
+vi.mock('public/ProductGallery.js', async () => await vi.importActual('../src/public/ProductGallery.js'));
+vi.mock('public/ProductOptions.js', async () => await vi.importActual('../src/public/ProductOptions.js'));
+vi.mock('public/ProductDetails.js', async () => await vi.importActual('../src/public/ProductDetails.js'));
+vi.mock('public/AddToCart.js', async () => await vi.importActual('../src/public/AddToCart.js'));
+vi.mock('public/a11yHelpers.js', async () => await vi.importActual('../src/public/a11yHelpers.js'));
+vi.mock('public/product/productSchema.js', async () => await vi.importActual('../src/public/product/productSchema.js'));
 import { futonFrame, wallHuggerFrame, futonMattress, murphyBed, casegoodsItem } from './fixtures/products.js';
 import { __seed as __seedData, __reset as __resetData } from 'wix-data';
 import { __setPath as __setLocationPath } from 'wix-location-frontend';
@@ -157,62 +165,31 @@ vi.mock('public/mobileHelpers', () => ({
   initBackToTop: vi.fn(),
   isMobile: vi.fn(() => false),
 }));
-vi.mock('public/productPageUtils.js', () => ({
-  buildGridAlt: vi.fn(p => p?.name ?? ''),
-  isCallForPrice: vi.fn(() => false),
-  CALL_FOR_PRICE_TEXT: 'Call for Price',
-}));
-vi.mock('public/productCardHelpers.js', () => ({
-  renderSimplePrice: vi.fn(),
-  setCardImage: vi.fn(),
-  styleCardContainer: vi.fn(),
-  styleBadge: vi.fn(),
-  initCardHover: vi.fn(),
-  formatCardPrice: vi.fn(),
-}));
+// productPageUtils/productCardHelpers NOT mocked — tests assert real
+// buildGridAlt/formatCardPrice/setCardImage output.
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
-    for (const s of sections) { try { await s.init(); } catch (_) {} }
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
   }),
 }));
 vi.mock('public/galleryConfig.js', () => ({
   getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
 }));
-vi.mock('public/ProductGallery.js', () => ({
-  initImageGallery: vi.fn(),
-  initProductBadge: vi.fn(),
-  initProductVideo: vi.fn(),
-}));
-vi.mock('public/ProductOptions.js', () => ({
-  initVariantSelector: vi.fn().mockResolvedValue(undefined),
-  initSwatchSelector: vi.fn(),
-}));
-vi.mock('public/ProductDetails.js', () => ({
-  initBreadcrumbs: vi.fn(),
-  initProductInfoAccordion: vi.fn(),
-  initSocialShare: vi.fn(),
-  initDeliveryEstimate: vi.fn(),
-  injectProductSchema: vi.fn(),
-  initSwatchRequest: vi.fn(),
-  initSwatchCTA: vi.fn(),
-}));
-vi.mock('public/AddToCart.js', () => ({
-  initQuantitySelector: vi.fn(),
-  initAddToCartEnhancements: vi.fn(),
-  initStickyCartBar: vi.fn(),
-  initBundleSection: vi.fn().mockResolvedValue(undefined),
-  initStockUrgency: vi.fn(),
-  initBackInStockNotification: vi.fn(),
-  initWishlistButton: vi.fn(),
-  initPriceDropNotify: vi.fn(),
-}));
-vi.mock('public/a11yHelpers.js', () => ({
-  makeClickable: vi.fn(),
-  announce: vi.fn(),
-}));
+// ProductGallery/ProductOptions/ProductDetails/AddToCart intentionally
+// NOT mocked — these modules access $w() elements and call schema/seo
+// helpers that the tests assert against. Stubs would break the flow.
+// a11yHelpers NOT mocked — real makeClickable wires onClick/tabIndex.
 vi.mock('public/socialProofToast', () => ({
-  initProductSocialProof: vi.fn(),
-  initCategorySocialProof: vi.fn(),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('backend/promotions.web', () => ({
   getFlashSales: vi.fn().mockResolvedValue([]),
@@ -225,11 +202,8 @@ vi.mock('public/flashSaleHelpers', () => ({
   initFlashSaleBanner: vi.fn(),
   initFlashSaleUrgency: vi.fn(),
 }));
-vi.mock('public/product/productSchema.js', () => ({
-  injectProductMeta: vi.fn(),
-  injectPinterestMeta: vi.fn(),
-  buildGridAlt: vi.fn(p => p?.name ?? ''),
-}));
+// productSchema intentionally NOT mocked — injects real Product/BreadcrumbList
+// JSON-LD via setStructuredData, which tests assert.
 vi.mock('public/giftProductBtn.js', () => ({
   initGiftProductButton: vi.fn(),
 }));

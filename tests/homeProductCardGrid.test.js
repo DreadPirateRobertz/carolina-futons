@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+vi.mock('public/productCardHelpers.js', async () => await vi.importActual('../src/public/productCardHelpers.js'));
+vi.mock('public/productPageUtils.js', async () => await vi.importActual('../src/public/productPageUtils.js'));
 import { futonFrame, futonMattress, wallHuggerFrame, saleProduct, outdoorFrame } from './fixtures/products.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
@@ -229,20 +231,8 @@ vi.mock('public/WishlistCardButton.js', () => ({
   initCardWishlistButton: vi.fn(),
   batchCheckWishlistStatus: vi.fn().mockResolvedValue({}),
 }));
-vi.mock('public/productCardHelpers.js', () => ({
-  styleCardContainer: vi.fn(),
-  styleBadge: vi.fn(),
-  initCardHover: vi.fn(),
-  formatCardPrice: vi.fn(),
-  setCardImage: vi.fn(),
-  getBadgeColor: vi.fn(() => ''),
-  renderSimplePrice: vi.fn(),
-}));
-vi.mock('public/productPageUtils.js', () => ({
-  isCallForPrice: vi.fn(() => false),
-  CALL_FOR_PRICE_TEXT: 'Call for Price',
-  buildGridAlt: vi.fn(p => p?.name ?? ''),
-}));
+// productCardHelpers + productPageUtils NOT mocked — card rendering tests
+// assert real image/price/badge output.
 vi.mock('public/galleryConfig.js', () => ({
   getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
 }));
