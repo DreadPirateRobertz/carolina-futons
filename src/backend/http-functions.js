@@ -9,7 +9,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
-import { scanAndTriggerWinback } from 'backend/marketingSequences.web';
+import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
@@ -843,6 +843,50 @@ export async function get_scanAndTriggerWinbackCron(request) {
     });
   } catch (err) {
     console.error('HTTP function error (scanAndTriggerWinbackCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Review Request Cron (cf-fsm) ──────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/runReviewRequestEmailsCron
+// Fires review_request email sequence for orders placed 7 days ago (±1 day).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// Primary schedule is jobs.config `runReviewRequestEmails` (daily 10 AM EST).
+// This HTTP endpoint is a manual/external trigger for the same logic.
+export async function get_runReviewRequestEmailsCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await runReviewRequestEmails();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        ordersScanned: result.ordersScanned || 0,
+        triggered: result.triggered || 0,
+        skipped: result.skipped || 0,
+        failed: result.failed || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (runReviewRequestEmailsCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
