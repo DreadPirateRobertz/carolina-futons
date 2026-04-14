@@ -294,6 +294,38 @@ export const getLeaderboardByPeriod = webMethod(
  *
  * @returns {Promise<{rank: number, points: number, tier: string|null} | null>}
  */
+/**
+ * Returns the top-3 members by totalPoints for the homepage sidebar widget.
+ * Fields: rank, displayName, points, tier, avatarUrl.
+ * Only includes members with leaderboardOptIn: true.
+ *
+ * @returns {Promise<Array<{rank: number, displayName: string|null, points: number, tier: string|null, avatarUrl: string|null}>>}
+ */
+export const getLeaderboardPreview = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const result = await wixData
+        .query('MemberPoints')
+        .eq('leaderboardOptIn', true)
+        .descending('totalPoints')
+        .limit(3)
+        .find({ suppressAuth: true });
+
+      return result.items.map((item, i) => ({
+        rank:        i + 1,
+        displayName: item.displayName ?? null,
+        points:      item.totalPoints ?? 0,
+        tier:        item.tier        ?? null,
+        avatarUrl:   item.avatarUrl   ?? null,
+      }));
+    } catch (e) {
+      logError('leaderboardService.getLeaderboardPreview', e);
+      return [];
+    }
+  }
+);
+
 export const getMyRank = webMethod(
   Permissions.SiteMember,
   async () => {
