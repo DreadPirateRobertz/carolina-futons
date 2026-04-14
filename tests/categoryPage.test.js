@@ -102,7 +102,15 @@ vi.mock('public/mobileHelpers', () => ({
 }));
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
-    for (const s of sections) { try { await s.init(); } catch (_) {} }
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
   }),
 }));
 vi.mock('public/engagementTracker', () => ({
@@ -122,21 +130,24 @@ vi.mock('public/productCache', () => ({
 vi.mock('public/touchHelpers', () => ({
   enableSwipe: vi.fn(),
 }));
-vi.mock('public/productPageUtils.js', () => ({
-  buildGridAlt: vi.fn(p => p?.name ?? ''),
-  detectProductBrand: vi.fn(() => ''),
-  isCallForPrice: vi.fn(() => false),
-  CALL_FOR_PRICE_TEXT: 'Call for Price',
-}));
+// productPageUtils.js intentionally NOT mocked: tests exercise real
+// buildGridAlt (brand+category SEO suffix) and formatters — stubs would
+// shadow the exact behavior under assertion.
 vi.mock('public/a11yHelpers.js', () => ({
   announce: vi.fn(),
-  makeClickable: vi.fn(),
+  // Delegate to the element's real onClick so wired handlers remain observable
+  // via el.onClick.mock.calls — matches the real helper's behavior closely enough
+  // for onReady handler assertions (click wiring, aria-label, disabled state).
+  makeClickable: vi.fn((el, handler, opts = {}) => {
+    if (el?.onClick) el.onClick(handler);
+    if (opts.ariaLabel && el?.accessibility) el.accessibility.ariaLabel = opts.ariaLabel;
+  }),
   createFocusTrap: vi.fn(),
   setupAccessibleDialog: vi.fn(),
 }));
 vi.mock('public/socialProofToast', () => ({
-  initCategorySocialProof: vi.fn(),
-  initProductSocialProof: vi.fn(),
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('backend/promotions.web', () => ({
   getFlashSales: vi.fn().mockResolvedValue([]),
@@ -158,16 +169,8 @@ vi.mock('public/StarRatingCard', () => ({
   renderCardStarRating: vi.fn(),
   _resetCache: vi.fn(),
 }));
-vi.mock('public/productCardHelpers.js', () => ({
-  styleCardContainer: vi.fn(),
-  styleBadge: vi.fn(),
-  initCardHover: vi.fn(),
-  formatCardPrice: vi.fn(),
-  setCardImage: vi.fn(),
-  renderCardFinancingBadge: vi.fn(),
-  renderSimplePrice: vi.fn(),
-  renderCardAssemblyBadge: vi.fn(),
-}));
+// productCardHelpers intentionally NOT mocked: product-grid tests assert
+// image URL, price label, sale badge — those come from the real helpers.
 vi.mock('public/galleryConfig.js', () => ({
   getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
 }));
