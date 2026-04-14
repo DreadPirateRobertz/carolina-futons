@@ -83,8 +83,11 @@ const SEQUENCES = {
     ],
   },
   reengagement: {
+    // cf-bpt: multi-step win-back — day 0 miss-you, day 7 deal, day 21 last call
     steps: [
-      { step: 1, templateId: 'reengagement_1', delayHours: 0, description: 'We miss you + exclusive offer' },
+      { step: 1, templateId: 'reengagement_1', delayHours: 0,   description: 'Day 0 — we miss you + exclusive offer (cf-bpt)' },
+      { step: 2, templateId: 'reengagement_2', delayHours: 168, description: 'Day 7 — here\'s a deal (cf-bpt)' },
+      { step: 3, templateId: 'reengagement_3', delayHours: 504, description: 'Day 21 — last chance (cf-bpt)' },
     ],
   },
   restock: {
@@ -1024,7 +1027,23 @@ export const triggerAbandonedCartRecovery = webMethod(
 );
 
 /**
- * Find dormant contacts (no activity in 90+ days) and queue re-engagement.
+ * Find dormant members (no gamification activity in 90+ days) and queue the
+ * multi-step win-back sequence.
+ *
+ * cf-bvn: Dormancy signal is MemberPoints.lastActivityAt — updated by
+ * gamificationCore on every points-earning event (purchase, review, quiz,
+ * wishlist add, streak check-in, etc.). This reaches browse-only members who
+ * never purchased, which the previous post-purchase-email-sentAt proxy missed.
+ *
+ * cf-bpt: All 3 steps of SEQUENCES.reengagement are queued up-front with
+ * staggered scheduledFor offsets (day 0 / day 7 / day 21), mirroring the
+ * welcome/cart_recovery multi-step pattern.
+ *
+ * @note Single-page cap: the dormant query is capped at 1 000 records per
+ *   invocation (Wix CMS page-size ceiling). If the dormant cohort exceeds
+ *   1 000 in one cron tick, overflow members slip to the next run — they
+ *   remain dormant and are picked up then. Queue a queryAll-style pagination
+ *   follow-up if the dormant backlog regularly exceeds this ceiling.
  *
  * @function triggerReengagement
  * @returns {Promise<{success: boolean, contacted: number}>}
@@ -1036,13 +1055,14 @@ export const triggerReengagement = webMethod(
     try {
       const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-      // Find contacts who placed orders but not recently
-      const result = await wixData.query('EmailQueue')
-        .eq('sequenceType', 'post_purchase')
-        .eq('sequenceStep', 1)
-        .eq('status', 'sent')
-        .le('sentAt', ninetyDaysAgo)
-        .find();
+      // Dormant = MemberPoints.lastActivityAt older than 90 days.
+      // (Members with no lastActivityAt yet — pre-cf-bvn records — are skipped
+      // to avoid spraying the entire back catalog the first time this runs.
+      // Their next activity will stamp lastActivityAt and bring them into scope.)
+      const dormant = await wixData.query('MemberPoints')
+        .le('lastActivityAt', ninetyDaysAgo)
+        .limit(1000)
+        .find({ suppressAuth: true });
 
       let contacted = 0;
       let discountCode = '';
@@ -1054,32 +1074,63 @@ export const triggerReengagement = webMethod(
         console.warn('[emailAutomation] Reengagement discount unavailable, emails will omit discount:', e.message);
       }
 
-      for (const item of result.items) {
-        if (!item.recipientEmail) continue;
-        if (await isUnsubscribed(item.recipientEmail, 'reengagement')) continue;
+      for (const mp of dormant.items) {
+        if (!mp.memberId) continue;
 
-        // Skip if already sent reengagement recently
+        // Resolve memberId → email + firstName via PrivateMembersData.
+        let email = '';
+        let contactId = '';
+        let firstName = '';
+        try {
+          const memberRow = await wixData.query('Members/PrivateMembersData')
+            .eq('_id', mp.memberId)
+            .find({ suppressAuth: true });
+          const m = memberRow.items?.[0];
+          email = m?.loginEmail || '';
+          contactId = m?.contactId || '';
+          firstName = m?.firstName || m?.nickname || '';
+        } catch (e) {
+          console.warn('[emailAutomation] Reengagement member lookup failed:', mp.memberId, e.message);
+          continue;
+        }
+
+        if (!email) continue;
+        // Refuse to queue without a contactId: downstream Wix triggeredEmails
+        // dispatch resolves the recipient via contactId — an empty value would
+        // either drop the send silently or target the wrong member.
+        if (!contactId) continue;
+        if (await isUnsubscribed(email, 'reengagement')) continue;
+
+        // Dedup: skip members we've already queued/sent reengagement to.
         const alreadySent = await wixData.query('EmailQueue')
-          .eq('recipientEmail', item.recipientEmail)
+          .eq('recipientEmail', email)
           .eq('sequenceType', 'reengagement')
           .find();
 
         if (alreadySent.items.length > 0) continue;
 
-        await queueEmail({
-          templateId: SEQUENCES.reengagement.steps[0].templateId,
-          recipientEmail: item.recipientEmail,
-          recipientContactId: item.recipientContactId || '',
-          variables: {
-            firstName: item.variables?.firstName || '',
-            discountCode,
-            discountAvailable,
-            email: item.recipientEmail,
-          },
-          sequenceType: 'reengagement',
-          sequenceStep: 1,
-          scheduledFor: new Date(),
-        });
+        // cf-bpt: queue all 3 win-back steps up-front with staggered
+        // scheduledFor offsets (day 0 / day 7 / day 21). processEmailQueue
+        // releases each when its scheduledFor arrives, mirroring welcome/
+        // cart_recovery multi-step cadence.
+        const queueStart = new Date();
+        for (const step of SEQUENCES.reengagement.steps) {
+          const scheduledFor = new Date(queueStart.getTime() + step.delayHours * 60 * 60 * 1000);
+          await queueEmail({
+            templateId: step.templateId,
+            recipientEmail: email,
+            recipientContactId: contactId,
+            variables: {
+              firstName,
+              discountCode,
+              discountAvailable,
+              email,
+            },
+            sequenceType: 'reengagement',
+            sequenceStep: step.step,
+            scheduledFor,
+          });
+        }
 
         contacted++;
       }

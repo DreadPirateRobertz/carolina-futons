@@ -58,8 +58,9 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.post_purchase.steps[2].description).toMatch(/cross.sell|complete.*room/i);
   });
 
-  it('has reengagement sequence with 1 step', () => {
-    expect(_SEQUENCES.reengagement.steps).toHaveLength(1);
+  it('has reengagement sequence with 3 steps (day 0/7/21 win-back — cf-bpt)', () => {
+    expect(_SEQUENCES.reengagement.steps).toHaveLength(3);
+    expect(_SEQUENCES.reengagement.steps.map(s => s.delayHours)).toEqual([0, 168, 504]);
   });
 
   it('has A/B variants for welcome step 1', () => {
@@ -527,18 +528,22 @@ describe('triggerAbandonedCartRecovery', () => {
 // ── triggerReengagement ────────────────────────────────────────────
 
 describe('triggerReengagement', () => {
-  it('queues reengagement for dormant contacts', async () => {
-    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
-    __seed('EmailQueue', [{
-      _id: 'eq-pp-1',
-      recipientEmail: 'dormant@test.com',
-      recipientContactId: 'contact-d1',
-      sequenceType: 'post_purchase',
-      sequenceStep: 1,
-      status: 'sent',
-      sentAt: ninetyOneDaysAgo,
-      variables: { firstName: 'Dormant' },
-    }]);
+  // cf-bpt: seeding moved from EmailQueue(post_purchase sentAt) → MemberPoints.lastActivityAt
+  // so browse-only members (no purchase) are now reachable. Extensive coverage of the new
+  // seeding path + multi-step sequence lives in tests/reEngagementWinBack.test.js.
+  const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
+
+  function seedDormant(memberId, email, firstName = '') {
+    __seed('MemberPoints', [
+      { _id: `mp-${memberId}`, memberId, lastActivityAt: ninetyOneDaysAgo },
+    ]);
+    __seed('Members/PrivateMembersData', [
+      { _id: memberId, loginEmail: email, contactId: `c-${memberId}`, firstName },
+    ]);
+  }
+
+  it('queues reengagement for dormant members', async () => {
+    seedDormant('mem-d1', 'dormant@test.com', 'Dormant');
 
     const result = await triggerReengagement();
     expect(result.success).toBe(true);
@@ -546,18 +551,7 @@ describe('triggerReengagement', () => {
   });
 
   it('includes discount code in reengagement', async () => {
-    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
-    __seed('EmailQueue', [{
-      _id: 'eq-pp-1',
-      recipientEmail: 'dormant@test.com',
-      recipientContactId: 'contact-d1',
-      sequenceType: 'post_purchase',
-      sequenceStep: 1,
-      status: 'sent',
-      sentAt: ninetyOneDaysAgo,
-      variables: { firstName: 'Dormant' },
-    }]);
-
+    seedDormant('mem-d1', 'dormant@test.com', 'Dormant');
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
@@ -571,18 +565,7 @@ describe('triggerReengagement', () => {
 
   it('sets discountAvailable false when reengagement secret missing', async () => {
     __resetSecrets();
-    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
-    __seed('EmailQueue', [{
-      _id: 'eq-pp-1',
-      recipientEmail: 'dormant@test.com',
-      recipientContactId: 'contact-d1',
-      sequenceType: 'post_purchase',
-      sequenceStep: 1,
-      status: 'sent',
-      sentAt: ninetyOneDaysAgo,
-      variables: { firstName: 'Dormant' },
-    }]);
-
+    seedDormant('mem-d1', 'dormant@test.com', 'Dormant');
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
@@ -594,44 +577,22 @@ describe('triggerReengagement', () => {
     expect(reengagement.variables.discountAvailable).toBe(false);
   });
 
-  it('skips contacts with recent reengagement', async () => {
-    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
-    __seed('EmailQueue', [
-      {
-        _id: 'eq-pp-1',
-        recipientEmail: 'dormant@test.com',
-        recipientContactId: 'contact-d1',
-        sequenceType: 'post_purchase',
-        sequenceStep: 1,
-        status: 'sent',
-        sentAt: ninetyOneDaysAgo,
-        variables: { firstName: 'Dormant' },
-      },
-      {
-        _id: 'eq-re-1',
-        recipientEmail: 'dormant@test.com',
-        sequenceType: 'reengagement',
-        sequenceStep: 1,
-        status: 'sent',
-      },
-    ]);
+  it('skips members with an existing queued reengagement (any step)', async () => {
+    seedDormant('mem-d1', 'dormant@test.com', 'Dormant');
+    __seed('EmailQueue', [{
+      _id: 'eq-re-1',
+      recipientEmail: 'dormant@test.com',
+      sequenceType: 'reengagement',
+      sequenceStep: 1,
+      status: 'sent',
+    }]);
 
     const result = await triggerReengagement();
     expect(result.contacted).toBe(0);
   });
 
-  it('skips unsubscribed contacts', async () => {
-    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
-    __seed('EmailQueue', [{
-      _id: 'eq-pp-1',
-      recipientEmail: 'unsub@test.com',
-      recipientContactId: 'contact-u1',
-      sequenceType: 'post_purchase',
-      sequenceStep: 1,
-      status: 'sent',
-      sentAt: ninetyOneDaysAgo,
-      variables: { firstName: 'Unsub' },
-    }]);
+  it('skips unsubscribed members', async () => {
+    seedDormant('mem-u1', 'unsub@test.com', 'Unsub');
     __seed('Unsubscribes', [{
       email: 'unsub@test.com',
       sequenceType: 'reengagement',
@@ -642,7 +603,7 @@ describe('triggerReengagement', () => {
     expect(result.contacted).toBe(0);
   });
 
-  it('returns zero when no dormant contacts', async () => {
+  it('returns zero when no dormant members', async () => {
     const result = await triggerReengagement();
     expect(result.success).toBe(true);
     expect(result.contacted).toBe(0);
