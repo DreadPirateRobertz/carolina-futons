@@ -95,7 +95,7 @@ vi.mock('public/miniCartDrawer', () => ({
   updateCartCount: vi.fn(),
 }));
 vi.mock('public/performanceHelpers', () => ({
-  sharePromise: vi.fn(fn => fn()),
+  sharePromise: vi.fn(fn => fn),
   deferInit: vi.fn(fn => fn()),
   prioritizeSections: vi.fn(async (sections) => {
     for (const s of sections) { try { await s.init(); } catch (_) {} }
