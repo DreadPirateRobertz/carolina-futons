@@ -701,11 +701,13 @@ describe('A/B variant selection in welcome sequence', () => {
 
     await triggerWelcomeSequence('c1', 'ab@test.com', 'Tester');
 
-    expect(inserts.length).toBe(3);
+    expect(inserts.length).toBe(5);
     expect(inserts[0].abVariant).toBe('A');
     expect(inserts[0].variables.subjectLine).toContain('Welcome to Carolina Futons');
     expect(inserts[1].abVariant).toBeNull();
     expect(inserts[2].abVariant).toBeNull();
+    expect(inserts[3].abVariant).toBeNull();
+    expect(inserts[4].abVariant).toBeNull();
     expect(inserts[1].variables.subjectLine).toBeUndefined();
   });
 

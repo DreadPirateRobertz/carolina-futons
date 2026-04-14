@@ -54,6 +54,22 @@ describe('welcome sequence step spec (CF-o63p)', () => {
     expect(step3.delayHours).toBe(120);
     expect(step3.description).toMatch(/buying guide/i);
   });
+
+  it('step 4 is Day 14 (336h) with engagement check description (cf-20c)', () => {
+    const step4 = _SEQUENCES.welcome.steps.find(s => s.step === 4);
+    expect(step4).toBeDefined();
+    expect(step4.delayHours).toBe(336);
+    expect(step4.templateId).toBe('welcome_series_4');
+    expect(step4.description).toMatch(/engagement/i);
+  });
+
+  it('step 5 is Day 21 (504h) with final value email description (cf-20c)', () => {
+    const step5 = _SEQUENCES.welcome.steps.find(s => s.step === 5);
+    expect(step5).toBeDefined();
+    expect(step5.delayHours).toBe(504);
+    expect(step5.templateId).toBe('welcome_series_5');
+    expect(step5.description).toMatch(/final value|value/i);
+  });
 });
 
 // ── Step 1: welcome + 10% coupon ──────────────────────────────────────
@@ -232,7 +248,7 @@ describe('wixMembers_onMemberCreated triggers welcome series', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const welcomeSteps = items.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeSteps).toHaveLength(3);
+    expect(welcomeSteps).toHaveLength(5);
   });
 
   it('step 2 in event-triggered sequence has bestSellersUrl', async () => {

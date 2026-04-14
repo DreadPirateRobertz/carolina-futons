@@ -148,16 +148,16 @@ describe('welcome sequence — each step fires exactly once per member', () => {
 
     const first = await triggerWelcomeSeries('twice@test.com', 'Twice');
     expect(first.success).toBe(true);
-    expect(first.queued).toBe(3);
+    expect(first.queued).toBe(5);
 
     const second = await triggerWelcomeSeries('twice@test.com', 'Twice');
     expect(second.success).toBe(false);
     expect(second.queued).toBe(0);
 
-    // Exactly 3 records in the queue — not 6
+    // Exactly 5 records in the queue — not 10
     const all = __getInserted('EmailQueue');
     const welcome = all.filter(r => r.sequenceType === 'welcome');
-    expect(welcome).toHaveLength(3);
+    expect(welcome).toHaveLength(5);
   });
 });
 
@@ -513,6 +513,6 @@ describe('sequence deduplication — new signup during active sequence', () => {
 
     const result = await triggerWelcomeSeries('different@test.com', 'Diff');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 });

@@ -119,11 +119,15 @@ describe('getCampaignAnalytics', () => {
 
   it('calculates sequence completion rates', async () => {
     const emailItems = [
+      // a@t.com completes all 5 steps (welcome now extends to step 5 per cf-20c)
       { _id: 'w1', sequenceType: 'welcome', sequenceStep: 1, status: 'sent', recipientEmail: 'a@t.com' },
       { _id: 'w2', sequenceType: 'welcome', sequenceStep: 2, status: 'sent', recipientEmail: 'a@t.com' },
       { _id: 'w3', sequenceType: 'welcome', sequenceStep: 3, status: 'sent', recipientEmail: 'a@t.com' },
-      { _id: 'w4', sequenceType: 'welcome', sequenceStep: 1, status: 'sent', recipientEmail: 'b@t.com' },
-      { _id: 'w5', sequenceType: 'welcome', sequenceStep: 2, status: 'cancelled', recipientEmail: 'b@t.com' },
+      { _id: 'w4', sequenceType: 'welcome', sequenceStep: 4, status: 'sent', recipientEmail: 'a@t.com' },
+      { _id: 'w5', sequenceType: 'welcome', sequenceStep: 5, status: 'sent', recipientEmail: 'a@t.com' },
+      // b@t.com drops off at step 2
+      { _id: 'w6', sequenceType: 'welcome', sequenceStep: 1, status: 'sent', recipientEmail: 'b@t.com' },
+      { _id: 'w7', sequenceType: 'welcome', sequenceStep: 2, status: 'cancelled', recipientEmail: 'b@t.com' },
     ];
 
     mockQuery.mockImplementation((collection) =>

@@ -42,11 +42,11 @@ beforeEach(() => {
 // ── Full Welcome Lifecycle ─────────────────────────────────────────
 
 describe('welcome sequence lifecycle', () => {
-  it('member created → 3 emails queued → step 1 sent immediately → steps 2-3 stay pending', async () => {
+  it('member created → 5 emails queued → step 1 sent immediately → steps 2-5 stay pending', async () => {
     // Step 1: Trigger welcome sequence
     const queued = await triggerWelcomeSequence('contact-lc1', 'lifecycle@test.com', 'Lori');
     expect(queued.success).toBe(true);
-    expect(queued.queued).toBe(3);
+    expect(queued.queued).toBe(5);
 
     // Collect what was inserted into EmailQueue
     let queueItems = [];
@@ -149,7 +149,7 @@ describe('welcome sequence lifecycle', () => {
 
     // Welcome emails were queued
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeEmails).toHaveLength(3);
+    expect(welcomeEmails).toHaveLength(5);
 
     // Seed them for processing with step 1 due now
     __seed('EmailQueue', welcomeEmails.map((item, i) => ({
@@ -618,7 +618,7 @@ describe('multiple sequences for same contact', () => {
   it('welcome and post-purchase can coexist for same email', async () => {
     // Welcome queued
     const welcome = await triggerWelcomeSequence('contact-multi', 'multi@test.com', 'Multi');
-    expect(welcome.queued).toBe(3);
+    expect(welcome.queued).toBe(5);
 
     // Post-purchase also queued (different sequence type)
     const pp = await triggerPostPurchaseSequence('contact-multi', 'multi@test.com', 'Multi', 'ORD-M1', 899, []);

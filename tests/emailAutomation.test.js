@@ -30,11 +30,13 @@ beforeEach(() => {
 // ── Sequence Definitions ────────────────────────────────────────────
 
 describe('sequence definitions', () => {
-  it('has welcome sequence with 3 steps at Day 0/2/5 timing (CF-o63p)', () => {
-    expect(_SEQUENCES.welcome.steps).toHaveLength(3);
+  it('has welcome sequence with 5 steps at Day 0/2/5/14/21 timing (CF-o63p + cf-20c)', () => {
+    expect(_SEQUENCES.welcome.steps).toHaveLength(5);
     expect(_SEQUENCES.welcome.steps[0].delayHours).toBe(0);
     expect(_SEQUENCES.welcome.steps[1].delayHours).toBe(48);   // Day 2
     expect(_SEQUENCES.welcome.steps[2].delayHours).toBe(120);  // Day 5
+    expect(_SEQUENCES.welcome.steps[3].delayHours).toBe(336);  // Day 14 — engagement check (cf-20c)
+    expect(_SEQUENCES.welcome.steps[4].delayHours).toBe(504);  // Day 21 — final value email (cf-20c)
   });
 
   it('has cart_recovery sequence with 1h/24h/72h triggers', () => {
@@ -77,10 +79,10 @@ describe('sequence definitions', () => {
 // ── triggerWelcomeSequence ──────────────────────────────────────────
 
 describe('triggerWelcomeSequence', () => {
-  it('queues 3 welcome emails for a new member', async () => {
+  it('queues 5 welcome emails for a new member', async () => {
     const result = await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 
   it('includes discount code in variables', async () => {
@@ -89,7 +91,7 @@ describe('triggerWelcomeSequence', () => {
 
     await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
 
-    expect(insertedItems.length).toBe(3);
+    expect(insertedItems.length).toBe(5);
     expect(insertedItems[0].variables.discountCode).toBe('WELCOME10');
     expect(insertedItems[0].variables.discountAvailable).toBe(true);
   });
@@ -214,7 +216,7 @@ describe('triggerWelcomeSequence', () => {
 
     const result = await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
     expect(result.success).toBe(true);
-    expect(result.queued).toBe(3);
+    expect(result.queued).toBe(5);
   });
 });
 
@@ -948,7 +950,7 @@ describe('wixMembers_onMemberCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeEmails).toHaveLength(3);
+    expect(welcomeEmails).toHaveLength(5);
   });
 
   it('extracts email from contactDetails when loginEmail missing', async () => {
@@ -965,7 +967,7 @@ describe('wixMembers_onMemberCreated', () => {
     await new Promise(r => setTimeout(r, 100));
 
     const welcomeEmails = insertedItems.filter(i => i.sequenceType === 'welcome');
-    expect(welcomeEmails).toHaveLength(3);
+    expect(welcomeEmails).toHaveLength(5);
     expect(welcomeEmails[0].recipientEmail).toBe('fallback@test.com');
   });
 
