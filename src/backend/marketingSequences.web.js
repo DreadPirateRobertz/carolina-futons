@@ -209,6 +209,77 @@ export const triggerReviewRequestSequence = webMethod(Permissions.Admin, async (
   }
 });
 
+// ── runReviewRequestEmails (cf-fsm) ───────────────────────────────────────────
+
+const ORDERS_COLLECTION = 'Stores/Orders';
+const REVIEW_WINDOW = { minDays: 6, maxDays: 8 };
+const REVIEW_LOOKBACK_DAYS = REVIEW_WINDOW.maxDays + 1;
+const ORDERS_PAGE_SIZE = 100;
+
+async function fetchOrdersInReviewWindow() {
+  const cutoff = new Date(Date.now() - REVIEW_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+  const results = [];
+  let offset = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const batch = await wixData
+      .query(ORDERS_COLLECTION)
+      .ge('_createdDate', cutoff)
+      .limit(ORDERS_PAGE_SIZE)
+      .skip(offset)
+      .find({ suppressAuth: true });
+    results.push(...batch.items);
+    if (batch.items.length < ORDERS_PAGE_SIZE) break;
+    offset += ORDERS_PAGE_SIZE;
+  }
+  return results;
+}
+
+/**
+ * Daily cron entrypoint: finds orders placed 6–8 days ago and enqueues the
+ * review-request sequence for each buyer. Idempotent via enqueueEmail's
+ * (email, sequenceType, step) dedup — repeat fires within the window are no-ops.
+ *
+ * @returns {Promise<{ success: boolean, ordersScanned: number, triggered: number, skipped: number, failed: number }>}
+ */
+export const runReviewRequestEmails = webMethod(Permissions.Admin, async () => {
+  try {
+    const orders = await fetchOrdersInReviewWindow();
+    const now = Date.now();
+    let triggered = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const order of orders) {
+      const orderDate = order._createdDate;
+      if (!orderDate) { skipped++; continue; }
+
+      const daysSince = Math.floor((now - new Date(orderDate).getTime()) / (24 * 60 * 60 * 1000));
+      if (daysSince < REVIEW_WINDOW.minDays || daysSince > REVIEW_WINDOW.maxDays) continue;
+
+      const email = order.buyerInfo?.email || '';
+      const contactId = order.buyerInfo?.contactId || order.buyerInfo?.memberId || '';
+      if (!email || !contactId) { skipped++; continue; }
+
+      const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+      const result = await triggerReviewRequestSequence({
+        email,
+        contactId,
+        firstName,
+        orderId: order._id,
+      });
+
+      if (result?.success) triggered++;
+      else failed++;
+    }
+
+    return { success: true, ordersScanned: orders.length, triggered, skipped, failed };
+  } catch (err) {
+    logError('runReviewRequestEmails failed', err);
+    return { success: false, ordersScanned: 0, triggered: 0, skipped: 0, failed: 0 };
+  }
+});
+
 // ── triggerWinbackSequence ────────────────────────────────────────────────────
 
 /**
@@ -243,7 +314,6 @@ export const triggerWinbackSequence = webMethod(Permissions.Admin, async (params
 
 // ── scanAndTriggerWinback ─────────────────────────────────────────────────────
 
-const ORDERS_COLLECTION = 'Stores/Orders';
 // Weekly Monday cron. Window must cover at least one week so a customer who
 // hit day 30 the day after last Monday's run isn't silently skipped. 30–37
 // days picks up every lapsed buyer exactly once without backfilling history.
