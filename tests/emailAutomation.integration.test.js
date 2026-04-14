@@ -513,15 +513,16 @@ describe('re-engagement filtering', () => {
 
   it('contacts dormant contacts (> 90 days)', async () => {
     const hundredDaysAgo = new Date(Date.now() - 100 * 24 * 3600000);
-    __seed('EmailQueue', [{
-      _id: 'eq-dormant',
-      recipientEmail: 'dormant@test.com',
-      recipientContactId: 'contact-dormant',
-      sequenceType: 'post_purchase',
-      sequenceStep: 1,
-      status: 'sent',
-      sentAt: hundredDaysAgo,
-      variables: { firstName: 'Dormant' },
+    __seed('MemberPoints', [{
+      _id: 'mp-dormant',
+      memberId: 'mem-dormant',
+      lastActivityAt: hundredDaysAgo,
+    }]);
+    __seed('Members/PrivateMembersData', [{
+      _id: 'mem-dormant',
+      loginEmail: 'dormant@test.com',
+      contactId: 'contact-dormant',
+      firstName: 'Dormant',
     }]);
 
     let insertedItems = [];
@@ -538,17 +539,18 @@ describe('re-engagement filtering', () => {
 
   it('does not send reengagement twice to same contact', async () => {
     const hundredDaysAgo = new Date(Date.now() - 100 * 24 * 3600000);
+    __seed('MemberPoints', [{
+      _id: 'mp-double',
+      memberId: 'mem-double',
+      lastActivityAt: hundredDaysAgo,
+    }]);
+    __seed('Members/PrivateMembersData', [{
+      _id: 'mem-double',
+      loginEmail: 'double@test.com',
+      contactId: 'contact-double',
+      firstName: 'Double',
+    }]);
     __seed('EmailQueue', [
-      {
-        _id: 'eq-pp-old',
-        recipientEmail: 'double@test.com',
-        recipientContactId: 'contact-double',
-        sequenceType: 'post_purchase',
-        sequenceStep: 1,
-        status: 'sent',
-        sentAt: hundredDaysAgo,
-        variables: { firstName: 'Double' },
-      },
       {
         _id: 'eq-re-existing',
         recipientEmail: 'double@test.com',

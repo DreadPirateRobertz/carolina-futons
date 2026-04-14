@@ -258,12 +258,13 @@ describe('triggerReengagement skips', () => {
   const longAgo = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000);
 
   it('skips contacts already sent reengagement', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-old', memberId: 'mem-old', lastActivityAt: longAgo,
+    }]);
+    __seed('Members/PrivateMembersData', [{
+      _id: 'mem-old', loginEmail: 'old@buyer.com', contactId: 'c10', firstName: 'Old',
+    }]);
     __seed('EmailQueue', [
-      {
-        _id: 'pp1', recipientEmail: 'old@buyer.com', recipientContactId: 'c10',
-        sequenceType: 'post_purchase', sequenceStep: 1, status: 'sent',
-        sentAt: longAgo, variables: { firstName: 'Old' },
-      },
       {
         _id: 're1', recipientEmail: 'old@buyer.com',
         sequenceType: 'reengagement', sequenceStep: 1, status: 'sent',
@@ -275,10 +276,11 @@ describe('triggerReengagement skips', () => {
   });
 
   it('skips unsubscribed contacts', async () => {
-    __seed('EmailQueue', [{
-      _id: 'pp2', recipientEmail: 'unsub@buyer.com', recipientContactId: 'c11',
-      sequenceType: 'post_purchase', sequenceStep: 1, status: 'sent',
-      sentAt: longAgo, variables: { firstName: 'Unsub' },
+    __seed('MemberPoints', [{
+      _id: 'mp-unsub', memberId: 'mem-unsub', lastActivityAt: longAgo,
+    }]);
+    __seed('Members/PrivateMembersData', [{
+      _id: 'mem-unsub', loginEmail: 'unsub@buyer.com', contactId: 'c11', firstName: 'Unsub',
     }]);
     __seed('Unsubscribes', [{
       _id: 'u1', email: 'unsub@buyer.com', sequenceType: 'reengagement',
@@ -289,10 +291,11 @@ describe('triggerReengagement skips', () => {
   });
 
   it('queues reengagement for eligible dormant contact', async () => {
-    __seed('EmailQueue', [{
-      _id: 'pp3', recipientEmail: 'eligible@buyer.com', recipientContactId: 'c12',
-      sequenceType: 'post_purchase', sequenceStep: 1, status: 'sent',
-      sentAt: longAgo, variables: { firstName: 'Eli' },
+    __seed('MemberPoints', [{
+      _id: 'mp-eli', memberId: 'mem-eli', lastActivityAt: longAgo,
+    }]);
+    __seed('Members/PrivateMembersData', [{
+      _id: 'mem-eli', loginEmail: 'eligible@buyer.com', contactId: 'c12', firstName: 'Eli',
     }]);
 
     const inserts = [];
