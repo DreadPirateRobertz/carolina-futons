@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.4",
-    "@wix/cli": "^1.1.174",
+    "@wix/cli": "^1.1.175",
     "@wix/eslint-plugin-cli": "^1.0.0",
     "eslint": "^8.25.0",
     "husky": "^9.1.7",
