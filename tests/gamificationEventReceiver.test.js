@@ -27,7 +27,7 @@ import {
   __onUpdate,
   __onInsert,
 } from './__mocks__/wix-data.js';
-import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistMonthlyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak, getRecentAchievements } from '../src/backend/gamificationEventReceiver.web.js';
+import { receiveGamificationEvent, updateStreakState, updateChallengeProgress, checkWishlistMonthlyCap, recordWishlistAdd, getActiveChallenges, _resetActiveChallengesRateLimit, recordChallengeProgress, _resetRecordChallengeProgressRateLimit, recoverStreak, getRecentAchievements, seedWelcomePoints } from '../src/backend/gamificationEventReceiver.web.js';
 import { POINT_VALUES, STREAK_RECOVERY_COST } from '../src/public/gamificationTokens.js';
 import { getTodayET, getYesterdayOf } from '../src/backend/utils/dateUtils.js';
 import { ANALYTICS_EVENTS_COLLECTION } from '../src/backend/utils/analyticsEvents.js';
@@ -2358,5 +2358,103 @@ describe('getRecentAchievements', () => {
     expect(results).toHaveLength(2);
     expect(results[0].memberNickname).toBe('Tay');
     expect(results[1].memberNickname).toBe('Tay');
+  });
+});
+
+// ── cf-bvn: lastActivityAt stamped on every MemberPoints write path ──────────
+// Dormancy detection (re-engagement win-back) reads MemberPoints.lastActivityAt.
+// If any producer path forgets to stamp it, browse-only members silently fall
+// out of the dormant cohort. These tests lock every write path.
+
+describe('cf-bvn: lastActivityAt is stamped on every MemberPoints write path', () => {
+  it('receiveGamificationEvent stamps lastActivityAt on wixData.update for existing record', async () => {
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 50, tier: 'Trail Blazer' }]);
+    const updated = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-1');
+
+    expect(updated).toHaveLength(1);
+    expect(updated[0].lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(updated[0].lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
+  });
+
+  it('receiveGamificationEvent stamps lastActivityAt on wixData.insert for new member', async () => {
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'MemberPoints') inserted.push(item); });
+
+    await receiveGamificationEvent('gamification_add_to_cart', {}, 'mem-new');
+
+    const mp = inserted.find(i => i.memberId === 'mem-new');
+    expect(mp).toBeDefined();
+    expect(mp.lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(mp.lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
+  });
+
+  it('seedWelcomePoints stamps lastActivityAt on initial insert', async () => {
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'MemberPoints') inserted.push(item); });
+
+    await seedWelcomePoints('mem-welcome', 50);
+
+    const mp = inserted.find(i => i.memberId === 'mem-welcome');
+    expect(mp).toBeDefined();
+    expect(mp.lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(mp.lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
+  });
+
+  it('recordChallengeProgress stamps lastActivityAt on update (existing MemberPoints, challenge completes)', async () => {
+    const CHALLENGES_COLLECTION = 'Challenges';
+    const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
+    const FUTURE = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', name: 'X', type: 'daily', targetCount: 1, rewardPoints: 50, expiresAt: FUTURE, active: true },
+    ]);
+    __seed(CHALLENGE_PROGRESS_COLLECTION, []);
+    __seed('MemberPoints', [{ _id: 'mp-1', memberId: 'mem-1', totalPoints: 100, tier: 'Trail Blazer' }]);
+    const updated = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+
+    await recordChallengeProgress({ memberId: 'mem-1', challengeId: 'ch-1' });
+
+    expect(updated).toHaveLength(1);
+    expect(updated[0].lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(updated[0].lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
+  });
+
+  it('recordChallengeProgress stamps lastActivityAt on insert (new MemberPoints, challenge completes)', async () => {
+    const CHALLENGES_COLLECTION = 'Challenges';
+    const FUTURE = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    __seed(CHALLENGES_COLLECTION, [
+      { _id: 'ch-1', challengeId: 'ch-1', name: 'X', type: 'daily', targetCount: 1, rewardPoints: 50, expiresAt: FUTURE, active: true },
+    ]);
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'MemberPoints') inserted.push(item); });
+
+    await recordChallengeProgress({ memberId: 'mem-new', challengeId: 'ch-1' });
+
+    const mp = inserted.find(i => i.memberId === 'mem-new');
+    expect(mp).toBeDefined();
+    expect(mp.lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(mp.lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
+  });
+
+  it('recoverStreak stamps lastActivityAt on updatedRecord', async () => {
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-1',
+      totalPoints: 500,
+      tier: 'Mountain Guide',
+      currentStreakDays: 0,
+      lastStreakRecoveryDate: null,
+    }]);
+    const updated = [];
+    __onUpdate((col, item) => { if (col === 'MemberPoints') updated.push(item); });
+
+    const result = await recoverStreak('mem-1');
+
+    expect(result.success).toBe(true);
+    expect(updated).toHaveLength(1);
+    expect(updated[0].lastActivityAt).toBeInstanceOf(Date);
+    expect(Math.abs(updated[0].lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
   });
 });

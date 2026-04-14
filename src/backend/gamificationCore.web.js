@@ -37,6 +37,16 @@ import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { dispatchBusEvent } from 'backend/utils/eventBusDispatcher';
 
 export const MEMBER_POINTS_COLLECTION = 'MemberPoints';
+// ── MemberPoints: two activity fields, do not conflate ──────────────────────
+// lastActivityDate — ET *date string* ("2026-04-13"). Day-granularity,
+//   timezone-bound. Read by streak engine, pointsExpiryService,
+//   gamificationNotifs (streak danger), loyaltyService. NEVER compare to
+//   lastActivityAt — different type AND different granularity.
+// lastActivityAt   — UTC *Date*. Millisecond-granularity timestamp stamped
+//   on every user-initiated MemberPoints write (cf-bvn). Read by
+//   leaderboardService (tie-breaker) and re-engagement dormancy (cf-bpt).
+//   Consumers must query with a Date value, never with an ET string.
+// ──────────────────────────────────────────────────────────────────────────
 export const MEMBER_BADGES_COLLECTION = 'MemberBadges';
 const BONUS_SPIN_GRANTS_COLLECTION = 'BonusSpinGrants';
 export const CHALLENGE_PROGRESS_COLLECTION = 'MemberChallengeProgress';
