@@ -103,13 +103,8 @@ function createItemScope() {
 }
 
 // ── Auto-added by cf-obz: mock coverage gap reduction ──────────────
-vi.mock('public/galleryHelpers', () => ({
-  getProductBadge: vi.fn(() => null),
-  getRecentlyViewed: vi.fn().mockResolvedValue([]),
-  addToCompare: vi.fn(),
-  removeFromCompare: vi.fn(),
-  getCompareList: vi.fn(() => []),
-}));
+// galleryHelpers intentionally NOT mocked — compare flow assertions need
+// real addToCompare return value to gate refreshCompareBarUI wiring.
 vi.mock('public/placeholderImages.js', () => ({
   getProductFallbackImage: vi.fn(() => ''),
 }));
@@ -133,7 +128,15 @@ vi.mock('public/mobileHelpers', () => ({
 }));
 vi.mock('public/performanceHelpers.js', () => ({
   prioritizeSections: vi.fn(async (sections) => {
-    for (const s of sections) { try { await s.init(); } catch (_) {} }
+    const critical = [];
+    for (const s of sections.filter(s => s.critical)) {
+      try { await s.init(); critical.push({ status: 'fulfilled', value: undefined }); }
+      catch (e) { critical.push({ status: 'rejected', reason: e }); }
+    }
+    for (const s of sections.filter(s => !s.critical)) {
+      try { await s.init(); } catch (_) {}
+    }
+    return { critical };
   }),
 }));
 vi.mock('public/engagementTracker', () => ({
@@ -153,21 +156,13 @@ vi.mock('public/productCache', () => ({
 vi.mock('public/touchHelpers', () => ({
   enableSwipe: vi.fn(),
 }));
-vi.mock('public/productPageUtils.js', () => ({
-  buildGridAlt: vi.fn(p => p?.name ?? ''),
-  detectProductBrand: vi.fn(() => ''),
-  isCallForPrice: vi.fn(() => false),
-  CALL_FOR_PRICE_TEXT: 'Call for Price',
-}));
-vi.mock('public/a11yHelpers.js', () => ({
-  announce: vi.fn(),
-  makeClickable: vi.fn(),
-  createFocusTrap: vi.fn(),
-  setupAccessibleDialog: vi.fn(),
-}));
+// productPageUtils intentionally NOT mocked — tests assert against real
+// buildGridAlt/detectProductBrand output.
+// a11yHelpers intentionally NOT mocked — keyboard tests assert tabIndex,
+// aria-label, onKeyPress wiring that makeClickable performs on real elements.
 vi.mock('public/socialProofToast', () => ({
-  initCategorySocialProof: vi.fn(),
-  initProductSocialProof: vi.fn(),
+  initCategorySocialProof: vi.fn(() => Promise.resolve()),
+  initProductSocialProof: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('backend/promotions.web', () => ({
   getFlashSales: vi.fn().mockResolvedValue([]),
@@ -189,16 +184,8 @@ vi.mock('public/StarRatingCard', () => ({
   renderCardStarRating: vi.fn(),
   _resetCache: vi.fn(),
 }));
-vi.mock('public/productCardHelpers.js', () => ({
-  styleCardContainer: vi.fn(),
-  styleBadge: vi.fn(),
-  initCardHover: vi.fn(),
-  formatCardPrice: vi.fn(),
-  setCardImage: vi.fn(),
-  renderCardFinancingBadge: vi.fn(),
-  renderSimplePrice: vi.fn(),
-  renderCardAssemblyBadge: vi.fn(),
-}));
+// productCardHelpers intentionally NOT mocked — real helpers provide
+// the image URL / price / badge output that tests assert against.
 vi.mock('public/galleryConfig.js', () => ({
   getImageDimensions: vi.fn(() => ({ width: 400, height: 400 })),
 }));
