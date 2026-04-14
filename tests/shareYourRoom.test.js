@@ -26,12 +26,14 @@ vi.mock('backend/ugcService.web', () => ({
   submitUGCPhoto: (...args) => mockSubmitUGCPhoto(...args),
 }));
 
+const mockAnnounce = vi.fn();
 vi.mock('public/a11yHelpers', () => ({
-  announce: vi.fn(),
+  announce: (...args) => mockAnnounce(...args),
 }));
 
+const mockTrackEvent = vi.fn();
 vi.mock('public/engagementTracker', () => ({
-  trackEvent: vi.fn(),
+  trackEvent: (...args) => mockTrackEvent(...args),
 }));
 
 // ── $w Mock Factory ──────────────────────────────────────────────────────────
@@ -143,6 +145,13 @@ describe('ShareYourRoom', () => {
     expect(get('#shareYourRoomModal').expand).toHaveBeenCalled();
   });
 
+  it('announces modal open to screen readers with $w', () => {
+    initShareYourRoomCTA($w, MEMBER_STATE);
+    const handler = get('#shareYourRoomBtn').onClick.mock.calls[0][0];
+    handler();
+    expect(mockAnnounce).toHaveBeenCalledWith($w, expect.stringContaining('opened'));
+  });
+
   it('collapses login prompt for logged-in member', () => {
     initShareYourRoomCTA($w, MEMBER_STATE);
     const handler = get('#shareYourRoomBtn').onClick.mock.calls[0][0];
@@ -179,6 +188,13 @@ describe('ShareYourRoom', () => {
     const closeHandler = get('#shareYourRoomClose').onClick.mock.calls[0][0];
     closeHandler();
     expect(get('#shareYourRoomModal').collapse).toHaveBeenCalled();
+  });
+
+  it('announces modal close to screen readers with $w', () => {
+    initShareYourRoomCTA($w, MEMBER_STATE);
+    const closeHandler = get('#shareYourRoomClose').onClick.mock.calls[0][0];
+    closeHandler();
+    expect(mockAnnounce).toHaveBeenCalledWith($w, expect.stringContaining('closed'));
   });
 
   it('collapses modal when overlay clicked', () => {
@@ -309,6 +325,11 @@ describe('ShareYourRoom', () => {
 
     expect(get('#shareYourRoomSuccess').expand).toHaveBeenCalled();
     expect(get('#shareYourRoomForm').collapse).toHaveBeenCalled();
+    expect(mockAnnounce).toHaveBeenCalledWith(local$w, expect.stringContaining('submitted'));
+    expect(mockTrackEvent).toHaveBeenCalledWith('ugc_photo_submitted', expect.objectContaining({
+      roomType: 'bedroom',
+      productId: 'prod-1',
+    }));
   });
 
   it('shows API error and re-enables submit on failure', async () => {
