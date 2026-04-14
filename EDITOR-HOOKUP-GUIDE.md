@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-13 (v4.0 — Phase 6 App-Forward: push notifications (cf-push-1/cf-push-2), deep links (cf-deeplink), spin redemption (cf-spin), mobile challenges AR/quiz/social (cf-mobile-challenges), cross-rig sync (cf-cross-rig), Challenge of Week backend (cf-rsr ✅), Leaderboard backend (cf-73p ✅), gamification chips (cf-tcs ✅), streak cron (cf-2yd ✅). New CMS collections: PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. Previous: v3.1 — Warranty/NPS/VideoReviewGrid/StyleQuizResult.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-13 (v4.1 — Stamped.io setup expanded: full 4-step Stilgar hookup guide (webhook URL, 4 secrets, app install, productReviewWidget placement), StarRatingCard batch integration note for Home/Category. Previous: v4.0 — Phase 6 App-Forward push/deep-link/spin/mobile-challenges/cross-rig, cf-3z1 Challenge of Week, cf-73p Leaderboard, cf-tcs gamification chips, cf-2yd streak cron.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -1301,15 +1301,35 @@ CF+ members can lock today's price with a $25 refundable deposit for 30/60/90 da
 | `priceLockSuccess` | Text | Success message — auto-collapses after 3s |
 
 ### Stamped.io Reviews (NEW — CF-gxn1)
-*Source: `src/public/ProductReviews.js` + `src/backend/stampedIoService.web.js`*
+*Source: `src/public/ProductReviews.js` + `src/backend/stampedIoService.web.js` + `src/backend/http-functions.js`*
 
-**Stamped.io is now the PRIMARY review source.** CMS reviews are fallback. Existing `#reviewsSection` element IDs unchanged — see Reviews & Ratings section. One new element needed:
+**Stamped.io is now the PRIMARY review source.** CMS reviews are the fallback. Existing `#reviewsSection` element IDs are unchanged — see Reviews & Ratings section above. One new element needed on Product Page:
 
 | Element ID | Wix Element | Notes |
 |---|---|---|
 | `productReviewWidget` | Box | Stamped.io native embed container — place below review form |
 
-**Stilgar TODO (dashboard only):** Install Stamped.io from Wix App Market + add secrets: `STAMPED_API_KEY`, `STAMPED_API_SECRET`, `STAMPED_STORE_HASH`.
+**How it integrates:**
+- `ProductReviews.js` calls `getStampedRating(productId)` + `getStampedReviews(productId)` (Stamped-first, CMS fallback)
+- `StarRatingCard.js` calls `getBatchStampedRatings(productIds)` for star overlays on Home + Category page product cards
+- New reviews posted in Stamped.io are pushed to us via webhook → auto-approved at 4+ stars with no profanity, else queued for moderation
+
+**Stilgar setup — 4 steps (dashboard only, no code changes needed):**
+
+1. **Wix Secrets Manager** — add all 4 secrets (Dashboard > Settings > Secrets Manager):
+   - `STAMPED_API_KEY` — Stamped.io public API key
+   - `STAMPED_API_SECRET` — Stamped.io private API secret
+   - `STAMPED_STORE_HASH` — Stamped.io store identifier
+   - `STAMPED_WEBHOOK_SECRET` — any random string you choose; must match what you enter in Stamped.io
+
+2. **Stamped.io webhook** — in Stamped.io dashboard > Settings > Webhooks, add:
+   - URL: `https://www.carolinafutons.com/_functions/stampedWebhook`
+   - Method: POST
+   - Secret header: `x-stamped-secret` → value must match `STAMPED_WEBHOOK_SECRET` above
+
+3. **Install Stamped.io app** from Wix App Market (if not already installed) — required for the native `productReviewWidget` embed
+
+4. **Add `#productReviewWidget` Box** on Product Page below the review form — Stamped.io SDK auto-populates it
 
 ### BNPL Widget (CF-nqb5.1 — PR #936 ✅ MERGED 2026-03-29)
 *Source: `src/public/BNPLWidget.js` — `initBNPLWidget($w, price)`*
