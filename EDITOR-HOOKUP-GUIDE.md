@@ -1316,11 +1316,11 @@ CF+ members can lock today's price with a $25 refundable deposit for 30/60/90 da
 
 **Stilgar setup — 4 steps (dashboard only, no code changes needed):**
 
-1. **Wix Secrets Manager** — add all 4 secrets (Dashboard > Settings > Secrets Manager):
-   - `STAMPED_API_KEY` — Stamped.io public API key
-   - `STAMPED_API_SECRET` — Stamped.io private API secret
-   - `STAMPED_STORE_HASH` — Stamped.io store identifier
-   - `STAMPED_WEBHOOK_SECRET` — any random string you choose; must match what you enter in Stamped.io
+1. **Wix Secrets Manager** — add these in Dashboard > Settings > Secrets Manager:
+   - `STAMPED_API_KEY` = `9c8ac5f5-7e8d-4143-a3cd-4e85bf7196ba` *(v2 public key — from secrets.env `STAMPED_PUBLIC_KEY`)*
+   - `STAMPED_API_SECRET` = *(skip — not available on free/Starter plan, not currently used by any endpoint)*
+   - `STAMPED_STORE_HASH` = `361996` *(shop ID — from secrets.env `STAMPED_SHOP_ID`)*
+   - `STAMPED_WEBHOOK_SECRET` = generate a random string: `openssl rand -hex 32` in terminal; paste same value in Stamped.io webhook config below
 
 2. **Stamped.io webhook** — in Stamped.io dashboard > Settings > Webhooks, add:
    - URL: `https://www.carolinafutons.com/_functions/stampedWebhook`
