@@ -726,7 +726,15 @@ export async function recordWishlistAdd(memberId, todayET) {
 export const getActiveChallenges = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
-    if (!memberId) return { challenges: [] };
+    if (!memberId) {
+      // Permissions.SiteMember should gate anonymous callers before we get
+      // here; reaching this branch means Velo let an unauthenticated request
+      // through (stale session, misconfiguration). Surface it as a distinct
+      // error instead of returning "no challenges" — that's silent-failure
+      // masquerade. See cf-1y7 (cf-2ag cascade).
+      console.warn('[gamificationCore] getActiveChallenges: no memberId on session (cf-1y7)');
+      return { challenges: [], error: 'auth_required' };
+    }
 
     // Rate limit: 10 calls/hr per member
     const now = Date.now();
@@ -1046,6 +1054,13 @@ export const recoverStreak = webMethod(
 export const getStreakData = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
+    if (!memberId) {
+      // Velo SiteMember gate leak — distinguishable from "authed but no streak
+      // yet" (which also returns zeros, but without the error field).
+      // See cf-1y7 (cf-2ag cascade).
+      console.warn('[gamificationCore] getStreakData: no memberId on session (cf-1y7)');
+      return { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
+    }
     const record = await findMemberRecord(memberId);
     if (!record) {
       return { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
@@ -1158,6 +1173,13 @@ export function computeTierInfo(totalPoints) {
 export const getMemberTier = webMethod(
   Permissions.SiteMember,
   async (memberId) => {
+    if (!memberId) {
+      // Velo SiteMember gate leak — return the baseline Trail Blazer shape
+      // but signal the auth anomaly so widgets can gate tier benefits display.
+      // See cf-1y7 (cf-2ag cascade).
+      console.warn('[gamificationCore] getMemberTier: no memberId on session (cf-1y7)');
+      return { ...computeTierInfo(0), error: 'auth_required' };
+    }
     const record = await findMemberRecord(memberId);
     return computeTierInfo(record ? record.totalPoints : 0);
   }
@@ -1191,7 +1213,19 @@ export const getActivityFeed = webMethod(
   async (memberId, limit = 10) => {
     const { currentMember } = await import('wix-members-backend');
     const caller = await currentMember.getMember();
-    if (!caller?._id || caller._id !== memberId) return [];
+    if (!caller?._id) {
+      // Velo SiteMember gate leak. Array return preserved for consumer compat;
+      // observability lives in the warn so Wix runtime logs surface the leak.
+      // See cf-1y7 (cf-2ag cascade).
+      console.warn('[gamificationCore] getActivityFeed: no member on session (auth_required) (cf-1y7)');
+      return [];
+    }
+    if (caller._id !== memberId) {
+      // Cross-member read attempt. Keep defense-in-depth (empty array) but
+      // warn distinctly so the two failure modes are separable in logs.
+      console.warn('[gamificationCore] getActivityFeed: caller/memberId mismatch (forbidden) (cf-1y7)');
+      return [];
+    }
 
     const result = await wixData
       .query('AnalyticsEvents')
