@@ -14,6 +14,7 @@ import {
   getRecentlyViewed,
   getSimilarProducts,
   getCustomersAlsoBought,
+  getProductRecommendations,
 } from '../src/backend/productRecommendations.web.js';
 
 beforeEach(() => {
@@ -1190,5 +1191,115 @@ describe('trackRecentlyViewed — trim behavior', () => {
     expect(viewed.success).toBe(true);
     const frameEntries = viewed.products.filter(p => p._id === 'prod-frame-001');
     expect(frameEntries.length).toBe(1);
+  });
+});
+
+// ── getProductRecommendations (cf-e1h) ────────────────────────────
+
+describe('getProductRecommendations (cf-e1h)', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+    __seed('MemberBrowseHistory', []);
+    __seed('Stores/Orders', []);
+  });
+
+  it('returns history-based recommendations ranked by browse frequency', async () => {
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date() },
+      { _id: 'bh-2', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date('2026-04-10') },
+      { _id: 'bh-3', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date('2026-04-09') },
+      { _id: 'bh-4', sessionKey: 'member_mem-1', productId: 'prod-case-001', viewedAt: new Date() },
+    ]);
+
+    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+
+    expect(result.success).toBe(true);
+    expect(result.source).toBe('history');
+    expect(result.products.length).toBeGreaterThanOrEqual(1);
+    expect(result.products[0].productId).toBe('prod-matt-001');
+    expect(result.products[0]).toHaveProperty('title');
+    expect(result.products[0]).toHaveProperty('price');
+    expect(result.products[0]).toHaveProperty('imageUrl');
+    expect(result.products[0]).toHaveProperty('slug');
+  });
+
+  it('falls back to category-based recommendations when no history exists', async () => {
+    const result = await getProductRecommendations('prod-frame-001', { sessionId: 'guest-sess' });
+
+    expect(result.success).toBe(true);
+    expect(result.source).toBe('category');
+    expect(result.products.length).toBeGreaterThanOrEqual(1);
+    expect(result.products.every(p => p.productId !== 'prod-frame-001')).toBe(true);
+  });
+
+  it('returns category fallback for guest with no browse/order data', async () => {
+    const result = await getProductRecommendations('prod-matt-001', { sessionId: 'new-guest' });
+
+    expect(result.success).toBe(true);
+    expect(result.source).toBe('category');
+  });
+
+  it('excludes already-purchased products from recommendations', async () => {
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date() },
+      { _id: 'bh-2', sessionKey: 'member_mem-1', productId: 'prod-case-001', viewedAt: new Date() },
+    ]);
+    __seed('Stores/Orders', [
+      { _id: 'o-1', lineItems: [{ productId: 'prod-matt-001' }] },
+    ]);
+
+    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+
+    expect(result.success).toBe(true);
+    const ids = result.products.map(p => p.productId);
+    expect(ids).not.toContain('prod-matt-001');
+  });
+
+  it('respects the limit parameter', async () => {
+    const result = await getProductRecommendations('prod-frame-001', { sessionId: 'sess', limit: 2 });
+
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeLessThanOrEqual(2);
+  });
+
+  it('works with sessionId fallback for guests (no memberId)', async () => {
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'session_guest-abc', productId: 'prod-matt-001', viewedAt: new Date() },
+    ]);
+
+    const result = await getProductRecommendations('prod-frame-001', { sessionId: 'guest-abc' });
+
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeGreaterThanOrEqual(1);
+    expect(result.source).toBe('history');
+  });
+
+  it('returns { success: false } on query error', async () => {
+    const { __setQueryError: setErr } = await import('./__mocks__/wix-data.js');
+    setErr('Stores/Products', new Error('DB failure'));
+
+    const result = await getProductRecommendations('prod-frame-001', { sessionId: 'sess' });
+
+    expect(result.success).toBe(false);
+    expect(result.products).toEqual([]);
+  });
+
+  it('returns empty for invalid productId', async () => {
+    const result = await getProductRecommendations('', { sessionId: 'sess' });
+    expect(result.success).toBe(false);
+    expect(result.products).toEqual([]);
+  });
+
+  it('excludes current product from results', async () => {
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-frame-001', viewedAt: new Date() },
+    ]);
+
+    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+
+    expect(result.success).toBe(true);
+    const ids = result.products.map(p => p.productId);
+    expect(ids).not.toContain('prod-frame-001');
   });
 });

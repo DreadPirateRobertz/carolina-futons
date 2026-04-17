@@ -850,3 +850,150 @@ export const getFreightComplementProducts = webMethod(
     }
   }
 );
+
+// ── getProductRecommendations (cf-e1h) ───────────────────────────────
+
+const MEMBER_BROWSE_HISTORY_COLLECTION = 'MemberBrowseHistory';
+
+/**
+ * Get personalized product recommendations based on browse + purchase history.
+ * Uses memberId (authenticated) or sessionId (guest) as the lookup key.
+ * Falls back to category-based recommendations when no history exists.
+ *
+ * @param {string} productId - Current product on PDP (excluded from results)
+ * @param {Object} [options]
+ * @param {string} [options.memberId] - Authenticated member ID
+ * @param {string} [options.sessionId] - Guest session ID (fallback)
+ * @param {number} [options.limit=4] - Max products to return
+ * @returns {Promise<{success: boolean, products: Array<{productId, title, price, imageUrl, slug}>, source: 'history'|'category'}>}
+ * @permission Anyone
+ */
+export const getProductRecommendations = webMethod(
+  Permissions.Anyone,
+  async (productId, options = {}) => {
+    try {
+      const pid = validateId(productId);
+      if (!pid) return { success: false, products: [], source: 'category' };
+
+      const { memberId, sessionId, limit = 4 } = options;
+      const safeLimit = Math.max(1, Math.min(12, Math.round(limit)));
+
+      const sessionKey = memberId
+        ? `member_${memberId}`
+        : sessionId
+          ? `session_${sessionId}`
+          : null;
+
+      const frequency = {};
+      const purchasedProductIds = new Set();
+
+      if (sessionKey) {
+        const browseResults = await wixData
+          .query(MEMBER_BROWSE_HISTORY_COLLECTION)
+          .eq('sessionKey', sessionKey)
+          .ne('productId', pid)
+          .limit(100)
+          .find({ suppressAuth: true });
+
+        for (const record of browseResults.items) {
+          if (record.productId && record.productId !== pid) {
+            frequency[record.productId] = (frequency[record.productId] || 0) + 1;
+          }
+        }
+      }
+
+      if (memberId) {
+        const orders = await wixData
+          .query('Stores/Orders')
+          .limit(100)
+          .find({ suppressAuth: true });
+
+        for (const order of orders.items) {
+          if (!order.lineItems) continue;
+          const orderProductIds = order.lineItems
+            .map(li => li.productId)
+            .filter(Boolean);
+
+          for (const opid of orderProductIds) {
+            purchasedProductIds.add(opid);
+          }
+
+          if (orderProductIds.includes(pid)) {
+            for (const opid of orderProductIds) {
+              if (opid !== pid) {
+                frequency[opid] = (frequency[opid] || 0) + 2;
+              }
+            }
+          }
+        }
+      }
+
+      purchasedProductIds.delete(pid);
+      for (const purchasedId of purchasedProductIds) {
+        delete frequency[purchasedId];
+      }
+
+      const rankedIds = Object.entries(frequency)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, safeLimit)
+        .map(([id]) => id);
+
+      if (rankedIds.length > 0) {
+        const products = await wixData
+          .query('Stores/Products')
+          .hasSome('_id', rankedIds)
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
+          .find({ suppressAuth: true });
+
+        const productMap = new Map(products.items.map(p => [p._id, p]));
+        const ordered = rankedIds
+          .map(id => productMap.get(id))
+          .filter(Boolean)
+          .map(p => ({
+            productId: p._id,
+            title: p.name,
+            price: p.price,
+            imageUrl: p.mainMedia?.src || p.mainMedia || null,
+            slug: p.slug,
+          }));
+
+        if (ordered.length > 0) {
+          return { success: true, products: ordered, source: 'history' };
+        }
+      }
+
+      const sourceProduct = await wixData.get('Stores/Products', pid, { suppressAuth: true });
+      if (!sourceProduct) return { success: true, products: [], source: 'category' };
+
+      const collections = Array.isArray(sourceProduct.collections)
+        ? sourceProduct.collections
+        : sourceProduct.collections ? [sourceProduct.collections] : [];
+
+      if (collections.length === 0) {
+        return { success: true, products: [], source: 'category' };
+      }
+
+      const excludeIds = [pid, ...purchasedProductIds];
+      const categoryResults = await wixData
+        .query('Stores/Products')
+        .hasSome('collections', collections)
+        .not(wixData.query('Stores/Products').hasSome('_id', excludeIds))
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
+        .limit(safeLimit)
+        .find({ suppressAuth: true });
+
+      const categoryProducts = categoryResults.items.map(p => ({
+        productId: p._id,
+        title: p.name,
+        price: p.price,
+        imageUrl: p.mainMedia?.src || p.mainMedia || null,
+        slug: p.slug,
+      }));
+
+      return { success: true, products: categoryProducts, source: 'category' };
+    } catch (err) {
+      console.error('[productRecommendations] getProductRecommendations error:', err);
+      return { success: false, products: [], source: 'category' };
+    }
+  }
+);
