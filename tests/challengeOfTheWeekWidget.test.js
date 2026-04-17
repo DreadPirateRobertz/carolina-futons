@@ -385,6 +385,15 @@ describe('ChallengeOfTheWeekWidget — getChallengeOfTheWeek section (cf-1he)', 
     expect(getEl('#cotw-points').text).toBe('1,500 pts');
   });
 
+  it('renders "0 pts" when pointValue is missing/undefined (rennala nit #2)', async () => {
+    getChallengeOfTheWeek.mockResolvedValue({
+      success: true,
+      challenge: { ...COTW_CHALLENGE, pointValue: undefined },
+    });
+    await init();
+    expect(getEl('#cotw-points').text).toBe('0 pts');
+  });
+
   it('sets #cotw-image src to imageUrl', async () => {
     await init();
     expect(getEl('#cotw-image').src).toBe('https://example.com/challenge.jpg');

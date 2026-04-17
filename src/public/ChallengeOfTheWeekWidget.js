@@ -211,7 +211,7 @@ async function _renderChallengeOfTheWeek($w, getChallengeOfTheWeek) {
   try { $w('#cotw-section').expand(); } catch {}
   try { $w('#cotw-title').text = ch.title; } catch {}
   try { $w('#cotw-description').text = ch.description ?? ''; } catch {}
-  try { $w('#cotw-points').text = `${ch.pointValue.toLocaleString()} pts`; } catch {}
+  try { $w('#cotw-points').text = `${(ch.pointValue ?? 0).toLocaleString()} pts`; } catch {}
 
   if (ch.imageUrl) {
     try { $w('#cotw-image').expand(); } catch {}
