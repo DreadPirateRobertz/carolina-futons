@@ -31,6 +31,10 @@ Create in this order (dependencies flow downward):
 18. **SpinGrants** — used by bonus spin grant and redemption flow
 19. **MobileChallengeCompletions** — used by mobile app challenge tracking
 20. **CrossRigSyncLog** — used by cross-rig gamification sync audit trail
+21. **Landings** — used by `/spring-sale`, `/winback`, `/press` marketing pages (cf-3qt Phase 5)
+22. **PressMentions** — used by `/press` mentions list (cf-3qt Phase 5)
+23. **PressKitAssets** — used by `/press` downloadable assets (cf-3qt Phase 5)
+24. **ComparisonFeatures** — used by `/compare` product matrix (cf-3qt Phase 4)
 
 ---
 
@@ -445,6 +449,89 @@ Queried on every call to `getShippingEstimate` and `calculateBundleQuote`. Produ
 
 ---
 
+## 21. Landings
+
+**Used by:** cf-3qt Phase 5 marketing routes (`/spring-sale`, `/winback`, `/press`)
+**Permissions:** Anyone read, Admin write
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| slug | Text | Yes | **Index — unique.** Examples: `spring-sale`, `winback`, `press` |
+| title | Text | Yes | SEO `<title>` |
+| headline | Text | Yes | Hero H1 |
+| subheadline | Text | No | Hero subhead |
+| heroImageUrl | URL | No | Wix media asset URL |
+| ctaPrimaryLabel | Text | No | |
+| ctaPrimaryHref | Text | No | |
+| ctaSecondaryLabel | Text | No | |
+| ctaSecondaryHref | Text | No | |
+| bodyMdx | Rich Text | No | Long-form copy, rendered as markdown (max ~20000 chars) |
+| utmDefaults | Rich Text | No | JSON blob: `{ campaign, content }` applied to outbound links |
+| activeFrom | Date | No | Visibility window start |
+| activeUntil | Date | No | Visibility window end |
+| seoDescription | Text | No | Meta description |
+| ogImageUrl | URL | No | OpenGraph image |
+
+---
+
+## 22. PressMentions
+
+**Used by:** `/press` (cf-3qt Phase 5)
+**Permissions:** Anyone read, Admin write
+
+Empty on launch — roadmap/"coming soon" treatment applies until first placement. Melania populates via Wix CMS UI as outreach lands.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| outlet | Text | Yes | **Index.** Outlet name (e.g. `Hendersonville Times-News`) |
+| outletLogoUrl | URL | No | Grayscale logo asset |
+| articleTitle | Text | Yes | |
+| articleUrl | URL | Yes | |
+| publishedDate | Date | Yes | **Index** — recency sort |
+| excerpt | Text | No | Pull quote (max ~500 chars) |
+| category | Text | No | **Index.** Values: `local-press`, `national`, `podcast`, `blog` |
+| featured | Boolean | No | Pin to top |
+| sortOrder | Number | No | Manual ordering override |
+
+---
+
+## 23. PressKitAssets
+
+**Used by:** `/press` downloads (cf-3qt Phase 5)
+**Permissions:** Anyone read, Admin write
+
+Seeds from godfrey (logo SVG, product photos, fact-sheet PDF).
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| name | Text | Yes | Human-readable asset name |
+| description | Text | No | |
+| fileUrl | URL | Yes | Wix media URL |
+| fileType | Text | Yes | Values: `svg`, `png`, `pdf`, `zip` |
+| fileSizeBytes | Number | No | |
+| category | Text | Yes | **Index.** Values: `logo`, `product-photo`, `team-photo`, `bio`, `fact-sheet` |
+| sortOrder | Number | No | |
+
+---
+
+## 24. ComparisonFeatures
+
+**Used by:** `/compare` product matrix (cf-3qt Phase 4)
+**Permissions:** Anyone read, Admin write
+
+Each row represents one spec dimension. `values` is a denormalized JSON map keyed by product slug — sufficient for ≤20 rows × ≤5 products.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| featureKey | Text | Yes | **Index — unique.** e.g. `frame-material` |
+| label | Text | Yes | Display label for the row |
+| description | Text | No | Hover/help text |
+| category | Text | No | **Index.** Values: `construction`, `comfort`, `price`, `warranty` |
+| sortOrder | Number | No | Display order |
+| values | Rich Text | Yes | JSON blob: `{ "<productSlug>": "<cell value or icon key>" }` |
+
+---
+
 ## Index Summary
 
 These fields should be indexed in Wix CMS for query performance:
@@ -471,3 +558,7 @@ These fields should be indexed in Wix CMS for query performance:
 | SpinGrants | memberId, expiresAt, status |
 | MobileChallengeCompletions | memberId, challengeType, completedAt |
 | CrossRigSyncLog | memberId, sourceRig, syncedAt |
+| Landings | slug (unique) |
+| PressMentions | outlet, publishedDate, category |
+| PressKitAssets | category |
+| ComparisonFeatures | featureKey (unique), category |
