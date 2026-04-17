@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-14 (v4.3 — Phase 8 COMPLETE: all 6 email sequences wired + 2 crons live (review-request daily #1062, winback weekly #1063). Welcome drip extended to 5 steps (#1064). 9 PRs merged this session. Dashboard needed: Secrets Manager (STAMPED_API_KEY, STAMPED_STORE_HASH, STAMPED_WEBHOOK_SECRET) + CMS collections (ChallengeOfTheWeek, PushTokens) + Wix Email Marketing templates (welcome_series_4 Day 14, welcome_series_5 Day 21). Previous: v4.2 — Night shift 5 merges.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-04-16 (v4.4 — CMS collections 28→32: added PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog to provisioning manifest + setup guide. Dashboard needed: Secrets Manager (STAMPED_API_KEY, STAMPED_STORE_HASH, STAMPED_WEBHOOK_SECRET) + CMS collections (ChallengeOfTheWeek) + Wix Email Marketing templates (welcome_series_4 Day 14, welcome_series_5 Day 21). Previous: v4.3 — Phase 8 COMPLETE.). Welcome drip extended to 5 steps (#1064). 9 PRs merged this session. Dashboard needed: Secrets Manager (STAMPED_API_KEY, STAMPED_STORE_HASH, STAMPED_WEBHOOK_SECRET) + CMS collections (ChallengeOfTheWeek, PushTokens) + Wix Email Marketing templates (welcome_series_4 Day 14, welcome_series_5 Day 21). Previous: v4.2 — Night shift 5 merges.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -21,7 +21,7 @@ All required dashboard/API configurations are now in place for editor hookup:
 | **UPS carrier** | CONFIGURED | Live rates + $49.99 fallback |
 | **Local Pickup** | CONFIGURED | $0 (Hendersonville showroom) |
 | **Local Delivery** | CONFIGURED | $49.99 flat rate |
-| **CMS collections** | 28 TOTAL | All collections provisioned on staging |
+| **CMS collections** | 32 TOTAL | All collections provisioned on staging (added PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog) |
 | **Back In Stock** | BLOCKED | API returns NOT_SUPPORTED — needs manual dashboard toggle |
 | **Wix Payments** | CONNECTED | Credit/Debit, Apple Pay, Google Pay, PayPal, Afterpay, Affirm — activates at Premium upgrade |
 | **Manual Payments** | CONNECTED | In-store cash/check at Hendersonville showroom |

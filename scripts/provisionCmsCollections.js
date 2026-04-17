@@ -370,6 +370,58 @@ const COLLECTION_MANIFEST = [
     permissions: ADMIN_ONLY,
   },
   {
+    id: 'PushTokens',
+    displayName: 'Push Tokens',
+    fields: [
+      field('memberId', 'Member ID', 'TEXT'),
+      field('token', 'Token', 'TEXT'),
+      field('platform', 'Platform', 'TEXT'),
+      field('active', 'Active', 'BOOLEAN'),
+    ],
+    permissions: { read: 'ADMIN', insert: 'MEMBER', update: 'ADMIN', remove: 'ADMIN' },
+  },
+  {
+    id: 'SpinGrants',
+    displayName: 'Spin Grants',
+    fields: [
+      field('memberId', 'Member ID', 'TEXT'),
+      field('grantedAt', 'Granted At', 'DATETIME'),
+      field('expiresAt', 'Expires At', 'DATETIME'),
+      field('redeemedAt', 'Redeemed At', 'DATETIME'),
+      field('reward', 'Reward', 'TEXT'),
+      field('rewardValue', 'Reward Value', 'NUMBER'),
+      field('status', 'Status', 'TEXT'),
+    ],
+    permissions: ADMIN_ONLY,
+  },
+  {
+    id: 'MobileChallengeCompletions',
+    displayName: 'Mobile Challenge Completions',
+    fields: [
+      field('memberId', 'Member ID', 'TEXT'),
+      field('challengeType', 'Challenge Type', 'TEXT'),
+      field('completedAt', 'Completed At', 'DATETIME'),
+      field('pointsAwarded', 'Points Awarded', 'NUMBER'),
+      field('productId', 'Product ID', 'TEXT'),
+      field('score', 'Score', 'NUMBER'),
+      field('platform', 'Platform', 'TEXT'),
+    ],
+    permissions: ADMIN_ONLY,
+  },
+  {
+    id: 'CrossRigSyncLog',
+    displayName: 'Cross-Rig Sync Log',
+    fields: [
+      field('memberId', 'Member ID', 'TEXT'),
+      field('points', 'Points', 'NUMBER'),
+      field('eventType', 'Event Type', 'TEXT'),
+      field('sourceRig', 'Source Rig', 'TEXT'),
+      field('syncedAt', 'Synced At', 'DATETIME'),
+      field('direction', 'Direction', 'TEXT'),
+    ],
+    permissions: ADMIN_ONLY,
+  },
+  {
     id: 'PremiumMemberships',
     displayName: 'Premium Memberships',
     fields: [
