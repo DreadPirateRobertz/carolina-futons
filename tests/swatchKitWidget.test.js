@@ -165,6 +165,15 @@ describe('buildCreditStatusText', () => {
     expect(buildCreditStatusText(null)).toBe('');
   });
 
+  it('returns empty string for auth_required response (cf-2ag)', () => {
+    // Backend signals stale session by returning { hasPendingCredit: false,
+    // error: 'auth_required' }. Banner must stay hidden rather than showing
+    // the pending-credit text to an unauthenticated viewer.
+    expect(
+      buildCreditStatusText({ hasPendingCredit: false, error: 'auth_required' }),
+    ).toBe('');
+  });
+
   it('returns text with amount when pending credit has no expiry', () => {
     const text = buildCreditStatusText({ hasPendingCredit: true, amount: 5 });
     expect(text).toContain('$5');

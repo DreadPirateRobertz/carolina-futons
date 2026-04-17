@@ -37,6 +37,9 @@ export async function initPage($w) {
     if (member?._id) {
       const { getSwatchKitCreditStatus } = await import('backend/swatchKitService.web');
       const creditStatus = await getSwatchKitCreditStatus();
+      if (creditStatus?.error === 'auth_required') {
+        console.warn('[swatchKit] backend reported auth_required despite frontend session — session may be stale (cf-2ag)');
+      }
       const statusText = buildCreditStatusText(creditStatus);
       if (statusText) {
         $w('#creditStatusBanner').text = statusText;

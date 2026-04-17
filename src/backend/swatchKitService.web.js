@@ -157,7 +157,15 @@ export const getSwatchKitCreditStatus = webMethod(
   async () => {
     const member = await currentMember.getMember();
     const cleanId = sanitize(member?._id || '', 64);
-    if (!cleanId) return { hasPendingCredit: false };
+    if (!cleanId) {
+      // Permissions.SiteMember should gate anonymous callers before we get
+      // here; reaching this branch means Velo let an unauthenticated request
+      // through (stale session, misconfiguration). Surface it as a distinct
+      // error instead of returning "no credit" — that's silent-failure
+      // masquerade. See cf-2ag.
+      console.warn('[swatchKitService] getSwatchKitCreditStatus: no member on session (cf-2ag)');
+      return { hasPendingCredit: false, error: 'auth_required' };
+    }
 
     try {
       const res = await wixData.query(SWATCH_KIT_ORDERS)
