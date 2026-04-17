@@ -84,3 +84,11 @@ blue-ridge-search.png
 
 # Gas Town (added by gt)
 CLAUDE.local.md
+
+# Gas Town ops files — runtime state, never commit
+rigs.json
+town.json
+overseer.json
+daemon.json
+dolt-server.port
+_mayor_backup/
