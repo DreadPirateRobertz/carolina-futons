@@ -1,6 +1,6 @@
 /**
  * @module ChallengeOfTheWeekWidget
- * @description Renders two homepage challenge sections:
+ * @description Renders three homepage challenge sections:
  *
  * 1. Community collective challenge (CF-8lj8) — all members share one goal:
  *   #weeklyTitle        — Challenge title (e.g. "Community Challenge: 500 Orders!")
@@ -24,10 +24,18 @@
  *   #cotwCtaBtn         — CTA button (linked to ctaUrl; hidden when no URL)
  *   #cotwError          — Shown on fetch error
  *
- * CF-8lj8, cf-rsr
+ * 3. CMS-driven Challenge of the Week (cf-1he) — reads from challengeService:
+ *   #cotw-section       — Outer section (collapsed on error or no challenge)
+ *   #cotw-title         — Challenge title
+ *   #cotw-description   — Challenge description
+ *   #cotw-points        — Point reward label (e.g. "200 pts")
+ *   #cotw-image         — Challenge image (collapsed when no imageUrl)
+ *
+ * CF-8lj8, cf-rsr, cf-1he
  */
 
 import { getWeeklyChallenge as _defaultGetWeeklyChallenge, getActiveChallengeOfWeek as _defaultGetActiveChallengeOfWeek } from 'backend/gamificationEventReceiver.web';
+import { getChallengeOfTheWeek as _defaultGetChallengeOfTheWeek } from 'backend/challengeService.web';
 
 const TIMER_INTERVAL_MS = 60_000;
 
@@ -53,6 +61,7 @@ function formatTimeRemaining(expiresAt) {
  * @param {Function} [opts.$w]
  * @param {Function} [opts.getWeeklyChallenge]
  * @param {Function} [opts.getActiveChallengeOfWeek]
+ * @param {Function} [opts.getChallengeOfTheWeek]
  */
 export async function initChallengeOfTheWeekWidget(opts = {}) {
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
@@ -60,11 +69,13 @@ export async function initChallengeOfTheWeekWidget(opts = {}) {
   const $w = opts.$w ?? globalThis.$w;
   const getWeeklyChallenge = opts.getWeeklyChallenge ?? _defaultGetWeeklyChallenge;
   const getActiveChallengeOfWeek = opts.getActiveChallengeOfWeek ?? _defaultGetActiveChallengeOfWeek;
+  const getChallengeOfTheWeek = opts.getChallengeOfTheWeek ?? _defaultGetChallengeOfTheWeek;
 
-  // Render both sections in parallel
+  // Render all sections in parallel
   await Promise.all([
     _renderCommunityChallenge($w, getWeeklyChallenge),
     _renderFeaturedChallenge($w, getActiveChallengeOfWeek),
+    _renderChallengeOfTheWeek($w, getChallengeOfTheWeek),
   ]);
 }
 
@@ -175,5 +186,37 @@ async function _renderFeaturedChallenge($w, getActiveChallengeOfWeek) {
     } catch {}
   } else {
     try { $w('#cotwCtaBtn').hide(); } catch {}
+  }
+}
+
+// ── Challenge of the Week — CMS-driven homepage section (cf-1he) ─────────────
+
+async function _renderChallengeOfTheWeek($w, getChallengeOfTheWeek) {
+  let result;
+  try {
+    result = await getChallengeOfTheWeek();
+  } catch (err) {
+    console.error('[ChallengeOfTheWeekWidget] getChallengeOfTheWeek failed:', err);
+    try { $w('#cotw-section').collapse(); } catch {}
+    return;
+  }
+
+  if (!result || !result.success || !result.challenge) {
+    try { $w('#cotw-section').collapse(); } catch {}
+    return;
+  }
+
+  const ch = result.challenge;
+
+  try { $w('#cotw-section').expand(); } catch {}
+  try { $w('#cotw-title').text = ch.title; } catch {}
+  try { $w('#cotw-description').text = ch.description ?? ''; } catch {}
+  try { $w('#cotw-points').text = `${(ch.pointValue ?? 0).toLocaleString()} pts`; } catch {}
+
+  if (ch.imageUrl) {
+    try { $w('#cotw-image').expand(); } catch {}
+    try { $w('#cotw-image').src = ch.imageUrl; } catch {}
+  } else {
+    try { $w('#cotw-image').collapse(); } catch {}
   }
 }
