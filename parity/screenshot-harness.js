@@ -46,7 +46,10 @@ const REPORT_DIR   = path.join(__dirname, 'reports', TODAY, 'shots');
 // reviewer-friendly path (e.g. ~/cf-3qt-parity).
 const GALLERY_DIR  = process.env.GALLERY_DIR || mkdtempSync(path.join(os.tmpdir(), 'cf-3qt-parity-'));
 const NAV_TIMEOUT  = Number(process.env.PARITY_NAV_TIMEOUT_MS || 45_000);
-const WAIT_STATE   = process.env.PARITY_WAIT_STATE || 'networkidle';
+// Default to 'load' because Wix Studio sites rarely reach networkidle (long-polling
+// editor + analytics beacons keep traffic alive). For strict parity diffs against
+// the Next.js preview, override with PARITY_WAIT_STATE=networkidle.
+const WAIT_STATE   = process.env.PARITY_WAIT_STATE || 'load';
 
 if (!LEGACY) {
   console.error('ERROR: LEGACY_BASE env var is required (e.g. LEGACY_BASE=https://www.carolinafutons.com).');
