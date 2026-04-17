@@ -254,10 +254,23 @@ describe('getSwatchKitCreditStatus', () => {
     expect(result).toEqual({ hasPendingCredit: false });
   });
 
-  it('returns hasPendingCredit: false when getMember returns no id', async () => {
+  it('returns auth_required + warns when getMember returns null (cf-2ag)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockGetMember.mockResolvedValue(null);
     const result = await getSwatchKitCreditStatus();
-    expect(result).toEqual({ hasPendingCredit: false });
+    expect(result).toEqual({ hasPendingCredit: false, error: 'auth_required' });
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[swatchKitService] getSwatchKitCreditStatus: no member on session'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('returns auth_required when getMember resolves with no _id (cf-2ag)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mockGetMember.mockResolvedValue({});
+    const result = await getSwatchKitCreditStatus();
+    expect(result).toEqual({ hasPendingCredit: false, error: 'auth_required' });
+    warnSpy.mockRestore();
   });
 
   it('returns pending credit details when found', async () => {
