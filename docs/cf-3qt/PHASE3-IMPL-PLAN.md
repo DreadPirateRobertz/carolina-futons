@@ -28,9 +28,10 @@ In-scope this phase:
   as `getMember()` / `getMemberId()` / `withMember(fn)`.
 - **Server Actions** for 3 domain slices that call existing Velo
   `Permissions.SiteMember` webMethods with the member bearer token:
-  - wishlist (5 methods)
+  - wishlist (4 methods; `updateWishlistStock` is Admin-only, excluded)
   - loyalty (13 methods)
-  - gamification (8 methods across `gamificationCore` + notifs + chips)
+  - gamification (7 member-scoped methods + 1 Anyone `getLeaderboard`
+    exposed without auth wrap)
 - Playwright coverage: login → member-scoped round-trip → logout.
 
 Explicitly **not** in scope:
@@ -330,11 +331,14 @@ export async function getWishlist() {
 export async function isOnWishlist(productId: string) {
   return withMember(m => callVelo({ method: 'wishlistService/isOnWishlist', args: [productId], accessToken: m.accessToken }));
 }
-
-export async function updateWishlistStock() {
-  return withMember(m => callVelo({ method: 'wishlistService/updateWishlistStock', args: [], accessToken: m.accessToken }));
-}
 ```
+
+> **Excluded**: `wishlistService.updateWishlistStock` — declared
+> `Permissions.Admin` in `src/backend/wishlistService.web.js:208`. It must
+> not appear in a member-facing Server Action. If Phase 3 needs stock
+> freshness on read (e.g. hydrate `inStock` flags on `getWishlist`
+> results), add the join on the server-action read path, not as a
+> member-callable write.
 
 ### 8.2 `app/actions/loyalty.ts`
 
@@ -366,9 +370,12 @@ export async function getChallengeLeaderboard(challengeId: string) {
 }
 
 export async function redeemReward(rewardId: string) {
-  // Why: write path — WEBMETHOD-CATALOG flags a name collision with
-  // rewardEngine.redeemReward. We target loyaltyService here; surface the
-  // other as rewardEngine.redeemReward if/when it's needed.
+  // Why: `redeemReward` exists in two backend modules (WEBMETHOD-CATALOG
+  // collision note): `loyaltyService.redeemReward(rewardId)` wraps the Wix
+  // Loyalty API and auto-creates a coupon; `rewardsStore.redeemReward(memberId, rewardId)`
+  // is a lower-level CMS-backed version. We target loyaltyService here —
+  // member identity is derived from the bearer token server-side, so the
+  // caller does not pass memberId.
   return withMember(s => callVelo({ method: m('redeemReward'), args: [rewardId], accessToken: s.accessToken }));
 }
 ```
@@ -382,30 +389,74 @@ import { callVelo } from '@/lib/wix/velo-client';
 
 const g = (method: string) => `gamificationCore/${method}`;
 
-export async function getActiveChallenges()   { return withMember(s => callVelo({ method: g('getActiveChallenges'),  args: [], accessToken: s.accessToken })); }
-export async function getStreakData()         { return withMember(s => callVelo({ method: g('getStreakData'),        args: [], accessToken: s.accessToken })); }
-export async function getMemberTier()         { return withMember(s => callVelo({ method: g('getMemberTier'),        args: [], accessToken: s.accessToken })); }
-export async function getActivityFeed(limit = 20) {
-  return withMember(s => callVelo({ method: g('getActivityFeed'), args: [limit], accessToken: s.accessToken }));
+// Member-scoped reads. Several gamificationCore methods accept `memberId` as
+// their first positional arg rather than inferring from the bearer token.
+// We derive memberId server-side from the session and pass it explicitly so
+// the call can't be spoofed with another member's id.
+export async function getActiveChallenges() {
+  return withMember(s => callVelo({ method: g('getActiveChallenges'), args: [s.memberId], accessToken: s.accessToken }));
 }
-export async function getLeaderboard(scope: 'daily' | 'weekly' | 'alltime' = 'weekly', limit = 10) {
-  // Why: second collision flagged in WEBMETHOD-CATALOG (loyaltyService +
-  // gamificationCore both expose getLeaderboard). Keep them distinct in the
-  // Server Action surface; callers choose by import path.
-  return withMember(s => callVelo({ method: g('getLeaderboard'), args: [scope, limit], accessToken: s.accessToken }));
+export async function getStreakData() {
+  return withMember(s => callVelo({ method: g('getStreakData'), args: [s.memberId], accessToken: s.accessToken }));
+}
+export async function getMemberTier() {
+  return withMember(s => callVelo({ method: g('getMemberTier'), args: [s.memberId], accessToken: s.accessToken }));
+}
+export async function getActivityFeed(limit = 20) {
+  return withMember(s => callVelo({ method: g('getActivityFeed'), args: [s.memberId, limit], accessToken: s.accessToken }));
 }
 
-// Writes — the event ingress + challenge mutations
-export async function recordChallengeProgress(challengeId: string, delta: number) {
-  return withMember(s => callVelo({ method: g('recordChallengeProgress'), args: [challengeId, delta], accessToken: s.accessToken }));
+// Writes — the event ingress + challenge mutations. memberId pulled from
+// session; callers never pass it.
+export async function recordChallengeProgress(challengeId: string) {
+  return withMember(s => callVelo({
+    method: g('recordChallengeProgress'),
+    args: [{ memberId: s.memberId, challengeId }],
+    accessToken: s.accessToken,
+  }));
 }
 export async function recoverStreak() {
-  return withMember(s => callVelo({ method: g('recoverStreak'), args: [], accessToken: s.accessToken }));
+  return withMember(s => callVelo({ method: g('recoverStreak'), args: [s.memberId], accessToken: s.accessToken }));
 }
-export async function receiveGamificationEvent(event: { type: string; payload: unknown }) {
-  return withMember(s => callVelo({ method: g('receiveGamificationEvent'), args: [event], accessToken: s.accessToken }));
+export async function receiveGamificationEvent(eventName: string, payload: unknown) {
+  return withMember(s => callVelo({
+    method: g('receiveGamificationEvent'),
+    args: [eventName, payload, s.memberId],
+    accessToken: s.accessToken,
+  }));
+}
+
+// Why: `gamificationCore.getLeaderboard` is Permissions.Anyone — public
+// homepage widget surface. Do NOT wrap with withMember; that would force a
+// redirect to /login for logged-out visitors. A logged-in caller may still
+// pass their memberId to get a highlight row; logged-out callers get the
+// leaderboard sans highlight.
+export async function getLeaderboardPublic(limit = 10, memberId: string | null = null) {
+  return callVelo({
+    method: g('getLeaderboard'),
+    args: [limit, memberId],
+    // no accessToken: Anyone endpoint
+  });
 }
 ```
+
+> **Collision note** (from WEBMETHOD-CATALOG): `getLeaderboard` lives in
+> BOTH `loyaltyService` (`Permissions.SiteMember`, §8.2) AND `gamificationCore`
+> (`Permissions.Anyone`, above). They serve different surfaces — the loyalty
+> one is private per-member context, the gamification one is the public
+> homepage board. Keep them on distinct import paths:
+> `import { getLeaderboard } from '@/app/actions/loyalty';` (member-scoped)
+> vs `import { getLeaderboardPublic } from '@/app/actions/gamification';`.
+
+> **`Permissions.Member` audit (non-blocking, carry to Phase 0)**:
+> `gamificationCore.receiveGamificationEvent`, `getActiveChallenges`,
+> `recordChallengeProgress`, and `recoverStreak` are declared
+> `Permissions.Member` — NOT a canonical Velo permission (canonical:
+> `Anyone` / `SiteMember` / `Admin`). Wix may silently coerce this, most
+> likely to `Anyone`. If so, these become publicly callable with an
+> attacker-supplied `memberId`, since they trust the first positional arg.
+> Phase 0 Q: confirm coercion behavior and either normalize the source to
+> `SiteMember` or move callers through a `callAs` server-only shim.
 
 ## 9. First-green Playwright slice
 
