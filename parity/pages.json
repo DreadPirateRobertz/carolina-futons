@@ -1,0 +1,53 @@
+{
+  "$schema": "./pages.schema.json",
+  "_comment": "30-page audit set for cf-3qt.6 parity audit. Legacy paths reflect current Wix Studio URL shape; Next paths reflect the clean routes the Next.js app will expose. Update as PDP slugs and content routes are finalized in Phases 2-5.",
+  "pages": [
+    { "id": "home",                "legacy": "/",                                           "next": "/",                              "phase": 2 },
+    { "id": "plp-futons",          "legacy": "/category/futons",                            "next": "/category/futons",               "phase": 2 },
+    { "id": "plp-mattresses",      "legacy": "/category/mattresses",                        "next": "/category/mattresses",           "phase": 2 },
+    { "id": "plp-frames",          "legacy": "/category/frames",                            "next": "/category/frames",               "phase": 2 },
+    { "id": "plp-covers",          "legacy": "/category/covers",                            "next": "/category/covers",               "phase": 2 },
+    { "id": "plp-accessories",     "legacy": "/category/accessories",                       "next": "/category/accessories",          "phase": 2 },
+    { "id": "pdp-eureka",          "legacy": "/product-page/eureka-futon",                  "next": "/products/eureka-futon",         "phase": 2 },
+    { "id": "cart",                "legacy": "/cart-page",                                  "next": "/cart",                          "phase": 2 },
+    { "id": "checkout",            "legacy": "/checkout",                                   "next": "/checkout",                      "phase": 2, "auth": "member" },
+    { "id": "order-conf",          "legacy": "/thank-you-page",                             "next": "/order-confirmation",            "phase": 2, "auth": "member" },
+
+    { "id": "account-login",       "legacy": "/account/login",                              "next": "/account/login",                 "phase": 3 },
+    { "id": "account-dashboard",   "legacy": "/account/my-account",                         "next": "/account",                       "phase": 3, "auth": "member" },
+    { "id": "account-orders",      "legacy": "/account/my-orders",                          "next": "/account/orders",                "phase": 3, "auth": "member" },
+    { "id": "account-wishlist",    "legacy": "/account/my-wishlist",                        "next": "/account/wishlist",              "phase": 3, "auth": "member" },
+
+    { "id": "about",               "legacy": "/about",                                      "next": "/about",                         "phase": 4 },
+    { "id": "faq",                 "legacy": "/faq",                                        "next": "/faq",                           "phase": 4 },
+    { "id": "contact",             "legacy": "/contact",                                    "next": "/contact",                       "phase": 4 },
+    { "id": "grow-in-home",        "legacy": "/grow-in-home",                               "next": "/grow-in-home",                  "phase": 4 },
+    { "id": "compare",             "legacy": "/compare",                                    "next": "/compare",                       "phase": 4 },
+    { "id": "videos",              "legacy": "/videos",                                     "next": "/videos",                        "phase": 4 },
+    { "id": "blog-index",          "legacy": "/blog",                                       "next": "/blog",                          "phase": 4 },
+    { "id": "blog-post-sample",    "legacy": "/post/how-to-pick-a-futon",                   "next": "/blog/how-to-pick-a-futon",      "phase": 4 },
+
+    { "id": "landing-students",    "legacy": "/students",                                   "next": "/students",                      "phase": 5 },
+    { "id": "landing-apartments",  "legacy": "/apartments",                                 "next": "/apartments",                    "phase": 5 },
+    { "id": "landing-guest-room",  "legacy": "/guest-room",                                 "next": "/guest-room",                    "phase": 5 },
+    { "id": "landing-rv",          "legacy": "/rv-boats",                                   "next": "/rv-boats",                      "phase": 5 },
+    { "id": "search",              "legacy": "/search-results?q=futon",                     "next": "/search?q=futon",                "phase": 5 },
+    { "id": "sitemap",             "legacy": "/sitemap",                                    "next": "/sitemap.xml",                   "phase": 5 },
+    { "id": "not-found",           "legacy": "/does-not-exist-xyz",                         "next": "/does-not-exist-xyz",            "phase": 5, "expectStatus": 404 },
+    { "id": "returns-policy",      "legacy": "/returns",                                    "next": "/returns",                       "phase": 4 }
+  ],
+  "breakpoints": [
+    { "id": "mobile",  "width": 375,  "height": 812  },
+    { "id": "tablet",  "width": 768,  "height": 1024 },
+    { "id": "desktop", "width": 1440, "height": 900  }
+  ],
+  "thresholds": {
+    "visualDiffPctMax": 5.0,
+    "lighthouse": {
+      "performance": 0,
+      "accessibility": 0,
+      "best-practices": 0,
+      "seo": 0
+    }
+  }
+}

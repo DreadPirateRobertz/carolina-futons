@@ -7,12 +7,12 @@
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.4.0",
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.59.1",
+    "pngjs": "^7.0.0",
     "puppeteer": "^24.40.0",
     "react": "16.14.0",
     "vitest": "^4.1.2"
-  },
-  "overrides": {
-    "tar": "^7.5.12"
   },
   "overrides": {
     "tar": "^7.5.12"
@@ -29,6 +29,12 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "node --test e2e/smoke.js",
-    "validate:catalog": "node scripts/validate-catalog.js"
+    "validate:catalog": "node scripts/validate-catalog.js",
+    "parity:lighthouse": "node parity/lighthouse-run.js",
+    "parity:visual": "playwright test --config parity/playwright.config.js",
+    "parity:screenshots": "node parity/screenshot-harness.js",
+    "parity:functional": "playwright test --config parity/playwright.config.js parity/functional",
+    "parity:gsc-pull": "node scripts/gsc-url-pull.js",
+    "parity:redirect-map": "node scripts/build-redirect-map.js"
   }
 }
