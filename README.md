@@ -8,19 +8,22 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 
 ## Current Status
 
-**v1.4.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
+**v1.5.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 38,123+ tests passing across 1,034 test files (Vitest)
-- Video Reviews: full submission → moderation → PDP grid pipeline with gamification reward
+- 39,691+ tests passing across 1,093 test files (Vitest) — 90.46% stmts / 85.16% branch coverage
+- **Phase 8 marketing automation**: Review request cron, winback cron, welcome drip extended to 5 emails
+- **Gamification expansion**: Chips on Collection/Category pages, Leaderboard webMethods, Challenge of the Week widget
+- **Cross-rig push**: badge_earned/tier_changed → FCM push; ar_discovery/social_share → mobile challenge completion
+- **TikTok pixel**: PDP, cart, wishlist, purchase events; GA4 consent gate
+- Video Reviews: submission → moderation → PDP grid pipeline with gamification reward
 - Trail system: 5-checkpoint Trail Progress Widget, perk unlock, tier perk catalog
 - Room Planner: 2D drag-and-drop canvas with postMessage protocol
 - BundleBuilder: PDP step picker with live price + add-to-cart
-- Email automation: 5 lifecycle sequences, price drop triggers, weekly analytics digest
+- Email automation: 5 lifecycle sequences + winback + review request, price drop triggers
 - Commerce: BNPL calculator (Affirm/Klarna), trade-in program, swatch kit micro-product
-- SEO: auto-meta, dynamic sitemap, Google Merchant Center feed, buying guide OG images
+- SEO: auto-meta, dynamic sitemap, Google Merchant Center feed, Blog→TopicCluster backlinks
 - NPS/CSAT survey system, warranty registration, virtual consultation booking
-- Dallas mobile unblock: CartSessions backend, loyalty portability API, videoReviewService
-- Security: IDOR fixes on all member-facing webMethods (currentMember server-side identity)
+- Security: IDOR guards on all member-facing webMethods, suppressAuth audit complete
 - Pre-commit hooks (husky + lint-staged), coverage thresholds enforced
 - Production repo: [DreadPirateRobertz/carolina-futons-stage3-velo](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo)
 - Full changelog: [CHANGELOG.md](CHANGELOG.md)
