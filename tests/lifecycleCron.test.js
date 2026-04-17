@@ -36,8 +36,10 @@ import {
 
 // cf-h6w: push dispatch mock — runDailyChallengeReminders fires push alongside email
 const mockSendPushToMember = vi.fn(async () => ({ sent: 1, failed: 0 }));
+const mockSkipIfOptedOut = vi.fn(async () => false);
 vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: (...args) => mockSendPushToMember(...args),
+  skipIfOptedOut: (...args) => mockSkipIfOptedOut(...args),
   PUSH_EVENTS: {
     BADGE_EARNED: 'badge_earned',
     TIER_CHANGED: 'tier_changed',
@@ -90,6 +92,8 @@ beforeEach(() => {
   resetCrm();
   mockSendPushToMember.mockClear();
   mockSendPushToMember.mockResolvedValue({ sent: 1, failed: 0 });
+  mockSkipIfOptedOut.mockClear();
+  mockSkipIfOptedOut.mockResolvedValue(false);
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -643,6 +647,22 @@ describe('runDailyChallengeReminders — push dispatch (cf-h6w)', () => {
     ]);
     await runDailyChallengeReminders();
     expect(mockSendPushToMember).not.toHaveBeenCalled();
+  });
+
+  // cf-5je: category-level opt-out skips the supplementary push but the
+  // primary email still fires — counted in `sent` and notifiedAt still marked.
+  it('skips push when skipIfOptedOut returns true but still sends email', async () => {
+    __seed('MemberChallengeProgress', [
+      challengeRecord({ _id: 'mcp-a', memberId: 'mem-opted-out' }),
+    ]);
+    mockSkipIfOptedOut.mockResolvedValue(true);
+
+    const result = await runDailyChallengeReminders();
+
+    expect(result).toEqual({ success: true, sent: 1, failed: 0 });
+    expect(__getEmailLog()).toHaveLength(1);
+    expect(mockSendPushToMember).not.toHaveBeenCalled();
+    expect(mockSkipIfOptedOut).toHaveBeenCalledWith('mem-opted-out', 'challenge_reminder');
   });
 });
 
