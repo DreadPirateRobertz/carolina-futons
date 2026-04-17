@@ -250,6 +250,62 @@ export async function _recordTrailChallengeCompletion(memberId, trailId, challen
  * @param {string} challengeId
  * @returns {Promise<{ success: boolean, trailComplete?: boolean, perkDelivered?: boolean, couponCode?: string|null, error?: string }>}
  */
+// ── getChallengeOfTheWeek (cf-3z1) ──────────────────────────────────────────
+
+const CHALLENGE_OF_THE_WEEK_COLLECTION = 'ChallengeOfTheWeek';
+
+/**
+ * Returns the most recent Sunday <= today (start of the current week).
+ */
+function getMostRecentSunday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+
+/**
+ * WebMethod (public): returns the current week's featured challenge.
+ * Finds the record whose weekStart is the most recent Sunday <= today.
+ * Falls back to the most recent record if no current-week record exists.
+ */
+export const getChallengeOfTheWeek = webMethod(Permissions.Anyone, async () => {
+  try {
+    const sunday = getMostRecentSunday();
+
+    // Try current week first
+    const currentWeek = await wixData
+      .query(CHALLENGE_OF_THE_WEEK_COLLECTION)
+      .le('weekStart', sunday)
+      .descending('weekStart')
+      .limit(1)
+      .find({ suppressAuth: true });
+
+    const challenge = currentWeek.items[0] || null;
+
+    if (!challenge) {
+      return { success: false, error: 'no_challenges' };
+    }
+
+    return {
+      success: true,
+      challenge: {
+        challengeId: challenge.challengeId,
+        title: challenge.title,
+        description: challenge.description,
+        pointValue: challenge.pointValue,
+        imageUrl: challenge.imageUrl,
+        weekStart: challenge.weekStart,
+      },
+    };
+  } catch (err) {
+    console.error('[challengeService] getChallengeOfTheWeek error:', err);
+    return { success: false, error: 'Failed to load challenge of the week.' };
+  }
+});
+
+// ── recordTrailChallengeCompletion ────────────────────────────────────────────
+
 export const recordTrailChallengeCompletion = webMethod(Permissions.SiteMember, async (trailId, challengeId) => {
   let member;
   try { member = await currentMember.getMember(); } catch { member = null; }
