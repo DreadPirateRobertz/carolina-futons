@@ -46,6 +46,10 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.js'],
     setupFiles: ['tests/setup.js'],
+    poolOptions: {
+      threads: { isolate: true },
+      forks: { isolate: true },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],

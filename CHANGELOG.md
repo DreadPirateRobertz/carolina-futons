@@ -4,6 +4,66 @@ All notable changes to the Carolina Futons Wix Velo codebase.
 
 ---
 
+## [v1.5.0] — 2026-04-16
+
+39,691 tests | 1,093 test files | Coverage: 90.46% stmts / 85.16% branch / 89.13% funcs / 91.58% lines
+Phase 8 marketing automation + gamification expansion — 122 commits, 18 PRs ([#1007](https://github.com/DreadPirateRobertz/carolina-futons/pull/1007)–[#1064](https://github.com/DreadPirateRobertz/carolina-futons/pull/1064))
+
+### Marketing Automation (Phase 8)
+
+- **Review request sequence**: Daily cron scans orders 6–8 days old, enqueues `review_request` email; idempotent via EmailQueue dedup ([#1062](https://github.com/DreadPirateRobertz/carolina-futons/pull/1062))
+- **Winback sequence**: Weekly cron (Mondays 10AM EST) for 30–37 day post-purchase churn recovery; `scanAndTriggerWinbackCron` HTTP endpoint ([#1063](https://github.com/DreadPirateRobertz/carolina-futons/pull/1063))
+- **Welcome drip extended**: `SEQUENCES.welcome` from 3 to 5 emails — Day 14 engagement check + Day 21 final value email ([#1064](https://github.com/DreadPirateRobertz/carolina-futons/pull/1064))
+- **Re-engagement extended**: Non-purchasers now included; multi-step winback sequence wired ([#1052](https://github.com/DreadPirateRobertz/carolina-futons/pull/1052))
+- **Challenge reminder push**: `challengeReminderService` wired into daily cron ([#1057](https://github.com/DreadPirateRobertz/carolina-futons/pull/1057))
+- **Challenge notif SMS queue**: `processChallengeNotifSMSQueue` wired into jobs.config cron ([#1061](https://github.com/DreadPirateRobertz/carolina-futons/pull/1061))
+- **Tier upgrade email + push**: Congratulations flow on tier promotion — email + FCM push ([#1051](https://github.com/DreadPirateRobertz/carolina-futons/pull/1051))
+- **Streak reminder push**: Daily cron triggers FCM push for streak reminder events
+
+### Gamification Expansion
+
+- **Gamification chips on Collection/Category pages**: Point chips on product cards + loyalty badge + streak display on listing pages
+- **Leaderboard preview**: `getLeaderboardPreview` webMethod — top-3 for homepage widget ([cf-xmt](https://github.com/DreadPirateRobertz/carolina-futons/commit/8282ed62))
+- **Challenge of the Week widget**: Individual featured challenge display ([cf-rsr](https://github.com/DreadPirateRobertz/carolina-futons/commit/de875059))
+- **Leaderboard webMethods**: `getLeaderboardByPeriod` + `getMyRank` + Leaderboard page stub ([cf-73p](https://github.com/DreadPirateRobertz/carolina-futons/commit/6ee398ed))
+- **MemberPoints.lastActivityAt**: Stamped on every gamification event for accurate staleness detection ([#1053](https://github.com/DreadPirateRobertz/carolina-futons/pull/1053))
+- **MemberPoints sparse insert fix**: All fields initialized on first insert to prevent null-field corruption ([#1056](https://github.com/DreadPirateRobertz/carolina-futons/pull/1056))
+- **Streak milestone notifications**: Queue-based dispatch replacing direct fan-out ([cf-cin](https://github.com/DreadPirateRobertz/carolina-futons/commit/d959f6e2))
+
+### Cross-Rig & Push (Mobile ↔ Web)
+
+- **ar_discovery_completed + social_share_completed**: Wired to `completeMobileChallenge` ([cf-cn2](https://github.com/DreadPirateRobertz/carolina-futons/commit/9ab186bb))
+- **badge_earned + tier_changed**: → FCM push via `crossRigEventReceiver` ([cf-bdl](https://github.com/DreadPirateRobertz/carolina-futons/commit/d1a2e82a))
+- **Customer room photos**: `getApprovedPhotos` + submission-flow acknowledgement ([#1039](https://github.com/DreadPirateRobertz/carolina-futons/pull/1039))
+- **MemberPointsLedger history**: Paginated audit trail exposed as SiteMember webMethod ([#1040](https://github.com/DreadPirateRobertz/carolina-futons/pull/1040))
+
+### Analytics & Tracking
+
+- **TikTok pixel events**: PDP, cart, wishlist, purchase — all wired ([#1047](https://github.com/DreadPirateRobertz/carolina-futons/pull/1047))
+- **GA4 consent gate**: Raw `ga4Tracking` fire functions gated on analytics consent ([#1044](https://github.com/DreadPirateRobertz/carolina-futons/pull/1044))
+- **TikTok fan-out decoupled**: No longer blocked by GA4 analytics consent guard ([#1050](https://github.com/DreadPirateRobertz/carolina-futons/pull/1050))
+- **dailyContentRotation alias**: Wix cron resolution fix ([#1043](https://github.com/DreadPirateRobertz/carolina-futons/pull/1043))
+- **og:image normalization**: Normalizes mainMedia to CDN URL for social share images ([#1045](https://github.com/DreadPirateRobertz/carolina-futons/pull/1045))
+
+### SEO & Content
+
+- **Blog Post → Topic Cluster backlink**: `isPartOf` schema wired for internal linking ([#1048](https://github.com/DreadPirateRobertz/carolina-futons/pull/1048))
+- **Social repeater → SocialBar**: Replaced custom repeater with native Wix SocialBar; per-repeater link nicknames fixed ([#1007](https://github.com/DreadPirateRobertz/carolina-futons/pull/1007))
+- **Store contact data fix**: Corrected `STORE_PHONE` and `STORE_HOURS` in localSeoData ([#1046](https://github.com/DreadPirateRobertz/carolina-futons/pull/1046))
+
+### Security
+
+- **IDOR guard on getMyRank**: Auth check + `suppressAuth` on `_getTrailProgressForMember` ([#1038](https://github.com/DreadPirateRobertz/carolina-futons/pull/1038))
+- **CrossRigSync helpers moved to non-web utils**: Removed accidental public web exposure ([#1041](https://github.com/DreadPirateRobertz/carolina-futons/pull/1041))
+- **suppressAuth: true on all gamificationCore wixData calls**: Auth bypass gap closed ([#1058](https://github.com/DreadPirateRobertz/carolina-futons/pull/1058))
+
+### Bug Fixes
+
+- **ShareYourRoom $w arg**: Missing `$w` parameter causing silent a11y dead code ([#1060](https://github.com/DreadPirateRobertz/carolina-futons/pull/1060))
+- **funnelTracker test isolation**: `vi.doUnmock` was nuking mock registry between tests causing sporadic CI pollution ([8afebd59](https://github.com/DreadPirateRobertz/carolina-futons/commit/8afebd59))
+
+---
+
 ## [v1.4.0] — 2026-04-05
 
 38,123 tests | 1,034 test files | Waves 33–34 — 60 PRs merged ([#916](https://github.com/DreadPirateRobertz/carolina-futons/pull/916)–[#979](https://github.com/DreadPirateRobertz/carolina-futons/pull/979))
