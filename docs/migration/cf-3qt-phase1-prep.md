@@ -314,10 +314,12 @@ breakpoint behaviors (from global.css §19, §31):
 - Email template tokens (those live in `src/public/emailTemplates/` — separate system)
 - Mobile app tokens (consumed via `design-tokens.json` generated from `sharedTokens.js` — not affected by this migration)
 
-## 5. Open questions for melania
+## 5. Decisions from melania (2026-04-17)
 
-1. **Font loading strategy**: Use `next/font/google` for Playfair Display + Source Sans 3, or self-host (current Wix uses Wix CDN)?
-2. **shadcn install location**: `/components/ui/` standard, or nested under `/components/cf/ui/` to signal CF-themed variants?
-3. **Announcement bar**: Static string, CMS-driven (Wix Content Manager → Headless API), or Contentful-style external CMS?
-4. **Phase 1 `/design` preview page**: Should it be gated (env flag, basic auth) on Vercel preview, or open?
-5. **Header search**: Port Wix's built-in search, or build on Wix Headless Search API directly?
+1. **Fonts**: `next/font/google` for Playfair Display + Source Sans 3. Self-hosted by Next.js → zero CLS, no third-party cookies.
+2. **shadcn path**: `/components/ui/` standard. Theming via Tailwind `cf-*` tokens, not directory nesting.
+3. **Announcement bar**: CMS-driven. Create Wix CMS `AnnouncementBar` collection with fields `message`, `linkUrl`, `startDate`, `endDate`, `priority`. Fetch via `@wix/data`. Marketing can update without deploy.
+4. **`/design` preview**: Open on Vercel previews; add `<meta name="robots" content="noindex">` to prevent indexing. Cheaper than basic auth, nothing sensitive.
+5. **Header search**: Build on Wix Headless Search API (`@wix/stores.products` + `@wix/data` query). Wix Studio front-end search is eliminated — no porting.
+
+**PR #1077 approved** for merge once Phase 0 (`cf-nq7`) repo is live. Drop-in spec for `carolina-futons-web` repo.
