@@ -30,6 +30,7 @@ vi.mock('backend/utils/crossRigSyncUtils', () => ({
 
 vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: vi.fn(async () => ({ sent: 1, failed: 0 })),
+  skipIfOptedOut: vi.fn(async () => false),
   PUSH_EVENTS: {
     BADGE_EARNED: 'badge_earned',
     TIER_CHANGED: 'tier_changed',

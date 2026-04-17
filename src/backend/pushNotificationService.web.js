@@ -1,11 +1,17 @@
 /**
- * pushNotificationService — FCM HTTP v1 push dispatch.
+ * pushNotificationService — FCM HTTP v1 push dispatch + push preferences.
  *
  * Sends push notifications to all active device tokens for a member.
  * Handles per-token FCM failures; deactivates stale tokens (NOT_FOUND/UNREGISTERED).
  *
- * CF-axn
+ * Push preferences (cf-5je): members can opt in/out of push categories
+ * (challenges, streak, marketing, tier). Stored in PushPreferences collection.
+ *
+ * CF-axn / cf-5je
  */
+import { Permissions, webMethod } from 'wix-web-module';
+import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { getActiveTokensForMember, deactivateToken } from 'backend/pushTokenRegistry.web';
 
 export const PUSH_EVENTS = {
@@ -92,3 +98,130 @@ export async function sendPushToMember(memberId, event, payload = {}) {
 
   return { sent, failed };
 }
+
+// ── Push Preferences (cf-5je) ───────────────────────────────────────────────
+
+export const PUSH_PREFERENCES_COLLECTION = 'PushPreferences';
+
+const VALID_CATEGORIES = ['challenges', 'streak', 'marketing', 'tier'];
+
+const DEFAULT_PREFS = Object.freeze({
+  challenges: true,
+  streak: true,
+  marketing: true,
+  tier: true,
+});
+
+/** Map PUSH_EVENTS values to preference categories. */
+const EVENT_TO_CATEGORY = {
+  [PUSH_EVENTS.CHALLENGE_COMPLETE]: 'challenges',
+  [PUSH_EVENTS.CHALLENGE_REMINDER]: 'challenges',
+  [PUSH_EVENTS.STREAK_MILESTONE]:   'streak',
+  [PUSH_EVENTS.PRICE_DROP]:         'marketing',
+  [PUSH_EVENTS.TIER_CHANGED]:       'tier',
+};
+
+/**
+ * Check whether a push should be skipped based on member preferences.
+ *
+ * @param {string} memberId
+ * @param {string} event - One of PUSH_EVENTS values
+ * @returns {Promise<boolean>} true if the member has opted out of this category
+ */
+export async function skipIfOptedOut(memberId, event) {
+  const category = EVENT_TO_CATEGORY[event];
+  if (!category) return false; // unmapped events always send
+
+  const result = await wixData.query(PUSH_PREFERENCES_COLLECTION)
+    .eq('memberId', memberId)
+    .find({ suppressAuth: true });
+
+  if (!result.items.length) return false; // no record -> default all-in
+
+  const record = result.items[0];
+  const prefs = record.categoryPrefs || {};
+  return prefs[category] === false;
+}
+
+/**
+ * Update push notification preferences for the current member.
+ *
+ * @param {{ challenges?: boolean, streak?: boolean, marketing?: boolean, tier?: boolean }} prefs
+ * @returns {Promise<{ success: boolean, prefs?: object, error?: string }>}
+ */
+export const managePushPreferences = webMethod(
+  Permissions.SiteMember,
+  async (prefs) => {
+    if (!prefs || typeof prefs !== 'object') {
+      return { success: false, error: 'prefs object is required' };
+    }
+
+    for (const key of Object.keys(prefs)) {
+      if (!VALID_CATEGORIES.includes(key)) {
+        return { success: false, error: `unknown category: ${key}` };
+      }
+      if (typeof prefs[key] !== 'boolean') {
+        return { success: false, error: `category ${key} must be boolean` };
+      }
+    }
+
+    // ── Resolve memberId from session (idor-ok) ───────────────────────────
+    let memberId;
+    try {
+      const member = await currentMember.getMember();
+      memberId = member?._id;
+    } catch (_) { /* handled below */ }
+    if (!memberId) return { success: false, error: 'unauthenticated' };
+
+    const existing = await wixData.query(PUSH_PREFERENCES_COLLECTION)
+      .eq('memberId', memberId)
+      .find({ suppressAuth: true });
+
+    let merged;
+    if (existing.items.length) {
+      const record = existing.items[0];
+      merged = { ...DEFAULT_PREFS, ...record.categoryPrefs, ...prefs };
+      await wixData.update(PUSH_PREFERENCES_COLLECTION, {
+        ...record,
+        categoryPrefs: merged,
+        updatedAt: new Date(),
+      }, { suppressAuth: true });
+    } else {
+      merged = { ...DEFAULT_PREFS, ...prefs };
+      await wixData.insert(PUSH_PREFERENCES_COLLECTION, {
+        memberId,
+        categoryPrefs: merged,
+        updatedAt: new Date(),
+      });
+    }
+
+    return { success: true, prefs: merged };
+  },
+);
+
+/**
+ * Read-only companion — returns current push preferences for the caller.
+ *
+ * @returns {Promise<{ success: boolean, prefs?: object, error?: string }>}
+ */
+export const getMyPushPreferences = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    let memberId;
+    try {
+      const member = await currentMember.getMember();
+      memberId = member?._id;
+    } catch (_) { /* handled below */ }
+    if (!memberId) return { success: false, error: 'unauthenticated' };
+
+    const result = await wixData.query(PUSH_PREFERENCES_COLLECTION)
+      .eq('memberId', memberId)
+      .find({ suppressAuth: true });
+
+    if (!result.items.length) {
+      return { success: true, prefs: { ...DEFAULT_PREFS } };
+    }
+
+    return { success: true, prefs: { ...DEFAULT_PREFS, ...result.items[0].categoryPrefs } };
+  },
+);
