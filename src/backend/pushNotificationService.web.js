@@ -103,13 +103,14 @@ export async function sendPushToMember(memberId, event, payload = {}) {
 
 export const PUSH_PREFERENCES_COLLECTION = 'PushPreferences';
 
-const VALID_CATEGORIES = ['challenges', 'streak', 'marketing', 'tier'];
+const VALID_CATEGORIES = ['challenges', 'streak', 'marketing', 'tier', 'badges'];
 
 const DEFAULT_PREFS = Object.freeze({
   challenges: true,
   streak: true,
   marketing: true,
   tier: true,
+  badges: true,
 });
 
 /** Map PUSH_EVENTS values to preference categories. */
@@ -119,6 +120,7 @@ const EVENT_TO_CATEGORY = {
   [PUSH_EVENTS.STREAK_MILESTONE]:   'streak',
   [PUSH_EVENTS.PRICE_DROP]:         'marketing',
   [PUSH_EVENTS.TIER_CHANGED]:       'tier',
+  [PUSH_EVENTS.BADGE_EARNED]:       'badges',
 };
 
 /**
@@ -192,7 +194,7 @@ export const managePushPreferences = webMethod(
         memberId,
         categoryPrefs: merged,
         updatedAt: new Date(),
-      });
+      }, { suppressAuth: true });
     }
 
     return { success: true, prefs: merged };

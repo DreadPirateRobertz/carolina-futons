@@ -8,7 +8,7 @@
  * CF-z51
  */
 import wixData from 'wix-data';
-import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
+import { sendPushToMember, skipIfOptedOut, PUSH_EVENTS } from 'backend/pushNotificationService.web';
 
 export const SYNC_LOG_COLLECTION = 'CrossRigSyncLog';
 const ALLOWED_SOURCE_RIGS = ['cfutons_mobile'];
@@ -63,6 +63,9 @@ export async function syncMobilePoints(memberId, points, eventType, sourceRig) {
  */
 export async function syncBadgeEarnedToPush(memberId, badgeId) {
   try {
+    if (await skipIfOptedOut(memberId, PUSH_EVENTS.BADGE_EARNED)) {
+      return { success: true, pushSent: 0, skipped: true };
+    }
     const { sent } = await sendPushToMember(memberId, PUSH_EVENTS.BADGE_EARNED, { badgeId });
     return { success: true, pushSent: sent };
   } catch (err) {

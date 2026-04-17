@@ -29,6 +29,7 @@ describe('managePushPreferences', () => {
       streak: true,
       marketing: false,
       tier: true,
+      badges: true,
     });
   });
 
@@ -56,6 +57,7 @@ describe('managePushPreferences', () => {
       streak: false,
       marketing: false,
       tier: false,
+      badges: false,
     });
     expect(result.success).toBe(true);
     expect(result.prefs).toEqual({
@@ -63,6 +65,7 @@ describe('managePushPreferences', () => {
       streak: false,
       marketing: false,
       tier: false,
+      badges: false,
     });
   });
 
@@ -119,6 +122,7 @@ describe('getMyPushPreferences', () => {
       streak: true,
       marketing: true,
       tier: true,
+      badges: true,
     });
   });
 
@@ -151,7 +155,17 @@ describe('skipIfOptedOut', () => {
     expect(skip).toBe(false);
   });
 
-  it('returns false for unmapped event types (BADGE_EARNED)', async () => {
+  it('maps BADGE_EARNED to badges category', async () => {
+    __seed(PUSH_PREFERENCES_COLLECTION, [{
+      _id: 'pref-1',
+      memberId: MEMBER_ID,
+      categoryPrefs: { badges: false },
+    }]);
+    const skip = await skipIfOptedOut(MEMBER_ID, PUSH_EVENTS.BADGE_EARNED);
+    expect(skip).toBe(true);
+  });
+
+  it('does not skip BADGE_EARNED when no badges pref is set (defaults opt-in)', async () => {
     __seed(PUSH_PREFERENCES_COLLECTION, [{
       _id: 'pref-1',
       memberId: MEMBER_ID,
