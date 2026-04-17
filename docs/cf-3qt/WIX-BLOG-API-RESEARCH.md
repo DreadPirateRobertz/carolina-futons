@@ -100,12 +100,13 @@ Full post adds: `richContent: RicosDocument | null`, `plainContent: string`, `se
 
 ---
 
-## 5. Open questions for Phase 1
+## 5. Decisions (locked by melania 2026-04-17)
 
-1. **Auth strategy** — anonymous OAuth visitor vs. API-key service token? (Blog reads are public; visitor token is simplest.)
-2. **ISR cadence** — `revalidate: 300` (5 min) for index + `/blog/[slug]`? Mayor/Melania to confirm SEO posture.
-3. **Ricos viewer** — adopt `@wix/ricos-viewer` now or spike a thin custom renderer? Bundle size check needed in Phase 1.
+1. **Auth** — anonymous OAuth visitor token (`WIX_CLIENT_ID`) for content reads. Admin API key reserved for build-time sitemap/seed only.
+2. **ISR cadence** — `/blog` index = `revalidate: 300`, `/blog/[slug]` = `revalidate: 600`. Plus on-demand revalidation via webhook — see item 5.
+3. **Ricos viewer** — adopt `@wix/ricos-viewer`. Bundle-size check still required in Phase 1 (budget: ≤50KB gzip added to `/blog/[slug]` route).
 4. **Image domains** — `next.config.js` `images.remotePatterns` must include `static.wixstatic.com`.
+5. **Revalidate webhook** — millicent owns the Phase 0 `/api/revalidate` route handler. Wix `onPublish` hook POSTs HMAC-signed payload → `revalidateTag('blog')`. Blog data fetches must use `fetch(..., { next: { tags: ['blog'] } })` so tag invalidation propagates.
 
 ---
 

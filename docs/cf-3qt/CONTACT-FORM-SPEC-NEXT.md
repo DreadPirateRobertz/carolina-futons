@@ -2,8 +2,9 @@
 
 **Owner:** blaidd
 **Phase:** cf-3qt.4 (content) — `/contact`
-**Status:** prep (Phase 1 still blocked)
+**Status:** prep (Phase 1 still blocked) · decisions locked by melania 2026-04-17
 **Replaces:** `src/pages/Contact.js` (Velo) → Next.js route + route handler.
+**Appointment booking on this page:** OUT OF SCOPE for Phase 4 (punted post-migration — confirmed).
 
 This spec is the single source of truth for the Next.js contact form. It re-uses the existing Velo backend verbatim — no server-side behavior change. The Next.js layer is a proxy + UI.
 
@@ -172,7 +173,7 @@ submitContactForm(input: {
 }): Promise<{ success: boolean; message?: string }>;
 ```
 
-Auth: **Admin visitor token** (site-owner credentials). Webforms are `Permissions.Anyone`, but routing through an admin client keeps the option open for future Admin-only methods to share one client. Credentials via `WIX_ADMIN_API_KEY` in Vercel env.
+Auth: **anonymous OAuth visitor token** (`WIX_CLIENT_ID`) per melania 2026-04-17. Both target webMethods are `Permissions.Anyone`, so the visitor token is sufficient — no admin credentials in this request path. Admin API key is reserved for build-time sitemap/seed scripts.
 
 ---
 
@@ -216,12 +217,13 @@ These replace the Velo `trackEvent('contact_form_submit')` calls.
 - [ ] Lighthouse a11y ≥ 95
 - [ ] JSON-LD validates (Rich Results test)
 - [ ] No secrets in client bundle (grep the Vercel build output for `WIX_ADMIN_API_KEY`)
+- [ ] `WIX_ADMIN_API_KEY` is NOT read by this route — only `WIX_CLIENT_ID` (visitor token)
 
 ---
 
 ## 9. Out of scope (for Phase 4)
 
-- Appointment booking (Velo sections 7A/7B) — punt to post-migration bead.
+- Appointment booking (Velo sections 7A/7B) — confirmed punt to post-migration (melania 2026-04-17). Revisit only if traffic data justifies.
 - A/B testing submit copy — punt.
 - Inline captcha — rate-limiting + honeypot is sufficient per current posture; revisit if spam metrics regress.
 
