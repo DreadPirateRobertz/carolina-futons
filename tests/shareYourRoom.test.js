@@ -34,6 +34,9 @@ vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
 }));
 
+import { announce }    from 'public/a11yHelpers';
+import { trackEvent }  from 'public/engagementTracker';
+
 // ── $w Mock Factory ──────────────────────────────────────────────────────────
 
 function mockEl(overrides = {}) {
@@ -141,6 +144,7 @@ describe('ShareYourRoom', () => {
     const handler = get('#shareYourRoomBtn').onClick.mock.calls[0][0];
     handler();
     expect(get('#shareYourRoomModal').expand).toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith($w, 'Share your room photo dialog opened');
   });
 
   it('collapses login prompt for logged-in member', () => {
@@ -179,6 +183,7 @@ describe('ShareYourRoom', () => {
     const closeHandler = get('#shareYourRoomClose').onClick.mock.calls[0][0];
     closeHandler();
     expect(get('#shareYourRoomModal').collapse).toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith($w, 'Share your room dialog closed');
   });
 
   it('collapses modal when overlay clicked', () => {
@@ -186,6 +191,7 @@ describe('ShareYourRoom', () => {
     const overlayHandler = get('#shareYourRoomOverlay').onClick.mock.calls[0][0];
     overlayHandler();
     expect(get('#shareYourRoomModal').collapse).toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith($w, 'Share your room dialog closed');
   });
 
   // ── upload ──────────────────────────────────────────────────────────────────

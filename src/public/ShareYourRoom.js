@@ -141,7 +141,7 @@ function openModal($w, state) {
   try { $w('#shareYourRoomModal').expand(); } catch (e) {}
   try { $w('#shareYourRoomOverlay').expand(); } catch (e) {}
 
-  announce('Share your room photo dialog opened');
+  announce($w, 'Share your room photo dialog opened');
   trackEvent('ugc_modal_open', {
     productId: state && state.product && state.product._id,
   });
@@ -151,7 +151,7 @@ function closeModal($w) {
   _isOpen = false;
   try { $w('#shareYourRoomModal').collapse(); } catch (e) {}
   try { $w('#shareYourRoomOverlay').collapse(); } catch (e) {}
-  announce('Share your room dialog closed');
+  announce($w, 'Share your room dialog closed');
 }
 
 async function handleUploadChange($w) {
@@ -232,7 +232,7 @@ async function handleSubmit($w, product) {
     if (result && result.success) {
       try { $w('#shareYourRoomForm').collapse(); } catch (e) {}
       try { $w('#shareYourRoomSuccess').expand(); } catch (e) {}
-      announce('Photo submitted! It will appear in the gallery after review.');
+      announce($w, 'Photo submitted! It will appear in the gallery after review.');
       trackEvent('ugc_photo_submitted', {
         roomType,
         productId: product._id,
@@ -262,7 +262,7 @@ function showValidation($w, message) {
   try {
     $w('#shareYourRoomValidation').text = message;
     $w('#shareYourRoomValidation').expand();
-    announce(message);
+    announce($w, message);
   } catch (e) {}
 }
 
