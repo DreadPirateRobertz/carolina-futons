@@ -20,6 +20,7 @@ import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
+import { corsHeaders, corsPreflight } from 'backend/utils/cors';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
@@ -86,11 +87,18 @@ export function get_googleShoppingFeed(request) {
 
 // Health check endpoint for monitoring
 // URL: GET https://www.carolinafutons.com/_functions/health
-export function get_health() {
+// Returns CORS headers so the carolina-futons-web Next.js app + preview URLs
+// can probe this endpoint cross-origin (needed for morgott's Phase 0 smoke gate).
+export function get_health(request) {
   return ok({
     body: JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }),
-    headers: { 'Content-Type': 'application/json' },
+    headers: corsHeaders(request, { 'Content-Type': 'application/json' }),
   });
+}
+
+// CORS preflight for /_functions/health.
+export function options_health(request) {
+  return response(corsPreflight(request));
 }
 
 // Dynamic product sitemap for SEO
