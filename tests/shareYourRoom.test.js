@@ -34,8 +34,7 @@ vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
 }));
 
-import { announce }    from 'public/a11yHelpers';
-import { trackEvent }  from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 
 // ── $w Mock Factory ──────────────────────────────────────────────────────────
 
@@ -315,6 +314,7 @@ describe('ShareYourRoom', () => {
 
     expect(get('#shareYourRoomSuccess').expand).toHaveBeenCalled();
     expect(get('#shareYourRoomForm').collapse).toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith(local$w, 'Photo submitted! It will appear in the gallery after review.');
   });
 
   it('shows API error and re-enables submit on failure', async () => {
@@ -333,6 +333,7 @@ describe('ShareYourRoom', () => {
     expect(get('#shareYourRoomValidation').text).toBe('Auth required.');
     expect(get('#shareYourRoomValidation').expand).toHaveBeenCalled();
     expect(get('#shareYourRoomSubmitBtn').enable).toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith(local$w, 'Auth required.');
   });
 
   it('shows generic error and re-enables submit on network exception', async () => {
