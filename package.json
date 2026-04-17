@@ -32,6 +32,8 @@
     "validate:catalog": "node scripts/validate-catalog.js",
     "parity:lighthouse": "node parity/lighthouse-run.js",
     "parity:visual": "playwright test --config parity/playwright.config.js",
+    "parity:screenshots": "node parity/screenshot-harness.js",
+    "parity:functional": "playwright test --config parity/playwright.config.js parity/functional",
     "parity:gsc-pull": "node scripts/gsc-url-pull.js",
     "parity:redirect-map": "node scripts/build-redirect-map.js"
   }

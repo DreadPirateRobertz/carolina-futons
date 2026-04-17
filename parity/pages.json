@@ -37,7 +37,7 @@
     { "id": "returns-policy",      "legacy": "/returns",                                    "next": "/returns",                       "phase": 4 }
   ],
   "breakpoints": [
-    { "id": "mobile",  "width": 390,  "height": 844  },
+    { "id": "mobile",  "width": 375,  "height": 812  },
     { "id": "tablet",  "width": 768,  "height": 1024 },
     { "id": "desktop", "width": 1440, "height": 900  }
   ],
