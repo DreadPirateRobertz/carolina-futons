@@ -46,44 +46,54 @@ Explicitly **not** in scope:
 
 ```
 carolina-futons-web/
-  app/
-    (auth)/
-      login/route.ts               ← redirect to Wix OAuth authorize URL
-      callback/route.ts            ← exchange code → tokens, set cookie
-      logout/route.ts              ← clear cookie, optional Wix /logout redirect
-    actions/
-      wishlist.ts                  ← server actions wrapping wishlistService
-      loyalty.ts                   ← server actions wrapping loyaltyService
-      gamification.ts              ← server actions wrapping gamificationCore
-  lib/
-    auth/
-      pkce.ts                      ← codeVerifier + codeChallenge (S256)
-      oauth-urls.ts                ← builds authorize + token endpoints
-      cookie.ts                    ← session cookie name, options, signer
-      session.ts                   ← getMember / getMemberId / withMember
-      tokens.ts                    ← /oauth2/token POST helper
-    wix/
-      velo-client.ts               ← thin RPC client for Velo webMethods
-      headless-client.ts           ← @wix/sdk OAuthStrategy wired per request
-  tests/
+  src/
+    app/
+      (auth)/
+        login/route.ts             ← redirect to Wix OAuth authorize URL
+        callback/route.ts          ← exchange code → tokens, set cookie
+        logout/route.ts            ← clear cookie
+      actions/
+        wishlist.ts                ← server actions wrapping wishlistService
+        loyalty.ts                 ← server actions wrapping loyaltyService
+        gamification.ts            ← server actions wrapping gamificationCore
+    lib/
+      auth/
+        pkce.ts                    ← codeVerifier + codeChallenge (S256)
+        oauth-urls.ts              ← builds authorize + token endpoints
+        cookie.ts                  ← session cookie name, options, signer
+        session.ts                 ← getMember / getMemberId / withMember
+        tokens.ts                  ← /oauth2/token POST helper
+      wix/
+        member-client.ts           ← per-request @wix/sdk OAuthStrategy w/ token (new)
+        velo-client.ts             ← thin RPC client for Velo webMethods (new)
+      wix-client.ts                ← millicent Phase 0: ANONYMOUS singleton (keep as-is)
+  e2e/
     auth.spec.ts                   ← Playwright: login → wishlist → logout
     member-actions.spec.ts         ← Playwright: wishlist/loyalty/gamif actions
-  .env.example                     ← lists required secrets (below)
+  .env.example                     ← append Phase 3 secrets (§3)
 ```
+
+> **Two Wix clients by design.** millicent's Phase 0 `src/lib/wix-client.ts`
+> is an anonymous singleton used for public reads (products, public CMS
+> items) from Server Components. Phase 3 adds `src/lib/wix/member-client.ts`
+> which is instantiated **per request** with the member bearer token pulled
+> from the session cookie. Do not conflate the two — the anonymous client
+> must not carry member identity, and the member client must not be cached
+> across requests.
 
 ## 3. Secrets / env contract
 
 Stilgar delivers, we set in Vercel (prod + preview + dev):
 
 ```
-WIX_OAUTH_CLIENT_ID=           # from Stilgar
+WIX_CLIENT_ID_HEADLESS=           # from Stilgar
 WIX_OAUTH_REDIRECT_URI=https://<host>/callback
 WIX_SITE_ID=                   # existing — for @wix/sdk
 SESSION_COOKIE_SECRET=         # 32 bytes, rotate per env
 VELO_RPC_BASE=https://<wix-site>/_functions   # Velo webMethod base
 ```
 
-> **If Stilgar ships earlier than expected**: we only need `WIX_OAUTH_CLIENT_ID`
+> **If Stilgar ships earlier than expected**: we only need `WIX_CLIENT_ID_HEADLESS`
 > to start wiring; the rest are already known values.
 
 ## 4. Auth cookie middleware — the core primitive
@@ -173,7 +183,7 @@ export async function GET(req: NextRequest) {
   });
 
   const url = buildAuthorizeUrl({
-    clientId: process.env.WIX_OAUTH_CLIENT_ID!,
+    clientId: process.env.WIX_CLIENT_ID_HEADLESS!,
     redirectUri: process.env.WIX_OAUTH_REDIRECT_URI!,
     codeChallenge,
     state,
@@ -191,7 +201,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { exchangeCode } from '@/lib/auth/tokens';
 import { setSession } from '@/lib/auth/cookie';
-import { getCurrentMemberId } from '@/lib/wix/headless-client';
+import { getCurrentMemberId } from '@/lib/wix/member-client';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
@@ -206,7 +216,7 @@ export async function GET(req: NextRequest) {
   const tokens = await exchangeCode({
     code,
     codeVerifier,
-    clientId: process.env.WIX_OAUTH_CLIENT_ID!,
+    clientId: process.env.WIX_CLIENT_ID_HEADLESS!,
     redirectUri: process.env.WIX_OAUTH_REDIRECT_URI!,
   });
 
@@ -434,7 +444,7 @@ is done.
 
 | Order | Task | Depends on | Duration |
 |:-:|---|---|---|
-| 1 | Stilgar delivers `WIX_OAUTH_CLIENT_ID` | (external) | blocking |
+| 1 | Stilgar delivers `WIX_CLIENT_ID_HEADLESS` | (external) | blocking |
 | 2 | Set env vars in Vercel (prod/preview/dev) | 1 | 15 min |
 | 3 | Land `lib/auth/*` (cookie, pkce, tokens, session) | 2 | 2h |
 | 4 | Land `/login` + `/callback` + `/logout` route handlers | 3 | 2h |
