@@ -26,8 +26,11 @@ vi.mock('backend/utils/dateUtils', () => ({
   getTodayET: () => TODAY_ET,
 }));
 
+const mockSkipIfOptedOut = vi.fn(async () => false);
+
 vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: (...args) => mockSendPushToMember(...args),
+  skipIfOptedOut: (...args) => mockSkipIfOptedOut(...args),
   PUSH_EVENTS: {
     STREAK_MILESTONE: 'streak_milestone',
   },
@@ -38,6 +41,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Default: sends 1 push per call
   mockSendPushToMember.mockResolvedValue({ sent: 1, failed: 0 });
+  mockSkipIfOptedOut.mockResolvedValue(false);
 });
 
 // ── Core send path ────────────────────────────────────────────────────────────
@@ -252,5 +256,24 @@ describe('runStreakAtRiskPushNotifications — token availability + errors', () 
     const result = await runStreakAtRiskPushNotifications();
 
     expect(result).toEqual({ sent: 0, skipped: 0, errors: 0 });
+  });
+});
+
+// ── cf-5je: category-level opt-out ────────────────────────────────────────────
+
+describe('runStreakAtRiskPushNotifications — cf-5je category opt-out', () => {
+  it('skips push when skipIfOptedOut returns true for the streak category', async () => {
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: 'mem-1', currentStreakDays: 5, lastActivityDate: YESTERDAY_ET },
+    ]);
+    __seed('MemberNotificationPrefs', []);
+    mockSkipIfOptedOut.mockResolvedValue(true);
+
+    const result = await runStreakAtRiskPushNotifications();
+
+    expect(result.sent).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(mockSendPushToMember).not.toHaveBeenCalled();
+    expect(mockSkipIfOptedOut).toHaveBeenCalledWith('mem-1', 'streak_milestone');
   });
 });

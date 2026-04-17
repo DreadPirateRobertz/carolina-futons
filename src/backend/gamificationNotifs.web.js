@@ -418,8 +418,11 @@ export async function checkStreakMilestoneNotifications() {
         // Push notification remains inline — it's best-effort and cheap compared
         // to the email triggeredEmails call that caused the original timeout.
         try {
-          const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
-          await sendPushToMember(memberId, PUSH_EVENTS.STREAK_MILESTONE, { days: String(STREAK_MILESTONE_DAY) });
+          const { sendPushToMember, PUSH_EVENTS, skipIfOptedOut } = await import('backend/pushNotificationService.web');
+          const skip = await skipIfOptedOut(memberId, PUSH_EVENTS.STREAK_MILESTONE);
+          if (!skip) {
+            await sendPushToMember(memberId, PUSH_EVENTS.STREAK_MILESTONE, { days: String(STREAK_MILESTONE_DAY) });
+          }
         } catch (pushErr) {
           logError(`checkStreakMilestoneNotifications — push failed for ${memberId}`, pushErr);
         }
@@ -515,8 +518,11 @@ export async function notifyTierUpgrade(memberId, newTier, previousTier) {
 
     // Push is best-effort — email already sent, so we still record dedup below.
     try {
-      const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
-      await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: newTier });
+      const { sendPushToMember, PUSH_EVENTS, skipIfOptedOut } = await import('backend/pushNotificationService.web');
+      const skip = await skipIfOptedOut(memberId, PUSH_EVENTS.TIER_CHANGED);
+      if (!skip) {
+        await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: newTier });
+      }
     } catch (pushErr) {
       logError(`notifyTierUpgrade — push failed for ${memberId}`, pushErr);
     }
@@ -600,7 +606,7 @@ export async function runStreakAtRiskPushNotifications() {
       prefsResult.items.map(p => [p.memberId, p])
     );
 
-    const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+    const { sendPushToMember, PUSH_EVENTS, skipIfOptedOut } = await import('backend/pushNotificationService.web');
 
     for (const record of atRiskMembers) {
       const memberId = record.memberId;
@@ -609,6 +615,13 @@ export async function runStreakAtRiskPushNotifications() {
       // Strict === false: undefined/null/missing prefs = opted IN by default.
       const prefs = prefsMap[memberId];
       if (prefs && prefs.streakReminders === false) {
+        result.skipped++;
+        continue;
+      }
+
+      // cf-5je: category-level opt-out (PushPreferences) is independent of the
+      // legacy per-member streakReminders flag above. Both must pass.
+      if (await skipIfOptedOut(memberId, PUSH_EVENTS.STREAK_MILESTONE)) {
         result.skipped++;
         continue;
       }

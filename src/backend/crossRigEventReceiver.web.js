@@ -20,7 +20,7 @@ import { currentMember } from 'wix-members-backend';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { logError } from 'backend/utils/errorHandler';
 import { syncBadgeEarnedToPush } from 'backend/utils/crossRigSyncUtils';
-import { sendPushToMember, PUSH_EVENTS } from 'backend/pushNotificationService.web';
+import { sendPushToMember, PUSH_EVENTS, skipIfOptedOut } from 'backend/pushNotificationService.web';
 import { completeMobileChallenge, MOBILE_CHALLENGE_TYPES } from 'backend/mobileChallengeService.web';
 
 const SUPPORTED_EVENTS = new Set([
@@ -152,9 +152,13 @@ export const crossRigEvent = webMethod(
       }
     }
     // tier_changed fires directly — web-side trigger, no cross-rig sync log needed.
+    // skipIfOptedOut checks member preferences before dispatching (cf-5je).
     if (body.event === 'tier_changed' && body.newTier) {
       try {
-        await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: body.newTier });
+        const skip = await skipIfOptedOut(memberId, PUSH_EVENTS.TIER_CHANGED);
+        if (!skip) {
+          await sendPushToMember(memberId, PUSH_EVENTS.TIER_CHANGED, { tier: body.newTier });
+        }
       } catch (err) {
         logError('crossRigEvent — tier_changed push failed', err);
         // Non-fatal

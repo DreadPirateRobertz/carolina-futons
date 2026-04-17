@@ -17,9 +17,11 @@ import {
 } from './__mocks__/wix-crm-backend.js';
 
 const mockSendPushToMember = vi.fn(async () => ({ sent: 1, failed: 0 }));
+const mockSkipIfOptedOut = vi.fn(async () => false);
 
 vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: (...args) => mockSendPushToMember(...args),
+  skipIfOptedOut: (...args) => mockSkipIfOptedOut(...args),
   PUSH_EVENTS: {
     TIER_CHANGED: 'tier_changed',
   },
@@ -35,6 +37,7 @@ beforeEach(() => {
   resetCrm();
   vi.clearAllMocks();
   mockSendPushToMember.mockResolvedValue({ sent: 1, failed: 0 });
+  mockSkipIfOptedOut.mockResolvedValue(false);
 });
 
 describe('notifyTierUpgrade — happy path', () => {
@@ -169,5 +172,20 @@ describe('notifyTierUpgrade — failure modes', () => {
     // Email + push did fire on this branch (race-duplicate by definition), but
     // caller must NOT treat this as a successful fresh send and retry.
     expect(__getEmailLog()).toHaveLength(1);
+  });
+});
+
+// cf-5je: push-level opt-out must NOT block the email (email is the primary
+// artifact for tier upgrades; push is supplementary).
+describe('notifyTierUpgrade — cf-5je push opt-out', () => {
+  it('sends email but skips push when member opted out of tier category', async () => {
+    mockSkipIfOptedOut.mockResolvedValue(true);
+
+    const result = await notifyTierUpgrade('mem-1', 'gold', 'silver');
+
+    expect(result.sent).toBe(true);
+    expect(__getEmailLog()).toHaveLength(1);
+    expect(mockSendPushToMember).not.toHaveBeenCalled();
+    expect(mockSkipIfOptedOut).toHaveBeenCalledWith('mem-1', 'tier_changed');
   });
 });

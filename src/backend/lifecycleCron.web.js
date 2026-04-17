@@ -170,7 +170,7 @@ export const runDailyChallengeReminders = webMethod(
   async () => {
     try {
       const { triggeredEmails } = await import('wix-crm-backend');
-      const { sendPushToMember, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+      const { sendPushToMember, PUSH_EVENTS, skipIfOptedOut } = await import('backend/pushNotificationService.web');
 
       const sendFn = async (record) => {
         await triggeredEmails.emailMember(
@@ -189,8 +189,13 @@ export const runDailyChallengeReminders = webMethod(
         // Failures are logged but do not affect send/failed counting or the
         // notifiedAt mark (otherwise a flaky FCM response would re-send the
         // entire batch on the next cron tick). cf-h6w
+        // cf-5je: category-level opt-out guard — email still sends (it's the
+        // primary channel), only the supplementary push is gated.
         try {
-          await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
+          const skip = await skipIfOptedOut(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER);
+          if (!skip) {
+            await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
+          }
         } catch (pushErr) {
           console.error(`[lifecycleCron] challenge reminder push failed for ${record.memberId}:`, pushErr?.message);
         }

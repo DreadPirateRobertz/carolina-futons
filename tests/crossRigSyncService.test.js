@@ -12,6 +12,7 @@ function setMember() { __setMember({ _id: MEMBER_ID }); }
 
 vi.mock('backend/pushNotificationService.web', () => ({
   sendPushToMember: vi.fn(async () => ({ sent: 1, failed: 0 })),
+  skipIfOptedOut: vi.fn(async () => false),
   PUSH_EVENTS: {
     BADGE_EARNED: 'badge_earned',
     TIER_CHANGED: 'tier_changed',
@@ -131,5 +132,15 @@ describe('syncBadgeEarnedToPush', () => {
     const result = await syncBadgeEarnedToPush(MEMBER_ID, 'new_badge');
     expect(result.success).toBe(true);
     expect(result.pushSent).toBe(0);
+  });
+
+  it('skips push when member opted out of badges category', async () => {
+    setMember();
+    const { sendPushToMember, skipIfOptedOut, PUSH_EVENTS } = await import('backend/pushNotificationService.web');
+    skipIfOptedOut.mockResolvedValueOnce(true);
+    const result = await syncBadgeEarnedToPush(MEMBER_ID, 'first_purchase');
+    expect(result).toEqual({ success: true, pushSent: 0, skipped: true });
+    expect(sendPushToMember).not.toHaveBeenCalled();
+    expect(skipIfOptedOut).toHaveBeenCalledWith(MEMBER_ID, PUSH_EVENTS.BADGE_EARNED);
   });
 });
