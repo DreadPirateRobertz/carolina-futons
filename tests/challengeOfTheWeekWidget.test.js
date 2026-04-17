@@ -322,3 +322,102 @@ describe('ChallengeOfTheWeekWidget — featured challenge section (cf-rsr)', () 
     expect(getEl('#cotwDesc').text).toBe('');
   });
 });
+
+// ── getChallengeOfTheWeek homepage section (cf-1he) ─────────────────────────
+
+const COTW_CHALLENGE = {
+  challengeId: 'cotw-apr-w3',
+  title: 'Share a Room Photo',
+  description: 'Post your futon setup and earn points!',
+  pointValue: 200,
+  imageUrl: 'https://example.com/challenge.jpg',
+  weekStart: new Date('2026-04-12'),
+};
+
+describe('ChallengeOfTheWeekWidget — getChallengeOfTheWeek section (cf-1he)', () => {
+  let getWeeklyChallenge;
+  let getActiveChallengeOfWeek;
+  let getChallengeOfTheWeek;
+
+  beforeEach(() => {
+    elements.clear();
+    vi.useFakeTimers();
+    getWeeklyChallenge = vi.fn().mockResolvedValue(null);
+    getActiveChallengeOfWeek = vi.fn().mockResolvedValue(null);
+    getChallengeOfTheWeek = vi.fn().mockResolvedValue({ success: true, challenge: COTW_CHALLENGE });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function init(overrides = {}) {
+    await initChallengeOfTheWeekWidget({
+      getWeeklyChallenge,
+      getActiveChallengeOfWeek,
+      getChallengeOfTheWeek,
+      $w: mock$w,
+      ...overrides,
+    });
+  }
+
+  it('populates #cotw-title with challenge title', async () => {
+    await init();
+    expect(getEl('#cotw-title').text).toBe('Share a Room Photo');
+  });
+
+  it('populates #cotw-description with challenge description', async () => {
+    await init();
+    expect(getEl('#cotw-description').text).toBe('Post your futon setup and earn points!');
+  });
+
+  it('populates #cotw-points with pointValue', async () => {
+    await init();
+    expect(getEl('#cotw-points').text).toContain('200');
+  });
+
+  it('sets #cotw-image src to imageUrl', async () => {
+    await init();
+    expect(getEl('#cotw-image').src).toBe('https://example.com/challenge.jpg');
+  });
+
+  it('expands #cotw-section on success', async () => {
+    await init();
+    expect(getEl('#cotw-section').expand).toHaveBeenCalled();
+  });
+
+  it('hides #cotw-section when success is false', async () => {
+    getChallengeOfTheWeek.mockResolvedValue({ success: false, error: 'no_challenges' });
+    await init();
+    expect(getEl('#cotw-section').collapse).toHaveBeenCalled();
+  });
+
+  it('hides #cotw-section on fetch error', async () => {
+    getChallengeOfTheWeek.mockRejectedValue(new Error('Network error'));
+    await init();
+    expect(getEl('#cotw-section').collapse).toHaveBeenCalled();
+  });
+
+  it('does not throw on any error path', async () => {
+    getChallengeOfTheWeek.mockRejectedValue(new Error('fail'));
+    await expect(init()).resolves.toBeUndefined();
+  });
+
+  it('handles missing description gracefully', async () => {
+    getChallengeOfTheWeek.mockResolvedValue({
+      success: true,
+      challenge: { ...COTW_CHALLENGE, description: null },
+    });
+    await init();
+    expect(getEl('#cotw-description').text).toBe('');
+  });
+
+  it('handles missing imageUrl gracefully', async () => {
+    getChallengeOfTheWeek.mockResolvedValue({
+      success: true,
+      challenge: { ...COTW_CHALLENGE, imageUrl: null },
+    });
+    await init();
+    expect(getEl('#cotw-image').collapse).toHaveBeenCalled();
+  });
+});
