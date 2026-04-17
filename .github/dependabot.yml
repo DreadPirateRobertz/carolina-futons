@@ -45,6 +45,13 @@ updates:
       - dependency-name: "vitest"
         update-types:
           - version-update:semver-major
+      # @wix/eslint-plugin-cli@1.0.2 pins eslint ^8.0.0 as a peer dep and has
+      # no published 9+/10+ compatible release. Dependabot opened #1004 for
+      # eslint 8→10; it's unmergeable until Wix publishes a newer plugin.
+      # Re-evaluate when @wix/eslint-plugin-cli accepts eslint >=9 as a peer.
+      - dependency-name: "eslint"
+        versions:
+          - ">=9"
 
   # Monitor GitHub Actions for version updates
   - package-ecosystem: github-actions
