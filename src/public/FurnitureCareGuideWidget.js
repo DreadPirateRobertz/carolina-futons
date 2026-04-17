@@ -20,6 +20,7 @@
  * CF-gbv
  */
 import { getCareGuide } from 'backend/furnitureCareGuideService.web';
+import { logError } from 'backend/errorMonitoring.web';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -30,9 +31,10 @@ const MATERIAL_LABELS = {
   leather: 'Leather Care',
 };
 
-// Why: generic tips ensure the care section always provides value, even when
-// a product has no CMS care record. Showing an empty section or collapsing
-// entirely would leave customers without any maintenance guidance. (CF-gbv)
+// Why: generic tips ensure the care section always provides value even when the
+// CMS has no product-specific record or the backend service fails. Collapsing
+// would hide genuinely useful guidance — every physical furniture product can
+// benefit from basic care advice. (CF-gbv)
 const GENERIC_CARE = {
   materialLabel:   'General Care',
   cleaningMethod:  'Wipe surfaces with a soft, dry or slightly damp cloth. For light soil, use a mild soap solution and wipe clean with a fresh damp cloth. Dry immediately after cleaning.',
@@ -52,17 +54,26 @@ const GENERIC_CARE = {
  * @returns {Promise<{ destroy: Function }>}
  */
 export async function initFurnitureCareGuideWidget($w, state) {
-  function collapse() {
-    try { $w('#careGuideSection').collapse(); } catch (err) {
-      console.error('[FurnitureCareGuideWidget] collapse error:', err.message);
+  function safeSet(selector, apply) {
+    try {
+      apply($w(selector));
+    } catch (err) {
+      logError({
+        context: `FurnitureCareGuideWidget.safeSet(${selector})`,
+        message: err?.message ?? String(err),
+      });
     }
+  }
+
+  function collapse() {
+    safeSet('#careGuideSection', el => el.collapse());
   }
 
   const slug = state?.product?.slug;
 
   if (!slug) {
-    // Why: no slug means the product record is missing or not yet loaded —
-    // collapsing avoids rendering an empty care guide with no content. (CF-gbv)
+    // No slug means the product record is missing or not yet loaded — nothing
+    // to render, so collapse and exit. (CF-gbv)
     collapse();
     return { destroy() {} };
   }
@@ -72,52 +83,37 @@ export async function initFurnitureCareGuideWidget($w, state) {
     const result = await getCareGuide(slug);
     if (result.success) {
       guide = result.guide; // may be null (no CMS record) — handled below
+    } else {
+      // Service returned a handled failure (e.g. internal_error). Fall through
+      // to the generic fallback so the section still renders, but log so the
+      // failure is visible in monitoring rather than silently masked. (CF-gbv)
+      logError({
+        context: 'FurnitureCareGuideWidget.initFurnitureCareGuideWidget',
+        message: `service error for slug "${slug}": ${result.error || 'unknown'}`,
+      });
     }
   } catch (err) {
-    console.error('[FurnitureCareGuideWidget] service error:', err.message);
-    // Fall through to generic tips on service failure — still useful to the customer.
+    logError({
+      context: 'FurnitureCareGuideWidget.initFurnitureCareGuideWidget',
+      message: err?.message ?? String(err),
+    });
   }
 
-  // Resolve display data: use product-specific guide or generic fallback.
-  // Why: generic fallback ensures the section always renders rather than showing
-  // nothing. Every physical furniture product can benefit from basic care guidance,
-  // so collapsing on missing data would hide genuinely useful information. (CF-gbv)
   const materialLabel   = (guide && MATERIAL_LABELS[guide.material]) || GENERIC_CARE.materialLabel;
   const cleaningMethod  = guide?.cleaningMethod  || GENERIC_CARE.cleaningMethod;
   const maintenanceTips = guide?.maintenanceTips || GENERIC_CARE.maintenanceTips;
   const warningNotes    = guide?.warningNotes    || GENERIC_CARE.warningNotes;
 
-  try {
-    try {
-      $w('#careGuideSection').accessibility.role     = 'region';
-      $w('#careGuideSection').accessibility.ariaLabel = 'Care and maintenance guide';
-    } catch (err) {
-      console.error('[FurnitureCareGuideWidget] accessibility error:', err.message);
-    }
-
-    try { $w('#careGuideTitle').text      = 'Care & Maintenance'; } catch (err) {
-      console.error('[FurnitureCareGuideWidget] #careGuideTitle error:', err.message);
-    }
-    try { $w('#careGuideMaterial').text   = materialLabel; } catch (err) {
-      console.error('[FurnitureCareGuideWidget] #careGuideMaterial error:', err.message);
-    }
-    try { $w('#careGuideCleaning').text   = cleaningMethod; } catch (err) {
-      console.error('[FurnitureCareGuideWidget] #careGuideCleaning error:', err.message);
-    }
-    try { $w('#careGuideMaintenance').text = maintenanceTips; } catch (err) {
-      console.error('[FurnitureCareGuideWidget] #careGuideMaintenance error:', err.message);
-    }
-    try { $w('#careGuideWarnings').text   = warningNotes; } catch (err) {
-      console.error('[FurnitureCareGuideWidget] #careGuideWarnings error:', err.message);
-    }
-
-    try { $w('#careGuideSection').expand(); } catch (err) {
-      console.error('[FurnitureCareGuideWidget] expand error:', err.message);
-    }
-  } catch (err) {
-    console.error('[FurnitureCareGuideWidget] init error:', err.message);
-    collapse();
-  }
+  safeSet('#careGuideSection', el => {
+    el.accessibility.role      = 'region';
+    el.accessibility.ariaLabel = 'Care and maintenance guide';
+  });
+  safeSet('#careGuideTitle',       el => { el.text = 'Care & Maintenance'; });
+  safeSet('#careGuideMaterial',    el => { el.text = materialLabel; });
+  safeSet('#careGuideCleaning',    el => { el.text = cleaningMethod; });
+  safeSet('#careGuideMaintenance', el => { el.text = maintenanceTips; });
+  safeSet('#careGuideWarnings',    el => { el.text = warningNotes; });
+  safeSet('#careGuideSection',     el => el.expand());
 
   return { destroy() {} };
 }

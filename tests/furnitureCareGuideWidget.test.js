@@ -13,6 +13,10 @@ vi.mock('backend/furnitureCareGuideService.web', () => ({
   getCareGuide: mockGetCareGuide,
 }));
 
+vi.mock('backend/errorMonitoring.web', () => ({
+  logError: vi.fn(),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeEl(overrides = {}) {

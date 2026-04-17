@@ -2,12 +2,18 @@
  * Tests for furnitureCareGuideService.web.js — CF-gbv
  * Per-product furniture care guide data service.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { __seed, __setQueryError, __reset as resetData } from './__mocks__/wix-data.js';
 import { getCareGuide } from '../src/backend/furnitureCareGuideService.web.js';
+
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: vi.fn(),
+}));
+import { logError } from 'backend/utils/errorHandler';
 
 beforeEach(() => {
   resetData();
+  vi.clearAllMocks();
 });
 
 // ── Seed helpers ──────────────────────────────────────────────────────────────
@@ -165,6 +171,60 @@ describe('getCareGuide — invalid input', () => {
     const result = await getCareGuide(undefined);
     expect(result.success).toBe(false);
     expect(result.error).toBe('invalid_slug');
+  });
+});
+
+// ── getCareGuide — wixData query failure ──────────────────────────────────────
+
+describe('getCareGuide — wixData query failure', () => {
+  it('returns success false with internal_error when the query throws', async () => {
+    __setQueryError('FurnitureCare', new Error('Wix Data network timeout'));
+    const result = await getCareGuide('comfort-futon');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('internal_error');
+  });
+
+  it('logs the underlying error via logError on query failure', async () => {
+    const err = new Error('Wix Data network timeout');
+    __setQueryError('FurnitureCare', err);
+    await getCareGuide('comfort-futon');
+    expect(logError).toHaveBeenCalledWith(
+      'furnitureCareGuideService.getCareGuide',
+      err,
+    );
+  });
+
+  it('does not return a guide object on query failure', async () => {
+    __setQueryError('FurnitureCare', new Error('boom'));
+    const result = await getCareGuide('comfort-futon');
+    expect(result.guide).toBeUndefined();
+  });
+});
+
+// ── getCareGuide — unknown material surfacing ─────────────────────────────────
+
+describe('getCareGuide — unknown material surfacing', () => {
+  it('logs the unknown material so ops can correct the CMS record', async () => {
+    __seed('FurnitureCare', [makeCareRecord({ material: 'bamboo' })]);
+    await getCareGuide('comfort-futon');
+    expect(logError).toHaveBeenCalledWith(
+      'furnitureCareGuideService.getCareGuide',
+      expect.objectContaining({
+        message: 'unknown material "bamboo" for productId "comfort-futon"',
+      }),
+    );
+  });
+
+  it('does not log when material field is missing entirely', async () => {
+    __seed('FurnitureCare', [makeCareRecord({ material: undefined })]);
+    await getCareGuide('comfort-futon');
+    expect(logError).not.toHaveBeenCalled();
+  });
+
+  it('does not log for a valid material', async () => {
+    __seed('FurnitureCare', [makeCareRecord({ material: 'fabric' })]);
+    await getCareGuide('comfort-futon');
+    expect(logError).not.toHaveBeenCalled();
   });
 });
 

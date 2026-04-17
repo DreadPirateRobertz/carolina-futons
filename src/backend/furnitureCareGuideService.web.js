@@ -17,6 +17,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'FurnitureCare';
 
@@ -48,7 +49,7 @@ export const getCareGuide = webMethod(
         .limit(1)
         .find();
     } catch (err) {
-      console.error('[furnitureCareGuideService] query error:', err.message);
+      logError('furnitureCareGuideService.getCareGuide', err);
       return { success: false, error: 'internal_error' };
     }
 
@@ -60,14 +61,26 @@ export const getCareGuide = webMethod(
     }
 
     const item = result.items[0];
-    const material = typeof item.material === 'string'
+    const rawMaterial = typeof item.material === 'string'
       ? item.material.toLowerCase().trim()
       : '';
+    const material = VALID_MATERIALS.includes(rawMaterial) ? rawMaterial : 'unknown';
+
+    // Why: an out-of-allowlist material usually means a typo or a new category
+    // added in the CMS without an accompanying code change. Surfacing it via
+    // logError keeps the widget safe (generic fallback) while flagging the data
+    // issue for ops to correct in the FurnitureCare collection. (CF-gbv)
+    if (material === 'unknown' && rawMaterial !== '') {
+      logError(
+        'furnitureCareGuideService.getCareGuide',
+        new Error(`unknown material "${rawMaterial}" for productId "${slug}"`),
+      );
+    }
 
     return {
       success: true,
       guide: {
-        material:        VALID_MATERIALS.includes(material) ? material : 'unknown',
+        material,
         cleaningMethod:  item.cleaningMethod  || '',
         maintenanceTips: item.maintenanceTips || '',
         warningNotes:    item.warningNotes    || '',
