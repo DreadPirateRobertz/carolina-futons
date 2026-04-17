@@ -137,38 +137,81 @@ flow preserves member identity, we should audit which of those calls
 can safely drop `suppressAuth` back — otherwise the member token
 doesn't actually narrow the data scope and we keep enforcing in-code.
 
-## 4. Open questions for melania / Phase 2 unblock
+## 4. Decisions (closed by melania 2026-04-17)
 
-1. **Client type** — is cf-3qt.3's caller a native mobile app, a separate
-   web SPA, or a server-to-server integration? PKCE vs. Sign On vs.
-   Client Credentials splits on this.
-2. **OAuth App provisioning** — who owns creating the Wix Headless
-   OAuth App and handing us the `clientId` + allowed redirectUris?
-3. **Scope discipline** — do we mint one OAuth App for cf-3qt.3, or
-   a per-surface app? Affects blast radius of a leaked clientId.
-4. **Token storage** — on the client side, spec whether refresh tokens
-   live in secure storage (Keychain / httpOnly cookie) vs. localStorage.
-   Affects XSS posture for the 265 SiteMember webMethods.
-5. **Logout + revoke** — Wix Logout endpoint returns HTML; an API-only
-   revoke is not documented. May need to just drop refresh on client
-   and rely on 14400s access-token TTL.
+1. **Client type** — **Next.js App Router on Vercel** (server-rendered
+   web). NOT SPA, NOT mobile. PKCE is handled server-side inside a
+   Next.js route handler; the browser never sees `codeVerifier` or
+   tokens. Mobile is a separate track with its own OAuth App.
+2. **OAuth App provisioning** — **escalated to Stilgar** (owns Wix
+   Business Manager). Needs clientId + redirectUris for:
+   - `https://web-staging.carolinafutons.com/api/auth/callback`
+   - Vercel preview URL pattern (e.g. `https://*.vercel.app/api/auth/callback`)
+   - `https://carolinafutons.com/api/auth/callback` — post-cutover
+3. **Scope discipline** — **single web OAuth App**. Mobile gets its own
+   later; do not share.
+4. **Token storage** — refresh token → httpOnly, SameSite=Lax,
+   encrypted + signed cookie. **Never localStorage**. Access token is
+   server-only; browser code never touches either token.
+5. **Logout** — drop refresh cookie, rely on 4h access TTL, redirect
+   through Wix logout URL. Document the revoke gap — Wix has no
+   documented API revoke endpoint, so tokens linger until natural
+   expiry even after logout. Acceptable for Phase 3; revisit if we
+   see session-hijack risk.
 
-## 5. Recommended Phase 2 first slice
+## 5. First slice (post-decision shape)
 
-Smallest end-to-end proof that unblocks the bead:
+With Q1 locked to "Next.js App Router server-side PKCE", the plumbing
+splits cleanly: **no Velo code runs the OAuth dance**. The Next.js repo
+owns PKCE end-to-end; the Velo side just keeps serving webMethods and
+starts trusting the Wix-resolved member identity.
 
-1. Provision headless OAuth App, stash `clientId` in site secrets.
-2. Add `src/backend/oauthBroker.web.js` with two webMethods (both
-   `Permissions.Anyone`):
-   - `startLogin(redirectUri)` → generates codeVerifier, returns
-     `{wixUrl, verifierId}`; stores codeVerifier keyed by verifierId
-     in a short-TTL CMS row (or signed JWT in cookie).
-   - `exchangeCode(verifierId, code)` → POSTs to `/oauth2/token`,
-     returns tokens.
-3. Wire one existing SiteMember webMethod (`wishlistService.getWishlist`)
-   to accept a bearer token in the request envelope.
-4. Playwright test: login → call wishlist → assert member-scoped
-   result. If green, scale to the other 76 SiteMember files.
+**Blocked on**: Stilgar delivering clientId + approved redirectUris.
 
-Estimate: ~2 days of crew time once the clientId is in hand. Bulk of
-the cost is in (3)/(4), not the OAuth plumbing itself.
+### Next.js side (in the cf-3qt repo, not cfutons)
+- `app/api/auth/login/route.ts` — GET: generate codeVerifier (random 64
+  bytes → base64url), compute codeChallenge (S256), store codeVerifier
+  in a signed+encrypted httpOnly cookie (`__Host-cv`, SameSite=Lax, 10
+  min TTL). Call Wix Create Redirect Session with codeChallenge and
+  redirectUri. 302 to the returned `wixUrl`.
+- `app/api/auth/callback/route.ts` — GET: read `code` from query,
+  `codeVerifier` from cookie, POST `/oauth2/token` with
+  `grantType=authorization_code`. On success, set two cookies:
+  `__Host-rt` (refresh, httpOnly, encrypted, 30d) and `__Host-at`
+  (access, httpOnly, 4h). Delete `__Host-cv`. 302 to dashboard.
+- `middleware.ts` — on any `/account/*` request, if `__Host-at`
+  missing or expired, try refresh silently; if refresh fails, 302 to
+  `/api/auth/login`.
+- `app/api/auth/logout/route.ts` — clear both cookies, 302 to Wix
+  logout URL.
+
+### Velo side (this repo)
+- **No `oauthBroker.web.js` needed** — deleted from plan.
+- Audit one SiteMember webMethod end-to-end to confirm Wix resolves
+  the bearer token to `currentMember.getMember()` correctly when the
+  call originates from a Next.js server with the OAuth access token.
+  Candidate: `wishlistService.getWishlist` (simplest read, existing
+  Playwright coverage).
+- If member identity resolves cleanly, no further Velo changes needed
+  for the proof. Scale by retesting each of the 76 other SiteMember
+  files as Phase 3 UI pages get built.
+
+### Playwright proof
+Next.js repo integration test:
+1. POST login form with test member credentials via `/api/auth/login`
+2. Follow 302 chain, land on dashboard
+3. Server component fetches wishlist via Velo webMethod
+4. Assert response is member-scoped (matches seeded wishlist rows)
+
+### Risk to flag to Stilgar before he provisions
+Vercel preview URLs are dynamic (`https://cf-3qt-git-<branch>-<hash>.vercel.app`).
+The OAuth App's allowed redirectUri list must support wildcards, OR
+we need a stable preview domain (e.g. `preview.carolinafutons.com` with
+Vercel branch aliasing). Wix OAuth App docs don't confirm wildcard
+support — worth verifying during Stilgar's provisioning run.
+
+### Timeline
+- Stilgar provisioning: unknown (blocking)
+- Next.js PKCE routes + cookie plumbing: ~1 day crew
+- Velo member-identity spike + Playwright: ~0.5 day crew
+- Scale to remaining 76 SiteMember files: piecemeal as Phase 3 UI lands
