@@ -860,7 +860,7 @@ import wixData from 'wix-data';
 // ... keep existing constants ...
 
 export const receiveGamificationEvent = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (eventName, payload, memberId) => {
     if (!memberId) {
       return { success: false, error: 'memberId is required' };

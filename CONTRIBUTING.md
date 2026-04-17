@@ -210,7 +210,7 @@ Every PR must include:
 
 ## Security
 
-- **webMethod permissions**: Always specify `Permissions.Anyone`, `Permissions.Member`, or `Permissions.Admin` explicitly. Never omit.
+- **webMethod permissions**: Always specify `Permissions.Anyone`, `Permissions.SiteMember`, or `Permissions.Admin` explicitly. Never omit. The canonical `@wix/web-methods` enum has exactly these three keys — `Permissions.Member` is NOT canonical and resolves to `undefined` at runtime, which the Velo server may coerce to `Anyone`, silently exposing member-only endpoints as public (see cf-zkj).
 - **suppressAuth**: Use `{ suppressAuth: true }` on wix-data queries that must bypass member permission gates (read-only public data).
 - **Input validation**: Validate all external inputs at system boundaries. Use `isWixMediaUrl()` from `src/backend/utils/sanitize.js` for media URLs.
 - **IDOR**: Never expose internal IDs or allow member A to read/write member B's data. All member-scoped queries must filter by `currentMember.getMember()`.

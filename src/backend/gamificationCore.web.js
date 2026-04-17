@@ -98,7 +98,7 @@ const FIXED_AWARD_EVENTS = new Set([
  *   pointsEarned?: number, badgeUnlocked?: string|null, error?: string}>}
  */
 export const receiveGamificationEvent = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (eventName, payload, memberId) => {
     if (!memberId) {
       return { success: false, error: 'memberId is required' };
@@ -724,7 +724,7 @@ export async function recordWishlistAdd(memberId, todayET) {
  * @returns {Promise<{ challenges: Array } | { status: 429, error: string }>}
  */
 export const getActiveChallenges = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) return { challenges: [] };
 
@@ -829,7 +829,7 @@ export const getActiveChallenges = webMethod(
  *                  | { status: 429, error: string }>}
  */
 export const recordChallengeProgress = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async ({ memberId, challengeId } = {}) => {
     if (!memberId) return { success: false, error: 'memberId is required' };
     if (!challengeId) return { success: false, error: 'challengeId is required' };
@@ -970,7 +970,7 @@ const STREAK_RECOVERY_COOLDOWN_DAYS = 30;
  * @returns {Promise<{ success: boolean, newTotal?: number, currentStreakDays?: number, error?: string }>}
  */
 export const recoverStreak = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) {
       return { success: false, error: 'memberId is required' };

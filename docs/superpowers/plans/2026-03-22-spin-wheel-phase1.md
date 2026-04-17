@@ -498,7 +498,7 @@
    * @property {string} [error]
    */
   export const spinWheel = webMethod(
-    Permissions.Member,
+    Permissions.SiteMember,
     async (memberId, todayET) => {
       if (!memberId) {
         return { eligible: false, error: 'memberId is required' };
@@ -1345,7 +1345,7 @@ Extend the test file to cover points award, non-points prize insert, and bonus s
    * Used by the frontend on page load to set initial UI state.
    */
   export const getSpinEligibility = webMethod(
-    Permissions.Member,
+    Permissions.SiteMember,
     async (memberId, todayET) => {
       if (!memberId) return { eligible: false, error: 'memberId is required' };
       const spinDate = todayET || getETDateString();

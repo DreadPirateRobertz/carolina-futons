@@ -183,7 +183,7 @@ async function decrementBonusSpin(memberId) {
  * @returns {Promise<{eligible: boolean, spinType?: string, reason?: string, bonusSpinsRemaining?: number, nextETMidnightMs?: number}>}
  */
 export const getSpinEligibility = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) return { eligible: false, reason: 'NO_MEMBER' };
     try {
@@ -217,7 +217,7 @@ export const getSpinEligibility = webMethod(
  * @returns {Promise<{success: boolean, spinType?: string, prize?: Object, historyId?: string, eventId?: string, isFallback?: boolean, nextETMidnightMs?: number, error?: string}>}
  */
 export const spinWheel = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) return { success: false, error: 'memberId is required' };
     try {

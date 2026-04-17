@@ -54,7 +54,7 @@ function clampExpiryDays(raw) {
  * >}
  */
 export const addShareToken = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async ({ expiryDays } = {}) => {
     // Authenticate
     let member;

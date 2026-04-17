@@ -287,7 +287,7 @@ async function initProductPage() {
         await initPDPSocialProofBadge($w, state, getNeighborCount, { zipPrefix });
       }, critical: false },
       // CF-e0y2: Gamification chat widget — cold visitors see greeting; members get full chat.
-      // getChatGreeting is Permissions.Anyone; chatWithAssistant is Permissions.Member.
+      // getChatGreeting is Permissions.Anyone; chatWithAssistant is Permissions.SiteMember.
       // Non-member send → auth_required → promptLogin modal.
       { name: 'chatWidget', init: async () => {
         const { getChatGreeting, chatWithAssistant: sendChat } = await import('backend/gamificationChatbot.web');
