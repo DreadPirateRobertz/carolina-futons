@@ -29,6 +29,10 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "node --test e2e/smoke.js",
-    "validate:catalog": "node scripts/validate-catalog.js"
+    "validate:catalog": "node scripts/validate-catalog.js",
+    "parity:lighthouse": "node parity/lighthouse-run.js",
+    "parity:visual": "playwright test --config parity/playwright.config.js",
+    "parity:gsc-pull": "node scripts/gsc-url-pull.js",
+    "parity:redirect-map": "node scripts/build-redirect-map.js"
   }
 }
