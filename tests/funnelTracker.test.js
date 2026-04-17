@@ -234,11 +234,6 @@ describe('getBackend load failure', () => {
     expect(mockLogError).toHaveBeenCalledWith(
       expect.objectContaining({ context: 'funnelTracker.getBackend' }),
     );
-
-    // Restore static mock for subsequent test files
-    vi.doUnmock('backend/conversionFunnel.web');
-    vi.doUnmock('backend/errorMonitoring.web');
-    vi.resetModules();
   });
 
   it('LOAD_FAILED sentinel prevents re-import on subsequent track calls', async () => {
@@ -263,9 +258,5 @@ describe('getBackend load failure', () => {
     tracker.track('add_to_cart');
     await vi.advanceTimersByTimeAsync(400);
     expect(mockLogError).toHaveBeenCalledTimes(1);
-
-    vi.doUnmock('backend/conversionFunnel.web');
-    vi.doUnmock('backend/errorMonitoring.web');
-    vi.resetModules();
   });
 });
