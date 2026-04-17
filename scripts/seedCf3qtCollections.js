@@ -1,12 +1,16 @@
 /**
  * seedCf3qtCollections.js — Seeds the cf-3qt Phase 4/5 CMS collections
- * (Landings, ComparisonFeatures) with initial content via the Wix Data Items
- * REST API. Idempotent: skips rows that already exist (keyed on `slug` for
- * Landings, `featureKey` for ComparisonFeatures).
+ * (Landings, PressMentions, PressKitAssets, ComparisonFeatures) with initial
+ * content via the Wix Data Items REST API. Idempotent: skips rows whose
+ * unique-key value already exists (slug / articleUrl / fileUrl / featureKey).
  *
- * PressMentions and PressKitAssets are intentionally NOT seeded here:
- *   - PressMentions → empty on launch (melania owns outreach placements)
- *   - PressKitAssets → godfrey owns asset provisioning (logos, fact sheet)
+ * Seed counts (target from melania 2026-04-17):
+ *   Landings:           2 rows   (spring-sale, winback)
+ *   PressMentions:      3 rows   (placeholder outreach entries — melania
+ *                                 replaces with real placements as they land)
+ *   PressKitAssets:     1 row    (primary logo — godfrey replaces URL once
+ *                                 the final SVG is in the Wix media library)
+ *   ComparisonFeatures: 20 rows  (feature-matrix rows for /compare)
  *
  * Usage (requires WIX_API_KEY + WIX_SITE_ID env vars):
  *   node scripts/seedCf3qtCollections.js --status
@@ -21,11 +25,11 @@ const ITEMS_API = 'https://www.wixapis.com/wix-data/v2/items';
 const QUERY_API = 'https://www.wixapis.com/wix-data/v2/items/query';
 
 /**
- * Landings seed rows — three launch-critical landing pages.
+ * Landings seed rows — two launch-critical landing pages.
  * spring-sale copy is a placeholder pending radahn's pull from the current
  * Wix Studio Sale page. winback copy is a minimal stub matching the UTM
- * default contract. press copy is fresh + matches the roadmap treatment
- * documented in docs/cf-3qt/CMS-COLLECTION-AUDIT.md §5.
+ * default contract. The /press page ships with its Landings row added
+ * via Wix CMS UI once outreach content solidifies (see CMS-COLLECTION-AUDIT §5).
  */
 const LANDINGS_SEED = [
   {
@@ -58,20 +62,66 @@ const LANDINGS_SEED = [
     seoDescription: 'A welcome-back offer from Carolina Futons for returning customers.',
     ogImageUrl: 'https://static.wixstatic.com/media/placeholder-winback-og.jpg',
   },
+];
+
+/**
+ * PressMentions seed rows — placeholder outreach entries so the /press page
+ * can render a non-empty list on launch. melania replaces each row with real
+ * placements as outreach lands (see media-research.json). The `featured`
+ * flag and `sortOrder` let the page highlight the most recent/impactful.
+ */
+const PRESS_MENTIONS_SEED = [
   {
-    slug: 'press',
-    title: 'Press',
-    headline: 'Carolina Futons in the News',
-    subheadline: 'Media mentions, company milestones, and a downloadable press kit.',
-    heroImageUrl: 'https://static.wixstatic.com/media/placeholder-press-hero.jpg',
-    ctaPrimaryLabel: 'Contact press@carolinafutons.com',
-    ctaPrimaryHref: 'mailto:press@carolinafutons.com',
-    ctaSecondaryLabel: 'Download press kit',
-    ctaSecondaryHref: '#press-kit',
-    bodyMdx: 'Carolina Futons has been hand-building solid wood futon frames in Hendersonville, NC since 1994. For interview requests, product samples, or high-resolution imagery, please reach out via the contact above.',
-    utmDefaults: 'utm_source=press&utm_medium=onsite&utm_campaign=press-page',
-    seoDescription: 'Carolina Futons press page — media contact, company background, and press kit downloads.',
-    ogImageUrl: 'https://static.wixstatic.com/media/placeholder-press-og.jpg',
+    outlet: 'Southern Living',
+    outletLogoUrl: 'https://static.wixstatic.com/media/placeholder-southern-living-logo.svg',
+    articleTitle: 'Hand-built in the Blue Ridge: Carolina Futons turns 30',
+    articleUrl: 'https://carolinafutons.com/press/placeholder/southern-living-30th',
+    publishedDate: '2026-03-01T00:00:00.000Z',
+    excerpt: 'TODO(melania): replace with real excerpt once the Southern Living piece runs.',
+    category: 'feature',
+    featured: true,
+    sortOrder: 10,
+  },
+  {
+    outlet: 'Asheville Citizen Times',
+    outletLogoUrl: 'https://static.wixstatic.com/media/placeholder-asheville-citizen-logo.svg',
+    articleTitle: 'Local makers spotlight: Carolina Futons',
+    articleUrl: 'https://carolinafutons.com/press/placeholder/asheville-citizen-local-makers',
+    publishedDate: '2026-02-15T00:00:00.000Z',
+    excerpt: 'TODO(melania): replace with real excerpt once the local makers feature publishes.',
+    category: 'local',
+    featured: false,
+    sortOrder: 20,
+  },
+  {
+    outlet: 'Apartment Therapy',
+    outletLogoUrl: 'https://static.wixstatic.com/media/placeholder-apartment-therapy-logo.svg',
+    articleTitle: 'The best solid-wood futons for small spaces',
+    articleUrl: 'https://carolinafutons.com/press/placeholder/apartment-therapy-roundup',
+    publishedDate: '2026-01-20T00:00:00.000Z',
+    excerpt: 'TODO(melania): replace with real excerpt once Apartment Therapy publishes the roundup.',
+    category: 'roundup',
+    featured: false,
+    sortOrder: 30,
+  },
+];
+
+/**
+ * PressKitAssets seed rows — minimum-viable: the primary logo so /press
+ * can render a downloadable press kit section on launch. godfrey replaces
+ * `fileUrl` with the real SVG URL once the final asset is uploaded to the
+ * Wix media library. Additional assets (product shots, fact sheet PDF)
+ * are added via Wix CMS UI as they land.
+ */
+const PRESS_KIT_ASSETS_SEED = [
+  {
+    name: 'Carolina Futons Logo (SVG)',
+    description: 'Primary wordmark logo in scalable vector format. Use on light backgrounds.',
+    fileUrl: 'https://static.wixstatic.com/media/placeholder-cf-logo.svg',
+    fileType: 'image/svg+xml',
+    fileSizeBytes: 0,
+    category: 'logo',
+    sortOrder: 10,
   },
 ];
 
@@ -91,60 +141,156 @@ const COMPARISON_FEATURES_SEED = [
     values: 'Solid North American hardwood (oak, cherry, maple) — no MDF or particleboard.',
   },
   {
+    featureKey: 'frame_joinery',
+    label: 'Joinery',
+    description: 'How the frame pieces are joined.',
+    category: 'build',
+    sortOrder: 20,
+    values: 'Mortise-and-tenon plus through-bolt construction — no staples or glue-only joints.',
+  },
+  {
+    featureKey: 'finish',
+    label: 'Finish options',
+    description: 'Available wood-stain finishes.',
+    category: 'build',
+    sortOrder: 30,
+    values: '6 hand-rubbed stain finishes: Natural, Honey, Walnut, Espresso, Whitewash, Black.',
+  },
+  {
+    featureKey: 'customization',
+    label: 'Customization',
+    description: 'Per-order configuration options.',
+    category: 'build',
+    sortOrder: 40,
+    values: 'Queen, Full, Twin, Loveseat sizes · drawer base add-on · arm-style choice.',
+  },
+  {
     featureKey: 'cushion',
     label: 'Cushion / mattress',
     description: 'Mattress construction options.',
     category: 'comfort',
-    sortOrder: 20,
-    values: 'Cotton + foam core, innerspring, or memory-foam top — multiple firmness options.',
+    sortOrder: 50,
+    values: 'Cotton + foam core, innerspring, or memory-foam top — multiple firmness levels.',
   },
   {
-    featureKey: 'warranty',
-    label: 'Warranty',
-    description: 'Frame and mattress warranty coverage.',
-    category: 'policy',
-    sortOrder: 30,
-    values: '10-year frame warranty · 5-year mattress warranty.',
+    featureKey: 'firmness',
+    label: 'Firmness levels',
+    description: 'Number of firmness options per mattress type.',
+    category: 'comfort',
+    sortOrder: 60,
+    values: '3 firmness levels per mattress line (Soft, Medium, Firm) — try in-showroom.',
+  },
+  {
+    featureKey: 'convert_action',
+    label: 'Sit-to-sleep conversion',
+    description: 'How the frame converts between couch and bed.',
+    category: 'comfort',
+    sortOrder: 70,
+    values: 'One-hand trifold conversion — no tools, no latches to release.',
+  },
+  {
+    featureKey: 'covers',
+    label: 'Covers',
+    description: 'Removable / washable cover options.',
+    category: 'comfort',
+    sortOrder: 80,
+    values: 'Removable zippered covers in 40+ fabrics · machine-washable cotton canvas line.',
   },
   {
     featureKey: 'assembly',
     label: 'Assembly',
     description: 'How the futon arrives and what setup is required.',
     category: 'logistics',
-    sortOrder: 40,
+    sortOrder: 90,
     values: 'Ships flat-packed · 20–40 min assembly · only a Phillips screwdriver required.',
+  },
+  {
+    featureKey: 'packaging',
+    label: 'Packaging',
+    description: 'Shipping-box weight and footprint.',
+    category: 'logistics',
+    sortOrder: 100,
+    values: '2-box shipment (frame + mattress) · avg 72 lb combined · fits through 30" doorways.',
   },
   {
     featureKey: 'delivery',
     label: 'Delivery',
     description: 'Shipping and local-delivery options.',
     category: 'logistics',
-    sortOrder: 50,
+    sortOrder: 110,
     values: 'Free UPS ground in the continental US · local delivery within NC pickup zone · Hendersonville showroom pickup.',
   },
   {
-    featureKey: 'made_in_usa',
-    label: 'Made in USA',
-    description: 'Where the frame and mattress are produced.',
-    category: 'origin',
-    sortOrder: 60,
-    values: 'Every frame and cotton-core mattress is built in Hendersonville, NC.',
+    featureKey: 'lead_time',
+    label: 'Lead time',
+    description: 'Build + ship turnaround.',
+    category: 'logistics',
+    sortOrder: 120,
+    values: 'Stocked frames ship in 3–5 business days · custom finishes 2–3 weeks.',
   },
   {
-    featureKey: 'customization',
-    label: 'Customization',
-    description: 'Finish and configuration options.',
-    category: 'build',
-    sortOrder: 70,
-    values: '6 stain finishes · queen, full, and loveseat sizes · optional drawer/storage base.',
+    featureKey: 'warranty_frame',
+    label: 'Frame warranty',
+    description: 'Frame-only warranty coverage.',
+    category: 'policy',
+    sortOrder: 130,
+    values: '10-year limited warranty against defects in materials and workmanship.',
+  },
+  {
+    featureKey: 'warranty_mattress',
+    label: 'Mattress warranty',
+    description: 'Mattress-only warranty coverage.',
+    category: 'policy',
+    sortOrder: 140,
+    values: '5-year limited warranty on cotton-core and innerspring mattresses.',
+  },
+  {
+    featureKey: 'returns',
+    label: 'Returns',
+    description: 'Return and trial policy.',
+    category: 'policy',
+    sortOrder: 150,
+    values: '30-day in-home trial · prepaid return label if unsatisfied.',
   },
   {
     featureKey: 'price_range',
     label: 'Price range',
     description: 'Typical frame + mattress bundle pricing.',
     category: 'policy',
-    sortOrder: 80,
+    sortOrder: 160,
     values: '$499–$1,899 depending on size, wood, and mattress choice. CF+ members save an additional 10%.',
+  },
+  {
+    featureKey: 'financing',
+    label: 'Financing',
+    description: 'Buy-now-pay-later options at checkout.',
+    category: 'policy',
+    sortOrder: 170,
+    values: 'Affirm and Afterpay available at checkout · 0% APR for qualified buyers.',
+  },
+  {
+    featureKey: 'made_in_usa',
+    label: 'Made in USA',
+    description: 'Where the frame and mattress are produced.',
+    category: 'origin',
+    sortOrder: 180,
+    values: 'Every frame and cotton-core mattress is built in Hendersonville, NC.',
+  },
+  {
+    featureKey: 'materials_sourcing',
+    label: 'Materials sourcing',
+    description: 'Where raw materials are sourced from.',
+    category: 'origin',
+    sortOrder: 190,
+    values: 'Hardwood from Appalachian hardwood belt · US-grown organic cotton for mattress cores.',
+  },
+  {
+    featureKey: 'eco',
+    label: 'Sustainability',
+    description: 'Environmental certifications and practices.',
+    category: 'origin',
+    sortOrder: 200,
+    values: 'Low-VOC finishes · CARB Phase-2 compliant · take-back program for old futons within NC.',
   },
 ];
 
@@ -154,6 +300,8 @@ const COMPARISON_FEATURES_SEED = [
  */
 const SEED_MANIFEST = [
   { collection: 'Landings',           uniqueKey: 'slug',       rows: LANDINGS_SEED },
+  { collection: 'PressMentions',      uniqueKey: 'articleUrl', rows: PRESS_MENTIONS_SEED },
+  { collection: 'PressKitAssets',     uniqueKey: 'fileUrl',    rows: PRESS_KIT_ASSETS_SEED },
   { collection: 'ComparisonFeatures', uniqueKey: 'featureKey', rows: COMPARISON_FEATURES_SEED },
 ];
 
@@ -367,6 +515,8 @@ Example:
 module.exports = {
   SEED_MANIFEST,
   LANDINGS_SEED,
+  PRESS_MENTIONS_SEED,
+  PRESS_KIT_ASSETS_SEED,
   COMPARISON_FEATURES_SEED,
   buildHeaders,
   fetchExistingKeys,

@@ -2,13 +2,16 @@
  * seedCf3qtCollections.test.js — Tests for the cf-3qt Phase 4/5 seed script.
  *
  * Covers: manifest shape, idempotent skipping on existing rows, dry-run mode,
- * error handling, and that both Landings + ComparisonFeatures are represented.
+ * error handling, and that all four collections (Landings, PressMentions,
+ * PressKitAssets, ComparisonFeatures) are represented.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 const {
   SEED_MANIFEST,
   LANDINGS_SEED,
+  PRESS_MENTIONS_SEED,
+  PRESS_KIT_ASSETS_SEED,
   COMPARISON_FEATURES_SEED,
   fetchExistingKeys,
   getSeedStatus,
@@ -46,22 +49,20 @@ afterEach(() => {
 // ─── Manifest structure ───────────────────────────────────────────────────────
 
 describe('SEED_MANIFEST', () => {
-  it('covers both Landings and ComparisonFeatures', () => {
+  it('covers all four cf-3qt collections', () => {
     const collections = SEED_MANIFEST.map((e) => e.collection);
     expect(collections).toContain('Landings');
+    expect(collections).toContain('PressMentions');
+    expect(collections).toContain('PressKitAssets');
     expect(collections).toContain('ComparisonFeatures');
   });
 
   it('declares the correct uniqueKey for each collection', () => {
     const byName = Object.fromEntries(SEED_MANIFEST.map((e) => [e.collection, e]));
     expect(byName.Landings.uniqueKey).toBe('slug');
+    expect(byName.PressMentions.uniqueKey).toBe('articleUrl');
+    expect(byName.PressKitAssets.uniqueKey).toBe('fileUrl');
     expect(byName.ComparisonFeatures.uniqueKey).toBe('featureKey');
-  });
-
-  it('does not include PressMentions or PressKitAssets (owned elsewhere)', () => {
-    const collections = SEED_MANIFEST.map((e) => e.collection);
-    expect(collections).not.toContain('PressMentions');
-    expect(collections).not.toContain('PressKitAssets');
   });
 
   it('has unique keys within each collection', () => {
@@ -71,15 +72,26 @@ describe('SEED_MANIFEST', () => {
     }
   });
 
-  it('seeds exactly three Landings rows (spring-sale, winback, press)', () => {
-    expect(LANDINGS_SEED).toHaveLength(3);
-    expect(LANDINGS_SEED.map((r) => r.slug).sort()).toEqual(['press', 'spring-sale', 'winback']);
+  it('seeds exactly two Landings rows (spring-sale, winback)', () => {
+    expect(LANDINGS_SEED).toHaveLength(2);
+    expect(LANDINGS_SEED.map((r) => r.slug).sort()).toEqual(['spring-sale', 'winback']);
   });
 
-  it('seeds at least six ComparisonFeatures rows covering the core buckets', () => {
-    expect(COMPARISON_FEATURES_SEED.length).toBeGreaterThanOrEqual(6);
+  it('seeds exactly three PressMentions rows with distinct outlets', () => {
+    expect(PRESS_MENTIONS_SEED).toHaveLength(3);
+    const outlets = new Set(PRESS_MENTIONS_SEED.map((r) => r.outlet));
+    expect(outlets.size).toBe(3);
+  });
+
+  it('seeds exactly one PressKitAssets row (primary logo)', () => {
+    expect(PRESS_KIT_ASSETS_SEED).toHaveLength(1);
+    expect(PRESS_KIT_ASSETS_SEED[0].category).toBe('logo');
+  });
+
+  it('seeds exactly twenty ComparisonFeatures rows spanning multiple buckets', () => {
+    expect(COMPARISON_FEATURES_SEED).toHaveLength(20);
     const categories = new Set(COMPARISON_FEATURES_SEED.map((r) => r.category));
-    expect(categories.size).toBeGreaterThanOrEqual(3);
+    expect(categories.size).toBeGreaterThanOrEqual(4);
   });
 
   it('every row declares a non-empty value for its uniqueKey', () => {
@@ -124,7 +136,10 @@ describe('fetchExistingKeys', () => {
 describe('getSeedStatus', () => {
   it('reports exists:true for rows already present', async () => {
     const mockFetch = vi.fn()
+      // Query order matches SEED_MANIFEST: Landings, PressMentions, PressKitAssets, ComparisonFeatures.
       .mockResolvedValueOnce(mockQueryResponse(['spring-sale'], 'slug'))
+      .mockResolvedValueOnce(mockQueryResponse([], 'articleUrl'))
+      .mockResolvedValueOnce(mockQueryResponse([], 'fileUrl'))
       .mockResolvedValueOnce(mockQueryResponse([], 'featureKey'));
     vi.stubGlobal('fetch', mockFetch);
 
@@ -146,48 +161,76 @@ describe('getSeedStatus', () => {
 describe('seedCollections', () => {
   it('inserts missing rows and skips existing ones', async () => {
     const mockFetch = vi.fn()
-      // Landings query → only 'press' exists
-      .mockResolvedValueOnce(mockQueryResponse(['press'], 'slug'))
-      // Landings inserts: spring-sale, winback
+      // Landings query → 'spring-sale' already exists
+      .mockResolvedValueOnce(mockQueryResponse(['spring-sale'], 'slug'))
+      // Landings insert: winback
+      .mockResolvedValueOnce(mockInsertSuccess())
+      // PressMentions query → empty
+      .mockResolvedValueOnce(mockQueryResponse([], 'articleUrl'))
+      // PressMentions inserts (3)
       .mockResolvedValueOnce(mockInsertSuccess())
       .mockResolvedValueOnce(mockInsertSuccess())
-      // ComparisonFeatures query → nothing exists
+      .mockResolvedValueOnce(mockInsertSuccess())
+      // PressKitAssets query → empty
+      .mockResolvedValueOnce(mockQueryResponse([], 'fileUrl'))
+      // PressKitAssets insert (1)
+      .mockResolvedValueOnce(mockInsertSuccess())
+      // ComparisonFeatures query → empty
       .mockResolvedValueOnce(mockQueryResponse([], 'featureKey'))
-      // ComparisonFeatures inserts (one per row)
+      // ComparisonFeatures inserts (20, matched by the terminal mockResolvedValue)
       .mockResolvedValue(mockInsertSuccess());
     vi.stubGlobal('fetch', mockFetch);
 
     const { results } = await seedCollections({ apiKey: 'k', siteId: 's' });
 
-    const press = results.find((r) => r.rowKey === 'press');
-    expect(press.status).toBe('EXISTS');
-
     const springSale = results.find((r) => r.rowKey === 'spring-sale');
-    expect(springSale.status).toBe('INSERTED');
+    expect(springSale.status).toBe('EXISTS');
+
+    const winback = results.find((r) => r.rowKey === 'winback');
+    expect(winback.status).toBe('INSERTED');
 
     const everyCompFeature = results.filter((r) => r.collection === 'ComparisonFeatures');
+    expect(everyCompFeature).toHaveLength(COMPARISON_FEATURES_SEED.length);
     expect(everyCompFeature.every((r) => r.status === 'INSERTED')).toBe(true);
+
+    const pressMentions = results.filter((r) => r.collection === 'PressMentions');
+    expect(pressMentions).toHaveLength(PRESS_MENTIONS_SEED.length);
+    expect(pressMentions.every((r) => r.status === 'INSERTED')).toBe(true);
+
+    const pressKit = results.filter((r) => r.collection === 'PressKitAssets');
+    expect(pressKit).toHaveLength(PRESS_KIT_ASSETS_SEED.length);
+    expect(pressKit.every((r) => r.status === 'INSERTED')).toBe(true);
   });
 
   it('dry-run mode never calls the insert endpoint', async () => {
     const mockFetch = vi.fn()
       .mockResolvedValueOnce(mockQueryResponse([], 'slug'))
+      .mockResolvedValueOnce(mockQueryResponse([], 'articleUrl'))
+      .mockResolvedValueOnce(mockQueryResponse([], 'fileUrl'))
       .mockResolvedValueOnce(mockQueryResponse([], 'featureKey'));
     vi.stubGlobal('fetch', mockFetch);
 
     const { results } = await seedCollections({ apiKey: 'k', siteId: 's', dryRun: true });
     expect(results.every((r) => r.status === 'WOULD_INSERT')).toBe(true);
-    // Exactly 2 fetches: one query per collection.
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    // Exactly 4 fetches: one query per collection in SEED_MANIFEST.
+    expect(mockFetch).toHaveBeenCalledTimes(SEED_MANIFEST.length);
   });
 
   it('captures individual insert errors without stopping', async () => {
     const mockFetch = vi.fn()
+      // Landings: query empty, first insert fails, second succeeds
       .mockResolvedValueOnce(mockQueryResponse([], 'slug'))
-      // First Landings insert fails, next two succeed
       .mockResolvedValueOnce(mockInsertFailure(500, 'Boom'))
       .mockResolvedValueOnce(mockInsertSuccess())
+      // PressMentions: query empty, all 3 inserts succeed
+      .mockResolvedValueOnce(mockQueryResponse([], 'articleUrl'))
       .mockResolvedValueOnce(mockInsertSuccess())
+      .mockResolvedValueOnce(mockInsertSuccess())
+      .mockResolvedValueOnce(mockInsertSuccess())
+      // PressKitAssets: query empty, insert succeeds
+      .mockResolvedValueOnce(mockQueryResponse([], 'fileUrl'))
+      .mockResolvedValueOnce(mockInsertSuccess())
+      // ComparisonFeatures: query empty, all inserts succeed (terminal fallback)
       .mockResolvedValueOnce(mockQueryResponse([], 'featureKey'))
       .mockResolvedValue(mockInsertSuccess());
     vi.stubGlobal('fetch', mockFetch);
@@ -196,8 +239,14 @@ describe('seedCollections', () => {
     const errors = results.filter((r) => r.status === 'ERROR');
     expect(errors).toHaveLength(1);
     expect(errors[0].detail).toMatch(/500.*Boom/);
+
+    const totalRows =
+      LANDINGS_SEED.length +
+      PRESS_MENTIONS_SEED.length +
+      PRESS_KIT_ASSETS_SEED.length +
+      COMPARISON_FEATURES_SEED.length;
     const inserted = results.filter((r) => r.status === 'INSERTED');
-    expect(inserted.length).toBe(LANDINGS_SEED.length - 1 + COMPARISON_FEATURES_SEED.length);
+    expect(inserted.length).toBe(totalRows - 1);
   });
 
   it('throws if apiKey or siteId are missing', async () => {
