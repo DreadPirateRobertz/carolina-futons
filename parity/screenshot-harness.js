@@ -27,6 +27,8 @@
  */
 
 import fs from 'node:fs/promises';
+import { mkdtempSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -39,7 +41,10 @@ const ONLY_PHASE   = process.env.PARITY_PHASE ? Number(process.env.PARITY_PHASE)
 const ONLY_PAGE    = process.env.PARITY_PAGE || null;
 const TODAY        = new Date().toISOString().slice(0, 10);
 const REPORT_DIR   = path.join(__dirname, 'reports', TODAY, 'shots');
-const GALLERY_DIR  = process.env.GALLERY_DIR || '/tmp/cf-3qt-parity';
+// Default gallery lives in a fresh per-run subdir of the OS temp dir to avoid
+// collisions / symlink-clobber on a shared /tmp. Pass GALLERY_DIR for a stable
+// reviewer-friendly path (e.g. ~/cf-3qt-parity).
+const GALLERY_DIR  = process.env.GALLERY_DIR || mkdtempSync(path.join(os.tmpdir(), 'cf-3qt-parity-'));
 const NAV_TIMEOUT  = Number(process.env.PARITY_NAV_TIMEOUT_MS || 45_000);
 const WAIT_STATE   = process.env.PARITY_WAIT_STATE || 'networkidle';
 
