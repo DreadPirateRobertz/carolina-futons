@@ -857,13 +857,13 @@ const MEMBER_BROWSE_HISTORY_COLLECTION = 'MemberBrowseHistory';
 
 /**
  * Get personalized product recommendations based on browse + purchase history.
- * Uses memberId (authenticated) or sessionId (guest) as the lookup key.
- * Falls back to category-based recommendations when no history exists.
+ * Authenticated member identity is resolved server-side via currentMember.getMember();
+ * guests fall back to a validated sessionId. Falls back to category-based
+ * recommendations when no history exists.
  *
  * @param {string} productId - Current product on PDP (excluded from results)
  * @param {Object} [options]
- * @param {string} [options.memberId] - Authenticated member ID
- * @param {string} [options.sessionId] - Guest session ID (fallback)
+ * @param {string} [options.sessionId] - Guest session ID (fallback, validated server-side)
  * @param {number} [options.limit=4] - Max products to return
  * @returns {Promise<{success: boolean, products: Array<{productId, title, price, imageUrl, slug}>, source: 'history'|'category'}>}
  * @permission Anyone
@@ -875,13 +875,22 @@ export const getProductRecommendations = webMethod(
       const pid = validateId(productId);
       if (!pid) return { success: false, products: [], source: 'category' };
 
-      const { memberId, sessionId, limit = 4 } = options;
+      const { sessionId, limit = 4 } = options;
       const safeLimit = Math.max(1, Math.min(12, Math.round(limit)));
 
-      const sessionKey = memberId
-        ? `member_${memberId}`
-        : sessionId
-          ? `session_${sessionId}`
+      // Resolve member identity server-side — never trust client-supplied IDs.
+      let resolvedMemberId = null;
+      try {
+        const member = await currentMember.getMember();
+        resolvedMemberId = member?._id ?? null;
+      } catch { /* guest caller — leave as null */ }
+
+      // Only use sessionId for guests, and only after validation.
+      const safeSessionId = resolvedMemberId ? null : validateId(sessionId);
+      const sessionKey = resolvedMemberId
+        ? `member_${resolvedMemberId}`
+        : safeSessionId
+          ? `session_${safeSessionId}`
           : null;
 
       const frequency = {};
@@ -902,9 +911,10 @@ export const getProductRecommendations = webMethod(
         }
       }
 
-      if (memberId) {
+      if (resolvedMemberId) {
         const orders = await wixData
           .query('Stores/Orders')
+          .eq('buyerInfo.memberId', resolvedMemberId)
           .limit(100)
           .find({ suppressAuth: true });
 

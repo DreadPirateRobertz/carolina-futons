@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
-import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __setMember, __resetMember } from './__mocks__/wix-members-backend.js';
 import { allProducts, futonFrame, futonMattress, murphyBed, platformBed, casegoodsItem, wallHuggerFrame, saleProduct, callForPriceProduct, callForPriceCasegoods } from './fixtures/products.js';
 import {
   getRelatedProducts,
@@ -1199,12 +1199,14 @@ describe('trackRecentlyViewed — trim behavior', () => {
 describe('getProductRecommendations (cf-e1h)', () => {
   beforeEach(() => {
     resetData();
+    __resetMember();
     __seed('Stores/Products', allProducts);
     __seed('MemberBrowseHistory', []);
     __seed('Stores/Orders', []);
   });
 
   it('returns history-based recommendations ranked by browse frequency', async () => {
+    __setMember({ _id: 'mem-1' });
     __seed('MemberBrowseHistory', [
       { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date() },
       { _id: 'bh-2', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date('2026-04-10') },
@@ -1212,7 +1214,7 @@ describe('getProductRecommendations (cf-e1h)', () => {
       { _id: 'bh-4', sessionKey: 'member_mem-1', productId: 'prod-case-001', viewedAt: new Date() },
     ]);
 
-    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+    const result = await getProductRecommendations('prod-frame-001');
 
     expect(result.success).toBe(true);
     expect(result.source).toBe('history');
@@ -1241,15 +1243,16 @@ describe('getProductRecommendations (cf-e1h)', () => {
   });
 
   it('excludes already-purchased products from recommendations', async () => {
+    __setMember({ _id: 'mem-1' });
     __seed('MemberBrowseHistory', [
       { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-matt-001', viewedAt: new Date() },
       { _id: 'bh-2', sessionKey: 'member_mem-1', productId: 'prod-case-001', viewedAt: new Date() },
     ]);
     __seed('Stores/Orders', [
-      { _id: 'o-1', lineItems: [{ productId: 'prod-matt-001' }] },
+      { _id: 'o-1', buyerInfo: { memberId: 'mem-1' }, lineItems: [{ productId: 'prod-matt-001' }] },
     ]);
 
-    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+    const result = await getProductRecommendations('prod-frame-001');
 
     expect(result.success).toBe(true);
     const ids = result.products.map(p => p.productId);
@@ -1263,7 +1266,7 @@ describe('getProductRecommendations (cf-e1h)', () => {
     expect(result.products.length).toBeLessThanOrEqual(2);
   });
 
-  it('works with sessionId fallback for guests (no memberId)', async () => {
+  it('works with sessionId fallback for guests (no logged-in member)', async () => {
     __seed('MemberBrowseHistory', [
       { _id: 'bh-1', sessionKey: 'session_guest-abc', productId: 'prod-matt-001', viewedAt: new Date() },
     ]);
@@ -1292,14 +1295,62 @@ describe('getProductRecommendations (cf-e1h)', () => {
   });
 
   it('excludes current product from results', async () => {
+    __setMember({ _id: 'mem-1' });
     __seed('MemberBrowseHistory', [
       { _id: 'bh-1', sessionKey: 'member_mem-1', productId: 'prod-frame-001', viewedAt: new Date() },
     ]);
 
-    const result = await getProductRecommendations('prod-frame-001', { memberId: 'mem-1' });
+    const result = await getProductRecommendations('prod-frame-001');
 
     expect(result.success).toBe(true);
     const ids = result.products.map(p => p.productId);
     expect(ids).not.toContain('prod-frame-001');
+  });
+
+  // ── Security: IDOR / cache-key injection ────────────────────────────
+
+  it('ignores client-supplied memberId — guest caller cannot impersonate a member', async () => {
+    // Victim has sensitive browse history under their member key
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'member_victim-42', productId: 'prod-matt-001', viewedAt: new Date() },
+      { _id: 'bh-2', sessionKey: 'member_victim-42', productId: 'prod-matt-001', viewedAt: new Date() },
+    ]);
+    // Guest caller (no __setMember) passes victim's memberId in options — must be ignored.
+    const result = await getProductRecommendations('prod-frame-001', { memberId: 'victim-42' });
+
+    expect(result.success).toBe(true);
+    // Without a validated sessionId and no authenticated member, no history lookup happens
+    // → falls through to category-based recommendations, not victim's browse data.
+    expect(result.source).toBe('category');
+  });
+
+  it('scopes Stores/Orders query to the authenticated member — no site-wide leak', async () => {
+    __setMember({ _id: 'buyer-A' });
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'member_buyer-A', productId: 'prod-matt-001', viewedAt: new Date() },
+    ]);
+    // Another member's order — must NOT influence buyer-A's recommendations
+    __seed('Stores/Orders', [
+      { _id: 'o-other', buyerInfo: { memberId: 'buyer-B' }, lineItems: [{ productId: 'prod-matt-001' }] },
+    ]);
+
+    const result = await getProductRecommendations('prod-frame-001');
+
+    expect(result.success).toBe(true);
+    // buyer-A never purchased prod-matt-001 — other member's order must not filter it out
+    const ids = result.products.map(p => p.productId);
+    expect(ids).toContain('prod-matt-001');
+  });
+
+  it('rejects malformed sessionId (cache-key injection attempt)', async () => {
+    // Sensitive record keyed by an injected-looking key
+    __seed('MemberBrowseHistory', [
+      { _id: 'bh-1', sessionKey: 'session_abc; DROP', productId: 'prod-matt-001', viewedAt: new Date() },
+    ]);
+    // Caller supplies unsafe characters — validateId returns '' so no lookup fires.
+    const result = await getProductRecommendations('prod-frame-001', { sessionId: 'abc; DROP' });
+
+    expect(result.success).toBe(true);
+    expect(result.source).toBe('category');
   });
 });
