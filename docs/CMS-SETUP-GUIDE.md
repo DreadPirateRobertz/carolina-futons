@@ -27,6 +27,10 @@ Create in this order (dependencies flow downward):
 14. **ReviewRequests** — used by post-purchase review solicitation
 15. **ReferralCodes** — used by referral program
 16. **Videos** — used by product video display
+17. **PushTokens** — used by push notification dispatch to member devices
+18. **SpinGrants** — used by bonus spin grant and redemption flow
+19. **MobileChallengeCompletions** — used by mobile app challenge tracking
+20. **CrossRigSyncLog** — used by cross-rig gamification sync audit trail
 
 ---
 
@@ -377,6 +381,70 @@ Queried on every call to `getShippingEstimate` and `calculateBundleQuote`. Produ
 
 ---
 
+## 17. PushTokens
+
+**Used by:** pushTokenRegistry.web.js, pushNotificationService.web.js
+**Permissions:** Site member insert, Admin read/update/remove (backend suppressAuth)
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| memberId | Text | Yes | **Index** — primary lookup |
+| token | Text | Yes | FCM/APNs device token |
+| platform | Text | Yes | Values: ios, android, web |
+| active | Boolean | Yes | Default true. **Index** — filter active tokens |
+
+---
+
+## 18. SpinGrants
+
+**Used by:** spinRedemptionService.web.js, rewardEngine
+**Permissions:** Backend only (elevated)
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| memberId | Text | Yes | **Index** — primary lookup |
+| grantedAt | Date | Yes | |
+| expiresAt | Date | Yes | **Index** — 30-day expiry filter |
+| redeemedAt | Date | No | Null until redeemed |
+| reward | Text | No | Reward description |
+| rewardValue | Number | No | Monetary or point value |
+| status | Text | Yes | Values: pending, redeemed, expired. **Index** |
+
+---
+
+## 19. MobileChallengeCompletions
+
+**Used by:** mobileChallengeService.web.js, crossRigEventReceiver
+**Permissions:** Backend only (elevated)
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| memberId | Text | Yes | **Index** — primary lookup |
+| challengeType | Text | Yes | Values: ar_discovery, quiz_completion, social_share. **Index** |
+| completedAt | Date | Yes | **Index** — idempotency check (same type+product per day) |
+| pointsAwarded | Number | Yes | AR=75, Quiz=50, Social=100 |
+| productId | Text | No | For AR discovery challenges |
+| score | Number | No | Quiz score |
+| platform | Text | No | Device platform |
+
+---
+
+## 20. CrossRigSyncLog
+
+**Used by:** crossRigSyncUtils.js (backend-only helper)
+**Permissions:** Backend only (elevated)
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| memberId | Text | Yes | **Index** — primary lookup |
+| points | Number | Yes | Points synced (>= 0) |
+| eventType | Text | Yes | e.g. quiz_completed, ar_discovery_completed |
+| sourceRig | Text | Yes | Values: cfutons_mobile. **Index** |
+| syncedAt | Date | Yes | **Index** — time-range filter |
+| direction | Text | Yes | Values: mobile_to_web |
+
+---
+
 ## Index Summary
 
 These fields should be indexed in Wix CMS for query performance:
@@ -399,3 +467,7 @@ These fields should be indexed in Wix CMS for query performance:
 | ReviewRequests | scheduledDate, status |
 | ReferralCodes | code, memberId, usedBy |
 | Videos | productId, category, viewCount, isFeatured |
+| PushTokens | memberId, active |
+| SpinGrants | memberId, expiresAt, status |
+| MobileChallengeCompletions | memberId, challengeType, completedAt |
+| CrossRigSyncLog | memberId, sourceRig, syncedAt |
