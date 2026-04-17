@@ -1,6 +1,6 @@
 /**
  * @module ChallengeOfTheWeekWidget
- * @description Renders two homepage challenge sections:
+ * @description Renders three homepage challenge sections:
  *
  * 1. Community collective challenge (CF-8lj8) — all members share one goal:
  *   #weeklyTitle        — Challenge title (e.g. "Community Challenge: 500 Orders!")
@@ -24,7 +24,14 @@
  *   #cotwCtaBtn         — CTA button (linked to ctaUrl; hidden when no URL)
  *   #cotwError          — Shown on fetch error
  *
- * CF-8lj8, cf-rsr
+ * 3. CMS-driven Challenge of the Week (cf-1he) — reads from challengeService:
+ *   #cotw-section       — Outer section (collapsed on error or no challenge)
+ *   #cotw-title         — Challenge title
+ *   #cotw-description   — Challenge description
+ *   #cotw-points        — Point reward label (e.g. "200 pts")
+ *   #cotw-image         — Challenge image (collapsed when no imageUrl)
+ *
+ * CF-8lj8, cf-rsr, cf-1he
  */
 
 import { getWeeklyChallenge as _defaultGetWeeklyChallenge, getActiveChallengeOfWeek as _defaultGetActiveChallengeOfWeek } from 'backend/gamificationEventReceiver.web';
@@ -204,9 +211,10 @@ async function _renderChallengeOfTheWeek($w, getChallengeOfTheWeek) {
   try { $w('#cotw-section').expand(); } catch {}
   try { $w('#cotw-title').text = ch.title; } catch {}
   try { $w('#cotw-description').text = ch.description ?? ''; } catch {}
-  try { $w('#cotw-points').text = `${ch.pointValue} pts`; } catch {}
+  try { $w('#cotw-points').text = `${ch.pointValue.toLocaleString()} pts`; } catch {}
 
   if (ch.imageUrl) {
+    try { $w('#cotw-image').expand(); } catch {}
     try { $w('#cotw-image').src = ch.imageUrl; } catch {}
   } else {
     try { $w('#cotw-image').collapse(); } catch {}

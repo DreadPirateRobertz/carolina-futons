@@ -376,9 +376,23 @@ describe('ChallengeOfTheWeekWidget — getChallengeOfTheWeek section (cf-1he)', 
     expect(getEl('#cotw-points').text).toContain('200');
   });
 
+  it('formats pointValue with locale separators (e.g. "1,500 pts")', async () => {
+    getChallengeOfTheWeek.mockResolvedValue({
+      success: true,
+      challenge: { ...COTW_CHALLENGE, pointValue: 1500 },
+    });
+    await init();
+    expect(getEl('#cotw-points').text).toBe('1,500 pts');
+  });
+
   it('sets #cotw-image src to imageUrl', async () => {
     await init();
     expect(getEl('#cotw-image').src).toBe('https://example.com/challenge.jpg');
+  });
+
+  it('re-expands #cotw-image when imageUrl is present (recovers from prior collapse)', async () => {
+    await init();
+    expect(getEl('#cotw-image').expand).toHaveBeenCalled();
   });
 
   it('expands #cotw-section on success', async () => {
