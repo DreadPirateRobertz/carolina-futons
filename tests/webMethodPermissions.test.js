@@ -18,9 +18,17 @@ const CANONICAL = new Set(['Anyone', 'Admin', 'SiteMember']);
 const BACKEND_DIR = join(__dirname, '..', 'src', 'backend');
 const PERMISSION_RE = /Permissions\.(\w+)/g;
 
-const webMethodFiles = readdirSync(BACKEND_DIR)
-  .filter((f) => f.endsWith('.web.js'))
-  .map((f) => join(BACKEND_DIR, f));
+function findWebMethodFiles(dir) {
+  const found = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...findWebMethodFiles(full));
+    else if (entry.isFile() && entry.name.endsWith('.web.js')) found.push(full);
+  }
+  return found;
+}
+
+const webMethodFiles = findWebMethodFiles(BACKEND_DIR);
 
 describe('webMethod permissions — canonical enum enforcement', () => {
   it.each(webMethodFiles)('%s uses only canonical Permissions keys', (file) => {
