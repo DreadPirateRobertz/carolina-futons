@@ -965,7 +965,7 @@ git commit -m "feat(phase4): new event types + challenge progress pipeline in re
 - Modify: `src/backend/gamificationEventReceiver.web.js`
 - Modify: `tests/gamificationEventReceiver.test.js`
 
-New exported `webMethod` (Permissions.Member). Rate limit: 10 calls/hr per member (same pattern as existing rate limiting in the receiver).
+New exported `webMethod` (Permissions.SiteMember). Rate limit: 10 calls/hr per member (same pattern as existing rate limiting in the receiver).
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1107,7 +1107,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @returns {Promise<{ challenges: Array } | { error: 429 }>}
  */
 export const getActiveChallenges = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (!memberId) return { challenges: [] };
 

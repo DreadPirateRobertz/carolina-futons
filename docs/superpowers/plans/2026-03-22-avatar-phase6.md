@@ -397,7 +397,7 @@ function parseUnlockedIds(raw) {
 // ── getAvatarState ────────────────────────────────────────────────────────────
 
 export const getAvatarState = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId) => {
     if (checkRateLimit(memberId, 'getAvatarState', 10)) {
       return { error: 'rate_limited', retryAfterMs: 3600000 };
@@ -669,7 +669,7 @@ Add the `purchaseAccessory` webMethod:
 
 ```js
 export const purchaseAccessory = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId, accessoryId) => {
     if (checkRateLimit(memberId, 'purchaseAccessory', 5)) {
       return { error: 'rate_limited', retryAfterMs: 3600000 };
@@ -891,7 +891,7 @@ Expected: FAIL — `equipAccessory` not exported.
 
 ```js
 export const equipAccessory = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (memberId, accessoryId) => {
     if (checkRateLimit(memberId, 'equipAccessory', 10)) {
       return { error: 'rate_limited', retryAfterMs: 3600000 };

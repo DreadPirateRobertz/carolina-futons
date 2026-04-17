@@ -4,7 +4,7 @@
 
 **Goal:** Implement a member-authenticated Claude-powered chatbot (`gamificationChatbot.web.js`) with per-member daily rate limits, session history, structured prompt-injection tool calls, and a pure-function frontend module (`ChatbotUI.js`), all behind a Wix Secrets Manager feature flag.
 
-**Architecture:** A new `gamificationChatbot.web.js` backend file exposes a single `chatWithAssistant` webMethod (Permissions.Member) that gates on a feature flag, enforces per-member daily message + token limits against the `ChatbotSessions` CMS collection, resolves tool intents via structured prompt injection (no Anthropic native tools API — Wix Velo does not support it), calls Claude via `wix-fetch`, and returns the reply with updated quota counts. A companion `ChatbotUI.js` frontend module provides pure functions for rendering the conversation thread, limit display, loading state, and reduced-motion fallback — no direct Wix API calls inside the module.
+**Architecture:** A new `gamificationChatbot.web.js` backend file exposes a single `chatWithAssistant` webMethod (Permissions.SiteMember) that gates on a feature flag, enforces per-member daily message + token limits against the `ChatbotSessions` CMS collection, resolves tool intents via structured prompt injection (no Anthropic native tools API — Wix Velo does not support it), calls Claude via `wix-fetch`, and returns the reply with updated quota counts. A companion `ChatbotUI.js` frontend module provides pure functions for rendering the conversation thread, limit display, loading state, and reduced-motion fallback — no direct Wix API calls inside the module.
 
 **Tech Stack:** Wix Velo JS (ES modules), wix-data, wix-fetch, wix-secrets-backend, wix-members-backend (currentMember), wix-web-module (webMethod + Permissions), vitest, existing mocks (`wix-data`, `wix-fetch`, `wix-secrets-backend`, `wix-members-backend`), `dateUtils.js` (shared ET date helpers from Phase 2).
 
@@ -35,19 +35,9 @@ Run all tests: `npx vitest run`
 - `wix-fetch.js` — `__setHandler(fn)`, `__reset()` — handler receives `(url, options)`, returns response-like object
 - `wix-secrets-backend.js` — `__setSecrets({ KEY: value })`, `__reset()` — `getSecret(key)` throws if key absent
 - `wix-members-backend.js` — `__setMember(member)`, `__reset()` — `currentMember.getMember()` returns the mock member
-- `wix-web-module.js` — `webMethod(_permission, fn)` returns `fn` directly; `Permissions.Member` must be added to the mock
+- `wix-web-module.js` — `webMethod(_permission, fn)` returns `fn` directly; exports the canonical `Permissions` enum (`Anyone`, `SiteMember`, `Admin`)
 
-**Important:** The `wix-web-module` mock only defines `Permissions.Anyone`, `Permissions.SiteMember`, `Permissions.Admin`. Before writing tests that reference `Permissions.Member`, add it to the mock:
-
-```js
-// tests/__mocks__/wix-web-module.js — add Member to the Permissions object
-export const Permissions = {
-  Anyone: 'Anyone',
-  SiteMember: 'SiteMember',
-  Member: 'Member',   // add this line
-  Admin: 'Admin',
-};
-```
+**Important:** The canonical `@wix/web-methods` enum is exactly `Permissions.Anyone`, `Permissions.SiteMember`, `Permissions.Admin`. `Permissions.Member` is NOT canonical — it resolves to `undefined` at runtime and the Velo server may coerce it to `Anyone`, silently exposing member-only endpoints as public (see cf-zkj).
 
 ---
 
@@ -56,30 +46,11 @@ export const Permissions = {
 **Files:**
 - Create: `src/backend/gamificationChatbot.web.js` (stub, then full logic)
 - Create: `tests/gamificationChatbot.test.js`
-- Modify: `tests/__mocks__/wix-web-module.js` (add `Member` to `Permissions`)
-
 This task covers the foundational pure logic: feature flag gating, input validation, daily message limit, daily token limit, hourly rate limit, and daily reset. Session history and Claude calls come in Tasks 2–4.
 
-### Step 1: Add `Permissions.Member` to the wix-web-module mock
+> **Note (cf-zkj):** An earlier revision of this plan added a non-canonical `Member` key to the mock. That step is dropped — the canonical enum is `{Anyone, SiteMember, Admin}` and matches the runtime. Use `Permissions.SiteMember` directly.
 
-Edit `tests/__mocks__/wix-web-module.js`:
-
-```js
-export const Permissions = {
-  Anyone: 'Anyone',
-  SiteMember: 'SiteMember',
-  Member: 'Member',
-  Admin: 'Admin',
-};
-
-export function webMethod(_permission, fn) {
-  return fn;
-}
-```
-
-- [ ] Edit `tests/__mocks__/wix-web-module.js` — add `Member: 'Member'` to `Permissions`
-
-### Step 2: Write failing tests (feature flag + rate limits)
+### Step 1: Write failing tests (feature flag + rate limits)
 
 Create `tests/gamificationChatbot.test.js`:
 
@@ -635,7 +606,7 @@ export const getChatbotEnabled = webMethod(
 );
 
 export const chatWithAssistant = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (message, memberId) => {
     return { stub: true };
   }
@@ -737,7 +708,7 @@ async function callClaude(messages, apiKey) {
 }
 
 export const chatWithAssistant = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (message, _clientMemberId) => {
     // 1. Feature flag
     let flagEnabled = false;

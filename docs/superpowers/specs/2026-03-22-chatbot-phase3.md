@@ -42,7 +42,7 @@ The flag check is the first operation inside `chatWithAssistant`, before auth, r
 
 ## Authentication
 
-Member authentication is required. Anonymous visitors cannot call `chatWithAssistant`. The webMethod uses `Permissions.Member` (not `Permissions.Anyone`).
+Member authentication is required. Anonymous visitors cannot call `chatWithAssistant`. The webMethod uses `Permissions.SiteMember` (not `Permissions.Anyone`).
 
 If a non-authenticated request reaches the method: return `{ error: 'auth_required' }` with HTTP 401. The frontend must check auth state before rendering the input controls and display a "Sign in to chat" prompt for logged-out visitors.
 
@@ -168,7 +168,7 @@ Keep replies under 200 words unless the member asks for detail.
 
 ### `chatWithAssistant(message, memberId)` webMethod
 
-**Permissions:** `Permissions.Member`
+**Permissions:** `Permissions.SiteMember`
 
 **Signature:** `chatWithAssistant(message: string, memberId: string)`
 

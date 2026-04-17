@@ -52,7 +52,7 @@ vi.mock('wix-data', () => ({
 }));
 
 vi.mock('wix-web-module', () => ({
-  Permissions: { Admin: 'Admin', Anyone: 'Anyone', SiteMember: 'SiteMember', Member: 'Member' },
+  Permissions: { Admin: 'Admin', Anyone: 'Anyone', SiteMember: 'SiteMember' },
   webMethod: (_perm, fn) => fn,
 }));
 

@@ -48,7 +48,7 @@ const SUPPORTED_EVENTS = new Set([
  * @returns {Promise<{success: boolean, status?: number, error?: string}>}
  */
 export const crossRigEvent = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (body) => {
     // ── Schema validation ──────────────────────────────────────────────────
     if (!body?.schemaVersion) {

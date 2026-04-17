@@ -153,7 +153,7 @@ export const recordSwatchKitPurchase = webMethod(
  * @returns {{ hasPendingCredit: boolean, creditId?: string, expiresAt?: Date }}
  */
 export const getSwatchKitCreditStatus = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async () => {
     const member = await currentMember.getMember();
     const cleanId = sanitize(member?._id || '', 64);

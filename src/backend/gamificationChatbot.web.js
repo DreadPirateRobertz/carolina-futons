@@ -110,7 +110,7 @@ export const getChatGreeting = webMethod(
 );
 
 export const chatWithAssistant = webMethod(
-  Permissions.Member,
+  Permissions.SiteMember,
   async (message, _clientMemberId) => {
     // 1. Feature flag
     let flagEnabled = false;
