@@ -485,4 +485,25 @@ describe('getActiveChallengeOfWeek (cf-16h: discriminable progressStatus)', () =
     expect(errSpy).not.toHaveBeenCalled();
     errSpy.mockRestore();
   });
+
+  // cf-n54: a member-lookup that *throws* (not just resolves null) must not be
+  // mis-classified as a visitor — it's a backend failure, not an unauth caller.
+  it('classifies member-lookup throw as "unavailable", not "visitor"', async () => {
+    const membersMod = await import('wix-members-backend');
+    const origGetMember = membersMod.currentMember.getMember;
+    membersMod.currentMember.getMember = vi.fn(() =>
+      Promise.reject(new Error('wix-members-backend transient failure')),
+    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const result = await getActiveChallengeOfWeek();
+      expect(result.progressStatus).toBe('unavailable');
+      expect(result.progressValue).toBe(0);
+      // errorHandler silent-mute downgrades to console.warn (cf-n54)
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      membersMod.currentMember.getMember = origGetMember;
+      warnSpy.mockRestore();
+    }
+  });
 });
