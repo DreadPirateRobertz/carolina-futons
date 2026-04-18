@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   allowOrigin,
   corsHeaders,
@@ -87,6 +87,40 @@ describe('corsPreflight', () => {
     const r = corsPreflight(req('https://evil.example.com'));
     expect(r.status).toBe(403);
     expect(r.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+});
+
+describe('origin-rejection observability', () => {
+  let spy;
+  beforeEach(() => { spy = vi.spyOn(console, 'error').mockImplementation(() => {}); });
+  afterEach(() => { spy.mockRestore(); });
+
+  it('logs when corsHeaders sees a disallowed Origin header', () => {
+    corsHeaders(req('https://evil.example.com'));
+    expect(spy).toHaveBeenCalledWith(
+      '[cors.originRejected.headers]',
+      expect.stringContaining('https://evil.example.com'),
+    );
+  });
+
+  it('logs when corsPreflight sees a disallowed Origin header', () => {
+    corsPreflight(req('https://evil.example.com'));
+    expect(spy).toHaveBeenCalledWith(
+      '[cors.originRejected.preflight]',
+      expect.stringContaining('https://evil.example.com'),
+    );
+  });
+
+  it('does not log when no Origin header is present (same-origin/server-to-server)', () => {
+    corsHeaders(req(null));
+    corsPreflight(req(null));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('does not log when the origin is allowed', () => {
+    corsHeaders(req('http://localhost:3000'));
+    corsPreflight(req('http://localhost:3000'));
+    expect(spy).not.toHaveBeenCalled();
   });
 });
 
