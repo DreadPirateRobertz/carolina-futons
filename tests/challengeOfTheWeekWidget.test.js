@@ -310,6 +310,31 @@ describe('ChallengeOfTheWeekWidget — featured challenge section (cf-rsr)', () 
     await expect(init()).resolves.toBeUndefined();
   });
 
+  // cf-9lp.3: backend now returns { error: 'internal_error' } instead of null
+  // on DB failure. Must route to the same error UI as a reject; must NOT try
+  // to render it as a challenge (no title → would throw accessing .title, etc).
+  it('shows #cotwError and collapses when backend returns { error: "internal_error" }', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ error: 'internal_error' });
+    await init();
+    expect(getEl('#cotwError').show).toHaveBeenCalled();
+    expect(getEl('#cotwContainer').collapse).toHaveBeenCalled();
+  });
+
+  it('routes any truthy error code to the error UI (future-proof)', async () => {
+    getActiveChallengeOfWeek.mockResolvedValue({ error: 'some-future-code' });
+    await init();
+    expect(getEl('#cotwError').show).toHaveBeenCalled();
+    expect(getEl('#cotwContainer').collapse).toHaveBeenCalled();
+  });
+
+  it('does NOT attempt to render challenge fields when result.error is set', async () => {
+    // If we tried to render, setting $w('#cotwTitle').text = undefined would
+    // blow up or show a blank title. Pin the invariant: no title write.
+    getActiveChallengeOfWeek.mockResolvedValue({ error: 'internal_error' });
+    await init();
+    expect(getEl('#cotwTitle').text).toBe(''); // never set (default)
+  });
+
   it('guards against targetCount of 0 (no NaN in width)', async () => {
     getActiveChallengeOfWeek.mockResolvedValue({ ...FEATURED, targetCount: 0, progressValue: 0 });
     await init();
