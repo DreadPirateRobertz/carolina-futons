@@ -94,6 +94,7 @@ import {
   getMemberTier,
   getActivityFeed,
   getActiveChallenges,
+  getActiveChallengeOfWeek,
   computeTierInfo,
 } from '../src/backend/gamificationCore.web.js';
 
@@ -389,5 +390,99 @@ describe('cf-1y7 null-member guard cascade', () => {
       expect(warnSpy).not.toHaveBeenCalled();
       warnSpy.mockRestore();
     });
+  });
+});
+
+// ── cf-16h getActiveChallengeOfWeek ─────────────────────────────────────────
+
+describe('getActiveChallengeOfWeek (cf-16h: discriminable progressStatus)', () => {
+  const FUTURE_ISO = new Date(Date.now() + 86_400_000).toISOString();
+
+  beforeEach(() => {
+    seed('Challenges', [{
+      _id: 'chall-db-1',
+      challengeId: 'chall-1',
+      title: 'Weekly walk',
+      description: '10k steps',
+      conditionType: 'steps',
+      targetCount: 10000,
+      rewardPoints: 50,
+      active: true,
+      isFeatured: true,
+      expiresAt: FUTURE_ISO,
+      ctaUrl: '/walk',
+    }]);
+  });
+
+  it('returns null when no featured challenge is active', async () => {
+    _collections = {};
+    const result = await getActiveChallengeOfWeek();
+    expect(result).toBeNull();
+  });
+
+  it('returns visitor status with zero progress for unauthenticated caller', async () => {
+    __mockMemberId = null;
+    const result = await getActiveChallengeOfWeek();
+    expect(result).not.toBeNull();
+    expect(result.challengeId).toBe('chall-1');
+    expect(result.progressValue).toBe(0);
+    expect(result.completedAt).toBeNull();
+    expect(result.progressStatus).toBe('visitor');
+  });
+
+  it('returns member status + real progress when the member has a record', async () => {
+    __mockMemberId = 'mem-7';
+    seed('MemberChallengeProgress', [{
+      memberId: 'mem-7',
+      challengeId: 'chall-1',
+      progressValue: 4200,
+      completedAt: null,
+    }]);
+    const result = await getActiveChallengeOfWeek();
+    expect(result.progressValue).toBe(4200);
+    expect(result.progressStatus).toBe('member');
+  });
+
+  it('returns member status with zero progress when member has no progress row', async () => {
+    __mockMemberId = 'mem-new';
+    const result = await getActiveChallengeOfWeek();
+    expect(result.progressValue).toBe(0);
+    expect(result.progressStatus).toBe('member');
+  });
+
+  it('reports unavailable when the progress query throws for an authenticated member', async () => {
+    __mockMemberId = 'mem-broken';
+    const wixData = (await import('wix-data')).default;
+    const origQuery = wixData.query;
+    let call = 0;
+    wixData.query = (col) => {
+      call += 1;
+      if (col === 'MemberChallengeProgress') {
+        return {
+          eq() { return this; },
+          gt() { return this; },
+          descending() { return this; },
+          limit() { return this; },
+          find() { throw new Error('connection reset'); },
+        };
+      }
+      return origQuery(col);
+    };
+    try {
+      const result = await getActiveChallengeOfWeek();
+      expect(result.progressValue).toBe(0);
+      expect(result.progressStatus).toBe('unavailable');
+    } finally {
+      wixData.query = origQuery;
+      void call;
+    }
+  });
+
+  it('does not spam the console for the expected visitor path', async () => {
+    __mockMemberId = null;
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await getActiveChallengeOfWeek();
+    expect(errSpy).not.toHaveBeenCalled();
+    errSpy.mockRestore();
   });
 });
