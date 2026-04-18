@@ -1924,6 +1924,14 @@ export async function get_activeChallenges(request) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
     }
 
+    // cf-9lp.1: surface cf-tlt's `internal_error` shape as 503 so generic REST
+    // consumers and monitoring probes don't treat a DB failure as success.
+    // The webMethod still preserves the { challenges: [] } field for mobile-app
+    // clients that read the body — shape is unchanged; only the status differs.
+    if (result.error === 'internal_error') {
+      return response({ status: 503, body: json(result), headers: jsonHeaders });
+    }
+
     return ok({ body: json(result), headers: jsonHeaders });
   } catch (err) {
     console.error(`HTTP function error (activeChallenges): memberId=${memberId || 'unknown'}:`, err);
