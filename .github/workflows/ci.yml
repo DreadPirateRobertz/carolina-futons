@@ -77,7 +77,11 @@ jobs:
         run: npx vitest run --coverage
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == 22
+        # Dependabot PRs run with restricted GITHUB_TOKEN and cannot read
+        # repository secrets, so CODECOV_TOKEN is empty and the upload fails
+        # the whole job. Skip for dependabot — coverage still uploads on
+        # push to main and on every non-dependabot PR. (cf-ugo)
+        if: matrix.node-version == 22 && github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
