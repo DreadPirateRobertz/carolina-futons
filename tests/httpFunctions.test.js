@@ -7,6 +7,7 @@ import { __setMember, __reset as resetMembers, currentMember as membersMock } fr
 import { _resetActiveChallengesRateLimit, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import {
   get_health,
+  options_health,
   get_productSitemap,
   get_blogSitemap,
   get_facebookCatalogFeed,
@@ -102,6 +103,33 @@ describe('get_health', () => {
   it('returns JSON content type', () => {
     const result = get_health();
     expect(result.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('echoes Access-Control-Allow-Origin for an allowlisted request origin', () => {
+    const result = get_health({ headers: { origin: 'http://localhost:3000' } });
+    expect(result.headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+    expect(result.headers.Vary).toBe('Origin');
+  });
+});
+
+// ── options_health — CORS preflight ────────────────────────────────────
+describe('options_health', () => {
+  it('returns 204 + ACAO for an allowlisted origin', () => {
+    const result = options_health({ headers: { origin: 'http://localhost:3000' } });
+    expect(result.status).toBe(204);
+    expect(result.headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/OPTIONS/);
+  });
+
+  it('returns 403 for a disallowed origin', () => {
+    const result = options_health({ headers: { origin: 'https://evil.example.com' } });
+    expect(result.status).toBe(403);
+    expect(result.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+
+  it('returns 403 when the Origin header is missing', () => {
+    const result = options_health({ headers: {} });
+    expect(result.status).toBe(403);
   });
 });
 

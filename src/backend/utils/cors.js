@@ -27,6 +27,8 @@
 //     return corsPreflight(request);
 //   }
 
+import { logError } from 'backend/utils/errorHandler';
+
 const EXACT_ORIGINS = [
   'https://carolina-futons-web.vercel.app',
   'https://carolina-futons-web-dreadpiraterobertzs-projects.vercel.app',
@@ -35,6 +37,22 @@ const EXACT_ORIGINS = [
 
 const WILDCARD_ORIGIN_PATTERN =
   /^https:\/\/carolina-futons-web-git-[a-z0-9-]+-dreadpiraterobertzs-projects\.vercel\.app$/;
+
+// Observability for rejected origins. Missing-origin requests (server-to-server,
+// same-origin) are silent — only a present-but-disallowed Origin is logged,
+// because that's the signal worth watching (bad actor, stale preview URL, or
+// an allowlist that needs updating).
+function rawOrigin(request) {
+  return request?.headers?.origin || request?.headers?.Origin || null;
+}
+
+function logOriginRejection(op, origin) {
+  logError(
+    `cors.originRejected[${op}]`,
+    new Error(`disallowed origin: ${origin}`),
+    { silent: false },
+  );
+}
 
 /**
  * Returns the origin to echo back in Access-Control-Allow-Origin if the
@@ -66,7 +84,11 @@ export function allowOrigin(request) {
  */
 export function corsHeaders(request, extraHeaders = {}) {
   const origin = allowOrigin(request);
-  if (!origin) return { ...extraHeaders };
+  if (!origin) {
+    const raw = rawOrigin(request);
+    if (raw) logOriginRejection('corsHeaders', raw);
+    return { ...extraHeaders };
+  }
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Credentials': 'true',
@@ -86,6 +108,8 @@ export function corsHeaders(request, extraHeaders = {}) {
 export function corsPreflight(request) {
   const origin = allowOrigin(request);
   if (!origin) {
+    const raw = rawOrigin(request);
+    if (raw) logOriginRejection('corsPreflight', raw);
     return { status: 403, headers: { 'Content-Type': 'text/plain' }, body: 'Origin not allowed' };
   }
   return {

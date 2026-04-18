@@ -1,14 +1,24 @@
-import { describe, it, expect } from 'vitest';
-import {
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const logErrorMock = vi.hoisted(() => vi.fn());
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: logErrorMock,
+}));
+
+const {
   allowOrigin,
   corsHeaders,
   corsPreflight,
   __TEST__,
-} from '../src/backend/utils/cors.js';
+} = await import('../src/backend/utils/cors.js');
 
 function req(origin) {
   return { headers: origin ? { origin } : {} };
 }
+
+beforeEach(() => {
+  logErrorMock.mockClear();
+});
 
 describe('allowOrigin', () => {
   it('allows the production vercel domain', () => {
@@ -87,6 +97,37 @@ describe('corsPreflight', () => {
     const r = corsPreflight(req('https://evil.example.com'));
     expect(r.status).toBe(403);
     expect(r.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+});
+
+describe('cors observability — origin-rejection logging', () => {
+  it('logs on corsHeaders when a present origin is disallowed', () => {
+    corsHeaders(req('https://evil.example.com'));
+    expect(logErrorMock).toHaveBeenCalledTimes(1);
+    const [ctx, err, opts] = logErrorMock.mock.calls[0];
+    expect(ctx).toBe('cors.originRejected[corsHeaders]');
+    expect(err.message).toContain('https://evil.example.com');
+    expect(opts).toEqual({ silent: false });
+  });
+
+  it('logs on corsPreflight when a present origin is disallowed', () => {
+    corsPreflight(req('https://evil.example.com'));
+    expect(logErrorMock).toHaveBeenCalledTimes(1);
+    const [ctx, err] = logErrorMock.mock.calls[0];
+    expect(ctx).toBe('cors.originRejected[corsPreflight]');
+    expect(err.message).toContain('https://evil.example.com');
+  });
+
+  it('does NOT log when the Origin header is absent (same-origin/s2s)', () => {
+    corsHeaders(req(null));
+    corsPreflight(req(null));
+    expect(logErrorMock).not.toHaveBeenCalled();
+  });
+
+  it('does NOT log when the origin is allowed', () => {
+    corsHeaders(req('http://localhost:3000'));
+    corsPreflight(req('http://localhost:3000'));
+    expect(logErrorMock).not.toHaveBeenCalled();
   });
 });
 
