@@ -1705,6 +1705,7 @@ describe('get_activeChallenges', () => {
       expect(result.status).toBe(503);
       const body = JSON.parse(result.body);
       expect(body.error).toBe('internal_error');
+      expect(body.challenges).toEqual([]);  // pin preserved-field regression
     });
 
     it('preserves 200 OK for empty-but-authed (no error field)', async () => {

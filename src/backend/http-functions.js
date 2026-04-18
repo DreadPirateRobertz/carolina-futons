@@ -1925,9 +1925,15 @@ export async function get_activeChallenges(request) {
     }
 
     // cf-9lp.1: surface cf-tlt's `internal_error` shape as 503 so generic REST
-    // consumers and monitoring probes don't treat a DB failure as success.
-    // The webMethod still preserves the { challenges: [] } field for mobile-app
-    // clients that read the body — shape is unchanged; only the status differs.
+    // consumers and monitoring probes stop treating a DB failure as success.
+    // Behavior change for existing consumers:
+    //   • Mobile app (cfutons_mobile wixClient.rawRequest) throws on non-2xx
+    //     and has isRetryableError→true for 5xx, so a transient DB blip now
+    //     triggers a retry instead of surfacing a silent empty list. This is
+    //     the desired UX — previously the user saw "no challenges" on failure.
+    //   • Generic REST / monitoring probes now see 503 and alert correctly.
+    // Body is still emitted ({ challenges: [], error: 'internal_error' }) for
+    // diagnostics, but callers that branch on status are the primary audience.
     if (result.error === 'internal_error') {
       return response({ status: 503, body: json(result), headers: jsonHeaders });
     }
