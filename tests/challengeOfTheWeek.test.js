@@ -210,8 +210,8 @@ describe('getActiveChallengeOfWeek (cf-rsr)', () => {
 
 // cf-9lp.3: outer catch must surface `internal_error` instead of bare null,
 // which was indistinguishable from the legitimate "no featured challenge this
-// week" case (line 1303). Cascade continuation of cf-tlt (PR #1099) and the
-// cf-9lp.1/.2 slices (PRs #1102 / #1104).
+// week" case (the `result.items.length === 0` early-return). Cascade
+// continuation of cf-tlt (PR #1099) and the cf-9lp.1/.2 slices (PRs #1102 / #1104).
 describe('getActiveChallengeOfWeek — cf-9lp.3 error surfacing', () => {
   it('returns { error: "internal_error" } when the outer query throws', async () => {
     _throwOnQuery = new Error('simulated DB failure');

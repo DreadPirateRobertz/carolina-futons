@@ -328,11 +328,13 @@ describe('ChallengeOfTheWeekWidget — featured challenge section (cf-rsr)', () 
   });
 
   it('does NOT attempt to render challenge fields when result.error is set', async () => {
-    // If we tried to render, setting $w('#cotwTitle').text = undefined would
-    // blow up or show a blank title. Pin the invariant: no title write.
+    // Pin the invariant behaviorally: success-render-branch calls
+    // (#cotwError.hide + #cotwContainer.expand) must NOT fire. These survive
+    // mock-shape refactors better than asserting on the default '' string.
     getActiveChallengeOfWeek.mockResolvedValue({ error: 'internal_error' });
     await init();
-    expect(getEl('#cotwTitle').text).toBe(''); // never set (default)
+    expect(getEl('#cotwError').hide).not.toHaveBeenCalled();
+    expect(getEl('#cotwContainer').expand).not.toHaveBeenCalled();
   });
 
   it('guards against targetCount of 0 (no NaN in width)', async () => {

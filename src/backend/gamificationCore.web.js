@@ -1367,9 +1367,9 @@ export const getActiveChallengeOfWeek = webMethod(
     } catch (err) {
       // cf-9lp.3: surface internal_error instead of bare null so callers can
       // distinguish a DB/internal failure from the legitimate no-featured-
-      // challenge-this-week case (line 1303). Same cf-2ag pattern as cf-tlt
-      // (getActiveChallenges) and the cascade in cf-9lp.1/.2; uses the
-      // project-wide `internal_error` convention.
+      // challenge-this-week case (the `result.items.length === 0` branch
+      // above). Mirrors cf-tlt (getActiveChallenges) and the cascade in
+      // cf-9lp.1/.2; uses the project-wide `internal_error` convention.
       logError('getActiveChallengeOfWeek — failed', err);
       return { error: 'internal_error' };
     }
