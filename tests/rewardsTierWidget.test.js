@@ -249,6 +249,21 @@ describe('error handling', () => {
     await expect(initRewardsTierWidget(MEMBER_ID, opts)).resolves.not.toThrow();
   });
 
+  // cf-2qe: previously `catch { data = null; }` collapsed the reject into the
+  // same path as a legitimate error-shape response — error UI surfaced but no
+  // client-side log captured the underlying throw. Restore observability.
+  it('logs to console.error when getMemberTier rejects (cf-2qe observability)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const $w = make$w();
+      const opts = { $w, getMemberTier: vi.fn().mockRejectedValue(new Error('fail')) };
+      await initRewardsTierWidget(MEMBER_ID, opts);
+      expect(errorSpy).toHaveBeenCalled();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   // cf-afx — don't render a fake "Trail Blazer" badge to unauthenticated viewers.
   // The cf-1y7 guard on getMemberTier surfaces `error: 'auth_required'` alongside
   // the computeTierInfo(0) baseline; pre-cf-afx the widget treated that like real

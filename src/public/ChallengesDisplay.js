@@ -164,7 +164,11 @@ export async function initChallengesDisplay(memberId, getActiveChallengesFn, $ch
   let response;
   try {
     response = await getActiveChallengesFn(memberId);
-  } catch {
+  } catch (err) {
+    // cf-2qe: log before hiding so a network/CORS/timeout failure leaves a
+    // client-side trail. UI path unchanged — silent-failure-hunter flagged the
+    // missing observability on PR #1104.
+    console.error('[ChallengesDisplay] getActiveChallengesFn threw:', err);
     showError();
     return;
   }
