@@ -199,3 +199,40 @@ describe('error handling', () => {
     await expect(initStreakTrackerWidget(MEMBER_ID, opts)).resolves.not.toThrow();
   });
 });
+
+// cf-afx — don't render a fake "0 day streak" to unauthenticated viewers.
+// The cf-1y7 guard on getStreakData surfaces `error: 'auth_required'` alongside
+// a zero-streak baseline; pre-cf-afx the widget treated that like real data and
+// rendered the misleading number.
+describe('cf-afx auth_required branch', () => {
+  it('shows #noStreakMsg when data carries error: auth_required', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#noStreakMsg'].show).toHaveBeenCalled();
+  });
+
+  it('hides streak elements when data carries error: auth_required', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#streakCount'].hide).toHaveBeenCalled();
+    expect($w._els['#longestStreak'].hide).toHaveBeenCalled();
+    expect($w._els['#streakFlameIcon'].hide).toHaveBeenCalled();
+    expect($w._els['#streakMultiplierLabel'].hide).toHaveBeenCalled();
+  });
+
+  it('does not set #streakCount text to "0 day streak" when error: auth_required', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#streakCount'].text).toBe('');
+  });
+
+  it('renders normally when error field is absent', async () => {
+    const $w = make$w();
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, makeStreakData({ currentStreak: 0 })));
+    expect($w._els['#streakCount'].text).toBe('0 day streak');
+    expect($w._els['#noStreakMsg'].show).not.toHaveBeenCalled();
+  });
+});

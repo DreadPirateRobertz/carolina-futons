@@ -33,7 +33,11 @@ export async function initStreakTrackerWidget(memberId, opts = {}) {
     data = null;
   }
 
-  if (!data) {
+  // cf-afx: treat the cf-1y7 auth_required baseline as "no streak data" so
+  // we don't render a fake "0 day streak" to an unauthenticated viewer. The
+  // handler still returns a zero-streak object for consumer compat, but the
+  // `error` field signals the viewer isn't actually tracking anything yet.
+  if (!data || data.error === 'auth_required') {
     try { $w('#noStreakMsg').show(); } catch {}
     try { $w('#streakCount').hide(); } catch {}
     try { $w('#longestStreak').hide(); } catch {}
