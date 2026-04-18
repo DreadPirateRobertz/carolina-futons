@@ -254,6 +254,7 @@ async function initChallengesSection() {
     getActiveChallenges,
     $w('#challengesSection'),
     $w('#challengesList'),
+    $w('#challengesError'),  // cf-9lp.2: optional error element; missing ref tolerated
   );
 }
 
@@ -563,7 +564,8 @@ async function initChallengesDisplaySection() {
     currentMember._id,
     getActiveChallenges,
     $w('#challengesSection'),
-    $w('#challengesList')
+    $w('#challengesList'),
+    $w('#challengesError'),  // cf-9lp.2: optional error element; missing ref tolerated
   );
 }
 
