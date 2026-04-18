@@ -38,12 +38,14 @@ export async function initRewardsTierWidget(memberId, opts = {}) {
     data = null;
   }
 
-  // cf-afx: treat the cf-1y7 auth_required baseline as "no tier data" so we
+  // cf-afx/cf-8qc: treat any cf-1y7 error baseline as "no tier data" so we
   // don't render a fake Trail Blazer badge + progress-to-Mountain-Guide copy
-  // to an unauthenticated viewer. The handler still returns computeTierInfo(0)
-  // for consumer compat, but the `error` field signals the viewer isn't in
-  // the loyalty program yet.
-  if (!data || data.error === 'auth_required') {
+  // to viewers who couldn't be served real data. The handler always returns
+  // computeTierInfo(0) for consumer compat (avoids NPE on data.currentTier
+  // reads), so the `error` field is the only honest signal that the values
+  // are placeholder. Truthy-check (not ===) so future codes (forbidden,
+  // rate_limited, ...) don't re-open the silent class.
+  if (!data || data.error) {
     try { $w('#tierError').show(); } catch {}
     try { $w('#tierBadge').hide(); } catch {}
     try { $w('#tierName').hide(); } catch {}

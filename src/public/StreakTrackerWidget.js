@@ -33,11 +33,13 @@ export async function initStreakTrackerWidget(memberId, opts = {}) {
     data = null;
   }
 
-  // cf-afx: treat the cf-1y7 auth_required baseline as "no streak data" so
-  // we don't render a fake "0 day streak" to an unauthenticated viewer. The
-  // handler still returns a zero-streak object for consumer compat, but the
-  // `error` field signals the viewer isn't actually tracking anything yet.
-  if (!data || data.error === 'auth_required') {
+  // cf-afx/cf-8qc: treat any cf-1y7 error baseline as "no streak data" so we
+  // don't render a fake "0 day streak" to viewers who couldn't be served real
+  // data. The handler always returns a zero-streak object for consumer compat
+  // (avoids NPE on data.currentStreak reads), so the `error` field is the only
+  // honest signal that the numbers are placeholder. Truthy-check (not ===) so
+  // future codes (forbidden, rate_limited, ...) don't re-open the silent class.
+  if (!data || data.error) {
     try { $w('#noStreakMsg').show(); } catch {}
     try { $w('#streakCount').hide(); } catch {}
     try { $w('#longestStreak').hide(); } catch {}

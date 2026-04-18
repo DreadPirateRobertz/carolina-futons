@@ -287,4 +287,33 @@ describe('error handling', () => {
       expect($w._els['#tierError'].show).not.toHaveBeenCalled();
     });
   });
+
+  // cf-8qc — widen guard to any truthy data.error. Narrow equality check
+  // would silently let fake "Trail Blazer" UI through if cf-1y7 ever surfaces
+  // 'forbidden', 'rate_limited', or other error codes.
+  describe('cf-8qc truthy-error branch', () => {
+    it('shows #tierError when data.error is "forbidden"', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ pointsInTier: 0, pointsToNextTier: 500 }), error: 'forbidden' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierError'].show).toHaveBeenCalled();
+      expect($w._els['#tierName'].text).toBe('');
+    });
+
+    it('shows #tierError when data.error is "rate_limited"', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ pointsInTier: 0, pointsToNextTier: 500 }), error: 'rate_limited' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierError'].show).toHaveBeenCalled();
+      expect($w._els['#tierName'].text).toBe('');
+    });
+
+    it('shows #tierError when data.error is any arbitrary string', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ tierName: 'Trail Blazer' }), error: 'some-future-code' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierError'].show).toHaveBeenCalled();
+      expect($w._els['#tierName'].text).toBe('');
+    });
+  });
 });

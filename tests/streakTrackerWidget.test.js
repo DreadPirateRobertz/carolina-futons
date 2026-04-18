@@ -204,6 +204,10 @@ describe('error handling', () => {
 // The cf-1y7 guard on getStreakData surfaces `error: 'auth_required'` alongside
 // a zero-streak baseline; pre-cf-afx the widget treated that like real data and
 // rendered the misleading number.
+//
+// cf-8qc widens the guard from `=== 'auth_required'` to any truthy `data.error`,
+// so future cf-1y7 extensions (forbidden, rate_limited, ...) don't re-introduce
+// the silent-failure class.
 describe('cf-afx auth_required branch', () => {
   it('shows #noStreakMsg when data carries error: auth_required', async () => {
     const $w = make$w();
@@ -234,5 +238,34 @@ describe('cf-afx auth_required branch', () => {
     await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, makeStreakData({ currentStreak: 0 })));
     expect($w._els['#streakCount'].text).toBe('0 day streak');
     expect($w._els['#noStreakMsg'].show).not.toHaveBeenCalled();
+  });
+});
+
+// cf-8qc — widen guard to any truthy data.error (not just auth_required).
+// Future cf-1y7 extensions may surface 'forbidden', 'rate_limited', etc.;
+// narrow equality check would silently let fake data through.
+describe('cf-8qc truthy-error branch', () => {
+  it('shows #noStreakMsg when data.error is "forbidden"', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'forbidden' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#noStreakMsg'].show).toHaveBeenCalled();
+    expect($w._els['#streakCount'].text).toBe('');
+  });
+
+  it('shows #noStreakMsg when data.error is "rate_limited"', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'rate_limited' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#noStreakMsg'].show).toHaveBeenCalled();
+    expect($w._els['#streakCount'].text).toBe('');
+  });
+
+  it('shows #noStreakMsg when data.error is any arbitrary string', async () => {
+    const $w = make$w();
+    const data = { currentStreak: 5, longestStreak: 10, lastActivityDate: null, error: 'some-future-code' };
+    await initStreakTrackerWidget(MEMBER_ID, makeOpts($w, data));
+    expect($w._els['#noStreakMsg'].show).toHaveBeenCalled();
+    expect($w._els['#streakCount'].text).toBe('');
   });
 });
