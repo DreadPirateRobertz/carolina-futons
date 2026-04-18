@@ -3,7 +3,7 @@
  * @description TDD tests for CF-fh5: challenge discovery chip on product/catalog pages.
  * Covers initChallengeDiscoveryChip — show, hide, context filtering.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { initChallengeDiscoveryChip } from '../src/public/challengeDiscovery.js';
 
 /** Build a minimal Wix element stub. */
@@ -210,7 +210,13 @@ describe('initChallengeDiscoveryChip — cf-9lp.4 error discrimination', () => {
     elements = makeElements();
     mockGetActiveChallenges = vi.fn();
     errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    errorSpy.mockClear();
+  });
+
+  // vi.spyOn on an already-spied property returns the same spy — mockImplementation
+  // does NOT reset call history. Restore between tests so each beforeEach gets a
+  // truly fresh spy, not one carrying forward prior tests' console.error calls.
+  afterEach(() => {
+    errorSpy.mockRestore();
   });
 
   it('hides chip AND logs when result.error is "internal_error" (even with empty challenges)', async () => {
