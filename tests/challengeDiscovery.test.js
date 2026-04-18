@@ -194,3 +194,58 @@ describe('initChallengeDiscoveryChip', () => {
     expect(elements.$chipTitle.text).toBe('Second chance');
   });
 });
+
+// cf-9lp.4: chip previously treated `{ challenges: [], error: 'internal_error' }`
+// (cf-tlt shape) identically to a clean empty result — users' chip silently
+// hid on DB failure, indistinguishable from "no matching challenge". Cascade
+// continuation of cf-tlt (PR #1099), cf-9lp.1 (PR #1102), cf-9lp.2 (PR #1104),
+// cf-9lp.3 (PR #1105). UX note: chip stays hidden on error (ambient UI, no
+// intrusive error state), but observability improves — discriminate + log.
+describe('initChallengeDiscoveryChip — cf-9lp.4 error discrimination', () => {
+  let elements;
+  let mockGetActiveChallenges;
+  let errorSpy;
+
+  beforeEach(() => {
+    elements = makeElements();
+    mockGetActiveChallenges = vi.fn();
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    errorSpy.mockClear();
+  });
+
+  it('hides chip AND logs when result.error is "internal_error" (even with empty challenges)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [], error: 'internal_error' });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('hides chip AND logs when result.error is truthy even with matching challenges (no partial render)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [ADD_TO_CART_CHALLENGE], error: 'internal_error' });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(elements.$chip.show).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('routes any truthy error code to the same hide+log path (future-proof)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [], error: 'some-future-code' });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('does NOT log when result is a normal empty-but-authed response (no error field)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('does NOT log on normal happy-path render', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [ADD_TO_CART_CHALLENGE] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.show).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
