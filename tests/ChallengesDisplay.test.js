@@ -325,6 +325,37 @@ describe('initChallengesDisplay — cf-9lp.2 error surfacing', () => {
     expect($section.hide).toHaveBeenCalled();
   });
 
+  // cf-2qe: the reject branch previously showed the error UI but left no
+  // client-side observability signal — a network/CORS/timeout failure became
+  // indistinguishable from a backend-flagged error once the UI was rendered.
+  it('logs to console.error when fn rejects (cf-2qe observability)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const $section = makeContainer();
+      const $list = makeRepeater();
+      const $error = makeContainer();
+      const fn = vi.fn().mockRejectedValue(new Error('network failure'));
+      await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+      expect(errorSpy).toHaveBeenCalled();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('does NOT log to console.error on normal happy-path (cf-2qe non-regression)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const $section = makeContainer();
+      const $list = makeRepeater();
+      const $error = makeContainer();
+      const fn = vi.fn().mockResolvedValue({ challenges: [] });
+      await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+      expect(errorSpy).not.toHaveBeenCalled();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   it('tolerates missing $challengesError (pre-editor-update safety)', async () => {
     const $section = makeContainer();
     const $list = makeRepeater();

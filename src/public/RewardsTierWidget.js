@@ -34,7 +34,11 @@ export async function initRewardsTierWidget(memberId, opts = {}) {
   let data;
   try {
     data = await getMemberTier(memberId);
-  } catch {
+  } catch (err) {
+    // cf-2qe: log before collapsing to the null-branch (which renders the
+    // error UI via !data). Without this, a network/CORS/timeout reject became
+    // indistinguishable from a legitimate cf-1y7 error-shape response.
+    console.error('[RewardsTierWidget] getMemberTier threw:', err);
     data = null;
   }
 
