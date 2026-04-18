@@ -41,8 +41,8 @@ export async function initRewardsTierWidget(memberId, opts = {}) {
   // cf-afx/cf-8qc: treat any cf-1y7 error baseline as "no tier data" so we
   // don't render a fake Trail Blazer badge + progress-to-Mountain-Guide copy
   // to viewers who couldn't be served real data. The handler always returns
-  // computeTierInfo(0) for consumer compat (avoids NPE on data.currentTier
-  // reads), so the `error` field is the only honest signal that the values
+  // computeTierInfo(0) to keep the response shape stable for non-gating
+  // consumers, so the `error` field is the only honest signal that the values
   // are placeholder. Truthy-check (not ===) so future codes (forbidden,
   // rate_limited, ...) don't re-open the silent class.
   if (!data || data.error) {
