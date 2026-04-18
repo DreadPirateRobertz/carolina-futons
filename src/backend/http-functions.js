@@ -1924,6 +1924,20 @@ export async function get_activeChallenges(request) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
     }
 
+    // cf-9lp.1: surface cf-tlt's `internal_error` shape as 503 so generic REST
+    // consumers and monitoring probes stop treating a DB failure as success.
+    // Behavior change for existing consumers:
+    //   • Mobile app (cfutons_mobile wixClient.rawRequest) throws on non-2xx
+    //     and has isRetryableError→true for 5xx, so a transient DB blip now
+    //     triggers a retry instead of surfacing a silent empty list. This is
+    //     the desired UX — previously the user saw "no challenges" on failure.
+    //   • Generic REST / monitoring probes now see 503 and alert correctly.
+    // Body is still emitted ({ challenges: [], error: 'internal_error' }) for
+    // diagnostics, but callers that branch on status are the primary audience.
+    if (result.error === 'internal_error') {
+      return response({ status: 503, body: json(result), headers: jsonHeaders });
+    }
+
     return ok({ body: json(result), headers: jsonHeaders });
   } catch (err) {
     console.error(`HTTP function error (activeChallenges): memberId=${memberId || 'unknown'}:`, err);
