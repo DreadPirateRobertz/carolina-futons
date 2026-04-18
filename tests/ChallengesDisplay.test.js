@@ -5,6 +5,7 @@ import {
   showCompletionToast,
   updateChallengeProgress,
   formatCountdown,
+  initChallengesDisplay,
 } from '../src/public/ChallengesDisplay.js';
 
 // ── Mock Wix $w element helpers ───────────────────────────────────────────────
@@ -272,5 +273,98 @@ describe('renderChallengeCard — countdown integration', () => {
     const card = makeCard();
     renderChallengeCard(card, makeChallenge({ expiresAt: expires }), now);
     expect(card.$expiresLabel.text).toBe('');
+  });
+});
+
+// cf-9lp.2: initChallengesDisplay must surface response.error and the catch-path
+// instead of silently hiding the section. Previously a DB failure (cf-tlt
+// `internal_error` shape) was indistinguishable from "no active challenges" —
+// user saw an empty section either way and we lost the signal at the user-facing
+// layer. Now: on error, show the error element (optional 5th param, tolerates
+// missing element) and hide the section. Empty path is preserved silently.
+describe('initChallengesDisplay — cf-9lp.2 error surfacing', () => {
+  function makeContainer() {
+    return { show: vi.fn(), hide: vi.fn() };
+  }
+  function makeRepeater() {
+    return {
+      _data: null, _onItemReady: null, show: vi.fn(), hide: vi.fn(),
+      set data(v) { this._data = v; }, get data() { return this._data; },
+      onItemReady(cb) { this._onItemReady = cb; },
+    };
+  }
+
+  it('shows $challengesError and hides section when response.error is "internal_error"', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue({ challenges: [], error: 'internal_error' });
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.show).toHaveBeenCalled();
+    expect($section.hide).toHaveBeenCalled();
+    expect($list._data).toBeNull();
+  });
+
+  it('shows $challengesError for any truthy error (future-proof)', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue({ challenges: [], error: 'some-future-code' });
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.show).toHaveBeenCalled();
+    expect($section.hide).toHaveBeenCalled();
+  });
+
+  it('shows $challengesError and hides section when fn rejects', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockRejectedValue(new Error('network failure'));
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.show).toHaveBeenCalled();
+    expect($section.hide).toHaveBeenCalled();
+  });
+
+  it('tolerates missing $challengesError (pre-editor-update safety)', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const fn = vi.fn().mockResolvedValue({ challenges: [], error: 'internal_error' });
+    // 5th arg omitted — must not throw.
+    await expect(initChallengesDisplay('mem-1', fn, $section, $list)).resolves.not.toThrow();
+    expect($section.hide).toHaveBeenCalled();
+  });
+
+  it('shows $challengesError when fn resolves to null (defensive null-guard)', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue(null);
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.show).toHaveBeenCalled();
+    expect($section.hide).toHaveBeenCalled();
+  });
+
+  it('hides $challengesError on normal render with challenges', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue({
+      challenges: [{ challengeId: 'ch-1', title: 't', description: 'd', targetCount: 1, rewardPoints: 10, expiresAt: '2099-01-01T00:00:00Z', progressValue: 0, completedAt: null }],
+    });
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.hide).toHaveBeenCalled();
+    expect($error.show).not.toHaveBeenCalled();
+    expect($section.show).toHaveBeenCalled();
+    expect($list._data).toHaveLength(1);
+  });
+
+  it('hides section silently on empty-but-authed (no error field)', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue({ challenges: [] });
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($section.hide).toHaveBeenCalled();
+    expect($error.show).not.toHaveBeenCalled();
   });
 });

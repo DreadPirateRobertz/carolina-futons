@@ -135,29 +135,55 @@ export function updateChallengeProgress(challengeId, progressValue, targetCount,
 
 /**
  * Initializes the challenges display section on page load.
- * Calls getActiveChallenges, hides section if empty, renders rail if challenges returned.
- * Wired in Member Page.js — not called directly from this module.
+ * Calls getActiveChallenges, then either: renders the rail (challenges returned),
+ * hides the section silently (empty-but-authed), or surfaces $challengesError
+ * (response.error truthy OR fn reject). Wired in Member Page.js.
+ *
+ * cf-9lp.2: a failure now surfaces a distinct error element instead of silently
+ * hiding the section (which used to be indistinguishable from "no challenges").
+ * The `$challengesError` element is optional — if it doesn't yet exist in the
+ * Wix editor, the try/catch around .show() swallows the ref error and behavior
+ * degrades gracefully to the pre-cf-9lp.2 silent-hide. Truthy-check on
+ * response.error (cf-8qc pattern) so future codes surface automatically.
  *
  * @param {string}   memberId
  * @param {Function} getActiveChallengesFn  - webMethod reference (injected for testability)
  * @param {Object}   $challengesSection     - Outer container Box
  * @param {Object}   $challengesList        - Repeater element
+ * @param {Object}   [$challengesError]     - Optional error-state container Box
  * @returns {Promise<void>}
  */
-export async function initChallengesDisplay(memberId, getActiveChallengesFn, $challengesSection, $challengesList) {
-  try {
-    const response = await getActiveChallengesFn(memberId);
-    const challenges = response.challenges || [];
-
-    if (challenges.length === 0) {
-      $challengesSection.hide();
-      return;
+export async function initChallengesDisplay(memberId, getActiveChallengesFn, $challengesSection, $challengesList, $challengesError) {
+  const showError = () => {
+    if ($challengesError) {
+      try { $challengesError.show(); } catch {}
     }
+    try { $challengesSection.hide(); } catch {}
+  };
 
-    $challengesSection.show();
-    renderChallengesRail($challengesList, challenges);
-  } catch (err) {
-    // Non-critical — hide section on error
-    $challengesSection.hide();
+  let response;
+  try {
+    response = await getActiveChallengesFn(memberId);
+  } catch {
+    showError();
+    return;
   }
+
+  if (!response || response.error) {
+    showError();
+    return;
+  }
+
+  if ($challengesError) {
+    try { $challengesError.hide(); } catch {}
+  }
+
+  const challenges = response.challenges || [];
+  if (challenges.length === 0) {
+    $challengesSection.hide();
+    return;
+  }
+
+  $challengesSection.show();
+  renderChallengesRail($challengesList, challenges);
 }
