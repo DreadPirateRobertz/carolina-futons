@@ -34,7 +34,7 @@ async function _postRevalidateWebhook(body) {
     ]);
     if (!url || !secret) return;
 
-    const payload = JSON.stringify(body);
+    const payload = JSON.stringify({ ...body, ts: Date.now() });
     const { createHmac } = await import('node:crypto');
     const sig = 'sha256=' + createHmac('sha256', secret).update(payload).digest('hex');
 
