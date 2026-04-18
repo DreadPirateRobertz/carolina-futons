@@ -61,6 +61,18 @@ export async function initChallengeDiscoveryChip(elements, memberId, getActiveCh
 
   try {
     const result = await getActiveChallengesFn(memberId);
+
+    // cf-9lp.4: discriminate backend errors from a clean empty result. The
+    // cf-tlt shape `{ challenges: [], error: 'internal_error' }` (or any
+    // truthy error code) previously slipped through as an empty list, so a DB
+    // failure hid silently — indistinguishable from "no matching challenge".
+    // UX stays ambient (chip hides either way), but we log so ops can see it.
+    if (result?.error) {
+      console.error('[challengeDiscovery] backend returned error:', result.error);
+      _hideChip($chip);
+      return;
+    }
+
     const challenges = result?.challenges ?? [];
 
     const match = challenges.find(c =>
