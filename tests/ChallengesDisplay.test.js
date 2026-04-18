@@ -334,6 +334,16 @@ describe('initChallengesDisplay — cf-9lp.2 error surfacing', () => {
     expect($section.hide).toHaveBeenCalled();
   });
 
+  it('shows $challengesError when fn resolves to null (defensive null-guard)', async () => {
+    const $section = makeContainer();
+    const $list = makeRepeater();
+    const $error = makeContainer();
+    const fn = vi.fn().mockResolvedValue(null);
+    await initChallengesDisplay('mem-1', fn, $section, $list, $error);
+    expect($error.show).toHaveBeenCalled();
+    expect($section.hide).toHaveBeenCalled();
+  });
+
   it('hides $challengesError on normal render with challenges', async () => {
     const $section = makeContainer();
     const $list = makeRepeater();
@@ -343,6 +353,7 @@ describe('initChallengesDisplay — cf-9lp.2 error surfacing', () => {
     });
     await initChallengesDisplay('mem-1', fn, $section, $list, $error);
     expect($error.hide).toHaveBeenCalled();
+    expect($error.show).not.toHaveBeenCalled();
     expect($section.show).toHaveBeenCalled();
     expect($list._data).toHaveLength(1);
   });

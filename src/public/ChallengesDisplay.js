@@ -135,8 +135,9 @@ export function updateChallengeProgress(challengeId, progressValue, targetCount,
 
 /**
  * Initializes the challenges display section on page load.
- * Calls getActiveChallenges, hides section if empty, renders rail if challenges returned.
- * Wired in Member Page.js — not called directly from this module.
+ * Calls getActiveChallenges, then either: renders the rail (challenges returned),
+ * hides the section silently (empty-but-authed), or surfaces $challengesError
+ * (response.error truthy OR fn reject). Wired in Member Page.js.
  *
  * cf-9lp.2: a failure now surfaces a distinct error element instead of silently
  * hiding the section (which used to be indistinguishable from "no challenges").
