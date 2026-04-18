@@ -62,6 +62,22 @@ describe('_postRevalidateWebhook (via wixStores_onProductUpdated)', () => {
     expect(opts.headers['x-wix-signature']).toBe(expectedSig(body));
   });
 
+  it('fires revalidate even when price has NOT dropped (regression pin)', async () => {
+    // Pins that _postRevalidateWebhook is called unconditionally on every update,
+    // not only when price decreases. A future refactor sliding the webhook call
+    // back inside a price-drop guard would break ISR for name/image/stock changes.
+    const { wixStores_onProductUpdated } = await import('../src/backend/events.js');
+    await wixStores_onProductUpdated({
+      entity: { _id: 'prod-no-drop', price: { amount: 100 } },
+      previousEntity: { _id: 'prod-no-drop', price: { amount: 100 } },
+    });
+
+    expect(mockFetch).toHaveBeenCalledOnce();
+    const parsed = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(parsed.eventType).toBe('onProductUpdated');
+    expect(parsed.itemId).toBe('prod-no-drop');
+  });
+
   it('POSTs on product created', async () => {
     const { wixStores_onProductCreated } = await import('../src/backend/events.js');
     await wixStores_onProductCreated({ entity: { _id: 'prod-2', name: 'Futon' } });
