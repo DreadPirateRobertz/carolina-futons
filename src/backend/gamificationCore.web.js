@@ -1258,6 +1258,10 @@ export const getActivityFeed = webMethod(
  * The CMS editor marks a challenge as featured by setting `isFeatured: true`
  * on the Challenges collection item.
  *
+ * progressStatus lets callers distinguish between "real 0 from a member",
+ * "default 0 because the caller is a visitor", and "default 0 because the
+ * progress query failed" — all three used to be indistinguishable.
+ *
  * @returns {Promise<{
  *   challengeId: string,
  *   title: string,
@@ -1267,6 +1271,7 @@ export const getActivityFeed = webMethod(
  *   rewardPoints: number,
  *   progressValue: number,
  *   completedAt: string|null,
+ *   progressStatus: 'member'|'visitor'|'unavailable',
  *   expiresAt: string,
  *   ctaUrl: string|null,
  * } | null>}
@@ -1296,10 +1301,15 @@ export const getActiveChallengeOfWeek = webMethod(
         const { currentMember: cm } = await import('wix-members-backend');
         const member = await cm.getMember();
         memberId = member?._id ?? null;
-      } catch { /* visitor or unauthenticated — progress stays 0 */ }
+      } catch (err) {
+        // Expected when the caller is an unauthenticated visitor. Keep the
+        // structured entry for aggregation but skip console noise.
+        logError('getActiveChallengeOfWeek — member lookup unavailable', err, { silent: true });
+      }
 
       let progressValue = 0;
       let completedAt = null;
+      let progressStatus = memberId ? 'member' : 'visitor';
 
       if (memberId) {
         try {
@@ -1314,7 +1324,10 @@ export const getActiveChallengeOfWeek = webMethod(
             progressValue = rec.progressValue ?? 0;
             completedAt = rec.completedAt ?? null;
           }
-        } catch { /* progress unavailable — return 0 */ }
+        } catch (err) {
+          logError(`getActiveChallengeOfWeek — progress lookup failed for ${memberId}`, err, { silent: true });
+          progressStatus = 'unavailable';
+        }
       }
 
       return {
@@ -1326,6 +1339,7 @@ export const getActiveChallengeOfWeek = webMethod(
         rewardPoints: challenge.rewardPoints ?? 0,
         progressValue,
         completedAt,
+        progressStatus,
         expiresAt: challenge.expiresAt instanceof Date
           ? challenge.expiresAt.toISOString()
           : challenge.expiresAt,
