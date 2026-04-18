@@ -7,6 +7,7 @@ import { __setMember, __reset as resetMembers, currentMember as membersMock } fr
 import { _resetActiveChallengesRateLimit, _resetRecordChallengeProgressRateLimit } from '../src/backend/gamificationEventReceiver.web.js';
 import {
   get_health,
+  options_health,
   get_productSitemap,
   get_blogSitemap,
   get_facebookCatalogFeed,
@@ -102,6 +103,35 @@ describe('get_health', () => {
   it('returns JSON content type', () => {
     const result = get_health();
     expect(result.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('echoes CORS headers when called with an allowed Origin', () => {
+    const request = { headers: { origin: 'http://localhost:3000' } };
+    const result = get_health(request);
+    expect(result.headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+    expect(result.headers['Access-Control-Allow-Credentials']).toBe('true');
+    expect(result.headers.Vary).toBe('Origin');
+  });
+});
+
+// ── options_health ──────────────────────────────────────────────────
+
+describe('options_health', () => {
+  it('returns 204 + preflight headers for an allowed Origin', () => {
+    const request = { headers: { origin: 'http://localhost:3000' } };
+    const result = options_health(request);
+    expect(result.status).toBe(204);
+    expect(result.headers['Access-Control-Allow-Origin']).toBe('http://localhost:3000');
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/GET.*POST.*OPTIONS/);
+    expect(result.headers['Access-Control-Allow-Headers']).toMatch(/Content-Type/);
+    expect(result.headers['Access-Control-Max-Age']).toBe('86400');
+  });
+
+  it('returns 403 for a disallowed Origin', () => {
+    const request = { headers: { origin: 'https://evil.example.com' } };
+    const result = options_health(request);
+    expect(result.status).toBe(403);
+    expect(result.headers['Access-Control-Allow-Origin']).toBeUndefined();
   });
 });
 

@@ -1,3 +1,5 @@
+import { logError } from 'backend/utils/errorHandler';
+
 // CORS allowlist + helpers for Velo HTTP Functions (/_functions/*).
 //
 // The carolina-futons-web Next.js app (and its Vercel preview URLs) needs to
@@ -51,6 +53,19 @@ export function allowOrigin(request) {
   return null;
 }
 
+// Distinguishes a request with no Origin header (same-origin / server-to-server)
+// from one whose Origin was present but not allowlisted. Only the latter is
+// an observability signal — emit a log so rejected cross-origin traffic shows
+// up in the Velo console without polluting normal same-origin traffic.
+function _checkOrigin(request, scope) {
+  const raw = request?.headers?.origin || request?.headers?.Origin || null;
+  const allowed = allowOrigin(request);
+  if (!allowed && raw) {
+    logError(`cors.originRejected.${scope}`, `Origin not in allowlist: ${raw}`);
+  }
+  return allowed;
+}
+
 /**
  * Returns a headers object with CORS fields populated if the request's origin
  * is allowed. Merges with any extra headers (e.g., Content-Type).
@@ -65,7 +80,7 @@ export function allowOrigin(request) {
  * @returns {Record<string, string>}
  */
 export function corsHeaders(request, extraHeaders = {}) {
-  const origin = allowOrigin(request);
+  const origin = _checkOrigin(request, 'headers');
   if (!origin) return { ...extraHeaders };
   return {
     'Access-Control-Allow-Origin': origin,
@@ -84,7 +99,7 @@ export function corsHeaders(request, extraHeaders = {}) {
  * @returns {{ status: number, headers: Record<string, string> }}
  */
 export function corsPreflight(request) {
-  const origin = allowOrigin(request);
+  const origin = _checkOrigin(request, 'preflight');
   if (!origin) {
     return { status: 403, headers: { 'Content-Type': 'text/plain' }, body: 'Origin not allowed' };
   }
