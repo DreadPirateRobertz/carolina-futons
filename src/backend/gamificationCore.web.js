@@ -823,8 +823,12 @@ export const getActiveChallenges = webMethod(
 
       return { challenges };
     } catch (err) {
+      // cf-tlt: surface internal_error instead of bare { challenges: [] } so
+      // callers can distinguish a DB failure from a legitimate empty-but-authed
+      // result. Same cf-2ag pattern as the null-member branch above, and uses
+      // the project-wide `internal_error` convention (see line 969 below).
       logError(`getActiveChallenges — failed for member ${memberId}`, err);
-      return { challenges: [] };
+      return { challenges: [], error: 'internal_error' };
     }
   }
 );

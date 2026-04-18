@@ -355,6 +355,30 @@ describe('cf-1y7 null-member guard cascade', () => {
       expect(result.error).toBeUndefined();
       expect(Array.isArray(result.challenges)).toBe(true);
     });
+
+    // cf-tlt: catch-all must surface error:'internal_error' instead of bare
+    // { challenges: [] }, so callers can distinguish a DB failure from a
+    // legitimate empty-but-authed result (was the cf-1y7 silent-failure
+    // masquerade class). Uses the project-wide `internal_error` convention.
+    it('returns { challenges: [], error: "internal_error" } when the Challenges query throws', async () => {
+      const wixData = (await import('wix-data')).default;
+      const origQuery = wixData.query;
+      wixData.query = (col) => {
+        if (col === 'Challenges') {
+          return {
+            eq() { return this; },
+            find() { throw new Error('connection reset'); },
+          };
+        }
+        return origQuery(col);
+      };
+      try {
+        const result = await getActiveChallenges('mem-db-fail');
+        expect(result).toEqual({ challenges: [], error: 'internal_error' });
+      } finally {
+        wixData.query = origQuery;
+      }
+    });
   });
 
   describe('getActivityFeed (Array-return, warn-only observability)', () => {
