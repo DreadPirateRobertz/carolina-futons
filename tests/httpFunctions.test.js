@@ -1662,6 +1662,30 @@ describe('get_activeChallenges', () => {
     const result = await get_activeChallenges(makeActiveChallengesRequest('mem-rl'));
     expect(result.status).toBe(429);
   });
+
+  // cf-9lp.1: when the webMethod returns { challenges: [], error: 'internal_error' }
+  // (the cf-tlt DB-failure shape), the HTTP endpoint MUST return 503, not 200 OK.
+  // Prior behavior was 200 OK with the error body — generic REST consumers and
+  // monitoring probes saw "success" when the backend had failed.
+  describe('cf-9lp.1 503 on internal_error', () => {
+    it('returns 503 when the webMethod surfaces error: "internal_error"', async () => {
+      __setMember({ _id: 'mem-db-fail' });
+      __setQueryError('Challenges', new Error('connection reset'));
+      const result = await get_activeChallenges(makeActiveChallengesRequest('mem-db-fail'));
+      expect(result.status).toBe(503);
+      const body = JSON.parse(result.body);
+      expect(body.error).toBe('internal_error');
+    });
+
+    it('preserves 200 OK for empty-but-authed (no error field)', async () => {
+      __setMember({ _id: 'mem-empty' });
+      const result = await get_activeChallenges(makeActiveChallengesRequest('mem-empty'));
+      expect(result.status).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.error).toBeUndefined();
+      expect(body.challenges).toEqual([]);
+    });
+  });
 });
 
 // ── POST /_functions/challengeProgress ───────────────────────────────────────
