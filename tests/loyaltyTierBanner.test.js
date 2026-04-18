@@ -376,3 +376,74 @@ describe('initLoyaltyTierBanner — streak chip', () => {
     expect(mockShouldShowStreakChip).toHaveBeenCalledWith(0);
   });
 });
+
+// ── cf-4yp: cf-1y7 truthy-error baseline ─────────────────────────────────────
+// The getMemberTier handler returns computeTierInfo(0) + `error: 'auth_required'`
+// to keep the response shape stable for non-gating consumers. Pre-cf-4yp the
+// banner treated that payload as real data and rendered a fake Trail Blazer
+// badge + "500 XP to Mountain Guide" copy to viewers who couldn't be served
+// real data. Truthy-check (not ===) so future codes (forbidden, rate_limited,
+// ...) don't re-open the silent class. Mirrors cf-afx/cf-8qc widget pattern.
+describe('initLoyaltyTierBanner — cf-4yp truthy-error branch', () => {
+  it('keeps banner hidden when tier carries error: auth_required', async () => {
+    const { $w, elements } = makeElements();
+    await initLoyaltyTierBanner({
+      $w,
+      getCurrentMember: vi.fn().mockResolvedValue({ _id: 'mem-1' }),
+      getMemberTier:    vi.fn().mockResolvedValue({ ...makeTier(), error: 'auth_required' }),
+      getStreakData:     vi.fn().mockResolvedValue(makeStreak()),
+    });
+    expect(elements['#tierBannerSection'].show).not.toHaveBeenCalled();
+  });
+
+  it('keeps banner hidden when tier carries error: forbidden', async () => {
+    const { $w, elements } = makeElements();
+    await initLoyaltyTierBanner({
+      $w,
+      getCurrentMember: vi.fn().mockResolvedValue({ _id: 'mem-1' }),
+      getMemberTier:    vi.fn().mockResolvedValue({ ...makeTier(), error: 'forbidden' }),
+      getStreakData:     vi.fn().mockResolvedValue(makeStreak()),
+    });
+    expect(elements['#tierBannerSection'].show).not.toHaveBeenCalled();
+  });
+
+  it('keeps banner hidden when tier carries error: rate_limited', async () => {
+    const { $w, elements } = makeElements();
+    await initLoyaltyTierBanner({
+      $w,
+      getCurrentMember: vi.fn().mockResolvedValue({ _id: 'mem-1' }),
+      getMemberTier:    vi.fn().mockResolvedValue({ ...makeTier(), error: 'rate_limited' }),
+      getStreakData:     vi.fn().mockResolvedValue(makeStreak()),
+    });
+    expect(elements['#tierBannerSection'].show).not.toHaveBeenCalled();
+  });
+
+  it('keeps banner hidden when tier carries any arbitrary error string', async () => {
+    const { $w, elements } = makeElements();
+    await initLoyaltyTierBanner({
+      $w,
+      getCurrentMember: vi.fn().mockResolvedValue({ _id: 'mem-1' }),
+      getMemberTier:    vi.fn().mockResolvedValue({ ...makeTier(), error: 'some-future-code' }),
+      getStreakData:     vi.fn().mockResolvedValue(makeStreak()),
+    });
+    expect(elements['#tierBannerSection'].show).not.toHaveBeenCalled();
+  });
+
+  it('does not set tier name when tier carries truthy error', async () => {
+    const { $w, elements } = makeElements();
+    await initLoyaltyTierBanner({
+      $w,
+      getCurrentMember: vi.fn().mockResolvedValue({ _id: 'mem-1' }),
+      getMemberTier:    vi.fn().mockResolvedValue({ ...makeTier({ tierName: 'Trail Blazer' }), error: 'auth_required' }),
+      getStreakData:     vi.fn().mockResolvedValue(makeStreak()),
+    });
+    expect(elements['#tierName'].text).toBe('');
+  });
+
+  it('renders normally when tier.error field is absent', async () => {
+    const { opts, elements } = makeOpts({ tierName: 'Mountain Guide' });
+    await initLoyaltyTierBanner(opts);
+    expect(elements['#tierName'].text).toBe('Mountain Guide');
+    expect(elements['#tierBannerSection'].show).toHaveBeenCalled();
+  });
+});

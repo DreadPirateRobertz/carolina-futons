@@ -181,4 +181,75 @@ describe('initLoyaltyBadge', () => {
     });
     expect(getStreakData).toHaveBeenCalledWith('mem-xyz');
   });
+
+  // ── cf-4yp: cf-1y7 truthy-error baseline ──────────────────────────────────
+  // The getMemberTier handler returns computeTierInfo(0) + `error: 'auth_required'`
+  // to keep the response shape stable for non-gating consumers. Pre-cf-4yp the
+  // badge widget treated that payload as real data and rendered a fake Trail
+  // Blazer badge to viewers who couldn't be served real data. Truthy-check (not
+  // ===) so future codes (forbidden, rate_limited, ...) don't re-open the
+  // silent class. Mirrors cf-afx/cf-8qc pattern.
+  describe('cf-4yp truthy-error branch', () => {
+    it('keeps container hidden when tier carries error: auth_required', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => ({ ...makeTier(), error: 'auth_required' }),
+        getStreakData: async () => makeStreak(),
+      });
+      expect($w('#loyaltyBadgeContainer').show).not.toHaveBeenCalled();
+    });
+
+    it('keeps container hidden when tier carries error: forbidden', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => ({ ...makeTier(), error: 'forbidden' }),
+        getStreakData: async () => makeStreak(),
+      });
+      expect($w('#loyaltyBadgeContainer').show).not.toHaveBeenCalled();
+    });
+
+    it('keeps container hidden when tier carries error: rate_limited', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => ({ ...makeTier(), error: 'rate_limited' }),
+        getStreakData: async () => makeStreak(),
+      });
+      expect($w('#loyaltyBadgeContainer').show).not.toHaveBeenCalled();
+    });
+
+    it('keeps container hidden when tier carries any arbitrary error string', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => ({ ...makeTier(), error: 'some-future-code' }),
+        getStreakData: async () => makeStreak(),
+      });
+      expect($w('#loyaltyBadgeContainer').show).not.toHaveBeenCalled();
+    });
+
+    it('does not set tier badge text when tier carries truthy error', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => ({ ...makeTier({ tierName: 'Trail Blazer' }), error: 'auth_required' }),
+        getStreakData: async () => makeStreak(),
+      });
+      const el = $w('#loyaltyTierBadge');
+      expect(el.html).toBe('');
+      expect(el.text).toBe('');
+    });
+
+    it('renders normally when tier.error field is absent', async () => {
+      await initLoyaltyBadge({
+        $w,
+        getCurrentMember: async () => ({ _id: 'mem-1' }),
+        getMemberTier: async () => makeTier({ tierName: 'Mountain Guide' }),
+        getStreakData: async () => makeStreak({ currentStreak: 0 }),
+      });
+      expect($w('#loyaltyBadgeContainer').show).toHaveBeenCalled();
+    });
+  });
 });
