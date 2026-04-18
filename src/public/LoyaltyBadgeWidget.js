@@ -58,7 +58,12 @@ export async function initLoyaltyBadge(opts = {}) {
   const tier = tierResult.status === 'fulfilled' ? tierResult.value : null;
   const streak = streakResult.status === 'fulfilled' ? streakResult.value : null;
 
-  if (!tier) return; // tier fetch failed — keep container hidden
+  // cf-4yp: cf-1y7 returns a shape-stable computeTierInfo(0) baseline +
+  // `error: 'auth_required'` (or 'forbidden', 'rate_limited', ...) when it
+  // can't serve real data. Pre-cf-4yp we rendered the fake Trail Blazer
+  // badge to viewers who shouldn't see one. Truthy-check `tier.error` (not
+  // ===) so new codes don't re-open the silent class. Mirrors cf-afx/cf-8qc.
+  if (!tier || tier.error) return;
 
   // ── Tier badge ───────────────────────────────────────────────────────────────
   try {
