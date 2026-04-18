@@ -23,6 +23,34 @@
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 
+// ── CWF ISR Revalidate Helper ─────────────────────────────────────────
+
+async function _postRevalidateWebhook(body) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const [url, secret] = await Promise.all([
+      getSecret('VERCEL_REVALIDATE_URL'),
+      getSecret('WIX_WEBHOOK_SECRET'),
+    ]);
+    if (!url || !secret) return;
+
+    const payload = JSON.stringify(body);
+    const { createHmac } = await import('node:crypto');
+    const sig = 'sha256=' + createHmac('sha256', secret).update(payload).digest('hex');
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-wix-signature': sig },
+      body: payload,
+    });
+    if (!res.ok) {
+      console.warn('[events] revalidate webhook returned', res.status);
+    }
+  } catch (err) {
+    console.warn('[events] revalidate webhook failed (non-fatal):', err?.message ?? err);
+  }
+}
+
 // ── Dead-Letter Queue Helper ─────────────────────────────────────────
 
 /**
@@ -376,6 +404,8 @@ export async function wixStores_onProductCreated(event) {
     return;
   }
 
+  await _postRevalidateWebhook({ collectionId: 'products', itemId: productId, eventType: 'onProductCreated' });
+
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const eventSecret = await getSecret('CONTENT_EVENT_KEY');
@@ -415,7 +445,9 @@ export async function wixStores_onProductUpdated(event) {
   const newPrice = product.price?.amount ?? product.price ?? null;
   const oldPrice = previous.price?.amount ?? previous.price ?? null;
 
-  // Only trigger on actual price drops (not increases, not identical)
+  await _postRevalidateWebhook({ collectionId: 'products', itemId: productId, eventType: 'onProductUpdated' });
+
+  // Only trigger price-drop content orchestration on actual price drops
   if (oldPrice == null || newPrice == null || newPrice >= oldPrice) return;
 
   try {
@@ -563,4 +595,27 @@ export async function wixMembers_onMemberUpdated(event) {
       impact: `Birthday fields not synced for member ${memberId} — birthday cron may skip this member`,
     });
   }
+}
+
+// ── CWF ISR Revalidate Hooks ─────────────────────────────────────────
+
+export async function wixBlog_onPostPublished(event) {
+  const post = event.entity || event;
+  const postId = post._id || post.id || '';
+  await _postRevalidateWebhook({
+    collectionId: 'blog/Posts',
+    itemId: postId || undefined,
+    eventType: 'onPostPublished',
+  });
+}
+
+export async function wixData_onDataItemUpdated(event) {
+  const collectionId = event.collectionId || event.dataCollectionId || '';
+  const itemId = event.item?._id || event.itemId || '';
+  if (!collectionId) return;
+  await _postRevalidateWebhook({
+    collectionId,
+    itemId: itemId || undefined,
+    eventType: 'onDataItemUpdated',
+  });
 }
