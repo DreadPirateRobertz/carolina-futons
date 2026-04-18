@@ -30,16 +30,43 @@ describe('logError', () => {
     spy.mockRestore();
   });
 
-  it('suppresses console output when silent', () => {
+  it('suppresses console.error when silent', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     logError('myModule', new Error('test'), { silent: true });
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
+    warnSpy.mockRestore();
+  });
+
+  // cf-n54: silent mode downgrades to console.warn rather than full mute so
+  // Wix runtime logs still capture the trace (no more complete silent-failure).
+  it('downgrades to console.warn when silent (not full mute)', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    logError('myModule', new Error('test err'), { silent: true });
+    expect(warnSpy).toHaveBeenCalledWith('[myModule] (silent)', 'test err');
+    warnSpy.mockRestore();
+  });
+
+  it('marks silent entries with silent:true flag', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entry = logError('test', new Error('x'), { silent: true });
+    expect(entry.silent).toBe(true);
+    warnSpy.mockRestore();
+  });
+
+  it('does not mark non-silent entries with silent flag', () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const entry = logError('test', new Error('x'));
+    expect(entry.silent).toBeUndefined();
+    errSpy.mockRestore();
   });
 
   it('includes ISO timestamp', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const entry = logError('test', 'err', { silent: true });
     expect(entry.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    warnSpy.mockRestore();
   });
 });
 

@@ -10,8 +10,10 @@
  * @param {string} context - Where the error occurred (e.g., 'cartRecovery.recordAbandonedCart')
  * @param {Error|string} error - The error to log
  * @param {Object} [options]
- * @param {boolean} [options.silent=false] - If true, suppress console.error output
- * @returns {{ context: string, message: string, timestamp: string, stack?: string }}
+ * @param {boolean} [options.silent=false] - If true, downgrade to console.warn
+ *   (not full mute) so Wix runtime logs still capture the trace without
+ *   surfacing as a red error in dashboards.
+ * @returns {{ context: string, message: string, timestamp: string, stack?: string, silent?: boolean }}
  */
 export function logError(context, error, { silent = false } = {}) {
   const entry = {
@@ -19,8 +21,13 @@ export function logError(context, error, { silent = false } = {}) {
     message: error?.message || String(error),
     timestamp: new Date().toISOString(),
     stack: error?.stack || undefined,
+    ...(silent ? { silent: true } : {}),
   };
-  if (!silent) console.error(`[${context}]`, entry.message);
+  if (silent) {
+    console.warn(`[${context}] (silent)`, entry.message);
+  } else {
+    console.error(`[${context}]`, entry.message);
+  }
   return entry;
 }
 

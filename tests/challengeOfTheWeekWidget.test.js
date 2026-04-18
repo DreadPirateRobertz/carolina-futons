@@ -321,6 +321,57 @@ describe('ChallengeOfTheWeekWidget — featured challenge section (cf-rsr)', () 
     await init();
     expect(getEl('#cotwDesc').text).toBe('');
   });
+
+  // cf-n54: widget must branch on progressStatus so consumers can distinguish
+  // a real-0 from a backend that couldn't resolve progress for this member.
+  describe('cf-n54 progressStatus consumer', () => {
+    it('renders unavailable fallback + hides bar when progressStatus is "unavailable"', async () => {
+      getActiveChallengeOfWeek.mockResolvedValue({
+        ...FEATURED,
+        progressValue: 0,
+        progressStatus: 'unavailable',
+      });
+      await init();
+      expect(getEl('#cotwProgressText').text).toBe('Progress temporarily unavailable');
+      expect(getEl('#cotwProgressBar').hide).toHaveBeenCalled();
+    });
+
+    it('renders normal progress when progressStatus is "member"', async () => {
+      getActiveChallengeOfWeek.mockResolvedValue({
+        ...FEATURED,
+        progressValue: 3,
+        targetCount: 6,
+        progressStatus: 'member',
+      });
+      await init();
+      expect(getEl('#cotwProgressText').text).toBe('3 / 6');
+      expect(getEl('#cotwProgressBar').style.width).toBe('50%');
+      expect(getEl('#cotwProgressBar').show).toHaveBeenCalled();
+    });
+
+    it('renders normal progress when progressStatus is "visitor" (0/target)', async () => {
+      getActiveChallengeOfWeek.mockResolvedValue({
+        ...FEATURED,
+        progressValue: 0,
+        targetCount: 1,
+        progressStatus: 'visitor',
+      });
+      await init();
+      expect(getEl('#cotwProgressText').text).toBe('0 / 1');
+      expect(getEl('#cotwProgressBar').style.width).toBe('0%');
+    });
+
+    it('renders normal progress when progressStatus is absent (back-compat)', async () => {
+      getActiveChallengeOfWeek.mockResolvedValue({
+        ...FEATURED,
+        progressValue: 2,
+        targetCount: 4,
+      });
+      await init();
+      expect(getEl('#cotwProgressText').text).toBe('2 / 4');
+      expect(getEl('#cotwProgressBar').style.width).toBe('50%');
+    });
+  });
 });
 
 // ── getChallengeOfTheWeek homepage section (cf-1he) ─────────────────────────

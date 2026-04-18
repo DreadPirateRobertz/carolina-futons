@@ -248,10 +248,12 @@ export const receiveGamificationEvent = webMethod(
       // Cross-rig event bus — web→mobile dispatch (best-effort)
       const totalDelta = newTotal - oldTotal;
       if (totalDelta !== 0) {
-        try { await dispatchBusEvent({ event: 'points_earned', userId: memberId, delta: totalDelta, newTotal }); } catch (_) {}
+        try { await dispatchBusEvent({ event: 'points_earned', userId: memberId, delta: totalDelta, newTotal }); }
+        catch (err) { logError(`gamificationEventReceiver — bus dispatch (points_earned) failed for ${memberId}`, err, { silent: true }); }
       }
       if (tierChanged) {
-        try { await dispatchBusEvent({ event: 'tier_upgraded', userId: memberId, newTier, previousTier: oldTier }); } catch (_) {}
+        try { await dispatchBusEvent({ event: 'tier_upgraded', userId: memberId, newTier, previousTier: oldTier }); }
+        catch (err) { logError(`gamificationEventReceiver — bus dispatch (tier_upgraded) failed for ${memberId}`, err, { silent: true }); }
         // CF-c6el.2: Auto-deliver tier perks (coupon codes, emails, booking links)
         try {
           const { deliverTierPerks } = await import('backend/rewardEngine.web');
@@ -329,10 +331,12 @@ export const receiveGamificationEvent = webMethod(
 
       // CF-1faf: Cross-rig bus — badge + streak events (best-effort)
       if (badgeUnlocked) {
-        try { await dispatchBusEvent({ event: 'badge_earned', userId: memberId, badgeId: badgeUnlocked }); } catch (_) {}
+        try { await dispatchBusEvent({ event: 'badge_earned', userId: memberId, badgeId: badgeUnlocked }); }
+        catch (err) { logError(`gamificationEventReceiver — bus dispatch (badge_earned) failed for ${memberId}`, err, { silent: true }); }
       }
       if (streakState.currentStreakDays > prevStreakDays) {
-        try { await dispatchBusEvent({ event: 'streak_extended', userId: memberId, currentStreakDays: streakState.currentStreakDays }); } catch (_) {}
+        try { await dispatchBusEvent({ event: 'streak_extended', userId: memberId, currentStreakDays: streakState.currentStreakDays }); }
+        catch (err) { logError(`gamificationEventReceiver — bus dispatch (streak_extended) failed for ${memberId}`, err, { silent: true }); }
       }
 
       return {
@@ -952,7 +956,8 @@ export const recordChallengeProgress = webMethod(
       }
 
       if (completed) {
-        try { await dispatchBusEvent({ event: 'challenge_completed', userId: memberId, challengeId }); } catch (_) {}
+        try { await dispatchBusEvent({ event: 'challenge_completed', userId: memberId, challengeId }); }
+        catch (err) { logError(`recordChallengeProgress — bus dispatch (challenge_completed) failed for ${memberId}`, err, { silent: true }); }
       }
 
       return { success: true, newProgress, completed, pointsAwarded };
@@ -1297,19 +1302,23 @@ export const getActiveChallengeOfWeek = webMethod(
       const cId = challenge.challengeId || challenge._id;
 
       let memberId = null;
+      let memberLookupFailed = false;
       try {
         const { currentMember: cm } = await import('wix-members-backend');
         const member = await cm.getMember();
         memberId = member?._id ?? null;
       } catch (err) {
-        // Expected when the caller is an unauthenticated visitor. Keep the
-        // structured entry for aggregation but skip console noise.
-        logError('getActiveChallengeOfWeek — member lookup unavailable', err, { silent: true });
+        memberLookupFailed = true;
+        logError('getActiveChallengeOfWeek — member lookup threw', err, { silent: true });
       }
 
       let progressValue = 0;
       let completedAt = null;
-      let progressStatus = memberId ? 'member' : 'visitor';
+      let progressStatus = memberLookupFailed
+        ? 'unavailable'
+        : memberId
+          ? 'member'
+          : 'visitor';
 
       if (memberId) {
         try {

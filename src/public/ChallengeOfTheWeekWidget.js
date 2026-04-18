@@ -165,13 +165,21 @@ async function _renderFeaturedChallenge($w, getActiveChallengeOfWeek) {
   try { $w('#cotwTitle').text = challenge.title; } catch {}
   try { $w('#cotwDesc').text = challenge.description ?? ''; } catch {}
 
-  // Member progress bar
-  const progress = challenge.progressValue ?? 0;
-  const target = challenge.targetCount || 1; // guard division by zero
-  const pct = Math.min(Math.round((progress / target) * 100), 100);
+  // Member progress bar — suppress when backend could not resolve progress
+  // so callers don't misread a real-0 as a failed member-lookup.
+  if (challenge.progressStatus === 'unavailable') {
+    try { $w('#cotwProgressText').text = 'Progress temporarily unavailable'; } catch {}
+    try { $w('#cotwProgressBar').style.width = '0%'; } catch {}
+    try { $w('#cotwProgressBar').hide(); } catch {}
+  } else {
+    try { $w('#cotwProgressBar').show(); } catch {}
+    const progress = challenge.progressValue ?? 0;
+    const target = challenge.targetCount || 1; // guard division by zero
+    const pct = Math.min(Math.round((progress / target) * 100), 100);
 
-  try { $w('#cotwProgressText').text = `${progress.toLocaleString()} / ${target.toLocaleString()}`; } catch {}
-  try { $w('#cotwProgressBar').style.width = `${pct}%`; } catch {}
+    try { $w('#cotwProgressText').text = `${progress.toLocaleString()} / ${target.toLocaleString()}`; } catch {}
+    try { $w('#cotwProgressBar').style.width = `${pct}%`; } catch {}
+  }
 
   // Reward
   if (challenge.rewardPoints > 0) {
