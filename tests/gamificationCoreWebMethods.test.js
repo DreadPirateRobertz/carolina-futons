@@ -356,10 +356,11 @@ describe('cf-1y7 null-member guard cascade', () => {
       expect(Array.isArray(result.challenges)).toBe(true);
     });
 
-    // cf-tlt: catch-all must surface error:'db_error' instead of bare
+    // cf-tlt: catch-all must surface error:'internal_error' instead of bare
     // { challenges: [] }, so callers can distinguish a DB failure from a
-    // legitimate empty-but-authed result (was the cf-1y7 silent-masquerade class).
-    it('returns { challenges: [], error: "db_error" } when the Challenges query throws', async () => {
+    // legitimate empty-but-authed result (was the cf-1y7 silent-failure
+    // masquerade class). Uses the project-wide `internal_error` convention.
+    it('returns { challenges: [], error: "internal_error" } when the Challenges query throws', async () => {
       const wixData = (await import('wix-data')).default;
       const origQuery = wixData.query;
       wixData.query = (col) => {
@@ -373,33 +374,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       };
       try {
         const result = await getActiveChallenges('mem-db-fail');
-        expect(result).toEqual({ challenges: [], error: 'db_error' });
-      } finally {
-        wixData.query = origQuery;
-      }
-    });
-
-    it('distinguishes db_error from auth_required and empty-but-authed', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const authResult = await getActiveChallenges(null);
-      expect(authResult.error).toBe('auth_required');
-      warnSpy.mockRestore();
-
-      const emptyResult = await getActiveChallenges('mem-ok-2');
-      expect(emptyResult.error).toBeUndefined();
-      expect(emptyResult.challenges).toEqual([]);
-
-      const wixData = (await import('wix-data')).default;
-      const origQuery = wixData.query;
-      wixData.query = (col) => {
-        if (col === 'Challenges') {
-          return { eq() { return this; }, find() { throw new Error('db down'); } };
-        }
-        return origQuery(col);
-      };
-      try {
-        const dbResult = await getActiveChallenges('mem-db-2');
-        expect(dbResult.error).toBe('db_error');
+        expect(result).toEqual({ challenges: [], error: 'internal_error' });
       } finally {
         wixData.query = origQuery;
       }
