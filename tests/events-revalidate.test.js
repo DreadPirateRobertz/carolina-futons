@@ -56,6 +56,8 @@ describe('_postRevalidateWebhook (via wixStores_onProductUpdated)', () => {
     expect(parsed.collectionId).toBe('products');
     expect(parsed.itemId).toBe('prod-1');
     expect(parsed.eventType).toBe('onProductUpdated');
+    expect(typeof parsed.ts).toBe('number');
+    expect(parsed.ts).toBeCloseTo(Date.now(), -3); // within ~1s
 
     expect(opts.headers['x-wix-signature']).toBe(expectedSig(body));
   });
