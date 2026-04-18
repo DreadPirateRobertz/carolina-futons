@@ -153,6 +153,16 @@ async function _renderFeaturedChallenge($w, getActiveChallengeOfWeek) {
     return;
   }
 
+  // cf-9lp.3: backend now returns { error: 'internal_error' } on DB failure
+  // instead of null (null stays reserved for legitimate "no featured challenge
+  // this week"). Truthy-check on `error` (cf-8qc pattern) so future error codes
+  // route here automatically. Same UI path as a reject.
+  if (challenge && challenge.error) {
+    try { $w('#cotwError').show(); } catch {}
+    try { $w('#cotwContainer').collapse(); } catch {}
+    return;
+  }
+
   if (!challenge) {
     try { $w('#cotwContainer').collapse(); } catch {}
     return;

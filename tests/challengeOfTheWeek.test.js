@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ── In-memory collections ────────────────────────────────────────────
 
 let _collections = {};
+let _throwOnQuery = null;
 
 function seed(collection, items) {
   _collections[collection] = items.map((item, i) => ({ _id: `id-${i}`, ...item }));
@@ -48,7 +49,12 @@ function buildQueryChain(collection) {
 }
 
 vi.mock('wix-data', () => ({
-  default: { query: (col) => buildQueryChain(col) },
+  default: {
+    query: (col) => {
+      if (_throwOnQuery) throw _throwOnQuery;
+      return buildQueryChain(col);
+    },
+  },
 }));
 
 vi.mock('wix-web-module', () => ({
@@ -101,6 +107,7 @@ function featuredChallenge(overrides = {}) {
 beforeEach(() => {
   _collections = {};
   _mockMemberId = null;
+  _throwOnQuery = null;
   vi.clearAllMocks();
 });
 
@@ -198,5 +205,29 @@ describe('getActiveChallengeOfWeek (cf-rsr)', () => {
     const result = await getActiveChallengeOfWeek();
     expect(typeof result.expiresAt).toBe('string');
     expect(result.expiresAt).toBe(dateObj.toISOString());
+  });
+});
+
+// cf-9lp.3: outer catch must surface `internal_error` instead of bare null,
+// which was indistinguishable from the legitimate "no featured challenge this
+// week" case (the `result.items.length === 0` early-return). Cascade
+// continuation of cf-tlt (PR #1099) and the cf-9lp.1/.2 slices (PRs #1102 / #1104).
+describe('getActiveChallengeOfWeek — cf-9lp.3 error surfacing', () => {
+  it('returns { error: "internal_error" } when the outer query throws', async () => {
+    _throwOnQuery = new Error('simulated DB failure');
+    const result = await getActiveChallengeOfWeek();
+    expect(result).toEqual({ error: 'internal_error' });
+  });
+
+  it('distinguishes internal_error from legitimate null (no featured challenge)', async () => {
+    // Sanity: empty collection (no seed) still returns null, NOT the error shape.
+    const noChallenge = await getActiveChallengeOfWeek();
+    expect(noChallenge).toBeNull();
+
+    // Force a DB throw — result must diverge from the null case.
+    _throwOnQuery = new Error('db outage');
+    const errored = await getActiveChallengeOfWeek();
+    expect(errored).not.toBeNull();
+    expect(errored.error).toBe('internal_error');
   });
 });

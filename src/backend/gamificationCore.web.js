@@ -1271,6 +1271,12 @@ export const getActivityFeed = webMethod(
  * "default 0 because the caller is a visitor", and "default 0 because the
  * progress query failed" — all three used to be indistinguishable.
  *
+ * Return discriminant (cf-9lp.3):
+ *   • Challenge object → found a featured challenge, render it
+ *   • null → no featured challenge this week (legitimate)
+ *   • { error: 'internal_error' } → outer catch fired (DB/internal failure);
+ *     callers must check `result?.error` before treating as a challenge.
+ *
  * @returns {Promise<{
  *   challengeId: string,
  *   title: string,
@@ -1283,7 +1289,7 @@ export const getActivityFeed = webMethod(
  *   progressStatus: 'member'|'visitor'|'unavailable',
  *   expiresAt: string,
  *   ctaUrl: string|null,
- * } | null>}
+ * } | null | { error: 'internal_error' }>}
  */
 export const getActiveChallengeOfWeek = webMethod(
   Permissions.Anyone,
@@ -1359,8 +1365,13 @@ export const getActiveChallengeOfWeek = webMethod(
         ctaUrl: challenge.ctaUrl || null,
       };
     } catch (err) {
+      // cf-9lp.3: surface internal_error instead of bare null so callers can
+      // distinguish a DB/internal failure from the legitimate no-featured-
+      // challenge-this-week case (the `result.items.length === 0` branch
+      // above). Mirrors cf-tlt (getActiveChallenges) and the cascade in
+      // cf-9lp.1/.2; uses the project-wide `internal_error` convention.
       logError('getActiveChallengeOfWeek — failed', err);
-      return null;
+      return { error: 'internal_error' };
     }
   }
 );
