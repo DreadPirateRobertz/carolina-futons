@@ -62,13 +62,17 @@ export async function initChallengeDiscoveryChip(elements, memberId, getActiveCh
   try {
     const result = await getActiveChallengesFn(memberId);
 
-    // cf-9lp.4: discriminate backend errors from a clean empty result. The
-    // cf-tlt shape `{ challenges: [], error: 'internal_error' }` (or any
-    // truthy error code) previously slipped through as an empty list, so a DB
-    // failure hid silently — indistinguishable from "no matching challenge".
-    // UX stays ambient (chip hides either way), but we log so ops can see it.
-    if (result?.error) {
-      console.error('[challengeDiscovery] backend returned error:', result.error);
+    // cf-9lp.4 + cf-9lp.4.F1: discriminate backend errors from a clean empty
+    // result. The cf-tlt shape `{ challenges: [], error: 'internal_error' }`
+    // previously slipped through as an empty list — DB failure hid silently.
+    // cf-9lp.4.F1 broadens to 2 adjacent shapes silent-failure-hunter flagged
+    // as realistic near-term contract risk: `errors` (plural, non-empty array)
+    // and `ok: false`. Singular `error` still wins when multiple keys set.
+    // UX stays ambient (chip hides either way); log carries the shape key so
+    // contract drift is visible.
+    const errorShape = _errorShape(result);
+    if (errorShape) {
+      console.error('[challengeDiscovery] backend error shape=' + errorShape.kind + ':', errorShape.value);
       _hideChip($chip);
       return;
     }
@@ -90,6 +94,19 @@ export async function initChallengeDiscoveryChip(elements, memberId, getActiveCh
     console.error('[challengeDiscovery] initChallengeDiscoveryChip failed', err);
     _hideChip($chip);
   }
+}
+
+// cf-9lp.4.F1: discriminate any of 3 backend error shapes. Priority order:
+// singular `error` wins over plural `errors` wins over `ok: false`. `kind` is
+// logged so contract drift stays visible if the backend mixes shapes later.
+function _errorShape(result) {
+  if (!result) return null;
+  if (result.error) return { kind: 'error', value: result.error };
+  if (Array.isArray(result.errors) && result.errors.length > 0) {
+    return { kind: 'errors', value: result.errors };
+  }
+  if (result.ok === false) return { kind: 'ok_false', value: false };
+  return null;
 }
 
 function _hideChip($chip) {

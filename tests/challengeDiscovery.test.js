@@ -255,3 +255,67 @@ describe('initChallengeDiscoveryChip — cf-9lp.4 error discrimination', () => {
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });
+
+// cf-9lp.4.F1 (cf-yc1v): silent-failure-hunter (PR #1108 review) flagged that
+// `result?.error` singular misses 2 common alternative shapes seen in adjacent
+// code: `errors` plural (list of {code,message}) and `ok: false` (boolean flag).
+// Narrow broaden — not a full defensive widening. Matches only the shapes the
+// hunter named as realistic near-term contract risk. Log carries the shape key
+// so future contract drift stays visible.
+describe('initChallengeDiscoveryChip — cf-9lp.4.F1 broadened error shapes', () => {
+  let elements;
+  let mockGetActiveChallenges;
+  let errorSpy;
+
+  beforeEach(() => {
+    elements = makeElements();
+    mockGetActiveChallenges = vi.fn();
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
+  });
+
+  it('hides chip AND logs when result.errors (plural) is a non-empty array', async () => {
+    mockGetActiveChallenges.mockResolvedValue({
+      challenges: [],
+      errors: [{ code: 'internal_error', message: 'db down' }],
+    });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('hides chip AND logs when result.ok === false', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [], ok: false });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('does NOT trip on empty errors array (empty is not an error signal)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [], errors: [] });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('does NOT trip on ok: true (non-regression)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({ challenges: [ADD_TO_CART_CHALLENGE], ok: true });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.show).toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('singular result.error still wins when both singular and plural set (precedence)', async () => {
+    mockGetActiveChallenges.mockResolvedValue({
+      challenges: [],
+      error: 'internal_error',
+      errors: [{ code: 'other' }],
+    });
+    await initChallengeDiscoveryChip(elements, 'mem-1', mockGetActiveChallenges, 'add_to_cart');
+    expect(elements.$chip.hide).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+});
