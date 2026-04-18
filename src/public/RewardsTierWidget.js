@@ -38,7 +38,12 @@ export async function initRewardsTierWidget(memberId, opts = {}) {
     data = null;
   }
 
-  if (!data) {
+  // cf-afx: treat the cf-1y7 auth_required baseline as "no tier data" so we
+  // don't render a fake Trail Blazer badge + progress-to-Mountain-Guide copy
+  // to an unauthenticated viewer. The handler still returns computeTierInfo(0)
+  // for consumer compat, but the `error` field signals the viewer isn't in
+  // the loyalty program yet.
+  if (!data || data.error === 'auth_required') {
     try { $w('#tierError').show(); } catch {}
     try { $w('#tierBadge').hide(); } catch {}
     try { $w('#tierName').hide(); } catch {}

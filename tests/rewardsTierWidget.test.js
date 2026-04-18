@@ -248,4 +248,43 @@ describe('error handling', () => {
     const opts = { $w, getMemberTier: vi.fn().mockRejectedValue(new Error('fail')) };
     await expect(initRewardsTierWidget(MEMBER_ID, opts)).resolves.not.toThrow();
   });
+
+  // cf-afx — don't render a fake "Trail Blazer" badge to unauthenticated viewers.
+  // The cf-1y7 guard on getMemberTier surfaces `error: 'auth_required'` alongside
+  // the computeTierInfo(0) baseline; pre-cf-afx the widget treated that like real
+  // data and showed tier benefits + "500 more points to Mountain Guide" copy.
+  describe('cf-afx auth_required branch', () => {
+    it('shows #tierError when data carries error: auth_required', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ pointsInTier: 0, pointsToNextTier: 500 }), error: 'auth_required' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierError'].show).toHaveBeenCalled();
+    });
+
+    it('hides tier UI when data carries error: auth_required', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ pointsInTier: 0, pointsToNextTier: 500 }), error: 'auth_required' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierBadge'].hide).toHaveBeenCalled();
+      expect($w._els['#tierName'].hide).toHaveBeenCalled();
+      expect($w._els['#tierProgress'].hide).toHaveBeenCalled();
+      expect($w._els['#tierPointsNeeded'].hide).toHaveBeenCalled();
+      expect($w._els['#tierBenefitsRepeater'].hide).toHaveBeenCalled();
+      expect($w._els['#tierNextBenefits'].hide).toHaveBeenCalled();
+    });
+
+    it('does not set tier name when error: auth_required', async () => {
+      const $w = make$w();
+      const data = { ...makeTierData({ tierName: 'Trail Blazer' }), error: 'auth_required' };
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, data));
+      expect($w._els['#tierName'].text).toBe('');
+    });
+
+    it('renders normally when error field is absent', async () => {
+      const $w = make$w();
+      await initRewardsTierWidget(MEMBER_ID, makeOpts($w, makeTierData()));
+      expect($w._els['#tierName'].text).toBe('Trail Blazer');
+      expect($w._els['#tierError'].show).not.toHaveBeenCalled();
+    });
+  });
 });
