@@ -81,6 +81,16 @@ describe('_postRevalidateWebhook (via wixStores_onProductUpdated)', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  it('does NOT call fetch when WIX_WEBHOOK_SECRET is empty', async () => {
+    mockGetSecret.mockImplementation((key) => {
+      if (key === 'WIX_WEBHOOK_SECRET') return Promise.resolve('');
+      return Promise.resolve(TEST_URL);
+    });
+    const { wixStores_onProductUpdated } = await import('../src/backend/events.js');
+    await wixStores_onProductUpdated({ entity: { _id: 'p1' } });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it('does not throw when fetch rejects (non-fatal)', async () => {
     mockFetch.mockRejectedValue(new Error('network error'));
     const { wixStores_onProductUpdated } = await import('../src/backend/events.js');
@@ -164,5 +174,13 @@ describe('wixData_onDataItemUpdated', () => {
     const { wixData_onDataItemUpdated } = await import('../src/backend/events.js');
     await wixData_onDataItemUpdated({ item: { _id: 'x' } });
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('falls back to dataCollectionId when collectionId is absent', async () => {
+    const { wixData_onDataItemUpdated } = await import('../src/backend/events.js');
+    await wixData_onDataItemUpdated({ dataCollectionId: 'Videos', item: { _id: 'v1' } });
+    const parsed = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(parsed.collectionId).toBe('Videos');
+    expect(parsed.itemId).toBe('v1');
   });
 });

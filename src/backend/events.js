@@ -445,6 +445,7 @@ export async function wixStores_onProductUpdated(event) {
   const newPrice = product.price?.amount ?? product.price ?? null;
   const oldPrice = previous.price?.amount ?? previous.price ?? null;
 
+  // Revalidate on every product update (name, image, stock, price) — intentional.
   await _postRevalidateWebhook({ collectionId: 'products', itemId: productId, eventType: 'onProductUpdated' });
 
   // Only trigger price-drop content orchestration on actual price drops
