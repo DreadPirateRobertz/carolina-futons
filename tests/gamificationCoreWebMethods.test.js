@@ -93,6 +93,7 @@ import {
   getLeaderboard,
   getMemberTier,
   getActivityFeed,
+  getActiveChallenges,
   computeTierInfo,
 } from '../src/backend/gamificationCore.web.js';
 
@@ -278,5 +279,115 @@ describe('getActivityFeed', () => {
     __mockMemberId = null;
     const result = await getActivityFeed('mem-1');
     expect(result).toEqual([]);
+  });
+});
+
+// ── cf-1y7: silent null-member guard observability (cf-2ag cascade) ───
+
+describe('cf-1y7 null-member guard cascade', () => {
+  describe('getStreakData', () => {
+    it('returns zero-streak baseline + error: auth_required + warns when memberId is null', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await getStreakData(null);
+      expect(result).toEqual({
+        currentStreak: 0,
+        longestStreak: 0,
+        lastActivityDate: null,
+        error: 'auth_required',
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[gamificationCore] getStreakData: no memberId on session'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('returns zero-streak baseline + error: auth_required + warns when memberId is undefined', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await getStreakData();
+      expect(result.error).toBe('auth_required');
+      expect(result.currentStreak).toBe(0);
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it('omits error field on successful authenticated read', async () => {
+      seed('MemberPoints', [{ memberId: 'mem-ok', currentStreakDays: 3 }]);
+      const result = await getStreakData('mem-ok');
+      expect(result.error).toBeUndefined();
+      expect(result.currentStreak).toBe(3);
+    });
+  });
+
+  describe('getMemberTier', () => {
+    it('returns lowest-tier baseline + error: auth_required + warns when memberId is null', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await getMemberTier(null);
+      expect(result.tierName).toBe('Trail Blazer'); // computeTierInfo(0) baseline preserved
+      expect(result.error).toBe('auth_required');
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[gamificationCore] getMemberTier: no memberId on session'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('omits error field on successful authenticated read', async () => {
+      seed('MemberPoints', [{ memberId: 'mem-ok', totalPoints: 500 }]);
+      const result = await getMemberTier('mem-ok');
+      expect(result.error).toBeUndefined();
+    });
+  });
+
+  describe('getActiveChallenges', () => {
+    it('returns { challenges: [], error: auth_required } + warns when memberId is null', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await getActiveChallenges(null);
+      expect(result).toEqual({ challenges: [], error: 'auth_required' });
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[gamificationCore] getActiveChallenges: no memberId on session'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('omits error field on successful authenticated call', async () => {
+      // Valid call path — no seeded ActiveChallenges, so empty but error-free
+      const result = await getActiveChallenges('mem-ok');
+      expect(result.error).toBeUndefined();
+      expect(Array.isArray(result.challenges)).toBe(true);
+    });
+  });
+
+  describe('getActivityFeed (Array-return, warn-only observability)', () => {
+    // Consumer compat: this handler returns Array, so error-object shape would
+    // be a breaking change. We preserve Array return but add dev-only warns at
+    // the two silent branches so auth/IDOR leaks surface in Wix runtime logs.
+    it('warns distinctly when no member is authenticated (auth_required)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      __mockMemberId = null;
+      const result = await getActivityFeed('mem-1');
+      expect(result).toEqual([]);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[gamificationCore] getActivityFeed: no member on session (auth_required)'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('warns distinctly when caller does not match memberId (forbidden)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      __mockMemberId = 'other-member';
+      const result = await getActivityFeed('mem-1');
+      expect(result).toEqual([]);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[gamificationCore] getActivityFeed: caller/memberId mismatch (forbidden)'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('does NOT warn on legitimate authenticated call', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      __mockMemberId = 'mem-1';
+      await getActivityFeed('mem-1');
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
   });
 });
