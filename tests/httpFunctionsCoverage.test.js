@@ -13,6 +13,11 @@ import {
   __setInsertError,
 } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
+import {
+  __reset as crmReset,
+  __getEmailLog as crmEmailLog,
+  __failNextEmail as crmFailNextEmail,
+} from './__mocks__/wix-crm-backend.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import { __setAccount, __reset as resetLoyalty } from './__mocks__/wix-loyalty.v2.js';
 import {
@@ -928,9 +933,9 @@ describe('get_cleanupRateLimitCron', () => {
 describe('post_contactSubmissions', () => {
   const goodOrigin = 'https://carolina-futons-web.vercel.app';
 
-  function buildReq({ body, origin = goodOrigin }) {
+  function buildReq({ body, origin = goodOrigin } = {}) {
     return {
-      headers: origin ? { origin } : {},
+      headers: { origin },
       body: { text: async () => body },
     };
   }
@@ -938,6 +943,7 @@ describe('post_contactSubmissions', () => {
   beforeEach(() => {
     __setSecrets({ SITE_OWNER_CONTACT_ID: 'owner-1' });
     __seed('EmailRateLimit', []);
+    crmReset();
   });
 
   it('returns 400 for invalid JSON body', async () => {
@@ -948,10 +954,10 @@ describe('post_contactSubmissions', () => {
     expect(parsed.error).toMatch(/Invalid JSON/i);
   });
 
-  it('returns 400 when sendEmail rejects (missing required field)', async () => {
-    // sendEmail validates {name, email, subject, message} as required;
-    // omitting message reproduces a real client misuse without needing to
-    // mock the email transport.
+  it('returns 400 when sendEmail rejects required-field validation', async () => {
+    // sendEmail requires {name, email, message}; subject/phone are optional.
+    // Omitting `message` reproduces a real client misuse without engaging
+    // the triggeredEmails mock.
     const result = await post_contactSubmissions(
       buildReq({
         body: JSON.stringify({
@@ -982,6 +988,62 @@ describe('post_contactSubmissions', () => {
     expect(JSON.parse(result.body).success).toBe(false);
   });
 
+  it('returns 200 + emits triggered email on a fully valid submission', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          phone: '828-555-0100',
+          subject: 'Frame question',
+          message: 'Do you ship to Hendersonville?',
+        }),
+      }),
+    );
+    expect(result.status).toBe(200);
+    expect(JSON.parse(result.body)).toEqual({ success: true });
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
+    const log = crmEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].contactId).toBe('owner-1');
+  });
+
+  it('returns 429 when sendEmail surfaces a rate-limit message', async () => {
+    // 4th submission within the 1-hour window trips _checkEmailRateLimit
+    // (max 3 — see emailService.web.js EMAIL_RATE_LIMIT_MAX).
+    const valid = JSON.stringify({
+      name: 'Stilgar',
+      email: 'stilgar@example.com',
+      subject: 'Repeated ping',
+      message: 'Hi',
+    });
+    for (let i = 0; i < 3; i++) {
+      const ok = await post_contactSubmissions(buildReq({ body: valid }));
+      expect(ok.status).toBe(200);
+    }
+    const limited = await post_contactSubmissions(buildReq({ body: valid }));
+    expect(limited.status).toBe(429);
+    const parsed = JSON.parse(limited.body);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toMatch(/too many requests/i);
+  });
+
+  it('returns 500 when triggered email transport throws', async () => {
+    crmFailNextEmail();
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Outage probe',
+          message: 'Hi',
+        }),
+      }),
+    );
+    expect(result.status).toBe(500);
+    expect(JSON.parse(result.body).success).toBe(false);
+  });
+
   it('echoes Access-Control-Allow-Origin for allowlisted origin on error', async () => {
     const result = await post_contactSubmissions(buildReq({ body: '{ bad' }));
     expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
@@ -1006,6 +1068,7 @@ describe('options_contactSubmissions', () => {
       'https://carolina-futons-web.vercel.app',
     );
     expect(result.headers['Access-Control-Allow-Methods']).toMatch(/POST/);
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/OPTIONS/);
   });
 
   it('returns 403 for disallowed origin', () => {
