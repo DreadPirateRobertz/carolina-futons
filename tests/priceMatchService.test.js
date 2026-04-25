@@ -245,6 +245,41 @@ describe('submitPriceMatchRequest', () => {
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/already|pending|duplicate/i);
   });
+
+  it('should mirror submission to ContactSubmissions for email automation', async () => {
+    const wixData = (await import('wix-data')).default;
+    const result = await submitPriceMatchRequest(validRequest);
+    expect(result.success).toBe(true);
+
+    const contactCall = wixData.insert.mock.calls.find(
+      ([collection]) => collection === 'ContactSubmissions'
+    );
+    expect(contactCall).toBeDefined();
+
+    const [, payload] = contactCall;
+    expect(payload.email).toBe('jane@example.com');
+    expect(payload.source).toBe('price_match_form');
+    expect(payload.status).toBe('price_match_request');
+    expect(payload.subject).toMatch(/Price Match/i);
+    expect(payload.message).toMatch(/Wayfair/);
+    expect(payload.message).toMatch(/PM-/);
+  });
+
+  it('should still succeed if ContactSubmissions mirror fails', async () => {
+    const wixData = (await import('wix-data')).default;
+    // First insert (PriceMatches) succeeds, second (ContactSubmissions) fails
+    wixData.insert
+      .mockImplementationOnce(async (collection, record) => ({
+        ...record,
+        _id: 'pm-001',
+        _createdDate: new Date(),
+      }))
+      .mockRejectedValueOnce(new Error('Mirror failed'));
+
+    const result = await submitPriceMatchRequest(validRequest);
+    expect(result.success).toBe(true);
+    expect(result.request.claimNumber).toBeDefined();
+  });
 });
 
 // ── getMyPriceMatches ────────────────────────────────────────────────

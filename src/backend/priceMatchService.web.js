@@ -210,6 +210,32 @@ export const submitPriceMatchRequest = webMethod(
 
       const inserted = await wixData.insert(COLLECTION, record);
 
+      // Mirror submission to ContactSubmissions so the standard contact-form
+      // email automation fires for the store owner. Best-effort — don't fail
+      // the price match request if this side-channel write errors.
+      try {
+        await wixData.insert('ContactSubmissions', {
+          email: record.memberEmail || '',
+          name: record.memberName || '',
+          phone: '',
+          subject: `Price Match Request — ${record.productName || record.productId}`,
+          message:
+            `Claim ${record.claimNumber}\n` +
+            `Our price: $${record.ourPrice}\n` +
+            `Competitor: ${record.competitorName} — $${record.competitorPrice}\n` +
+            (record.competitorUrl ? `URL: ${record.competitorUrl}\n` : '') +
+            (record.notes ? `Notes: ${record.notes}` : ''),
+          submittedAt: new Date(),
+          status: 'price_match_request',
+          source: 'price_match_form',
+          notes: record.notes || '',
+          productId: record.productId,
+          productName: record.productName,
+        });
+      } catch (mirrorErr) {
+        console.warn('[priceMatchService] ContactSubmissions mirror failed:', mirrorErr?.message ?? mirrorErr);
+      }
+
       return {
         success: true,
         request: {
