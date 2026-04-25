@@ -7,6 +7,7 @@ import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
+import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
@@ -2545,4 +2546,58 @@ export async function get_weeklyBlogDigestCron(request) {
       headers: JSON_HEADERS,
     });
   }
+}
+
+// ── /_functions/contactSubmissions ───────────────────────────────────
+//
+// cf-3qt.4.6: HTTP wrapper around emailService.sendEmail so external
+// front-ends (carolina-futons-web Next.js) can submit the contact form
+// through the same Velo path that powers the legacy Wix Studio site —
+// preserving the existing rate-limit + Stilgar-notification pipeline
+// and removing the standalone nodemailer SMTP dep on the Next side.
+//
+// Body shape mirrors emailService.sendEmail:
+//   { name, email, phone?, subject, message }
+// CORS: emits permissive headers via shared corsHeaders() helper so
+// browser-side fallback fetches work; primary caller is server-side.
+
+/**
+ * @function post_contactSubmissions
+ * @route POST /_functions/contactSubmissions
+ */
+export async function post_contactSubmissions(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const result = await sendEmail({
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      subject: body.subject,
+      message: body.message,
+    });
+
+    if (!result || result.success !== true) {
+      return badRequest({
+        body: JSON.stringify({ success: false, error: result?.message || 'Submission rejected' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (contactSubmissions):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_contactSubmissions(request) {
+  return response(corsPreflight(request));
 }

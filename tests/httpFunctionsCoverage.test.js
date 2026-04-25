@@ -26,6 +26,8 @@ import {
   post_trackReferral,
   get_bundles,
   post_addBundleToCart,
+  post_contactSubmissions,
+  options_contactSubmissions,
   get_productQA,
   post_submitQuestion,
   post_answerQuestion,
@@ -918,5 +920,98 @@ describe('get_cleanupRateLimitCron', () => {
     ]);
     const result = await get_cleanupRateLimitCron(cronReq('cleanup-key'));
     expect(result.status).toBe(200);
+  });
+});
+
+// ── post_contactSubmissions / options_contactSubmissions ─────────────────────
+
+describe('post_contactSubmissions', () => {
+  const goodOrigin = 'https://carolina-futons-web.vercel.app';
+
+  function buildReq({ body, origin = goodOrigin }) {
+    return {
+      headers: origin ? { origin } : {},
+      body: { text: async () => body },
+    };
+  }
+
+  beforeEach(() => {
+    __setSecrets({ SITE_OWNER_CONTACT_ID: 'owner-1' });
+    __seed('EmailRateLimit', []);
+  });
+
+  it('returns 400 for invalid JSON body', async () => {
+    const result = await post_contactSubmissions(buildReq({ body: '{ bad json' }));
+    expect(result.status).toBe(400);
+    const parsed = JSON.parse(result.body);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toMatch(/Invalid JSON/i);
+  });
+
+  it('returns 400 when sendEmail rejects (missing required field)', async () => {
+    // sendEmail validates {name, email, subject, message} as required;
+    // omitting message reproduces a real client misuse without needing to
+    // mock the email transport.
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+        }),
+      }),
+    );
+    expect(result.status).toBe(400);
+    const parsed = JSON.parse(result.body);
+    expect(parsed.success).toBe(false);
+    expect(typeof parsed.error).toBe('string');
+  });
+
+  it('returns 400 for invalid email format', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'not-an-email',
+          subject: 'Frame question',
+          message: 'Do you ship to Hendersonville?',
+        }),
+      }),
+    );
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).success).toBe(false);
+  });
+
+  it('echoes Access-Control-Allow-Origin for allowlisted origin on error', async () => {
+    const result = await post_contactSubmissions(buildReq({ body: '{ bad' }));
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
+    expect(result.headers['Vary']).toBe('Origin');
+  });
+
+  it('omits Access-Control-Allow-Origin for disallowed origin', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({ body: '{ bad', origin: 'https://attacker.example.com' }),
+    );
+    expect(result.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+});
+
+describe('options_contactSubmissions', () => {
+  it('returns 204 with CORS headers for allowlisted origin', () => {
+    const result = options_contactSubmissions({
+      headers: { origin: 'https://carolina-futons-web.vercel.app' },
+    });
+    expect(result.status).toBe(204);
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(
+      'https://carolina-futons-web.vercel.app',
+    );
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/POST/);
+  });
+
+  it('returns 403 for disallowed origin', () => {
+    const result = options_contactSubmissions({
+      headers: { origin: 'https://attacker.example.com' },
+    });
+    expect(result.status).toBe(403);
   });
 });
