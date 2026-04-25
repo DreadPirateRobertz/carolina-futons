@@ -1,0 +1,15 @@
+{
+  "id": "blog-post-sample",
+  "breakpoint": "desktop",
+  "width": 1440,
+  "height": 900,
+  "phase": 4,
+  "legacyUrl": "https://www.carolinafutons.com/post/how-to-pick-a-futon",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/blog-post-sample/desktop",
+  "capturedAt": "2026-04-17T18:20:44.284Z"
+}

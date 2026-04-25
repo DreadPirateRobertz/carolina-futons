@@ -1,0 +1,15 @@
+{
+  "id": "faq",
+  "breakpoint": "tablet",
+  "width": 768,
+  "height": 1024,
+  "phase": 4,
+  "legacyUrl": "https://www.carolinafutons.com/faq",
+  "nextUrl": null,
+  "legacyStatus": 200,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/faq/tablet",
+  "capturedAt": "2026-04-17T18:20:38.095Z"
+}

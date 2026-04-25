@@ -1,0 +1,15 @@
+{
+  "id": "sitemap",
+  "breakpoint": "mobile",
+  "width": 375,
+  "height": 812,
+  "phase": 5,
+  "legacyUrl": "https://www.carolinafutons.com/sitemap",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/sitemap/mobile",
+  "capturedAt": "2026-04-17T18:20:48.426Z"
+}

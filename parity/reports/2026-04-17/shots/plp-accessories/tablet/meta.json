@@ -1,0 +1,15 @@
+{
+  "id": "plp-accessories",
+  "breakpoint": "tablet",
+  "width": 768,
+  "height": 1024,
+  "phase": 2,
+  "legacyUrl": "https://www.carolinafutons.com/category/accessories",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/plp-accessories/tablet",
+  "capturedAt": "2026-04-17T18:20:31.865Z"
+}

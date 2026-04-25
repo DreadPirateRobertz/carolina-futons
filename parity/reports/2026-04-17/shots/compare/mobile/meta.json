@@ -1,0 +1,15 @@
+{
+  "id": "compare",
+  "breakpoint": "mobile",
+  "width": 375,
+  "height": 812,
+  "phase": 4,
+  "legacyUrl": "https://www.carolinafutons.com/compare",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/compare/mobile",
+  "capturedAt": "2026-04-17T18:20:40.911Z"
+}

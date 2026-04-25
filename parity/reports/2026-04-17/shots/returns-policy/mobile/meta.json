@@ -1,0 +1,15 @@
+{
+  "id": "returns-policy",
+  "breakpoint": "mobile",
+  "width": 375,
+  "height": 812,
+  "phase": 4,
+  "legacyUrl": "https://www.carolinafutons.com/returns",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/returns-policy/mobile",
+  "capturedAt": "2026-04-17T18:20:49.960Z"
+}

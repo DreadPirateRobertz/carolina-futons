@@ -1,0 +1,15 @@
+{
+  "id": "landing-rv",
+  "breakpoint": "mobile",
+  "width": 375,
+  "height": 812,
+  "phase": 5,
+  "legacyUrl": "https://www.carolinafutons.com/rv-boats",
+  "nextUrl": null,
+  "legacyStatus": 404,
+  "nextStatus": null,
+  "diffPct": null,
+  "error": null,
+  "dir": "parity/reports/2026-04-17/shots/landing-rv/mobile",
+  "capturedAt": "2026-04-17T18:20:46.929Z"
+}
