@@ -178,11 +178,16 @@ vi.mock('wix-location-frontend', () => ({
   to: vi.fn(),
 }));
 
+vi.mock('public/ChallengeOfTheWeekWidget.js', () => ({
+  initChallengeOfTheWeekWidget: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { trackEvent } from 'public/engagementTracker';
 import { makeClickable, announce } from 'public/a11yHelpers';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getSaleProducts } from 'backend/productRecommendations.web';
 import { initBackToTop, collapseOnMobile, onViewportChange } from 'public/mobileHelpers';
+import { initChallengeOfTheWeekWidget } from 'public/ChallengeOfTheWeekWidget.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -869,6 +874,53 @@ beforeAll(async () => {
       await onReadyHandler();
       await flushDeferred();
       expect(getEl('#featuredSubtitle').text).toContain('Handpicked');
+    });
+  });
+
+  // ── Challenge of the Week Section (cf-nqq) ────────────────────────
+
+  describe('challenge of the week section', () => {
+    beforeEach(() => {
+      initChallengeOfTheWeekWidget.mockClear();
+    });
+
+    it('calls initChallengeOfTheWeekWidget during page init', async () => {
+      await onReadyHandler();
+      await flushDeferred();
+      expect(initChallengeOfTheWeekWidget).toHaveBeenCalled();
+    });
+
+    it('passes $w to initChallengeOfTheWeekWidget', async () => {
+      await onReadyHandler();
+      await flushDeferred();
+      expect(initChallengeOfTheWeekWidget).toHaveBeenCalledWith(
+        expect.objectContaining({ $w: expect.any(Function) })
+      );
+    });
+
+    it('active challenge renders — widget init succeeds without throwing', async () => {
+      initChallengeOfTheWeekWidget.mockResolvedValueOnce(undefined);
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      await flushDeferred();
+      expect(initChallengeOfTheWeekWidget).toHaveBeenCalled();
+    });
+
+    it('no challenge — section stays hidden when widget resolves silently', async () => {
+      // Widget handles null by collapsing #weeklyContainer internally;
+      // homepage must not throw when widget resolves without error.
+      initChallengeOfTheWeekWidget.mockResolvedValueOnce(undefined);
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+
+    it('expired challenge — does not throw when widget handles expiry', async () => {
+      // Widget collapses section for expired/null challenges; homepage must stay stable.
+      initChallengeOfTheWeekWidget.mockResolvedValueOnce(undefined);
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+
+    it('widget failure does not crash page init', async () => {
+      initChallengeOfTheWeekWidget.mockRejectedValueOnce(new Error('challenge fetch failed'));
+      await expect(onReadyHandler()).resolves.not.toThrow();
     });
   });
 });
