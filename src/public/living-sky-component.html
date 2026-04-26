@@ -63,36 +63,38 @@
 
   <defs>
     <!-- Sky gradient — stop colors dynamically updated by living-sky.js -->
+    <!-- Defaults: h=12 midday spec (vibrant initial render before first JS tick) -->
     <linearGradient id="dyn-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop id="sky-stop-0" offset="0%"   stop-color="#A0C0D4"/>
-      <stop id="sky-stop-1" offset="35%"  stop-color="#B8D0E0"/>
-      <stop id="sky-stop-2" offset="70%"  stop-color="#C8DCE8"/>
-      <stop id="sky-stop-3" offset="100%" stop-color="#D8E8F0"/>
+      <stop id="sky-stop-0" offset="0%"   stop-color="#2858A0"/>
+      <stop id="sky-stop-1" offset="35%"  stop-color="#4878A8"/>
+      <stop id="sky-stop-2" offset="70%"  stop-color="#88B0C4"/>
+      <stop id="sky-stop-3" offset="100%" stop-color="#A4C8DC"/>
     </linearGradient>
 
     <!-- Sun / horizon radial glow — centre position updated by JS -->
+    <!-- Default: transparent (h=12 midday has no horizon glow; JS sets warm colors for dawn/dusk) -->
     <radialGradient id="sun-radial" cx="50%" cy="100%" r="50%">
-      <stop id="sg-0" offset="0%"   stop-color="#F4A878" stop-opacity="0.6"/>
-      <stop id="sg-1" offset="35%"  stop-color="#F0C880" stop-opacity="0.3"/>
-      <stop id="sg-2" offset="100%" stop-color="#F0C880" stop-opacity="0"/>
+      <stop id="sg-0" offset="0%"   stop-color="transparent" stop-opacity="0.6"/>
+      <stop id="sg-1" offset="35%"  stop-color="transparent" stop-opacity="0.3"/>
+      <stop id="sg-2" offset="100%" stop-color="transparent" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Ridge fill gradients (day defaults; colours updated by living-sky.js) -->
+    <!-- Ridge fill gradients — defaults: h=12 midday spec; colours updated by living-sky.js -->
     <linearGradient id="ridge-r4-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop id="r4-stop-0" offset="0%"   stop-color="#9AAAB8"/>
-      <stop id="r4-stop-1" offset="100%" stop-color="#8899A8"/>
+      <stop id="r4-stop-0" offset="0%"   stop-color="#AECCD8"/>
+      <stop id="r4-stop-1" offset="100%" stop-color="#AECCD8"/>
     </linearGradient>
     <linearGradient id="ridge-r3-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop id="r3-stop-0" offset="0%"   stop-color="#7A8FA0"/>
-      <stop id="r3-stop-1" offset="100%" stop-color="#6A7F90"/>
+      <stop id="r3-stop-0" offset="0%"   stop-color="#7AA4BE"/>
+      <stop id="r3-stop-1" offset="100%" stop-color="#7AA4BE"/>
     </linearGradient>
     <linearGradient id="ridge-r2-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop id="r2-stop-0" offset="0%"   stop-color="#5B8FA8"/>
-      <stop id="r2-stop-1" offset="100%" stop-color="#4A7888"/>
+      <stop id="r2-stop-0" offset="0%"   stop-color="#487494"/>
+      <stop id="r2-stop-1" offset="100%" stop-color="#487494"/>
     </linearGradient>
     <linearGradient id="ridge-r1-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop id="r1-stop-0" offset="0%"   stop-color="#3A4A55"/>
-      <stop id="r1-stop-1" offset="100%" stop-color="#2A3840"/>
+      <stop id="r1-stop-0" offset="0%"   stop-color="#1C4454"/>
+      <stop id="r1-stop-1" offset="100%" stop-color="#1C4454"/>
     </linearGradient>
 
     <!-- Edge glow filter for rim-light effect -->
@@ -266,9 +268,9 @@
              C724,111 736,106 754,109 C768,111 780,116 798,113 C812,110
              824,105 842,108 C856,110 868,115 886,112 C900,109 914,105
              1040,106 L1040,150Z"
-          fill="#1E2830"/>
+          fill="#0C1C26"/>
 
-    <g fill="#162030">
+    <g fill="#0C1C26">
       <polygon points="72,117 75,105 78,117"/>
       <polygon points="79,118 83,104 87,118"/>
       <polygon points="88,119 91,107 94,119"/>
@@ -282,7 +284,7 @@
       <polygon points="892,113 895,98 898,113"/>
     </g>
 
-    <g id="deciduous-trees" fill="#162030">
+    <g id="deciduous-trees" fill="#0C1C26">
       <ellipse cx="130" cy="113" rx="11" ry="7"/>  <rect x="128.5" y="118" width="3" height="5"/>
       <ellipse cx="382" cy="110" rx="10" ry="6.5"/><rect x="380.5" y="115" width="3" height="5"/>
       <ellipse cx="566" cy="107" rx="12" ry="7.5"/><rect x="564.5" y="113" width="3" height="5"/>
