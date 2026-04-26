@@ -87,6 +87,10 @@ $w.onReady(async function () {
         const { initGamificationTourOverlay } = await import('public/GamificationTourOverlay.js');
         await initGamificationTourOverlay();
       }, critical: false },
+    { name: 'saleLightbox', init: async () => {
+        const { initSaleLightbox } = await import('public/SaleLightbox.js');
+        await initSaleLightbox();
+      }, critical: false },
   ];
 
   const { critical: criticalResults } = await prioritizeSections(sections, {
