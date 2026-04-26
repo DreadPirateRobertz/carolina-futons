@@ -93,11 +93,11 @@ These are Phase 2/3 territory. Listed so the sitemap generator has the full rout
 
 Every webMethod we call from the Next.js client goes through a thin `app/api/*` proxy (to keep secrets + OAuth server-side). Phase 4/5 needs:
 
-| Next.js route handler | Proxies to webMethod | Method |
+| Next.js route handler | Proxies to Velo endpoint | Method |
 |---|---|---|
-| `POST /api/contact` | `contactSubmissions.submitContactForm` | POST |
-| `POST /api/newsletter/subscribe` | `newsletterService.subscribeToNewsletter` | POST |
-| `POST /api/newsletter/unsubscribe` | `newsletterService.unsubscribeFromESP` | POST |
+| `POST /api/contact` | `/_functions/contactSubmissions` → `emailService.sendEmail` | POST |
+| `POST /api/newsletter/subscribe` | `/_functions/mailingListSignups` → `newsletterService.subscribeToNewsletter` | POST |
+| `POST /api/newsletter/unsubscribe` | `newsletterService.unsubscribeFromESP` (webMethod, direct SDK) | POST |
 | `GET  /api/delivery-zone?zip=` | `storeLocatorService` distance calc (or inline `lib/delivery/zones.ts`) | GET |
 | `GET  /api/search?q=` | fan-out to stores + blog | GET |
 
