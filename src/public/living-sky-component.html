@@ -20,6 +20,33 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
     svg { display: block; width: 100%; height: 100%; }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: var(--star-base, 1); }
+      50%       { opacity: calc(var(--star-base, 1) * 0.55); }
+    }
+    @keyframes cloudDrift {
+      0%   { transform: translateX(0); }
+      50%  { transform: translateX(18px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes fireflyPulse {
+      0%, 100% { opacity: var(--ff-base, 1); transform: scale(1); }
+      50%       { opacity: calc(var(--ff-base, 1) * 0.3); transform: scale(0.6); }
+    }
+
+    #stars circle { animation: twinkle var(--tw-dur, 2s) ease-in-out infinite; }
+
+    #clouds { animation: cloudDrift 90s ease-in-out infinite; }
+
+    #firefly-group circle { animation: fireflyPulse var(--ff-dur, 2.2s) ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      #stars circle,
+      #clouds,
+      #firefly-group circle,
+      #owl-head * { animation: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -125,41 +152,41 @@
 
   <!-- ── 3. Stars ────────────────────────────────────────────────────────── -->
   <g id="stars" opacity="0">
-    <circle id="star-0"  cx="48"   cy="12" r="0.9" fill="#8BAFC8"/>
-    <circle id="star-1"  cx="112"  cy="8"  r="1.1" fill="#A0C0D4"/>
-    <circle id="star-2"  cx="195"  cy="18" r="0.8" fill="#8BAFC8"/>
-    <circle id="star-3"  cx="280"  cy="6"  r="1.2" fill="#C0D4E4"/>
-    <circle id="star-4"  cx="360"  cy="14" r="0.9" fill="#8BAFC8"/>
-    <circle id="star-5"  cx="450"  cy="4"  r="1.0" fill="#A0C0D4"/>
-    <circle id="star-6"  cx="530"  cy="19" r="0.8" fill="#8BAFC8"/>
-    <circle id="star-7"  cx="610"  cy="7"  r="1.1" fill="#8BAFC8"/>
-    <circle id="star-8"  cx="820"  cy="10" r="0.9" fill="#8BAFC8"/>
-    <circle id="star-9"  cx="900"  cy="5"  r="1.2" fill="#C0D4E4"/>
-    <circle id="star-10" cx="970"  cy="16" r="0.8" fill="#8BAFC8"/>
-    <circle id="star-11" cx="770"  cy="13" r="1.0" fill="#A0C0D4"/>
-    <circle id="star-12" cx="78"   cy="5"  r="1.0" fill="#8BAFC8"/>
-    <circle id="star-13" cx="240"  cy="10" r="0.9" fill="#8BAFC8"/>
-    <circle id="star-14" cx="680"  cy="17" r="0.9" fill="#8BAFC8"/>
-    <circle id="star-15" cx="1005" cy="9"  r="1.0" fill="#A0C0D4"/>
-    <circle id="star-16" cx="155"  cy="28" r="0.7" fill="#7090A8"/>
-    <circle id="star-17" cx="380"  cy="24" r="0.8" fill="#7090A8"/>
-    <circle id="star-18" cx="475"  cy="32" r="0.7" fill="#7090A8"/>
-    <circle id="star-19" cx="850"  cy="26" r="0.8" fill="#7090A8"/>
-    <circle id="star-20" cx="720"  cy="30" r="0.7" fill="#7090A8"/>
-    <circle id="star-21" cx="640"  cy="22" r="0.9" fill="#7090A8"/>
-    <circle id="star-22" cx="22"   cy="20" r="0.8" fill="#7090A8"/>
-    <circle id="star-23" cx="310"  cy="19" r="0.7" fill="#6888A0"/>
-    <circle id="star-24" cx="492"  cy="12" r="0.8" fill="#7090A8"/>
-    <circle id="star-25" cx="558"  cy="28" r="0.6" fill="#5878A0"/>
-    <circle id="star-26" cx="740"  cy="9"  r="0.7" fill="#7090A8"/>
-    <circle id="star-27" cx="930"  cy="22" r="0.8" fill="#7090A8"/>
-    <circle id="star-28" cx="1020" cy="26" r="0.7" fill="#6888A0"/>
-    <circle id="star-29" cx="418"  cy="9"  r="0.6" fill="#5878A0"/>
-    <circle id="star-30" cx="182"  cy="14" r="0.7" fill="#7090A8"/>
-    <circle id="star-31" cx="590"  cy="14" r="0.8" fill="#8BAFC8"/>
-    <circle id="star-32" cx="330"  cy="35" r="0.7" fill="#6888A0"/>
-    <circle id="star-33" cx="700"  cy="35" r="0.6" fill="#5878A0"/>
-    <circle id="star-34" cx="870"  cy="32" r="0.7" fill="#7090A8"/>
+    <circle id="star-0"  cx="48"   cy="12" r="0.9" fill="#8BAFC8" style="--tw-dur:1.7s;animation-delay:-0.3s"/>
+    <circle id="star-1"  cx="112"  cy="8"  r="1.1" fill="#A0C0D4" style="--tw-dur:2.3s;animation-delay:-1.1s"/>
+    <circle id="star-2"  cx="195"  cy="18" r="0.8" fill="#8BAFC8" style="--tw-dur:1.9s;animation-delay:-0.7s"/>
+    <circle id="star-3"  cx="280"  cy="6"  r="1.2" fill="#C0D4E4" style="--tw-dur:2.8s;animation-delay:-2.0s"/>
+    <circle id="star-4"  cx="360"  cy="14" r="0.9" fill="#8BAFC8" style="--tw-dur:1.6s;animation-delay:-0.5s"/>
+    <circle id="star-5"  cx="450"  cy="4"  r="1.0" fill="#A0C0D4" style="--tw-dur:2.1s;animation-delay:-1.6s"/>
+    <circle id="star-6"  cx="530"  cy="19" r="0.8" fill="#8BAFC8" style="--tw-dur:2.5s;animation-delay:-0.9s"/>
+    <circle id="star-7"  cx="610"  cy="7"  r="1.1" fill="#8BAFC8" style="--tw-dur:1.8s;animation-delay:-1.3s"/>
+    <circle id="star-8"  cx="820"  cy="10" r="0.9" fill="#8BAFC8" style="--tw-dur:2.4s;animation-delay:-0.2s"/>
+    <circle id="star-9"  cx="900"  cy="5"  r="1.2" fill="#C0D4E4" style="--tw-dur:2.0s;animation-delay:-1.8s"/>
+    <circle id="star-10" cx="970"  cy="16" r="0.8" fill="#8BAFC8" style="--tw-dur:2.6s;animation-delay:-1.0s"/>
+    <circle id="star-11" cx="770"  cy="13" r="1.0" fill="#A0C0D4" style="--tw-dur:1.5s;animation-delay:-0.4s"/>
+    <circle id="star-12" cx="78"   cy="5"  r="1.0" fill="#8BAFC8" style="--tw-dur:2.2s;animation-delay:-1.5s"/>
+    <circle id="star-13" cx="240"  cy="10" r="0.9" fill="#8BAFC8" style="--tw-dur:1.9s;animation-delay:-2.2s"/>
+    <circle id="star-14" cx="680"  cy="17" r="0.9" fill="#8BAFC8" style="--tw-dur:2.7s;animation-delay:-0.6s"/>
+    <circle id="star-15" cx="1005" cy="9"  r="1.0" fill="#A0C0D4" style="--tw-dur:1.6s;animation-delay:-1.9s"/>
+    <circle id="star-16" cx="155"  cy="28" r="0.7" fill="#7090A8" style="--tw-dur:2.3s;animation-delay:-0.8s"/>
+    <circle id="star-17" cx="380"  cy="24" r="0.8" fill="#7090A8" style="--tw-dur:2.9s;animation-delay:-2.4s"/>
+    <circle id="star-18" cx="475"  cy="32" r="0.7" fill="#7090A8" style="--tw-dur:1.7s;animation-delay:-1.2s"/>
+    <circle id="star-19" cx="850"  cy="26" r="0.8" fill="#7090A8" style="--tw-dur:2.1s;animation-delay:-0.1s"/>
+    <circle id="star-20" cx="720"  cy="30" r="0.7" fill="#7090A8" style="--tw-dur:2.5s;animation-delay:-2.8s"/>
+    <circle id="star-21" cx="640"  cy="22" r="0.9" fill="#7090A8" style="--tw-dur:1.8s;animation-delay:-1.4s"/>
+    <circle id="star-22" cx="22"   cy="20" r="0.8" fill="#7090A8" style="--tw-dur:2.2s;animation-delay:-0.7s"/>
+    <circle id="star-23" cx="310"  cy="19" r="0.7" fill="#6888A0" style="--tw-dur:2.6s;animation-delay:-2.1s"/>
+    <circle id="star-24" cx="492"  cy="12" r="0.8" fill="#7090A8" style="--tw-dur:1.5s;animation-delay:-1.7s"/>
+    <circle id="star-25" cx="558"  cy="28" r="0.6" fill="#5878A0" style="--tw-dur:2.0s;animation-delay:-0.3s"/>
+    <circle id="star-26" cx="740"  cy="9"  r="0.7" fill="#7090A8" style="--tw-dur:2.4s;animation-delay:-2.5s"/>
+    <circle id="star-27" cx="930"  cy="22" r="0.8" fill="#7090A8" style="--tw-dur:1.9s;animation-delay:-1.0s"/>
+    <circle id="star-28" cx="1020" cy="26" r="0.7" fill="#6888A0" style="--tw-dur:2.7s;animation-delay:-0.5s"/>
+    <circle id="star-29" cx="418"  cy="9"  r="0.6" fill="#5878A0" style="--tw-dur:1.6s;animation-delay:-1.8s"/>
+    <circle id="star-30" cx="182"  cy="14" r="0.7" fill="#7090A8" style="--tw-dur:2.3s;animation-delay:-2.3s"/>
+    <circle id="star-31" cx="590"  cy="14" r="0.8" fill="#8BAFC8" style="--tw-dur:2.8s;animation-delay:-0.9s"/>
+    <circle id="star-32" cx="330"  cy="35" r="0.7" fill="#6888A0" style="--tw-dur:1.7s;animation-delay:-1.6s"/>
+    <circle id="star-33" cx="700"  cy="35" r="0.6" fill="#5878A0" style="--tw-dur:2.1s;animation-delay:-2.7s"/>
+    <circle id="star-34" cx="870"  cy="32" r="0.7" fill="#7090A8" style="--tw-dur:2.5s;animation-delay:-1.1s"/>
   </g>
 
   <!-- ── 4. Clouds ────────────────────────────────────────────────────────── -->
@@ -345,32 +372,40 @@
     <g id="owl-perch" opacity="0">
       <g transform="translate(489,96)" fill="#060C16">
         <ellipse cx="0" cy="6" rx="3.5" ry="5.5"/>
-        <circle cx="0" cy="0.5" r="3.8"/>
-        <polygon points="-2.2,-3 -0.8,0.5 -3.8,-0.2"/>
-        <polygon points="2.2,-3 0.8,0.5 3.8,-0.2"/>
-        <circle cx="-1.4" cy="0.5" r="1.1" fill="#0E1C2C"/>
-        <circle cx="1.4"  cy="0.5" r="1.1" fill="#0E1C2C"/>
-        <polygon points="-0.4,1.5 0,2.8 0.4,1.5" fill="#0E1C2C"/>
+        <!-- head turns slightly every ~18s -->
+        <g id="owl-head">
+          <circle cx="0" cy="0.5" r="3.8"/>
+          <polygon points="-2.2,-3 -0.8,0.5 -3.8,-0.2"/>
+          <polygon points="2.2,-3 0.8,0.5 3.8,-0.2"/>
+          <circle cx="-1.4" cy="0.5" r="1.1" fill="#0E1C2C"/>
+          <circle cx="1.4"  cy="0.5" r="1.1" fill="#0E1C2C"/>
+          <polygon points="-0.4,1.5 0,2.8 0.4,1.5" fill="#0E1C2C"/>
+          <animateTransform attributeName="transform" type="rotate"
+            values="0 0 0.5; 0 0 0.5; 18 0 0.5; 0 0 0.5; -14 0 0.5; 0 0 0.5"
+            keyTimes="0; 0.38; 0.45; 0.55; 0.62; 1"
+            dur="18s" repeatCount="indefinite" calcMode="spline"
+            keySplines="0.4 0 0.6 1;0.2 0 0.8 1;0.2 0 0.8 1;0.2 0 0.8 1;0.4 0 0.6 1"/>
+        </g>
       </g>
     </g>
 
     <g id="firefly-group" opacity="0">
-      <circle cx="108"  cy="117" r="1.3" fill="#C8FF3A"/>
-      <circle cx="192"  cy="111" r="1.0" fill="#C0FF32"/>
-      <circle cx="275"  cy="114" r="1.2" fill="#CCFF40"/>
-      <circle cx="352"  cy="110" r="1.1" fill="#C4FF38"/>
-      <circle cx="431"  cy="116" r="1.4" fill="#D0FF44"/>
-      <circle cx="508"  cy="112" r="1.0" fill="#C8FF3C"/>
-      <circle cx="582"  cy="118" r="1.2" fill="#CCFF40"/>
-      <circle cx="658"  cy="113" r="1.3" fill="#C0FF34"/>
-      <circle cx="736"  cy="109" r="1.1" fill="#CCFF40"/>
-      <circle cx="812"  cy="116" r="1.0" fill="#C0FF32"/>
-      <circle cx="886"  cy="110" r="1.3" fill="#C8FF3C"/>
-      <circle cx="958"  cy="114" r="1.1" fill="#C4FF38"/>
-      <circle cx="146"  cy="123" r="0.9" fill="#C0FF34"/>
-      <circle cx="476"  cy="122" r="0.9" fill="#C8FF3C"/>
-      <circle cx="726"  cy="122" r="1.0" fill="#C0FF34"/>
-      <circle cx="992"  cy="112" r="0.9" fill="#C4FF38"/>
+      <circle cx="108"  cy="117" r="1.3" fill="#C8FF3A" style="--ff-dur:2.1s;animation-delay:-0.4s"/>
+      <circle cx="192"  cy="111" r="1.0" fill="#C0FF32" style="--ff-dur:3.4s;animation-delay:-1.8s"/>
+      <circle cx="275"  cy="114" r="1.2" fill="#CCFF40" style="--ff-dur:2.7s;animation-delay:-0.9s"/>
+      <circle cx="352"  cy="110" r="1.1" fill="#C4FF38" style="--ff-dur:1.9s;animation-delay:-2.3s"/>
+      <circle cx="431"  cy="116" r="1.4" fill="#D0FF44" style="--ff-dur:3.1s;animation-delay:-0.6s"/>
+      <circle cx="508"  cy="112" r="1.0" fill="#C8FF3C" style="--ff-dur:2.5s;animation-delay:-1.5s"/>
+      <circle cx="582"  cy="118" r="1.2" fill="#CCFF40" style="--ff-dur:1.8s;animation-delay:-3.0s"/>
+      <circle cx="658"  cy="113" r="1.3" fill="#C0FF34" style="--ff-dur:2.9s;animation-delay:-0.3s"/>
+      <circle cx="736"  cy="109" r="1.1" fill="#CCFF40" style="--ff-dur:2.2s;animation-delay:-2.0s"/>
+      <circle cx="812"  cy="116" r="1.0" fill="#C0FF32" style="--ff-dur:3.6s;animation-delay:-1.1s"/>
+      <circle cx="886"  cy="110" r="1.3" fill="#C8FF3C" style="--ff-dur:2.4s;animation-delay:-0.7s"/>
+      <circle cx="958"  cy="114" r="1.1" fill="#C4FF38" style="--ff-dur:1.7s;animation-delay:-2.6s"/>
+      <circle cx="146"  cy="123" r="0.9" fill="#C0FF34" style="--ff-dur:3.2s;animation-delay:-1.4s"/>
+      <circle cx="476"  cy="122" r="0.9" fill="#C8FF3C" style="--ff-dur:2.6s;animation-delay:-0.2s"/>
+      <circle cx="726"  cy="122" r="1.0" fill="#C0FF34" style="--ff-dur:2.0s;animation-delay:-2.8s"/>
+      <circle cx="992"  cy="112" r="0.9" fill="#C4FF38" style="--ff-dur:3.3s;animation-delay:-1.7s"/>
     </g>
 
     <g id="shooting-star" opacity="0">
@@ -561,7 +596,44 @@
       setOpacity('clouds', s.cloudOpacity);
     }
     if (typeof s.birdOpacity === 'number') {
-      setOpacity('bird-group', s.birdOpacity);
+      setOpacity('bird-group',    s.birdOpacity);
+      setOpacity('vulture-group', s.birdOpacity > 0.3 ? s.birdOpacity : 0);
+      // Hawk visibility is managed by the occasional-bird timer below.
+      // Store intent so the timer can decide whether to fire.
+      window._skyBirdOpacity = s.birdOpacity;
+    }
+
+    // ── Fireflies ─────────────────────────────────────────────────────────
+    if (typeof s.fireflyOpacity === 'number') {
+      setOpacity('firefly-group', s.fireflyOpacity);
+    }
+
+    // ── Owl ───────────────────────────────────────────────────────────────
+    if (typeof s.owlOpacity === 'number') {
+      setOpacity('owl-perch', s.owlOpacity > 0.15 ? s.owlOpacity : 0);
+      setOpacity('owl-sweep', s.owlOpacity > 0.4  ? s.owlOpacity : 0);
+    }
+
+    // ── Rim light ─────────────────────────────────────────────────────────
+    if (typeof s.rimOpacity === 'number') {
+      setOpacity('rim-light-line', s.rimOpacity);
+      setOpacity('rim-light-soft', s.rimOpacity * 0.6);
+      setOpacity('rim-r2',         s.rimOpacity * 0.7);
+      setOpacity('rim-r3',         s.rimOpacity * 0.5);
+      setOpacity('rim-r4',         s.rimOpacity * 0.35);
+    }
+    if (s.rimColor) {
+      setAttr('rim-light-line', 'stroke', s.rimColor);
+      setAttr('rim-r2',         'stroke', s.rimColor);
+    }
+
+    // ── Precipitation ──────────────────────────────────────────────────────
+    if (typeof s.precipitationOpacity === 'number') {
+      var isSnow = s.precipitationType === 'snow';
+      var isMist = s.precipitationType === 'mist';
+      setOpacity('snow-group',  isSnow ? s.precipitationOpacity : 0);
+      setOpacity('mist-overlay', isMist ? s.precipitationOpacity : 0);
+      setOpacity('fog',          isMist ? s.precipitationOpacity * 0.6 : 0);
     }
   }
 
@@ -576,6 +648,37 @@
       // Never let SVG update errors surface to the user
     }
   });
+
+  // ── Reduced-motion: freeze SMIL wildlife animations ────────────────────────
+  var _reducedMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (_reducedMotion) {
+    ['hawk', 'owl-sweep'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.querySelectorAll('animateTransform').forEach(function (a) {
+          try { a.endElement(); } catch (e) {}
+        });
+      }
+    });
+  }
+
+  // ── Occasional hawk fly-through ─────────────────────────────────────────────
+  // Fires once when birdOpacity > 0.2, then schedules the next pass 30–90s later.
+  // Respects prefers-reduced-motion.
+  (function scheduleHawk() {
+    if (_reducedMotion) return;
+
+    var delay = 30000 + Math.random() * 60000; // 30–90 s
+    setTimeout(function () {
+      if ((window._skyBirdOpacity || 0) > 0.2) {
+        setOpacity('hawk', 1);
+        // Hide hawk after one SMIL pass (~65 s) to let it loop naturally but not persist at low birdOp
+        setTimeout(function () { setOpacity('hawk', 0); }, 66000);
+      }
+      scheduleHawk();
+    }, delay);
+  }());
 
 }());
 </script>
