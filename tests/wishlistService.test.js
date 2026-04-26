@@ -1,6 +1,6 @@
 /**
  * @file wishlistService.test.js
- * @description Tests for CF-ne83 Wishlist Service — CRUD + priceAtAdd tracking.
+ * @description Tests for CF-ne83 + CF-nt2f Wishlist Service — CRUD + priceAtAdd + getWishlistByMemberId.
  *
  * Tests:
  *  - addToWishlist: adds item, stores priceAtAdd, rejects invalid input, dedup, cap
@@ -11,7 +11,7 @@
  *  - priceAtAdd tracking: field persisted and immutable on add
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert, __onUpdate, __onRemove, __getInserted, __getUpdated, __getRemoved } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __onUpdate, __onRemove, __getInserted, __getUpdated, __getRemoved, __setQueryError, __reset as __wixDataReset } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import {
@@ -445,7 +445,7 @@ describe('getWishlistByMemberId', () => {
     expect(result.success).toBe(false);
   });
 
-  it('returns success:false when rate limit is exceeded', async () => {
+  it('returns success:false with error:rate_limited when rate limit is exceeded', async () => {
     __seed('WishlistShareRateLimit', [{
       _id: 'rl-1',
       key: hashRateLimitKey('member-99'),
@@ -454,7 +454,22 @@ describe('getWishlistByMemberId', () => {
     }]);
     const result = await getWishlistByMemberId('member-99');
     expect(result.success).toBe(false);
+    expect(result.error).toBe('rate_limited');
     expect(result.items).toHaveLength(0);
+  });
+
+  it('resets rate limit after window expires and allows access', async () => {
+    __seed('Wishlist', [makeWishlistItem({ memberId: 'member-99' })]);
+    // Exhausted window that started 2 minutes ago — past the 60s window
+    __seed('WishlistShareRateLimit', [{
+      _id: 'rl-1',
+      key: hashRateLimitKey('member-99'),
+      count: 30,
+      windowStart: Date.now() - 120_000,
+    }]);
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
   });
 
   it('allows access when rate limit is not yet exceeded', async () => {
@@ -493,6 +508,16 @@ describe('getWishlistByMemberId', () => {
     const result = await getWishlistByMemberId('member-99');
     expect(result.items).toHaveLength(1);
     expect(result.items[0].id).toBe('wl-a');
+  });
+
+  it('returns success:false with error:server_error when wixData throws', async () => {
+    __setQueryError('Wishlist', new Error('wixData internal error'));
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('server_error');
+    expect(result.items).toHaveLength(0);
+    // Reset query error so later tests are not affected
+    __wixDataReset();
   });
 });
 

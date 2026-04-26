@@ -13,7 +13,7 @@
  *   memberId (Text, indexed)
  *   productId (Text, indexed)
  *   name (Text)
- *   price (Number) — current display price (updated on load)
+ *   price (Number) — display price at time of last explicit update (not auto-refreshed)
  *   priceAtAdd (Number) — price at time of wishlist add (never updated)
  *   imageUrl (Text)
  *   productSlug (Text)
@@ -23,7 +23,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const WISHLIST_MAX_ITEMS = 100;
@@ -179,7 +179,7 @@ export const getWishlistByMemberId = webMethod(
   Permissions.Anyone,
   async (memberId) => {
     try {
-      const cleanId = sanitize(memberId, 36);
+      const cleanId = validateId(memberId);
       if (!cleanId) return { success: false, items: [], total: 0 };
 
       // Rate-limit per memberId to prevent enumeration of arbitrary IDs.
@@ -188,7 +188,7 @@ export const getWishlistByMemberId = webMethod(
         cleanId,
         { max: 30, windowMs: 60_000 },
       );
-      if (!allowed) return { success: false, items: [], total: 0 };
+      if (!allowed) return { success: false, error: 'rate_limited', items: [], total: 0 };
 
       const result = await wixData.query('Wishlist')
         .eq('memberId', cleanId)
@@ -203,7 +203,7 @@ export const getWishlistByMemberId = webMethod(
       };
     } catch (err) {
       console.error('[wishlistService] getWishlistByMemberId error:', err);
-      return { success: false, items: [], total: 0 };
+      return { success: false, error: 'server_error', items: [], total: 0 };
     }
   }
 );
