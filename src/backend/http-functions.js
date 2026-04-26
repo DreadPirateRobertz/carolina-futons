@@ -7,6 +7,7 @@ import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
+import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
@@ -2545,4 +2546,92 @@ export async function get_weeklyBlogDigestCron(request) {
       headers: JSON_HEADERS,
     });
   }
+}
+
+// ── /_functions/contactSubmissions ───────────────────────────────────
+//
+// HTTP wrapper around emailService.sendEmail so external front-ends
+// (carolina-futons-web Next.js) submit the contact form through the
+// same Velo path that powers the legacy Wix Studio site — reusing the
+// existing rate-limit + site-owner triggered-email pipeline.
+//
+// CORS allowlist (see backend/utils/cors): prod Vercel domain,
+// project-scoped Vercel domain, branch preview URLs, localhost dev.
+
+/**
+ * @function post_contactSubmissions
+ * @route POST /_functions/contactSubmissions
+ * @param {Object} request.body.json
+ * @param {string} request.body.json.name    — required, ≤200 chars
+ * @param {string} request.body.json.email   — required, ≤254 chars, valid format
+ * @param {string} [request.body.json.phone] — optional, ≤20 chars
+ * @param {string} [request.body.json.subject] — optional, ≤300 chars
+ * @param {string} request.body.json.message — required, ≤2000 chars
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { success: true } on send;
+ *   400 { success: false, error } on validation;
+ *   429 { success: false, error } on per-email rate limit (3/hour);
+ *   500 { success: false, error } on transport failure or sendEmail
+ *   returning a non-object (webMethod proxy fault).
+ */
+export async function post_contactSubmissions(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.warn('[contactSubmissions] body parse failed:', parseErr?.message ?? parseErr);
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const result = await sendEmail({
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      subject: body.subject,
+      message: body.message,
+    });
+
+    // Defensive: webMethod proxy can theoretically resolve to undefined on
+    // backend infrastructure failures. Treat as 500 — it's not a client bug.
+    if (!result) {
+      console.error('[contactSubmissions] sendEmail resolved without a result envelope');
+      return serverError({
+        body: JSON.stringify({ success: false, error: 'Internal server error' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    if (result.success !== true) {
+      // Distinguish rate-limit (429) and transport failure (500) from
+      // validation (400). sendEmail's outer catch returns success:false
+      // with a "Failed to send message…" message — that is an infra
+      // outage, not a client validation error. Other handlers in this
+      // file already return 429 explicitly for rate-limit so the cfw
+      // client can back off (e.g., L1867, L2183, L2255).
+      const message = result.message ?? '';
+      const lowered = message.toLowerCase();
+      const status = lowered.includes('too many requests')
+        ? 429
+        : lowered.startsWith('failed to send')
+        ? 500
+        : 400;
+      return response({
+        status,
+        body: JSON.stringify({ success: false, error: message || 'Submission rejected' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (contactSubmissions):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_contactSubmissions(request) {
+  return response(corsPreflight(request));
 }

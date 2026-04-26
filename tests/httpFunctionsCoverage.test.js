@@ -13,6 +13,11 @@ import {
   __setInsertError,
 } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
+import {
+  __reset as crmReset,
+  __getEmailLog as crmEmailLog,
+  __failNextEmail as crmFailNextEmail,
+} from './__mocks__/wix-crm-backend.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import { __setAccount, __reset as resetLoyalty } from './__mocks__/wix-loyalty.v2.js';
 import {
@@ -26,6 +31,8 @@ import {
   post_trackReferral,
   get_bundles,
   post_addBundleToCart,
+  post_contactSubmissions,
+  options_contactSubmissions,
   get_productQA,
   post_submitQuestion,
   post_answerQuestion,
@@ -918,5 +925,156 @@ describe('get_cleanupRateLimitCron', () => {
     ]);
     const result = await get_cleanupRateLimitCron(cronReq('cleanup-key'));
     expect(result.status).toBe(200);
+  });
+});
+
+// ── post_contactSubmissions / options_contactSubmissions ─────────────────────
+
+describe('post_contactSubmissions', () => {
+  const goodOrigin = 'https://carolina-futons-web.vercel.app';
+
+  function buildReq({ body, origin = goodOrigin } = {}) {
+    return {
+      headers: { origin },
+      body: { text: async () => body },
+    };
+  }
+
+  beforeEach(() => {
+    __setSecrets({ SITE_OWNER_CONTACT_ID: 'owner-1' });
+    __seed('EmailRateLimit', []);
+    crmReset();
+  });
+
+  it('returns 400 for invalid JSON body', async () => {
+    const result = await post_contactSubmissions(buildReq({ body: '{ bad json' }));
+    expect(result.status).toBe(400);
+    const parsed = JSON.parse(result.body);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toMatch(/Invalid JSON/i);
+  });
+
+  it('returns 400 when sendEmail rejects required-field validation', async () => {
+    // sendEmail requires {name, email, message}; subject/phone are optional.
+    // Omitting `message` reproduces a real client misuse without engaging
+    // the triggeredEmails mock.
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+        }),
+      }),
+    );
+    expect(result.status).toBe(400);
+    const parsed = JSON.parse(result.body);
+    expect(parsed.success).toBe(false);
+    expect(typeof parsed.error).toBe('string');
+  });
+
+  it('returns 400 for invalid email format', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'not-an-email',
+          subject: 'Frame question',
+          message: 'Do you ship to Hendersonville?',
+        }),
+      }),
+    );
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).success).toBe(false);
+  });
+
+  it('returns 200 + emits triggered email on a fully valid submission', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          phone: '828-555-0100',
+          subject: 'Frame question',
+          message: 'Do you ship to Hendersonville?',
+        }),
+      }),
+    );
+    expect(result.status).toBe(200);
+    expect(JSON.parse(result.body)).toEqual({ success: true });
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
+    const log = crmEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].contactId).toBe('owner-1');
+  });
+
+  it('returns 429 when sendEmail surfaces a rate-limit message', async () => {
+    // 4th submission within the 1-hour window trips _checkEmailRateLimit
+    // (max 3 — see emailService.web.js EMAIL_RATE_LIMIT_MAX).
+    const valid = JSON.stringify({
+      name: 'Stilgar',
+      email: 'stilgar@example.com',
+      subject: 'Repeated ping',
+      message: 'Hi',
+    });
+    for (let i = 0; i < 3; i++) {
+      const ok = await post_contactSubmissions(buildReq({ body: valid }));
+      expect(ok.status).toBe(200);
+    }
+    const limited = await post_contactSubmissions(buildReq({ body: valid }));
+    expect(limited.status).toBe(429);
+    const parsed = JSON.parse(limited.body);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toMatch(/too many requests/i);
+  });
+
+  it('returns 500 when triggered email transport throws', async () => {
+    crmFailNextEmail();
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Outage probe',
+          message: 'Hi',
+        }),
+      }),
+    );
+    expect(result.status).toBe(500);
+    expect(JSON.parse(result.body).success).toBe(false);
+  });
+
+  it('echoes Access-Control-Allow-Origin for allowlisted origin on error', async () => {
+    const result = await post_contactSubmissions(buildReq({ body: '{ bad' }));
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
+    expect(result.headers['Vary']).toBe('Origin');
+  });
+
+  it('omits Access-Control-Allow-Origin for disallowed origin', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({ body: '{ bad', origin: 'https://attacker.example.com' }),
+    );
+    expect(result.headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+});
+
+describe('options_contactSubmissions', () => {
+  it('returns 204 with CORS headers for allowlisted origin', () => {
+    const result = options_contactSubmissions({
+      headers: { origin: 'https://carolina-futons-web.vercel.app' },
+    });
+    expect(result.status).toBe(204);
+    expect(result.headers['Access-Control-Allow-Origin']).toBe(
+      'https://carolina-futons-web.vercel.app',
+    );
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/POST/);
+    expect(result.headers['Access-Control-Allow-Methods']).toMatch(/OPTIONS/);
+  });
+
+  it('returns 403 for disallowed origin', () => {
+    const result = options_contactSubmissions({
+      headers: { origin: 'https://attacker.example.com' },
+    });
+    expect(result.status).toBe(403);
   });
 });
