@@ -30,6 +30,7 @@ export { post_getLeaderboard } from 'backend/leaderboard-http';
 import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
+import { subscribeToNewsletter } from 'backend/newsletterService.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -2633,5 +2634,76 @@ export async function post_contactSubmissions(request) {
 }
 
 export function options_contactSubmissions(request) {
+  return response(corsPreflight(request));
+}
+
+// ── /_functions/mailingListSignups ────────────────────────────────────────
+//
+// Velo HTTP wrapper for newsletterService.subscribeToNewsletter so the
+// Next.js frontend (carolina-futons-web) uses the same backend path as
+// the Wix Studio footer — reusing rate-limit, dedup, ESP-sync, and
+// audit-log pipelines.
+//
+// Called by: Next.js POST /api/newsletter/subscribe route handler.
+// Server Action can still serve as client-side fallback if this path fails.
+//
+// CORS allowlist: prod Vercel domain, project-scoped preview URLs, localhost.
+
+/**
+ * @function post_mailingListSignups
+ * @route POST /_functions/mailingListSignups
+ * @param {Object} request.body.json
+ * @param {string} request.body.json.email    — required, ≤254 chars, valid format
+ * @param {string} [request.body.json.source] — optional, ≤50 chars, defaults to 'footer_newsletter'
+ * @param {string} [request.body.json.honeypot] — optional bot-trap; non-empty → silent 200
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { success: true, discountCode } on subscribe or duplicate;
+ *   400 { success: false, error } on validation;
+ *   429 { success: false, error } on per-email rate limit (3/hour);
+ *   500 { success: false, error } on unexpected backend failure.
+ */
+export async function post_mailingListSignups(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.warn('[mailingListSignups] body parse failed:', parseErr?.message ?? parseErr);
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const result = await subscribeToNewsletter(body.email, {
+      source: body.source || 'footer_newsletter',
+      honeypot: body.honeypot,
+    });
+
+    if (!result) {
+      console.error('[mailingListSignups] subscribeToNewsletter resolved without a result envelope');
+      return serverError({
+        body: JSON.stringify({ success: false, error: 'Internal server error' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    if (result.success !== true) {
+      const message = result.message ?? '';
+      const status = message.toLowerCase().includes('too many requests') ? 429 : 400;
+      return response({
+        status,
+        body: JSON.stringify({ success: false, error: message || 'Subscription rejected' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    return ok({ body: JSON.stringify({ success: true, discountCode: result.discountCode }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (mailingListSignups):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_mailingListSignups(request) {
   return response(corsPreflight(request));
 }
