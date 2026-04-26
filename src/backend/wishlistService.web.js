@@ -24,6 +24,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const WISHLIST_MAX_ITEMS = 100;
 
@@ -158,6 +159,50 @@ export const getWishlist = webMethod(
       };
     } catch (err) {
       console.error('[wishlistService] getWishlist error:', err);
+      return { success: false, items: [], total: 0 };
+    }
+  }
+);
+
+// ── getWishlistByMemberId ─────────────────────────────────────────
+
+/**
+ * Read another member's wishlist by memberId.
+ * Used by the /wishlist/[token] share view in cfw — the HMAC token is
+ * verified on the cfw side before calling this; we only rate-limit here
+ * to prevent brute-force memberId enumeration.
+ *
+ * @param {string} memberId - Target member's _id (decoded from cfw share token)
+ * @returns {Promise<{success: boolean, items: Array, total: number}>}
+ */
+export const getWishlistByMemberId = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    try {
+      const cleanId = sanitize(memberId, 36);
+      if (!cleanId) return { success: false, items: [], total: 0 };
+
+      // Rate-limit per memberId to prevent enumeration of arbitrary IDs.
+      const { allowed } = await checkRateLimit(
+        'WishlistShareRateLimit',
+        cleanId,
+        { max: 30, windowMs: 60_000 },
+      );
+      if (!allowed) return { success: false, items: [], total: 0 };
+
+      const result = await wixData.query('Wishlist')
+        .eq('memberId', cleanId)
+        .descending('addedAt')
+        .limit(WISHLIST_MAX_ITEMS)
+        .find({ suppressAuth: true });
+
+      return {
+        success: true,
+        items: result.items.map(_mapItem),
+        total: result.totalCount,
+      };
+    } catch (err) {
+      console.error('[wishlistService] getWishlistByMemberId error:', err);
       return { success: false, items: [], total: 0 };
     }
   }
