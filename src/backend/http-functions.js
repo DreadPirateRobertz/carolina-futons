@@ -23,6 +23,7 @@ import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { corsHeaders, corsPreflight } from 'backend/utils/cors';
+import { getDeliveryZone as _getDeliveryZone } from 'backend/deliveryZoneService.web';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
@@ -2941,5 +2942,33 @@ export async function post_unsubscribe(request) {
 }
 
 export function options_unsubscribe(request) {
+  return response(corsPreflight(request));
+}
+
+// ── /_functions/deliveryZone ──────────────────────────────────────────────
+//
+// Delivery zone resolution for /getting-it-home page + Next.js frontend.
+// URL: GET https://www.carolinafutons.com/_functions/deliveryZone?zip=28792
+// cf-3qt.4.4: proxies to getDeliveryZone webMethod (distance calc + zone lookup).
+
+export async function get_deliveryZone(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  const zip = (request.query?.zip || '').trim();
+  if (!zip || !/^\d{5}$/.test(zip)) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'Missing or invalid zip parameter (must be 5 digits)' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  try {
+    const result = await _getDeliveryZone(zip);
+    return ok({ body: JSON.stringify({ success: true, ...result }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (deliveryZone):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_deliveryZone(request) {
   return response(corsPreflight(request));
 }
