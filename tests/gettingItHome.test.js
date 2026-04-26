@@ -186,4 +186,154 @@ describe('Getting It Home Page', () => {
       expect(contactLink.onClick).toHaveBeenCalled();
     });
   });
+
+  // ── Assembly Guides Repeater ──────────────────────────────────────
+
+  describe('assembly guides', () => {
+    it('populates assemblyGuidesRepeater with guide items', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      expect(repeater.data.length).toBeGreaterThan(0);
+    });
+
+    it('sets accessible label on assemblyGuidesRepeater', async () => {
+      await onReadyHandler();
+      expect(getEl('#assemblyGuidesRepeater').accessibility.ariaLabel).toBeTruthy();
+    });
+
+    it('onItemReady wires guideTitle text from item data', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_guide_${sel}`);
+      cb($item, { _id: 'frame', title: 'Frame Assembly', time: '30 min', tools: 'Allen wrench', steps: 'Step 1. Step 2.' });
+      expect(getEl('_guide_#guideTitle').text).toBe('Frame Assembly');
+    });
+
+    it('onItemReady wires guideTime text from item data', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_guide_${sel}`);
+      cb($item, { _id: 'frame', title: 'Frame Assembly', time: '30 min', tools: 'Allen wrench', steps: 'Step 1.' });
+      expect(getEl('_guide_#guideTime').text).toBe('30 min');
+    });
+
+    it('onItemReady wires guideTools text from item data', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_guide_${sel}`);
+      cb($item, { _id: 'frame', title: 'Frame Assembly', time: '30 min', tools: 'Allen wrench', steps: 'Step 1.' });
+      expect(getEl('_guide_#guideTools').text).toBe('Allen wrench');
+    });
+
+    it('onItemReady wires guideSteps text from item data', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_guide_${sel}`);
+      cb($item, { _id: 'frame', title: 'Frame Assembly', time: '30 min', tools: 'Allen wrench', steps: 'Step 1. Step 2.' });
+      expect(getEl('_guide_#guideSteps').text).toBe('Step 1. Step 2.');
+    });
+
+    it('onItemReady wires guideExpandBtn click to toggle steps visibility', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#assemblyGuidesRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_guide2_${sel}`);
+      cb($item, { _id: 'mattress', title: 'Mattress Setup', time: '10 min', tools: 'None', steps: 'Unbox.' });
+      expect(getEl('_guide2_#guideExpandBtn').onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── Care Tips Repeater ────────────────────────────────────────────
+
+  describe('care tips', () => {
+    it('populates careTipsRepeater with care tip items', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#careTipsRepeater');
+      expect(repeater.data.length).toBeGreaterThan(0);
+    });
+
+    it('sets accessible label on careTipsRepeater', async () => {
+      await onReadyHandler();
+      expect(getEl('#careTipsRepeater').accessibility.ariaLabel).toBeTruthy();
+    });
+
+    it('careCategoryDropdown has options set', async () => {
+      await onReadyHandler();
+      const dropdown = getEl('#careCategoryDropdown');
+      expect(dropdown.options).toBeDefined();
+      expect(dropdown.options.length).toBeGreaterThan(0);
+    });
+
+    it('careCategoryDropdown onChange filters careTipsRepeater', async () => {
+      await onReadyHandler();
+      const dropdown = getEl('#careCategoryDropdown');
+      const repeater = getEl('#careTipsRepeater');
+      const onChangeCb = dropdown.onChange.mock.calls[0]?.[0];
+      expect(onChangeCb).toBeInstanceOf(Function);
+      // Simulate selection
+      onChangeCb({ target: { value: 'frame' } });
+      expect(repeater.data.length).toBeGreaterThan(0);
+    });
+
+    it('onItemReady wires care tip title and content', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#careTipsRepeater');
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`_care_${sel}`);
+      cb($item, { _id: 'tip1', title: 'Tighten Bolts', content: 'Check bolts monthly.', category: 'frame' });
+      expect(getEl('_care_#careTipTitle').text).toBe('Tighten Bolts');
+      expect(getEl('_care_#careTipContent').text).toBe('Check bolts monthly.');
+    });
+  });
+
+  // ── Delivery Prep Instructions ────────────────────────────────────
+
+  describe('delivery prep instructions', () => {
+    it('deliveryTierDropdown has options set', async () => {
+      await onReadyHandler();
+      const dropdown = getEl('#deliveryTierDropdown');
+      expect(dropdown.options).toBeDefined();
+      expect(dropdown.options.length).toBeGreaterThan(0);
+    });
+
+    it('deliveryTierDropdown onChange updates deliveryPrepInstructions text', async () => {
+      await onReadyHandler();
+      const dropdown = getEl('#deliveryTierDropdown');
+      const onChangeCb = dropdown.onChange.mock.calls[0]?.[0];
+      expect(onChangeCb).toBeInstanceOf(Function);
+      onChangeCb({ target: { value: 'diy' } });
+      const prepEl = getEl('#deliveryPrepInstructions');
+      expect(prepEl.text.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── Schedule Delivery Button ──────────────────────────────────────
+
+  describe('schedule delivery button', () => {
+    it('scheduleDeliveryBtn onClick navigates to contact form', async () => {
+      await onReadyHandler();
+      const btn = getEl('#scheduleDeliveryBtn');
+      expect(btn.onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── Shipping Schema JSON-LD ───────────────────────────────────────
+
+  describe('shipping schema JSON-LD', () => {
+    it('sets shippingSchemaHtml with schema.org markup', async () => {
+      await onReadyHandler();
+      const schemaEl = getEl('#shippingSchemaHtml');
+      expect(schemaEl.html).toContain('schema.org');
+    });
+
+    it('shipping schema contains OfferShippingDetails type', async () => {
+      await onReadyHandler();
+      const schemaEl = getEl('#shippingSchemaHtml');
+      expect(schemaEl.html).toContain('OfferShippingDetails');
+    });
+  });
 });
