@@ -64,7 +64,6 @@ $w.onReady(async function () {
   // Deferred sections: below-fold content loaded during idle time
   const sections = [
     { name: 'heroAnimation', init: initHeroAnimation, critical: true },
-    { name: 'challengeOfTheWeek', init: initChallengeSection, critical: false },
     { name: 'featuredProducts', init: loadFeaturedProducts, critical: false },
     { name: 'categoryShowcase', init: initCategoryShowcase, critical: true },
     { name: 'trustBar', init: initTrustBar, critical: true },
@@ -147,18 +146,6 @@ $w.onReady(async function () {
     try { loadFeaturedProducts(); } catch (e) {}
   });
 });
-
-// ── Challenge of the Week Section (cf-nqq) ──────────────────────────
-
-/**
- * Initialize the ChallengeOfTheWeek section below the hero.
- * Delegates to the widget which fetches the active community challenge and
- * collapses #weeklyContainer automatically when no challenge is available.
- * @returns {Promise<void>}
- */
-async function initChallengeSection() {
-  await initChallengeOfTheWeekWidget({ $w });
-}
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
 
