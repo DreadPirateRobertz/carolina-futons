@@ -299,6 +299,13 @@ describe('Home page onReady', () => {
     expect(deferred).toHaveLength(18);
   });
 
+  it('has no duplicate section names', async () => {
+    await onReadyHandler();
+    const sections = prioritizeSections.mock.calls[0][0];
+    const names = sections.map(s => s.name);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
   it('every section has a name and init function', async () => {
     await onReadyHandler();
     const sections = prioritizeSections.mock.calls[0][0];
