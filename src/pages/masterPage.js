@@ -18,6 +18,7 @@ import { session as wixSession } from 'wix-storage-frontend';
 import { initAppDownloadBanner } from 'public/AppDownloadBanner';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter, initMountainDividerWithSkyWiring } from 'public/FooterSection';
+import { updateHeaderSkylineWithState } from 'public/MountainSkylineFigma';
 import { initCartUpsell } from 'public/CartUpsell';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
@@ -61,11 +62,11 @@ $w.onReady(async function () {
   initMiniCartAutoOpen();
   initCartUpsell($w);
   initFooter($w);
-  // Wire footer mountain divider to LivingSkyState — re-render on every sky tick.
-  // e.data is the raw LivingSkyState object; ridgeColors extraction happens inside initMountainDividerWithSkyWiring.
+  // Wire footer + header to LivingSkyState — re-render on every sky tick.
   try {
     $w('#livingSkyFrame').onMessage((e) => {
       initMountainDividerWithSkyWiring($w, e.data);
+      updateHeaderSkylineWithState($w, e.data, { containerId: '#headerSkyline' });
     });
   } catch (_) {}
   initMountainSkylineHeader();

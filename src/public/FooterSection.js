@@ -41,9 +41,9 @@ const DEFAULT_R4 = colors.mountainBlue; // far (use token, not hardcoded hex)
  * Three ridge layers shift color based on LivingSkyState.ridgeColors.
  *
  * Layer mapping (SVG paint order, background → foreground):
- *   Layer 1 far   — ridgeColors.r4 at opacity 0.22
- *   Layer 2 mid   — ridgeColors.r2 at opacity 0.40
- *   Layer 3 near  — ridgeColors.r1 at opacity 0.75
+ *   Layer 1 far   — ridgeColors.r4 at opacity 0.45
+ *   Layer 2 mid   — ridgeColors.r2 at opacity 0.65
+ *   Layer 3 near  — ridgeColors.r1 at opacity 0.88
  *
  * SVG filter chain:
  *   feTurbulence result="cf-noise" → feDisplacementMap in2="cf-noise"
@@ -59,27 +59,17 @@ export function buildFooterMountainSVG(ridgeColors = {}) {
 
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" style="display:block;width:100%;height:auto;">'
     + '<defs>'
-    + '<filter id="haze-footer"><feGaussianBlur stdDeviation="2"/></filter>'
     + '<filter id="cf-ridge-warp" x="-5%" y="-5%" width="110%" height="110%">'
     + '<feTurbulence type="fractalNoise" baseFrequency="0.04 0.08" numOctaves="3" seed="42" result="cf-noise"/>'
     + '<feDisplacementMap in="SourceGraphic" in2="cf-noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>'
     + '</filter>'
-    + '<linearGradient id="footer-sky" x1="0" y1="0" x2="0" y2="1">'
-    + '<stop offset="0%" stop-color="#F2E8D5" stop-opacity="0"/>'
-    + '<stop offset="30%" stop-color="#E8D5B7" stop-opacity="0.15"/>'
-    + '<stop offset="60%" stop-color="#B8D4E3" stop-opacity="0.08"/>'
-    + '<stop offset="100%" stop-color="#3A2518" stop-opacity="0.05"/>'
-    + '</linearGradient>'
     + '</defs>'
-    + '<rect width="1440" height="80" fill="url(#footer-sky)"/>'
     // Layer 1: far ridge — r4
-    + `<path d="M0,80 L0,52 C45,48 72,38 120,34 C168,30 195,40 245,36 C295,32 325,22 378,18 C431,14 462,28 512,24 C562,20 592,12 645,15 C698,18 728,30 778,26 C828,22 858,14 908,18 C958,22 988,32 1038,28 C1088,24 1118,16 1168,20 C1218,24 1248,34 1298,30 C1348,26 1378,18 1418,22 C1432,24 1438,30 1440,34 L1440,80 Z" fill="${r4}" opacity="0.22" filter="url(#cf-ridge-warp)"/>`
-    + '<rect x="0" y="20" width="1440" height="18" fill="#B8D4E3" opacity="0.06" filter="url(#haze-footer)"/>'
+    + `<path d="M0,80 L0,52 C45,48 72,38 120,34 C168,30 195,40 245,36 C295,32 325,22 378,18 C431,14 462,28 512,24 C562,20 592,12 645,15 C698,18 728,30 778,26 C828,22 858,14 908,18 C958,22 988,32 1038,28 C1088,24 1118,16 1168,20 C1218,24 1248,34 1298,30 C1348,26 1378,18 1418,22 C1432,24 1438,30 1440,34 L1440,80 Z" fill="${r4}" opacity="0.45" filter="url(#cf-ridge-warp)"/>`
     // Layer 2: mid ridge — r2
-    + `<path d="M0,80 L0,56 C38,52 62,42 108,38 C154,34 182,46 232,42 C282,38 312,26 365,24 C418,22 448,34 498,30 C548,26 578,18 632,20 C686,22 715,34 765,30 C815,26 845,18 898,22 C951,26 982,36 1032,32 C1082,28 1112,20 1162,24 C1212,28 1242,38 1292,34 C1342,30 1372,22 1412,26 C1430,28 1438,34 1440,38 L1440,80 Z" fill="${r2}" opacity="0.40" filter="url(#cf-ridge-warp)"/>`
-    + '<rect x="0" y="40" width="1440" height="12" fill="#B8D4E3" opacity="0.04" filter="url(#haze-footer)"/>'
+    + `<path d="M0,80 L0,56 C38,52 62,42 108,38 C154,34 182,46 232,42 C282,38 312,26 365,24 C418,22 448,34 498,30 C548,26 578,18 632,20 C686,22 715,34 765,30 C815,26 845,18 898,22 C951,26 982,36 1032,32 C1082,28 1112,20 1162,24 C1212,28 1242,38 1292,34 C1342,30 1372,22 1412,26 C1430,28 1438,34 1440,38 L1440,80 Z" fill="${r2}" opacity="0.65" filter="url(#cf-ridge-warp)"/>`
     // Layer 3: near ridge — r1
-    + `<path d="M0,80 L0,60 C42,56 68,48 118,44 C168,40 198,50 248,48 C298,46 328,36 382,34 C436,32 465,42 515,40 C565,38 598,28 652,30 C706,32 735,42 785,40 C835,38 868,30 918,32 C968,34 998,44 1048,42 C1098,40 1128,32 1178,34 C1228,36 1258,44 1308,42 C1358,40 1388,34 1422,36 C1434,37 1438,42 1440,44 L1440,80 Z" fill="${r1}" opacity="0.75" filter="url(#cf-ridge-warp)"/>`
+    + `<path d="M0,80 L0,60 C42,56 68,48 118,44 C168,40 198,50 248,48 C298,46 328,36 382,34 C436,32 465,42 515,40 C565,38 598,28 652,30 C706,32 735,42 785,40 C835,38 868,30 918,32 C968,34 998,44 1048,42 C1098,40 1128,32 1178,34 C1228,36 1258,44 1308,42 C1358,40 1388,34 1422,36 C1434,37 1438,42 1440,44 L1440,80 Z" fill="${r1}" opacity="0.88" filter="url(#cf-ridge-warp)"/>`
     + '<g class="birds" opacity="0.3">'
     + '<path d="M280,18 C284,14 288,12 292,15 C296,12 300,14 304,18" fill="none" stroke="#3A2518" stroke-width="1" stroke-linecap="round"/>'
     + '<path d="M302,15 C305,12 308,11 311,14 C314,11 317,12 320,15" fill="none" stroke="#3A2518" stroke-width="0.8" stroke-linecap="round"/>'

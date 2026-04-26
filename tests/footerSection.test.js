@@ -721,7 +721,7 @@ describe('initMountainDivider', () => {
 
   it('includes mountain ridgeline paths', () => {
     initMountainDivider($w);
-    expect($w('#footerMountainDivider').html).toContain('haze-footer');
+    expect($w('#footerMountainDivider').html).toContain('cf-ridge-warp');
     expect($w('#footerMountainDivider').html).toContain('pine-trees');
     expect($w('#footerMountainDivider').html).toContain('wildflowers');
     expect($w('#footerMountainDivider').html).toContain('birds');
@@ -778,22 +778,22 @@ describe('buildFooterMountainSVG', () => {
     expect(svg).toContain('in2="cf-noise"');
   });
 
-  it('applies ridgeColors.r4 to far ridge at opacity 0.22', () => {
+  it('applies ridgeColors.r4 to far ridge at opacity 0.45', () => {
     const svg = buildFooterMountainSVG(DEFAULT_COLORS);
     expect(svg).toContain('fill="#B8D4E3"');
-    expect(svg).toContain('opacity="0.22"');
+    expect(svg).toContain('opacity="0.45"');
   });
 
-  it('applies ridgeColors.r2 to mid ridge at opacity 0.40', () => {
+  it('applies ridgeColors.r2 to mid ridge at opacity 0.65', () => {
     const svg = buildFooterMountainSVG(DEFAULT_COLORS);
     expect(svg).toContain('fill="#5B8FA8"');
-    expect(svg).toContain('opacity="0.40"');
+    expect(svg).toContain('opacity="0.65"');
   });
 
-  it('applies ridgeColors.r1 to near ridge at opacity 0.75', () => {
+  it('applies ridgeColors.r1 to near ridge at opacity 0.88', () => {
     const svg = buildFooterMountainSVG(DEFAULT_COLORS);
     expect(svg).toContain('fill="#3A2518"');
-    expect(svg).toContain('opacity="0.75"');
+    expect(svg).toContain('opacity="0.88"');
   });
 
   it('changes far ridge when ridgeColors.r4 changes', () => {
@@ -816,8 +816,8 @@ describe('buildFooterMountainSVG', () => {
     expect(svg).toContain('wildflowers');
   });
 
-  it('retains haze-footer filter', () => {
-    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('haze-footer');
+  it('uses cf-ridge-warp filter for organic ridge edges', () => {
+    expect(buildFooterMountainSVG(DEFAULT_COLORS)).toContain('cf-ridge-warp');
   });
 
   it('applies cf-ridge-warp filter to near ridge path', () => {
@@ -826,9 +826,9 @@ describe('buildFooterMountainSVG', () => {
 
   it('falls back to design-token defaults when called with no arguments', () => {
     const svg = buildFooterMountainSVG();
-    expect(svg).toContain('opacity="0.22"');
-    expect(svg).toContain('opacity="0.40"');
-    expect(svg).toContain('opacity="0.75"');
+    expect(svg).toContain('opacity="0.45"');
+    expect(svg).toContain('opacity="0.65"');
+    expect(svg).toContain('opacity="0.88"');
     expect(svg).not.toContain('undefined');
   });
 
@@ -1331,26 +1331,25 @@ describe('buildFooterMountainSVG', () => {
     expect(svg).toContain('preserveAspectRatio="none"');
   });
 
-  it('applies r1 color (near layer) at opacity 0.75', () => {
+  it('applies r1 color (near layer) at opacity 0.88', () => {
     const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
     const svg = buildFooterMountainSVG(colors);
-    // Near layer uses r1 at opacity 0.75
     expect(svg).toContain('#AA1122');
-    expect(svg).toContain('opacity="0.75"');
+    expect(svg).toContain('opacity="0.88"');
   });
 
-  it('applies r2 color (mid layer) at opacity 0.40', () => {
+  it('applies r2 color (mid layer) at opacity 0.65', () => {
     const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
     const svg = buildFooterMountainSVG(colors);
     expect(svg).toContain('#BB3344');
-    expect(svg).toContain('opacity="0.40"');
+    expect(svg).toContain('opacity="0.65"');
   });
 
-  it('applies r4 color (far layer) at opacity 0.22', () => {
+  it('applies r4 color (far layer) at opacity 0.45', () => {
     const colors = { r1: '#AA1122', r2: '#BB3344', r4: '#CC5566' };
     const svg = buildFooterMountainSVG(colors);
     expect(svg).toContain('#CC5566');
-    expect(svg).toContain('opacity="0.22"');
+    expect(svg).toContain('opacity="0.45"');
   });
 
   it('SVG filter chain: feTurbulence has result="cf-noise"', () => {
