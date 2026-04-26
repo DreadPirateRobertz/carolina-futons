@@ -40,11 +40,15 @@ export function getTeamMembers() {
       name: 'Brenda Deal',
       role: 'Owner & Furniture Expert',
       bio: 'Brenda brings 30+ years of home furnishing expertise and a passion for helping customers find exactly the right piece for their space.',
+      photo: 'https://static.wixstatic.com/media/placeholder-brenda.jpg',
+      photoAlt: 'Brenda Deal, Owner of Carolina Futons',
     },
     {
       name: 'Howard Deal',
       role: 'Owner & Operations',
       bio: 'Howard manages logistics, delivery, and ensures every customer\'s experience is seamless from purchase to setup.',
+      photo: 'https://static.wixstatic.com/media/placeholder-howard.jpg',
+      photoAlt: 'Howard Deal, Owner of Carolina Futons',
     },
   ];
 }

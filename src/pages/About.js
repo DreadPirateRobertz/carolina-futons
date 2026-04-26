@@ -71,6 +71,7 @@ function initTeamSection() {
       try { $item('#teamName').text = itemData.name; } catch (e) {}
       try { $item('#teamRole').text = itemData.role; } catch (e) {}
       try { $item('#teamBio').text = itemData.bio; } catch (e) {}
+      try { if (itemData.photo) { $item('#teamPhoto').src = itemData.photo; $item('#teamPhoto').alt = itemData.photoAlt || itemData.name; } } catch (e) {}
     });
     teamRepeater.data = members.map((m, i) => ({ ...m, _id: `team-${i}` }));
   } catch (e) {}
