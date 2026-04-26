@@ -58,6 +58,15 @@ describe('About page — team section data', () => {
       expect(member.bio.length).toBeLessThanOrEqual(300);
     }
   });
+
+  it('team members include photo and photoAlt fields', () => {
+    const team = getTeamMembers();
+    for (const member of team) {
+      expect(member.photo).toBeTruthy();
+      expect(member.photoAlt).toBeTruthy();
+      expect(member.photoAlt).toContain(member.name.split(' ')[0]);
+    }
+  });
 });
 
 // ── About Page Showroom Info ─────────────────────────────────────────

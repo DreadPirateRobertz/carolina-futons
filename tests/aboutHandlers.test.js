@@ -222,6 +222,37 @@ describe('About Page', () => {
       expect(itemElements.get('#teamRole').text).toBe('Manager');
       expect(itemElements.get('#teamBio').text).toBe('Bio');
     });
+
+    it('onItemReady sets #teamPhoto src and alt when photo present', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#teamRepeater');
+      const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = new Map();
+      const $item = (sel) => {
+        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
+        return itemElements.get(sel);
+      };
+      onItemReadyCb($item, { name: 'Alice', role: 'Manager', bio: 'Bio', photo: 'https://example.com/alice.jpg', photoAlt: 'Alice headshot' });
+
+      expect(itemElements.get('#teamPhoto').src).toBe('https://example.com/alice.jpg');
+      expect(itemElements.get('#teamPhoto').alt).toBe('Alice headshot');
+    });
+
+    it('onItemReady falls back to name as alt when photoAlt missing', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#teamRepeater');
+      const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = new Map();
+      const $item = (sel) => {
+        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
+        return itemElements.get(sel);
+      };
+      onItemReadyCb($item, { name: 'Alice', role: 'Manager', bio: 'Bio', photo: 'https://example.com/alice.jpg' });
+
+      expect(itemElements.get('#teamPhoto').alt).toBe('Alice');
+    });
   });
 
   /* 7 — team gallery */
