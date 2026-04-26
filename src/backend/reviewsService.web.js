@@ -849,6 +849,45 @@ export const moderateVideoReview = webMethod(
   }
 );
 
+// ── getSiteAggregateRating ─────────────────────────────────────────────────────
+
+/**
+ * Compute aggregate rating across all approved reviews site-wide.
+ * Used by the /reviews page for schema.org AggregateRating markup.
+ *
+ * @returns {Promise<{average: number, total: number, bestRating: number}>}
+ * @permission Anyone
+ */
+export const getSiteAggregateRating = webMethod(
+  Permissions.Anyone,
+  async () => {
+    const result = await wixData.query(COLLECTION)
+      .eq('status', 'approved')
+      .limit(1000)
+      .find();
+
+    const reviews = result.items;
+    if (reviews.length === 0) return { average: 0, total: 0, bestRating: 5 };
+
+    let sum = 0;
+    let validCount = 0;
+    for (const r of reviews) {
+      if (r.rating == null || isNaN(Number(r.rating))) continue;
+      const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating))));
+      sum += rating;
+      validCount++;
+    }
+
+    if (validCount === 0) return { average: 0, total: 0, bestRating: 5 };
+
+    return {
+      average: Math.round((sum / validCount) * 10) / 10,
+      total: validCount,
+      bestRating: 5,
+    };
+  }
+);
+
 // ── getFeaturedReviews ────────────────────────────────────────────────────────
 
 /**
