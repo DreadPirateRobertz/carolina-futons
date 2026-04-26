@@ -212,7 +212,29 @@ const TEMPLATE_REGISTRY = {
     step: 1,
     subjectLine: 'We miss you, {firstName} — here\'s a special offer',
     previewText: 'It\'s been a while! Come back with an exclusive discount.',
-    variables: ['firstName', 'discountCode', 'email'],
+    variables: ['firstName', 'discountCode', 'discountAvailable', 'email'],
+    category: 'recovery',
+  },
+
+  reengagement_2: {
+    id: 'reengagement_2',
+    name: "Re-engagement — Here's a Deal",
+    sequence: 'reengagement',
+    step: 2,
+    subjectLine: "Still looking, {firstName}? Here's a deal",
+    previewText: "See what's new at Carolina Futons — your offer is still waiting.",
+    variables: ['firstName', 'discountCode', 'discountAvailable', 'email'],
+    category: 'recovery',
+  },
+
+  reengagement_3: {
+    id: 'reengagement_3',
+    name: 'Re-engagement — Last Chance',
+    sequence: 'reengagement',
+    step: 3,
+    subjectLine: 'Last chance, {firstName} — your offer expires soon',
+    previewText: "This is your final reminder. Your exclusive offer won't last.",
+    variables: ['firstName', 'discountCode', 'discountAvailable', 'email'],
     category: 'recovery',
   },
 };

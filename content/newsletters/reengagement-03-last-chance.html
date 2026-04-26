@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Last Chance — Your Offer Expires Soon</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #F0F4F8; font-family: Arial, sans-serif; color: #1E3A5F; }
+  .wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; }
+  .header { background: #1E3A5F; padding: 32px 24px; text-align: center; }
+  .header h1 { color: #ffffff; font-size: 28px; font-weight: 700; }
+  .header .tagline { color: #A8CCD8; font-size: 14px; margin-top: 8px; }
+  .urgency-bar { background: #C0392B; padding: 10px 24px; text-align: center; }
+  .urgency-bar p { color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
+  .hero { padding: 48px 32px; text-align: center; }
+  .hero h2 { font-size: 28px; color: #1E3A5F; margin-bottom: 16px; line-height: 1.3; }
+  .hero p { font-size: 16px; color: #3D5A80; line-height: 1.6; }
+  .content { padding: 0 32px 32px; }
+  .content p { font-size: 14px; color: #3D5A80; line-height: 1.6; margin-bottom: 16px; }
+  .offer-box { background: linear-gradient(135deg, #1E3A5F 0%, #3D5A80 100%); border-radius: 12px; padding: 32px 24px; text-align: center; margin: 24px 0; }
+  .offer-box .label { color: #A8CCD8; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+  .offer-box h3 { color: #ffffff; font-size: 22px; margin-bottom: 8px; }
+  .offer-box p { color: #A8CCD8; font-size: 14px; margin-bottom: 16px; }
+  .offer-box .code { display: inline-block; background: #4A7D94; color: #ffffff; padding: 8px 24px; border-radius: 4px; font-size: 20px; font-weight: 700; letter-spacing: 3px; }
+  .divider { height: 2px; background: linear-gradient(90deg, #4A7D94, #5B8FA8, #4A7D94); margin: 0 32px; }
+  .cta-block { text-align: center; padding: 32px; }
+  .cta-btn { display: inline-block; background: #4A7D94; color: #ffffff !important; padding: 14px 36px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 16px; }
+  .unsub-note { text-align: center; padding: 0 32px 24px; }
+  .unsub-note p { font-size: 13px; color: #3D5A80; font-style: italic; }
+  .footer { background: #1E3A5F; padding: 32px; text-align: center; }
+  .footer p { color: #A8CCD8; font-size: 13px; line-height: 1.6; }
+  .footer a { color: #ffffff; text-decoration: underline; }
+  .footer .address { color: #A8CCD8; font-size: 12px; margin-top: 16px; }
+  @media (max-width: 620px) {
+    .wrapper { width: 100% !important; }
+    .header, .hero, .content, .cta-block { padding-left: 16px !important; padding-right: 16px !important; }
+    .offer-box { margin: 24px 16px !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <h1>Carolina Futons</h1>
+    <div class="tagline">Quality Furniture from the Blue Ridge Mountains</div>
+  </div>
+
+  <div class="urgency-bar">
+    <p>&#9201; This is your last reminder &mdash; your offer expires in 48 hours</p>
+  </div>
+
+  <div class="hero">
+    <h2>We Hate Goodbyes, {firstName}</h2>
+    <p>Three weeks ago we reached out. You haven't been back, and we understand &mdash; timing matters. But before we stop sending you updates, we wanted to make sure you saw this one last offer.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="content">
+    <p>If the price was the sticking point, this is your moment. If you've been waiting for the right time, this is it. After this email, your exclusive discount expires and we'll respect your inbox.</p>
+
+    <div class="offer-box">
+      <div class="label">Final Offer</div>
+      <h3>10% Off &mdash; Expires in 48 Hours</h3>
+      <p>Use this code at checkout on any futon frame, mattress, Murphy bed, or cover.</p>
+      <div class="code">{discountCode}</div>
+    </div>
+
+    <p>If none of this feels right for you right now, no hard feelings. You can unsubscribe below and we'll stop writing. We hope your room turns out exactly how you pictured it &mdash; whether that's with us or not.</p>
+  </div>
+
+  <div class="cta-block">
+    <a href="https://www.carolinafutons.com" class="cta-btn">Use My Discount Now</a>
+  </div>
+
+  <div class="unsub-note">
+    <p>Not interested anymore? We get it. <a href="#">Unsubscribe</a> and we'll part as friends.</p>
+  </div>
+
+  <div class="footer">
+    <p><a href="#">Unsubscribe</a> &middot; <a href="#">Preferences</a> &middot; <a href="#">View in browser</a></p>
+    <div class="address">Carolina Futons &middot; Hendersonville, NC &middot; Blue Ridge Mountains</div>
+  </div>
+
+</div>
+</body>
+</html>
