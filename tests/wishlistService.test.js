@@ -1,6 +1,6 @@
 /**
  * @file wishlistService.test.js
- * @description Tests for CF-ne83 Wishlist Service — CRUD + priceAtAdd tracking.
+ * @description Tests for CF-ne83 + CF-nt2f Wishlist Service — CRUD + priceAtAdd + getWishlistByMemberId.
  *
  * Tests:
  *  - addToWishlist: adds item, stores priceAtAdd, rejects invalid input, dedup, cap
@@ -11,12 +11,14 @@
  *  - priceAtAdd tracking: field persisted and immutable on add
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert, __onUpdate, __onRemove, __getInserted, __getUpdated, __getRemoved } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __onUpdate, __onRemove, __getInserted, __getUpdated, __getRemoved, __setQueryError, __reset as __wixDataReset } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 import {
   addToWishlist,
   removeFromWishlist,
   getWishlist,
+  getWishlistByMemberId,
   isOnWishlist,
   updateWishlistStock,
   _WISHLIST_MAX_ITEMS,
@@ -403,6 +405,119 @@ describe('priceAtAdd tracking', () => {
     const result = await getWishlist();
     expect(result.items[0].price).toBe(299);
     expect(result.items[0].priceAtAdd).toBe(399);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// getWishlistByMemberId (cf-nt2f)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('getWishlistByMemberId', () => {
+  beforeEach(() => {
+    __seed('Wishlist', []);
+    __seed('WishlistShareRateLimit', []);
+  });
+
+  it('returns items for a known memberId without requiring authentication', async () => {
+    __seed('Wishlist', [makeWishlistItem({ memberId: 'member-99' })]);
+    // No call to __setMember — anyone permission
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
+    expect(result.total).toBe(1);
+  });
+
+  it('returns empty items array for a memberId with no wishlist', async () => {
+    const result = await getWishlistByMemberId('member-no-wishlist');
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(0);
+    expect(result.total).toBe(0);
+  });
+
+  it('returns success:false for a blank memberId', async () => {
+    const result = await getWishlistByMemberId('');
+    expect(result.success).toBe(false);
+    expect(result.items).toHaveLength(0);
+  });
+
+  it('returns success:false for a null memberId', async () => {
+    const result = await getWishlistByMemberId(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns success:false with error:rate_limited when rate limit is exceeded', async () => {
+    __seed('WishlistShareRateLimit', [{
+      _id: 'rl-1',
+      key: hashRateLimitKey('member-99'),
+      count: 30,
+      windowStart: Date.now() - 1000,
+    }]);
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('rate_limited');
+    expect(result.items).toHaveLength(0);
+  });
+
+  it('resets rate limit after window expires and allows access', async () => {
+    __seed('Wishlist', [makeWishlistItem({ memberId: 'member-99' })]);
+    // Exhausted window that started 2 minutes ago — past the 60s window
+    __seed('WishlistShareRateLimit', [{
+      _id: 'rl-1',
+      key: hashRateLimitKey('member-99'),
+      count: 30,
+      windowStart: Date.now() - 120_000,
+    }]);
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
+  });
+
+  it('allows access when rate limit is not yet exceeded', async () => {
+    __seed('Wishlist', [makeWishlistItem({ memberId: 'member-99' })]);
+    __seed('WishlistShareRateLimit', [{
+      _id: 'rl-1',
+      key: hashRateLimitKey('member-99'),
+      count: 5,
+      windowStart: Date.now() - 1000,
+    }]);
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
+  });
+
+  it('maps items using the same shape as getWishlist', async () => {
+    __seed('Wishlist', [makeWishlistItem({ memberId: 'member-99', price: 199, priceAtAdd: 249 })]);
+    const result = await getWishlistByMemberId('member-99');
+    const item = result.items[0];
+    expect(item).toHaveProperty('id');
+    expect(item).toHaveProperty('productId');
+    expect(item).toHaveProperty('name');
+    expect(item.price).toBe(199);
+    expect(item.priceAtAdd).toBe(249);
+    expect(item).toHaveProperty('imageUrl');
+    expect(item).toHaveProperty('productSlug');
+    expect(item).toHaveProperty('inStock');
+    expect(item).toHaveProperty('addedAt');
+  });
+
+  it('does not leak items belonging to other members', async () => {
+    __seed('Wishlist', [
+      makeWishlistItem({ _id: 'wl-a', memberId: 'member-99' }),
+      makeWishlistItem({ _id: 'wl-b', memberId: 'member-other' }),
+    ]);
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].id).toBe('wl-a');
+  });
+
+  it('returns success:false with error:server_error when wixData throws', async () => {
+    __setQueryError('Wishlist', new Error('wixData internal error'));
+    const result = await getWishlistByMemberId('member-99');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('server_error');
+    expect(result.items).toHaveLength(0);
+    // Reset query error so later tests are not affected
+    __wixDataReset();
   });
 });
 

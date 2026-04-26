@@ -13,7 +13,7 @@
  *   memberId (Text, indexed)
  *   productId (Text, indexed)
  *   name (Text)
- *   price (Number) — current display price (updated on load)
+ *   price (Number) — display price at time of last explicit update (not auto-refreshed)
  *   priceAtAdd (Number) — price at time of wishlist add (never updated)
  *   imageUrl (Text)
  *   productSlug (Text)
@@ -23,7 +23,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const WISHLIST_MAX_ITEMS = 100;
 
@@ -159,6 +160,50 @@ export const getWishlist = webMethod(
     } catch (err) {
       console.error('[wishlistService] getWishlist error:', err);
       return { success: false, items: [], total: 0 };
+    }
+  }
+);
+
+// ── getWishlistByMemberId ─────────────────────────────────────────
+
+/**
+ * Read another member's wishlist by memberId.
+ * Used by the /wishlist/[token] share view in cfw — the HMAC token is
+ * verified on the cfw side before calling this; we only rate-limit here
+ * to prevent brute-force memberId enumeration.
+ *
+ * @param {string} memberId - Target member's _id (decoded from cfw share token)
+ * @returns {Promise<{success: boolean, items: Array, total: number}>}
+ */
+export const getWishlistByMemberId = webMethod(
+  Permissions.Anyone,
+  async (memberId) => {
+    try {
+      const cleanId = validateId(memberId);
+      if (!cleanId) return { success: false, items: [], total: 0 };
+
+      // Rate-limit per memberId to prevent enumeration of arbitrary IDs.
+      const { allowed } = await checkRateLimit(
+        'WishlistShareRateLimit',
+        cleanId,
+        { max: 30, windowMs: 60_000 },
+      );
+      if (!allowed) return { success: false, error: 'rate_limited', items: [], total: 0 };
+
+      const result = await wixData.query('Wishlist')
+        .eq('memberId', cleanId)
+        .descending('addedAt')
+        .limit(WISHLIST_MAX_ITEMS)
+        .find({ suppressAuth: true });
+
+      return {
+        success: true,
+        items: result.items.map(_mapItem),
+        total: result.totalCount,
+      };
+    } catch (err) {
+      console.error('[wishlistService] getWishlistByMemberId error:', err);
+      return { success: false, error: 'server_error', items: [], total: 0 };
     }
   }
 );
