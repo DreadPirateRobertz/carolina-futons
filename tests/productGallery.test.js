@@ -209,6 +209,45 @@ describe('ProductGallery', () => {
       expect(gallery.items.length).toBeGreaterThan(2);
     });
 
+    it('sets gallery.items from mediaItems when product has 3+ images', () => {
+      state.product.mediaItems = [
+        { src: 'https://example.com/a.jpg', type: 'image', title: 'Front' },
+        { src: 'https://example.com/b.jpg', type: 'image', title: 'Side' },
+        { src: 'https://example.com/c.jpg', type: 'image', title: 'Back' },
+      ];
+      initImageGallery($w, state);
+      const gallery = $w('#productGallery');
+      expect(gallery.items.length).toBe(3);
+      expect(gallery.items[0].src).toBe('https://example.com/a.jpg');
+      expect(gallery.items[1].src).toBe('https://example.com/b.jpg');
+      expect(gallery.items[2].src).toBe('https://example.com/c.jpg');
+    });
+
+    it('normalizes mediaItems using url when src is absent', () => {
+      state.product.mediaItems = [
+        { url: 'https://example.com/a.jpg', type: 'image' },
+        { url: 'https://example.com/b.jpg', type: 'image' },
+        { url: 'https://example.com/c.jpg', type: 'image' },
+      ];
+      initImageGallery($w, state);
+      const gallery = $w('#productGallery');
+      expect(gallery.items[0].src).toBe('https://example.com/a.jpg');
+      expect(gallery.items[1].src).toBe('https://example.com/b.jpg');
+    });
+
+    it('thumbnail click works after 3+ items normalization', () => {
+      state.product.mediaItems = [
+        { src: 'https://example.com/a.jpg', type: 'image', title: 'Front' },
+        { src: 'https://example.com/b.jpg', type: 'image', title: 'Side' },
+        { src: 'https://example.com/c.jpg', type: 'image', title: 'Back' },
+      ];
+      initImageGallery($w, state);
+      const cb = $w('#productGallery').onItemClicked.mock.calls[0][0];
+      cb({ item: { src: 'https://example.com/b.jpg', title: 'Side' } });
+      expect($w('#productMainImage').src).toBe('https://example.com/b.jpg');
+      expect($w('#productMainImage').alt).toBe('Side');
+    });
+
     it('calls enableSwipe when gallery element exists', async () => {
       const { enableSwipe } = await import('public/touchHelpers');
       enableSwipe.mockClear();

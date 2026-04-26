@@ -46,19 +46,32 @@ export function initImageGallery($w, state) {
 
     const gallery = $w('#productGallery');
     if (gallery) {
-      // Fill gallery with placeholders when fewer than expected thumbnails
+      // Always normalize and set gallery.items so onItemClicked gets the correct event.item.src.
+      // Without this, products with 3+ images rely on the Wix Editor's native gallery data,
+      // whose item shape varies and may not include a usable .src on click events.
       const mediaItems = product.mediaItems || [];
+      const category = product.collections?.[0] || '';
+      let galleryItemsToSet;
       if (mediaItems.length < 3) {
-        const category = product.collections?.[0] || '';
         const placeholders = getPlaceholderProductImages(category, 4);
-        const combined = [
-          ...mediaItems,
+        galleryItemsToSet = [
+          ...mediaItems.map(item => ({
+            src: item.src || item.url || '',
+            type: 'image',
+            title: item.title || product.name || 'Product image',
+          })),
           ...placeholders.slice(mediaItems.length).map(src => ({
             src, type: 'image', title: product.name || 'Product image',
           })),
         ];
-        try { gallery.items = combined; } catch (e) {}
+      } else {
+        galleryItemsToSet = mediaItems.map(item => ({
+          src: item.src || item.url || '',
+          type: 'image',
+          title: item.title || product.name || '',
+        }));
       }
+      try { gallery.items = galleryItemsToSet; } catch (e) {}
 
       // Thumbnail click switches main image
       gallery.onItemClicked((event) => {
