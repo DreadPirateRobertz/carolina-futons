@@ -70,6 +70,22 @@ vi.mock('public/deliveryHelpers.js', () => ({
     minimumCharge: '$79',
     note: 'Rates vary by distance',
   })),
+  getAssemblyGuides: vi.fn(() => [
+    { _id: 'guide-1', title: 'Sofa Assembly', time: '30 min', tools: 'Allen wrench', steps: 'Step 1...' },
+  ]),
+  getCareTips: vi.fn(() => [
+    { _id: 'care-1', title: 'Fabric Care', content: 'Spot clean only' },
+  ]),
+  getCareTipCategories: vi.fn(() => [
+    { id: 'fabric', label: 'Fabric' },
+    { id: 'frame', label: 'Frame' },
+  ]),
+  getDeliveryPrepInstructions: vi.fn(() => 'Clear a path to the room'),
+  getDeliveryTierOptions: vi.fn(() => [
+    { id: 'curbside', label: 'Curbside Drop-off' },
+    { id: 'room', label: 'Room of Choice' },
+  ]),
+  buildShippingSchemaHtml: vi.fn(() => '<script type="application/ld+json">{}</script>'),
 }));
 
 vi.mock('wix-location-frontend', () => ({
