@@ -16,6 +16,9 @@ import {
 import { initAboutIllustrations } from 'public/aboutIllustrations.js';
 
 $w.onReady(async function () {
+  // cf-e5de: V3 cabin hero with scroll parallax (requires #heroV3Frame in editor)
+  import('public/HeroV3Wix').then(({ initHeroV3 }) => { initHeroV3($w); }).catch(() => {});
+
   initBackToTop($w);
   initPageHeading();
   initBrandStory();

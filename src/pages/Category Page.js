@@ -187,10 +187,13 @@ function initCategoryHero(currentPath) {
   try {
     import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
       initMountainSkyline($w, { variant: 'gradient', containerId: '#categoryHeroSkyline' });
-    }).catch(() => {
-      // MountainSkyline module not yet available — silently skip
-    });
+    }).catch(() => {});
   } catch (e) {}
+
+  // cf-e5de: V3 bear hero with scroll parallax for futon-frames category
+  if (currentPath === 'futon-frames') {
+    import('public/HeroV3Wix').then(({ initHeroV3 }) => { initHeroV3($w); }).catch(() => {});
+  }
 }
 
 // ── Flash Sale Banner ────────────────────────────────────────────────

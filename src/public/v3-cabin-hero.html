@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!--
+  v3-cabin-hero.html
+  Wix HtmlComponent: V3 bear-in-cabin-window winter hero with scroll parallax.
+  About page hero. Receives {type:'scroll',scrollY:number} via postMessage.
+  cf-e5de / Phase 7 V3 hero
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cabin Hero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #A8B8C8; }
+    #root { width: 100%; height: 100%; }
+    svg { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── Bear (peeking pose) ────────────────────────────────────────────────
+const BearPeeking = ({ eyeX }) => {
+  const fur = '#2A1810', muzzle = '#A8806A', nose = '#1A0E08', cream = '#FAF2DE';
+  return (
+    <g>
+      <ellipse cx="0" cy="20" rx="40" ry="18" fill={fur}/>
+      <ellipse cx="0" cy="0" rx="32" ry="28" fill={fur}/>
+      <circle cx="-26" cy="-18" r="10" fill={fur}/>
+      <circle cx="26" cy="-18" r="10" fill={fur}/>
+      <circle cx="-26" cy="-18" r="5" fill={muzzle} opacity="0.7"/>
+      <circle cx="26" cy="-18" r="5" fill={muzzle} opacity="0.7"/>
+      <ellipse cx="0" cy="10" rx="16" ry="13" fill={muzzle}/>
+      <ellipse cx="0" cy="3" rx="5" ry="4" fill={nose}/>
+      <circle cx={-13 + eyeX} cy="-6" r="3.2" fill={nose}/>
+      <circle cx={13 + eyeX} cy="-6" r="3.2" fill={nose}/>
+      <circle cx={-12 + eyeX} cy="-7" r="1" fill={cream}/>
+      <circle cx={14 + eyeX} cy="-7" r="1" fill={cream}/>
+    </g>
+  );
+};
+
+const Pine = () => (
+  <g>
+    <rect x="-2" y="0" width="4" height="10" fill="#3A2518"/>
+    <polygon points="0,-50 -16,-26 16,-26" fill="#1F3A2A"/>
+    <polygon points="0,-32 -18,-8 18,-8" fill="#1F3A2A"/>
+    <polygon points="0,-14 -20,8 20,8" fill="#1F3A2A"/>
+  </g>
+);
+
+const HeroCabin = () => {
+  const [p, setP] = useState(0.3);
+  const [t, setT] = useState(0);
+  const flakesRef = useRef(null);
+
+  if (!flakesRef.current) {
+    flakesRef.current = Array.from({length: 60}).map((_, i) => ({
+      x: (i*113)%1920, y0: ((i*79)%800), sp: 6 + (i%5)*3, drift: i%3,
+    }));
+  }
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (!e.data || e.data.type !== 'scroll') return;
+      const scrollY = Number(e.data.scrollY) || 0;
+      const heroH = 600, vh = window.innerHeight || 800;
+      const raw = (heroH / 2 - scrollY - vh / 2) / vh;
+      setP(Math.max(-1.2, Math.min(1.2, raw)));
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    let raf;
+    const s = performance.now();
+    const tick = (n) => { setT((n - s) / 1000); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const c = {
+    sky1: '#A8B8C8', sky2: '#D4DCE2', snow: '#FAF2DE',
+    r1: '#3A4858', r2: '#5B6878', r3: '#8B9AA8',
+    wall: '#3A2518', wallLight: '#5B3A2A', wallLog: '#6B4D3A',
+    window: '#F5C97A', windowFrame: '#1F1208',
+    smoke: '#FAF2DE', fire: '#E8845C', cream: '#FAF2DE',
+  };
+
+  const eyeX = Math.sin(t * 0.5) * 1.5;
+  const cabinY = 680 + p * -100;
+
+  return (
+    <svg viewBox="0 0 1920 800" preserveAspectRatio="xMidYMid slice"
+         style={{display:'block',width:'100%',height:'100%'}}
+         role="img" aria-label="Bear peeking through a cozy cabin window in winter">
+      <defs>
+        <linearGradient id="hc-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={c.sky1}/><stop offset="100%" stopColor={c.sky2}/>
+        </linearGradient>
+        <radialGradient id="hc-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={c.window} stopOpacity="0.7"/>
+          <stop offset="100%" stopColor={c.window} stopOpacity="0"/>
+        </radialGradient>
+        <filter id="hc-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="11"/>
+          <feColorMatrix values="0 0 0 0 0.18  0 0 0 0 0.10  0 0 0 0 0.06  0 0 0 0.16 0"/>
+        </filter>
+      </defs>
+
+      <rect width="1920" height="800" fill="url(#hc-sky)"/>
+
+      {/* Distant ridges (snowy) */}
+      <path d={`M 0 ${260+p*-10} Q 480 ${230+p*-10} 960 ${245+p*-10} T 1920 ${260+p*-10} L 1920 800 L 0 800 Z`} fill={c.r3}/>
+      <path d={`M 0 ${260+p*-10} Q 480 ${230+p*-10} 960 ${245+p*-10} T 1920 ${260+p*-10} L 1920 ${290+p*-10} Q 1440 ${275+p*-10} 960 ${280+p*-10} T 0 ${290+p*-10} Z`} fill={c.snow} opacity="0.7"/>
+      <path d={`M 0 ${340+p*-30} Q 480 ${310+p*-30} 960 ${320+p*-30} T 1920 ${335+p*-30} L 1920 800 L 0 800 Z`} fill={c.r2}/>
+      <path d={`M 0 ${420+p*-55} Q 480 ${390+p*-55} 960 ${400+p*-55} T 1920 ${415+p*-55} L 1920 800 L 0 800 Z`} fill={c.r1}/>
+      <path d={`M 0 ${500+p*-80} Q 480 ${475+p*-80} 960 ${485+p*-80} T 1920 ${495+p*-80} L 1920 800 L 0 800 Z`} fill={c.snow}/>
+
+      {/* Pines */}
+      <g transform={`translate(0 ${480 + p*-65})`} opacity="0.85">
+        {[80,160,260,1620,1740,1860].map((x,i)=>(
+          <g key={i} transform={`translate(${x} 0) scale(${0.9 + (i%2)*0.3})`}><Pine/></g>
+        ))}
+      </g>
+
+      {/* Smoke from chimney */}
+      <g transform={`translate(${640 + p*5} ${540 + p*-90})`} opacity="0.7">
+        <ellipse cx={Math.sin(t*0.3)*4} cy={-20 - (t*4) % 40} rx="22" ry="16" fill={c.smoke} opacity="0.5"/>
+        <ellipse cx={Math.sin(t*0.4)*6} cy={-50 - (t*4) % 60} rx="32" ry="22" fill={c.smoke} opacity="0.35"/>
+        <ellipse cx={Math.sin(t*0.5)*8} cy={-90 - (t*4) % 80} rx="44" ry="28" fill={c.smoke} opacity="0.2"/>
+      </g>
+
+      {/* Cabin */}
+      <g transform={`translate(960 ${cabinY})`}>
+        {/* Window glow halo */}
+        <ellipse cx="0" cy="-100" rx="320" ry="200" fill="url(#hc-glow)"/>
+        {/* Cabin body */}
+        <rect x="-280" y="-180" width="560" height="200" fill={c.wall}/>
+        {/* Log lines */}
+        <g stroke={c.wallLog} strokeWidth="2.5" opacity="0.7">
+          {[-160,-130,-100,-70,-40,-10].map(y => <line key={y} x1="-280" y1={y} x2="280" y2={y}/>)}
+        </g>
+        {/* Roof with snow cap */}
+        <polygon points="-310,-180 310,-180 230,-260 -230,-260" fill={c.windowFrame}/>
+        <polygon points="-310,-180 310,-180 270,-200 -270,-200" fill={c.snow} opacity="0.9"/>
+        {/* Chimney */}
+        <rect x="-330" y="-260" width="40" height="70" fill={c.wallLight}/>
+        <rect x="-336" y="-260" width="52" height="10" fill={c.wallLight}/>
+        <rect x="-330" y="-280" width="40" height="22" fill={c.snow} opacity="0.9"/>
+        {/* Big window */}
+        <rect x="-160" y="-150" width="320" height="160" fill={c.window}/>
+        <rect x="-160" y="-150" width="320" height="160" fill="url(#hc-glow)" opacity="0.5"/>
+        <rect x="-160" y="-150" width="320" height="160" fill="none" stroke={c.windowFrame} strokeWidth="6"/>
+        <line x1="0" y1="-150" x2="0" y2="10" stroke={c.windowFrame} strokeWidth="4"/>
+        <line x1="-160" y1="-70" x2="160" y2="-70" stroke={c.windowFrame} strokeWidth="4"/>
+        {/* Bear peeking */}
+        <g transform="translate(-60 -60) scale(1.2)">
+          <BearPeeking eyeX={eyeX}/>
+        </g>
+        {/* Lamp */}
+        <g transform="translate(70 -50)">
+          <circle r="14" fill={c.fire} opacity="0.6"/>
+          <circle r="6" fill={c.cream}/>
+        </g>
+        {/* Snow base */}
+        <ellipse cx="0" cy="20" rx="320" ry="14" fill={c.snow}/>
+        {/* Door */}
+        <rect x="-50" y="-90" width="60" height="110" fill={c.windowFrame}/>
+        <circle cx="0" cy="-30" r="2" fill={c.fire}/>
+      </g>
+
+      {/* Falling snow */}
+      {flakesRef.current.map((f, i) => {
+        const y = (f.y0 + t * f.sp) % 800;
+        const x = f.x + Math.sin(t * 0.6 + f.drift) * 12 + p * -10;
+        return <circle key={i} cx={x} cy={y} r="1.6" fill={c.cream} opacity="0.85"/>;
+      })}
+
+      <rect width="1920" height="800" filter="url(#hc-grain)" opacity="0.32"
+            style={{mixBlendMode:'multiply'}} pointerEvents="none"/>
+    </svg>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<HeroCabin/>);
+</script>
+</body>
+</html>
