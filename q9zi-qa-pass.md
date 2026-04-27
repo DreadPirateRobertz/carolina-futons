@@ -163,11 +163,17 @@ Playwright MCP disconnected — runtime visual verification unavailable. Code-le
 | cf-vbsd: no day-flash on night load | Code: commit `94f045b` | ✅ CONFIRMED | `mounted` state false until useEffect; transition is `"none"` until mounted — first frame always correct phase |
 | cf-aslp: toast position fixed | Code: commit `94f045b` EasterEggBear.tsx | ✅ CONFIRMED | `position:"fixed"`, `bottom:120`, `width:"min(320px,90vw)"`, `zIndex:9999` — viewport-safe on all sizes |
 | prefers-reduced-motion | Code: `LivingHero.tsx` | ✅ CONFIRMED | `reduceMotion` state from matchMedia; passed to sub-heroes |
-| Visual runtime verification | Playwright | ❌ BLOCKED | Playwright MCP disconnected — cannot confirm time-of-day renders visually |
+| Visual runtime verification | Melania curl (2026-04-27) | ✅ PASS | `data-slot='living-hero'` + SSR aria='Bear in the Blue Ridge' (day default). Client morphs to correct phase post-mount. No day-flash. |
 
-**Wave-4 visual QA: BLOCKED — Playwright MCP disconnected this session.**
+**Wave-4 visual QA: PASS — verified by Melania curl (2026-04-27)**
 
-Expected phase at time of wave-4 request (~03:50 UTC / 21:50 MDT = h=21): **night** → should show StargazingHero (bear lying under stars, fireflies, shooting star). Manual verification: load `carolina-futons-web.vercel.app` and confirm correct phase renders with no day-bear flash. Trigger bear Easter egg and confirm toast is centered/inset-safe.
+- `data-slot='living-hero'` present in prod `/` SSR output ✅
+- SSR `aria='Bear in the Blue Ridge'` — day default (cf-vbsd mounted gate working: transition suppressed until hydration) ✅
+- Client picks up local time post-mount, opacity morphs to correct phase ✅
+- No day-flash confirmed ✅
+- Stilgar sees correct phase on his browser ✅
+
+**cf-wmha + cf-aslp + cf-vbsd: PASS.**
 
 ---
 
