@@ -71,11 +71,11 @@ describe('_TEMPLATE_REGISTRY structure', () => {
 describe('getTemplatesBySequence', () => {
   it('returns welcome templates sorted by step', async () => {
     const result = await getTemplatesBySequence('welcome');
-    expect(result).toHaveLength(3);
-    expect(result[0].step).toBe(1);
-    expect(result[1].step).toBe(2);
-    expect(result[2].step).toBe(3);
+    expect(result).toHaveLength(5);
+    expect(result.map(t => t.step)).toEqual([1, 2, 3, 4, 5]);
     expect(result[0].id).toBe('welcome_series_1');
+    expect(result[3].id).toBe('welcome_series_4');
+    expect(result[4].id).toBe('welcome_series_5');
   });
 
   it('returns empty array for unknown sequence', async () => {
@@ -86,7 +86,7 @@ describe('getTemplatesBySequence', () => {
   it('sanitizes input (strips HTML)', async () => {
     const result = await getTemplatesBySequence('<script>welcome</script>');
     // sanitize strips tags -> "welcome"
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(5);
   });
 });
 

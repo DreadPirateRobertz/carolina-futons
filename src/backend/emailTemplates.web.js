@@ -54,6 +54,26 @@ const TEMPLATE_REGISTRY = {
     variables: ['firstName', 'discountCode', 'email'],
     category: 'onboarding',
   },
+  welcome_series_4: {
+    id: 'welcome_series_4',
+    name: 'Welcome — Day 14 Browse Reminder',
+    sequence: 'welcome',
+    step: 4,
+    subjectLine: 'Still exploring? Let us help you find the perfect futon',
+    previewText: 'Day 14 check-in — helpful tips to make your decision easier.',
+    variables: ['firstName', 'email'],
+    category: 'onboarding',
+  },
+  welcome_series_5: {
+    id: 'welcome_series_5',
+    name: 'Welcome — Day 21 Final Value Email',
+    sequence: 'welcome',
+    step: 5,
+    subjectLine: 'Families across the Carolinas trust us — here\'s why',
+    previewText: 'Real stories from real customers. A final note from our team.',
+    variables: ['firstName', 'email'],
+    category: 'onboarding',
+  },
 
   // Abandoned Cart Recovery
   cart_recovery_1: {
