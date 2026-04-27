@@ -256,11 +256,11 @@ function initEnhancedNavigation() {
 
 async function initAnnouncementBar() {
   const staticMessages = [
-    // 'Free Shipping on Orders Over $999!', // Disabled: free shipping currently inactive
-    'Visit Our Showroom: Wed–Sat 10–5 | 824 Locust St, Hendersonville NC | (828) 252-9449',
-    'Over 700 Fabric Swatches Available In-Store',
-    'Request FREE fabric swatches — shipped to your door!',
-    'Family Owned Since 1991 — Carolina Futons',
+    'Free white-glove delivery on orders over $1,500',
+    '0% APR Financing available',
+    'Free swatches kit — shipped to your door',
+    'Hardwood frames built by hand in NC',
+    '15-year warranty on all hardwood frames',
   ];
 
   // Fetch CMS announcement bars (highest priority first)
