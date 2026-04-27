@@ -51,7 +51,7 @@ function safeHeaderColor(val, fallback) {
 // Colors: spec h=12 midday palette. Ridge opacities boosted for full saturation.
 // #B8D4E3 (skyGradientTop brand token) anchors the near-horizon stop per Phase 7 spec.
 // eslint-disable-next-line
-const SVG_CONTENT = '<defs><linearGradient id="sky-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1A3060" stop-opacity="1"/><stop offset="20%" stop-color="#2858A0" stop-opacity="1"/><stop offset="50%" stop-color="#4878A8" stop-opacity="1"/><stop offset="75%" stop-color="#88B0C4" stop-opacity="1"/><stop offset="100%" stop-color="#B8D4E3" stop-opacity="1"/></linearGradient><filter id="soft-edge"><feGaussianBlur stdDeviation="1.2"/></filter></defs><rect width="1440" height="200" fill="url(#sky-grad)"/><path class="ridge-1" d="' + RIDGE_PATHS[0] + '" fill="#AECCD8" opacity="0.45" filter="url(#soft-edge)"/><path class="ridge-2" d="' + RIDGE_PATHS[1] + '" fill="#7AA4BE" opacity="0.55"/><path class="ridge-3" d="' + RIDGE_PATHS[2] + '" fill="#5B8FA8" opacity="0.62"/><path class="ridge-4" d="' + RIDGE_PATHS[3] + '" fill="#487494" opacity="0.70"/><path class="ridge-5" d="' + RIDGE_PATHS[4] + '" fill="#3D5A80" opacity="0.78"/><path class="ridge-6" d="' + RIDGE_PATHS[5] + '" fill="#1E3A5F" opacity="0.88"/><path class="ridge-7" d="' + RIDGE_PATHS[6] + '" fill="#0C1C26" opacity="0.95"/>' + DECOR_SVG;
+const SVG_CONTENT = '<defs><linearGradient id="sky-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1A3060" stop-opacity="1"/><stop offset="20%" stop-color="#2858A0" stop-opacity="1"/><stop offset="50%" stop-color="#4878A8" stop-opacity="1"/><stop offset="75%" stop-color="#88B0C4" stop-opacity="1"/><stop offset="100%" stop-color="#B8D4E3" stop-opacity="1"/></linearGradient></defs><rect width="1440" height="200" fill="url(#sky-grad)"/><path class="ridge-1" d="' + RIDGE_PATHS[0] + '" fill="#AECCD8" opacity="0.45"/><path class="ridge-2" d="' + RIDGE_PATHS[1] + '" fill="#7AA4BE" opacity="0.55"/><path class="ridge-3" d="' + RIDGE_PATHS[2] + '" fill="#5B8FA8" opacity="0.62"/><path class="ridge-4" d="' + RIDGE_PATHS[3] + '" fill="#487494" opacity="0.70"/><path class="ridge-5" d="' + RIDGE_PATHS[4] + '" fill="#3D5A80" opacity="0.78"/><path class="ridge-6" d="' + RIDGE_PATHS[5] + '" fill="#1E3A5F" opacity="0.88"/><path class="ridge-7" d="' + RIDGE_PATHS[6] + '" fill="#0C1C26" opacity="0.95"/>' + DECOR_SVG;
 
 /**
  * Build a dynamic header mountain SVG driven by LivingSkyState.
@@ -92,12 +92,10 @@ export function buildHeaderMountainSVG(ridgeColors, skyColors, height) {
     + `<stop offset="75%" stop-color="${sky2}" stop-opacity="1"/>`
     + `<stop offset="100%" stop-color="${sky3}" stop-opacity="1"/>`
     + '</linearGradient>'
-    + '<filter id="soft-edge-dyn"><feGaussianBlur stdDeviation="1.2"/></filter>'
     + '</defs>';
 
   const ridgeSvg = RIDGE_PATHS.map((d, i) => {
-    const filter = i === 0 ? ' filter="url(#soft-edge-dyn)"' : '';
-    return `<path class="ridge-${i + 1}" d="${d}" fill="${fills[i]}" opacity="${D.op[i]}"${filter}/>`;
+    return `<path class="ridge-${i + 1}" d="${d}" fill="${fills[i]}" opacity="${D.op[i]}"/>`;
   }).join('');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="${h}" viewBox="0 0 1440 200" preserveAspectRatio="none" aria-hidden="true" role="presentation">`

@@ -23,7 +23,7 @@
 
     @keyframes twinkle {
       0%, 100% { opacity: var(--star-base, 1); }
-      50%       { opacity: calc(var(--star-base, 1) * 0.55); }
+      50%       { opacity: calc(var(--star-base, 1) * 0.75); }
     }
     @keyframes cloudDrift {
       0%   { transform: translateX(0); }
@@ -32,7 +32,7 @@
     }
     @keyframes fireflyPulse {
       0%, 100% { opacity: var(--ff-base, 1); transform: scale(1); }
-      50%       { opacity: calc(var(--ff-base, 1) * 0.3); transform: scale(0.6); }
+      50%       { opacity: calc(var(--ff-base, 1) * 0.55); transform: scale(0.6); }
     }
 
     #stars circle { animation: twinkle var(--tw-dur, 2s) ease-in-out infinite; }

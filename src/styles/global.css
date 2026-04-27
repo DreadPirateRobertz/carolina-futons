@@ -154,7 +154,7 @@ h4.font_4,
 
 /* Clean light background */
 .header [data-testid="colorUnderlay"] {
-  background: linear-gradient(180deg, var(--cf-header-top) 0%, var(--cf-header-bottom) 100%) !important;
+  background: transparent !important;
 }
 
 /* Announcement bar text */
