@@ -116,6 +116,13 @@ describe('post_trackCustomEvent — validation', () => {
     const res = await post_trackCustomEvent(makeRequest({ args: ['winback_landing_view'] }));
     expect(res.status).toBe(200);
   });
+
+  it('returns 400 when params payload exceeds 8 KB', async () => {
+    const large = { source: 'winback', data: 'x'.repeat(9000) };
+    const res = await post_trackCustomEvent(makeRequest(veloBody('winback_landing_view', large)));
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).success).toBe(false);
+  });
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

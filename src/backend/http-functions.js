@@ -2741,6 +2741,12 @@ export async function post_trackCustomEvent(request) {
     }
 
     const safeParams = params && typeof params === 'object' && !Array.isArray(params) ? params : {};
+
+    // Guard: public endpoint — cap payload to prevent unbounded storage writes.
+    if (JSON.stringify(safeParams).length > 8192) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
     const source = sanitize(String(safeParams.source || 'custom'), 50);
 
     const { checkRateLimit } = await import('backend/utils/rateLimit');
