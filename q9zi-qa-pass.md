@@ -151,6 +151,26 @@ New: bed-size radio (Twin/Full/Queen/King) + Cloudflare Turnstile CAPTCHA on `/c
 
 ---
 
+## WAVE-3 SWEEP — Theme C Deploy + Fresh Deploy Verification (2026-04-27)
+
+| Feature | Page/Route | Result | Notes |
+|---|---|---|---|
+| Theme C hero | /theme-c | ✅ PASS | Night sky, moon, rolling hills, bear silhouette, stars — all render |
+| Theme C — firefly animation | /theme-c | ✅ PASS | 14 firefly elements (`stargaze-firefly`) present in DOM |
+| Theme C — shooting star | /theme-c | ✅ PASS | 1 `stargaze-shoot` element; fires every 8s per preview description |
+| Theme C — milky way | /theme-c | ✅ PASS | `stargaze-milkyway` present; drifts over 1 min |
+| Theme C — prefers-reduced-motion | /theme-c | ✅ PASS | 4 CSS `prefers-reduced-motion` rules present; page explicitly documents compliance |
+| Theme C — console errors | /theme-c | ✅ PASS | 0 errors on load |
+| Theme C — mobile 390×844 | /theme-c | ✅ PASS | Hero scales, hamburger nav present, no overflow |
+| Theme A | /theme-a | ✅ PASS | Bear mascot, day scene, category cards, Easter egg "Find the bear — 10% off" section |
+| /signup fresh deploy | /signup | ✅ PASS | Account created (cf-c77s wave-3 test) — see cf-c77s section |
+| /contact PR #256 | /contact | ✅ PASS | Bed-size radio (Twin/Full/Queen/King) renders; Turnstile dev bypass (no visible widget) |
+| Dark mode toggle | site-wide | ✅ PASS | Moon icon when active; confirmed persistent via localStorage |
+
+**No regressions from Theme C deploy. 0 new beads.**
+
+---
+
 ## OPEN BEADS TRACKER
 
 All beads still requiring action as of 2026-04-27 wave-2.
