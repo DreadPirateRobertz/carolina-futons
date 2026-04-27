@@ -131,4 +131,21 @@ Full email + challenge test matrix: `parity/reports/2026-04-26-e2e-emails-challe
 
 ---
 
-*millicent — 2026-04-27 — cf-q9zi QA pass (updated with post-merge wave 2)*
+## OPEN BEADS TRACKER
+
+All beads still requiring action as of 2026-04-27 wave-2.
+
+| Bead | Priority | Status | Title | Blocker |
+|---|---|---|---|---|
+| cf-1te7 | P1 | OPEN | /collections/* → 404, no redirect to /shop/* | — |
+| cf-e92v | P2 | OPEN | /care and /care-warranty → 404, no redirect to /warranty | — |
+| cf-5pf8 | P1 | OPEN | Newsletter footer fails post-PR-#242 | Velo endpoint not published or deploy lag |
+| cf-sg12 | P1 | OPEN | /style-quiz permanently broken | Ongoing since Phase 1 |
+| cf-44mq | P1 | IN_PROGRESS | PDP variant pickers broken | STAGING_SITE products have empty productOptions |
+| cf-c77s | P1 | IN_PROGRESS | E2E email + challenge tests | Welcome email: reCAPTCHA blocker (manual Hal action needed) |
+| B1 (new) | HIGH | OPEN | welcome_series_4, welcome_series_5 missing from emailTemplates.web.js | Will fail at send time — registry gap |
+| B2 (new) | HIGH | OPEN | reengagement_2, reengagement_3 missing from emailTemplates.web.js | Will fail at send time — registry gap |
+
+---
+
+*millicent — 2026-04-27 — cf-q9zi QA pass (updated with post-merge wave 2 + open beads tracker)*
