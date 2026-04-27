@@ -165,7 +165,9 @@ Playwright MCP disconnected — runtime visual verification unavailable. Code-le
 | prefers-reduced-motion | Code: `LivingHero.tsx` | ✅ CONFIRMED | `reduceMotion` state from matchMedia; passed to sub-heroes |
 | Visual runtime verification | Playwright | ❌ BLOCKED | Playwright MCP disconnected — cannot confirm time-of-day renders visually |
 
-**Manual verification needed:** Load `carolina-futons-web.vercel.app` at night (h<5 or h≥20 local) and confirm StargazingHero renders immediately (no day-bear flash). Trigger EasterEggBear toast and confirm it's centered and not clipped.
+**Wave-4 visual QA: BLOCKED — Playwright MCP disconnected this session.**
+
+Expected phase at time of wave-4 request (~03:50 UTC / 21:50 MDT = h=21): **night** → should show StargazingHero (bear lying under stars, fireflies, shooting star). Manual verification: load `carolina-futons-web.vercel.app` and confirm correct phase renders with no day-bear flash. Trigger bear Easter egg and confirm toast is centered/inset-safe.
 
 ---
 
