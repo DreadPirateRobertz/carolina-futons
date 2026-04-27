@@ -119,15 +119,35 @@ Retested all features from PRs merged since first-wave QA pass.
 
 ---
 
-## cf-c77s UPDATE — Welcome Email + Cart Abandonment
+## cf-c77s UPDATE — Welcome Email Re-test (2026-04-27 Wave 3)
 
-**PR #249 is now merged.** Cart pipeline functional. Status:
+**cfw /signup now triggers member creation.** PR #241 merged — signup via Wix Headless auth, no reCAPTCHA.
 
-- **Cart abandonment email**: Cart abandonment automation is ACTIVE (Wix, `eedfb2db`). Real test requires email-associated cart session + 30 min wait. Cannot automate.
-- **Welcome email**: /signup (PR #241) now live on cfw. `wixMembers_onMemberCreated` trigger still requires human signup with reCAPTCHA solve on STAGING_SITE. `welcome_series_4` and `welcome_series_5` missing from `emailTemplates.web.js` registry — steps 4-5 will fail at send time regardless.
-- **Manual step required**: Hal signs up at `https://chrisdealglass.wixstudio.com/my-site` → solve reCAPTCHA → check `halworker85@gmail.com` for `welcome-01-hello.html` within 5 min.
+### Wave-3 Re-test Result
+
+| Step | Action | Result |
+|---|---|---|
+| 1 | Navigate to `carolina-futons-web.vercel.app/signup` | ✅ Form renders |
+| 2 | Fill email `halworker85+welcome-cfw-20260427@gmail.com` + password | ✅ Form accepts input |
+| 3 | Click "Create account" | ✅ **"Account created"** — "Your account is ready. Sign in to continue." |
+| 4 | `wixMembers_onMemberCreated` fires on STAGING_SITE | ⏳ **UNVERIFIED** — event should fire, email queue pending |
+| 5 | welcome-01-hello.html arrives at inbox within 5 min | ⏳ **PENDING** — check `halworker85+welcome-cfw-20260427@gmail.com` |
+
+**Timestamp:** ~03:45 UTC 2026-04-27. Email should arrive by ~03:50 UTC.
+
+### Registry Status (B1/B2)
+- PR #256 = cf-7hfz: `/contact` bed-size radio + Turnstile CAPTCHA. **NOT the email registry fix.**
+- `welcome_series_4`, `welcome_series_5` still missing from `emailTemplates.web.js` — steps 4-5 of welcome series will fail at send time.
+- `reengagement_2`, `reengagement_3` still missing — B2 still open.
+
+**Net:** Steps 1-3 of welcome series should now queue. Steps 4-5 will fail until registry is patched.
+
+**Cart abandonment email**: Automation ACTIVE (`eedfb2db`). Real test requires email-associated cart session + 30 min wait. Cannot automate.
 
 Full email + challenge test matrix: `parity/reports/2026-04-26-e2e-emails-challenges.md`
+
+### PR #256 Feature — /contact CAPTCHA (cf-7hfz)
+New: bed-size radio (Twin/Full/Queen/King) + Cloudflare Turnstile CAPTCHA on `/contact`. Include in wave-3 QA sweep.
 
 ---
 
