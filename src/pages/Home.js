@@ -916,6 +916,11 @@ function initHeroAnimation() {
         trackEvent('personalized_hero', { source: heroConfig.source, category: heroConfig.imageKey });
       }
     }).catch(() => {});
+
+    // cf-e5de: V3 porch hero with scroll parallax (replaces static photo when frame exists)
+    import('public/HeroPorchWix').then(({ initHeroPorch }) => {
+      initHeroPorch($w);
+    }).catch(() => {});
   } catch (e) {
     // Hero elements may not exist
   }
