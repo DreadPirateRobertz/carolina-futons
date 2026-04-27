@@ -56,10 +56,10 @@ beforeEach(async () => {
 describe('getTemplatesBySequence', () => {
   it('returns welcome series templates sorted by step', async () => {
     const r = await mod.getTemplatesBySequence('welcome');
-    expect(r.length).toBe(3);
+    expect(r.length).toBe(5);
     expect(r[0].id).toBe('welcome_series_1');
     expect(r[1].step).toBe(2);
-    expect(r[2].step).toBe(3);
+    expect(r[4].step).toBe(5);
   });
 
   it('returns cart recovery templates', async () => {
@@ -91,7 +91,7 @@ describe('getTemplate', () => {
 describe('getTemplateIndex', () => {
   it('returns grouped template IDs', async () => {
     const r = await mod.getTemplateIndex();
-    expect(r.welcome).toHaveLength(3);
+    expect(r.welcome).toHaveLength(5);
     expect(r.cart_recovery).toHaveLength(3);
     expect(r.post_purchase).toHaveLength(5);
     expect(r.promotional.length).toBeGreaterThanOrEqual(3);
