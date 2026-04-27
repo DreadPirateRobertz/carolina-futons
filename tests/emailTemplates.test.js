@@ -56,7 +56,7 @@ describe('_TEMPLATE_REGISTRY', () => {
 
   it('contains reengagement template', () => {
     const re = Object.values(_TEMPLATE_REGISTRY).filter(t => t.sequence === 'reengagement');
-    expect(re).toHaveLength(1);
+    expect(re).toHaveLength(3);
   });
 
   it('every template has required fields', () => {
@@ -160,7 +160,7 @@ describe('getTemplatesBySequence', () => {
 
   it('returns reengagement templates', async () => {
     const templates = await getTemplatesBySequence('reengagement');
-    expect(templates).toHaveLength(1);
+    expect(templates).toHaveLength(3);
   });
 
   it('returns empty for null input', async () => {
