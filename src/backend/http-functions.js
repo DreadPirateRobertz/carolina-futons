@@ -14,6 +14,7 @@ import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketing
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
+import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
@@ -2705,5 +2706,63 @@ export async function post_mailingListSignups(request) {
 }
 
 export function options_mailingListSignups(request) {
+  return response(corsPreflight(request));
+}
+
+// ── Public Analytics Event Tracking ─────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/trackCustomEvent
+// Receives events from the cfw Next.js host (server components, Server Actions).
+// Mirror of the customEvents/trackCustomEvent webMethod which is unreachable
+// from external callers (Wix webMethods only run within the Wix site runtime).
+// Rate-limited: 30 events/min per source (matches webMethod limit). cf-3qt.5.3
+
+export async function post_trackCustomEvent(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const [eventName, params = {}] = Array.isArray(body?.args) ? body.args : [];
+    if (!eventName || typeof eventName !== 'string') {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const cleanName = sanitize(eventName, 100)
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '')
+      .toLowerCase();
+    if (!cleanName) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const safeParams = params && typeof params === 'object' && !Array.isArray(params) ? params : {};
+    const source = sanitize(String(safeParams.source || 'custom'), 50);
+
+    const { checkRateLimit } = await import('backend/utils/rateLimit');
+    const { allowed } = await checkRateLimit('CustomEventRateLimit', source, { max: 30, windowMs: 60_000 });
+    if (!allowed) {
+      return response({ status: 429, body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    await insertAnalyticsEvent({
+      memberId: safeParams.memberId || null,
+      eventType: cleanName,
+      source,
+      payload: safeParams,
+    });
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (post_trackCustomEvent):', err);
+    return serverError({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_trackCustomEvent(request) {
   return response(corsPreflight(request));
 }
