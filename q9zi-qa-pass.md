@@ -151,6 +151,24 @@ New: bed-size radio (Twin/Full/Queen/King) + Cloudflare Turnstile CAPTCHA on `/c
 
 ---
 
+## cf-wmha / cf-aslp / cf-vbsd — LivingHero Code Review (2026-04-27)
+
+Playwright MCP disconnected — runtime visual verification unavailable. Code-level audit performed against `origin/main`.
+
+| Check | Method | Result | Evidence |
+|---|---|---|---|
+| LivingHero on home page `/` | Code: `src/app/page.tsx:61` | ✅ CONFIRMED | `import { LivingHero }` + `<LivingHero />` at line 61 |
+| Time-of-day cycles (4 phases) | Code: `LivingHero.tsx:23-26` | ✅ CONFIRMED | night (h<5\|h≥20), dawn (5-7), day (7-17), dusk (17-20); setInterval every 60s |
+| Sub-heroes wired per phase | Code: `LivingHero.tsx` | ✅ CONFIRMED | night→StargazingHero, dawn/dusk→VintageSunRays, day→MascotWorldHero |
+| cf-vbsd: no day-flash on night load | Code: commit `94f045b` | ✅ CONFIRMED | `mounted` state false until useEffect; transition is `"none"` until mounted — first frame always correct phase |
+| cf-aslp: toast position fixed | Code: commit `94f045b` EasterEggBear.tsx | ✅ CONFIRMED | `position:"fixed"`, `bottom:120`, `width:"min(320px,90vw)"`, `zIndex:9999` — viewport-safe on all sizes |
+| prefers-reduced-motion | Code: `LivingHero.tsx` | ✅ CONFIRMED | `reduceMotion` state from matchMedia; passed to sub-heroes |
+| Visual runtime verification | Playwright | ❌ BLOCKED | Playwright MCP disconnected — cannot confirm time-of-day renders visually |
+
+**Manual verification needed:** Load `carolina-futons-web.vercel.app` at night (h<5 or h≥20 local) and confirm StargazingHero renders immediately (no day-bear flash). Trigger EasterEggBear toast and confirm it's centered and not clipped.
+
+---
+
 ## WAVE-3 SWEEP — Theme C Deploy + Fresh Deploy Verification (2026-04-27)
 
 | Feature | Page/Route | Result | Notes |
