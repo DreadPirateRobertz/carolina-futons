@@ -569,6 +569,58 @@ const BLOG_POSTS = {
       },
     ],
   },
+
+  'casegoods-accessories-guide': {
+    slug: 'casegoods-accessories-guide',
+    title: 'Casegoods & Accessories: Complete Your Room',
+    metaDescription: 'Casegoods and furniture accessories turn a room from "I have furniture" to "this room is complete." Explore accents, tables, storage, and more at Carolina Futons.',
+    keywords: ['casegoods furniture', 'furniture accessories', 'room accessories furniture', 'accent furniture', 'complete room furniture'],
+    excerpt: '"Casegoods" is the industry term for case-style furniture — pieces built around a box or case structure. Combined with the right accessories, they transform a collection of furniture into a cohesive, finished room.',
+    category: 'Casegoods & Accessories',
+    tags: ['casegoods', 'accessories', 'accent furniture', 'buying guide'],
+    publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/casegoods-accessories-hero.jpg',
+    faqs: [],
+  },
+
+  'futon-covers-fabrics-guide': {
+    slug: 'futon-covers-fabrics-guide',
+    title: 'Futon Covers & Fabrics: A Visual Buying Guide',
+    metaDescription: 'Learn how to choose the right futon cover — fabric types, sizing, fitted vs slipcover style. Find the perfect cover for your futon at Carolina Futons.',
+    keywords: ['futon cover guide', 'futon slipcover', 'best futon cover fabric', 'futon cover types', 'bifold futon cover'],
+    excerpt: 'Your futon cover is what transforms a bare mattress into furniture. The right cover makes your futon look like an intentional design choice — here\'s how to choose the right one.',
+    category: 'Futon Covers',
+    tags: ['futon covers', 'fabrics', 'buying guide'],
+    publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-cover-hero.jpg',
+    faqs: [],
+  },
+
+  'murphy-cabinet-beds-buying-guide': {
+    slug: 'murphy-cabinet-beds-buying-guide',
+    title: 'Murphy Cabinet Beds: The Ultimate Guest Room Solution',
+    metaDescription: 'Murphy cabinet beds fold into a stylish cabinet — no wall mounting, no tools, no contractor. Compare styles, sizes, and mechanisms. Shop Carolina Futons\' full selection.',
+    keywords: ['murphy cabinet bed', 'cabinet bed review', 'murphy bed alternative', 'wall bed cabinet', 'space saving bed'],
+    excerpt: 'A murphy cabinet bed gives you a real queen-size sleeping surface that disappears into a beautiful piece of furniture when you don\'t need it — no studs, no wall anchors, no contractor.',
+    category: 'Murphy Beds',
+    tags: ['murphy beds', 'cabinet beds', 'guest room', 'buying guide'],
+    publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/murphy-cabinet-bed-hero.jpg',
+    faqs: [],
+  },
+
+  'wall-hugger-futons-buying-guide': {
+    slug: 'wall-hugger-futons-buying-guide',
+    title: 'Wall Hugger Futons: Space-Saving Furniture That Doesn\'t Sacrifice Comfort',
+    metaDescription: 'Wall hugger futons open flat without rolling away from the wall — perfect for small rooms and tight spaces. Compare styles, sizes, and brands. Shop Carolina Futons.',
+    keywords: ['wall hugger futon', 'wall hugger futon frame', 'futon for small space', 'space saving futon'],
+    excerpt: 'Traditional futons need 6–12 inches of clearance to recline. Wall hugger futons solve this entirely — the seat moves forward as the back reclines, staying within 2–3 inches of the wall.',
+    category: 'Futon Frames',
+    tags: ['futon frames', 'wall hugger', 'small spaces', 'buying guide'],
+    publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-wall-hugger-hero.jpg',
+    faqs: [],
+  },
 };
 
 // ── Category Buying Guides ──────────────────────────────────────────
