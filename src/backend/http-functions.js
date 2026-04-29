@@ -2772,3 +2772,67 @@ export async function post_trackCustomEvent(request) {
 export function options_trackCustomEvent(request) {
   return response(corsPreflight(request));
 }
+
+// ── Back-in-Stock Notify Me ──────────────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/notifyMe
+// Receives email + productId from cfw PdpNotifyMe server action.
+// Inserts a record into the NotifyMe CMS collection.
+// Collection schema:
+//   email (Text, required)
+//   productId (Text, required)
+//   source (Text, optional)
+//
+// cf-lqnd
+
+const NOTIFY_ME_COLLECTION = 'NotifyMe';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * @function post_notifyMe
+ * @route POST /_functions/notifyMe
+ * @param {Object} request.body.json
+ * @param {string} request.body.json.email     — required, valid email format
+ * @param {string} request.body.json.productId — required, Wix product ID
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { success: true } on insert;
+ *   400 { success: false, error } on validation;
+ *   500 { success: false, error } on unexpected failure.
+ */
+export async function post_notifyMe(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.warn('[notifyMe] body parse failed:', parseErr?.message ?? parseErr);
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const productId = typeof body.productId === 'string' ? body.productId.trim() : '';
+
+    if (!email || !EMAIL_RE.test(email)) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Valid email is required' }), headers: JSON_HEADERS });
+    }
+    if (!productId) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Product ID is required' }), headers: JSON_HEADERS });
+    }
+
+    await wixData.insert(NOTIFY_ME_COLLECTION, {
+      email,
+      productId,
+      source: typeof body.source === 'string' ? body.source.slice(0, 50) : 'pdp',
+    }, { suppressAuth: true });
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (notifyMe):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_notifyMe(request) {
+  return response(corsPreflight(request));
+}
