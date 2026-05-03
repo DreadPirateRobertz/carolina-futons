@@ -124,7 +124,7 @@ describe('getTemplateIndex', () => {
     expect(index.cart_recovery).toHaveLength(3);
     expect(index.post_purchase).toHaveLength(5);
     expect(index.promotional).toHaveLength(3);
-    expect(index.reengagement).toHaveLength(1);
+    expect(index.reengagement).toHaveLength(3);
   });
 
   it('returns correct structure with all known sequences', async () => {

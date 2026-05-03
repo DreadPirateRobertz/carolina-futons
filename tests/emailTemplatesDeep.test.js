@@ -95,7 +95,7 @@ describe('getTemplateIndex', () => {
     expect(r.cart_recovery).toHaveLength(3);
     expect(r.post_purchase).toHaveLength(5);
     expect(r.promotional.length).toBeGreaterThanOrEqual(3);
-    expect(r.reengagement).toHaveLength(1);
+    expect(r.reengagement).toHaveLength(3);
   });
 });
 
