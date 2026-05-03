@@ -45,6 +45,7 @@ import { sendOrderConfirmation, sendFreightShippingNotification, sendShippingNot
 import { buildFreightTrackingPayload } from 'backend/freightTracking.web';
 import { scheduleSurvey } from 'backend/surveyService.web';
 import { _getReferralLinkForMember } from 'backend/referralService.web';
+import { buildUnsubscribeUrl } from 'backend/utils/unsubToken';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -1488,10 +1489,22 @@ async function sendQueuedEmail(queueItem) {
     throw new Error('No contact ID for recipient');
   }
 
+  let unsubscribeUrl;
+  try {
+    const secret = await getSecret('UNSUB_TOKEN_SECRET');
+    const email = queueItem.recipientEmail || queueItem.variables?.email || '';
+    if (email) {
+      unsubscribeUrl = await buildUnsubscribeUrl(email, queueItem.sequenceType || 'all', secret);
+    }
+  } catch {
+    // Non-fatal: fall back to static unsubscribe page
+    unsubscribeUrl = 'https://www.carolinafutons.com/unsubscribe';
+  }
+
   await triggeredEmails.emailContact(
     queueItem.templateId,
     contactId,
-    { variables: queueItem.variables || {} }
+    { variables: { ...queueItem.variables, unsubscribeUrl } }
   );
 }
 
