@@ -162,8 +162,8 @@ function _unsubHtml(heading, message) {
 <title>${heading} — Carolina Futons</title>
 <style>body{margin:0;padding:40px 20px;font-family:Arial,sans-serif;background:#f5f5f5;color:#333;}
 .box{max-width:480px;margin:0 auto;background:#fff;border-radius:6px;padding:32px;text-align:center;}
-h1{font-family:Georgia,serif;color:#1E3A5F;font-size:24px;margin:0 0 16px;}
-p{line-height:1.6;color:#555;}a{color:#1E3A5F;}</style></head>
+h1{font-family:Georgia,serif;color:${colors.espresso};font-size:24px;margin:0 0 16px;}
+p{line-height:1.6;color:#555;}a{color:${colors.espresso};}</style></head>
 <body><div class="box"><h1>${heading}</h1><p>${message}</p></div></body></html>`;
 }
 
@@ -2897,5 +2897,50 @@ export async function post_notifyMe(request) {
 }
 
 export function options_notifyMe(request) {
+  return response(corsPreflight(request));
+}
+
+/**
+ * @function post_unsubscribe
+ * @route POST /_functions/unsubscribe
+ * JSON API variant for front-end / List-Unsubscribe-Post header compliance.
+ * Body: { token: string }  — same HMAC token as the GET endpoint.
+ */
+export async function post_unsubscribe(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      body = JSON.parse(await request.body.text());
+    } catch {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const token = typeof body.token === 'string' ? body.token : '';
+    if (!token) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Token is required' }), headers: JSON_HEADERS });
+    }
+
+    let secret;
+    try {
+      secret = await getSecret('UNSUB_TOKEN_SECRET');
+    } catch {
+      return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+    }
+
+    const decoded = await verifyUnsubToken(token, secret);
+    if (!decoded) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'invalid-token' }), headers: JSON_HEADERS });
+    }
+
+    await unsubscribeContact(decoded.email, decoded.seq);
+    return ok({ body: JSON.stringify({ success: true, email: decoded.email }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('[unsubscribe] post_unsubscribe error:', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_unsubscribe(request) {
   return response(corsPreflight(request));
 }
