@@ -19,6 +19,9 @@ import { randomUUID } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BLOG_API = 'https://www.wixapis.com/blog/v3/posts';
+// Velo HTTP endpoint added in cf-phgh — bypasses REST API permission gaps
+const VELO_BLOG_IMPORT_URL = 'https://www.carolinafutons.com/_functions/importBlogPosts';
+const VELO_AUTH_TOKEN = 'cf-phgh-rennala-2026-04-28-blog-seed';
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
@@ -218,12 +221,40 @@ export async function importPost(meta, markdownBody) {
   return { created: true, skipped: false, id: postId, slug: meta.slug };
 }
 
+/**
+ * Batch-import all posts via the Velo carolinafutons.com HTTP endpoint.
+ * Requires the cf-phgh post_importBlogPosts function to be deployed.
+ */
+export async function importAllPostsViaVelo(postsWithBodies) {
+  const payload = postsWithBodies.map(({ meta, body }) => {
+    const richContent = markdownToRicos(body);
+    return buildPostPayload(meta, richContent).post;
+  });
+
+  const res = await fetch(VELO_BLOG_IMPORT_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${VELO_AUTH_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ posts: payload }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Velo blog import failed: HTTP ${res.status} — ${text}`);
+  }
+
+  return res.json();
+}
+
 // ── CLI entry point ───────────────────────────────────────────────────────────
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const statusOnly = args.includes('--status');
+  const useVelo = args.includes('--velo');
 
   const contentDir = join(__dirname, '..', 'content', 'blog');
   const mdFiles = readdirSync(contentDir).filter((f) => f.endsWith('.md'));
@@ -234,8 +265,8 @@ async function main() {
 
   console.log(`Found ${mdFiles.length} markdown files.\n`);
 
-  const results = { created: 0, skipped: 0, errors: [] };
-
+  // Collect resolved posts (slugs with metadata)
+  const resolvedPosts = [];
   for (const file of mdFiles) {
     const slug = file.replace('.md', '');
     const meta = metaBySlug[slug];
@@ -243,47 +274,60 @@ async function main() {
       console.warn(`  ⚠ No metadata for ${slug} — skipping`);
       continue;
     }
-
     const mdContent = readFileSync(join(contentDir, file), 'utf8');
     const { body, metaDescription } = parseBlogMarkdown(mdContent);
-    const fullMeta = { ...meta, metaDescription: metaDescription || meta.metaDescription };
+    resolvedPosts.push({ meta: { ...meta, metaDescription: metaDescription || meta.metaDescription }, body });
+  }
 
-    if (dryRun) {
-      const payload = buildPostPayload(fullMeta, markdownToRicos(body));
-      console.log(`[dry-run] Would create: ${slug}`);
+  if (dryRun) {
+    for (const { meta, body } of resolvedPosts) {
+      const payload = buildPostPayload(meta, markdownToRicos(body));
+      console.log(`[dry-run] Would create: ${meta.slug}`);
       console.log(JSON.stringify(payload, null, 2).slice(0, 300) + '…\n');
-      continue;
     }
+    return;
+  }
 
-    if (statusOnly) {
-      const headers = buildHeaders();
-      const existing = await queryPostBySlug(slug, headers).catch(() => []);
-      console.log(`  ${existing.length > 0 ? '✓' : '✗'} ${slug}`);
-      continue;
+  if (statusOnly) {
+    const headers = buildHeaders();
+    for (const { meta } of resolvedPosts) {
+      const existing = await queryPostBySlug(meta.slug, headers).catch(() => []);
+      console.log(`  ${existing.length > 0 ? '✓' : '✗'} ${meta.slug}`);
     }
+    return;
+  }
 
-    process.stdout.write(`  Importing ${slug}… `);
-    try {
-      const result = await importPost(fullMeta, body);
-      if (result.skipped) {
-        console.log('skipped (already exists)');
-        results.skipped++;
-      } else {
-        console.log(`created (id: ${result.id})`);
-        results.created++;
+  const results = { created: 0, skipped: 0, errors: [] };
+
+  if (useVelo) {
+    console.log('Using Velo endpoint...');
+    const batchResult = await importAllPostsViaVelo(resolvedPosts);
+    results.created = batchResult.created ?? 0;
+    results.skipped = batchResult.skipped ?? 0;
+    results.errors = batchResult.errors ?? [];
+  } else {
+    for (const { meta, body } of resolvedPosts) {
+      process.stdout.write(`  Importing ${meta.slug}… `);
+      try {
+        const result = await importPost(meta, body);
+        if (result.skipped) {
+          console.log('skipped (already exists)');
+          results.skipped++;
+        } else {
+          console.log(`created (id: ${result.id})`);
+          results.created++;
+        }
+      } catch (err) {
+        console.log(`ERROR: ${err.message}`);
+        results.errors.push({ slug: meta.slug, error: err.message });
       }
-    } catch (err) {
-      console.log(`ERROR: ${err.message}`);
-      results.errors.push({ slug, error: err.message });
     }
   }
 
-  if (!dryRun && !statusOnly) {
-    console.log(`\nDone. Created: ${results.created}, Skipped: ${results.skipped}, Errors: ${results.errors.length}`);
-    if (results.errors.length > 0) {
-      console.error('Errors:', results.errors);
-      process.exit(1);
-    }
+  console.log(`\nDone. Created: ${results.created}, Skipped: ${results.skipped}, Errors: ${results.errors.length}`);
+  if (results.errors.length > 0) {
+    console.error('Errors:', results.errors);
+    process.exit(1);
   }
 }
 
