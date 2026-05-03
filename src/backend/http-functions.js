@@ -9,7 +9,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact } from 'backend/emailAutomation.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
@@ -32,7 +32,6 @@ import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
 import { subscribeToNewsletter } from 'backend/newsletterService.web';
-import { unsubscribeContact } from 'backend/emailAutomation.web';
 import { verifyUnsubToken } from 'backend/utils/unsubToken';
 
 /**
