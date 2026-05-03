@@ -19,10 +19,10 @@ beforeEach(() => {
 // ── Template Registry ───────────────────────────────────────────────
 
 describe('_TEMPLATE_REGISTRY', () => {
-  it('contains welcome series templates (3 steps)', () => {
+  it('contains welcome series templates (5 steps)', () => {
     const welcome = Object.values(_TEMPLATE_REGISTRY).filter(t => t.sequence === 'welcome');
-    expect(welcome).toHaveLength(3);
-    expect(welcome.map(t => t.step)).toEqual([1, 2, 3]);
+    expect(welcome).toHaveLength(5);
+    expect(welcome.map(t => t.step)).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('contains cart recovery templates (3 steps)', () => {
@@ -126,9 +126,9 @@ describe('_TEMPLATE_REGISTRY', () => {
 describe('getTemplatesBySequence', () => {
   it('returns welcome templates sorted by step', async () => {
     const templates = await getTemplatesBySequence('welcome');
-    expect(templates).toHaveLength(3);
+    expect(templates).toHaveLength(5);
     expect(templates[0].step).toBe(1);
-    expect(templates[2].step).toBe(3);
+    expect(templates[4].step).toBe(5);
   });
 
   it('returns cart_recovery templates', async () => {
@@ -224,9 +224,9 @@ describe('getTemplateIndex', () => {
     expect(index).toHaveProperty('reengagement');
   });
 
-  it('welcome has 3 template IDs', async () => {
+  it('welcome has 5 template IDs', async () => {
     const index = await getTemplateIndex();
-    expect(index.welcome).toHaveLength(3);
+    expect(index.welcome).toHaveLength(5);
   });
 
   it('cart_recovery has 3 template IDs', async () => {
