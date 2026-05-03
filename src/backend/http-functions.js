@@ -14,6 +14,7 @@ import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketing
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
+import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
@@ -2705,5 +2706,133 @@ export async function post_mailingListSignups(request) {
 }
 
 export function options_mailingListSignups(request) {
+  return response(corsPreflight(request));
+}
+
+// ── Public Analytics Event Tracking ─────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/trackCustomEvent
+// Receives events from the cfw Next.js host (server components, Server Actions).
+// Mirror of the customEvents/trackCustomEvent webMethod which is unreachable
+// from external callers (Wix webMethods only run within the Wix site runtime).
+// Rate-limited: 30 events/min per source (matches webMethod limit). cf-3qt.5.3
+
+export async function post_trackCustomEvent(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const [eventName, params = {}] = Array.isArray(body?.args) ? body.args : [];
+    if (!eventName || typeof eventName !== 'string') {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const cleanName = sanitize(eventName, 100)
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '')
+      .toLowerCase();
+    if (!cleanName) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const safeParams = params && typeof params === 'object' && !Array.isArray(params) ? params : {};
+
+    // Guard: public endpoint — cap payload to prevent unbounded storage writes.
+    if (JSON.stringify(safeParams).length > 8192) {
+      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    const source = sanitize(String(safeParams.source || 'custom'), 50);
+
+    const { checkRateLimit } = await import('backend/utils/rateLimit');
+    const { allowed } = await checkRateLimit('CustomEventRateLimit', source, { max: 30, windowMs: 60_000 });
+    if (!allowed) {
+      return response({ status: 429, body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    }
+
+    await insertAnalyticsEvent({
+      memberId: safeParams.memberId || null,
+      eventType: cleanName,
+      source,
+      payload: safeParams,
+    });
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (post_trackCustomEvent):', err);
+    return serverError({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_trackCustomEvent(request) {
+  return response(corsPreflight(request));
+}
+
+// ── Back-in-Stock Notify Me ──────────────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/notifyMe
+// Receives email + productId from cfw PdpNotifyMe server action.
+// Inserts a record into the NotifyMe CMS collection.
+// Collection schema:
+//   email (Text, required)
+//   productId (Text, required)
+//   source (Text, optional)
+//
+// cf-lqnd
+
+const NOTIFY_ME_COLLECTION = 'NotifyMe';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * @function post_notifyMe
+ * @route POST /_functions/notifyMe
+ * @param {Object} request.body.json
+ * @param {string} request.body.json.email     — required, valid email format
+ * @param {string} request.body.json.productId — required, Wix product ID
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { success: true } on insert;
+ *   400 { success: false, error } on validation;
+ *   500 { success: false, error } on unexpected failure.
+ */
+export async function post_notifyMe(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.warn('[notifyMe] body parse failed:', parseErr?.message ?? parseErr);
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const productId = typeof body.productId === 'string' ? body.productId.trim() : '';
+
+    if (!email || !EMAIL_RE.test(email)) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Valid email is required' }), headers: JSON_HEADERS });
+    }
+    if (!productId) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Product ID is required' }), headers: JSON_HEADERS });
+    }
+
+    await wixData.insert(NOTIFY_ME_COLLECTION, {
+      email,
+      productId,
+      source: typeof body.source === 'string' ? body.source.slice(0, 50) : 'pdp',
+    }, { suppressAuth: true });
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (notifyMe):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_notifyMe(request) {
   return response(corsPreflight(request));
 }

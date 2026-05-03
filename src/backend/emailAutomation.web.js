@@ -23,9 +23,11 @@
  *
  * 3. Create triggered email templates in Dashboard > Marketing:
  *    welcome_series_1, welcome_series_2, welcome_series_3,
+ *    welcome_series_4, welcome_series_5,
  *    cart_recovery_1, cart_recovery_2, cart_recovery_3,
  *    post_purchase_1, post_purchase_2, post_purchase_3,
- *    reengagement_1
+ *    post_purchase_review_reward, post_purchase_referral,
+ *    reengagement_1, reengagement_2, reengagement_3
  *
  * 4. Add secrets in Wix Secrets Manager:
  *    WELCOME_DISCOUNT_CODE, RECOVERY_DISCOUNT_CODE
