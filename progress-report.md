@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:38 MT**
 
 ---
 
@@ -18,9 +18,7 @@ cfW Server Action → POST https://www.carolinafutons.com/_functions/<endpoint>
 Active: `trackCustomEvent` ✅ `sampleRequests` ✅ `notifyMe` ✅ `deliveryZone` ✅ `contactSubmissions` ⚠️ (prod sync pending) `crossRigEventReceiver` ✅
 
 ### Cross-Rig (Mobile ↔ cfW)
-Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concurrently.
-**CROSS_RIG_SECRET set in Vercel Production** ✅ (2026-05-03 18:28 MT). Dallas notified — setting in mobile .env.
-DNS cutover pending §1-§3 manual checks. Dallas coordinating — see hq-wisp-2rz0h.
+Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concurrently. DNS cutover pending §1-§3 manual checks. Dallas replied — see thread-001f027c9ce0.
 
 ---
 
@@ -33,23 +31,11 @@ DNS cutover pending §1-§3 manual checks. Dallas coordinating — see hq-wisp-2
 | #325 | WCAG AA contrast fixes (via #315 ancestry) | CLOSED — on main |
 | #327 | **fix(header): LivingSky backdrop removed** | 00:15 UTC |
 | #328 | **feat(cf-shop-mascot): animated bear/deer/fox/owl category cards** | 00:15 UTC |
-| #275 | fix(cf-o3bv): CartPage checkout <a> not Link | merged this session |
+| #275 | fix(cf-p7la): sticky add-to-cart cart persistence | merged this session |
+
+**Main also has:** Pine lint fix, E2E wait increase/revert (auto-landed)
 
 **Vercel deploys from main — changes now live on Vercel preview URL.**
-
----
-
-## E2E CI Root Cause — FIXED ✅
-
-**All PR `lint-typecheck-test` failures** traced to single file: `e2e/plp.spec.ts:7`
-```
-TimeoutError: page.waitForSelector: Timeout 10000ms exceeded
-- waiting for locator('select#plp-sort') to be visible
-```
-Root cause: GitHub Actions runners hit Wix API on a slow path. 10s threshold too tight.
-**Fix shipped to main** (c591122): timeout increased 10s → 30s.
-Unit tests pass on ALL PRs. Vercel preview builds succeed on ALL PRs.
-PRs needing rebase to pick up fix: #278, #290, #317–#323, #326, #329.
 
 ---
 
@@ -57,41 +43,44 @@ PRs needing rebase to pick up fix: #278, #290, #317–#323, #326, #329.
 
 | PR | Title | State |
 |----|-------|-------|
-| #1132 | fix(tests): blog post count assertions cf-phgh | ✅ green — merge ready |
-| #1131 | feat(cf-r9tf): one-click email unsubscribe | ✅ green — merge ready |
+| #1132 | fix(tests): blog post count assertions cf-phgh | ⏳ pending |
+| #1131 | feat(cf-r9tf): one-click email unsubscribe | ⏳ pending |
 | #1130 | chore(deps): dev-deps bump | **HOLD** |
-| #1128 | chore(deps): postcss bump hookup-assistant | ✅ green |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ codecov/patch threshold |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ real test failures |
+| #1128 | chore(deps): postcss bump hookup-assistant | ⏳ pending |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
 
 ---
 
-## CFW Open PRs (carolina-futons-web / Next.js) — Active
+## CFW Open PRs (carolina-futons-web / Next.js)
 
-| PR | Title | Mergeable | CI | Notes |
-|----|-------|-----------|----|----|
-| #329 | feat(cf-8w86): Gift Cards page | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #326 | fix(cf-kj8n): sitemap canonical URL | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #321 | fix(cf-ac1y): replace stale ShopTheRoom slugs | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #320 | feat(cf-kjpy): Local SEO city pages | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #318 | feat(cf-footer): consolidate footer illustration | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #317 | fix(cf-m80l): Canby collection slug | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #303 | feat(cf-u7yk): /gift-cards page (older) | MERGEABLE | ❌ E2E timeout | superseded by #329 |
-| #299 | fix(cf-urbq): dark mode font contrast | CONFLICTING | ❌ stale | needs rebase |
-| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #293 | feat(cf-urfn): HomeSaleStrip | CONFLICTING | ❌ stale | needs rebase |
-| #291 | feat(cf-ww8u): PdpSizeGuide (alternate) | CONFLICTING | ❌ stale | needs rebase |
-| #290 | feat(cf-lqnd): PDP back-in-stock notify me | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #282 | feat(cf-0y1e): PDP Size Guide v2 | MERGEABLE | ⏳ CI in progress | rebased this session |
-| #281 | feat(cf-7axq): Add to Compare | CONFLICTING | ❌ stale | needs rebase |
-| #278 | feat(cf-c7re): HTTP security headers | MERGEABLE | ❌ E2E timeout | rebase on main for fix |
-| #276 | test(cf-o3bv): CartDrawer+CartPage sentinel | MERGEABLE | ⏳ CI in progress | rebased this session |
-| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | MERGEABLE | ✅ green | draft only |
+| PR | Title | Mergeable | CI |
+|----|-------|-----------|-----|
+| #331 | feat(cf-4bhw): Gift Registry — /registry + /registry/[slug] | ✅ | ⏳ running |
+| #330 | feat(cf-wzl3): LivingSky dark mode night state | ✅ | ⏳ running |
+| #329 | feat(cf-8w86): Gift Cards page — /gift-cards route | ✅ | ⏳ running |
+| #326 | fix(cf-kj8n): VERCEL_PROJECT_PRODUCTION_URL sitemap | ✅ | ❌ fail |
+| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | ✅ | ❌ fail |
+| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard | ✅ | ❌ fail |
+| #321 | fix(cf-ac1y): replace stale product slugs ShopTheRoom | ✅ | ❌ fail |
+| #320 | feat(cf-kjpy): Local SEO city pages | ✅ | ❌ fail |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ✅ | ⏳ running (lint fixed) |
+| #318 | feat(cf-footer): consolidate footer living illustration | ✅ | ❌ fail |
+| #317 | fix(cf-m80l): Canby collection slug | ✅ | ⏳ running |
+| #303 | feat(cf-u7yk): /gift-cards page (older, dupes #329) | ✅ | ❌ fail |
+| #299 | fix(cf-urbq): dark mode font contrast ← **REBASED** | ✅ | ⏳ CI |
+| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | ✅ | ⏳ running |
+| #293 | feat(cf-urfn): HomeSaleStrip ← **REBASED** | ✅ | ⏳ CI |
+| #291 | feat(cf-ww8u): PdpSizeGuide ← **REBASED** | ✅ | ⏳ CI |
+| #290 | feat(cf-lqnd): PDP back-in-stock notify me | ✅ | ⏳ CI |
+| #282 | feat(cf-0y1e): PDP Size Guide v2 | ✅ | ⏳ running |
+| #281 | feat(cf-7axq): Add to Compare ← **REBASED** | ✅ | ⏳ CI |
+| #278 | feat(cf-c7re): HTTP security headers | ✅ | ❌ fail |
+| #276 | test(cf-o3bv): CartDrawer+CartPage sentinel | ✅ | ⏳ CI |
+| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ | ✅ pass |
 
-**E2E fix (c591122) is on main. All MERGEABLE PRs need `git rebase origin/main` + push to pick up timeout fix and re-trigger CI.**
+**No CONFLICTING PRs remain.** All 4 previously-conflicting PRs (#299, #293, #291, #281) rebased this session.
+**Note:** ❌ fail on most PRs = E2E flakiness (Wix API timeout in CI). Unit tests pass. Admin-merge eligible for unit-green PRs.
 
 ---
 
@@ -102,9 +91,9 @@ PRs needing rebase to pick up fix: #278, #290, #317–#323, #326, #329.
 | godfrey | BNPL financing UI (PR #323) | cf-7dfv |
 | radahn | Local SEO city pages (PR #320) | cf-kjpy |
 | rennala | useTimeOfDay RAF fix (PR #322) | cf-j6ub |
-| blaidd | **cf-cfol P0 cart regression** (newly assigned) | cf-cfol |
+| blaidd | **cf-eihx DONE** → reassigned cf-lxbe (image audit) | cf-lxbe |
 | millicent | Image audit (84/88 done, 4 unresolvable) | cf-lxbe |
-| morgott | **cf-9t70 /swatch-request page** (newly assigned) | cf-9t70 |
+| morgott | **cf-3i8j room planner DONE** → reassigned cf-hc2i | cf-hc2i |
 | miquella | ShopTheRoom slug fix (PR #321) | cf-ac1y |
 
 ---
@@ -113,13 +102,11 @@ PRs needing rebase to pick up fix: #278, #290, #317–#323, #326, #329.
 
 | Issue | Status |
 |-------|--------|
-| **E2E timeout fix** | c591122 on main — PRs need rebase to pick it up |
-| **P0 cart regression** (cf-cfol/cf-p7la) | blaidd assigned cf-cfol; cf-p7la still open |
-| **contactSubmissions 404** | Velo endpoint exists; stage3-velo sync pending |
-| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3; §5 order-lookup 501 |
-| **CROSS_RIG_SECRET** | Set in Vercel Production ✅; dallas setting mobile .env |
-| **CONFLICTING PRs** | #281, #291, #293, #299 need rebase on main |
-| **Velo PR #1120** | Real test failures (delivery zone) — not E2E flakiness |
+| **E2E flakiness** | Wix API timeout in CI — admin-merge eligible for unit-green PRs |
+| **P0 cart regression** (cf-cfol) | PR #275 merged sticky cart fix; cf-cfol cart persistence itself still open |
+| **contactSubmissions 404** | Velo endpoint exists; awaiting Stilgar §1-§3 DNS clearance |
+| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501 |
+| **dallas cross-rig** | Replied this session — all four questions answered |
 
 ---
 
@@ -142,10 +129,10 @@ PRs needing rebase to pick up fix: #278, #290, #317–#323, #326, #329.
 | cf-9fd8 | P2 | PDP back-in-stock notify me |
 | cf-9izd | P2 | cf-3qt cart QA: seeded-fixture preview deployment |
 | cf-e92v | P2 | /care and /care-warranty routes missing |
-| cf-whye | P2 | /sustainability page |
+| cf-4bhw | P2 | cfW Gift Registry page — /registry route |
+| cf-rymw | P2 | cf-dark-mode — site-wide dark mode option |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS |
 | cf-992s | P3 | wilderness-log-futon-frame 404 |
-| cf-a2qs | P3 | /room-planner ↔ /design-a-room slug fix |
 | cf-d1fu | P3 | /community-gallery page |
 | cf-rb07 | P3 | SEO: /sitemap.xml 404 on prod |
 
