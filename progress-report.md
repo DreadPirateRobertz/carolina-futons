@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:14 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:18 MT**
 
 ---
 
@@ -88,12 +88,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | PR #410 MERGED ✅ (97/100 on-sale edge tests) — idle, convoy candidate | ✅ |
-| blaidd | Idle — convoy candidate | ✅ |
-| godfrey | Idle — convoy candidate | ✅ |
-| miquella | Idle — convoy candidate | ✅ |
-| morgott | PR #399 closed (superseded) — cf-2idp done via #389+#394 on main | ✅ |
-| millicent | Idle — convoy candidate | ✅ |
+| rennala | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| blaidd | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| godfrey | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| miquella | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| morgott | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| millicent | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
 
 ---
 
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Sale PLP + on-sale edge tests live · CFW queue CLEAN — only HOLD deps + Stilgar-blocked · 6 crew convoy-ready · P0 OAuth blocked Playwright MCP down*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · CFW queue CLEAN · 6 crew convoy-ready awaiting mayor routing · P0 OAuth blocked Playwright MCP down*
