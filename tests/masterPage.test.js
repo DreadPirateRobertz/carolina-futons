@@ -105,6 +105,7 @@ import { reportMetrics } from 'backend/coreWebVitals.web';
 import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
+import { session as wixSession } from 'wix-storage-frontend';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -1637,6 +1638,8 @@ describe('masterPage.js', () => {
   // ── Promotional Lightbox ──────────────────────────────────────────
 
   describe('promotional lightbox', () => {
+    afterEach(() => { wixSession.clear(); });
+
     it('populates promo lightbox when active promotion exists', async () => {
       getActivePromotion.mockResolvedValueOnce({
         _id: 'promo-1',
@@ -1715,6 +1718,50 @@ describe('masterPage.js', () => {
       vi.advanceTimersByTime(3000);
       await vi.advanceTimersByTimeAsync(100);
       expect(getEl('#promoTitle').text).toBe('');
+      vi.useRealTimers();
+    });
+
+    it('does not show lightbox when promo already dismissed this session', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-gate-1',
+        title: 'Spring Sale',
+        subtitle: 'Save 20%',
+        discountCode: 'SPRING20',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [],
+      });
+      // Simulate prior dismissal via wix-storage-frontend session storage
+      wixSession.setItem('promo_dismissed_promo-gate-1', '1');
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(getEl('#promoOverlay').show).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('sets session dismiss key when lightbox is dismissed via close button', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-gate-2',
+        title: 'Spring Sale',
+        subtitle: 'Save 20%',
+        discountCode: 'SPRING20',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        expect(getEl('#promoOverlay').show).toHaveBeenCalled();
+      });
+      // Simulate overlay click (dismiss)
+      const overlayHandler = getEl('#promoOverlay').onClick.mock.calls[0]?.[0];
+      if (overlayHandler) overlayHandler();
+      await vi.advanceTimersByTimeAsync(50);
+      expect(wixSession.getItem('promo_dismissed_promo-gate-2')).toBe('1');
       vi.useRealTimers();
     });
 

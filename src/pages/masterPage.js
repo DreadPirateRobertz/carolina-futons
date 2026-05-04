@@ -14,6 +14,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
 import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
+import { session as wixSession } from 'wix-storage-frontend';
 import { initAppDownloadBanner } from 'public/AppDownloadBanner';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter, initMountainDividerWithSkyWiring } from 'public/FooterSection';
@@ -475,15 +476,11 @@ async function initPromoLightbox() {
     const promo = await getActivePromotion();
     if (!promo) return;
 
-    // Check if user already dismissed this promotion in this session
+    // Check if user already dismissed this promotion in this session.
+    // Uses wix-storage-frontend session scope so the gate persists across
+    // Wix client-side page navigations (browser sessionStorage resets per nav).
     const dismissKey = `promo_dismissed_${promo._id}`;
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        if (sessionStorage.getItem(dismissKey)) return;
-      } catch (e) {
-        // sessionStorage may not be available
-      }
-    }
+    if (wixSession.getItem(dismissKey)) return;
 
     populatePromoLightbox(promo);
     initPromoCountdown(promo.endDate);
@@ -508,7 +505,9 @@ async function initPromoLightbox() {
     $w('#promoOverlay').show('fade', { duration: 300 });
     _promoDialog.open();
   } catch (e) {
-    // Promo lightbox is non-critical — never block the page
+    // Promo lightbox is non-critical — never block the page, but log so
+    // Wix monitoring captures storage/API failures that silently prevent display.
+    console.error('[masterPage] initPromoLightbox failed:', e?.message);
   }
 }
 
@@ -605,11 +604,7 @@ function dismissLightbox(dismissKey) {
     $w('#promoOverlay').hide('fade', { duration: 200 });
   } catch (e) {}
 
-  if (typeof sessionStorage !== 'undefined') {
-    try {
-      sessionStorage.setItem(dismissKey, '1');
-    } catch (e) {}
-  }
+  try { wixSession.setItem(dismissKey, '1'); } catch (e) {}
 }
 
 function initPromoDismiss(promoId, dismissKey) {
