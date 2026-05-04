@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:43 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:48 MT**
 
 ---
 
@@ -105,13 +105,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #368 E2E fixture smoke test | ⏳ CI pending |
-| rennala | cf-3qt.2 page gap audit (cf-9t70 blocked) | 🔧 in progress |
-| blaidd | cf-3qt.2.9 — PDP /products/[slug] | 🔧 dispatched |
-| godfrey | cf-3qt.2.6 — Home page hero+collections | 🔧 dispatched |
-| miquella | cf-3qt.2.8 — PLP Murphy Cabinet Beds | 🔧 dispatched |
-| morgott | cf-3qt.2.7 — PLP Futon Frames | 🔧 dispatched |
-| millicent | cf-3qt.2.10 — Cart page | 🔧 dispatched |
+| radahn | PR #368 E2E fixture smoke — CI pending | ⏳ |
+| rennala | CF #1133 CI fix (trade-in) — cf-9t70 blocked | 🔧 |
+| blaidd | CF #1120 CI fix (delivery zone) | 🔧 |
+| godfrey | cf-3qt.2.14 PLP E2E fixture specs | 🔧 |
+| miquella | cf-3qt.2.Z secondary pages audit | 🔧 |
+| morgott | cf-3qt.2.13 search/compare/wishlist smoke | 🔧 |
+| millicent | CF #1125 CI fix (sampleRequests) | 🔧 |
 
 ---
 
@@ -135,12 +135,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.2.6 | P1 | Home page — hero + collections | godfrey |
-| cf-3qt.2.7 | P1 | PLP Futon Frames | morgott |
-| cf-3qt.2.8 | P1 | PLP Murphy Cabinet Beds | miquella |
-| cf-3qt.2.9 | P1 | PDP /products/[slug] | blaidd |
-| cf-3qt.2.10 | P1 | Cart page | millicent |
-| cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
+| cf-3qt.2.11 | P1 | Integration verification (all pages built ✅) | blaidd→closing |
+| cf-3qt.2.12 | P1 | Checkout flow audit | millicent→CF #1125 |
+| cf-3qt.2.13 | P2 | Search/compare/wishlist smoke | morgott |
+| cf-3qt.2.14 | P1 | PLP E2E fixture specs | godfrey |
+| cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked→#1133 fix) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
