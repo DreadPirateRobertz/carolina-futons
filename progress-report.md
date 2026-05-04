@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:46 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:48 MT**
 
 ---
 
@@ -88,12 +88,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| blaidd | Idle — cf-3qt.8.1 ✅ (upgrade-runbook.md) | ✅ |
-| godfrey | Idle — cf-3qt.8.2 ✅ (dns-staging.md) | ✅ |
-| miquella | Idle — cf-3qt.8.3 ✅ (monitoring-setup.md) | ✅ |
-| millicent | Idle — cf-3qt.8.4 ✅ (rollback-runbook.md) | ✅ |
-| rennala | Idle — cf-3qt.8.5 ✅ (smoke-test-plan.md) | ✅ |
-| morgott | Idle — cf-3qt.9.1 ✅ (retirement-plan.md) | ✅ |
+| blaidd | cf-3qt.8.8 — SEO metadata audit (seo-audit.md) | 🔧 |
+| godfrey | cf-3qt.8.7 — Lighthouse baseline (lighthouse-baseline.md) | 🔧 |
+| miquella | cf-3qt.8.10 — axe a11y scan (a11y-audit.md) | 🔧 |
+| millicent | Idle — cf-3qt.8.4 ✅ complete | ✅ |
+| rennala | cf-3qt.8.9 — Wave-1 E2E automation (post-cutover-wave1.spec.ts) | 🔧 |
+| morgott | cf-3qt.8.6 — redirect map + next.config.ts PR | 🔧 |
 
 ---
 
@@ -170,4 +170,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 prep 6/6 DONE — all runbooks committed · ⚠️ Vercel personal account flag for Stilgar · All crew idle awaiting next wave · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-2 sprint active — redirect map/Lighthouse/SEO audit/Wave-1 E2E/a11y scan · ⚠️ Vercel personal account flag for Stilgar · P0 deferred Stilgar manual*
