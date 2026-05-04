@@ -125,9 +125,9 @@ describe('Header SVG brand token compliance', () => {
     expect(ridges.length).toBeGreaterThanOrEqual(7);
   });
 
-  it('has atmospheric haze filters', () => {
+  it('has no blur overlays (removed per Phase 7 vibrance spec)', () => {
     const svg = getMountainSkylineSvg();
-    expect(svg).toContain('feGaussianBlur');
+    expect(svg).not.toContain('feGaussianBlur');
   });
 
   it('has detail elements (birds, trees, wildflowers)', () => {

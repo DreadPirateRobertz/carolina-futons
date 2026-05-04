@@ -88,8 +88,8 @@ describe('getMountainSkylineSvg — no deprecated filters', () => {
     expect(getMountainSkylineSvg()).not.toContain('<feDisplacementMap');
   });
 
-  it('may contain feGaussianBlur for atmospheric haze (allowed)', () => {
-    expect(getMountainSkylineSvg()).toContain('<feGaussianBlur');
+  it('does NOT contain feGaussianBlur (removed per Phase 7 — no blur overlays)', () => {
+    expect(getMountainSkylineSvg()).not.toContain('<feGaussianBlur');
   });
 });
 
