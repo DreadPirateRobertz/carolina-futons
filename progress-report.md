@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 14:41 MT**
 
 ---
 
@@ -63,8 +63,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #414 | chore(design-migration): final illustrations/ cleanup | ✅ CI | ❌ BLOCK 63/100 — delete orphan contact-hero.svg |
-| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ✅ CI | ❌ BLOCK 58/100 — 4 fixes: skip desc, silent return×2, locator, dupes |
+| #415 | feat(cf-footer-anim): footer mascot animation | ✅ CI | ❌ BLOCK — missing Footer.tsx integration + animation |
+| #414 | chore(design-migration): illustrations cleanup + 4 SVGs | ✅ MERGED | 95/100 |
+| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ✅ MERGED | 88/100 |
+| #416 | feat(cf-home-animals): homepage mascot category cards | ✅ MERGED | 90/100 |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -84,13 +86,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #414 BLOCK — delete orphan contact-hero.svg, re-push | 🔧 fixing |
-| blaidd | PR #413 BLOCK — 4 fixes (skip desc, silent return×2, locator, dupes) | 🔧 fixing |
-| millicent | cf-3qt.16 — animate MascotFooterDivider in Footer | 🔧 dispatched |
-| morgott | cf-3qt.17 — homepage product grid animal mascot spots | 🔧 dispatched |
-| rennala | next bead assigned via bd ready | 🔧 dispatched |
-| godfrey | confirming cf-3qt.8.11 closed, then next bead | ⏳ |
-| miquella | confirming cf-3qt.8.12 closed, then next bead | ⏳ |
+| millicent | cf-3qt.16 — PR #415 BLOCK: add Footer.tsx integration + float animation | 🔧 fixing |
+| morgott | wix-retirement-checklist.md — cf-3qt.9 prep doc | 🔧 dispatched |
+| radahn | IDLE — cf-3qt.8.15 ✅ merged | ⚡ needs bead |
+| blaidd | IDLE — cf-3qt.8.13 ✅ merged | ⚡ needs bead |
+| rennala | IDLE | ⚡ needs bead |
+| godfrey | IDLE — cf-3qt.8.11 ✅ | ⚡ needs bead |
+| miquella | IDLE — cf-3qt.8.12 ✅ | ⚡ needs bead |
 
 ---
 
@@ -117,7 +119,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
-| cf-3qt.8.15 | P2 | illustrations/ final cleanup + dead CSS | 🔧 radahn PR #414 CI |
+| cf-3qt.16 | P1 | footer animation — PR #415 BLOCK (millicent fixing) | 🔧 |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -127,6 +129,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #416 | feat(cf-home-animals): homepage mascot category cards | 90/100 | 14:41 MT |
+| #414 | chore(design-migration): illustrations cleanup + 4 SVGs | 95/100 | 14:41 MT |
+| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | 88/100 | 14:41 MT |
 | #412 | feat(cf-3qt.8.6): pre-cutover redirect map | 85.8/100 avg | 11:2x MT |
 | #411 | test(cf-3qt.8.9): Wave 1 post-cutover smoke | 88/100 | 11:22 MT |
 | #410 | test(on-sale): discountedPrice edge cases | 97/100 | 17:13 UTC |
@@ -165,4 +170,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-3 sprint: #412+#411 MERGED, #413+#414 CI pending refinery · 5 crew idle dispatching now · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#414 + #416 (5 PRs) · Stilgar directives: homepage ✅ #416 merged, footer ⏳ #415 BLOCK fixing · Refinery rate-limited until 2:40 MT · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
