@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 08:59 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 03:03 MT**
 
 ---
 
@@ -84,10 +84,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | **CONVOY** blogContent — blaidd to rebase after rennala fix lands |
-| #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ | |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ⏳ test(22) running | **CONVOY** rennala fix landed → test(20) ✅, test(22) in progress |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ⏳ test(22) running | **CONVOY** rennala fix landed → test(20) ✅, test(22) in progress |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ⏳ running | rennala pushed 17→21 fix — CI in flight |
+| #1130 | chore(deps): dev-deps bump | **HOLD** ✅ | |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ⏳ test(22) running | test(20) ✅, millicent rebased on #1132 fix |
+| ~~#1120~~ | ~~feat(cf-3qt.4.4): delivery zone~~ | ✅ **MERGED** 09:02 UTC | blaidd |
 
 ---
 
@@ -95,12 +95,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #374 | fix(cf-3qt): fixture addToCart + getOrder | ⏳ CI running / Vercel ✅ | millicent — refinery dispatched |
-| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott — nudged to fix |
-| #372 | test(cf-3qt.2.14): PLP E2E fixture specs | ⏳ CI running / Vercel ✅ | godfrey |
-| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ✅ CLEAN | miquella — refinery running |
-| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel fail | morgott — #370 fix priority over #373 |
-| #369 | feat(cf-3qt.2.6): Home page collections grid | ✅ CLEAN | godfrey — refinery running, ready to merge |
+| #375 | fix(cf-3qt.2.Z): render audit /registry /swatch | ✅ CLEAN | miquella — refinery running |
+| #374 | fix(cf-3qt): fixture addToCart + getOrder | ✅ CI+Vercel | millicent — **REFINERY BLOCK**: USE_FIXTURES module-level + addToCart unconditional; awaiting fix push |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott — fix deploying |
+| #372 | test(cf-3qt.2.14): PLP E2E fixture specs (5 routes) | ⏳ CI / Vercel ✅ | radahn — refinery running |
+| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ✅ CI+Vercel | miquella — **REFINERY BLOCK**: cube+ranchero slugs not in FIXTURE_PRODUCTS |
+| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel fail | morgott — fix pushed, new build deploying |
+| #369 | feat(cf-3qt.2.6): Home page collections grid | ⏳ QUEUED | godfrey — pushing refinery fixes (font-heading + bg-cf-cream) |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -110,13 +111,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-3qt.2.14 PLP E2E specs → PR #372 CI running | ⏳ |
-| rennala | blogContent 17→21 fix → **CONVOY UNBLOCKING** — test(20) ✅ on #1125/#1120 | 🔧 |
-| blaidd | CF #1133 — rebase needed after rennala convoy fix confirms green | ⏳ |
-| godfrey | PR #369 ✅ CLEAN + PR #372 CI running | 🔧 |
-| miquella | PR #371 ✅ CLEAN (ranchero fix pushed) — refinery pending | 🔧 |
-| morgott | Fix PR #370 Vercel (priority) → then PR #373 Vercel | 🔧 |
-| millicent | PR #374 fixture addToCart+getOrder — CI running | 🔧 |
+| radahn | PR #372 PLP E2E specs — CI running, refinery dispatched | 🔧 |
+| rennala | blogContent convoy fix ✅ done → picking up cf-3qt.3 | 🔧 |
+| blaidd | PR #1120 MERGED ✅ — standing by for next bead | ⏳ |
+| godfrey | PR #369 refinery fixes (font-heading + bg-cf-cream) — CI queued | 🔧 |
+| miquella | Fix PR #371 BLOCK (cube+ranchero to FIXTURE_PRODUCTS) | 🔧 |
+| morgott | PR #370 Vercel fix deploying + PR #373 Vercel fix | 🔧 |
+| millicent | Fix PR #374 BLOCK (USE_FIXTURES inline + addToCart guard) | 🔧 |
 
 ---
 
@@ -140,10 +141,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.2.12 | P1 | Checkout audit → fixture blockers → PR #374 CI running | millicent |
+| cf-3qt.2.12 | P1 | Checkout fixture blockers → PR #374 BLOCK pending fix | millicent |
 | cf-3qt.2.13 | P2 | Search/compare/wishlist smoke → PR #373 Vercel fail | morgott |
-| cf-3qt.2.14 | P1 | PLP E2E fixture specs → PR #372 CI running | godfrey |
-| cf-9t70 | P1 | /swatch-request Wix CMS | rennala (convoy fix in flight) |
+| cf-3qt.2.14 | P1 | PLP E2E fixture specs → PR #372 CI running | radahn |
+| cf-9t70 | P1 | /swatch-request Wix CMS | rennala |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -176,6 +177,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #366 | Light mode charcoal/50→/70 FilterFirst WCAG AA | 08:38 UTC |
 | #367 | Light mode charcoal/50→/70 alt nodes WCAG AA | 08:4x UTC |
 | #368 | E2E checkout fixture-mode smoke | 08:55 UTC |
+| #1120 | Delivery zone distance calc + GET /deliveryZone | 09:02 UTC |
 
 ---
 
