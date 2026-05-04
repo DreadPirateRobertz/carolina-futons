@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:38 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:48 MT**
 
 ---
 
@@ -18,7 +18,7 @@ cfW Server Action → POST https://www.carolinafutons.com/_functions/<endpoint>
 Active: `trackCustomEvent` ✅ `sampleRequests` ✅ `notifyMe` ✅ `deliveryZone` ✅ `contactSubmissions` ⚠️ (prod sync pending) `crossRigEventReceiver` ✅
 
 ### Cross-Rig (Mobile ↔ cfW)
-Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concurrently. DNS cutover pending §1-§3 manual checks. Dallas replied — see thread-001f027c9ce0.
+Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concurrently. CROSS_RIG_SECRET now deployed: **Vercel Production ✅ + Wix Staging Secrets Manager ✅ + Mobile .env ✅** (dallas confirmed 18:37 MT). DNS cutover pending §1-§3 manual checks (cf-cb9s) — §5 order-lookup 501 still open.
 
 ---
 
@@ -33,7 +33,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #328 | **feat(cf-shop-mascot): animated bear/deer/fox/owl category cards** | 00:15 UTC |
 | #275 | fix(cf-p7la): sticky add-to-cart cart persistence | merged this session |
 
-**Main also has:** Pine lint fix, E2E wait increase/revert (auto-landed)
+**Velo also merged:** #1132 (blog post count fix) ✅ · #1131 (one-click unsubscribe) ✅
+
+**Main also has:** Pine lint fix, E2E wait increase/revert (auto-landed), cf-7axq Add to Compare, ci.yml E2E nightly-only patch (721ca82 — **UNDER REVIEW**: Stilgar corrected order → Option A timeout bump first; 721ca82 may be reverted)
 
 **Vercel deploys from main — changes now live on Vercel preview URL.**
 
@@ -43,11 +45,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | State |
 |----|-------|-------|
-| #1132 | fix(tests): blog post count assertions cf-phgh | ⏳ pending |
-| #1131 | feat(cf-r9tf): one-click email unsubscribe | ⏳ pending |
 | #1130 | chore(deps): dev-deps bump | **HOLD** |
-| #1128 | chore(deps): postcss bump hookup-assistant | ⏳ pending |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail |
+| #1128 | chore(deps): postcss bump hookup-assistant | ✅ pass — merge eligible |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ⏳ running |
 | #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
 
 ---
@@ -56,31 +56,31 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | Mergeable | CI |
 |----|-------|-----------|-----|
-| #331 | feat(cf-4bhw): Gift Registry — /registry + /registry/[slug] | ✅ | ⏳ running |
-| #330 | feat(cf-wzl3): LivingSky dark mode night state | ✅ | ⏳ running |
+| #331 | feat(cf-4bhw): Gift Registry — /registry + /registry/[slug] | ✅ | ❌ fail |
+| #330 | feat(cf-wzl3): LivingSky dark mode night state | ✅ | ❌ fail |
 | #329 | feat(cf-8w86): Gift Cards page — /gift-cards route | ✅ | ⏳ running |
-| #326 | fix(cf-kj8n): VERCEL_PROJECT_PRODUCTION_URL sitemap | ✅ | ❌ fail |
-| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | ✅ | ❌ fail |
-| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard | ✅ | ❌ fail |
-| #321 | fix(cf-ac1y): replace stale product slugs ShopTheRoom | ✅ | ❌ fail |
-| #320 | feat(cf-kjpy): Local SEO city pages | ✅ | ❌ fail |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ✅ | ⏳ running (lint fixed) |
-| #318 | feat(cf-footer): consolidate footer living illustration | ✅ | ❌ fail |
-| #317 | fix(cf-m80l): Canby collection slug | ✅ | ⏳ running |
+| #326 | fix(cf-kj8n): VERCEL_PROJECT_PRODUCTION_URL sitemap | ✅ | ⏳ CI |
+| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | ✅ | ⏳ CI |
+| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard | ✅ | ⏳ running |
+| #321 | fix(cf-ac1y): replace stale product slugs ShopTheRoom | ✅ | ⏳ CI |
+| #320 | feat(cf-kjpy): Local SEO city pages | ✅ | ⏳ running |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ✅ | ❌ fail |
+| #318 | feat(cf-footer): consolidate footer living illustration | ✅ | ⏳ running |
+| #317 | fix(cf-m80l): Canby collection slug | ✅ | ⏳ CI |
 | #303 | feat(cf-u7yk): /gift-cards page (older, dupes #329) | ✅ | ❌ fail |
-| #299 | fix(cf-urbq): dark mode font contrast ← **REBASED** | ✅ | ⏳ CI |
-| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | ✅ | ⏳ running |
+| #299 | fix(cf-urbq): dark mode font contrast ← **REBASED** | ✅ | ⏳ running |
+| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | ✅ | ⏳ CI |
 | #293 | feat(cf-urfn): HomeSaleStrip ← **REBASED** | ✅ | ⏳ CI |
-| #291 | feat(cf-ww8u): PdpSizeGuide ← **REBASED** | ✅ | ⏳ CI |
+| #291 | feat(cf-ww8u): PdpSizeGuide ← **REBASED** | ✅ | ❌ fail |
 | #290 | feat(cf-lqnd): PDP back-in-stock notify me | ✅ | ⏳ CI |
 | #282 | feat(cf-0y1e): PDP Size Guide v2 | ✅ | ⏳ running |
-| #281 | feat(cf-7axq): Add to Compare ← **REBASED** | ✅ | ⏳ CI |
-| #278 | feat(cf-c7re): HTTP security headers | ✅ | ❌ fail |
+| #281 | feat(cf-7axq): Add to Compare ← **REBASED** | ✅ | ❌ fail |
+| #278 | feat(cf-c7re): HTTP security headers | ✅ | ⏳ CI |
 | #276 | test(cf-o3bv): CartDrawer+CartPage sentinel | ✅ | ⏳ CI |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ | ✅ pass |
 
 **No CONFLICTING PRs remain.** All 4 previously-conflicting PRs (#299, #293, #291, #281) rebased this session.
-**Note:** ❌ fail on most PRs = E2E flakiness (Wix API timeout in CI). Unit tests pass. Admin-merge eligible for unit-green PRs.
+**Note:** ❌ fail on PRs = lint/typecheck/unit failure OR E2E (E2E now skipped on PR builds per 721ca82). ⏳ CI = awaiting first run after rebase. Admin-merge eligible for unit-green PRs.
 
 ---
 
@@ -90,10 +90,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 |------|-------------|------|
 | godfrey | BNPL financing UI (PR #323) | cf-7dfv |
 | radahn | Local SEO city pages (PR #320) | cf-kjpy |
-| rennala | useTimeOfDay RAF fix (PR #322) | cf-j6ub |
-| blaidd | **cf-eihx DONE** → reassigned cf-lxbe (image audit) | cf-lxbe |
-| millicent | Image audit (84/88 done, 4 unresolvable) | cf-lxbe |
-| morgott | **cf-3i8j room planner DONE** → reassigned cf-hc2i | cf-hc2i |
+| rennala | emailTemplates reengagement_2/_3 missing registry | cf-hc2i |
+| blaidd | Cart P0 convoy — checkout empty regression | cf-cfol |
+| millicent | Image audit DONE — 4 unresolvable (mesa mattresses staging-only + san-sebastian video) | cf-lxbe ✓ |
+| morgott | Cart P1 convoy — sticky add-to-cart persistence | cf-p7la |
 | miquella | ShopTheRoom slug fix (PR #321) | cf-ac1y |
 
 ---
@@ -102,15 +102,16 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **E2E flakiness** | Wix API timeout in CI — admin-merge eligible for unit-green PRs |
-| **P0 cart regression** (cf-cfol) | PR #275 merged sticky cart fix; cf-cfol cart persistence itself still open |
+| **CI fix order** | 721ca82 (Option B nightly-only E2E) on main — Stilgar corrected order: A (30s timeout) first. Revert + re-apply pending |
+| **P0 cart regression** (cf-cfol) | blaidd on it; morgott on cf-p7la (sticky cart) |
+| **Mascot visibility** | Stilgar NOT seeing bear/deer/fox/owl shop grid — PR #328 merged. Needs Vercel cache check / Stilgar browser cache |
 | **contactSubmissions 404** | Velo endpoint exists; awaiting Stilgar §1-§3 DNS clearance |
-| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501 |
-| **dallas cross-rig** | Replied this session — all four questions answered |
+| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501 open. Dallas holding. |
+| **CROSS_RIG_SECRET** | ✅ DONE: Vercel Prod ✅ Wix Staging ✅ Mobile ✅ (dallas confirmed 18:37 MT) |
 
 ---
 
-## In-Progress Beads (21 total)
+## In-Progress Beads (20 total)
 
 | Bead | Pri | Title |
 |------|-----|-------|
@@ -121,7 +122,6 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-1te7 | P1 | /collections/* 404 — no redirect to /shop/* |
 | cf-9t70 | P1 | /swatch-request page — fabric sample order form |
 | cf-c77s | P1 | E2E auto emails + challenges + reward system |
-| cf-eihx | P1 | CFW shipping tier system — DONE ✓ |
 | cf-hc2i | P1 | emailTemplates reengagement_2/_3 missing registry |
 | cf-kjpy | P1 | cfW Local SEO city pages |
 | cf-rtd7 | P1 | cf-3qt full prod parity audit |
@@ -129,7 +129,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-9fd8 | P2 | PDP back-in-stock notify me |
 | cf-9izd | P2 | cf-3qt cart QA: seeded-fixture preview deployment |
 | cf-e92v | P2 | /care and /care-warranty routes missing |
-| cf-4bhw | P2 | cfW Gift Registry page — /registry route |
+| cf-4bhw | P2 | cfW Gift Registry page — /registry route (PR #331 submitted) |
 | cf-rymw | P2 | cf-dark-mode — site-wide dark mode option |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS |
 | cf-992s | P3 | wilderness-log-futon-frame 404 |
@@ -142,7 +142,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Repo | Schedule | State |
 |------|---------|-------|
 | carolina-futons | `0 6 * * *` | ✅ Running |
-| carolina-futons-web | `0 6 * * *` | ✅ Active |
+| carolina-futons-web | `0 6 * * *` | ⚠️ Failing 3 days — Wix API timeout. E2E on PRs now skipped (721ca82). Nightly still runs full suite. |
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
