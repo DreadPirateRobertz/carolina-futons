@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:14 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:19 MT**
 
 ---
 
@@ -15,10 +15,21 @@
 cfW Server Action → POST https://www.carolinafutons.com/_functions/<endpoint>
                           ↓ Wix Velo HTTP function (http-functions.js) ↓ wixData/webMethod
 ```
-Active: `trackCustomEvent` ✅ `sampleRequests` ✅ `notifyMe` ✅ `deliveryZone` ✅ `contactSubmissions` ⚠️ (code live in http-functions.js:2641 — Wix site PUBLISH needed) `crossRigEventReceiver` ✅
+Active: `trackCustomEvent` ✅ `sampleRequests` ✅ `notifyMe` ✅ `deliveryZone` ✅ `contactSubmissions` ⚠️ (code at http-functions.js:2641 — live Wix site PUBLISH needed by Stilgar) `crossRigEventReceiver` ✅
 
 ### Cross-Rig (Mobile ↔ cfW)
 Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix Staging ✅**. CFW_API_URL in EAS = `https://carolina-futons-web.vercel.app` (update to carolinafutons.com at DNS cutover). DNS cutover pending cf-cb9s.
+
+---
+
+## 🔍 PROD VERIFICATION (2026-05-04 00:19 MT)
+
+**URL checked:** https://carolina-futons-web.vercel.app/shop/futon-frames
+- **Products:** ✅ Real Wix products rendering (`static.wixstatic.com/media/e04e89_*` images confirmed in HTML)
+- **Current deployment:** dpl_3fY9hGzN9h14BSygypaNKcCrgGPC (supersedes Stilgar's dpl_81vGDWyL3j — our merges triggered newer builds)
+- **Delivery zone API:** ✅ `/api/delivery-zone?zip=28801` → white-glove NC
+- **WIX_CLIENT_ID_HEADLESS (prod):** ✅ cb591c8e active
+- **P0 status:** Products loading. If images still appear broken visually → screenshot needed from Stilgar to diagnose further
 
 ---
 
@@ -29,30 +40,19 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Feature | Status |
 |---------|--------|
 | LivingHero + all phase fixes | ✅ MERGED |
-| Footer scene integrated | ✅ MERGED #318 |
-| Search product thumbnails | ✅ FIXED |
-| Gift Registry /registry | ✅ MERGED #331 |
-| EasterEggBear mobile modal | ✅ MERGED #353 |
-| SEO BlogPosting JSON-LD | ✅ MERGED #352 |
 | Illustrations wired (all pages) | ✅ MERGED #351 |
 | Room planner 2D | ✅ MERGED #319 |
 | Dark mode font contrast | ✅ MERGED #299 |
 | PdpSizeGuide | ✅ MERGED #291 |
 | Auth catch error surfacing | ✅ MERGED #358 |
-| Blog OG + Twitter card | ❌ PR #355 CI fail — radahn fixing TS type errors |
-| Footer scene alive (cf-qif2) | ⏳ godfrey |
-| **P0: PLP zero products** | ⚠️ Code fix on main. Awaiting Stilgar: Option A (Preview WIX_CLIENT_ID→cb591c8e) or B (USE_FIXTURE=1) |
-| Font contrast audit | ⏳ miquella cf-tu3q — 7 beads filed, crew assigned |
+| SEO BlogPosting JSON-LD | ✅ MERGED #352 |
+| Gift Registry /registry | ✅ MERGED #331 |
+| Blog OG + Twitter card | ⏳ PR #355 CLEAN — refinery running |
+| Footer scene alive (cf-qif2) | ⏳ PR #359 CLEAN — refinery running |
+| Add to Compare | ⏳ PR #281 CLEAN — refinery re-checking boxes |
+| **P0: PLP zero products (preview)** | ⚠️ Awaiting Stilgar: Option A (Preview WIX_CLIENT_ID→cb591c8e) or B (USE_FIXTURE=1) |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Needs Wix site publish (Stilgar direct action) |
-
----
-
-## ⚠️ P0 OPEN: Zero Products on PLP
-
-**Root cause:** Preview env WIX_CLIENT_ID_HEADLESS=6b4d4894 (staging, no collections). Code fix pushed (306eca7). Awaiting Stilgar directive:
-- **Option A** (recommended): Change Preview WIX_CLIENT_ID_HEADLESS → cb591c8e
-- **Option B**: Set NEXT_PUBLIC_USE_FIXTURE_PRODUCTS=1 on Vercel Preview + CI
 
 ---
 
@@ -60,8 +60,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Env Var | Status |
 |---------|--------|
-| WIX_CLIENT_ID_HEADLESS (prod) | ✅ cb591c8e |
-| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — no collections → P0 |
+| WIX_CLIENT_ID_HEADLESS (prod) | ✅ cb591c8e — confirmed active on latest build |
+| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — no collections → P0 on preview URL |
 | SMTP / CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
 | SENTRY_AUTH_TOKEN (EAS) | ⏳ Awaiting Stilgar |
 
@@ -82,8 +82,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ⏳ pending | Needs Stilgar ok on clipboard approach |
-| #355 | feat(cf-3qt.7): blog OG + Twitter card | ❌ fail | radahn: fix TS types (openGraph.type, twitter.card) + co-author line |
+| #361 | fix(cf-af7h): PLP filter labels zinc-500→zinc-600 | ⚠️ UNSTABLE | blaidd — CI running |
+| #360 | fix(cf-xbj9): dark:bg-cf-espresso card wrappers | ⚠️ UNSTABLE | godfrey — CI running |
+| #359 | feat(cf-qif2): bear-breathe animation + footer fix | ✅ CLEAN | refinery running |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ⏳ pending | Needs Stilgar ok on approach |
+| #355 | feat(cf-3qt.7): blog OG + Twitter card metadata | ✅ CLEAN | refinery running |
+| #281 | feat(cf-7axq): Add to Compare | ✅ CLEAN | refinery re-checking boxes |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
 ---
@@ -92,12 +96,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | Fix PR #355 TS errors → then cf-52gi dark mode homepage | 🔧 fixing |
-| rennala | cf-9t70: /swatch-request Wix CMS pending | ⏳ blocked |
-| blaidd | cf-af7h: light mode PLP filter contrast (P2) | 🔧 new |
-| godfrey | cf-qif2: footer bear animation → then cf-xbj9 (P1 card bg) | 🔧 in sequence |
-| miquella | cf-0s4l: run --provision with WIX_API_KEY from secrets.env | 🔧 unblocked |
-| morgott | cf-ydny + cf-ed89: dark mode CTA + sustainability gray | 🔧 new |
+| radahn | PR #355 fixed → cf-52gi dark mode homepage | ⏳ #355 pending merge |
+| rennala | cf-9t70: /swatch-request Wix CMS pending | ⏳ blocked on CMS collection |
+| blaidd | PR #361 cf-af7h PLP filter labels | 🔧 CI running |
+| godfrey | PR #360 cf-xbj9 dark mode card bg + PR #359 footer | 🔧 CI running |
+| miquella | cf-0s4l: running --provision with WIX_API_KEY | 🔧 unblocked |
+| morgott | cf-ydny + cf-ed89 dark mode CTA + sustainability | 🔧 new |
 | millicent | 🆓 free | — |
 
 ---
@@ -106,48 +110,38 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: PLP zero products** | Stilgar directive needed (Option A vs B) |
-| **contactSubmissions 404** | Code present (http-functions.js:2641) — Stilgar must publish live Wix site |
-| **PR #355** | radahn: fix TS types + co-author line |
+| **P0: PLP zero products (preview)** | Stilgar env decision needed (Option A vs B) |
+| **contactSubmissions 404** | Stilgar must publish live Wix site |
 | **PR #356** | cf-okwz clipboard approach — Stilgar approval needed |
+| **PR #355** | Refinery running — pending result |
+| **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
 | **SENTRY_AUTH_TOKEN** | Stilgar awaiting |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
-| **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending |
-| **Vercel prod redeploy** | Needed to activate WIX_CLIENT_ID_HEADLESS prod swap |
 
 ---
 
-## In-Progress Beads (font contrast wave)
+## In-Progress Beads
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-xbj9 | P1 | dark mode: card bg-white → dark:bg-cf-espresso (92 nodes) | godfrey |
-| cf-ydny | P2 | dark mode: CTA token #7ab8d0 fails with white text | morgott |
-| cf-ed89 | P2 | dark mode: /sustainability gray bg contrast | morgott |
-| cf-52gi | P2 | dark mode: homepage cream/sand collisions | radahn |
-| cf-af7h | P2 | light mode: PLP filter label ratio 4.38 | blaidd |
-| cf-ighf | P3 | light mode: homepage charcoal/50 (2 nodes) | unassigned |
-| cf-32cy | P3 | dark mode: /contact orange (1 node) | unassigned |
-| cf-qif2 | P1 | LivingFooterScene bear breathing + positioning | godfrey |
-| cf-9t70 | P1 | /swatch-request Wix CMS pending | rennala |
-| cf-tu3q | P2 | Font contrast Playwright audit | ✅ filed 7 beads |
+| cf-xbj9 | P1 | dark:bg-cf-espresso card wrappers (92 nodes) | godfrey PR #360 |
+| cf-qif2 | P1 | Footer bear animation + abs positioning | godfrey PR #359 |
+| cf-9t70 | P1 | /swatch-request Wix CMS | rennala |
+| cf-52gi | P2 | dark mode homepage cream/sand | radahn (after #355) |
+| cf-ydny | P2 | dark mode CTA token fix | morgott |
+| cf-ed89 | P2 | dark mode /sustainability gray bg | morgott |
+| cf-af7h | P2 | light mode PLP filter labels | blaidd PR #361 |
+| cf-okwz | P3 | EasterEggBear clipboard approach | PR #356 pending |
+| cf-ighf | P3 | light mode charcoal/50 (2 nodes) | unassigned |
+| cf-32cy | P3 | dark mode /contact orange (1 node) | unassigned |
 | cf-0s4l | P3 | /sustainability provision | miquella — running now |
 
 ---
 
-## Shipping LTL/Freight/Parcel — Test Report
+## Shipping Test Report ✅ (delivered to Stilgar)
 
-**56/56 tests PASS** (shipping-estimate.test.ts + api-delivery-zone.test.ts)
-
-| Weight | CONUS non-NC | NC Zone |
-|--------|-------------|---------|
-| 1–69 lbs | **Parcel** (UPS Ground) | White-glove |
-| 70–499 lbs | **LTL** | White-glove |
-| ≥500 lbs / palletized | **Freight** | White-glove |
-| AK/HI/territories | **Unsupported** | — |
-
-Delivery windows: NC 1-2d · SE 2-3d · Mid 3-5d · West 5-7d
+56/56 tests PASS · Parcel <70 lbs · LTL 70-499 lbs · Freight ≥500 lbs or palletized · White-glove NC only
 
 ---
 
