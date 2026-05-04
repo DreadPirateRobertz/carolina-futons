@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:02 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:05 MT**
 
 ---
 
@@ -70,6 +70,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Render audit /registry /gift-cards | ✅ MERGED #375 |
 | Hamburger menu z-index | ✅ MERGED #378 |
 | PLP Futon Frames getCollectionPlp | ✅ MERGED #370 |
+| Search/compare/wishlist E2E smoke | ✅ MERGED #373 |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 | Footer living animation | 🔧 radahn — cf-45uk |
@@ -99,9 +100,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | **BLOCK**: checkout-smoke line 44 expects `#add-to-cart-status` visible for in-stock — element only renders on error/disabled. Rennala fix pending |
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar must replace with placeholders |
-| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ✅ Vercel | refinery in-flight |
+| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | **BLOCK**: checkout-smoke:44 `toBeVisible()` on in-stock — element absent when no error. Rennala must change to `toHaveCount(0)` |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar replaces with placeholders |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -112,11 +112,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | cf-45uk — footer living animation (LivingFooter.tsx) | 🔧 |
-| rennala | PR #380 — fix checkout-smoke `#add-to-cart-status` assertion | 🔧 fix needed |
+| rennala | PR #380 — fix `checkout-smoke.spec.ts:44` `toHaveCount(0)` | 🔧 fix needed |
 | blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
 | miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
-| morgott | PR #373 refinery in-flight → next bead after clear | ⏳ |
+| morgott | standing by — awaiting next bead | ⏳ |
 | millicent | standing by | ⏳ |
 
 ---
@@ -176,6 +176,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | 11:0x UTC |
 | #378 | fix(cf-hmb1): hamburger z-index (z-[55]/z-[56]) | 11:0x UTC |
 | #370 | feat(cf-3qt.2): PLP Futon Frames getCollectionPlp | 11:0x UTC |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | 11:0x UTC |
 
 ---
 
