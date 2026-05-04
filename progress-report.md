@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:08 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:12 MT**
 
 ---
 
@@ -63,6 +63,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
+| #420 | test(cf-3qt.8.27): /shop/sale PLP E2E (6 fixture tests) | ⏳ CI | rennala — 92/100 pending merge |
 | #419 | test(cf-3qt.8.26): redirect map unit tests (8 tests) | ⏳ CI | blaidd — awaiting merge |
 | #418 | fix(cf-q5km): MascotCategoryCard useReducedMotion guard | ✅ CI | ❌ BLOCK — missing MascotCategoryCard.tsx, needs rebase |
 | #417 | test(cf-3qt.16.2): homepage MascotCategoryCard E2E | ✅ MERGED | 88/100 |
@@ -90,7 +91,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | morgott | wix-retirement-checklist.md — cf-3qt.9 prep doc | 🔧 dispatched |
 | radahn | cf-l6aj — parity audit gaps → bead backlog | 🔧 dispatched |
 | blaidd | cf-3qt.8.26 ✅ PR #419 redirect map tests (8 tests) | 🔧 CI pending |
-| rennala | cf-3qt.8.27 — /shop/sale PLP E2E spec | 🔧 dispatched |
+| rennala | cf-3qt.8.27 ✅ PR #420 CI pending · cf-3qt.8.28 — /about E2E | 🔧 dispatched |
 | godfrey | cf-3qt.16.3 — MascotCategoryCard unit tests | 🔧 dispatched |
 | miquella | cf-q5km — PR #418 BLOCK: rebase + add MascotCategoryCard.tsx fix | 🔧 fixing |
 
