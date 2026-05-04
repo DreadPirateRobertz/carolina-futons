@@ -105,6 +105,7 @@ import { reportMetrics } from 'backend/coreWebVitals.web';
 import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
+import { session as wixSession } from 'wix-storage-frontend';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -1637,6 +1638,8 @@ describe('masterPage.js', () => {
   // ── Promotional Lightbox ──────────────────────────────────────────
 
   describe('promotional lightbox', () => {
+    afterEach(() => { wixSession.clear(); });
+
     it('populates promo lightbox when active promotion exists', async () => {
       getActivePromotion.mockResolvedValueOnce({
         _id: 'promo-1',
@@ -1728,14 +1731,13 @@ describe('masterPage.js', () => {
         products: [],
       });
       // Simulate prior dismissal via wix-storage-frontend session storage
-      globalThis.sessionStorage.setItem('promo_dismissed_promo-gate-1', '1');
+      wixSession.setItem('promo_dismissed_promo-gate-1', '1');
       vi.useFakeTimers();
       elements.clear();
       await onReadyHandler();
       vi.advanceTimersByTime(3000);
       await vi.advanceTimersByTimeAsync(100);
       expect(getEl('#promoOverlay').show).not.toHaveBeenCalled();
-      globalThis.sessionStorage.clear();
       vi.useRealTimers();
     });
 
@@ -1759,8 +1761,7 @@ describe('masterPage.js', () => {
       const overlayHandler = getEl('#promoOverlay').onClick.mock.calls[0]?.[0];
       if (overlayHandler) overlayHandler();
       await vi.advanceTimersByTimeAsync(50);
-      expect(globalThis.sessionStorage.getItem('promo_dismissed_promo-gate-2')).toBe('1');
-      globalThis.sessionStorage.clear();
+      expect(wixSession.getItem('promo_dismissed_promo-gate-2')).toBe('1');
       vi.useRealTimers();
     });
 

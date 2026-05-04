@@ -505,7 +505,9 @@ async function initPromoLightbox() {
     $w('#promoOverlay').show('fade', { duration: 300 });
     _promoDialog.open();
   } catch (e) {
-    // Promo lightbox is non-critical — never block the page
+    // Promo lightbox is non-critical — never block the page, but log so
+    // Wix monitoring captures storage/API failures that silently prevent display.
+    console.error('[masterPage] initPromoLightbox failed:', e?.message);
   }
 }
 
