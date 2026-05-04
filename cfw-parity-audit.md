@@ -1,7 +1,7 @@
 # cfw vs Wix Editor Parity Audit
 
-**Generated**: 2026-04-28  
-**Bead**: cf-69fx  
+**Generated**: 2026-04-28 | **Last refreshed**: 2026-05-04  
+**Bead**: cf-69fx | **Refresh bead**: cf-l6aj.23  
 **Source**: EDITOR-HOOKUP-GUIDE.md + EDITOR_HOOKUP_GUIDE.html  
 **Cross-check**: carolinafutons.com READ-ONLY + cfw src/  
 
@@ -13,11 +13,11 @@
 
 | Category | Present | Partial | Missing |
 |---|---|---|---|
-| PDP Features | 11 | 3 | 6 |
-| Home Page Sections | 6 | 1 | 9 |
-| Sitewide / Layout | 5 | 2 | 3 |
-| Standalone Pages | 15 | 2 | 11 |
-| **TOTAL** | **38** | **7** | **29** |
+| PDP Features | 14 | 2 | 4 |
+| Home Page Sections | 13 | 1 | 4 |
+| Sitewide / Layout | 8 | 0 | 1 |
+| Standalone Pages | 21 | 2 | 10 |
+| **TOTAL** | **56** | **5** | **19** |
 
 **Top-10 missing filed as beads** — see §Beads Filed below.
 
@@ -57,14 +57,14 @@
 | 21 | Hero section | ✅ PRESENT | `LivingHero` (animated Living Sky, time-of-day cycling) + headline + CTA buttons. |
 | 22 | Product browser (FilterFirst) | ✅ PRESENT | Theme-D `FilterFirst` replaces Wix's separate Featured / Sale / Category repeaters with a single tab+grid UI. |
 | 23 | Featured Products section | ⚠️ PARTIAL | Covered by FilterFirst but no dedicated "Featured" section with quick-view modal + "Available in X colors" text + swatch dots — the Wix featured repeater is richer per-card. |
-| 24 | Sale Products section | ❌ MISSING | No dedicated sale strip on home. Wix has `saleRepeater` (auto-collapsed when no sales). FilterFirst does not surface a sale-only strip. |
+| 24 | Sale Products section | ✅ PRESENT | `HomeSaleStrip.tsx` wired to home — auto-collapses when no active sale products. Mirrors Wix's `saleRepeater` behavior. |
 | 25 | Category cards | ✅ PRESENT | FilterFirst tabs serve as category nav; individual category images come from collection data. |
-| 26 | Quiz CTA section | ❌ MISSING | No `quizCTASection` on home. Wix: "Find Your Perfect Futon" section → `/style-quiz`. The style-quiz page exists at cfw but has no home entry point. |
-| 27 | Swatch Promo section | ❌ MISSING | No `swatchPromoSection` on home. Wix: heading + CTA button → swatch request. |
+| 26 | Quiz CTA section | ✅ PRESENT | `QuizCtaSection.tsx` wired to home. Entry point to `/style-quiz` — "Find Your Perfect Futon" CTA section. (cf-e4vd shipped) |
+| 27 | Swatch Promo section | ✅ PRESENT | `SwatchPromoSection.tsx` wired to home. Heading + CTA → `/swatch-request`. (cf-ph80 shipped) |
 | 28 | Blog teasers section | ❌ MISSING | No blog teasers on home. Wix: `HomeBlogTeasers.js` injects 3 recent posts via HtmlComponent. |
-| 29 | Social feeds (Instagram / TikTok / Pinterest) | ❌ MISSING | No social feed embeds on home. Wix: `SocialFeedEmbed.js` → 3 HtmlComponents. |
-| 30 | Video showcase section | ❌ MISSING | `/videos` page exists but no video section on home. Wix: `videoShowcaseSection` with 3 thumbnails + "View All" CTA. |
-| 31 | Continue Shopping strip | ❌ MISSING | No `continueShoppingSection` on home. Wix: sessionStorage LRU, shows last 1–6 browsed products. |
+| 29 | Social feeds (Instagram / TikTok / Pinterest) | ✅ PRESENT | `SocialFeeds.tsx` wired to home (cf-l6aj.5). Consent-gated IG/TikTok/Pinterest embeds. |
+| 30 | Video showcase section | ✅ PRESENT | `VideoShowcaseStrip.tsx` wired to home — 3 editorially curated video thumbnails + links. |
+| 31 | Continue Shopping strip | ✅ PRESENT | `ContinueShoppingStrip.tsx` wired to home (cf-l6aj.7). localStorage LRU, hidden on first visit, capped at 6 items. |
 | 32 | Recently Viewed (home) | ❌ MISSING | `PdpRecentlyViewed` exists on PDP, not on home. Wix has a home `recentSection`. |
 | 33 | Newsletter section (home inline) | ❌ MISSING | `EmailCapturePopup` (exit-intent) + footer `NewsletterSignup` present. No inline newsletter section on home page canvas. Wix has `newsletterSection` on home. |
 | 34 | Gift Card CTA section | ❌ MISSING | No gift card promo section on home. Wix has `giftCardSection` → `/gift-cards`. |
@@ -82,9 +82,9 @@
 | 39 | Announcement bar | ✅ PRESENT | `AnnouncementBar.tsx` in Header. Static copy ("Free white-glove delivery on orders over $1,500"). Phase 3: CMS-driven. |
 | 40 | Desktop + mobile navigation | ✅ PRESENT | `Header.tsx` with primary nav + sub-nav + `HeaderMobileMenu.tsx`. |
 | 41 | Mega-menu (hover panel with product images) | ❌ MISSING | Header has flat nav links. Wix has `megaMenuPanel` with category images on hover. |
-| 42 | Promo Lightbox (full featured) | ⚠️ PARTIAL | `SaleLightbox.tsx` has countdown + CTA link + dismiss. **Missing**: email capture inside lightbox, promo code display + copy button, featured products repeater inside lightbox. Wix `promoLightbox` has all of these. |
+| 42 | Promo Lightbox (full featured) | ✅ PRESENT | `SaleLightbox.tsx` — countdown + CTA link + dismiss + email capture (reuses `NewsletterSignup`) + promo code chip with copy-to-clipboard + top-3 featured sale products. Full parity with Wix `promoLightbox`. (cf-l6aj.12 PR #430) |
 | 43 | Back to top | ✅ PRESENT | `BackToTop.tsx` wired globally. |
-| 44 | PWA Install Banner | ❌ MISSING | No `installBanner` component. Wix has `PWA Install Banner` in masterPage. |
+| 44 | PWA Install Banner | ✅ PRESENT | `PwaInstallBanner.tsx` wired in `layout.tsx`. Matches Wix's `PWA Install Banner` in masterPage. |
 | 45 | Cart + side-cart drawer | ✅ PRESENT | `CartDrawer.tsx` + `CartProvider` + `CartTrigger`. |
 | 46 | Footer newsletter | ✅ PRESENT | `NewsletterSignup.tsx` wired into `Footer.tsx`. |
 | 47 | Analytics tags (GA4, Meta, TikTok, Pinterest) | ✅ PRESENT | All 4 wired in `layout.tsx` behind consent. |
@@ -142,8 +142,8 @@
 | cf-ww8u | PDP Size Guide + Room Fit checker | P1 | Furniture shoppers' #1 objection is "will it fit?" Wix has full `ProductSizeGuide.js`. cfw needs dimension data from CMS + room-fit input UI. |
 | cf-pkfu | PDP 360° Spin Viewer — wire `ProductSpinViewer` into PDP | P2 | Component + tests exist. Gap is: (a) Wix spin-image set → cfw, (b) import + render `ProductSpinViewer` in `products/[slug]/page.tsx` with spin image URLs. |
 | cf-9fd8 | PDP Back-in-stock notify me | P2 | Out-of-stock products lose conversions without email capture. Wix has `notifyMeSection` + `inventoryService.web.js`. cfw needs a notify-me form on OOS products. |
-| cf-ph80 | Home — Swatch Promo section | P2 | Direct answer to Stilgar's question about fabric swatches visibility. CTA on home drives swatch requests and reinforces 700-fabric story. |
-| cf-e4vd | Home — Quiz CTA section | P2 | `/style-quiz` exists but has zero home entry points. Style quiz drives engagement + recommendation conversion. |
+| cf-ph80 | Home — Swatch Promo section | ~~P2~~ **SHIPPED** | `SwatchPromoSection.tsx` wired to home. |
+| cf-e4vd | Home — Quiz CTA section | ~~P2~~ **SHIPPED** | `QuizCtaSection.tsx` wired to home. |
 | cf-urfn | Home — Sale Products strip | P2 | Dedicated sale strip is a proven home-page conversion pattern. FilterFirst does not surface sale-only products prominently. |
 | cf-u7yk | Gift Cards page (/gift-cards) | P3 | Gift card revenue stream entirely missing on cfw. Wix backend complete. Needs Next.js route + Wix pricing-plans integration. |
 | cf-h9pj | Community Gallery — photo submission form | P3 | Gallery is view-only. UGC submission drives content flywheel. Wix has `/submit-photo-review`. cfw needs upload form + Wix Data write. |
@@ -156,11 +156,11 @@
 2. **Free fabric sample request** — ✅ PRESENT. `/swatch-request` page fully functional.
 3. **Compare drawer** — ✅ PRESENT. `AddToCompareButton` wired on PDP and PLP cards; compare page fully discoverable.
 4. **Wishlist share** — ✅ PRESENT. `/wishlist/[token]` shared view.
-5. **Swatch promo section** — ❌ MISSING (home).
+5. **Swatch promo section** — ✅ PRESENT (home). `SwatchPromoSection.tsx` shipped (cf-ph80).
 6. **Custom-build configurator** — ❌ MISSING. Not present on Wix either; no evidence in guide.
 7. **Room visualizer** — ⚠️ PARTIAL. `/design-a-room` with simple canvas vs. Wix's full drag-drop room planner.
 8. **Style quiz** — ✅ PRESENT. Full multi-step flow + recommendations.
 9. **White Glove Delivery learn-more modal** — ✅ PRESENT (`PdpWhiteGlove.tsx`).
-10. **Live showroom feed** — ❌ MISSING. No Instagram/TikTok embeds on home.
+10. **Live showroom feed** — ✅ PRESENT. `SocialFeeds.tsx` on home (cf-l6aj.5) — consent-gated IG/TikTok/Pinterest embeds.
 11. **Recently viewed** — ✅ PRESENT on PDP; ❌ MISSING on home.
 12. **Reviews aggregate** — ✅ PRESENT.
