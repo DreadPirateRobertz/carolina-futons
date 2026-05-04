@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:25 MT**
 
 ---
 
@@ -100,8 +100,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ CLEAN | **BLOCK** 72/100 — rebase still needed (rennala) |
-| #383 | feat(cf-s44d): email trigger E2E | ✅ CLEAN | **BLOCK** 62/100 — route.ts fix still pending (miquella) |
+| #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ CLEAN | **REFINERY RUNNING** — CI now PASS; squash-merge contamination eval in progress |
+| #383 | feat(cf-s44d): email trigger E2E | ✅ CLEAN | **REFINERY RUNNING** — CI now PASS; route.ts email guard bug still present |
 | #386 | test(cf-1409): rewards E2E | ✅ MERGED | 11:58 UTC |
 | #384 | fix(cf-2jq9): .dark --cf-smoke token | ✅ MERGED | 11:58 UTC |
 | #382 | feat(cf-3qt.10): sofa-beds PLP | ✅ MERGED | 11:47 UTC |
@@ -116,12 +116,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | cf-3qt.13 — /shop index hub page | 🔧 |
-| rennala | cf-uaoz — PR #387 ✅ CI BLOCK 72/100 (still not rebased) | ⚠️ |
-| blaidd | cf-3qt.12 — Sale PLP /shop/sale | 🔧 |
-| godfrey | cf-3qt.14 — /search results page (new) | 🔧 |
-| miquella | cf-s44d — PR #383 BLOCK 62/100 (route.ts fix still pending) | ⚠️ |
-| morgott | cf-3qt.15 — newsletter wire mailingListSignups (new) | 🔧 |
-| millicent | cf-h2em — Platform Beds PLP (no PR, respawn pending) | ⚠️ |
+| rennala | cf-uaoz — PR #387 CI PASS; refinery eval in progress (branch: feat/cf-r9tf wrong) | ⚠️ |
+| blaidd | cf-3qt.12 — Sale PLP /shop/sale (branch: feat/cf-announcement-rotate — wrong) | ⚠️ |
+| godfrey | cf-3qt.14 — /search results page (branch: feat/cf-y2l3 — wrong) | ⚠️ |
+| miquella | cf-s44d — PR #383 CI PASS; refinery eval in progress (branch: main — wrong) | ⚠️ |
+| morgott | cf-3qt.15 — newsletter wire (branch: main — wrong) | ⚠️ |
+| millicent | cf-h2em — Platform Beds PLP (branch: feat/cf-oht1 — wrong, respawn pending) | ⚠️ |
 
 ---
 
@@ -201,4 +201,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · 9 beads active · #383/#387 still BLOCK (no new commits) · escalation pending*
+*Cron: 1709bbed · Next refresh ~10 min · 9 beads active · #383/#387 CI now PASS — refinery running; crew branch drift detected (6 of 7 on wrong branches)*
