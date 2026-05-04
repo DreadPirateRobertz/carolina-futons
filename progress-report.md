@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:53 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:05 MT**
 
 ---
 
@@ -26,7 +26,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 **Root cause:** Wix headless OAuth app `cb591c8e` returns `"No Metasite Context in identity"` — not installed on any Wix site with Stores.
 
-**STILGAR MUST FIX (wix.com/developers):** Manage Apps → find `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a` → install on carolinafutons.com. No code change can resolve this.
+**FIX (Stilgar manual — Playwright MCP down):** Log in as halworker85@gmail.com → https://manage.wix.com/developer-center/ → My Apps → find `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a` → Install on Site → carolinafutons.com
 
 ---
 
@@ -67,7 +67,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 72/100** — MESA_SALE collectionIds breaks mattresses PLP count + null→absent key needs test (morgott fixing) |
+| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **CONFLICT** — 93/100 PASS, morgott rebase needed |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -88,11 +88,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | PR #408 MERGED ✅ — idle, await next | ✅ |
+| rennala | isProductOnSale edge-case unit tests (follow-on from #390) | 🆕 |
 | blaidd | PR #389 MERGED ✅ (84/100 sale PLP) — idle, await next | ✅ |
-| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, follow-on: isProductOnSale unit tests | ✅ |
+| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, await next | ✅ |
 | miquella | PR #403 MERGED ✅ — idle, await next | ✅ |
-| morgott | PR #399 BLOCK 55/100 — fix makeProduct spread + test type bug | ⚠️ |
+| morgott | PR #399 93/100 PASS — rebase onto main, push to clear CONFLICT | ⚠️ REBASE |
 | millicent | PRs #405+#409 MERGED ✅ — idle, await next | ✅ |
 
 ---
@@ -101,7 +101,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: 0 products** | wix.com/developers: install OAuth app cb591c8e on carolinafutons.com |
+| **P0: 0 products** | Manual fix: halworker85 → manage.wix.com/developer-center → app cb591c8e → Install on carolinafutons.com. **Playwright MCP down — cannot automate.** |
 | **E2E checkout** | Wix Dashboard: enable sandbox payment + P0 fix |
 | **cf-0s4l** | Create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
@@ -134,8 +134,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
-| #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
 | #389 | feat(cf-3qt.12): /shop/sale PLP | 84/100 | 16:52 UTC |
+| #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
 | #390 | test(cf-3qt.14): /search E2E smoke | 88/100 | 16:43 UTC |
 | #406 | chore(design-migration): orphan botanical deletions | 95/100 | 16:31 UTC |
 | #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
@@ -151,7 +151,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #395 | feat(cf-8xw1): data-slot=category-card | 97/100 | 10:05 UTC |
 | #394 | fix(cf-3qt.12): Mesa discountedPrice hotfix | — | ~09:55 UTC |
 | #393 | fix(cf-m07g): checkout real-payment E2E (gated) | 97/100 | 15:49 UTC |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | 100/100 | ~09:50 UTC |
 | Earlier PRs | #383–#388, #369–#382, #352–#368 | — | 05:41–09:2x UTC |
 
 ---
@@ -169,4 +168,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP MERGED · #399 BLOCK 72/100 (morgott, 3rd iteration) · Cleanup pass: radahn*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP live · #399 93/100 PASS needs rebase · P0 OAuth blocked (Playwright MCP down — Stilgar manual fix required) · rennala on isProductOnSale edge tests*
