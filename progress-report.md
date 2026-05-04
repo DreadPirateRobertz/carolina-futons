@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:30 MT**
 
 ---
 
@@ -33,9 +33,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | About page illustration | ✅ LIVE — v2 botanical ink art |
 | Gift Cards /gift-cards | ✅ LIVE — "coming soon" placeholder |
 | PLP /shop/futon-frames | ✅ LIVE — 17 products |
-| Design a Room | ⚠️ TEXT ONLY — rennala on it (cf-c0dh) |
-| Home scroll crash | ❌ BUG — millicent investigating (cf-d3ho) |
-| Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
+| Home scroll crash | ⏳ Fix PR #345 CI running (millicent) |
+| Design a Room | ❌ PR #343 CI+Vercel FAILED — rennala fixing |
+| Sale lightbox | ⏳ Velo PR #1134 CI running (godfrey) |
+| Theme A/B/C/D previews | ✅ PR #344 GREEN — awaiting Stilgar pick |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
@@ -45,6 +46,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
+| #1134 | fix(cf-nbu4): promo lightbox session gate | ⏳ running |
 | #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail (test 20+22) |
 | #1130 | chore(deps): dev-deps bump | **HOLD** ✅ pass |
 | #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only |
@@ -56,7 +58,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #342 | test(cf-3qt.4): FAQ/GIH/Videos smoke tests | ✅ GREEN — merge ready |
+| #345 | fix(cf-d3ho): VintageSunRays hydration mismatch | ⏳ running (Vercel ✅) |
+| #344 | feat(cf-yfvl): /theme-d Fontshare Minimal | ✅ GREEN — Stilgar pick pending |
+| #343 | feat(cf-c0dh): Design a Room scene viewer | ❌ FAIL — rennala fixing |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -64,23 +68,22 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
-**#331/#319/#299/#291/#281 all failing = lint/typecheck errors. E2E skipped on PR builds.**
-
 ---
 
 ## Crew Assignments
 
 | Crew | Current Task | Bead |
 |------|-------------|------|
-| blaidd | Phase 4 content pages (About/FAQ/Contact/GIH) | cf-3qt.4 |
-| godfrey | PDP Financing BNPL | cf-10fx |
+| blaidd | Phase 5 marketing + utility pages | cf-3qt.5 |
+| blaidd | E2E auto emails + rewards (convoy) | cf-c77s |
+| godfrey | Sale lightbox session gate | cf-nbu4 |
 | radahn | /sustainability CMS wiring | cf-0s4l |
-| rennala | Design a Room — futon-in-room visual | cf-c0dh |
-| millicent | Home page scroll crash investigation | cf-d3ho |
-| miquella | — (reassigned cf-c0dh to rennala) | — |
-| morgott | — (reassigned cf-d3ho to millicent) | — |
-
-**Queued:** cf-nbu4 (sale lightbox session gate) → radahn after cf-0s4l
+| rennala | Design a Room fix (CI failing) | cf-c0dh |
+| rennala | BNPL Afterpay/Affirm (convoy) | cf-d3hc |
+| millicent | PDP back-in-stock notify me | cf-9fd8 |
+| miquella | CFW shipping tier system | cf-eihx |
+| miquella | Parity audit | cf-rtd7 |
+| morgott | Theme A/B/C/D experiments | cf-yfvl |
 
 ---
 
@@ -88,34 +91,33 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **Home scroll crash** | cf-d3ho P1 — millicent investigating |
-| **Design a Room plain** | cf-c0dh P1 — rennala in progress |
-| **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
+| **cf-c0dh Design a Room** | PR #343 CI+Vercel FAIL — rennala fixing |
+| **Sale lightbox** | cf-nbu4 P2 — Velo PR #1134 CI running |
+| **Home scroll crash** | cf-d3ho — PR #345 CI running |
 | **Velo #1125** | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates |
 | **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501. Dallas holding. |
+| **Theme pick** | PR #344 green — Stilgar needs to choose A/B/C/D |
 
 ---
 
-## In-Progress Beads (12 total)
+## In-Progress Beads (10 total)
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-10fx | P1 | PDP Financing / BNPL | godfrey |
-| cf-d3hc | P1 | PDP Financing / BNPL (Afterpay, Affirm) | — |
-| cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
+| cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | morgott |
 | cf-c0dh | P1 | Design a Room — futon-in-room visual | rennala |
-| cf-d3ho | P1 | Home page scroll crash | millicent |
-| cf-c77s | P1 | E2E auto emails + challenges + rewards | — |
-| cf-eihx | P1 | CFW shipping tier system | — |
-| cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
-| cf-yfvl | P1 | cf-theme-experiments A/B/C/D variants | — |
-| cf-9fd8 | P2 | PDP back-in-stock notify me | — |
+| cf-eihx | P1 | CFW shipping tier system | miquella |
+| cf-rtd7 | P1 | cf-3qt full prod parity audit | miquella |
+| cf-yfvl | P1 | cf-theme-experiments A/B/C/D variants | morgott |
+| cf-9fd8 | P2 | PDP back-in-stock notify me | millicent |
 | cf-9izd | P2 | Cart QA seeded-fixture preview deploy | millicent |
+| cf-nbu4 | P2 | Sale lightbox session gate | godfrey |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS | radahn |
 
-**Outside bd:** cf-rb07/rennala · cf-tyuk/millicent · cf-3qt.4/blaidd
+**Outside bd:** cf-3qt.5/blaidd · cf-d3hc/rennala · cf-c77s/blaidd
 
 ---
 
