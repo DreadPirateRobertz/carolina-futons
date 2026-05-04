@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:20 MT**
 
 ---
 
@@ -22,29 +22,22 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
-## ⚠️ STILGAR VISIBILITY ISSUE — ACTION NEEDED
+## 🔍 STILGAR SITE AUDIT — Vercel URL (2026-05-03 20:15 MT)
 
-**carolinafutons.com still serves Wix** — DNS cutover (cf-cb9s) has NOT happened.
-LivingSky header + all illustration PRs are in **cfW (Next.js/Vercel)**, live at:
+**Audited:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
 
-> **https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/**
+| Feature | Status | Notes |
+|---------|--------|-------|
+| LivingSky header | ✅ LIVE | Pink/blue/teal sky gradient visible all pages |
+| Footer illustration | ✅ LIVE | Dark blue-green night mountain scene |
+| About page illustration | ✅ LIVE | v2 botanical ink mountain art in hero bg |
+| Gift Cards /gift-cards | ✅ LIVE | "Coming soon" placeholder with proper layout |
+| PLP /shop/futon-frames | ✅ LIVE | 17 products, header + sub-nav correct |
+| Design a Room | ⚠️ TEXT ONLY | No room visualization — cf-c0dh in progress |
+| Home page scroll crash | ❌ BUG | Page crashes at bottom — 3 console errors — cf-d3ho |
+| Sale lightbox | ⚠️ UX ISSUE | Fires on every page navigation — cf-nbu4 |
 
-Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until DNS flip.
-
-**Wix republish needed?** Yes — for Velo changes (PR #1114 contactSubmissions endpoint). Stilgar needs to push Publish in Wix Studio to activate Velo code changes on carolinafutons.com.
-
----
-
-## Session Merges — SHIPPED TO VERCEL ✅
-
-### This Session (23 CFW + 3 Velo merged)
-| PR | What |
-|----|------|
-| #340 | refactor(cf-jegx): SwatchContactInfo.state → UsState literal union ✅ |
-| #339 | feat(cf-jegx): Turnstile reset + degraded-mode banner ✅ |
-| #334–#338 + 17 others | See previous entries — all shipped ✅ |
-
-**Vercel production URL:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
+**Root cause Stilgar couldn't see:** carolinafutons.com still serves Wix. cfW features only on Vercel URL above. DNS flip (cf-3qt.8) required for public visibility.
 
 ---
 
@@ -63,14 +56,12 @@ Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until 
 
 | PR | Title | CI |
 |----|-------|----|
-| #331 | feat(cf-4bhw): Gift Registry — /registry + /registry/[slug] | ❌ fail |
+| #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
 | #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail |
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
-
-**All 5 failing = lint/typecheck errors.**
 
 ---
 
@@ -83,8 +74,10 @@ Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until 
 | radahn | /sustainability CMS wiring | cf-0s4l |
 | rennala | Sitemap 404 fix | cf-rb07 |
 | millicent | Illustration wiring — v1/v2/v3 into sub-pages | cf-tyuk |
-| morgott | cf-9t70 swatch — Wix CMS collection + email templates | cf-9t70 |
-| miquella | **Design a Room — futon-in-room visual (NEW Stilgar directive)** | cf-c0dh |
+| morgott | **Home page scroll crash investigation** ← NEW | cf-d3ho |
+| miquella | Design a Room — futon-in-room visual | cf-c0dh |
+
+**Queued:** cf-nbu4 (sale lightbox session gate) → radahn after cf-0s4l
 
 ---
 
@@ -92,23 +85,26 @@ Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until 
 
 | Issue | Status |
 |-------|--------|
-| **Stilgar can't see header/illustrations** | cfW on Vercel URL — NOT carolinafutons.com (Wix). DNS flip pending. |
-| **Wix republish needed** | Stilgar must Publish in Wix Studio for Velo #1114 (contactSubmissions) to go live |
-| **Velo #1125** (sampleRequests) | Codecov-only fail — admin merge eligible? |
+| **Home scroll crash** | cf-d3ho P1 — morgott investigating |
+| **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
+| **Design a Room plain** | cf-c0dh P1 — miquella building room scene |
+| **Vercel URL** | Stilgar must use Vercel URL; DNS flip (cf-3qt.8) pending |
+| **Velo #1125** | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates needed |
-| **contactSubmissions 404** | Velo endpoint exists; awaiting Stilgar §1-§3 DNS clearance |
-| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501. Dallas holding. |
+| **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
+| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501 |
 
 ---
 
-## In-Progress Beads (11 total)
+## In-Progress Beads (12 total)
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-10fx | P1 | PDP Financing / BNPL — Afterpay + Affirm | godfrey |
-| cf-d3hc | P1 | PDP Financing / BNPL section | — |
-| cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | morgott |
-| cf-c0dh | P1 | Design a Room — futon-in-room visual ← **NEW Stilgar** | miquella |
+| cf-10fx | P1 | PDP Financing / BNPL | godfrey |
+| cf-d3hc | P1 | PDP Financing / BNPL (Afterpay, Affirm) | — |
+| cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
+| cf-c0dh | P1 | Design a Room — futon-in-room visual | miquella |
+| cf-d3ho | P1 | Home page scroll crash ← NEW | morgott |
 | cf-c77s | P1 | E2E auto emails + challenges + rewards | — |
 | cf-eihx | P1 | CFW shipping tier system | — |
 | cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
@@ -117,7 +113,7 @@ Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until 
 | cf-9izd | P2 | Cart QA seeded-fixture preview deploy | blaidd |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS | radahn |
 
-**Outside bd (active):** cf-rb07/rennala · cf-tyuk/millicent
+**Outside bd:** cf-rb07/rennala · cf-tyuk/millicent
 
 ---
 
