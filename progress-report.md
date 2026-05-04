@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:36 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:46 MT**
 
 ---
 
@@ -88,12 +88,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| blaidd | cf-3qt.8.1 ✅ upgrade-runbook.md — ⚠️ KEY FINDING: project on personal acct, not team | ✅ |
-| godfrey | cf-3qt.8.2 ✅ dns-staging.md — CLOSED | ✅ |
-| miquella | cf-3qt.8.3 ✅ monitoring-setup.md — CLOSED | ✅ |
-| millicent | cf-3qt.8.4 ✅ rollback-runbook.md (15-min revert SLA) — CLOSED | ✅ |
-| rennala | cf-3qt.8.5 ✅ smoke-test-plan.md (4 waves, T+24h Go/No-Go) — CLOSED | ✅ |
-| morgott | cf-3qt.9.1 ✅ retirement-plan.md — CLOSED | ✅ |
+| blaidd | Idle — cf-3qt.8.1 ✅ (upgrade-runbook.md) | ✅ |
+| godfrey | Idle — cf-3qt.8.2 ✅ (dns-staging.md) | ✅ |
+| miquella | Idle — cf-3qt.8.3 ✅ (monitoring-setup.md) | ✅ |
+| millicent | Idle — cf-3qt.8.4 ✅ (rollback-runbook.md) | ✅ |
+| rennala | Idle — cf-3qt.8.5 ✅ (smoke-test-plan.md) | ✅ |
+| morgott | Idle — cf-3qt.9.1 ✅ (retirement-plan.md) | ✅ |
 
 ---
 
