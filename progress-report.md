@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:12 MT**
 
 ---
 
@@ -111,7 +111,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-45uk — footer living animation (LivingFooter.tsx) | 🔧 |
+| radahn | cf-45uk — footer living animation (redirected from cf-3qt.7 code-complete) | 🔧 |
 | rennala | PR #380 — fix `checkout-smoke.spec.ts:44` `toHaveCount(0)` | 🔧 fix needed |
 | blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
@@ -131,6 +131,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **contactSubmissions** | Publish live Wix site |
 | **PR #356** | Approve clipboard approach |
 | **PR #376** | ⚠️ MORNING FLAG: Replace real GA4/Meta Pixel IDs with placeholder strings |
+| **cf-3qt.7 live verify** | GA4 realtime check + Pixel Helper + Rich Results Test (needs TikTok/Pinterest IDs too) |
+| **GSC sitemap** | Deferred to Phase 8 — no action now |
 | **cf-9t70 CMS** | Create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
@@ -143,7 +145,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-3qt.3 | P1 | Account — Playwright auth fixture | rennala — PR #380 fix pending |
-| cf-3qt.7 | P1 | SEO + analytics env vars | PR #376 BLOCK (Stilgar) |
+| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
 | cf-45uk | P2 | Footer living animation distinct from header | radahn |
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | blaidd |
