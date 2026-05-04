@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:32 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:36 MT**
 
 ---
 
@@ -88,11 +88,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| blaidd | cf-3qt.8.1 ✅ upgrade-runbook.md — CLOSED | ✅ |
+| blaidd | cf-3qt.8.1 ✅ upgrade-runbook.md — ⚠️ KEY FINDING: project on personal acct, not team | ✅ |
 | godfrey | cf-3qt.8.2 ✅ dns-staging.md — CLOSED | ✅ |
 | miquella | cf-3qt.8.3 ✅ monitoring-setup.md — CLOSED | ✅ |
-| millicent | cf-3qt.8.4 — rollback-runbook.md in progress | 🔧 |
-| rennala | cf-3qt.8.5 ✅ smoke-test-plan.md (4 waves) — CLOSED | ✅ |
+| millicent | cf-3qt.8.4 ✅ rollback-runbook.md (15-min revert SLA) — CLOSED | ✅ |
+| rennala | cf-3qt.8.5 ✅ smoke-test-plan.md (4 waves, T+24h Go/No-Go) — CLOSED | ✅ |
 | morgott | cf-3qt.9.1 ✅ retirement-plan.md — CLOSED | ✅ |
 
 ---
@@ -102,6 +102,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Issue | Status |
 |-------|--------|
 | **P0: 0 products** | **DEFERRED** — Stilgar doing manually. Fix: halworker85 → manage.wix.com/developer-center → cb591c8e → Install on carolinafutons.com |
+| **Vercel account** | ⚠️ Project on personal account `dreadpiraterobertzs-projects` — must transfer to team OR upgrade personal before Pro cutover. See upgrade-runbook.md |
 | **E2E checkout** | Wix Dashboard: enable sandbox payment + P0 fix |
 | **cf-0s4l** | Create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
@@ -169,4 +170,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 prep 5/6 DONE — upgrade/DNS/monitoring/smoke-test/retirement committed · millicent rollback-runbook.md in flight · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 prep 6/6 DONE — all runbooks committed · ⚠️ Vercel personal account flag for Stilgar · All crew idle awaiting next wave · P0 deferred Stilgar manual*
