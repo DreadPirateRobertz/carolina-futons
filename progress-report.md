@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:34 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:38 MT**
 
 ---
 
@@ -60,9 +60,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Dark mode CTA + sustainability | ✅ MERGED #362 |
 | Dark mode homepage | ✅ MERGED #364 |
 | **Products loading (ALL PLPs)** | ❌ 0 products — Wix OAuth not connected |
-| Dark mode card wrappers | ⛔ PR #363 BLOCKED (3rd review) — blaidd fixing 2 inputs |
+| Dark mode card wrappers | ✅ MERGED #363 |
 | CTA hover + /contact dark | ✅ MERGED #365 |
-| Light mode charcoal/50 | ⏳ cf-ighf millicent in progress |
+| Light mode charcoal/50→/70 | ✅ MERGED #366 |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 
@@ -94,8 +94,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #366 | fix(cf-ighf): charcoal/70 contrast fix FilterFirst | ✅ CLEAN | refinery running |
-| #363 | fix(cf-xbj9): dark mode card wrappers | ✅ CLEAN | blaidd adding ConsentBanner border (rennala review) |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -107,11 +105,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|--------|
 | radahn | E2E checkout smoke test (Playwright, fixture mode) | 🔧 building |
 | rennala | cf-9t70 /swatch-request | ⏳ blocked on Wix CMS (Stilgar) |
-| blaidd | PR #363 — adding ConsentBanner dark:border-cf-ink/30 (rennala review) | 🔧 final fix |
-| godfrey | 🆓 free (off PR #363) | — |
+| blaidd | 🆓 free (#363 merged) | — |
+| godfrey | 🆓 free | — |
 | miquella | cf-0s4l BLOCKED — account mismatch | ⛔ Stilgar API key needed |
-| morgott | 🆓 free (#365 merged) | — |
-| millicent | cf-ighf — PR #366 open, refinery running | 🔧 done |
+| morgott | cf-3qt.2 WEBMETHOD-CATALOG.md Stores/cart section | 🔧 in progress |
+| millicent | 🆓 free (#366 merged) | — |
 
 ---
 
@@ -135,9 +133,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-xbj9 | P1 | dark:bg-cf-cream card wrappers | blaidd PR #363 (4th cycle) |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
-| cf-ighf | P3 | light mode charcoal/70 (2 nodes) — PR #366 | millicent (refinery) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
@@ -166,6 +162,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #361 | PLP filter labels | 06:25 UTC |
 | #362 | Dark mode CTA + sustainability | 06:26 UTC |
 | #364 | Dark mode homepage | 06:44 UTC |
+| #365 | Dark mode CTA hover + /contact WCAG AA | 08:33 UTC |
+| #363 | Dark mode card bg-white → bg-cf-cream WCAG AA | 08:37 UTC |
+| #366 | Light mode charcoal/50→/70 FilterFirst WCAG AA | 08:38 UTC |
 
 ---
 
