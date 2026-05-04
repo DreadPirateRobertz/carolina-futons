@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 04:42 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 04:50 MT**
 
 ---
 
@@ -38,7 +38,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Checkout route (cfW) | ✅ 3/3 PASS |
 | Full cfutons vitest suite | ✅ **40,158/40,158 PASS** |
 | E2E checkout (real payment) | ⛔ BLOCKED — P0 must resolve first; Stilgar enable Wix sandbox payment |
-| E2E fixture-mode smoke test | ✅ PR #368 MERGED |
+| E2E fixture-mode smoke test | ✅ PR #368 + #377 follow-up MERGED |
 
 ---
 
@@ -68,6 +68,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Fixture cart + order (E2E) | ✅ MERGED #374 |
 | PLP E2E smoke (5 routes) | ✅ MERGED #372 |
 | Render audit /registry /gift-cards | ✅ MERGED #375 |
+| **Hamburger menu z-index** | 🔧 godfrey fixing (z-[55]/z-[56] in HeaderMobileMenu.tsx) |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 
@@ -88,9 +89,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | rennala pushed 072784e4 — checking if stale run or new failure (blaidd investigating) |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | blaidd investigating — stale run vs second failure |
 | #1130 | chore(deps): dev-deps bump | **HOLD** ✅ | |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ merge conflict | All-green CI, but #1120 merge created conflict — millicent rebasing |
 
 ---
 
@@ -98,10 +98,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #376 | docs(cf-3qt.7): analytics env vars to .env.example | ✅ CLEAN | refinery running |
-| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott — fix in progress |
-| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ❌ CI fail | miquella — CUBE+RANCHERO fixture push broke typecheck; nudged to fix |
-| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel fail | morgott — fix deploying (SortSelect useClient fix) |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real prod IDs in .env.example — Stilgar: replace with placeholders |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott |
+| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ✅ CLEAN | final refinery running |
+| #370 | feat(cf-3qt.2): PLP Futon Frames | ✅ Vercel | **BLOCK**: divergent plp.ts/ProductCard/page.tsx — morgott to rebase + keep SortSelect only |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -111,13 +111,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | #372 MERGED ✅ — standing by for cf-3qt.3 sub-tasks | ⏳ |
-| rennala | cf-3qt.3 epic — architecture review underway | 🔧 |
-| blaidd | PR #1133 investigation — stale run vs new failure | 🔧 |
-| godfrey | #369 MERGED ✅ — standing by | ⏳ |
-| miquella | Fix PR #371 CI fail (typecheck error from fixture push) | 🔧 |
-| morgott | PR #370 Vercel deploying + PR #373 Vercel fix | 🔧 |
-| millicent | Rebase PR #1125 on main (conflict from #1120 merge) | 🔧 |
+| radahn | #377 MERGED ✅ — standing by | ⏳ |
+| rennala | cf-3qt.3 Playwright auth fixture (storageState + globalSetup) | 🔧 |
+| blaidd | PR #1133 CI investigation | 🔧 |
+| godfrey | Hamburger z-index fix — HeaderMobileMenu.tsx 2 lines | 🔧 |
+| miquella | PR #371 final refinery pending — CI ✅ | ⏳ |
+| morgott | PR #370 rebase (SortSelect only) + PR #373 Vercel fix | 🔧 |
+| millicent | #1125 MERGED ✅ — standing by | ⏳ |
 
 ---
 
@@ -130,6 +130,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **cf-0s4l** | Wix Dashboard: create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
 | **PR #356** | Approve clipboard approach |
+| **PR #376** | Replace real GA4/Meta Pixel IDs with placeholder strings |
 | **cf-9t70 CMS** | Create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
@@ -141,7 +142,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.3 | P1 | Account — OAuth + member dashboard + orders + wishlist | rennala |
+| cf-3qt.3 | P1 | Account — Playwright auth fixture (storageState + globalSetup) | rennala |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -157,29 +158,15 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | When |
 |----|-------|------|
-| #352 | SEO BlogPosting JSON-LD | 05:41 UTC |
-| #351 | Illustrations wired | 05:41 UTC |
-| #319 | 2D drag-drop room planner | 06:02 UTC |
-| #299 | Dark mode font contrast | 06:03 UTC |
-| #1135 | Sustainability CMS collections | 06:06 UTC |
-| #358 | Auth catch error surfacing | 06:11 UTC |
-| #291 | PdpSizeGuide | 06:12 UTC |
-| #281 | Add to Compare | 06:20 UTC |
-| #355 | Blog OG + Twitter card | 06:23 UTC |
-| #359 | Footer bear-breathe animation | 06:23 UTC |
-| #361 | PLP filter labels | 06:25 UTC |
-| #362 | Dark mode CTA + sustainability | 06:26 UTC |
-| #364 | Dark mode homepage | 06:44 UTC |
-| #365 | Dark mode CTA hover + /contact WCAG AA | 08:33 UTC |
-| #363 | Dark mode card bg-white → bg-cf-cream WCAG AA | 08:37 UTC |
-| #366 | Light mode charcoal/50→/70 FilterFirst WCAG AA | 08:38 UTC |
-| #367 | Light mode charcoal/50→/70 alt nodes WCAG AA | 08:4x UTC |
+| #352–#367 | WCAG + dark mode wave (14 PRs) | 05:41–08:4x UTC |
 | #368 | E2E checkout fixture-mode smoke | 08:55 UTC |
-| #1120 | Delivery zone distance calc + GET /deliveryZone | 09:02 UTC |
+| #1120 | Delivery zone distance calc | 09:02 UTC |
 | #372 | PLP fixture-mode E2E smoke (5 routes) | 09:1x UTC |
-| #375 | Render audit /registry /gift-cards (cf-smoke token) | 09:1x UTC |
+| #375 | Render audit /registry /gift-cards | 09:1x UTC |
 | #369 | Home featured collections grid | 09:2x UTC |
 | #374 | Fixture mode addToCart + getOrder | 09:2x UTC |
+| #1125 | sampleRequests Velo endpoint | 10:47 UTC |
+| #377 | E2E inline fixture check + OOS assert | 10:50 UTC |
 
 ---
 
