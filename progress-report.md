@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:54 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 08:59 MT**
 
 ---
 
@@ -22,7 +22,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ---
 
-## 🔍 P0 PRODUCTS — CONFIRMED BROKEN (browser-verified 01:14 MT)
+## 🔍 P0 PRODUCTS — CONFIRMED BROKEN
 
 **Root cause:** Wix headless OAuth app `cb591c8e` returns `"No Metasite Context in identity"` — not installed on any Wix site with Stores.
 
@@ -38,7 +38,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Checkout route (cfW) | ✅ 3/3 PASS |
 | Full cfutons vitest suite | ✅ **40,158/40,158 PASS** |
 | E2E checkout (real payment) | ⛔ BLOCKED — P0 must resolve first; Stilgar enable Wix sandbox payment |
-| E2E fixture-mode smoke test | ⏳ PR #368 pending CI (radahn) |
+| E2E fixture-mode smoke test | ✅ PR #368 MERGED |
 
 ---
 
@@ -84,10 +84,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | **CONVOY** blogContent 17→21 count (rennala fixing) |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | **CONVOY** blogContent — blaidd to rebase after rennala fix lands |
 | #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ | |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail | **CONVOY** same root — awaiting rennala fix |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail | **CONVOY** same root — awaiting rennala fix |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ⏳ test(22) running | **CONVOY** rennala fix landed → test(20) ✅, test(22) in progress |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ⏳ test(22) running | **CONVOY** rennala fix landed → test(20) ✅, test(22) in progress |
 
 ---
 
@@ -95,10 +95,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #371 | feat(cf-3qt.2.8): PLP Murphy Cabinet Beds | ⏳ PENDING | miquella |
-| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel build fail | morgott redirected to fix |
-| #369 | feat(cf-3qt.2.6): Home page collections grid | ⏳ PENDING | godfrey |
-| #368 | test(e2e): checkout smoke — fixture-mode | ⏳ PENDING | radahn fixing 2 refinery issues |
+| #374 | fix(cf-3qt): fixture addToCart + getOrder | ⏳ CI running / Vercel ✅ | millicent — refinery dispatched |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott — nudged to fix |
+| #372 | test(cf-3qt.2.14): PLP E2E fixture specs | ⏳ CI running / Vercel ✅ | godfrey |
+| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ✅ CLEAN | miquella — refinery running |
+| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel fail | morgott — #370 fix priority over #373 |
+| #369 | feat(cf-3qt.2.6): Home page collections grid | ✅ CLEAN | godfrey — refinery running, ready to merge |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -108,13 +110,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #368 — fixing 2 refinery issues | 🔧 |
-| rennala | **CONVOY FIX**: blogContent 17→21 → unblocks #1120/#1125/#1133 | 🔧 |
-| blaidd | CF #1120 — awaiting rennala convoy fix to rebase | ⏳ |
-| godfrey | PR #369 Home page + cf-3qt.2.14 E2E specs | 🔧 |
-| miquella | PR #371 Murphy Beds + cf-3qt.2.8 | 🔧 |
-| morgott | PR #370 Vercel fix → cf-3qt.2.13 smoke tests | 🔧 |
-| millicent | fix/cf-3qt-fixture-cart-order (cart.ts + getOrder) | 🔧 |
+| radahn | cf-3qt.2.14 PLP E2E specs → PR #372 CI running | ⏳ |
+| rennala | blogContent 17→21 fix → **CONVOY UNBLOCKING** — test(20) ✅ on #1125/#1120 | 🔧 |
+| blaidd | CF #1133 — rebase needed after rennala convoy fix confirms green | ⏳ |
+| godfrey | PR #369 ✅ CLEAN + PR #372 CI running | 🔧 |
+| miquella | PR #371 ✅ CLEAN (ranchero fix pushed) — refinery pending | 🔧 |
+| morgott | Fix PR #370 Vercel (priority) → then PR #373 Vercel | 🔧 |
+| millicent | PR #374 fixture addToCart+getOrder — CI running | 🔧 |
 
 ---
 
@@ -138,13 +140,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.2.11 | P1 | Integration verification ✅ 114 tests PASS | blaidd (closed) |
-| cf-3qt.2.12 | P1 | Checkout audit → 2 P1 fixture blockers found | millicent fixing |
-| cf-3qt.2.13 | P2 | Search/compare/wishlist smoke | morgott |
-| cf-3qt.2.14 | P1 | PLP E2E fixture specs | godfrey |
-| cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked→#1133 fix) |
+| cf-3qt.2.12 | P1 | Checkout audit → fixture blockers → PR #374 CI running | millicent |
+| cf-3qt.2.13 | P2 | Search/compare/wishlist smoke → PR #373 Vercel fail | morgott |
+| cf-3qt.2.14 | P1 | PLP E2E fixture specs → PR #372 CI running | godfrey |
+| cf-9t70 | P1 | /swatch-request Wix CMS | rennala (convoy fix in flight) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
-| cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
 ---
 
@@ -175,6 +175,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #363 | Dark mode card bg-white → bg-cf-cream WCAG AA | 08:37 UTC |
 | #366 | Light mode charcoal/50→/70 FilterFirst WCAG AA | 08:38 UTC |
 | #367 | Light mode charcoal/50→/70 alt nodes WCAG AA | 08:4x UTC |
+| #368 | E2E checkout fixture-mode smoke | 08:55 UTC |
 
 ---
 
