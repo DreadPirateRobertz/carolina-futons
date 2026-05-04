@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:28 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:33 MT**
 
 ---
 
@@ -48,7 +48,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Phase | Scope | PR | Status |
 |-------|-------|----|--------|
-| Quick wins | Delete orphaned botanical components | #406 | ⚠️ CONFLICT — radahn rebase needed |
+| Quick wins | Delete orphaned botanical components | #406 | ✅ MERGED (95/100) |
 | Phase 0 | MascotFooterDivider wired into layout | #400 | ✅ MERGED |
 | Phase 1 | PLP category cards — botanical imports removed | #404 | ✅ MERGED (95/100) |
 | Phase 2 — /about | BotanicalMountainSkyline + Timeline + TeamPortrait → v3 | #401 | ✅ MERGED (87/100) |
@@ -59,7 +59,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
 | Cleanup | Final illustrations/ audit | — | ⏳ radahn (after #406 + #408) |
 
-**Design migration: ~90% complete** — 7 of 8 phase PRs merged. Spring-sale (#408) + orphan cleanup (#406) remaining.
+**Design migration: ~92% complete** — Phases 0+1+2(all routes)+3+quick-wins MERGED. Spring-sale (#408) only remaining.
 
 ---
 
@@ -67,10 +67,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #408 | feat(design-migration): /spring-sale — LivingSky → VintageSunRays | ❌ FAIL | rennala — lint-typecheck-test fix needed |
-| #406 | chore(design-migration): delete orphaned v2 botanical components | ✅ CLEAN | **CONFLICT** — radahn rebase needed (95/100) |
-| #406 | chore(design-migration): delete orphaned v2 botanical components | ✅ CLEAN | **CONFLICT** — radahn rebase needed (95/100) |
-| #399 | fix(cf-2idp): Mesa sale fixture | CONFLICT | morgott — needs rebase after wave |
+| #408 | feat(design-migration): /spring-sale — LivingSky → VintageSunRays | ❌ FAIL | rennala — TS error fix in progress |
+| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 62/100** — syntax error in E2E + makeProduct spread anti-pattern (morgott) |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 58/100 — form submit + data-slot fixes missing (godfrey) |
@@ -92,12 +90,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #406 rebase (conflict after design-migration wave) → then cleanup pass | ⚠️ REBASE |
+| radahn | PR #406 MERGED ✅ — now on cleanup pass (final illustrations/ audit) | ✅ |
 | rennala | PR #408 CI fix — lint-typecheck-test failures on /spring-sale | ❌ FIX |
-| blaidd | PR #389 rebase (/shop/sale conflict after wave) | ⚠️ REBASE |
+| blaidd | PR #389 rebase pushed — awaiting GH mergeable state update | ⏳ |
 | godfrey | PR #390 fix — form submit test + data-slot="product-card" selector (BLOCK 58/100) | ⚠️ |
 | miquella | PR #403 MERGED ✅ — idle, await next assignment | ✅ |
-| morgott | PR #407 MERGED ✅ → Phase 1 PLP audit followup | ✅ |
+| morgott | PR #399 BLOCK 62/100 — fix syntax error in E2E + makeProduct spread pattern | ⚠️ FIX |
 | millicent | PRs #405+#409 MERGED ✅ — idle, await next assignment | ✅ |
 
 ---
@@ -139,6 +137,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #406 | chore(design-migration): orphan botanical deletions | 95/100 | 16:31 UTC |
 | #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
 | #403 | feat(design-migration): /visit + /design-a-room scenes | 87/100 | 16:26 UTC |
 | #409 | refactor(mascot-palette): V3_NIGHT palette + Bear pose | 97/100 | 16:25 UTC |
@@ -170,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 90% complete — Phases 0+1+2(all routes)+3 MERGED · #406 CONFLICT rebase · #408 CI FAIL · #389 CONFLICT rebase · #390 BLOCK 58/100*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 92% complete — Phases 0+1+2(all routes)+3+quick-wins MERGED · #408 CI FAIL · #389 awaiting GH mergeable · #390 BLOCK 58/100 · #399 BLOCK 62/100*
