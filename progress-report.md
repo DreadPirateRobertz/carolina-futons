@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:18 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:28 MT**
 
 ---
 
@@ -48,16 +48,18 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Phase | Scope | PR | Status |
 |-------|-------|----|--------|
-| Quick wins | Delete orphaned botanical components | — | 🔧 radahn |
+| Quick wins | Delete orphaned botanical components | #406 | ⚠️ CONFLICT — radahn rebase needed |
 | Phase 0 | MascotFooterDivider wired into layout | #400 | ✅ MERGED |
-| Phase 1 | PLP category cards verify | — | 🔧 godfrey (after #390) |
+| Phase 1 | PLP category cards — botanical imports removed | #404 | ✅ MERGED (95/100) |
 | Phase 2 — /about | BotanicalMountainSkyline + Timeline + TeamPortrait → v3 | #401 | ✅ MERGED (87/100) |
-| Phase 2 — /contact + /press | ContactHero → FogScene | #402 | ⚠️ BLOCK — aria fix needed (blaidd) |
-| Phase 2 — /visit + /design-a-room | BotanicalVisitUs + DesignARoom → v3 scenes | — | 🔧 miquella |
-| Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ⏳ CI running |
-| Phase 2 — /spring-sale | LivingSky → VintageSunRays | — | 🆕 rennala |
-| Phase 3 | Empty states + 404 → v3 mascot spots | #405 | ✅ MERGED (74/100) |
-| Cleanup | Final illustrations/ audit | — | ⏳ radahn (last) |
+| Phase 2 — /contact + /press | ContactHero → FogScene | #402 | ✅ MERGED (96/100) |
+| Phase 2 — /visit + /design-a-room | BotanicalVisitUs + DesignARoom → v3 scenes | #403 | ✅ MERGED (87/100) |
+| Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ✅ MERGED (92/100) |
+| Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ❌ CI FAIL — rennala fix needed |
+| Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
+| Cleanup | Final illustrations/ audit | — | ⏳ radahn (after #406 + #408) |
+
+**Design migration: ~90% complete** — 7 of 8 phase PRs merged. Spring-sale (#408) + orphan cleanup (#406) remaining.
 
 ---
 
@@ -65,15 +67,16 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #407 | feat(design-migration): /guides + /reviews ReadingScene+FallsScene | ⏳ RUNNING | morgott |
-| #402 | feat(design-migration): FogScene /contact+/press | ✅ CLEAN | **BLOCK** 91/100 — aria-hidden conflict (blaidd fix pending) |
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | morgott — needs refinery + merge |
+| #408 | feat(design-migration): /spring-sale — LivingSky → VintageSunRays | ❌ FAIL | rennala — lint-typecheck-test fix needed |
+| #406 | chore(design-migration): delete orphaned v2 botanical components | ✅ CLEAN | **CONFLICT** — radahn rebase needed (95/100) |
+| #406 | chore(design-migration): delete orphaned v2 botanical components | ✅ CLEAN | **CONFLICT** — radahn rebase needed (95/100) |
+| #399 | fix(cf-2idp): Mesa sale fixture | CONFLICT | morgott — needs rebase after wave |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 58/100 — form submit + data-slot fixes missing (godfrey) |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | **CONFLICT** — blaidd rebase needed after #394 |
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approval needed |
+| #389 | feat(cf-3qt.12): /shop/sale PLP | CONFLICT | **CONFLICT** — blaidd rebase needed after wave |
+| #376 | docs(cf-3qt.7): analytics env vars | CONFLICT | **BLOCK**: Stilgar replace GA4/Meta IDs |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | CONFLICT | Stilgar approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
 ## CF Open PRs (carolina-futons / Velo)
@@ -89,13 +92,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | Design migration quick wins — delete orphaned botanical components | 🔧 |
-| rennala | Design migration /spring-sale — LivingSky → VintageSunRays | 🆕 |
-| blaidd | PR #402 aria fix (outer aria-hidden conflicts inner role/aria-label) + then /spring-sale support | ⚠️ |
+| radahn | PR #406 rebase (conflict after design-migration wave) → then cleanup pass | ⚠️ REBASE |
+| rennala | PR #408 CI fix — lint-typecheck-test failures on /spring-sale | ❌ FIX |
+| blaidd | PR #389 rebase (/shop/sale conflict after wave) | ⚠️ REBASE |
 | godfrey | PR #390 fix — form submit test + data-slot="product-card" selector (BLOCK 58/100) | ⚠️ |
-| miquella | Design migration /visit + /design-a-room | 🔧 |
-| morgott | PR #407 CI running (/guides+/reviews) → then Phase 1 PLP audit | 🔧 |
-| millicent | Follow-on: NotFoundIllustration V3_NIGHT palette fix + Bear pose verification | 🆕 |
+| miquella | PR #403 MERGED ✅ — idle, await next assignment | ✅ |
+| morgott | PR #407 MERGED ✅ → Phase 1 PLP audit followup | ✅ |
+| millicent | PRs #405+#409 MERGED ✅ — idle, await next assignment | ✅ |
 
 ---
 
@@ -136,6 +139,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
+| #403 | feat(design-migration): /visit + /design-a-room scenes | 87/100 | 16:26 UTC |
+| #409 | refactor(mascot-palette): V3_NIGHT palette + Bear pose | 97/100 | 16:25 UTC |
+| #407 | feat(design-migration): /guides + /reviews scenes | 92/100 | 16:25 UTC |
+| #402 | feat(design-migration): FogScene /contact+/press | 96/100 | 16:25 UTC |
 | #405 | feat(design-migration-p3): Phase 3 empty states | 74/100 | 10:17 UTC |
 | #401 | feat(design-migration): /about botanical → v3 | 87/100 | 10:12 UTC |
 | #400 | feat(design-migration-p0): MascotFooterDivider in layout | 95/100 | 10:12 UTC |
@@ -162,4 +170,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 60% complete — Phase 0+2/about+Phase 3 MERGED · #390 BLOCK 58/100 · #402 BLOCK aria fix · #389 CONFLICT needs rebase*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 90% complete — Phases 0+1+2(all routes)+3 MERGED · #406 CONFLICT rebase · #408 CI FAIL · #389 CONFLICT rebase · #390 BLOCK 58/100*
