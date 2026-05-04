@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:18 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:23 MT**
 
 ---
 
@@ -26,7 +26,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 **Root cause:** Wix headless OAuth app `cb591c8e` returns `"No Metasite Context in identity"` — not installed on any Wix site with Stores.
 
-**FIX (Stilgar manual — Playwright MCP down):** Log in as halworker85@gmail.com → https://manage.wix.com/developer-center/ → My Apps → find `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a` → Install on Site → carolinafutons.com
+**DEFERRED** — Stilgar will fix manually. FIX: halworker85@gmail.com → manage.wix.com/developer-center → My Apps → `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a` → Install on carolinafutons.com
 
 ---
 
@@ -88,12 +88,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
-| blaidd | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
-| godfrey | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
-| miquella | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
-| morgott | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
-| millicent | Idle — convoy candidate (awaiting mayor routing) | ⏳ |
+| rennala | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| blaidd | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| godfrey | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| miquella | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| morgott | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| millicent | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
 
 ---
 
@@ -101,7 +101,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: 0 products** | Manual fix: halworker85 → manage.wix.com/developer-center → app cb591c8e → Install on carolinafutons.com. **Playwright MCP down — cannot automate.** |
+| **P0: 0 products** | **DEFERRED** — Stilgar doing manually. Fix: halworker85 → manage.wix.com/developer-center → cb591c8e → Install on carolinafutons.com |
 | **E2E checkout** | Wix Dashboard: enable sandbox payment + P0 fix |
 | **cf-0s4l** | Create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · CFW queue CLEAN · 6 crew convoy-ready awaiting mayor routing · P0 OAuth blocked Playwright MCP down*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · CFW queue CLEAN · All parity beads CLOSED · 6 crew idle — zero local beads, awaiting mayor convoy routing · P0 deferred Stilgar manual*
