@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:20 MT**
 
 ---
 
@@ -201,4 +201,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · 9 beads active · #383/#387 BLOCK · godfrey+morgott on cf-3qt.14/15 · millicent respawn pending*
+*Cron: 1709bbed · Next refresh ~10 min · 9 beads active · #383/#387 still BLOCK (no new commits) · escalation pending*
