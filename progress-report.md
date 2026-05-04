@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 14:41 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 14:58 MT**
 
 ---
 
@@ -55,7 +55,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ✅ MERGED (92/100) |
 | Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ✅ MERGED (97/100) |
 | Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
-| Cleanup | Final illustrations/ cleanup — ContactHero orphan deleted | #414 | ⏳ CI |
+| Cleanup | Final illustrations/ cleanup — ContactHero orphan deleted | #414 | ✅ MERGED (95/100) |
 
 ---
 
@@ -63,10 +63,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #415 | feat(cf-footer-anim): footer mascot animation | ✅ CI | ❌ BLOCK — missing Footer.tsx integration + animation |
-| #414 | chore(design-migration): illustrations cleanup + 4 SVGs | ✅ MERGED | 95/100 |
-| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ✅ MERGED | 88/100 |
-| #416 | feat(cf-home-animals): homepage mascot category cards | ✅ MERGED | 90/100 |
+| #415 | feat(cf-footer-anim): footer mascot animation | ✅ MERGED | 91/100 — Footer.tsx + motion + useReducedMotion |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -86,13 +83,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| millicent | cf-3qt.16 — PR #415 BLOCK: add Footer.tsx integration + float animation | 🔧 fixing |
+| millicent | cf-3qt.16.1 — Footer animation vitest (framer-motion + useReducedMotion) | 🔧 dispatched |
 | morgott | wix-retirement-checklist.md — cf-3qt.9 prep doc | 🔧 dispatched |
-| radahn | IDLE — cf-3qt.8.15 ✅ merged | ⚡ needs bead |
-| blaidd | IDLE — cf-3qt.8.13 ✅ merged | ⚡ needs bead |
-| rennala | IDLE | ⚡ needs bead |
-| godfrey | IDLE — cf-3qt.8.11 ✅ | ⚡ needs bead |
-| miquella | IDLE — cf-3qt.8.12 ✅ | ⚡ needs bead |
+| radahn | cf-3qt.8.25 ✅ vercel-account-transfer-runbook.md | ⚡ needs bead |
+| blaidd | cf-3qt.8.24 ✅ contact-form-publish-checklist.md | ⚡ needs bead |
+| rennala | cf-3qt.8.22 ✅ theme-options.md | ⚡ needs bead |
+| godfrey | cf-3qt.16.2 — homepage MascotCategoryCard E2E spec | 🔧 dispatched |
+| miquella | cf-q5km — a11y audit: footer anim + category cards | 🔧 dispatched |
 
 ---
 
@@ -119,7 +116,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
-| cf-3qt.16 | P1 | footer animation — PR #415 BLOCK (millicent fixing) | 🔧 |
+| cf-3qt.16.1 | P2 | Footer animation vitest — millicent | 🔧 in progress |
+| cf-3qt.16.2 | P2 | Homepage MascotCategoryCard E2E — godfrey | 🔧 in progress |
+| cf-q5km | P2 | A11y audit footer anim + category cards — miquella | 🔧 in progress |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -129,6 +128,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #415 | feat(cf-footer-anim): footer mascot animation (Footer.tsx + motion) | 91/100 | 14:58 MT |
 | #416 | feat(cf-home-animals): homepage mascot category cards | 90/100 | 14:41 MT |
 | #414 | chore(design-migration): illustrations cleanup + 4 SVGs | 95/100 | 14:41 MT |
 | #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | 88/100 | 14:41 MT |
@@ -170,4 +170,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#414 + #416 (5 PRs) · Stilgar directives: homepage ✅ #416 merged, footer ⏳ #415 BLOCK fixing · Refinery rate-limited until 2:40 MT · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#416 (6 PRs) · Stilgar directives: homepage ✅ #416 merged, footer ✅ #415 merged 91/100 · hq-wtyn0 live E2E DONE (curl — Playwright MCP disconnected) · 3 crew dispatched (millicent/godfrey/miquella) · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
