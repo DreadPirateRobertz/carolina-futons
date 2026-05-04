@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:48 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:52 MT**
 
 ---
 
@@ -95,7 +95,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #368 | test(e2e): checkout smoke — fixture-mode cart+checkout | ⏳ PENDING | radahn |
+| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel build fail | morgott fixing |
+| #368 | test(e2e): checkout smoke — fixture-mode | ✅ CLEAN | refinery conf 87 — radahn fixing 2 issues |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -105,13 +106,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #368 E2E fixture smoke — CI pending | ⏳ |
-| rennala | CF #1133 CI fix (trade-in) — cf-9t70 blocked | 🔧 |
+| radahn | PR #368 — fixing 2 refinery issues (server action + OOS test) | 🔧 |
+| rennala | PR #368 review (redirected from duplicate spec) | 🔧 |
 | blaidd | CF #1120 CI fix (delivery zone) | 🔧 |
 | godfrey | cf-3qt.2.14 PLP E2E fixture specs | 🔧 |
 | miquella | cf-3qt.2.Z secondary pages audit | 🔧 |
-| morgott | cf-3qt.2.13 search/compare/wishlist smoke | 🔧 |
-| millicent | CF #1125 CI fix (sampleRequests) | 🔧 |
+| morgott | PR #370 Vercel build fix (PLP Futon Frames) | 🔧 |
+| millicent | fix/cf-3qt-fixture-cart-order — cart.ts + getOrder fixture branches | 🔧 |
 
 ---
 
@@ -135,8 +136,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.2.11 | P1 | Integration verification (all pages built ✅) | blaidd→closing |
-| cf-3qt.2.12 | P1 | Checkout flow audit | millicent→CF #1125 |
+| cf-3qt.2.11 | P1 | Integration verification ✅ 114 tests PASS | blaidd (closed) |
+| cf-3qt.2.12 | P1 | Checkout audit → 2 P1 fixture blockers found | millicent fixing |
 | cf-3qt.2.13 | P2 | Search/compare/wishlist smoke | morgott |
 | cf-3qt.2.14 | P1 | PLP E2E fixture specs | godfrey |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked→#1133 fix) |
