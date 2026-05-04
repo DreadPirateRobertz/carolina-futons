@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:42 MT**
 
 ---
 
@@ -100,7 +100,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: ⚠️ MORNING FLAG — Stilgar replace real GA4/Meta IDs with placeholders |
+| #383 | feat(cf-s44d): email trigger E2E | ⏳ CI | **BLOCK** refinery 68/100 — 3 fixes (miquella) |
+| #382 | feat(cf-3qt.10): sofa-beds PLP | ❌ CI FAIL | missing image field + CI fix (blaidd) |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace real GA4/Meta IDs |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -110,13 +112,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-45uk ✅ CLOSED — reviewing peer PRs / cf-uaoz support | ⏳ |
+| radahn | cf-3qt.11 — Mattresses PLP /shop/mattresses | 🔧 |
 | rennala | cf-uaoz — plp.spec.ts CI flakiness (no PR yet) | 🔧 |
-| blaidd | cf-3qt.10 — Sofa Beds PLP /shop/sofa-beds (just assigned) | 🔧 |
-| godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
-| miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
-| morgott | cf-2jq9 — globals.css .dark --cf-smoke token fix | 🔧 |
-| millicent | cf-h2em — Platform Beds PLP /shop/platform-beds | 🔧 |
+| blaidd | cf-3qt.10 — PR #382 ❌ CI FAIL (image field + fix needed) | ⚠️ |
+| godfrey | cf-1409 — still on wrong branch, escalated ×2 | ⚠️ |
+| miquella | cf-s44d — PR #383 ⏳ BLOCKED refinery 68/100 (3 fixes) | ⚠️ |
+| morgott | cf-2jq9 — still on main, escalated ×2 | ⚠️ |
+| millicent | cf-h2em — redirected to correct branch (was on cf-oht1) | 🔧 |
 
 ---
 
@@ -144,12 +146,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
-| cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
-| cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
-| cf-3qt.10 | P2 | Sofa Beds PLP /shop/sofa-beds | blaidd (just assigned) |
-| cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent |
-| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
+| cf-1409 | P2 | Reward + challenge E2E tests | godfrey — wrong branch, escalated ×2 |
+| cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott — main/clean, escalated ×2 |
+| cf-3qt.10 | P2 | Sofa Beds PLP /shop/sofa-beds | blaidd — PR #382 ❌ CI FAIL |
+| cf-3qt.11 | P2 | Mattresses PLP /shop/mattresses | radahn |
+| cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent — redirected |
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala — no PR yet |
+| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella — PR #383 BLOCKED 68/100 |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -191,4 +194,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · blaidd ALIVE — cf-3qt.10 assigned · rennala cf-uaoz no PR yet*
+*Cron: 1709bbed · Next refresh ~10 min · PR #382 ❌ · PR #383 BLOCK 68/100 · godfrey+morgott escalated ×2*
