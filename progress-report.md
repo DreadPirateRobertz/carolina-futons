@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:45 MT**
 
 ---
 
@@ -28,33 +28,46 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Feature | Status |
 |---------|--------|
-| LivingHero header | ✅ MERGED #347 — bears live |
-| LivingHero day→night flash | ✅ FIXED (33cbe6e, main) |
-| Footer white circles | ✅ FIXED (12978d4, main) |
-| Search product thumbnails | ✅ FIXED (b7c93cc, main) |
+| LivingHero header | ✅ MERGED #347 |
+| LivingHero day→night flash | ✅ FIXED (33cbe6e) |
+| Footer white circles | ✅ FIXED (12978d4) |
+| Footer scene integrated | ✅ MERGED #354 — LivingFooterScene now absolute, no float |
+| Search product thumbnails | ✅ FIXED (b7c93cc) |
 | Gift Registry /registry | ✅ MERGED #331 |
-| Theme previews A/B/C/D | ✅ LIVE — /theme-a /theme-b /theme-c /theme-d |
-| Design a Room | ✅ MERGED #343 |
-| Auth dead-end redirect | ✅ MERGED #348 |
-| /dashboard/profile | ✅ MERGED #349 |
-| PDP Financing (BNPL) | ✅ MERGED #279 |
-| Bear Easter egg mobile | ⏳ cf-ggvw → godfrey |
+| EasterEggBear mobile modal | ✅ MERGED #353 — portal fix |
+| SEO BlogPosting JSON-LD | ✅ MERGED #352 |
+| Illustrations wired | ✅ MERGED #351 |
+| Bear Easter egg persistence | ⏳ cf-okwz (P3) — Stilgar to pick: clipboard/localStorage/silent |
+| **P0: Zero products on PLP** | ⚠️ PARTIALLY FIXED — plp.ts fixture-gated (306eca7). Awaiting Stilgar directive: set Preview WIX_CLIENT_ID_HEADLESS=cb591c8e (real catalog) OR USE_FIXTURE=1 (5 test items) |
 | Font contrast audit | ⏳ miquella (cf-tu3q) |
-| SEO+analytics | ⏳ cf-3qt.7 (radahn+rennala convoy, PR #352 ❌ lint fix needed) |
+| Theme pick | ⏳ Stilgar to choose /theme-a–d |
 
 **carolinafutons.com still = Wix.** cfW on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
-## Vercel Env (Stilgar directive — all done)
+## ⚠️ P0 OPEN: Zero Products on PLP
+
+**Root cause:** Vercel Preview env uses WIX_CLIENT_ID_HEADLESS=6b4d4894 (staging headless). Staging Wix site has no collections → CATEGORY_NOT_FOUND → items=[]. Also breaks CI E2E.
+
+**Code fix pushed (306eca7):** `plp.ts` now honours USE_FIXTURE flag — fixture collection IDs no longer hit real Wix.
+
+**Remaining:** Stilgar must choose preview env strategy:
+- **Option A** (recommended): Change Preview WIX_CLIENT_ID_HEADLESS → cb591c8e (prod Wix client). Real catalog on preview URL.
+- **Option B**: Set NEXT_PUBLIC_USE_FIXTURE_PRODUCTS=1 on Vercel Preview + CI. Shows 5 fixture products only.
+
+---
+
+## Vercel Env
 
 | Env Var | Status |
 |---------|--------|
-| WIX_CLIENT_ID_HEADLESS (prod) | ✅ Swapped → cb591c8e live prod value |
+| WIX_CLIENT_ID_HEADLESS (prod) | ✅ cb591c8e |
+| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — staging, no collections → P0 |
 | SMTP_HOST/PORT/USER/PASS (prod) | ✅ Set |
-| CROSS_RIG_SECRET (prod) | ✅ Set |
-| EAS CROSS_RIG_SECRET | ✅ Set (dallas confirmed) |
-| EAS CFW_API_URL | ✅ Set = https://carolina-futons-web.vercel.app |
+| CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
+| EAS CFW_API_URL | ✅ carolina-futons-web.vercel.app |
+| SENTRY_AUTH_TOKEN (EAS) | ⏳ Awaiting Stilgar |
 
 ---
 
@@ -73,14 +86,24 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #352 | feat(cf-3qt.7): BlogPosting JSON-LD on /blog/[slug] | ❌ fail | radahn — lint-typecheck-test fail |
-| #351 | feat(cf-sb0i): wire BotanicalFooterDivider + PLP illus | ❌ fail | blaidd — fix in progress |
-| #350 | feat(cf-9izd): fixture products for cart QA | ❌ fail | millicent — rebase broke, fixing |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail | unassigned |
-| #299 | fix(cf-urbq): dark mode font contrast | ⏳ CI running | morgott rebased |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ⏳ CI running | morgott rebased |
-| #281 | feat(cf-7axq): Add to Compare | ⏳ CI running | godfrey rebased |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail | millicent fixing |
+| #299 | fix(cf-urbq): dark mode font contrast | ❌ fail | morgott: rebase on latest main |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail | morgott: rebase on latest main |
+| #281 | feat(cf-7axq): Add to Compare | ❌ fail | godfrey: rebase on latest main |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | |
+
+---
+
+## Session Merges (this session)
+
+| PR | Title |
+|----|-------|
+| ✅ #354 | fix(cf-duua): LivingFooterScene out of flow |
+| ✅ #353 | fix(cf-ggvw): EasterEggBear portal fix |
+| ✅ #352 | feat(cf-3qt.7): SEO BlogPosting JSON-LD |
+| ✅ #351 | feat(cf-sb0i): illustrations wired |
+| ✅ #350 | feat(cf-9izd): fixture products |
+| ✅ #331 | feat(cf-4bhw): Gift Registry |
 
 ---
 
@@ -88,13 +111,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Bead | Status |
 |------|-------------|------|--------|
-| radahn | SEO+analytics — fix PR #352 lint fail | cf-3qt.7 | ❌ PR lint fix |
-| rennala | Convoy cf-3qt.7 — parallel SEO steps | cf-3qt.7 | 🆕 convoyed |
-| blaidd | Wire unwired illustrations | cf-sb0i | ❌ PR fix |
-| godfrey | EasterEggBear mobile modal fix | cf-ggvw | in progress |
-| miquella | Playwright font-contrast audit | cf-tu3q | in progress |
-| morgott | Waiting CI on #291 + #299 | cf-sk49/cf-urbq | ⏳ CI |
-| millicent | Rebase fix PR #350 | cf-3ya6 | ❌ PR fix |
+| radahn | cf-3qt.7 shipped — awaiting next | — | 🆓 free |
+| rennala | cf-3qt.7 convoy done — awaiting next | — | 🆓 free |
+| blaidd | cf-sb0i shipped — awaiting next | — | 🆓 free |
+| godfrey | Rebase PR #281 on latest main | cf-7axq | rebasing |
+| miquella | Font-contrast audit + cf-0s4l next | cf-tu3q | in progress |
+| morgott | Rebase PRs #291+#299 on latest main | cf-duua closed | rebasing |
+| millicent | Fix PR #319 CI (room planner) | cf-3ya6 closed | ❌ fixing |
 
 ---
 
@@ -102,18 +125,16 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **PR #352** | radahn: lint-typecheck-test fail — fix and push |
-| **PR #351** | blaidd: CI fail — fix in progress |
-| **PR #350** | millicent: rebase broke CI — fixing |
-| **PRs #281/#291/#299** | morgott/godfrey rebased — CI running |
-| **Bear Easter egg mobile** | cf-ggvw → godfrey (portal + safe-area) |
+| **P0: PLP zero products** | Stilgar decision needed: Option A (prod Wix client on preview) vs Option B (USE_FIXTURE=1) |
+| **PRs #281/#291/#299** | Need rebase on main after P0 fix commit (306eca7) |
+| **CI E2E** | Fails until preview WIX env resolved — E2E hits staging Wix with no collections |
+| **SENTRY_AUTH_TOKEN** | Mayor DM'd Stilgar — awaiting |
 | **Font contrast** | cf-tu3q/miquella — audit in progress |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
-| **Velo #1125** | Codecov-only — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
 | **contactSubmissions 404** | Awaiting Stilgar DNS clearance |
-| **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501 |
-| **v3 cabin/reading/falls/fog** | No CFW components — need Stilgar page direction |
+| **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending |
+| **v3 cabin/reading/falls/fog** | Need Stilgar page direction |
 | **Vercel prod redeploy** | Needed to activate new WIX_CLIENT_ID_HEADLESS |
 
 ---
@@ -122,14 +143,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.7 | P1 | SEO+analytics | radahn + rennala |
-| cf-sb0i | P2 | Wire unwired illustrations | blaidd |
-| cf-ggvw | P2 | EasterEggBear mobile modal fix | godfrey |
 | cf-tu3q | P2 | Font contrast Playwright audit | miquella |
-| cf-sk49 | P2 | PdpSizeGuide — CI pending | morgott |
-| cf-3ya6 | P2 | Fixture products PR #350 fix | millicent |
+| cf-0s4l | P3 | /sustainability CMS | miquella (next) |
 | cf-9t70 | P1 | /swatch-request — Wix CMS pending | — |
-| cf-0s4l | P3 | /sustainability CMS | miquella |
+| cf-okwz | P3 | EasterEggBear false "Code saved ✓" | unassigned |
+| cf-duua | P1 | Footer scene layout | ✅ closed (PR #354 merged) |
 
 ---
 
