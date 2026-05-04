@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:33 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:44 MT**
 
 ---
 
@@ -42,24 +42,24 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ---
 
-## 🎨 DESIGN MIGRATION STATUS
+## 🎨 DESIGN MIGRATION STATUS — ✅ 100% COMPLETE
 
 **Stilgar direct order 2026-05-04.** Plan: `crew/melania/design-migration-plan.md`
 
 | Phase | Scope | PR | Status |
 |-------|-------|----|--------|
 | Quick wins | Delete orphaned botanical components | #406 | ✅ MERGED (95/100) |
-| Phase 0 | MascotFooterDivider wired into layout | #400 | ✅ MERGED |
+| Phase 0 | MascotFooterDivider wired into layout | #400 | ✅ MERGED (95/100) |
 | Phase 1 | PLP category cards — botanical imports removed | #404 | ✅ MERGED (95/100) |
 | Phase 2 — /about | BotanicalMountainSkyline + Timeline + TeamPortrait → v3 | #401 | ✅ MERGED (87/100) |
 | Phase 2 — /contact + /press | ContactHero → FogScene | #402 | ✅ MERGED (96/100) |
 | Phase 2 — /visit + /design-a-room | BotanicalVisitUs + DesignARoom → v3 scenes | #403 | ✅ MERGED (87/100) |
 | Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ✅ MERGED (92/100) |
-| Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ❌ CI FAIL — rennala fix needed |
+| Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ✅ MERGED (97/100) |
 | Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
-| Cleanup | Final illustrations/ audit | — | ⏳ radahn (after #406 + #408) |
+| Cleanup | Final illustrations/ audit | — | 🔧 radahn in progress |
 
-**Design migration: ~92% complete** — Phases 0+1+2(all routes)+3+quick-wins MERGED. Spring-sale (#408) only remaining.
+**All botanical illustrations removed site-wide. v3 mascot/bear scenes wired on all routes.**
 
 ---
 
@@ -67,14 +67,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #408 | feat(design-migration): /spring-sale — LivingSky → VintageSunRays | ❌ FAIL | rennala — TS error fix in progress |
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 62/100** — syntax error in E2E + makeProduct spread anti-pattern (morgott) |
+| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 55/100** — makeProduct spread anti-pattern + test type bug (morgott fixing) |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
-| #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 58/100 — form submit + data-slot fixes missing (godfrey) |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | CONFLICT | **CONFLICT** — blaidd rebase needed after wave |
-| #376 | docs(cf-3qt.7): analytics env vars | CONFLICT | **BLOCK**: Stilgar replace GA4/Meta IDs |
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | CONFLICT | Stilgar approval needed |
+| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | mergeability UNKNOWN — awaiting GH compute |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
 ## CF Open PRs (carolina-futons / Velo)
@@ -90,13 +88,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #406 MERGED ✅ — now on cleanup pass (final illustrations/ audit) | ✅ |
-| rennala | PR #408 CI fix — lint-typecheck-test failures on /spring-sale | ❌ FIX |
-| blaidd | PR #389 rebase pushed — awaiting GH mergeable state update | ⏳ |
-| godfrey | PR #390 fix — form submit test + data-slot="product-card" selector (BLOCK 58/100) | ⚠️ |
-| miquella | PR #403 MERGED ✅ — idle, await next assignment | ✅ |
-| morgott | PR #399 BLOCK 62/100 — fix syntax error in E2E + makeProduct spread pattern | ⚠️ FIX |
-| millicent | PRs #405+#409 MERGED ✅ — idle, await next assignment | ✅ |
+| radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
+| rennala | PR #408 MERGED ✅ — idle, await next | ✅ |
+| blaidd | PR #389 awaiting GH mergeable confirmation | ⏳ |
+| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, await next | ✅ |
+| miquella | PR #403 MERGED ✅ — idle, await next | ✅ |
+| morgott | PR #399 BLOCK 55/100 — fix makeProduct spread + test type bug | ⚠️ |
+| millicent | PRs #405+#409 MERGED ✅ — idle, await next | ✅ |
 
 ---
 
@@ -137,6 +135,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
+| #390 | test(cf-3qt.14): /search E2E smoke | 88/100 | 16:43 UTC |
 | #406 | chore(design-migration): orphan botanical deletions | 95/100 | 16:31 UTC |
 | #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
 | #403 | feat(design-migration): /visit + /design-a-room scenes | 87/100 | 16:26 UTC |
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 92% complete — Phases 0+1+2(all routes)+3+quick-wins MERGED · #408 CI FAIL · #389 awaiting GH mergeable · #390 BLOCK 58/100 · #399 BLOCK 62/100*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE — all phases merged · #399 BLOCK 55/100 (morgott) · #389 awaiting GH mergeable · Cleanup pass: radahn*
