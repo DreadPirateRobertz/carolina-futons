@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:00 MT**
 
 ---
 
@@ -36,7 +36,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Design a Room | ⚠️ TEXT ONLY — miquella building room scene (cf-c0dh) |
 | Home scroll crash | ❌ BUG — crashes at page bottom, 3 errors (cf-d3ho) |
 | Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
-| LivingSky height fix | ⏳ PR #341 CI running — Vercel preview ✅ green |
+| LivingSky height fix | ✅ PR #341 ALL GREEN — ready to merge |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
@@ -57,7 +57,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #341 | fix(cf-d3ho): LivingSky full height restore | ⏳ running (Vercel ✅) |
+| #341 | fix(cf-d3ho): LivingSky full height restore | ✅ GREEN — merge ready |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -73,7 +73,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Crew | Current Task | Bead |
 |------|-------------|------|
-| blaidd | Cart QA seeded fixtures | cf-9izd |
+| blaidd | Phase 4 content pages (About/FAQ/Contact/GIH) | cf-3qt.4 |
 | godfrey | PDP Financing BNPL | cf-10fx |
 | radahn | /sustainability CMS wiring | cf-0s4l |
 | rennala | Sitemap 404 fix | cf-rb07 |
@@ -83,15 +83,13 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 **Queued:** cf-nbu4 (sale lightbox session gate) → radahn after cf-0s4l
 
-**Convoy candidates:** cf-rtd7 parity audit (no crew), cf-eihx shipping tier (no crew) — flag to mayor for dallas cross-rig convoy
-
 ---
 
 ## Open Blockers
 
 | Issue | Status |
 |-------|--------|
-| **LivingSky height collapse** | P0 — PR #341 CI running, Vercel preview green |
+| **LivingSky height fix** | ✅ PR #341 green — awaiting merge |
 | **Home scroll crash** | cf-d3ho P1 — morgott investigating |
 | **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
 | **Design a Room plain** | cf-c0dh P1 — miquella in progress |
@@ -116,10 +114,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
 | cf-yfvl | P1 | cf-theme-experiments A/B/C/D variants | — |
 | cf-9fd8 | P2 | PDP back-in-stock notify me | — |
-| cf-9izd | P2 | Cart QA seeded-fixture preview deploy | blaidd |
+| cf-9izd | P2 | Cart QA seeded-fixture preview deploy | millicent |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS | radahn |
 
-**Outside bd:** cf-rb07/rennala · cf-tyuk/millicent
+**Outside bd:** cf-rb07/rennala · cf-tyuk/millicent · cf-3qt.4/blaidd
 
 ---
 
