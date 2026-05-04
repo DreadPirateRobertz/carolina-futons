@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:52 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 16:04 MT**
 
 ---
 
@@ -63,9 +63,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #432 | test(cf-205c): VideoShowcaseStrip E2E smoke (6 tests) | ⏳ PENDING | rennala |
-| #431 | feat(cf-l6aj.5): SocialFeeds — consent-gated IG/TikTok/Pinterest | ⏳ PENDING | rennala — lint fixed, awaiting CI |
-| #430 | feat(cf-l6aj.12): SaleLightbox promo lightbox (23 tests) | ⏳ PENDING | miquella — TS2558 fixed |
+| #433 | feat(cf-l6aj.2): CMS-driven product badges New/Sale/Bestseller/CF+ | ⏳ PENDING | rennala |
+| #432 | test(cf-205c): VideoShowcaseStrip E2E smoke (6 tests) | ✅ GREEN → **MERGE** | rennala |
+| #431 | feat(cf-l6aj.5): SocialFeeds — consent-gated IG/TikTok/Pinterest | ✅ GREEN → **MERGE** | rennala |
+| #430 | feat(cf-l6aj.12): SaleLightbox promo lightbox (23 tests) | ✅ GREEN → **MERGE** | miquella |
 | #429 | feat(cf-l6aj.1): PdpAlsoBought — CMS-first + category fallback | ✅ MERGED | 93/100 |
 | #428 | chore(cf-q90y.1): delete 9 orphan illustration components | ✅ MERGED | radahn — -1315 lines |
 | #427 | test(cf-pmdf): MascotCategoryCard reduced-motion E2E | ✅ MERGED | 90/100 |
@@ -99,9 +100,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | morgott | cf-l6aj.14 — Style Quiz Result page (standalone shareable URL) | 🔧 dispatched |
 | radahn | cf-l6aj.3 — Home featured products richer cards (quick-view, swatches) | 🔧 dispatched |
 | blaidd | cf-l6aj.11 — Sitewide Mega-menu hover panel | 🔧 in progress |
-| rennala | cf-l6aj.2 — CMS badges (New/Sale/Bestseller) — PR #431+#432 open | 🔧 dispatched |
+| rennala | cf-l6aj.9 — Inline newsletter section; PRs #431/#432/#433 open | 🔧 in progress |
 | godfrey | cf-j2r7 — recently-viewed PDP rail | 🔧 in progress |
-| miquella | PR #430 ⏳ CI pending — next bead after green | 🔧 awaiting CI |
+| miquella | PR #430 ✅ GREEN — refinery pending → merge → next bead | 🔧 awaiting merge |
 
 ---
 
@@ -129,11 +130,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
 | cf-l6aj.11 | P2 | Mega-menu hover panel — blaidd | 🔧 in progress |
-| cf-l6aj.2 | P2 | CMS badges (New/Sale/Bestseller) — rennala | 🔧 dispatched |
-| cf-l6aj.3 | P2 | Featured products richer cards — radahn | 🔧 dispatched |
+| cf-l6aj.3 | P2 | Featured products richer cards — radahn | 🔧 in progress |
 | cf-l6aj.1.1 | P2 | PdpAlsoBought tests — millicent | 🔧 in progress |
-| cf-l6aj.14 | P3 | Style Quiz Result page — morgott | 🔧 dispatched |
 | cf-j2r7 | P2 | PDP recently-viewed rail — godfrey | 🔧 in progress |
+| cf-l6aj.9 | P3 | Inline newsletter section — rennala | 🔧 in progress |
+| cf-l6aj.14 | P3 | Style Quiz Result page — morgott | 🔧 in progress |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -195,4 +196,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #415–#429 (14 PRs, excl #418 closed) · 3 PRs pending CI (#430/#431/#432) · 7 crew active on parity-gap sprint (cf-l6aj) · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) + f01ec08c (PM cross-sync 30min) · Design migration 100% COMPLETE · Session merges: #415–#429 (14 PRs) · PRs #430/#431/#432 ✅ GREEN awaiting refinery merge · PR #433/#434 ⏳ pending CI · 7 crew active parity sprint · P0 OAuth = FilterFirst empty hero — deferred Stilgar · ⚠️ Vercel personal account*
