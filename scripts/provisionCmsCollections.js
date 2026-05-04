@@ -434,6 +434,41 @@ const COLLECTION_MANIFEST = [
     ],
     permissions: ADMIN_ONLY,
   },
+  // ── cf-0s4l Sustainability page collections ────────────────────────────────
+  {
+    id: 'SustainabilityStory',
+    displayName: 'Sustainability Story',
+    fields: [
+      field('heading', 'Heading', 'TEXT'),
+      field('body', 'Body', 'RICH_TEXT'),
+      field('imageUrl', 'Image URL', 'URL'),
+      field('imageAlt', 'Image Alt', 'TEXT'),
+      field('sortOrder', 'Sort Order', 'NUMBER'),
+    ],
+    permissions: PUBLIC_READ,
+  },
+  {
+    id: 'SustainabilityCertification',
+    displayName: 'Sustainability Certification',
+    fields: [
+      field('name', 'Name', 'TEXT'),
+      field('body', 'Body', 'TEXT'),
+      field('sortOrder', 'Sort Order', 'NUMBER'),
+    ],
+    permissions: PUBLIC_READ,
+  },
+  {
+    id: 'SustainabilityMaterial',
+    displayName: 'Sustainability Material',
+    fields: [
+      field('title', 'Title', 'TEXT'),
+      field('description', 'Description', 'TEXT'),
+      field('imageUrl', 'Image URL', 'URL'),
+      field('imageAlt', 'Image Alt', 'TEXT'),
+      field('sortOrder', 'Sort Order', 'NUMBER'),
+    ],
+    permissions: PUBLIC_READ,
+  },
   // ── cf-3qt Phase 4/5 content collections ───────────────────────────────────
   {
     id: 'Landings',
