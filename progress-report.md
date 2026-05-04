@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:53 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:54 MT**
 
 ---
 
@@ -84,10 +84,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | **CONVOY** blogContent 17→21 count (rennala fixing) |
 | #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ | |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail | |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail | |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail | **CONVOY** same root — awaiting rennala fix |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail | **CONVOY** same root — awaiting rennala fix |
 
 ---
 
@@ -109,8 +109,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | PR #368 — fixing 2 refinery issues | 🔧 |
-| rennala | PR #368 review + cf-9t70 blocked | 🔧 |
-| blaidd | CF #1120 CI fix (delivery zone) | 🔧 |
+| rennala | **CONVOY FIX**: blogContent 17→21 → unblocks #1120/#1125/#1133 | 🔧 |
+| blaidd | CF #1120 — awaiting rennala convoy fix to rebase | ⏳ |
 | godfrey | PR #369 Home page + cf-3qt.2.14 E2E specs | 🔧 |
 | miquella | PR #371 Murphy Beds + cf-3qt.2.8 | 🔧 |
 | morgott | PR #370 Vercel fix → cf-3qt.2.13 smoke tests | 🔧 |
