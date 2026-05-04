@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:42 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:50 MT**
 
 ---
 
@@ -100,8 +100,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #383 | feat(cf-s44d): email trigger E2E | ⏳ CI | **BLOCK** refinery 68/100 — 3 fixes (miquella) |
-| #382 | feat(cf-3qt.10): sofa-beds PLP | ❌ CI FAIL | missing image field + CI fix (blaidd) |
+| #386 | test(cf-1409): rewards E2E fixture-mode | ❌ CI FAIL | TS error blog.ts — godfrey fixing |
+| #384 | fix(cf-2jq9): globals.css .dark --cf-smoke | ✅ CLEAN | refinery 88/100 PASS — checkboxes needed (morgott) |
+| #383 | feat(cf-s44d): email trigger E2E | ⏳ CI | **BLOCK** refinery 68/100 + CI fix (miquella) |
+| #382 | feat(cf-3qt.10): sofa-beds PLP | ✅ MERGED | 11:47 UTC |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace real GA4/Meta IDs |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -114,11 +116,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|--------|
 | radahn | cf-3qt.11 — Mattresses PLP /shop/mattresses | 🔧 |
 | rennala | cf-uaoz — plp.spec.ts CI flakiness (no PR yet) | 🔧 |
-| blaidd | cf-3qt.10 — PR #382 ❌ CI FAIL (image field + fix needed) | ⚠️ |
-| godfrey | cf-1409 — still on wrong branch, escalated ×2 | ⚠️ |
-| miquella | cf-s44d — PR #383 ⏳ BLOCKED refinery 68/100 (3 fixes) | ⚠️ |
-| morgott | cf-2jq9 — still on main, escalated ×2 | ⚠️ |
-| millicent | cf-h2em — redirected to correct branch (was on cf-oht1) | 🔧 |
+| blaidd | cf-3qt.10 ✅ MERGED #382 — standing by for next bead | ⏳ |
+| godfrey | cf-1409 — PR #386 ❌ TS error blog.ts (fixing) | ⚠️ |
+| miquella | cf-s44d — PR #383 BLOCKED 68/100 + CI fix in progress | ⚠️ |
+| morgott | cf-2jq9 — PR #384 ✅ refinery PASS, checkboxes needed | 🔧 |
+| millicent | cf-h2em — Platform Beds PLP (no PR yet) | 🔧 |
 
 ---
 
@@ -146,11 +148,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
-| cf-1409 | P2 | Reward + challenge E2E tests | godfrey — wrong branch, escalated ×2 |
-| cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott — main/clean, escalated ×2 |
-| cf-3qt.10 | P2 | Sofa Beds PLP /shop/sofa-beds | blaidd — PR #382 ❌ CI FAIL |
+| cf-1409 | P2 | Reward + challenge E2E tests | godfrey — PR #386 ❌ TS fix needed |
+| cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott — PR #384 ✅ awaiting checkboxes |
 | cf-3qt.11 | P2 | Mattresses PLP /shop/mattresses | radahn |
-| cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent — redirected |
+| cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent — no PR yet |
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala — no PR yet |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella — PR #383 BLOCKED 68/100 |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
@@ -167,6 +168,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | When |
 |----|-------|------|
+| #382 | feat(cf-3qt.10): sofa-beds PLP /shop/sofa-beds | 11:47 UTC |
 | #352–#367 | WCAG + dark mode wave (14 PRs) | 05:41–08:4x UTC |
 | #368 | E2E checkout fixture-mode smoke | 08:55 UTC |
 | #1120 | Delivery zone distance calc | 09:02 UTC |
@@ -194,4 +196,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · PR #382 ❌ · PR #383 BLOCK 68/100 · godfrey+morgott escalated ×2*
+*Cron: 1709bbed · Next refresh ~10 min · #382 MERGED · #384 PASS awaiting checkboxes · #386 TS fix · blaidd free*
