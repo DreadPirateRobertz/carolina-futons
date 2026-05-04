@@ -1,5 +1,6 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:00 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:10 MT**
+⚠️ GitHub API unreachable this cycle — PR CI states from last successful poll (21:00 MT)
 
 ---
 
@@ -36,13 +37,13 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Design a Room | ⚠️ TEXT ONLY — miquella building room scene (cf-c0dh) |
 | Home scroll crash | ❌ BUG — crashes at page bottom, 3 errors (cf-d3ho) |
 | Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
-| LivingSky height fix | ✅ PR #341 ALL GREEN — ready to merge |
+| LivingSky height fix | ✅ PR #341 MERGED 01:44 UTC — prod deploy triggered |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
-## CF Open PRs (carolina-futons / Velo)
+## CF Open PRs (carolina-futons / Velo) — last polled 21:00 MT
 
 | PR | Title | CI |
 |----|-------|----|
@@ -53,11 +54,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
-## CFW Open PRs (carolina-futons-web / Next.js)
+## CFW Open PRs (carolina-futons-web / Next.js) — last polled 21:00 MT
 
 | PR | Title | CI |
 |----|-------|----|
-| #341 | fix(cf-d3ho): LivingSky full height restore | ✅ GREEN — merge ready |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -89,7 +89,6 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **LivingSky height fix** | ✅ PR #341 green — awaiting merge |
 | **Home scroll crash** | cf-d3ho P1 — morgott investigating |
 | **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
 | **Design a Room plain** | cf-c0dh P1 — miquella in progress |
