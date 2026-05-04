@@ -1,6 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:10 MT**
-⚠️ GitHub API unreachable this cycle — PR CI states from last successful poll (21:00 MT)
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 21:20 MT**
 
 ---
 
@@ -29,21 +28,20 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Feature | Status |
 |---------|--------|
-| LivingSky header | ✅ LIVE — pink/blue/teal sky gradient on all pages |
+| LivingSky header | ✅ LIVE + height fix merged (#341) |
 | Footer illustration | ✅ LIVE — night mountain scene |
 | About page illustration | ✅ LIVE — v2 botanical ink art |
 | Gift Cards /gift-cards | ✅ LIVE — "coming soon" placeholder |
 | PLP /shop/futon-frames | ✅ LIVE — 17 products |
-| Design a Room | ⚠️ TEXT ONLY — miquella building room scene (cf-c0dh) |
-| Home scroll crash | ❌ BUG — crashes at page bottom, 3 errors (cf-d3ho) |
+| Design a Room | ⚠️ TEXT ONLY — rennala on it (cf-c0dh) |
+| Home scroll crash | ❌ BUG — millicent investigating (cf-d3ho) |
 | Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
-| LivingSky height fix | ✅ PR #341 MERGED 01:44 UTC — prod deploy triggered |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
-## CF Open PRs (carolina-futons / Velo) — last polled 21:00 MT
+## CF Open PRs (carolina-futons / Velo)
 
 | PR | Title | CI |
 |----|-------|----|
@@ -54,10 +52,11 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
-## CFW Open PRs (carolina-futons-web / Next.js) — last polled 21:00 MT
+## CFW Open PRs (carolina-futons-web / Next.js)
 
 | PR | Title | CI |
 |----|-------|----|
+| #342 | test(cf-3qt.4): FAQ/GIH/Videos smoke tests | ✅ GREEN — merge ready |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -76,10 +75,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | blaidd | Phase 4 content pages (About/FAQ/Contact/GIH) | cf-3qt.4 |
 | godfrey | PDP Financing BNPL | cf-10fx |
 | radahn | /sustainability CMS wiring | cf-0s4l |
-| rennala | Sitemap 404 fix | cf-rb07 |
-| millicent | Illustration wiring — v1/v2/v3 sub-pages | cf-tyuk |
-| morgott | Home page scroll crash investigation | cf-d3ho |
-| miquella | Design a Room — futon-in-room visual | cf-c0dh |
+| rennala | Design a Room — futon-in-room visual | cf-c0dh |
+| millicent | Home page scroll crash investigation | cf-d3ho |
+| miquella | — (reassigned cf-c0dh to rennala) | — |
+| morgott | — (reassigned cf-d3ho to millicent) | — |
 
 **Queued:** cf-nbu4 (sale lightbox session gate) → radahn after cf-0s4l
 
@@ -89,9 +88,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **Home scroll crash** | cf-d3ho P1 — morgott investigating |
+| **Home scroll crash** | cf-d3ho P1 — millicent investigating |
+| **Design a Room plain** | cf-c0dh P1 — rennala in progress |
 | **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
-| **Design a Room plain** | cf-c0dh P1 — miquella in progress |
 | **Velo #1125** | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates |
 | **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
@@ -106,8 +105,8 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-10fx | P1 | PDP Financing / BNPL | godfrey |
 | cf-d3hc | P1 | PDP Financing / BNPL (Afterpay, Affirm) | — |
 | cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
-| cf-c0dh | P1 | Design a Room — futon-in-room visual | miquella |
-| cf-d3ho | P1 | Home page scroll crash | morgott |
+| cf-c0dh | P1 | Design a Room — futon-in-room visual | rennala |
+| cf-d3ho | P1 | Home page scroll crash | millicent |
 | cf-c77s | P1 | E2E auto emails + challenges + rewards | — |
 | cf-eihx | P1 | CFW shipping tier system | — |
 | cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
