@@ -734,14 +734,17 @@ export const getBackInStockSection = webMethod(Permissions.Anyone, _getBackInSto
 
 // ── Full Email Template Generators ──────────────────────────────────
 
-const EMAIL_FOOTER = `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:32px;border-top:1px solid #e0e0e0;">
+function buildEmailFooter(unsubscribeUrl) {
+  const unsubHref = unsubscribeUrl || `${SITE_URL}/unsubscribe`;
+  return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:32px;border-top:1px solid #e0e0e0;">
   <tr><td style="padding:16px 0;font-family:Arial,sans-serif;font-size:12px;color:#999;text-align:center;">
     Carolina Futons · 120 4th Avenue West · Hendersonville, NC 28792<br/>
-    <a href="${SITE_URL}/unsubscribe" style="color:#999;text-decoration:underline;">unsubscribe</a> · <a href="${SITE_URL}/email-preferences" style="color:#999;text-decoration:underline;">email preferences</a>
+    <a href="${unsubHref}" style="color:#999;text-decoration:underline;">unsubscribe</a> · <a href="${SITE_URL}/email-preferences" style="color:#999;text-decoration:underline;">email preferences</a>
   </td></tr>
 </table>`;
+}
 
-function wrapEmailHtml(title, bodyContent) {
+function wrapEmailHtml(title, bodyContent, unsubscribeUrl) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -760,7 +763,7 @@ function wrapEmailHtml(title, bodyContent) {
 ${bodyContent}
       </td></tr>
       <tr><td style="padding:0 20px 20px;">
-${EMAIL_FOOTER}
+${buildEmailFooter(unsubscribeUrl)}
       </td></tr>
     </table>
   </td></tr>

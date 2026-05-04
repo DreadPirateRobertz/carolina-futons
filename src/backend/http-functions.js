@@ -9,7 +9,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact } from 'backend/emailAutomation.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
@@ -32,6 +32,7 @@ import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
 import { subscribeToNewsletter } from 'backend/newsletterService.web';
+import { verifyUnsubToken } from 'backend/utils/unsubToken';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -102,6 +103,67 @@ export function get_health(request) {
 // CORS preflight for /_functions/health.
 export function options_health(request) {
   return response(corsPreflight(request));
+}
+
+// One-click unsubscribe endpoint (CAN-SPAM / GDPR List-Unsubscribe).
+// URL: GET https://www.carolinafutons.com/_functions/unsubscribe?token=<JWT>
+// Token is HMAC-SHA256 signed with the UNSUB_TOKEN_SECRET Wix secret.
+// CF-r9tf
+export async function get_unsubscribe(request) {
+  const token = request?.query?.token || '';
+  if (!token) {
+    return badRequest({
+      body: _unsubHtml('Invalid link', 'This unsubscribe link is missing or invalid.'),
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+
+  let secret;
+  try {
+    secret = await getSecret('UNSUB_TOKEN_SECRET');
+  } catch {
+    return serverError({
+      body: _unsubHtml('Error', 'Something went wrong. Please try again.'),
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+
+  const decoded = await verifyUnsubToken(token, secret);
+  if (!decoded) {
+    return badRequest({
+      body: _unsubHtml('Invalid link', 'This unsubscribe link is invalid or has expired. Links are valid for 30 days.'),
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+
+  try {
+    await unsubscribeContact(decoded.email, decoded.seq);
+    return ok({
+      body: _unsubHtml(
+        'You\'ve been unsubscribed',
+        `<strong>${decoded.email}</strong> has been removed from our mailing list. ` +
+        `You won't receive any more ${decoded.seq === 'all' ? '' : decoded.seq + ' '}emails from us.<br/><br/>` +
+        `Changed your mind? <a href="https://www.carolinafutons.com/account/preferences">Manage email preferences</a>.`,
+      ),
+      headers: { 'Content-Type': 'text/html' },
+    });
+  } catch {
+    return serverError({
+      body: _unsubHtml('Error', 'We couldn\'t process your request. Please try again or contact us.'),
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+}
+
+function _unsubHtml(heading, message) {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${heading} — Carolina Futons</title>
+<style>body{margin:0;padding:40px 20px;font-family:Arial,sans-serif;background:#f5f5f5;color:#333;}
+.box{max-width:480px;margin:0 auto;background:#fff;border-radius:6px;padding:32px;text-align:center;}
+h1{font-family:Georgia,serif;color:${colors.espresso};font-size:24px;margin:0 0 16px;}
+p{line-height:1.6;color:#555;}a{color:${colors.espresso};}</style></head>
+<body><div class="box"><h1>${heading}</h1><p>${message}</p></div></body></html>`;
 }
 
 // Dynamic product sitemap for SEO
@@ -2834,5 +2896,50 @@ export async function post_notifyMe(request) {
 }
 
 export function options_notifyMe(request) {
+  return response(corsPreflight(request));
+}
+
+/**
+ * @function post_unsubscribe
+ * @route POST /_functions/unsubscribe
+ * JSON API variant for front-end / List-Unsubscribe-Post header compliance.
+ * Body: { token: string }  — same HMAC token as the GET endpoint.
+ */
+export async function post_unsubscribe(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      body = JSON.parse(await request.body.text());
+    } catch {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const token = typeof body.token === 'string' ? body.token : '';
+    if (!token) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Token is required' }), headers: JSON_HEADERS });
+    }
+
+    let secret;
+    try {
+      secret = await getSecret('UNSUB_TOKEN_SECRET');
+    } catch {
+      return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+    }
+
+    const decoded = await verifyUnsubToken(token, secret);
+    if (!decoded) {
+      return badRequest({ body: JSON.stringify({ success: false, error: 'invalid-token' }), headers: JSON_HEADERS });
+    }
+
+    await unsubscribeContact(decoded.email, decoded.seq);
+    return ok({ body: JSON.stringify({ success: true, email: decoded.email }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('[unsubscribe] post_unsubscribe error:', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_unsubscribe(request) {
   return response(corsPreflight(request));
 }
