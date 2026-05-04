@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:29 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:45 MT**
 
 ---
 
@@ -63,8 +63,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #414 | chore(design-migration): final illustrations/ cleanup | ⏳ CI | radahn — refinery pending CI |
-| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ⏳ CI | blaidd — refinery pending CI |
+| #414 | chore(design-migration): final illustrations/ cleanup | ✅ CI | ❌ BLOCK 63/100 — delete orphan contact-hero.svg |
+| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ✅ CI | ❌ BLOCK 58/100 — 4 fixes: skip desc, silent return×2, locator, dupes |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -84,13 +84,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-3qt.8.15 — illustrations cleanup, PR #414 CI | ⏳ CI |
-| blaidd | cf-3qt.8.13 — Wave-2 E2E spec, PR #413 CI | ⏳ CI |
-| godfrey | IDLE — cf-3qt.8.11 ✅ complete | ⚡ needs bead |
-| miquella | IDLE — cf-3qt.8.12 ✅ complete | ⚡ needs bead |
-| millicent | IDLE — cf-3qt.8.14 ✅ complete | ⚡ needs bead |
-| rennala | IDLE — cf-3qt.8.9 ✅ complete | ⚡ needs bead |
-| morgott | IDLE — cf-3qt.8.6 ✅ complete | ⚡ needs bead |
+| radahn | PR #414 BLOCK — delete orphan contact-hero.svg, re-push | 🔧 fixing |
+| blaidd | PR #413 BLOCK — 4 fixes (skip desc, silent return×2, locator, dupes) | 🔧 fixing |
+| millicent | cf-3qt.16 — animate MascotFooterDivider in Footer | 🔧 dispatched |
+| morgott | cf-3qt.17 — homepage product grid animal mascot spots | 🔧 dispatched |
+| rennala | next bead assigned via bd ready | 🔧 dispatched |
+| godfrey | confirming cf-3qt.8.11 closed, then next bead | ⏳ |
+| miquella | confirming cf-3qt.8.12 closed, then next bead | ⏳ |
 
 ---
 
