@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 22:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:05 MT**
 
 ---
 
@@ -18,7 +18,7 @@ cfW Server Action → POST https://www.carolinafutons.com/_functions/<endpoint>
 Active: `trackCustomEvent` ✅ `sampleRequests` ✅ `notifyMe` ✅ `deliveryZone` ✅ `contactSubmissions` ⚠️ (prod sync pending) `crossRigEventReceiver` ✅
 
 ### Cross-Rig (Mobile ↔ cfW)
-Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concurrently. CROSS_RIG_SECRET: **Vercel Production ✅ + Wix Staging ✅ + Mobile ✅** (dallas confirmed). DNS cutover pending cf-cb9s — §5 order-lookup 501 still open.
+Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix Staging ✅**. CFW_API_URL in EAS = `https://carolina-futons-web.vercel.app` (update to carolinafutons.com at DNS cutover). DNS cutover pending cf-cb9s.
 
 ---
 
@@ -28,31 +28,31 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Feature | Status |
 |---------|--------|
-| LivingHero header | ✅ MERGED #347 — bears live (porch day + stargazing night) |
-| Footer white circles | ✅ FIXED — STARS SVG removed from LivingFooterBg (direct to main) |
+| LivingHero header | ✅ MERGED #347 — bears live |
+| LivingHero day→night flash | ✅ FIXED — !mounted guard on all 4 phase opacities (33cbe6e, main) |
+| Footer white circles | ✅ FIXED — STARS SVG removed |
 | Theme previews A/B/C/D | ✅ LIVE — /theme-a /theme-b /theme-c /theme-d |
 | Design a Room | ✅ MERGED #343 |
 | Auth dead-end redirect | ✅ MERGED #348 |
 | /dashboard/profile | ✅ MERGED #349 |
 | Sale lightbox session gate | ✅ MERGED Velo #1134 |
 | PDP Financing (BNPL) | ✅ MERGED #279 |
+| Font contrast audit | ⏳ miquella (cf-tu3q) — Playwright audit in progress |
 | SEO+analytics | ⏳ cf-3qt.7 in progress (radahn) |
-| Cart fixture preview | ⏳ PR #350 pending CI |
 
-**carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
+**carolinafutons.com still = Wix.** cfW on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
-## Vercel Env Actions (Stilgar directive)
+## Vercel Env (Stilgar directive — all done)
 
 | Env Var | Status |
 |---------|--------|
-| WIX_CLIENT_ID_HEADLESS (prod) | ✅ SWAPPED → cb591c8e live prod value |
-| SMTP_HOST/PORT/USER/PASS (prod) | ✅ Already set (8d ago) |
-| CROSS_RIG_SECRET (prod) | ✅ Already set (2h ago) |
-| EAS CROSS_RIG_SECRET + CFW_API_URL | ⏳ Dallas pinged — CFW_API_URL value TBD |
-
-**Redeploy needed** to pick up WIX_CLIENT_ID_HEADLESS update on Production.
+| WIX_CLIENT_ID_HEADLESS (prod) | ✅ Swapped → cb591c8e live prod value |
+| SMTP_HOST/PORT/USER/PASS (prod) | ✅ Set |
+| CROSS_RIG_SECRET (prod) | ✅ Set |
+| EAS CROSS_RIG_SECRET | ✅ Set (dallas confirmed) |
+| EAS CFW_API_URL | ✅ Set = https://carolina-futons-web.vercel.app |
 
 ---
 
@@ -60,10 +60,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail (test 20+22) |
-| #1130 | chore(deps): dev-deps bump | **HOLD** ✅ pass |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail |
+| #1130 | chore(deps): dev-deps bump | **HOLD** ✅ |
 | #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail (test 20+22) |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
 
 ---
 
@@ -71,11 +71,11 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #350 | feat(cf-9izd): seeded fixture products for cart QA | ✅ Vercel pass (lint pending) |
-| #331 | feat(cf-4bhw): Gift Registry | ❌ fail — uncrewed |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail → rennala (cf-agzh) |
-| #299 | fix(cf-urbq): dark mode font contrast | ✅ Vercel pass (lint clear or pending) |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail — uncrewed |
+| #350 | feat(cf-9izd): fixture products for cart QA | ⏳ pending → millicent |
+| #331 | feat(cf-4bhw): Gift Registry | ❌ fail → rennala (cf-yhep) |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ⏳ CI re-running (rennala fixed) |
+| #299 | fix(cf-urbq): dark mode font contrast | ⏳ CI pending (morgott fixed) |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail → morgott (cf-sk49) |
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail → godfrey (cf-arfx) |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
@@ -86,12 +86,12 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Crew | Current Task | Bead |
 |------|-------------|------|
 | radahn | SEO+analytics — redirects, GA4, pixels, JSON-LD, OG, sitemap | cf-3qt.7 |
-| rennala | Fix PR #319 lint/typecheck (2D room planner) | cf-agzh |
-| morgott | Fix PR #299 lint/typecheck (dark mode contrast) | cf-xu9g |
-| godfrey | Fix PR #281 lint/typecheck (Add to Compare) | cf-arfx |
 | blaidd | Wire unwired illustrations (BotanicalFooterDivider + 4 PLP) | cf-sb0i |
-| millicent | Standing by — bd ready | — |
-| miquella | CFW shipping tier system | cf-eihx |
+| godfrey | Fix PR #281 lint (Add to Compare) | cf-arfx |
+| miquella | Playwright font-contrast audit (light + dark mode) | cf-tu3q |
+| rennala | Fix PR #331 lint (Gift Registry) | cf-yhep |
+| morgott | Fix PR #291 lint (PdpSizeGuide) | cf-sk49 |
+| millicent | PR #350 check + merge if green | cf-3ya6 |
 
 ---
 
@@ -99,15 +99,14 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **PR #331 #291** | Gift Registry + PdpSizeGuide — uncrewed lint fixes |
-| **EAS CFW_API_URL** | Dallas coordinating — CFW_API_URL value for EAS secrets |
-| **Vercel prod redeploy** | Needed to pick up new WIX_CLIENT_ID_HEADLESS |
-| **Theme pick** | /theme-a /theme-b /theme-c /theme-d live — Stilgar to choose |
-| **Velo #1125** | Codecov-only fail — admin merge eligible? |
+| **Font contrast** | cf-tu3q/miquella — audit in progress, beads to follow |
+| **Theme pick** | /theme-a–d live — Stilgar to choose |
+| **Velo #1125** | Codecov-only — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
-| **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
-| **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501. Dallas holding. |
+| **contactSubmissions 404** | Awaiting Stilgar DNS clearance |
+| **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501 |
 | **v3 cabin/reading/falls/fog** | No CFW components — need Stilgar page direction |
+| **Vercel prod redeploy** | Needed to activate new WIX_CLIENT_ID_HEADLESS |
 
 ---
 
@@ -115,15 +114,15 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.7 | P1 | SEO+analytics (redirects, GA4, pixels, schema, OG, sitemap) | radahn |
-| cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
-| cf-agzh | P2 | Fix PR #319 lint errors (2D room planner) | rennala |
-| cf-xu9g | P2 | Fix PR #299 lint errors (dark mode) | morgott |
-| cf-arfx | P2 | Fix PR #281 lint errors (Add to Compare) | godfrey |
-| cf-sb0i | P2 | Wire unwired illustrations (footer divider + 4 PLP) | blaidd |
-| cf-0s4l | P3 | /sustainability — wire Wix CMS | miquella |
-
-**Outside bd:** cf-eihx/miquella
+| cf-3qt.7 | P1 | SEO+analytics | radahn |
+| cf-sb0i | P2 | Wire unwired illustrations | blaidd |
+| cf-arfx | P2 | Fix PR #281 lint (Add to Compare) | godfrey |
+| cf-tu3q | P2 | Font contrast Playwright audit | miquella |
+| cf-yhep | P2 | Fix PR #331 lint (Gift Registry) | rennala |
+| cf-sk49 | P2 | Fix PR #291 lint (PdpSizeGuide) | morgott |
+| cf-3ya6 | P2 | PR #350 check + merge | millicent |
+| cf-9t70 | P1 | /swatch-request — Wix CMS pending | — |
+| cf-0s4l | P3 | /sustainability CMS | miquella |
 
 ---
 
@@ -131,7 +130,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Repo | Schedule | State |
 |------|---------|-------|
 | carolina-futons | `0 6 * * *` | ✅ Running |
-| carolina-futons-web | `0 6 * * *` | ✅ Fixed |
+| carolina-futons-web | `0 6 * * *` | ✅ Running |
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
