@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:27 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 18:23 MT**
 
 ---
 
@@ -31,6 +31,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #325 | WCAG AA contrast fixes (via #315 ancestry) | CLOSED — on main |
 | #327 | **fix(header): LivingSky backdrop removed** | 00:15 UTC |
 | #328 | **feat(cf-shop-mascot): animated bear/deer/fox/owl category cards** | 00:15 UTC |
+| #275 | fix(cf-p7la): sticky add-to-cart cart persistence | merged this session |
 
 **Vercel deploys from main — changes now live on Vercel preview URL.**
 
@@ -51,30 +52,31 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ## CFW Open PRs (carolina-futons-web / Next.js) — Active
 
-| PR | Title | CI |
-|----|-------|----|
-| #329 | feat(cf-8w86): Gift Cards page — /gift-cards route | ❌ fail |
-| #326 | fix(cf-kj8n): prefer VERCEL_PROJECT_PRODUCTION_URL for sitemap base | ❌ fail |
-| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | ❌ fail |
-| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard | ❌ fail |
-| #321 | fix(cf-ac1y): replace stale product slugs in ShopTheRoom | ❌ fail |
-| #320 | feat(cf-kjpy): Local SEO city pages | ❌ fail |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
-| #318 | feat(cf-footer): consolidate footer living illustration | ❌ fail |
-| #317 | fix(cf-m80l): Canby collection slug | ❌ fail |
-| #303 | feat(cf-u7yk): /gift-cards page (older) | ❌ fail |
-| #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
-| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | ❌ fail |
-| #293 | feat(cf-urfn): HomeSaleStrip | ❌ fail |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail |
-| #290 | feat(cf-lqnd): PDP back-in-stock notify me | ⏳ running |
-| #282 | feat(cf-0y1e): PDP Size Guide v2 | ⏳ running |
-| #281 | feat(cf-7axq): Add to Compare | ❌ fail |
-| #278 | feat(cf-c7re): HTTP security headers | ⏳ running |
-| #276 | test(cf-o3bv): CartDrawer+CartPage sentinel | ❌ fail |
-| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ⏳ pending |
+| PR | Title | Mergeable | CI |
+|----|-------|-----------|-----|
+| #329 | feat(cf-8w86): Gift Cards page — /gift-cards route | ✅ | ❌ fail |
+| #326 | fix(cf-kj8n): prefer VERCEL_PROJECT_PRODUCTION_URL for sitemap base | ✅ | ❌ fail |
+| #323 | feat(cf-7dfv): wire PdpFinancing into PDP | ✅ | ❌ fail |
+| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard | ✅ | ❌ fail |
+| #321 | fix(cf-ac1y): replace stale product slugs in ShopTheRoom | ✅ | ❌ fail |
+| #320 | feat(cf-kjpy): Local SEO city pages | ✅ | ❌ fail |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ✅ | ❌ fail |
+| #318 | feat(cf-footer): consolidate footer living illustration | ✅ | ❌ fail |
+| #317 | fix(cf-m80l): Canby collection slug | ✅ | ❌ fail |
+| #303 | feat(cf-u7yk): /gift-cards page (older) | ✅ | ❌ fail |
+| #299 | fix(cf-urbq): dark mode font contrast | ⚠️ CONFLICTING | ❌ fail |
+| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch | ✅ | ❌ fail |
+| #293 | feat(cf-urfn): HomeSaleStrip | ⚠️ CONFLICTING | ❌ fail |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ⚠️ CONFLICTING | ❌ fail |
+| #290 | feat(cf-lqnd): PDP back-in-stock notify me | ✅ | ⏳ running |
+| #282 | feat(cf-0y1e): PDP Size Guide v2 | ✅ | ⏳ pending |
+| #281 | feat(cf-7axq): Add to Compare | ⚠️ CONFLICTING | ❌ fail |
+| #278 | feat(cf-c7re): HTTP security headers | ✅ | ❌ fail |
+| #276 | test(cf-o3bv): CartDrawer+CartPage sentinel | ✅ | ⏳ pending |
+| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ | ✅ pass |
 
 **Note:** Most ❌ are E2E flakiness (Wix API timeout from CI runner). Unit tests pass. Merging via --admin for unit-green PRs where E2E failures are systemic.
+**CONFLICTING PRs (#299, #293, #291, #281):** Need rebase on updated main — queued for this session.
 
 ---
 
@@ -85,7 +87,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | godfrey | BNPL financing UI (PR #323) | cf-7dfv |
 | radahn | Local SEO city pages (PR #320) | cf-kjpy |
 | rennala | useTimeOfDay RAF fix (PR #322) | cf-j6ub |
-| blaidd | **cf-eihx shipping tiers DONE** ✓ → reassign next P1 | cf-eihx done |
+| blaidd | **cf-eihx shipping tiers DONE** ✓ → reassign cf-lxbe (P1 image audit) | cf-eihx→cf-lxbe |
 | millicent | Image audit (84/88 done, 4 unresolvable) | cf-lxbe |
 | morgott | **cf-3i8j room planner DONE** ✓ → reassign next P1 | cf-3i8j |
 | miquella | ShopTheRoom slug fix (PR #321) | cf-ac1y |
@@ -97,13 +99,13 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Issue | Status |
 |-------|--------|
 | **E2E flakiness** | PLP tests timeout on Wix API — merging with --admin for unit-test-green PRs |
-| **P0 cart regression** (cf-cfol/cf-p7la) | PRs #275/#276 in CI — monitor |
+| **P0 cart regression** (cf-cfol/cf-p7la) | PR #275 merged; cf-cfol still open |
 | **contactSubmissions 404** | Velo endpoint exists; stage3-velo sync pending |
 | **DNS flip** (cf-cb9s) | Stilgar manual §1-§3; §5 order-lookup 501 |
-| **blaidd reassign** | cf-eihx done; pick next P1 bead |
+| **blaidd reassign** | cf-eihx done; assigning cf-lxbe (image audit P1) |
 | **morgott reassign** | cf-3i8j PR #319 submitted; pick next P1 bead |
-| **dallas cross-rig** | hq-wisp-2rz0h — /contact 404 + DNS timeline; Vercel+Velo endpoint coordination |
-| **All crew IDLE** | Watchdog alert — 8 crew showing idle, need fresh bead assignments |
+| **dallas cross-rig** | hq-wisp-2rz0h — /contact 404 + DNS timeline; replied this session |
+| **CONFLICTING PRs** | #299, #293, #291, #281 — need rebase on updated main |
 
 ---
 
@@ -126,10 +128,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-9fd8 | P2 | PDP back-in-stock notify me |
 | cf-9izd | P2 | cf-3qt cart QA: seeded-fixture preview deployment |
 | cf-e92v | P2 | /care and /care-warranty routes missing |
-| cf-whye | P2 | /sustainability page |
+| cf-4bhw | P2 | cfW Gift Registry page — /registry route |
+| cf-rymw | P2 | cf-dark-mode — site-wide dark mode option |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS |
 | cf-992s | P3 | wilderness-log-futon-frame 404 |
-| cf-a2qs | P3 | /room-planner ↔ /design-a-room slug fix |
 | cf-d1fu | P3 | /community-gallery page |
 | cf-rb07 | P3 | SEO: /sitemap.xml 404 on prod |
 
