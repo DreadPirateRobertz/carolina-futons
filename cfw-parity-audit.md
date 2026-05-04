@@ -13,11 +13,11 @@
 
 | Category | Present | Partial | Missing |
 |---|---|---|---|
-| PDP Features | 9 | 5 | 6 |
+| PDP Features | 11 | 3 | 6 |
 | Home Page Sections | 6 | 1 | 9 |
 | Sitewide / Layout | 5 | 2 | 3 |
-| Standalone Pages | 14 | 3 | 11 |
-| **TOTAL** | **34** | **11** | **29** |
+| Standalone Pages | 15 | 2 | 11 |
+| **TOTAL** | **38** | **7** | **29** |
 
 **Top-10 missing filed as beads** — see §Beads Filed below.
 
@@ -43,10 +43,10 @@
 | 14 | 360° Spin Viewer | ❌ MISSING | `ProductSpinViewer.tsx` component built and tested but **not imported/rendered** in `products/[slug]/page.tsx`. No spin image set is fetched from Wix. Wix has `viewer360Section` + `viewer360Embed` wired via `initProduct360Viewer`. |
 | 15 | Financing / BNPL section | ❌ MISSING | No `PdpFinancing` component. No Afterpay / Affirm messaging anywhere on PDP. Wix has `ProductFinancing.js` with term pills, monthly calc, Afterpay 4-payment breakdown, and modal. |
 | 16 | Size Guide + Room Fit checker | ❌ MISSING | No `SizeGuide` / `ProductSizeGuide` component. No room-fit inputs on PDP. Wix has `ProductSizeGuide.js` with dimension grid, imperial/metric toggle, SVG diagrams, and room-fit checker (W × D inputs → clearance verdict). |
-| 17 | Product Info Modal (care guide + dimensions) | ❌ MISSING | No `ProductInfoModal` component. Wix has `careGuideBtn`, `dimensionsModal`, `checkRoomFitBtn`, `fitResult`. |
+| 17 | Product Info Modal (care guide + dimensions) | ✅ PRESENT | `ProductInfoModal.tsx` — care guide + dimensions tab, imported and rendered in `src/app/products/[slug]/page.tsx`. |
 | 18 | Back-in-stock notify me | ❌ MISSING | No `notifyMeSection` / `notifyMeInput` / `notifyMeBtn` on PDP. When stock is 0 cfw shows "Out of stock" badge only. Wix wires `notifyMeSection` + `inventoryService.web.js`. |
-| 19 | CMS-driven product badge | ⚠️ PARTIAL | `PdpStockBadge.tsx` covers stock-state badges. Missing: CMS `ProductBadges` collection — "New", "Bestseller", "CF+ Exclusive", "Sale" from Wix `badgeService.web.js`. |
-| 20 | Compare — Add from PDP/PLP | ⚠️ PARTIAL | `/compare` page with `CompareTable` exists and works (URL-param driven). **Missing: "Add to Compare" button on PDP or PLP product cards.** Users cannot discover the compare page through the UI. |
+| 19 | CMS-driven product badge | ✅ PRESENT | `PdpProductBadges.tsx` — "New", "Bestseller", "Sale", "CF+ Exclusive" from Wix `ProductBadges` CMS collection. Rendered on PDP and PLP product cards (PR #433). |
+| 20 | Compare — Add from PDP/PLP | ✅ PRESENT | `AddToCompareButton.tsx` wired in `ProductCard.tsx` (PLP) and `PdpInteractive.tsx` (PDP). Compare is fully discoverable from product surfaces. |
 
 ---
 
@@ -100,7 +100,7 @@
 | 50 | Blog | ✅ PRESENT | `/blog/[slug]` with full post rendering. |
 | 51 | Community Gallery (view) | ✅ PRESENT | `/community-gallery` — masonry photo grid from Wix Data. |
 | 52 | Community Gallery (submit photo / UGC) | ❌ MISSING | No photo upload / submission form on community gallery page or anywhere. Wix has `/submit-photo-review` page + `UGC Gallery.js` with `submitSection`. |
-| 53 | Compare page | ⚠️ PARTIAL | `/compare` page + `CompareTable` works. But compare is URL-only — no "Add to Compare" button on PDP or product cards surfaces it. |
+| 53 | Compare page | ✅ PRESENT | `/compare` page + `CompareTable` + `AddToCompareButton` on PDP and PLP cards. Fully surfaced via UI entry points. |
 | 54 | Wishlist (member) + share | ✅ PRESENT | `/wishlist/[token]` share view + member dashboard `/dashboard/wishlist`. |
 | 55 | Design a Room / Room Planner | ⚠️ PARTIAL | `/design-a-room` with `RoomPlannerCanvas` (futon footprint on grid). Wix has full `/room-planner` with drag-drop room setup, presets, product palette, and canvas save/share. cfw's is a simpler consultation/calculator page. |
 | 56 | Guides / Topic Cluster | ✅ PRESENT | `/guides/[slug]` topic cluster pages. |
@@ -154,7 +154,7 @@
 
 1. **Fabric swatch picker** — ⚠️ PARTIAL. Grid + family filter + "Order free swatches" link all present. Missing: actual swatch photos. This is the most visible gap Stilgar flagged.
 2. **Free fabric sample request** — ✅ PRESENT. `/swatch-request` page fully functional.
-3. **Compare drawer** — ⚠️ PARTIAL. Page works via URL, no UI entry points on PDP/PLP.
+3. **Compare drawer** — ✅ PRESENT. `AddToCompareButton` wired on PDP and PLP cards; compare page fully discoverable.
 4. **Wishlist share** — ✅ PRESENT. `/wishlist/[token]` shared view.
 5. **Swatch promo section** — ❌ MISSING (home).
 6. **Custom-build configurator** — ❌ MISSING. Not present on Wix either; no evidence in guide.
