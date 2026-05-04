@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:23 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:28 MT**
 
 ---
 
@@ -88,12 +88,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
-| blaidd | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
-| godfrey | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
-| miquella | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
-| morgott | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
-| millicent | Idle — no leaf beads; awaiting mayor convoy routing | ⏳ |
+| blaidd | cf-3qt.8.1 — Vercel Pro upgrade prep (upgrade-runbook.md) | 🔧 |
+| godfrey | cf-3qt.8.2 — DNS record staging (dns-staging.md) | 🔧 |
+| miquella | cf-3qt.8.3 — Monitoring setup (BetterUptime/UptimeRobot) | 🔧 |
+| millicent | cf-3qt.8.4 — Rollback runbook (rollback-runbook.md) | 🔧 |
+| rennala | cf-3qt.8.5 — Smoke test plan (smoke-test-plan.md) | 🔧 |
+| morgott | cf-3qt.9.1 — Wix retirement plan (retirement-plan.md) | 🔧 |
 
 ---
 
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · CFW queue CLEAN · All parity beads CLOSED · 6 crew idle — zero local beads, awaiting mayor convoy routing · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · CFW queue CLEAN · 6 new cf-3qt.8/9 prep beads created + dispatched · All 7 crew active · P0 deferred Stilgar manual*
