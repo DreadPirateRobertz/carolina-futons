@@ -34,6 +34,7 @@ import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
 import { getSecret } from 'wix-secrets-backend';
 import { subscribeToNewsletter } from 'backend/newsletterService.web';
 import { verifyUnsubToken } from 'backend/utils/unsubToken';
+import { submitSwatchRequest } from 'backend/swatchRequest.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -2970,5 +2971,82 @@ export async function get_deliveryZone(request) {
 }
 
 export function options_deliveryZone(request) {
+  return response(corsPreflight(request));
+}
+
+// ── /_functions/sampleRequests ────────────────────────────────────────────
+//
+// HTTP wrapper around swatchRequest.submitSwatchRequest so the Next.js
+// frontend can submit fabric swatch requests without exposing Velo webMethod
+// internals. Rate-limited per email (5/hour) to prevent sample abuse.
+//
+// Called by: Next.js Server Action in src/app/actions/swatch-request.ts
+// CORS allowlist: prod Vercel domain, project-scoped preview URLs, localhost.
+
+/**
+ * @function post_sampleRequests
+ * @route POST /_functions/sampleRequests
+ * @param {string[]} request.body.json.swatchIds    — 1–5 swatch _id values
+ * @param {Object}   request.body.json.contactInfo  — shipping address fields
+ * @param {string}   [request.body.json.productSlug] — optional referring product
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { success: true, requestId } on success;
+ *   400 { success: false, error } on validation;
+ *   429 { success: false, error } on per-email rate limit (5/hour);
+ *   500 { success: false, error } on backend failure.
+ */
+export async function post_sampleRequests(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (parseErr) {
+      console.warn('[sampleRequests] body parse failed:', parseErr?.message ?? parseErr);
+      return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    // Rate-limit by email (5 requests/hour) — swatch samples have material cost
+    const email = (body?.contactInfo?.email || '').toLowerCase().trim();
+    if (email) {
+      const { checkRateLimit } = await import('backend/utils/rateLimit');
+      const rl = await checkRateLimit('SwatchRequestRateLimit', email, { max: 5, windowMs: 3_600_000 });
+      if (!rl.allowed) {
+        return response({
+          status: 429,
+          body: JSON.stringify({ success: false, error: 'Too many requests — please try again later.' }),
+          headers: JSON_HEADERS,
+        });
+      }
+    }
+
+    const result = await submitSwatchRequest({
+      swatchIds: body.swatchIds,
+      contactInfo: body.contactInfo,
+      productSlug: body.productSlug,
+    });
+
+    if (!result) {
+      console.error('[sampleRequests] submitSwatchRequest resolved without a result envelope');
+      return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+    }
+
+    if (result.success !== true) {
+      const message = result.error ?? '';
+      return badRequest({
+        body: JSON.stringify({ success: false, error: message || 'Submission rejected' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    return ok({ body: JSON.stringify({ success: true, requestId: result.requestId }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (sampleRequests):', err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+export function options_sampleRequests(request) {
   return response(corsPreflight(request));
 }
