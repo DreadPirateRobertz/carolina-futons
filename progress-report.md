@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:09 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:14 MT**
 
 ---
 
@@ -67,8 +67,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #410 | test(on-sale): discountedPrice edge cases | ⏳ CI | rennala — refinery queued when green |
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **CONFLICT** — 93/100 PASS, morgott rebase still pending |
+| #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -89,11 +88,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | PR #410 open — on-sale edge tests, CI running | ⏳ |
+| rennala | PR #410 MERGED ✅ (97/100 on-sale edge tests) — idle, convoy candidate | ✅ |
 | blaidd | Idle — convoy candidate | ✅ |
 | godfrey | Idle — convoy candidate | ✅ |
 | miquella | Idle — convoy candidate | ✅ |
-| morgott | PR #399 93/100 PASS — rebase onto main, push to clear CONFLICT | ⚠️ REBASE |
+| morgott | PR #399 closed (superseded) — cf-2idp done via #389+#394 on main | ✅ |
 | millicent | Idle — convoy candidate | ✅ |
 
 ---
@@ -135,6 +134,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #410 | test(on-sale): discountedPrice edge cases | 97/100 | 17:13 UTC |
 | #389 | feat(cf-3qt.12): /shop/sale PLP | 84/100 | 16:52 UTC |
 | #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
 | #390 | test(cf-3qt.14): /search E2E smoke | 88/100 | 16:43 UTC |
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP live · #410 CI running · #399 93/100 PASS CONFLICT · P0 OAuth blocked Playwright MCP down · 4 crew convoy-ready*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Sale PLP + on-sale edge tests live · CFW queue CLEAN — only HOLD deps + Stilgar-blocked · 6 crew convoy-ready · P0 OAuth blocked Playwright MCP down*
