@@ -6,6 +6,7 @@ import {
   __getUpdated,
   __setInsertError,
   __setUpdateError,
+  __setQueryError,
   __onInsert,
 } from './__mocks__/wix-data.js';
 import { __reset as resetMembers, __setMember } from './__mocks__/wix-members-backend.js';
@@ -49,8 +50,8 @@ function makeRequest(overrides = {}) {
     submittedCondition: 'good',
     itemAge: 3,
     photoUrls: '[]',
-    estimatedCreditMin: 67,
-    estimatedCreditMax: 83,
+    estimatedCreditMin: 65,
+    estimatedCreditMax: 85,
     status: 'pending',
     confirmedCondition: null,
     issuedCreditAmount: null,
@@ -509,7 +510,8 @@ describe('confirmTradeIn', () => {
   });
 
   it('returns success with reconciliation message when Stage 3 update fails', async () => {
-    // Stage 1 already ran (status=confirmed), Stage 2 will succeed, Stage 3 will fail.
+    // status='confirmed' causes Stage 1 to skip (pending guard), so the single
+    // __setUpdateError fires on the Stage 3 write, not an earlier update.
     // Credit was issued — must return success so staff know the credit went out.
     __seed(COLLECTION, [makeRequest({ _id: 'req-1', memberId: 'member-1', status: 'confirmed' })]);
     __setUpdateError(COLLECTION, new Error('CMS timeout'));
@@ -608,5 +610,77 @@ describe('rejectTradeIn', () => {
     expect(result.success).toBe(true);
     const updated = __getUpdated(COLLECTION);
     expect(updated[0].staffNotes).toBe('');
+  });
+
+  it('returns error for already-credited request', async () => {
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', status: 'credited' })]);
+    const result = await rejectTradeIn('req-1');
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/already credited/i);
+  });
+
+  it('returns error for already-confirmed request', async () => {
+    __seed(COLLECTION, [makeRequest({ _id: 'req-1', status: 'confirmed' })]);
+    const result = await rejectTradeIn('req-1');
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/already confirmed/i);
+  });
+});
+
+// ── confirmTradeIn — status overwrite guard ────────────────────────
+
+describe('confirmTradeIn — status overwrite guard', () => {
+  beforeEach(() => { __reset(); resetMembers(); vi.clearAllMocks(); });
+
+  it('cannot reject a confirmed record that already has storeCreditId', async () => {
+    __seed(COLLECTION, [makeRequest({
+      _id: 'req-1', memberId: 'member-1', status: 'confirmed',
+      storeCreditId: 'credit-already-issued',
+    })]);
+    const result = await confirmTradeIn('req-1', 'poor'); // ineligible condition
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/cannot reject|already issued/i);
+    const updated = __getUpdated(COLLECTION);
+    expect(updated.every(u => u.status !== 'rejected')).toBe(true);
+  });
+});
+
+// ── Rate limit fail-open ───────────────────────────────────────────
+
+describe('submitTradeInRequest — rate limit fail-open', () => {
+  beforeEach(() => { __reset(); resetMembers(); vi.clearAllMocks(); });
+
+  it('allows submission when checkRateLimit throws (fail-open policy)', async () => {
+    checkRateLimit.mockRejectedValueOnce(new Error('DB unavailable'));
+    const result = await submitTradeInRequest({
+      firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com',
+      itemType: 'frame', submittedCondition: 'good',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+// ── DB error paths ─────────────────────────────────────────────────
+
+describe('getTradeInRequests — DB error', () => {
+  beforeEach(() => { __reset(); resetMembers(); });
+
+  it('returns failure when CMS query throws', async () => {
+    __setQueryError(COLLECTION, new Error('DB timeout'));
+    const result = await getTradeInRequests();
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/failed to retrieve/i);
+  });
+});
+
+describe('getMyTradeInRequests — DB error', () => {
+  beforeEach(() => { __reset(); resetMembers(); });
+
+  it('returns failure when CMS query throws', async () => {
+    __setMember(makeMember('member-1'));
+    __setQueryError(COLLECTION, new Error('DB timeout'));
+    const result = await getMyTradeInRequests();
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/failed to retrieve/i);
   });
 });

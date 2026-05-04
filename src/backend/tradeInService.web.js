@@ -88,9 +88,11 @@ async function getMember() {
   try {
     return await currentMember.getMember();
   } catch (err) {
-    // Guest checkout — null is the expected return for unauthenticated callers.
-    // Log warnings so auth-service failures are distinguishable from genuine guests.
-    console.warn('[tradeInService] getMember failed, treating as guest:', err);
+    // getMember() throws for unauthenticated callers and on transient auth-service
+    // failures. Both are treated as guest; logging makes session-service outages
+    // visible in error monitoring rather than silently producing guest records for
+    // authenticated members on service degradation.
+    logError('[tradeInService] getMember failed, treating as guest:', err);
     return null;
   }
 }
@@ -182,11 +184,16 @@ export const submitTradeInRequest = webMethod(
       if (!validateEmail(email)) return { success: false, message: 'Valid email address is required.' };
 
       // Rate limit: 3 submissions per email per 24h.
-      // Uses a read-then-insert pattern; a unique index on `key` in TradeInRateLimit
-      // (see @setup) causes a second concurrent insert to throw — checkRateLimit
-      // fails open on any DB error, so the race results in a missed increment
-      // rather than a false block.
-      const rl = await checkRateLimit(RL_COLLECTION, email, { max: RL_MAX, windowMs: RL_WINDOW_MS });
+      // checkRateLimit reads the count then updates or inserts. The unique index on
+      // `key` in TradeInRateLimit prevents duplicate rows but does not make the
+      // read-then-update path atomic. Fail-open: a checkRateLimit throw allows the
+      // submission through so a rate-limit DB outage does not silently block customers.
+      let rl;
+      try {
+        rl = await checkRateLimit(RL_COLLECTION, email, { max: RL_MAX, windowMs: RL_WINDOW_MS });
+      } catch (_) {
+        rl = { allowed: true };
+      }
       if (!rl.allowed) {
         return { success: false, message: 'You have submitted too many trade-in requests. Please try again tomorrow.' };
       }
@@ -386,7 +393,14 @@ export const confirmTradeIn = webMethod(
       const baseUpdate = { ...request, confirmedCondition: cond, staffNotes, confirmedAt };
 
       if (!val.eligible) {
-        // Item failed inspection — reject it
+        // Cannot reject a record whose credit was already issued — that would leave
+        // an active store credit pointing at a 'rejected' trade-in.
+        if (request.storeCreditId) {
+          return {
+            success: false,
+            message: `Cannot reject: store credit ${request.storeCreditId} was already issued for this request.`,
+          };
+        }
         await wixData.update(COLLECTION, { ...baseUpdate, status: 'rejected' });
         return {
           success: false,
@@ -397,10 +411,11 @@ export const confirmTradeIn = webMethod(
       const creditAmount = val.baseCredit;
 
       // Stage 1: Write 'confirmed' before issuing credit.
-      // Skipped on retry (status already 'confirmed'). Stage 2 checks
-      // request.storeCreditId to prevent double-issuance on Stage 3 failure.
+      // Skipped on retry (status already 'confirmed'). issuedCreditAmount is written
+      // in Stage 3 only — setting it here before issueStoreCredit runs would overstate
+      // the issued amount if Stage 2 fails.
       if (request.status === 'pending') {
-        await wixData.update(COLLECTION, { ...baseUpdate, status: 'confirmed', issuedCreditAmount: creditAmount });
+        await wixData.update(COLLECTION, { ...baseUpdate, status: 'confirmed' });
       }
 
       // Stage 2: Issue store credit if we have a member ID and haven't already.
