@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:52 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:22 MT**
 
 ---
 
@@ -57,7 +57,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ✅ MERGED (92/100) |
 | Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ✅ MERGED (97/100) |
 | Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
-| Cleanup | Final illustrations/ audit | — | 🔧 radahn in progress |
+| Cleanup | Final illustrations/ audit | cf-3qt.8.15 | 🔧 radahn dispatched |
 
 **All botanical illustrations removed site-wide. v3 mascot/bear scenes wired on all routes.**
 
@@ -67,7 +67,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
+| #412 | feat(cf-3qt.8.6): pre-cutover redirect map | ⏳ IN_PROGRESS | millicent: refinery + merge when CI green |
+| #411 | test(cf-3qt.8.9): Wave 1 post-cutover smoke spec | ⏳ IN_PROGRESS | rennala pushed 4 fixes (17:21 UTC); refinery pending |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -87,13 +88,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| blaidd | cf-3qt.8.8 — SEO metadata audit (seo-audit.md) | 🔧 |
-| godfrey | cf-3qt.8.7 — Lighthouse baseline (lighthouse-baseline.md) | 🔧 |
-| miquella | cf-3qt.8.10 — axe a11y scan (a11y-audit.md) | 🔧 |
-| millicent | Idle — cf-3qt.8.4 ✅ complete | ✅ |
-| rennala | cf-3qt.8.9 — Wave-1 E2E automation (post-cutover-wave1.spec.ts) | 🔧 |
-| morgott | cf-3qt.8.6 — redirect map + next.config.ts PR | 🔧 |
+| radahn | cf-3qt.8.15 — illustrations/ final cleanup + dead CSS | 🔧 dispatched |
+| blaidd | cf-3qt.8.13 — Wave-2 post-cutover E2E spec | 🔧 dispatched |
+| godfrey | cf-3qt.8.11 — Lighthouse baseline real scores | 🔧 dispatched |
+| miquella | cf-3qt.8.12 — axe-core a11y scan real results | 🔧 dispatched |
+| millicent | cf-3qt.8.14 — refinery + merge PR #412 | 🔧 dispatched |
+| rennala | cf-3qt.8.9 — PR #411 Wave-1 E2E (4 fixes pushed, CI pending) | ⏳ CI |
+| morgott | cf-3qt.8.6 — PR #412 redirect map (CI pending) | ⏳ CI |
 
 ---
 
@@ -140,7 +141,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
 | #390 | test(cf-3qt.14): /search E2E smoke | 88/100 | 16:43 UTC |
 | #406 | chore(design-migration): orphan botanical deletions | 95/100 | 16:31 UTC |
-| #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
+| #404 | feat(design-migration-p1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
 | #403 | feat(design-migration): /visit + /design-a-room scenes | 87/100 | 16:26 UTC |
 | #409 | refactor(mascot-palette): V3_NIGHT palette + Bear pose | 97/100 | 16:25 UTC |
 | #407 | feat(design-migration): /guides + /reviews scenes | 92/100 | 16:25 UTC |
@@ -170,4 +171,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-2 sprint active — redirect map/Lighthouse/SEO audit/Wave-1 E2E/a11y scan · ⚠️ Vercel personal account flag for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-3 sprint active — Lighthouse real scores/axe real scan/Wave-2 E2E/redirect-map merge/illustrations cleanup · ⚠️ Vercel personal account flag for Stilgar · P0 deferred Stilgar manual · PR #411+#412 CI pending*
