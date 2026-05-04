@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:19 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:24 MT**
 
 ---
 
@@ -47,9 +47,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Auth catch error surfacing | ✅ MERGED #358 |
 | SEO BlogPosting JSON-LD | ✅ MERGED #352 |
 | Gift Registry /registry | ✅ MERGED #331 |
-| Blog OG + Twitter card | ⏳ PR #355 CLEAN — refinery running |
-| Footer scene alive (cf-qif2) | ⏳ PR #359 CLEAN — refinery running |
-| Add to Compare | ⏳ PR #281 CLEAN — refinery re-checking boxes |
+| Blog OG + Twitter card | ✅ MERGED #355 (06:23 UTC) |
+| Footer scene alive (cf-qif2) | ✅ MERGED #359 (06:23 UTC) |
+| Add to Compare | ✅ MERGED #281 |
+| Dark mode CTA + sustainability | ⏳ PR #362 CLEAN — refinery running |
+| PLP filter labels | ⏳ PR #361 CLEAN — refinery running |
+| Dark mode card wrappers | ⏳ PR #360 UNSTABLE — awaiting CI |
 | **P0: PLP zero products (preview)** | ⚠️ Awaiting Stilgar: Option A (Preview WIX_CLIENT_ID→cb591c8e) or B (USE_FIXTURE=1) |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Needs Wix site publish (Stilgar direct action) |
@@ -82,12 +85,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #361 | fix(cf-af7h): PLP filter labels zinc-500→zinc-600 | ⚠️ UNSTABLE | blaidd — CI running |
+| #362 | fix(cf-ydny,cf-ed89): dark mode CTA + sustainability | ✅ CLEAN | morgott — refinery running |
+| #361 | fix(cf-af7h): PLP filter labels zinc-500→zinc-600 | ✅ CLEAN | blaidd — refinery running |
 | #360 | fix(cf-xbj9): dark:bg-cf-espresso card wrappers | ⚠️ UNSTABLE | godfrey — CI running |
-| #359 | feat(cf-qif2): bear-breathe animation + footer fix | ✅ CLEAN | refinery running |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ⏳ pending | Needs Stilgar ok on approach |
-| #355 | feat(cf-3qt.7): blog OG + Twitter card metadata | ✅ CLEAN | refinery running |
-| #281 | feat(cf-7axq): Add to Compare | ✅ CLEAN | refinery re-checking boxes |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
 ---
@@ -96,13 +97,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #355 fixed → cf-52gi dark mode homepage | ⏳ #355 pending merge |
+| radahn | cf-52gi dark mode homepage cream/sand | 🔧 unblocked — #355 merged |
 | rennala | cf-9t70: /swatch-request Wix CMS pending | ⏳ blocked on CMS collection |
-| blaidd | PR #361 cf-af7h PLP filter labels | 🔧 CI running |
-| godfrey | PR #360 cf-xbj9 dark mode card bg + PR #359 footer | 🔧 CI running |
-| miquella | cf-0s4l: running --provision with WIX_API_KEY | 🔧 unblocked |
-| morgott | cf-ydny + cf-ed89 dark mode CTA + sustainability | 🔧 new |
-| millicent | 🆓 free | — |
+| blaidd | PR #361 cf-af7h PLP filter labels | 🔧 refinery running |
+| godfrey | PR #360 cf-xbj9 dark mode card bg | ⏳ CI unstable |
+| miquella | cf-0s4l: running --provision with WIX_API_KEY | 🔧 in progress |
+| morgott | PR #362 cf-ydny + cf-ed89 | 🔧 refinery running |
+| millicent | cf-ighf light mode charcoal/50 (2 nodes) | 🔧 assigned |
 
 ---
 
@@ -113,7 +114,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **P0: PLP zero products (preview)** | Stilgar env decision needed (Option A vs B) |
 | **contactSubmissions 404** | Stilgar must publish live Wix site |
 | **PR #356** | cf-okwz clipboard approach — Stilgar approval needed |
-| **PR #355** | Refinery running — pending result |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
 | **SENTRY_AUTH_TOKEN** | Stilgar awaiting |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
@@ -126,14 +126,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-xbj9 | P1 | dark:bg-cf-espresso card wrappers (92 nodes) | godfrey PR #360 |
-| cf-qif2 | P1 | Footer bear animation + abs positioning | godfrey PR #359 |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala |
-| cf-52gi | P2 | dark mode homepage cream/sand | radahn (after #355) |
-| cf-ydny | P2 | dark mode CTA token fix | morgott |
-| cf-ed89 | P2 | dark mode /sustainability gray bg | morgott |
+| cf-52gi | P2 | dark mode homepage cream/sand | radahn — unblocked |
 | cf-af7h | P2 | light mode PLP filter labels | blaidd PR #361 |
-| cf-okwz | P3 | EasterEggBear clipboard approach | PR #356 pending |
-| cf-ighf | P3 | light mode charcoal/50 (2 nodes) | unassigned |
+| cf-okwz | P3 | EasterEggBear clipboard approach | PR #356 pending Stilgar |
+| cf-ighf | P3 | light mode charcoal/50 (2 nodes) | millicent |
 | cf-32cy | P3 | dark mode /contact orange (1 node) | unassigned |
 | cf-0s4l | P3 | /sustainability provision | miquella — running now |
 
@@ -156,6 +153,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #1135 | Sustainability CMS collections | 06:06 UTC |
 | #358 | Auth catch error surfacing | 06:11 UTC |
 | #291 | PdpSizeGuide | 06:12 UTC |
+| #281 | Add to Compare | 06:20 UTC |
+| #355 | Blog OG + Twitter card metadata | 06:23 UTC |
+| #359 | Footer bear-breathe animation | 06:23 UTC |
 
 ---
 
