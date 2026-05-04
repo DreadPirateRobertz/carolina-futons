@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:09 MT**
 
 ---
 
@@ -67,7 +67,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **CONFLICT** — 93/100 PASS, morgott rebase needed |
+| #410 | test(on-sale): discountedPrice edge cases | ⏳ CI | rennala — refinery queued when green |
+| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **CONFLICT** — 93/100 PASS, morgott rebase still pending |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -88,12 +89,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
-| rennala | isProductOnSale edge-case unit tests (follow-on from #390) | 🆕 |
-| blaidd | PR #389 MERGED ✅ (84/100 sale PLP) — idle, await next | ✅ |
-| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, await next | ✅ |
-| miquella | PR #403 MERGED ✅ — idle, await next | ✅ |
+| rennala | PR #410 open — on-sale edge tests, CI running | ⏳ |
+| blaidd | Idle — convoy candidate | ✅ |
+| godfrey | Idle — convoy candidate | ✅ |
+| miquella | Idle — convoy candidate | ✅ |
 | morgott | PR #399 93/100 PASS — rebase onto main, push to clear CONFLICT | ⚠️ REBASE |
-| millicent | PRs #405+#409 MERGED ✅ — idle, await next | ✅ |
+| millicent | Idle — convoy candidate | ✅ |
 
 ---
 
@@ -168,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP live · #399 93/100 PASS needs rebase · P0 OAuth blocked (Playwright MCP down — Stilgar manual fix required) · rennala on isProductOnSale edge tests*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP live · #410 CI running · #399 93/100 PASS CONFLICT · P0 OAuth blocked Playwright MCP down · 4 crew convoy-ready*
