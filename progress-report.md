@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 16:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 16:50 MT**
 
 ---
 
@@ -63,16 +63,17 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #438 | feat(cf-l6aj.22): /survey NPS page + server action | ❌ FAIL | rennala — ESLint: unescaped apostrophe SurveyForm.tsx:88 |
-| #437 | feat(cf-l6aj.21): /near/[city] pages added to sitemap | ✅ GREEN | rennala — awaiting merge |
-| #436 | feat(cf-l6aj.8): RecentlyViewedStrip home (11 unit + 1 E2E) | ✅ GREEN | miquella — awaiting merge |
-| #435 | feat(cf-l6aj.4): blog teasers section (9 unit + 4 E2E) | ❌ FAIL | rennala — TS2556 BlogTeasers.test.tsx:10 |
-| #434 | feat(cf-l6aj.9): HomeNewsletterSection inline strip | ✅ GREEN | rennala — awaiting merge |
+| #442 | feat(cf-l6aj.20): Spin Wheel — prize wheel + 24h cookie | ⏳ PENDING | rennala (on hold — opened in violation) |
+| #441 | feat(cf-l6aj.11): MegaMenu hover/focus panel (216 vitest) | ✅ GREEN | blaidd — **MERGE READY** |
+| #440 | feat(cf-l6aj.17): Bundle Builder frame+mattress tiered discount | ✅ GREEN | rennala — awaiting PM review |
+| #439 | feat(cf-l6aj.19): Futon Sommelier 4-question recommender | ✅ GREEN | rennala — awaiting PM review |
+| #438 | feat(cf-l6aj.22): /survey NPS page + server action | ❌ FAIL | rennala — ESLint apostrophe SurveyForm.tsx:88 |
+| #437 | feat(cf-l6aj.21): /near/[city] added to sitemap | ✅ GREEN | rennala — **MERGE READY** |
+| #436 | feat(cf-l6aj.8): RecentlyViewedStrip home (11 unit + 1 E2E) | ✅ GREEN | miquella — **MERGE READY** |
+| #435 | feat(cf-l6aj.4): blog teasers (9 unit + 4 E2E) | ❌ FAIL | rennala — TS2556 BlogTeasers.test.tsx:10 |
+| #434 | feat(cf-l6aj.9): HomeNewsletterSection inline strip | ✅ GREEN | rennala — **MERGE READY** |
 | #433 | feat(cf-l6aj.2): CMS product badges New/Sale/Bestseller/CF+ | ✅ MERGED | 18 session merges |
-| #432 | test(cf-205c): VideoShowcaseStrip E2E smoke (6 tests) | ✅ MERGED | 92/100 |
-| #431 | feat(cf-l6aj.5): SocialFeeds consent-gated IG/TikTok/Pinterest | ✅ MERGED | 89/100 |
-| #430 | feat(cf-l6aj.12): SaleLightbox promo lightbox (23 tests) | ✅ MERGED | 88/100 |
-| Earlier | #415–#429 | ✅ MERGED | see session merges table |
+| Earlier | #415–#432 | ✅ MERGED | 17 PRs |
 | #427 | test(cf-pmdf): MascotCategoryCard reduced-motion E2E | ✅ MERGED | 90/100 |
 | #426 | feat(cf-l6aj.13): PWA install banner + manifest | ✅ MERGED | radahn |
 | #425 | test(cf-3qt.16.3): MascotCategoryCard unit tests | ✅ MERGED | godfrey |
@@ -100,13 +101,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| millicent | cf-l6aj.1.1 — vitest/E2E tests for PdpAlsoBought (PR #429) | 🔧 in progress |
-| morgott | cf-l6aj.14 — Style Quiz Result page (standalone shareable URL) | 🔧 in progress |
-| radahn | cf-l6aj.3 — Home featured products richer cards (quick-view, swatches) | 🔧 in progress |
-| blaidd | cf-l6aj.11 — Sitewide Mega-menu hover panel | 🔧 in progress |
-| rennala | fixing #435 (TS2556) + #438 (ESLint apostrophe) + cf-l6aj.19 Futon Sommelier | ⚠️ 2 CI fails |
+| millicent | robots noindex fix PR + pre-cutover checklist doc | 🔧 dispatched |
+| morgott | cf-l6aj.14 — Style Quiz Result page | 🔧 in progress |
+| radahn | cf-l6aj.3 — richer Featured cards (24/31 tests, 30-60min to PR) | 🔧 in progress |
+| blaidd | PR #441 ✅ merged → next bead | 🔧 awaiting merge |
+| rennala | **ON HOLD** — fix #435 + #438 only; 4th violation (PR #442 opened) | ⛔ suspended |
 | godfrey | cf-j2r7 — recently-viewed PDP rail | 🔧 in progress |
-| miquella | cf-l6aj.23 — parity audit doc refresh; PR #436 ✅ awaiting merge | 🔧 in progress |
+| miquella | cf-l6aj.23 — parity audit doc; PR #436 ✅ merge ready | 🔧 in progress |
 
 ---
 
