@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:26 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:35 MT**
 
 ---
 
@@ -22,12 +22,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ---
 
-## 🔍 PROD VERIFICATION (2026-05-04 00:26 MT)
+## 🔍 PROD STATUS (2026-05-04 00:35 MT)
 
-**Platform Beds prod check:** `/shop/platform-beds` → `e04e89_*` wixstatic images confirmed. Real products rendering. ✅
-**Futon Frames:** `/shop/futon-frames` → confirmed ✅
-**Delivery zone API:** `/api/delivery-zone?zip=28801` → white-glove NC ✅
-**0-products diagnosis:** Preview URL uses WIX_CLIENT_ID=6b4d4894 (staging, no collections). Prod URL uses cb591c8e (working). Preview = P0 blocker. Stilgar decision pending.
+**P0 ROOT CAUSE FOUND:** WIX_CLIENT_ID_HEADLESS env var had trailing `\n` → malformed client ID → Wix SDK auth failure → `getCollectionBySlug` errors → 0 products ALL PLPs.
+
+**FIX DEPLOYED:** `env().trim()` added to src/lib/env.ts (commit 99f71ef, main). Vercel redeploy in progress (~2-4 min).
+
+**Stilgar action needed:** Remove + re-add WIX_CLIENT_ID_HEADLESS in Vercel Dashboard (prod) without trailing newline: `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a`
 
 ---
 
@@ -50,10 +51,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Add to Compare | ✅ MERGED #281 |
 | PLP filter labels (cf-af7h) | ✅ MERGED #361 |
 | Dark mode CTA + sustainability | ✅ MERGED #362 |
-| Dark mode card wrappers (cf-xbj9) | ⏳ PR #363 PENDING CI |
+| **Products loading (ALL PLPs)** | 🔧 FIX DEPLOYING — env.ts trim committed, Vercel building |
+| Dark mode card wrappers (cf-xbj9) | ⛔ PR #363 DO NOT MERGE — 2 inputs missing dark token, QA unchecked |
 | Dark mode homepage (cf-52gi) | ⏳ PR #364 UNSTABLE CI |
 | Light mode charcoal/50 (cf-ighf) | ⏳ millicent in progress |
-| **P0: PLP zero products (preview)** | ⚠️ Awaiting Stilgar: Option A (Preview WIX_CLIENT_ID→cb591c8e) or B (USE_FIXTURE=1) |
+| **P0: PLP zero products (preview)** | ⚠️ Also affected — same root cause. Fix deploying. |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Needs Wix site publish (Stilgar direct action) |
 
@@ -63,8 +65,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Env Var | Status |
 |---------|--------|
-| WIX_CLIENT_ID_HEADLESS (prod) | ✅ cb591c8e — confirmed active on latest build |
-| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — no collections → P0 on preview URL |
+| WIX_CLIENT_ID_HEADLESS (prod) | ⚠️ Has trailing \\n — fix in env.ts deployed; Stilgar should also fix in Vercel Dashboard |
+| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — same trim fix will help; may also need Stilgar to set correct value |
 | SMTP / CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
 | SENTRY_AUTH_TOKEN (EAS) | ⏳ Awaiting Stilgar |
 
@@ -86,7 +88,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | PR | Title | CI | Note |
 |----|-------|----|----|
 | #364 | fix(cf-52gi): dark mode homepage token inversions | ⚠️ UNSTABLE | radahn — awaiting CI |
-| #363 | fix(cf-xbj9): dark mode card bg-white WCAG AA | ⏳ PENDING | godfrey — CI running |
+| #363 | fix(cf-xbj9): dark mode card bg WCAG AA | ⛔ DO NOT MERGE | godfrey — 2 input fixes + QA boxes needed |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Needs Stilgar approach approval |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -97,12 +99,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | PR #364 cf-52gi dark mode homepage | ⏳ CI unstable |
-| rennala | cf-9t70: /swatch-request Wix CMS | ⏳ blocked on Wix CMS collection |
-| blaidd | cf-af7h DONE ✅ | 🆓 free — needs new bead |
-| godfrey | PR #363 cf-xbj9 dark mode cards | ⏳ CI pending |
-| miquella | cf-0s4l: --provision with WIX_API_KEY | 🔧 running |
-| morgott | cf-ydny + cf-ed89 DONE ✅ | 🆓 free — needs new bead |
-| millicent | cf-ighf light mode charcoal/50 | 🔧 in progress |
+| rennala | cf-9t70: /swatch-request Wix CMS | ⏳ blocked on Wix CMS collection (Stilgar) |
+| blaidd | cf-32cy dark mode /contact orange | 🔧 in progress |
+| godfrey | PR #363 cf-xbj9 — fixing 2 inputs + QA | 🔧 rework needed |
+| miquella | cf-0s4l BLOCKED — WIX_API_KEY account mismatch | ⛔ needs Stilgar new API key |
+| morgott | cf-jcta CTA hover dark contrast gap | 🔧 in progress |
+| millicent | cf-ighf light mode charcoal/50 (2 nodes) | 🔧 in progress |
 
 ---
 
@@ -110,10 +112,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: PLP zero products (preview)** | Stilgar env decision needed (Option A vs B) |
+| **P0: Products = 0** | Fix deploying — env.ts trim pushed to main. Stilgar also fix env var in Vercel Dashboard. |
+| **cf-0s4l BLOCKED** | Stilgar must create WIX_API_KEY under account ed8a7220 in Wix Dashboard → Settings → API Keys |
 | **contactSubmissions 404** | Stilgar must publish live Wix site |
 | **PR #356** | cf-okwz clipboard approach — Stilgar approval needed |
-| **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending (Stilgar) |
+| **cf-9t70 swatch CMS** | Stilgar create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Stilgar awaiting |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending |
@@ -124,21 +127,20 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-xbj9 | P1 | dark:bg-cf-cream card wrappers (92+ nodes) | godfrey PR #363 |
+| cf-xbj9 | P1 | dark:bg-cf-cream card wrappers | godfrey PR #363 rework |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
 | cf-52gi | P2 | dark mode homepage cream/sand | radahn PR #364 |
+| cf-32cy | P3 | dark mode /contact orange (1 node) | blaidd |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-ighf | P3 | light mode charcoal/50 (2 nodes) | millicent |
-| cf-0s4l | P3 | /sustainability provision | miquella |
-| cf-jcta | P3 | CTA hover dark contrast gap (follow-up cf-ydny) | unassigned |
-| cf-32cy | P3 | dark mode /contact orange (1 node) | unassigned |
+| cf-jcta | P3 | CTA hover dark contrast gap | morgott |
+| cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
 ---
 
-## Shipping Test Report ✅ (sent to mayor 00:26 MT)
+## Shipping Test Report ✅ (resent to mayor 00:34 MT)
 
 56/56 PASS · Parcel <70 lbs · LTL 70–499 lbs · Freight ≥500 lbs or palletized · White-glove NC only
-Delivery windows: Parcel 5–7d, LTL 7–14d, Freight 10–21d, White-glove 10–21d
 
 ---
 
@@ -158,6 +160,7 @@ Delivery windows: Parcel 5–7d, LTL 7–14d, Freight 10–21d, White-glove 10�
 | #359 | Footer bear-breathe animation | 06:23 UTC |
 | #361 | PLP filter labels zinc-600 | 06:25 UTC |
 | #362 | Dark mode CTA + sustainability | 06:26 UTC |
+| env.ts trim fix | P0 products loading fix | 06:33 UTC |
 
 ---
 
