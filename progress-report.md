@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:52 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:53 MT**
 
 ---
 
@@ -95,8 +95,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel build fail | morgott fixing |
-| #368 | test(e2e): checkout smoke — fixture-mode | ✅ CLEAN | refinery conf 87 — radahn fixing 2 issues |
+| #371 | feat(cf-3qt.2.8): PLP Murphy Cabinet Beds | ⏳ PENDING | miquella |
+| #370 | feat(cf-3qt.2): PLP Futon Frames | ❌ Vercel build fail | morgott redirected to fix |
+| #369 | feat(cf-3qt.2.6): Home page collections grid | ⏳ PENDING | godfrey |
+| #368 | test(e2e): checkout smoke — fixture-mode | ⏳ PENDING | radahn fixing 2 refinery issues |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -106,13 +108,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | PR #368 — fixing 2 refinery issues (server action + OOS test) | 🔧 |
-| rennala | PR #368 review (redirected from duplicate spec) | 🔧 |
+| radahn | PR #368 — fixing 2 refinery issues | 🔧 |
+| rennala | PR #368 review + cf-9t70 blocked | 🔧 |
 | blaidd | CF #1120 CI fix (delivery zone) | 🔧 |
-| godfrey | cf-3qt.2.14 PLP E2E fixture specs | 🔧 |
-| miquella | cf-3qt.2.Z secondary pages audit | 🔧 |
-| morgott | PR #370 Vercel build fix (PLP Futon Frames) | 🔧 |
-| millicent | fix/cf-3qt-fixture-cart-order — cart.ts + getOrder fixture branches | 🔧 |
+| godfrey | PR #369 Home page + cf-3qt.2.14 E2E specs | 🔧 |
+| miquella | PR #371 Murphy Beds + cf-3qt.2.8 | 🔧 |
+| morgott | PR #370 Vercel fix → cf-3qt.2.13 smoke tests | 🔧 |
+| millicent | fix/cf-3qt-fixture-cart-order (cart.ts + getOrder) | 🔧 |
 
 ---
 
