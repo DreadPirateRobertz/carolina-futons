@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 09:48 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:06 MT**
 
 ---
 
@@ -38,7 +38,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Checkout route (cfW) | ✅ 3/3 PASS |
 | Full cfutons vitest suite | ✅ **40,158/40,158 PASS** |
 | E2E checkout (real payment) | ⛔ BLOCKED — P0 must resolve first; Stilgar enable Wix sandbox payment |
-| E2E fixture-mode smoke test | ✅ PR #368 + #377 MERGED |
+| E2E fixture-mode smoke test | ✅ PRs #368 + #377 MERGED |
 
 ---
 
@@ -74,6 +74,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 | Footer living animation | ✅ MERGED #381 (valley mist particles) |
+| /shop/sale PLP + Mesa discountedPrice | ✅ MERGED #389 + #394 |
+| data-slot=category-card + E2E | ✅ MERGED #395 |
+| Rewards E2E scaffold | ✅ MERGED #396 |
+| Email routes + verify spec | ✅ MERGED #397 |
+| Bear image (BotanicalFooterDivider) | 🔧 PR #398 CI running |
+| **Design migration plan** | ✅ PLAN COMPLETE — crew dispatched |
 
 ---
 
@@ -101,13 +107,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
+| #399 | fix(cf-2idp): Mesa sale fixture | ⏳ RUNNING | morgott, needs CI confirm |
+| #398 | fix(cf-bear-img): remove BotanicalFooterDivider | ⏳ RUNNING | melania, Stilgar directive |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version, CI breaking |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** — review before merge |
-| #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 77/100 — form submission test + data-slot fix (godfrey) |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | **BLOCK** 90/100 — formatted.discountedPrice + checkboxes (blaidd) |
-| #388 | test(cf-3qt.13): E2E smoke /shop index hub | ✅ MERGED | 12:39 UTC — refinery 86/100 |
-| #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ MERGED | 12:28 UTC — refinery 88/100 |
-| #383 | feat(cf-s44d): email trigger E2E | ✅ MERGED | 15:42 UTC — refinery 84/100 |
+| #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 77/100 — fix in progress (godfrey) |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace real GA4/Meta IDs |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -118,13 +122,28 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-gjhu — Rewards E2E (challenges + earning + redemption) | 🔧 |
-| rennala | cf-nujp — Email verification E2E (cart-recovery/welcome/notifyMe/swatch) | 🔧 |
-| blaidd | cf-3qt.12 — PR #389 BLOCK 90/100 — formatted.discountedPrice + checkboxes (fix sent) | ⚠️ |
+| radahn | **Design migration — quick wins**: delete orphaned botanical components (`BlueRidgeTimeline`, `MountainSkyline`, `FooterMountainDivider`, `StargazingHero` in illustrations/) + final cleanup pass | 🆕 |
+| rennala | **Design migration — /about**: replace `BotanicalMountainSkyline` + `BotanicalTimeline` + `TeamPortrait` with v3-01-porch.svg scene + character vignettes | 🆕 |
+| blaidd | **Design migration — /contact + /press**: replace `ContactHero` with v3-06-fog.svg scene | 🆕 |
 | godfrey | cf-3qt.14 — PR #390 BLOCK 77/100 — form submit test + data-slot (fix sent) | ⚠️ |
-| miquella | cf-s44d ✅ MERGED — free for next bead | ⏳ |
-| morgott | cf-m07g — Checkout real-payment E2E spec (prep now, blocked Stilgar sandbox) | 🔧 |
-| millicent | cf-8xw1 — data-slot=category-card + shop click-through nav test | 🔧 |
+| miquella | **Design migration — /visit + /design-a-room**: v3-03-cabin.svg + v3-02-stargazing.svg | 🆕 |
+| morgott | cf-2idp PR #399 CI running → then design migration /guides + /reviews (v3-04-reading + v3-05-falls) | 🔧 |
+| millicent | **Design migration — Phase 0 + Phase 3**: wire MascotFooterDivider into layout, then empty states (search/cart/404) | 🆕 |
+
+---
+
+## Design Migration Plan
+
+**Stilgar direct order: 2026-05-04.** Full plan in `crew/melania/design-migration-plan.md`.
+
+| Phase | Scope | Owner | Status |
+|-------|-------|-------|--------|
+| Quick wins | Delete orphaned botanical components | radahn | 🆕 |
+| Phase 0 | Wire MascotFooterDivider into layout | millicent | 🆕 |
+| Phase 1 | PLPs category cards (verify, not replace) | godfrey (after #390) | ⏳ |
+| Phase 2 | /about, /contact, /press, /visit, /guides, /reviews, /design-a-room | rennala/blaidd/miquella/morgott | 🆕 |
+| Phase 3 | Empty states + 404 | millicent | ⏳ (after Phase 0) |
+| Cleanup | Final illustrations/ audit + delete | radahn | ⏳ (last) |
 
 ---
 
@@ -137,10 +156,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **cf-0s4l** | Wix Dashboard: create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
 | **PR #356** | Approve clipboard approach |
-| **PR #376** | ⚠️ MORNING FLAG: Replace real GA4/Meta Pixel IDs with placeholder strings |
-| **cf-3qt.7 live verify** | GA4 realtime check + Pixel Helper + Rich Results Test (needs TikTok/Pinterest IDs too) |
+| **PR #376** | Replace real GA4/Meta Pixel IDs with placeholder strings |
+| **cf-3qt.7 live verify** | GA4 realtime check + Pixel Helper + Rich Results Test |
 | **GSC sitemap** | Deferred to Phase 8 — no action now |
-| **SwatchRequests CMS** | cf-9t70 code MERGED — create SwatchRequests collection in Wix Dashboard to activate swatch-request page |
+| **SwatchRequests CMS** | Create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
 | **DNS flip** (cf-cb9s) | §1-§3 pending |
@@ -151,11 +170,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
-| cf-gjhu | P2 | E2E: Reward system challenges + earning + redemption | radahn |
-| cf-m07g | P2 | E2E: Checkout with real Wix sandbox payment (spec prep) | morgott — blocked Stilgar sandbox |
-| cf-nujp | P2 | E2E: All test emails verified (cart-recovery/welcome/notifyMe/swatch) | rennala |
-| cf-8xw1 | P2 | feat: data-slot=category-card + shop click-through nav test | millicent |
+| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK |
+| cf-gjhu | P2 | E2E: Reward system → PR #396 MERGED, UI phases pending | radahn (design migration next) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -170,6 +186,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | When |
 |----|-------|------|
+| #397 | feat(cf-nujp): email routes + verify spec (87/100) | 10:05 UTC |
+| #396 | test(cf-gjhu): rewards E2E scaffold | 10:05 UTC |
+| #395 | feat(cf-8xw1): data-slot=category-card (97/100) | 10:05 UTC |
+| #394 | fix(cf-3qt.12): Mesa discountedPrice hotfix | ~09:55 UTC |
+| #389 | feat(cf-3qt.12): /shop/sale PLP (100/100) | ~09:50 UTC |
 | #383 | feat(cf-s44d): email trigger E2E — cart recovery + welcome | 15:42 UTC |
 | #388 | test(cf-3qt.13): E2E smoke /shop index hub | 12:39 UTC |
 | #387 | fix(cf-uaoz): stabilize plp.spec.ts timeouts + selectors | 12:28 UTC |
@@ -192,6 +213,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | 11:0x UTC |
 | #380 | feat(cf-3qt.3): Playwright auth fixture + checkout-smoke fix | 11:21 UTC |
 | #381 | feat(cf-45uk): valley mist particles LivingFooterScene | 11:22 UTC |
+| #393 | fix(cf-m07g): checkout real-payment E2E (gated) | 15:49 UTC |
 
 ---
 
@@ -203,4 +225,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 353ab5c0 · Next refresh ~10 min · 6 beads active · #389 BLOCK 90/100; #390 BLOCK 77/100; fixes sent; miquella+millicent redeployed; #392 eslint FAIL HOLD*
+*Cron: 353ab5c0 · Next refresh ~10 min · Design migration ACTIVE — 6 crew dispatched · #390 BLOCK 77/100 godfrey fix in progress · #398/#399 CI running*
