@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 04:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 04:58 MT**
 
 ---
 
@@ -68,9 +68,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Fixture cart + order (E2E) | ✅ MERGED #374 |
 | PLP E2E smoke (5 routes) | ✅ MERGED #372 |
 | Render audit /registry /gift-cards | ✅ MERGED #375 |
-| **Hamburger menu z-index** | 🔧 godfrey fixing (z-[55]/z-[56] in HeaderMobileMenu.tsx) |
+| **Hamburger menu z-index** | ✅ MERGED #378 (refinery 92/100 PASS) |
+| **PLP Futon Frames getCollectionPlp** | ✅ MERGED #370 (refinery PASS after rebase) |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
+| Footer living animation | 🔧 radahn — cf-45uk |
 
 ---
 
@@ -89,7 +91,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | blaidd investigating — stale run vs second failure |
 | #1130 | chore(deps): dev-deps bump | **HOLD** ✅ | |
 
 ---
@@ -98,10 +99,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real prod IDs in .env.example — Stilgar: replace with placeholders |
-| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott |
-| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | ✅ CLEAN | final refinery running |
-| #370 | feat(cf-3qt.2): PLP Futon Frames | ✅ Vercel | **BLOCK**: divergent plp.ts/ProductCard/page.tsx — morgott to rebase + keep SortSelect only |
+| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | refinery in-flight |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar must replace with placeholders |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott fixing |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -111,12 +111,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | #377 MERGED ✅ — standing by | ⏳ |
-| rennala | cf-3qt.3 Playwright auth fixture (storageState + globalSetup) | 🔧 |
-| blaidd | PR #1133 CI investigation | 🔧 |
-| godfrey | Hamburger z-index fix — HeaderMobileMenu.tsx 2 lines | 🔧 |
-| miquella | PR #371 final refinery pending — CI ✅ | ⏳ |
-| morgott | PR #370 rebase (SortSelect only) + PR #373 Vercel fix | 🔧 |
+| radahn | cf-45uk — footer living animation (LivingFooter.tsx) | 🔧 |
+| rennala | cf-3qt.3 Playwright auth fixture — PR #380 open, Vercel ✅ | ⏳ refinery |
+| blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
+| godfrey | #378 MERGED ✅ — standing by | ⏳ |
+| miquella | #371 MERGED ✅ — standing by | ⏳ |
+| morgott | PR #373 Vercel fix — search/compare/wishlist smoke | 🔧 |
 | millicent | #1125 MERGED ✅ — standing by | ⏳ |
 
 ---
@@ -143,7 +143,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-3qt.3 | P1 | Account — Playwright auth fixture (storageState + globalSetup) | rennala |
+| cf-3qt.7 | P1 | SEO + analytics env vars | PR #376 BLOCK |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
+| cf-45uk | P2 | Footer living animation distinct from header | radahn |
+| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | blaidd |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -167,6 +170,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #374 | Fixture mode addToCart + getOrder | 09:2x UTC |
 | #1125 | sampleRequests Velo endpoint | 10:47 UTC |
 | #377 | E2E inline fixture check + OOS assert | 10:50 UTC |
+| #1133 | feat(cf-y2l3): trade-in/trade-up program | 10:5x UTC |
+| #378 | fix(cf-hmb1): hamburger z-index (z-[55]/z-[56]) | 11:0x UTC |
+| #370 | feat(cf-3qt.2): PLP Futon Frames getCollectionPlp | 11:0x UTC |
+| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | earlier |
 
 ---
 
