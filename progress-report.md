@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:33 MT**
 
 ---
 
@@ -61,7 +61,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Dark mode homepage | ✅ MERGED #364 |
 | **Products loading (ALL PLPs)** | ❌ 0 products — Wix OAuth not connected |
 | Dark mode card wrappers | ⛔ PR #363 BLOCKED (3rd review) — blaidd fixing 2 inputs |
-| CTA hover + /contact dark | ⏳ PR #365 CLEAN — visual QA boxes needed (conf 72) |
+| CTA hover + /contact dark | ✅ MERGED #365 |
 | Light mode charcoal/50 | ⏳ cf-ighf millicent in progress |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
@@ -94,7 +94,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #365 | fix(cf-jcta+cf-32cy): CTA hover + /contact dark | ✅ CLEAN | conf 72 — morgott visual QA in progress |
+| ~~#365~~ | fix(cf-jcta+cf-32cy): CTA hover + /contact dark | ✅ MERGED 02:33 MT | |
 | #363 | fix(cf-xbj9): dark mode card wrappers | ✅ CLEAN | ⛔ 4th cycle — blaidd fixing 2 inputs |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -110,7 +110,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | blaidd | PR #363 cf-xbj9 — fixing 2 inputs + QA boxes | 🔧 took over from godfrey |
 | godfrey | 🆓 free (off PR #363) | — |
 | miquella | cf-0s4l BLOCKED — account mismatch | ⛔ Stilgar API key needed |
-| morgott | PR #365 visual QA | 🔧 checking boxes |
+| morgott | 🆓 free (#365 merged) | — |
 | millicent | cf-ighf light mode charcoal/50 | 🔧 in progress |
 
 ---
@@ -140,7 +140,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-ighf | P3 | light mode charcoal/50 (2 nodes) | millicent |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
-| cf-jcta | P3 | CTA hover dark WCAG | morgott PR #365 |
 
 ---
 
