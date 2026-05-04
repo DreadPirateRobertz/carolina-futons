@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:12 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:31 MT**
 
 ---
 
@@ -63,10 +63,16 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #420 | test(cf-3qt.8.27): /shop/sale PLP E2E (6 fixture tests) | ⏳ CI | rennala — 92/100 pending merge |
-| #419 | test(cf-3qt.8.26): redirect map unit tests (8 tests) | ⏳ CI | blaidd — awaiting merge |
-| #418 | fix(cf-q5km): MascotCategoryCard useReducedMotion guard | ✅ CI | ❌ BLOCK — missing MascotCategoryCard.tsx, needs rebase |
-| #417 | test(cf-3qt.16.2): homepage MascotCategoryCard E2E | ✅ MERGED | 88/100 |
+| #427 | test(cf-pmdf): MascotCategoryCard reduced-motion E2E | ✅ MERGED | miquella — 90/100 |
+| #426 | feat(cf-l6aj.13): PWA install banner + manifest | ✅ MERGED | radahn — 5-agent pre-reviewed |
+| #425 | test(cf-3qt.16.3): MascotCategoryCard unit tests | ✅ MERGED | godfrey |
+| #424 | feat(cf-l6aj.7): ContinueShoppingStrip + 13 tests | ✅ MERGED | blaidd — 91/100 |
+| #423 | fix(cf-q5km): MascotCategoryCard useReducedMotion | ✅ MERGED | miquella — 96/100 |
+| #422 | test(cf-3qt.16.4): Footer 22 integration tests | ✅ MERGED | millicent — 93/100 |
+| #421 | test(cf-3qt.8.28): /about v3 E2E | ✅ MERGED | rennala — 91/100 |
+| #420 | test(cf-3qt.8.27): /shop/sale PLP E2E | ✅ MERGED | rennala — 92/100 |
+| #419 | test(cf-3qt.8.26): redirect map unit tests | ✅ MERGED | blaidd — 93/100 |
+| #417 | test(cf-3qt.16.2): homepage MascotCategoryCard E2E | ✅ MERGED | godfrey — 88/100 |
 | #415 | feat(cf-footer-anim): footer mascot animation | ✅ MERGED | 91/100 — Footer.tsx + motion + useReducedMotion |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CI | **HOLD** |
@@ -87,13 +93,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| millicent | cf-3qt.16.1 ✅ Footer animation unit tests — 5 pass | ⚡ needs bead |
+| millicent | cf-l6aj.1 — PDP FBT / Also Bought repeater | 🔧 dispatched |
 | morgott | wix-retirement-checklist.md — cf-3qt.9 prep doc | 🔧 dispatched |
-| radahn | cf-l6aj — parity audit gaps → bead backlog | 🔧 dispatched |
-| blaidd | cf-3qt.8.26 ✅ PR #419 redirect map tests (8 tests) | 🔧 CI pending |
-| rennala | cf-3qt.8.27 ✅ PR #420 CI pending · cf-3qt.8.28 — /about E2E | 🔧 dispatched |
-| godfrey | cf-3qt.16.3 — MascotCategoryCard unit tests | 🔧 dispatched |
-| miquella | cf-q5km — PR #418 BLOCK: rebase + add MascotCategoryCard.tsx fix | 🔧 fixing |
+| radahn | cf-q90y.1 — delete 9 orphan illustration components (unblocked) | 🔧 in progress |
+| blaidd | cf-l6aj.11 — Sitewide Mega-menu hover panel | 🔧 dispatched |
+| rennala | cf-l6aj.5 — Home social feeds (IG/TikTok/Pinterest) | 🔧 dispatched |
+| godfrey | cf-j2r7 — recently-viewed rail on PDP | 🔧 dispatched |
+| miquella | cf-l6aj.12 — Sitewide Promo Lightbox | 🔧 dispatched |
 
 ---
 
@@ -120,11 +126,14 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
-| cf-q5km | P2 | PR #418 BLOCK: miquella rebase + add MascotCategoryCard.tsx | 🔧 fixing |
-| cf-q90y.1 | P2 | Delete 9 orphan illustration components — radahn | 🔧 in progress |
-| cf-3qt.16.3 | P2 | MascotCategoryCard unit tests — godfrey | 🔧 in progress |
-| cf-3qt.8.27 | P2 | /shop/sale PLP E2E — rennala | 🔧 in progress |
-| cf-l6aj | P2 | Parity audit gap → bead backlog — radahn | 🔧 in progress |
+| cf-l6aj.11 | P2 | Mega-menu hover panel — blaidd | 🔧 in progress |
+| cf-l6aj.12 | P2 | Promo Lightbox — miquella | 🔧 in progress |
+| cf-l6aj.1 | P2 | PDP FBT repeater — millicent | 🔧 in progress |
+| cf-l6aj.5 | P2 | Home social feeds — rennala | 🔧 in progress |
+| cf-j2r7 | P2 | PDP recently-viewed rail — godfrey | 🔧 in progress |
+| cf-q90y.1 | P2 | Delete 9 orphan illustrations — radahn | 🔧 in progress |
+| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
+| cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -134,6 +143,16 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #427 | test(cf-pmdf): MascotCategoryCard reduced-motion E2E | 90/100 | 15:31 MT |
+| #426 | feat(cf-l6aj.13): PWA install banner + manifest | pre-reviewed | 15:24 MT |
+| #425 | test(cf-3qt.16.3): MascotCategoryCard unit tests | — | 15:24 MT |
+| #424 | feat(cf-l6aj.7): ContinueShoppingStrip + 13 tests | 91/100 | 15:31 MT |
+| #423 | fix(cf-q5km): MascotCategoryCard useReducedMotion | 96/100 | 15:24 MT |
+| #422 | test(cf-3qt.16.4): Footer 22 integration tests | 93/100 | 15:21 MT |
+| #421 | test(cf-3qt.8.28): /about v3 E2E | 91/100 | 15:15 MT |
+| #420 | test(cf-3qt.8.27): /shop/sale PLP E2E | 92/100 | 15:12 MT |
+| #419 | test(cf-3qt.8.26): redirect map unit tests | 93/100 | 15:12 MT |
+| #417 | test(cf-3qt.16.2): homepage MascotCategoryCard E2E | 88/100 | 15:08 MT |
 | #415 | feat(cf-footer-anim): footer mascot animation (Footer.tsx + motion) | 91/100 | 14:58 MT |
 | #416 | feat(cf-home-animals): homepage mascot category cards | 90/100 | 14:41 MT |
 | #414 | chore(design-migration): illustrations cleanup + 4 SVGs | 95/100 | 14:41 MT |
@@ -176,4 +195,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#417 (7 PRs) · #418 BLOCKED (miquella rebase+fix) · #419 CI pending · 6 crew active · radahn botanical audit: 9 orphans found → cf-q90y.1 deletion bead · Theme routes pre-exist (#252/#216/#255/#344) · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #415–#427 (12 PRs, excl #418 closed) · 7 crew active on parity-gap sprint (cf-l6aj) · 23-bead parity backlog from radahn audit · radahn unblocking cf-q90y.1 orphan deletion · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
