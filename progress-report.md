@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:40 MT**
 
 ---
 
@@ -36,6 +36,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Design a Room | ⚠️ TEXT ONLY — miquella building room scene (cf-c0dh) |
 | Home scroll crash | ❌ BUG — crashes at page bottom, 3 errors (cf-d3ho) |
 | Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
+| LivingSky height fix | ✅ PR #341 opened — h-full restore on both wrapper divs |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
@@ -45,10 +46,10 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail |
-| #1130 | chore(deps): dev-deps bump | **HOLD** |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ❌ fail (codecov only) |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail (test 20+22) |
+| #1130 | chore(deps): dev-deps bump | **HOLD** ✅ pass |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail (test 20+22) |
 
 ---
 
@@ -56,6 +57,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
+| #341 | fix(cf-d3ho): LivingSky full height restore | ⏳ queued |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -63,7 +65,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
-**All 5 failing = lint/typecheck errors. E2E skipped on PR builds.**
+**#331/#319/#299/#291/#281 all failing = lint/typecheck errors. E2E skipped on PR builds.**
 
 ---
 
@@ -87,6 +89,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
+| **LivingSky height collapse** | P0 — PR #341 queued CI |
 | **Home scroll crash** | cf-d3ho P1 — morgott investigating |
 | **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
 | **Design a Room plain** | cf-c0dh P1 — miquella in progress |
