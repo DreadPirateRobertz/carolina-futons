@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:30 MT**
 
 ---
 
@@ -22,22 +22,22 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
-## 🔍 STILGAR SITE AUDIT — Vercel URL (2026-05-03 20:15 MT)
+## 🔍 STILGAR SITE AUDIT — Vercel URL (audited 20:15 MT)
 
-**Audited:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
+**URL:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| LivingSky header | ✅ LIVE | Pink/blue/teal sky gradient visible all pages |
-| Footer illustration | ✅ LIVE | Dark blue-green night mountain scene |
-| About page illustration | ✅ LIVE | v2 botanical ink mountain art in hero bg |
-| Gift Cards /gift-cards | ✅ LIVE | "Coming soon" placeholder with proper layout |
-| PLP /shop/futon-frames | ✅ LIVE | 17 products, header + sub-nav correct |
-| Design a Room | ⚠️ TEXT ONLY | No room visualization — cf-c0dh in progress |
-| Home page scroll crash | ❌ BUG | Page crashes at bottom — 3 console errors — cf-d3ho |
-| Sale lightbox | ⚠️ UX ISSUE | Fires on every page navigation — cf-nbu4 |
+| Feature | Status |
+|---------|--------|
+| LivingSky header | ✅ LIVE — pink/blue/teal sky gradient on all pages |
+| Footer illustration | ✅ LIVE — night mountain scene |
+| About page illustration | ✅ LIVE — v2 botanical ink art |
+| Gift Cards /gift-cards | ✅ LIVE — "coming soon" placeholder |
+| PLP /shop/futon-frames | ✅ LIVE — 17 products |
+| Design a Room | ⚠️ TEXT ONLY — miquella building room scene (cf-c0dh) |
+| Home scroll crash | ❌ BUG — crashes at page bottom, 3 errors (cf-d3ho) |
+| Sale lightbox | ⚠️ Fires every page nav (cf-nbu4) |
 
-**Root cause Stilgar couldn't see:** carolinafutons.com still serves Wix. cfW features only on Vercel URL above. DNS flip (cf-3qt.8) required for public visibility.
+**carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
@@ -63,6 +63,8 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
+**All 5 failing = lint/typecheck errors. E2E skipped on PR builds.**
+
 ---
 
 ## Crew Assignments
@@ -73,8 +75,8 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | godfrey | PDP Financing BNPL | cf-10fx |
 | radahn | /sustainability CMS wiring | cf-0s4l |
 | rennala | Sitemap 404 fix | cf-rb07 |
-| millicent | Illustration wiring — v1/v2/v3 into sub-pages | cf-tyuk |
-| morgott | **Home page scroll crash investigation** ← NEW | cf-d3ho |
+| millicent | Illustration wiring — v1/v2/v3 sub-pages | cf-tyuk |
+| morgott | Home page scroll crash investigation | cf-d3ho |
 | miquella | Design a Room — futon-in-room visual | cf-c0dh |
 
 **Queued:** cf-nbu4 (sale lightbox session gate) → radahn after cf-0s4l
@@ -87,12 +89,11 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 |-------|--------|
 | **Home scroll crash** | cf-d3ho P1 — morgott investigating |
 | **Sale lightbox fires everywhere** | cf-nbu4 P2 — radahn queued |
-| **Design a Room plain** | cf-c0dh P1 — miquella building room scene |
-| **Vercel URL** | Stilgar must use Vercel URL; DNS flip (cf-3qt.8) pending |
+| **Design a Room plain** | cf-c0dh P1 — miquella in progress |
 | **Velo #1125** | Codecov-only fail — admin merge eligible? |
-| **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates needed |
+| **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates |
 | **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
-| **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501 |
+| **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501. Dallas holding. |
 
 ---
 
@@ -104,7 +105,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | cf-d3hc | P1 | PDP Financing / BNPL (Afterpay, Affirm) | — |
 | cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
 | cf-c0dh | P1 | Design a Room — futon-in-room visual | miquella |
-| cf-d3ho | P1 | Home page scroll crash ← NEW | morgott |
+| cf-d3ho | P1 | Home page scroll crash | morgott |
 | cf-c77s | P1 | E2E auto emails + challenges + rewards | — |
 | cf-eihx | P1 | CFW shipping tier system | — |
 | cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
