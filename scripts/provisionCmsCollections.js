@@ -440,7 +440,7 @@ const COLLECTION_MANIFEST = [
     displayName: 'Sustainability Story',
     fields: [
       field('heading', 'Heading', 'TEXT'),
-      field('body', 'Body', 'RICH_TEXT'),
+      field('body', 'Body', 'TEXT'),
       field('imageUrl', 'Image URL', 'URL'),
       field('imageAlt', 'Image Alt', 'TEXT'),
       field('sortOrder', 'Sort Order', 'NUMBER'),
