@@ -635,9 +635,9 @@ describe('confirmTradeIn — status overwrite guard', () => {
   it('cannot reject a confirmed record that already has storeCreditId', async () => {
     __seed(COLLECTION, [makeRequest({
       _id: 'req-1', memberId: 'member-1', status: 'confirmed',
-      storeCreditId: 'credit-already-issued',
+      itemType: 'mattress', storeCreditId: 'credit-already-issued',
     })]);
-    const result = await confirmTradeIn('req-1', 'poor'); // ineligible condition
+    const result = await confirmTradeIn('req-1', 'poor'); // mattress+poor is ineligible (hygiene policy)
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/cannot reject|already issued/i);
     const updated = __getUpdated(COLLECTION);
