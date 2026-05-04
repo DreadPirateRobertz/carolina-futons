@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 14:58 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 15:08 MT**
 
 ---
 
@@ -63,12 +63,15 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
+| #419 | test(cf-3qt.8.26): redirect map unit tests (8 tests) | ⏳ CI | blaidd — awaiting merge |
+| #418 | fix(cf-q5km): MascotCategoryCard useReducedMotion guard | ✅ CI | ❌ BLOCK — missing MascotCategoryCard.tsx, needs rebase |
+| #417 | test(cf-3qt.16.2): homepage MascotCategoryCard E2E | ✅ MERGED | 88/100 |
 | #415 | feat(cf-footer-anim): footer mascot animation | ✅ MERGED | 91/100 — Footer.tsx + motion + useReducedMotion |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
-| #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approval needed |
-| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
+| #391 | chore(deps): bump wix-sdk group | ✅ CI | **HOLD** |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ CI | **BLOCK**: Stilgar replace GA4/Meta IDs |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CI | Stilgar approval needed |
+| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ CI | draft |
 
 ## CF Open PRs (carolina-futons / Velo)
 
@@ -83,13 +86,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| millicent | cf-3qt.16.1 — Footer animation vitest (framer-motion + useReducedMotion) | 🔧 dispatched |
+| millicent | cf-3qt.16.1 ✅ Footer animation unit tests — 5 pass | ⚡ needs bead |
 | morgott | wix-retirement-checklist.md — cf-3qt.9 prep doc | 🔧 dispatched |
-| radahn | cf-3qt.8.25 ✅ vercel-account-transfer-runbook.md | ⚡ needs bead |
-| blaidd | cf-3qt.8.24 ✅ contact-form-publish-checklist.md | ⚡ needs bead |
-| rennala | cf-3qt.8.22 ✅ theme-options.md | ⚡ needs bead |
-| godfrey | cf-3qt.16.2 — homepage MascotCategoryCard E2E spec | 🔧 dispatched |
-| miquella | cf-q5km — a11y audit: footer anim + category cards | 🔧 dispatched |
+| radahn | cf-l6aj — parity audit gaps → bead backlog | 🔧 dispatched |
+| blaidd | cf-3qt.8.26 ✅ PR #419 redirect map tests (8 tests) | 🔧 CI pending |
+| rennala | cf-3qt.8.27 — /shop/sale PLP E2E spec | 🔧 dispatched |
+| godfrey | cf-3qt.16.3 — MascotCategoryCard unit tests | 🔧 dispatched |
+| miquella | cf-q5km — PR #418 BLOCK: rebase + add MascotCategoryCard.tsx fix | 🔧 fixing |
 
 ---
 
@@ -116,9 +119,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
-| cf-3qt.16.1 | P2 | Footer animation vitest — millicent | 🔧 in progress |
-| cf-3qt.16.2 | P2 | Homepage MascotCategoryCard E2E — godfrey | 🔧 in progress |
-| cf-q5km | P2 | A11y audit footer anim + category cards — miquella | 🔧 in progress |
+| cf-q5km | P2 | PR #418 BLOCK: miquella rebase + add MascotCategoryCard.tsx | 🔧 fixing |
+| cf-q90y.1 | P2 | Delete 9 orphan illustration components — radahn | 🔧 in progress |
+| cf-3qt.16.3 | P2 | MascotCategoryCard unit tests — godfrey | 🔧 in progress |
+| cf-3qt.8.27 | P2 | /shop/sale PLP E2E — rennala | 🔧 in progress |
+| cf-l6aj | P2 | Parity audit gap → bead backlog — radahn | 🔧 in progress |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
@@ -170,4 +175,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#416 (6 PRs) · Stilgar directives: homepage ✅ #416 merged, footer ✅ #415 merged 91/100 · hq-wtyn0 live E2E DONE (curl — Playwright MCP disconnected) · 3 crew dispatched (millicent/godfrey/miquella) · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · Session merges: #411–#417 (7 PRs) · #418 BLOCKED (miquella rebase+fix) · #419 CI pending · 6 crew active · radahn botanical audit: 9 orphans found → cf-q90y.1 deletion bead · Theme routes pre-exist (#252/#216/#255/#344) · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
