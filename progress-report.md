@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:23 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:26 MT**
 
 ---
 
@@ -73,7 +73,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Search/compare/wishlist E2E smoke | ✅ MERGED #373 |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
-| Footer living animation | 🔧 radahn — cf-45uk |
+| Footer living animation | ✅ MERGED #381 (valley mist particles) |
 
 ---
 
@@ -100,10 +100,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: ⚠️ MORNING FLAG — Stilgar replace real GA4/Meta IDs |
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
-| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
-| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar replaces with placeholders |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: ⚠️ MORNING FLAG — Stilgar replace real GA4/Meta IDs with placeholders |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -113,7 +110,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | #381 MERGED ✅ (cf-45uk footer mist particles, refinery 91/100) — standing by | ⏳ |
+| radahn | cf-45uk ✅ CLOSED — standing by for new bead | ⏳ |
 | rennala | cf-uaoz — plp.spec.ts CI flakiness (took from dead blaidd) | 🔧 |
 | blaidd | ⚠️ SESSION DEAD — mayor respawning, cf-uaoz transferred to rennala | ☠️ |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
@@ -135,7 +132,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **PR #376** | ⚠️ MORNING FLAG: Replace real GA4/Meta Pixel IDs with placeholder strings |
 | **cf-3qt.7 live verify** | GA4 realtime check + Pixel Helper + Rich Results Test (needs TikTok/Pinterest IDs too) |
 | **GSC sitemap** | Deferred to Phase 8 — no action now |
-| **cf-9t70 CMS** | Create SwatchRequests collection in Wix Dashboard |
+| **SwatchRequests CMS** | cf-9t70 code MERGED — create SwatchRequests collection in Wix Dashboard to activate swatch-request page |
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
 | **DNS flip** (cf-cb9s) | §1-§3 pending |
@@ -148,9 +145,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-----|-------|------|
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala (transferred from dead blaidd) |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
-| cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
-| cf-45uk | P2 | Footer living animation distinct from header | radahn |
-| Footer living animation | ✅ MERGED #381 (valley mist particles, refinery 91/100) | |
 | cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
 | cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
@@ -196,4 +190,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min*
+*Cron: 1709bbed · Next refresh ~10 min · cf-45uk CLOSED · cf-9t70 code MERGED*
