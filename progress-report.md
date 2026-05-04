@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 19:55 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 20:05 MT**
 
 ---
 
@@ -22,35 +22,29 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
+## ⚠️ STILGAR VISIBILITY ISSUE — ACTION NEEDED
+
+**carolinafutons.com still serves Wix** — DNS cutover (cf-cb9s) has NOT happened.
+LivingSky header + all illustration PRs are in **cfW (Next.js/Vercel)**, live at:
+
+> **https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/**
+
+Stilgar must check the Vercel URL to see cfW changes. Wix won't show them until DNS flip.
+
+**Wix republish needed?** Yes — for Velo changes (PR #1114 contactSubmissions endpoint). Stilgar needs to push Publish in Wix Studio to activate Velo code changes on carolinafutons.com.
+
+---
+
 ## Session Merges — SHIPPED TO VERCEL ✅
 
-### This Session (22 CFW + 3 Velo merged)
+### This Session (23 CFW + 3 Velo merged)
 | PR | What |
 |----|------|
-| #339 | feat(cf-jegx): Turnstile reset + degraded-mode banner + comment polish ✅ |
-| #334 | fix(cf-o8s9): restore LivingSky backdrop — Stilgar directive ✅ |
-| #335 | fix(cf-cfol): guard checkout against cart-write race [P0] ✅ |
-| #337 | fix(cf-p7la): prevent hydrateCartAction racing addItemAction [P1] ✅ |
-| #336 | feat(cf-9cgu): LivingSkyErrorBoundary ✅ |
-| #332 | feat(cf-xmpb): commerce dark mode — PDP + account ✅ |
-| #330 | feat(cf-wzl3): LivingSky night state in dark mode ✅ |
-| #329 | feat(cf-8w86): Gift Cards page ✅ |
-| #326 | fix(cf-kj8n): VERCEL_PROJECT_PRODUCTION_URL sitemap ✅ |
-| #323 | feat(cf-7dfv): wire PdpFinancing into PDP ✅ |
-| #322 | fix(cf-j6ub): useTimeOfDay RAF + SSR flash guard ✅ |
-| #321 | fix(cf-ac1y): replace stale ShopTheRoom slugs ✅ |
-| #320 | feat(cf-kjpy): Local SEO /near/[city-slug] ✅ |
-| #338 | test(cf-jegx): swatch-request coverage ✅ |
-| #318 | feat(cf-footer): consolidate footer illustration ✅ |
-| #296 | feat(cf-e4vd/cf-ph80): HomeQuizCta + Swatch ✅ |
-| #293 | feat(cf-urfn): HomeSaleStrip ✅ |
-| #290 | feat(cf-lqnd): PDP back-in-stock notify me ✅ |
-| #282 | feat(cf-0y1e): PDP Size Guide v2 ✅ |
-| #278 | feat(cf-c7re): HTTP security headers ✅ |
-| #276 | test(cf-o3bv): CartDrawer+CartPage sentinel ✅ |
-| Velo #1128 | chore: postcss bump ✅ |
-| Velo #1132 | fix: blog post count ✅ |
-| Velo #1131 | feat: one-click unsubscribe ✅ |
+| #340 | refactor(cf-jegx): SwatchContactInfo.state → UsState literal union ✅ |
+| #339 | feat(cf-jegx): Turnstile reset + degraded-mode banner ✅ |
+| #334–#338 + 17 others | See previous entries — all shipped ✅ |
+
+**Vercel production URL:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
 
 ---
 
@@ -76,7 +70,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
-**All 5 failing = lint/typecheck errors. E2E skipped on PR builds.**
+**All 5 failing = lint/typecheck errors.**
 
 ---
 
@@ -90,9 +84,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | rennala | Sitemap 404 fix | cf-rb07 |
 | millicent | Illustration wiring — v1/v2/v3 into sub-pages | cf-tyuk |
 | morgott | cf-9t70 swatch — Wix CMS collection + email templates | cf-9t70 |
-| miquella | Next bead (cart convoy complete) | — |
-
-**Bead closures this session:** cf-kjpy · cf-p7la · cf-cfol · cf-rymw · cf-jegx · cf-992s · cf-d1fu · cf-lxbe
+| miquella | **Design a Room — futon-in-room visual (NEW Stilgar directive)** | cf-c0dh |
 
 ---
 
@@ -100,22 +92,23 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **Velo #1125** (sampleRequests) | Codecov-only fail — all tests pass. Admin merge eligible? |
+| **Stilgar can't see header/illustrations** | cfW on Vercel URL — NOT carolinafutons.com (Wix). DNS flip pending. |
+| **Wix republish needed** | Stilgar must Publish in Wix Studio for Velo #1114 (contactSubmissions) to go live |
+| **Velo #1125** (sampleRequests) | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection + email templates needed |
 | **contactSubmissions 404** | Velo endpoint exists; awaiting Stilgar §1-§3 DNS clearance |
 | **DNS flip** (cf-cb9s) | Stilgar manual §1-§3 pending; §5 order-lookup 501. Dallas holding. |
-| **CROSS_RIG_SECRET** | ✅ COMPLETE |
-| **LivingSky + cart races** | ✅ All resolved this session |
 
 ---
 
-## In-Progress Beads (10 total)
+## In-Progress Beads (11 total)
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-10fx | P1 | PDP Financing / BNPL — Afterpay + Affirm | godfrey |
 | cf-d3hc | P1 | PDP Financing / BNPL section | — |
 | cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | morgott |
+| cf-c0dh | P1 | Design a Room — futon-in-room visual ← **NEW Stilgar** | miquella |
 | cf-c77s | P1 | E2E auto emails + challenges + rewards | — |
 | cf-eihx | P1 | CFW shipping tier system | — |
 | cf-rtd7 | P1 | cf-3qt full prod parity audit | — |
