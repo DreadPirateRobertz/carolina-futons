@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 22:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 22:50 MT**
 
 ---
 
@@ -32,14 +32,27 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | Footer white circles | ✅ FIXED — STARS SVG removed from LivingFooterBg (direct to main) |
 | Theme previews A/B/C/D | ✅ LIVE — /theme-a /theme-b /theme-c /theme-d |
 | Design a Room | ✅ MERGED #343 |
-| Auth dead-end redirect | ✅ MERGED #348 — safeNext() guard |
+| Auth dead-end redirect | ✅ MERGED #348 |
 | /dashboard/profile | ✅ MERGED #349 |
 | Sale lightbox session gate | ✅ MERGED Velo #1134 |
-| PDP Financing (BNPL) | ✅ MERGED #279 — Afterpay 4-pay + term pills |
-| Cart fixture preview | ⏳ PR #350 open — CI pending |
+| PDP Financing (BNPL) | ✅ MERGED #279 |
 | SEO+analytics | ⏳ cf-3qt.7 in progress (radahn) |
+| Cart fixture preview | ⏳ PR #350 pending CI |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
+
+---
+
+## Vercel Env Actions (Stilgar directive)
+
+| Env Var | Status |
+|---------|--------|
+| WIX_CLIENT_ID_HEADLESS (prod) | ✅ SWAPPED → cb591c8e live prod value |
+| SMTP_HOST/PORT/USER/PASS (prod) | ✅ Already set (8d ago) |
+| CROSS_RIG_SECRET (prod) | ✅ Already set (2h ago) |
+| EAS CROSS_RIG_SECRET + CFW_API_URL | ⏳ Dallas pinged — CFW_API_URL value TBD |
+
+**Redeploy needed** to pick up WIX_CLIENT_ID_HEADLESS update on Production.
 
 ---
 
@@ -58,11 +71,11 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #350 | feat(cf-9izd): seeded fixture products for cart QA | ⏳ pending |
-| #331 | feat(cf-4bhw): Gift Registry | ❌ fail — unassigned |
+| #350 | feat(cf-9izd): seeded fixture products for cart QA | ✅ Vercel pass (lint pending) |
+| #331 | feat(cf-4bhw): Gift Registry | ❌ fail — uncrewed |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail → rennala (cf-agzh) |
-| #299 | fix(cf-urbq): dark mode font contrast | ❌ fail → morgott (cf-xu9g) |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail — unassigned |
+| #299 | fix(cf-urbq): dark mode font contrast | ✅ Vercel pass (lint clear or pending) |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail — uncrewed |
 | #281 | feat(cf-7axq): Add to Compare | ❌ fail → godfrey (cf-arfx) |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
 
@@ -77,7 +90,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | morgott | Fix PR #299 lint/typecheck (dark mode contrast) | cf-xu9g |
 | godfrey | Fix PR #281 lint/typecheck (Add to Compare) | cf-arfx |
 | blaidd | Wire unwired illustrations (BotanicalFooterDivider + 4 PLP) | cf-sb0i |
-| millicent | Standing by — next: PR #331 or #291 fix | — |
+| millicent | Standing by — bd ready | — |
 | miquella | CFW shipping tier system | cf-eihx |
 
 ---
@@ -86,7 +99,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **PR #331 #291** | Gift Registry + PdpSizeGuide — uncrewed lint fixes (millicent next) |
+| **PR #331 #291** | Gift Registry + PdpSizeGuide — uncrewed lint fixes |
+| **EAS CFW_API_URL** | Dallas coordinating — CFW_API_URL value for EAS secrets |
+| **Vercel prod redeploy** | Needed to pick up new WIX_CLIENT_ID_HEADLESS |
 | **Theme pick** | /theme-a /theme-b /theme-c /theme-d live — Stilgar to choose |
 | **Velo #1125** | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
@@ -96,18 +111,19 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 ---
 
-## In-Progress Beads (6 total)
+## In-Progress Beads
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-3qt.7 | P1 | SEO+analytics (redirects, GA4, pixels, schema, OG, sitemap) | radahn |
 | cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | — |
-| cf-sb0i | P2 | Wire unwired illustrations (footer divider + 4 PLP) | blaidd |
 | cf-agzh | P2 | Fix PR #319 lint errors (2D room planner) | rennala |
 | cf-xu9g | P2 | Fix PR #299 lint errors (dark mode) | morgott |
 | cf-arfx | P2 | Fix PR #281 lint errors (Add to Compare) | godfrey |
+| cf-sb0i | P2 | Wire unwired illustrations (footer divider + 4 PLP) | blaidd |
+| cf-0s4l | P3 | /sustainability — wire Wix CMS | miquella |
 
-**Outside bd:** cf-d3hc closed · cf-eihx/miquella
+**Outside bd:** cf-eihx/miquella
 
 ---
 
