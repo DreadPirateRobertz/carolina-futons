@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:07 MT**
 
 ---
 
@@ -116,8 +116,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
 | miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
-| morgott | standing by — awaiting next bead | ⏳ |
-| millicent | standing by | ⏳ |
+| morgott | cf-2jq9 — globals.css .dark --cf-smoke token fix | 🔧 |
+| millicent | cf-h2em — Platform Beds PLP /shop/platform-beds | 🔧 |
 
 ---
 
@@ -130,7 +130,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **cf-0s4l** | Wix Dashboard: create WIX_API_KEY under account ed8a7220 |
 | **contactSubmissions** | Publish live Wix site |
 | **PR #356** | Approve clipboard approach |
-| **PR #376** | Replace real GA4/Meta Pixel IDs with placeholder strings |
+| **PR #376** | ⚠️ MORNING FLAG: Replace real GA4/Meta Pixel IDs with placeholder strings |
 | **cf-9t70 CMS** | Create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
@@ -149,6 +149,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | blaidd |
 | cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
+| cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
+| cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
