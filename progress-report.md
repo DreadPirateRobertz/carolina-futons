@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:39 MT**
 
 ---
 
@@ -22,19 +22,21 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ---
 
-## 🔍 PROD STATUS (2026-05-04 00:35 MT)
+## 🔍 P0 STATUS (2026-05-04 00:39 MT) — STILGAR ACTION REQUIRED
 
-**P0 ROOT CAUSE FOUND:** WIX_CLIENT_ID_HEADLESS env var had trailing `\n` → malformed client ID → Wix SDK auth failure → `getCollectionBySlug` errors → 0 products ALL PLPs.
+**TRUE ROOT CAUSE:** Wix headless OAuth app (`cb591c8e`) has NO Metasite Context — it is not installed/connected to any Wix site with Stores. Direct API test returns: `"No Metasite Context in identity." (UNAUTHORIZED)`.
 
-**FIX DEPLOYED:** `env().trim()` added to src/lib/env.ts (commit 99f71ef, main). Vercel redeploy in progress (~2-4 min).
+**STILGAR MUST FIX IN WIX DEV CENTER (wix.com/developers):**
+1. Open Manage Apps → find OAuth app with clientId `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a`
+2. Verify which site it's installed on
+3. Install on carolinafutons.com if not already done
+4. OR create new OAuth app on the live site → update `WIX_CLIENT_ID_HEADLESS` in Vercel (prod)
 
-**Stilgar action needed:** Remove + re-add WIX_CLIENT_ID_HEADLESS in Vercel Dashboard (prod) without trailing newline: `cb591c8e-2147-4ca2-88f0-89b7e0f2b25a`
+**env.ts trim fix** deployed (commit 99f71ef) — defensive improvement, does not resolve this root cause.
 
 ---
 
 ## 🔍 STILGAR SITE AUDIT — Vercel URL
-
-**URL:** https://carolina-futons-web-git-main-dreadpiraterobertzs-projects.vercel.app/
 
 | Feature | Status |
 |---------|--------|
@@ -49,13 +51,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Blog OG + Twitter card | ✅ MERGED #355 |
 | Footer scene alive (cf-qif2) | ✅ MERGED #359 |
 | Add to Compare | ✅ MERGED #281 |
-| PLP filter labels (cf-af7h) | ✅ MERGED #361 |
+| PLP filter labels | ✅ MERGED #361 |
 | Dark mode CTA + sustainability | ✅ MERGED #362 |
-| **Products loading (ALL PLPs)** | 🔧 FIX DEPLOYING — env.ts trim committed, Vercel building |
-| Dark mode card wrappers (cf-xbj9) | ⛔ PR #363 DO NOT MERGE — 2 inputs missing dark token, QA unchecked |
+| **Products loading (ALL PLPs)** | ❌ 0 products — Wix OAuth app not connected to site |
+| Dark mode card wrappers (cf-xbj9) | ⛔ PR #363 — godfrey fixing 2 inputs |
 | Dark mode homepage (cf-52gi) | ⏳ PR #364 UNSTABLE CI |
+| CTA hover + /contact (cf-jcta+cf-32cy) | ⏳ PR #365 CLEAN — refinery running |
 | Light mode charcoal/50 (cf-ighf) | ⏳ millicent in progress |
-| **P0: PLP zero products (preview)** | ⚠️ Also affected — same root cause. Fix deploying. |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Needs Wix site publish (Stilgar direct action) |
 
@@ -65,8 +67,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Env Var | Status |
 |---------|--------|
-| WIX_CLIENT_ID_HEADLESS (prod) | ⚠️ Has trailing \\n — fix in env.ts deployed; Stilgar should also fix in Vercel Dashboard |
-| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — same trim fix will help; may also need Stilgar to set correct value |
+| WIX_CLIENT_ID_HEADLESS (prod) | ❌ `cb591c8e` — no Metasite Context. Stilgar must fix in Wix Dev Center |
+| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ `6b4d4894` — same issue |
 | SMTP / CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
 | SENTRY_AUTH_TOKEN (EAS) | ⏳ Awaiting Stilgar |
 
@@ -87,9 +89,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #364 | fix(cf-52gi): dark mode homepage token inversions | ⚠️ UNSTABLE | radahn — awaiting CI |
-| #363 | fix(cf-xbj9): dark mode card bg WCAG AA | ⛔ DO NOT MERGE | godfrey — 2 input fixes + QA boxes needed |
-| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Needs Stilgar approach approval |
+| #365 | fix(cf-jcta+cf-32cy): CTA hover + /contact dark | ✅ CLEAN | refinery running |
+| #364 | fix(cf-52gi): dark mode homepage | ⚠️ UNSTABLE | radahn — CI running |
+| #363 | fix(cf-xbj9): dark mode card bg WCAG AA | ✅ CLEAN | godfrey — fixing 2 inputs |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Needs Stilgar approach ok |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
 ---
@@ -99,12 +102,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | PR #364 cf-52gi dark mode homepage | ⏳ CI unstable |
-| rennala | cf-9t70: /swatch-request Wix CMS | ⏳ blocked on Wix CMS collection (Stilgar) |
-| blaidd | cf-32cy dark mode /contact orange | 🔧 in progress |
-| godfrey | PR #363 cf-xbj9 — fixing 2 inputs + QA | 🔧 rework needed |
-| miquella | cf-0s4l BLOCKED — WIX_API_KEY account mismatch | ⛔ needs Stilgar new API key |
-| morgott | cf-jcta CTA hover dark contrast gap | 🔧 in progress |
-| millicent | cf-ighf light mode charcoal/50 (2 nodes) | 🔧 in progress |
+| rennala | cf-9t70 /swatch-request | ⏳ blocked on Wix CMS (Stilgar) |
+| blaidd | cf-32cy — in PR #365 | ✅ done, in refinery |
+| godfrey | PR #363 cf-xbj9 — fixing 2 inputs | 🔧 rework |
+| miquella | cf-0s4l BLOCKED — account mismatch | ⛔ Stilgar API key needed |
+| morgott | cf-jcta — in PR #365 | ✅ done, in refinery |
+| millicent | cf-ighf light mode charcoal/50 | 🔧 in progress |
 
 ---
 
@@ -112,13 +115,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: Products = 0** | Fix deploying — env.ts trim pushed to main. Stilgar also fix env var in Vercel Dashboard. |
-| **cf-0s4l BLOCKED** | Stilgar must create WIX_API_KEY under account ed8a7220 in Wix Dashboard → Settings → API Keys |
-| **contactSubmissions 404** | Stilgar must publish live Wix site |
-| **PR #356** | cf-okwz clipboard approach — Stilgar approval needed |
-| **cf-9t70 swatch CMS** | Stilgar create SwatchRequests collection in Wix Dashboard |
+| **P0: 0 products** | Stilgar: fix OAuth app cb591c8e in Wix Dev Center (connect to site) |
+| **cf-0s4l** | Stilgar: create WIX_API_KEY under account ed8a7220 in Wix Dashboard |
+| **contactSubmissions** | Stilgar: publish live Wix site |
+| **PR #356** | Stilgar: approve clipboard approach |
+| **cf-9t70 CMS** | Stilgar: create SwatchRequests collection in Wix Dashboard |
 | **SENTRY_AUTH_TOKEN** | Stilgar awaiting |
-| **Theme pick** | /theme-a–d live — Stilgar to choose |
+| **Theme pick** | /theme-a–d — Stilgar to choose |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending |
 
 ---
@@ -130,15 +133,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-xbj9 | P1 | dark:bg-cf-cream card wrappers | godfrey PR #363 rework |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
 | cf-52gi | P2 | dark mode homepage cream/sand | radahn PR #364 |
-| cf-32cy | P3 | dark mode /contact orange (1 node) | blaidd |
-| cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-ighf | P3 | light mode charcoal/50 (2 nodes) | millicent |
-| cf-jcta | P3 | CTA hover dark contrast gap | morgott |
+| cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
 ---
 
-## Shipping Test Report ✅ (resent to mayor 00:34 MT)
+## Shipping Test Report ✅ (delivered to mayor 00:34 MT)
 
 56/56 PASS · Parcel <70 lbs · LTL 70–499 lbs · Freight ≥500 lbs or palletized · White-glove NC only
 
@@ -156,11 +157,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #358 | Auth catch error surfacing | 06:11 UTC |
 | #291 | PdpSizeGuide | 06:12 UTC |
 | #281 | Add to Compare | 06:20 UTC |
-| #355 | Blog OG + Twitter card metadata | 06:23 UTC |
+| #355 | Blog OG + Twitter card | 06:23 UTC |
 | #359 | Footer bear-breathe animation | 06:23 UTC |
-| #361 | PLP filter labels zinc-600 | 06:25 UTC |
+| #361 | PLP filter labels | 06:25 UTC |
 | #362 | Dark mode CTA + sustainability | 06:26 UTC |
-| env.ts trim fix | P0 products loading fix | 06:33 UTC |
 
 ---
 
