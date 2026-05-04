@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:21 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:23 MT**
 
 ---
 
@@ -100,7 +100,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #381 | feat(cf-45uk): valley mist particles LivingFooterScene | ⏳ CI | refinery in-flight |
+| #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: ⚠️ MORNING FLAG — Stilgar replace real GA4/Meta IDs |
+| #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
+| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar replaces with placeholders |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -111,9 +113,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-45uk — PR #381 open (valley mist particles), refinery in-flight | 🔧 |
-| rennala | #380 MERGED ✅ (melania pushed fix + merged) — standing by | ⏳ |
-| blaidd | ⚠️ SESSION DEAD — cf-uaoz unassigned, pending respawn | ☠️ |
+| radahn | #381 MERGED ✅ (cf-45uk footer mist particles, refinery 91/100) — standing by | ⏳ |
+| rennala | cf-uaoz — plp.spec.ts CI flakiness (took from dead blaidd) | 🔧 |
+| blaidd | ⚠️ SESSION DEAD — mayor respawning, cf-uaoz transferred to rennala | ☠️ |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
 | miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
 | morgott | cf-2jq9 — globals.css .dark --cf-smoke token fix | 🔧 |
@@ -144,11 +146,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.3 | P1 | Account — Playwright auth fixture | ✅ PR #380 MERGED |
+| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala (transferred from dead blaidd) |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
 | cf-45uk | P2 | Footer living animation distinct from header | radahn |
-| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | ⚠️ UNASSIGNED — blaidd session dead |
+| Footer living animation | ✅ MERGED #381 (valley mist particles, refinery 91/100) | |
 | cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
 | cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
@@ -182,6 +184,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #370 | feat(cf-3qt.2): PLP Futon Frames getCollectionPlp | 11:0x UTC |
 | #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | 11:0x UTC |
 | #380 | feat(cf-3qt.3): Playwright auth fixture + checkout-smoke fix | 11:21 UTC |
+| #381 | feat(cf-45uk): valley mist particles LivingFooterScene | 11:22 UTC |
 
 ---
 
