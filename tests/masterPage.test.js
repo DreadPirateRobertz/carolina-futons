@@ -1718,6 +1718,52 @@ describe('masterPage.js', () => {
       vi.useRealTimers();
     });
 
+    it('does not show lightbox when promo already dismissed this session', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-gate-1',
+        title: 'Spring Sale',
+        subtitle: 'Save 20%',
+        discountCode: 'SPRING20',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [],
+      });
+      // Simulate prior dismissal via wix-storage-frontend session storage
+      globalThis.sessionStorage.setItem('promo_dismissed_promo-gate-1', '1');
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(getEl('#promoOverlay').show).not.toHaveBeenCalled();
+      globalThis.sessionStorage.clear();
+      vi.useRealTimers();
+    });
+
+    it('sets session dismiss key when lightbox is dismissed via close button', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-gate-2',
+        title: 'Spring Sale',
+        subtitle: 'Save 20%',
+        discountCode: 'SPRING20',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        expect(getEl('#promoOverlay').show).toHaveBeenCalled();
+      });
+      // Simulate overlay click (dismiss)
+      const overlayHandler = getEl('#promoOverlay').onClick.mock.calls[0]?.[0];
+      if (overlayHandler) overlayHandler();
+      await vi.advanceTimersByTimeAsync(50);
+      expect(globalThis.sessionStorage.getItem('promo_dismissed_promo-gate-2')).toBe('1');
+      globalThis.sessionStorage.clear();
+      vi.useRealTimers();
+    });
+
     it('renders promo countdown timer', async () => {
       getActivePromotion.mockResolvedValueOnce({
         _id: 'promo-4',
