@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:44 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 10:53 MT**
 
 ---
 
@@ -67,10 +67,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 55/100** — makeProduct spread anti-pattern + test type bug (morgott fixing) |
+| #399 | fix(cf-2idp): Mesa sale fixture | ✅ CLEAN | **BLOCK 72/100** — MESA_SALE collectionIds breaks mattresses PLP count + null→absent key needs test (morgott fixing) |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | mergeability UNKNOWN — awaiting GH compute |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -90,8 +89,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|--------|
 | radahn | Final cleanup pass — illustrations/ audit + dead CSS removal | 🔧 |
 | rennala | PR #408 MERGED ✅ — idle, await next | ✅ |
-| blaidd | PR #389 awaiting GH mergeable confirmation | ⏳ |
-| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, await next | ✅ |
+| blaidd | PR #389 MERGED ✅ (84/100 sale PLP) — idle, await next | ✅ |
+| godfrey | PR #390 MERGED ✅ (88/100 search E2E) — idle, follow-on: isProductOnSale unit tests | ✅ |
 | miquella | PR #403 MERGED ✅ — idle, await next | ✅ |
 | morgott | PR #399 BLOCK 55/100 — fix makeProduct spread + test type bug | ⚠️ |
 | millicent | PRs #405+#409 MERGED ✅ — idle, await next | ✅ |
@@ -136,6 +135,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | PR | Title | Score | When |
 |----|-------|-------|------|
 | #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
+| #389 | feat(cf-3qt.12): /shop/sale PLP | 84/100 | 16:52 UTC |
 | #390 | test(cf-3qt.14): /search E2E smoke | 88/100 | 16:43 UTC |
 | #406 | chore(design-migration): orphan botanical deletions | 95/100 | 16:31 UTC |
 | #404 | feat(cf-design-phase1): Phase 1 PLP botanical removal | 95/100 | 16:26 UTC |
@@ -169,4 +169,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE — all phases merged · #399 BLOCK 55/100 (morgott) · #389 awaiting GH mergeable · Cleanup pass: radahn*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE + sale PLP MERGED · #399 BLOCK 72/100 (morgott, 3rd iteration) · Cleanup pass: radahn*
