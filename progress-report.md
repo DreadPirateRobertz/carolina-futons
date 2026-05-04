@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:22 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 11:29 MT**
 
 ---
 
@@ -44,8 +44,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ## 🎨 DESIGN MIGRATION STATUS — ✅ 100% COMPLETE
 
-**Stilgar direct order 2026-05-04.** Plan: `crew/melania/design-migration-plan.md`
-
 | Phase | Scope | PR | Status |
 |-------|-------|----|--------|
 | Quick wins | Delete orphaned botanical components | #406 | ✅ MERGED (95/100) |
@@ -57,9 +55,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Phase 2 — /guides + /reviews | BotanicalGuides + Reviews → ReadingScene + FallsScene | #407 | ✅ MERGED (92/100) |
 | Phase 2 — /spring-sale | LivingSky → VintageSunRays | #408 | ✅ MERGED (97/100) |
 | Phase 3 | Empty states + 404 → v3 mascot spots | #405 + #409 | ✅ MERGED (74+97/100) |
-| Cleanup | Final illustrations/ audit | cf-3qt.8.15 | 🔧 radahn dispatched |
-
-**All botanical illustrations removed site-wide. v3 mascot/bear scenes wired on all routes.**
+| Cleanup | Final illustrations/ cleanup — ContactHero orphan deleted | #414 | ⏳ CI |
 
 ---
 
@@ -67,8 +63,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #412 | feat(cf-3qt.8.6): pre-cutover redirect map | ⏳ IN_PROGRESS | millicent: refinery + merge when CI green |
-| #411 | test(cf-3qt.8.9): Wave 1 post-cutover smoke spec | ⏳ IN_PROGRESS | rennala pushed 4 fixes (17:21 UTC); refinery pending |
+| #414 | chore(design-migration): final illustrations/ cleanup | ⏳ CI | radahn — refinery pending CI |
+| #413 | test(cf-3qt.8.13): Wave 2 post-cutover E2E spec | ⏳ CI | blaidd — refinery pending CI |
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ CLEAN | **BLOCK**: Stilgar replace GA4/Meta IDs |
@@ -88,13 +84,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-3qt.8.15 — illustrations/ final cleanup + dead CSS | 🔧 dispatched |
-| blaidd | cf-3qt.8.13 — Wave-2 post-cutover E2E spec | 🔧 dispatched |
-| godfrey | cf-3qt.8.11 — Lighthouse baseline real scores | 🔧 dispatched |
-| miquella | cf-3qt.8.12 — axe-core a11y scan real results | 🔧 dispatched |
-| millicent | cf-3qt.8.14 — refinery + merge PR #412 | 🔧 dispatched |
-| rennala | cf-3qt.8.9 — PR #411 Wave-1 E2E (4 fixes pushed, CI pending) | ⏳ CI |
-| morgott | cf-3qt.8.6 — PR #412 redirect map (CI pending) | ⏳ CI |
+| radahn | cf-3qt.8.15 — illustrations cleanup, PR #414 CI | ⏳ CI |
+| blaidd | cf-3qt.8.13 — Wave-2 E2E spec, PR #413 CI | ⏳ CI |
+| godfrey | IDLE — cf-3qt.8.11 ✅ complete | ⚡ needs bead |
+| miquella | IDLE — cf-3qt.8.12 ✅ complete | ⚡ needs bead |
+| millicent | IDLE — cf-3qt.8.14 ✅ complete | ⚡ needs bead |
+| rennala | IDLE — cf-3qt.8.9 ✅ complete | ⚡ needs bead |
+| morgott | IDLE — cf-3qt.8.6 ✅ complete | ⚡ needs bead |
 
 ---
 
@@ -121,14 +117,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
+| cf-3qt.8.15 | P2 | illustrations/ final cleanup + dead CSS | 🔧 radahn PR #414 CI |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
-
----
-
-## Shipping Test Report ✅
-
-56/56 PASS · Parcel <70 lbs · LTL 70–499 lbs · Freight ≥500 lbs or palletized · White-glove NC only
 
 ---
 
@@ -136,6 +127,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | Score | When |
 |----|-------|-------|------|
+| #412 | feat(cf-3qt.8.6): pre-cutover redirect map | 85.8/100 avg | 11:2x MT |
+| #411 | test(cf-3qt.8.9): Wave 1 post-cutover smoke | 88/100 | 11:22 MT |
 | #410 | test(on-sale): discountedPrice edge cases | 97/100 | 17:13 UTC |
 | #389 | feat(cf-3qt.12): /shop/sale PLP | 84/100 | 16:52 UTC |
 | #408 | feat(design-migration): /spring-sale VintageSunRays | 97/100 | 16:38 UTC |
@@ -149,12 +142,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #405 | feat(design-migration-p3): Phase 3 empty states | 74/100 | 10:17 UTC |
 | #401 | feat(design-migration): /about botanical → v3 | 87/100 | 10:12 UTC |
 | #400 | feat(design-migration-p0): MascotFooterDivider in layout | 95/100 | 10:12 UTC |
-| #397 | feat(cf-nujp): email routes + verify spec | 87/100 | 10:05 UTC |
-| #396 | test(cf-gjhu): rewards E2E scaffold | — | 10:05 UTC |
-| #395 | feat(cf-8xw1): data-slot=category-card | 97/100 | 10:05 UTC |
-| #394 | fix(cf-3qt.12): Mesa discountedPrice hotfix | — | ~09:55 UTC |
-| #393 | fix(cf-m07g): checkout real-payment E2E (gated) | 97/100 | 15:49 UTC |
-| Earlier PRs | #383–#388, #369–#382, #352–#368 | — | 05:41–09:2x UTC |
+| Earlier PRs | #383–#397, #352–#368 | — | earlier |
+
+---
+
+## Shipping Test Report ✅
+
+56/56 PASS · Parcel <70 lbs · LTL 70–499 lbs · Freight ≥500 lbs or palletized · White-glove NC only
 
 ---
 
@@ -171,4 +165,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-3 sprint active — Lighthouse real scores/axe real scan/Wave-2 E2E/redirect-map merge/illustrations cleanup · ⚠️ Vercel personal account flag for Stilgar · P0 deferred Stilgar manual · PR #411+#412 CI pending*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) · Design migration 100% COMPLETE · cf-3qt.8 wave-3 sprint: #412+#411 MERGED, #413+#414 CI pending refinery · 5 crew idle dispatching now · ⚠️ Vercel personal account for Stilgar · P0 deferred Stilgar manual*
