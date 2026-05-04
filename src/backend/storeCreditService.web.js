@@ -11,7 +11,7 @@
  * @setup
  * Create 'StoreCredits' CMS collection with fields:
  *   memberId (Text, indexed), balance (Number), initialAmount (Number),
- *   reason (Text: 'return'|'refund'|'promotion'|'admin_gift'|'goodwill'|'gift_received'),
+ *   reason (Text: 'return'|'refund'|'promotion'|'admin_gift'|'goodwill'|'gift_received'|'trade_in'),
  *   orderReference (Text), status (Text: 'active'|'used'|'expired'),
  *   createdDate (Date), expirationDate (Date), lastUsedDate (Date),
  *   transactions (Text - JSON array of {type, amount, date, orderId?, fromMemberId?}),

@@ -23,7 +23,8 @@ const TRADE_IN_PAGE_URL = '/trade-in';
 
 // Known-type guard: if a productType is not listed here, the widget hides without
 // making a backend call. Must stay in sync with VALUATION_MATRIX item types in
-// tradeInService.web.js. The displayed dollar value always comes from the backend.
+// tradeInService.web.js. initTradeInWidget fetches live values from the backend;
+// getDisplayMax() returns these constants directly for static/synchronous callers.
 const DISPLAY_MAX = {
   frame:    75,
   mattress: 40,
