@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:26 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:30 MT**
 
 ---
 
@@ -110,9 +110,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-45uk ✅ CLOSED — standing by for new bead | ⏳ |
-| rennala | cf-uaoz — plp.spec.ts CI flakiness (took from dead blaidd) | 🔧 |
-| blaidd | ⚠️ SESSION DEAD — mayor respawning, cf-uaoz transferred to rennala | ☠️ |
+| radahn | cf-45uk ✅ CLOSED — reviewing peer PRs / cf-uaoz support | ⏳ |
+| rennala | cf-uaoz — plp.spec.ts CI flakiness (no PR yet) | 🔧 |
+| blaidd | cf-3qt.10 — Sofa Beds PLP /shop/sofa-beds (just assigned) | 🔧 |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
 | miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
 | morgott | cf-2jq9 — globals.css .dark --cf-smoke token fix | 🔧 |
@@ -143,12 +143,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala (transferred from dead blaidd) |
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
 | cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
-| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
 | cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
+| cf-3qt.10 | P2 | Sofa Beds PLP /shop/sofa-beds | blaidd (just assigned) |
 | cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent |
+| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
+| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala — no PR yet |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -190,4 +191,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · cf-45uk CLOSED · cf-9t70 code MERGED*
+*Cron: 1709bbed · Next refresh ~10 min · blaidd ALIVE — cf-3qt.10 assigned · rennala cf-uaoz no PR yet*
