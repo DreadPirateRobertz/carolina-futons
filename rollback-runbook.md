@@ -50,9 +50,12 @@ Replace the Vercel records with the original Wix records:
 > **IMPORTANT:** Record the exact Wix DNS values from Wix Dashboard → Settings → Domains → DNS Records **before** the cutover and paste them below. Update this section when you do the cutover.
 
 ```
-# Fill in before cutover — copy from Wix Dashboard → Settings → Domains → DNS Records
-carolinafutons.com  A      <WIX_A_RECORD_IP>
-www                 CNAME  <WIX_CNAME_TARGET>
+# Verified via dig on 2026-05-04 — cross-check in Wix Dashboard before cutover
+# Wix uses multiple A records (anycast). Restore ALL THREE:
+carolinafutons.com  A      185.230.63.107
+carolinafutons.com  A      185.230.63.171
+carolinafutons.com  A      185.230.63.186
+www                 CNAME  cdn1.wixdns.net.
 ```
 
 **Step 4 — Save and verify** (2 min)
@@ -175,10 +178,11 @@ Re-attempt ETA:
 
 Do this in the days before the DNS flip. This makes the runbook executable on short notice.
 
-- [ ] Current Wix A record IP copied here: `___________________`
-- [ ] Current Wix CNAME target copied here: `___________________`
+- [x] Current Wix A records verified via dig 2026-05-04: `185.230.63.107`, `185.230.63.171`, `185.230.63.186`
+- [x] Current Wix CNAME target verified via dig 2026-05-04: `cdn1.wixdns.net.`
+- [ ] Cross-check above values in Wix Dashboard → Settings → Domains → DNS Records before cutover (confirm not changed)
 - [ ] TTL lowered to 60s on all records — date done: `___________________`
-- [ ] Registrar login confirmed and credentials accessible to Stilgar
+- [ ] Registrar login confirmed and credentials accessible to Stilgar — registrar: check Wix Dashboard → Settings → Domains
 - [ ] Sentry DSN wired in Vercel production env (`SENTRY_DSN`)
 - [ ] Error-rate alerting enabled in Vercel Analytics (alert at 5% 5xx)
 - [ ] Stilgar's phone number confirmed with melania
