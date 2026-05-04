@@ -1,21 +1,21 @@
 # Lighthouse Baseline: carolina-futons-web (Vercel Preview)
 
-**Bead:** cf-3qt.8.7  
+**Bead:** cf-3qt.8.11  
 **Author:** godfrey  
 **Date:** 2026-05-04  
-**Tool:** Lighthouse 13.2.0 (mobile simulation)  
-**Target:** https://carolina-futons-web.vercel.app/  
+**Tool:** Lighthouse 13.2.0 (mobile simulation, `--headless`)  
+**Preview URL:** https://carolina-futons-web.vercel.app/  
 
 ---
 
 ## Scores
 
-| Page | URL | Perf | A11y | Best Practices | SEO |
-|------|-----|------|------|----------------|-----|
+| Page | Path | Perf | A11y | Best Practices | SEO |
+|------|------|------|------|----------------|-----|
 | Home | `/` | 79 | 97 | 81 | 66 |
+| Shop index | `/shop` | 85 | 97 | 81 | 66 |
 | Futon Frames PLP | `/shop/futon-frames` | 69 | 97 | 81 | 66 |
 | Kingston PDP | `/products/kingston-futon-frame` | 74 | 97 | 81 | 58 |
-| About | `/about` | 87 | 97 | 81 | 66 |
 | Contact | `/contact` | 70 | 97 | 81 | 66 |
 
 ---
@@ -24,85 +24,93 @@
 
 | Page | FCP | LCP | TBT | CLS | Speed Index | TTI |
 |------|-----|-----|-----|-----|-------------|-----|
-| Home | 1.4 s | 4.3 s | 60 ms | 0 | 6.9 s | 5.9 s |
+| Home `/` | 1.4 s | 4.3 s | 60 ms | 0 | 6.9 s | 5.9 s |
+| Shop `/shop` | 1.3 s | 3.6 s | 60 ms | 0 | 5.6 s | 5.1 s |
 | Futon Frames PLP | 2.7 s | 5.6 s | 0 ms | 0 | 6.6 s | 5.6 s |
 | Kingston PDP | 1.3 s | 5.7 s | 50 ms | 0.036 | 5.8 s | 6.0 s |
-| About | 1.3 s | 3.5 s | 20 ms | 0 | 5.0 s | 5.1 s |
 | Contact | 2.6 s | 5.7 s | 10 ms | 0 | 6.0 s | 5.7 s |
 
-LCP threshold: Good <2.5 s, Needs Improvement 2.5–4.0 s, Poor >4.0 s  
-CLS threshold: Good <0.1, Needs Improvement 0.1–0.25, Poor >0.25
+LCP thresholds: Good <2.5 s · Needs Improvement 2.5–4.0 s · Poor >4.0 s  
+CLS thresholds: Good <0.1 · Needs Improvement 0.1–0.25 · Poor >0.25
 
 ---
 
 ## Key Findings
 
 ### Accessibility — 97/100 on every page
-Strong baseline. No issues identified across all five pages.
+No issues. Clean baseline.
 
 ### SEO — 66/100 (58 on Kingston PDP)
 
-**`is-crawlable` fails on every page.** This is expected and intentional: Vercel
-automatically adds `X-Robots-Tag: noindex` on all preview deployment URLs to
-prevent them from appearing in search results. This will resolve automatically
-once the domain is pointed at production (carolinafutons.com). Not a bug.
+**`is-crawlable` fails on every page.** Vercel preview deployments automatically
+add `X-Robots-Tag: noindex` to prevent preview URLs from appearing in search
+results. This is expected and will resolve automatically once carolinafutons.com
+points to Vercel. Not a bug — do not attempt to fix on the preview.
 
-**Kingston PDP also fails `meta-description`.** The `/products/[slug]` route does
-not generate a meta description for the `kingston-futon-frame` product. This will
-suppress the rich snippet on the live domain — needs a fix before cutover.
+**Kingston PDP also fails `meta-description`.** The `/products/[slug]` dynamic
+route does not generate a meta description for this product. This will persist on
+production and suppress rich snippets in Google Search. Fix before cutover.
 
-### Performance — 69–87/100
+### Performance — 69–85/100
 
-- **About page** is the best performer (87) — low JS weight, minimal images.
-- **PLP and Contact** are weakest (69–70) — large LCP (5.6–5.7 s).
-- **LCP is the primary drag across all pages** — 4.3–5.7 s, all in "Poor" territory.
-  Likely cause: hero/product images not prioritized or sized for mobile viewport.
-- **CLS on Kingston PDP = 0.036** — minor, in "Good" range, but non-zero.
-  Likely a late-loading image without explicit dimensions.
+Best: `/shop` index (85), About-equivalent static pages.  
+Worst: `/shop/futon-frames` PLP (69) and `/contact` (70).
+
+**LCP is the primary drag across all pages** — ranging 3.6–5.7 s, all in "Poor"
+territory except `/shop` (3.6 s, "Needs Improvement"). Likely causes:
+- Hero/product images not using `priority` prop on above-the-fold images
+- Product images on the PLP served at full resolution before layout is known
+
+**CLS on Kingston PDP = 0.036** — within "Good" range but non-zero. Likely a
+product image or font load without reserved space.
 
 ### Best Practices — 81/100 on every page
-Consistent across all pages. No variation; likely a shared dependency issue.
+Uniform across all pages — likely a shared third-party or browser API issue
+rather than page-specific.
 
-### Top Opportunity: Unused JavaScript (all pages)
+### Top Opportunity: Unused JavaScript (every page)
 
-Every page flags the same audit:
+| Page | Est. savings |
+|------|-------------|
+| Home | 138 KiB / 610 ms |
+| Shop index | 138 KiB |
+| Futon Frames PLP | 136 KiB / 770 ms |
+| Kingston PDP | 330 KiB / 1,510 ms |
+| Contact | 138 KiB / 750 ms |
 
-| Page | Est. JS savings | Est. time savings |
-|------|----------------|-------------------|
-| Home | 138 KiB | 610 ms |
-| Futon Frames PLP | 136 KiB | 770 ms |
-| Kingston PDP | 330 KiB | 1,510 ms |
-| About | 138 KiB | 450 ms |
-| Contact | 138 KiB | 750 ms |
-
-Kingston PDP carries 330 KiB of unused JS — more than double any other page.
-This is the single highest-impact optimization target.
-
----
-
-## Recommended Pre-Cutover Fixes (Priority Order)
-
-1. **Kingston PDP meta description** — `is-crawlable` will auto-fix on production,
-   but the missing meta description will persist. Add dynamic `metadata` export
-   to `/products/[slug]/page.tsx` to generate description from product data.
-
-2. **LCP optimization** — All pages have LCP > 4 s on mobile. Add `priority` prop
-   to the hero image on `/` and the first product image on `/shop/futon-frames`.
-   Ensure explicit `width`/`height` on all above-the-fold images.
-
-3. **Kingston PDP JS bundle** — 330 KiB unused JS (1.5 s savings) is significant.
-   Audit lazy loading of PDP-specific components (variant picker, galleries,
-   financing widgets).
-
-4. **CLS on Kingston PDP** — Minor (0.036) but investigate which element shifts.
-   Likely a product image missing explicit dimensions.
+Kingston PDP carries 330 KiB of unused JS — more than double other pages.
+This is the single largest perf improvement available.
 
 ---
 
-## Notes on Test Conditions
+## Pre-Cutover Action Items
 
-- All runs: Lighthouse 13.2.0, mobile simulation (Moto G Power emulation, 4× CPU throttle, Fast 4G)
-- Vercel preview cold-start latency may inflate TTFB and LCP relative to production
-- `force-dynamic` pages (`/search`) were not included in this baseline (not in scope)
-- Re-run this report on the live `carolinafutons.com` domain post-cutover to establish
-  the true production baseline (preview cold-starts and `noindex` artifacts will not apply)
+| # | Issue | Page | Priority |
+|---|-------|------|----------|
+| 1 | Missing meta description | `/products/[slug]` | P1 — affects SEO day-1 |
+| 2 | LCP > 4 s (hero images not prioritized) | Home, PLP, PDP, Contact | P1 — Core Web Vitals |
+| 3 | 330 KiB unused JS | Kingston PDP | P2 — perf |
+| 4 | CLS 0.036 | Kingston PDP | P3 — minor |
+
+---
+
+## Post-Cutover Retest Plan
+
+Re-run this report against `https://carolinafutons.com` (not the preview URL)
+after DNS propagation confirms. Expected changes:
+- SEO scores should rise to 90+ (crawlable, structured data intact)
+- LCP may improve with CDN edge caching vs preview cold-start latency
+- Use same command: `npx lighthouse <url> --chrome-flags='--headless'`
+
+---
+
+## Raw Command
+
+```bash
+npx lighthouse <url> \
+  --chrome-path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --chrome-flags="--headless" \
+  --output=json --output-path=/tmp/lh-<page>.json \
+  --only-categories=performance,accessibility,best-practices,seo \
+  --quiet
+```
