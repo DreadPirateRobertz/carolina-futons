@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 09:41 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 09:48 MT**
 
 ---
 
@@ -103,8 +103,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |----|-------|----|----|
 | #392 | chore(deps): bump eslint 9→10 | ❌ FAIL | **HOLD** — major version, CI breaking |
 | #391 | chore(deps): bump wix-sdk group | ✅ CLEAN | **HOLD** — review before merge |
-| #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | godfrey — refinery running |
-| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | blaidd — refinery running |
+| #390 | test(cf-3qt.14): /search page E2E smoke | ✅ CLEAN | **BLOCK** 77/100 — form submission test + data-slot fix (godfrey) |
+| #389 | feat(cf-3qt.12): /shop/sale PLP | ✅ CLEAN | **BLOCK** 90/100 — formatted.discountedPrice + checkboxes (blaidd) |
 | #388 | test(cf-3qt.13): E2E smoke /shop index hub | ✅ MERGED | 12:39 UTC — refinery 86/100 |
 | #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ MERGED | 12:28 UTC — refinery 88/100 |
 | #383 | feat(cf-s44d): email trigger E2E | ✅ MERGED | 15:42 UTC — refinery 84/100 |
@@ -120,11 +120,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|--------|
 | radahn | cf-gjhu — Rewards E2E (challenges + earning + redemption) | 🔧 |
 | rennala | cf-nujp — Email verification E2E (cart-recovery/welcome/notifyMe/swatch) | 🔧 |
-| blaidd | cf-3qt.12 ✅ MERGED PR #389 (refinery running) — then mattresses-sale fixture hotfix | 🔧 |
-| godfrey | cf-3qt.14 — PR #390 open CI PASS, refinery running | 🔧 |
-| miquella | cf-s44d ✅ MERGED PR #383 — free for next bead | ⏳ |
+| blaidd | cf-3qt.12 — PR #389 BLOCK 90/100 — formatted.discountedPrice + checkboxes (fix sent) | ⚠️ |
+| godfrey | cf-3qt.14 — PR #390 BLOCK 77/100 — form submit test + data-slot (fix sent) | ⚠️ |
+| miquella | cf-s44d ✅ MERGED — free for next bead | ⏳ |
 | morgott | cf-m07g — Checkout real-payment E2E spec (prep now, blocked Stilgar sandbox) | 🔧 |
-| millicent | freed — checking bd ready for next bead | ⏳ |
+| millicent | cf-8xw1 — data-slot=category-card + shop click-through nav test | 🔧 |
 
 ---
 
@@ -155,6 +155,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-gjhu | P2 | E2E: Reward system challenges + earning + redemption | radahn |
 | cf-m07g | P2 | E2E: Checkout with real Wix sandbox payment (spec prep) | morgott — blocked Stilgar sandbox |
 | cf-nujp | P2 | E2E: All test emails verified (cart-recovery/welcome/notifyMe/swatch) | rennala |
+| cf-8xw1 | P2 | feat: data-slot=category-card + shop click-through nav test | millicent |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -202,4 +203,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 353ab5c0 · Next refresh ~10 min · 5 beads active · #389/#390 refinery running; #383 MERGED 84/100; 3 new Stilgar E2E beads (cf-gjhu/cf-m07g/cf-nujp) dispatched*
+*Cron: 353ab5c0 · Next refresh ~10 min · 6 beads active · #389 BLOCK 90/100; #390 BLOCK 77/100; fixes sent; miquella+millicent redeployed; #392 eslint FAIL HOLD*
