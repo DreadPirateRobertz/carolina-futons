@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:31 MT**
 
 ---
 
@@ -100,8 +100,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
+| #388 | test(cf-3qt.13): E2E smoke /shop index hub | ⏳ PENDING | radahn — 2 commits, CI running |
 | #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ MERGED | 12:28 UTC — refinery 88/100 PASS; squash safe |
-| #383 | feat(cf-s44d): email trigger E2E | ✅ CLEAN | **BLOCK** 57.6/100 — route.ts discriminated guard fix sent to miquella |
+| #383 | feat(cf-s44d): email trigger E2E | ⏳ PENDING | **BLOCK** 57.6/100 — route.ts fix in flight (miquella) |
 | #386 | test(cf-1409): rewards E2E | ✅ MERGED | 11:58 UTC |
 | #384 | fix(cf-2jq9): .dark --cf-smoke token | ✅ MERGED | 11:58 UTC |
 | #382 | feat(cf-3qt.10): sofa-beds PLP | ✅ MERGED | 11:47 UTC |
@@ -115,12 +116,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-3qt.13 — /shop index hub page | 🔧 |
-| rennala | cf-uaoz — PR #387 ✅ MERGED 12:28 UTC — free for next bead | ✅ |
+| radahn | cf-3qt.13 — PR #388 open, CI pending | 🔧 |
+| rennala | freed — seeking next bead | ⏳ |
 | blaidd | cf-3qt.12 — Sale PLP /shop/sale (branch: feat/cf-announcement-rotate — wrong) | ⚠️ |
 | godfrey | cf-3qt.14 — /search results page (branch: feat/cf-y2l3 — wrong) | ⚠️ |
-| miquella | cf-s44d — PR #383 BLOCK 57.6/100 — route.ts fix nudged, awaiting push | ⚠️ |
-| morgott | cf-3qt.15 — newsletter wire (branch: main — wrong) | ⚠️ |
+| miquella | cf-s44d — PR #383 BLOCK 57.6/100 — route.ts fix in flight | ⚠️ |
+| morgott | cf-3qt.15 pre-resolved ✅ (bead closed) — taking cf-3qt.11 Mattresses | 🔧 |
 | millicent | cf-h2em — Platform Beds PLP (branch: feat/cf-oht1 — wrong, respawn pending) | ⚠️ |
 
 ---
@@ -153,7 +154,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-3qt.12 | P2 | Sale PLP /shop/sale | blaidd |
 | cf-3qt.13 | P2 | /shop index hub page | radahn |
 | cf-3qt.14 | P2 | /search results page | godfrey (new) |
-| cf-3qt.15 | P2 | Newsletter wire mailingListSignups | morgott (new) |
+| cf-3qt.15 | P2 | Newsletter wire mailingListSignups | ✅ PRE-RESOLVED — bead closed (code on main) |
 | cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent — respawn pending |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella — PR #383 BLOCK 57.6/100 — route.ts fix pending |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
@@ -201,4 +202,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · 8 beads active · #387 MERGED 88/100; #383 BLOCK 57.6/100 (miquella fix pending); rennala free for next bead*
+*Cron: 1709bbed · Next refresh ~10 min · 7 beads active · #388 new (radahn cf-3qt.13 CI pending); #383 BLOCK miquella fix in flight; cf-3qt.15 pre-resolved closed*
