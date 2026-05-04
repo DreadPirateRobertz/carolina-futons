@@ -602,7 +602,7 @@ function dismissLightbox(dismissKey) {
     $w('#promoOverlay').hide('fade', { duration: 200 });
   } catch (e) {}
 
-  wixSession.setItem(dismissKey, '1');
+  try { wixSession.setItem(dismissKey, '1'); } catch (e) {}
 }
 
 function initPromoDismiss(promoId, dismissKey) {
