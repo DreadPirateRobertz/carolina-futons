@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:14 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:17 MT**
 
 ---
 
@@ -100,7 +100,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | **BLOCK**: checkout-smoke:44 `toBeVisible()` on in-stock — element absent when no error. Rennala must change to `toHaveCount(0)` |
+| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | Fix pushed (melania: toHaveCount(0)), rebased, merge in-flight |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar replaces with placeholders |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
@@ -111,9 +111,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| radahn | cf-45uk — footer living animation (redirected from cf-3qt.7 code-complete) | 🔧 |
+| radahn | cf-45uk — footer living animation (re-nudged with explicit file paths) | 🔧 |
 | rennala | PR #380 — fix `checkout-smoke.spec.ts:44` `toHaveCount(0)` | 🔧 fix needed |
-| blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
+| blaidd | ⚠️ SESSION DEAD — cf-uaoz unassigned, pending respawn | ☠️ |
 | godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
 | miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
 | morgott | cf-2jq9 — globals.css .dark --cf-smoke token fix | 🔧 |
@@ -148,7 +148,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-3qt.7 | P1 | SEO + analytics — code COMPLETE, blocked Stilgar verify | PR #376 BLOCK + live verify |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
 | cf-45uk | P2 | Footer living animation distinct from header | radahn |
-| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | blaidd |
+| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | ⚠️ UNASSIGNED — blaidd session dead |
 | cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
 | cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
 | cf-2jq9 | P2 | globals.css .dark --cf-smoke missing token | morgott |
