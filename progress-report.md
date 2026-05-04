@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:15 MT**
 
 ---
 
@@ -30,15 +30,17 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |---------|--------|
 | LivingHero header | ✅ MERGED #347 — bears live |
 | LivingHero day→night flash | ✅ FIXED — !mounted guard on all 4 phase opacities (33cbe6e, main) |
-| Footer white circles | ✅ FIXED — STARS SVG removed |
+| Footer white circles | ✅ FIXED — STARS SVG removed (12978d4, main) |
+| Search product thumbnails | ✅ FIXED — next/image added (b7c93cc, main) |
 | Theme previews A/B/C/D | ✅ LIVE — /theme-a /theme-b /theme-c /theme-d |
 | Design a Room | ✅ MERGED #343 |
 | Auth dead-end redirect | ✅ MERGED #348 |
 | /dashboard/profile | ✅ MERGED #349 |
 | Sale lightbox session gate | ✅ MERGED Velo #1134 |
 | PDP Financing (BNPL) | ✅ MERGED #279 |
+| Bear Easter egg mobile | ⏳ cf-ggvw → godfrey |
 | Font contrast audit | ⏳ miquella (cf-tu3q) — Playwright audit in progress |
-| SEO+analytics | ⏳ cf-3qt.7 in progress (radahn) |
+| SEO+analytics | ⏳ cf-3qt.7 in progress (radahn, PR #352 pending) |
 
 **carolinafutons.com still = Wix.** cfW on Vercel URL only until DNS flip (cf-3qt.8).
 
@@ -61,7 +63,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | PR | Title | CI |
 |----|-------|----|
 | #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail |
-| #1130 | chore(deps): dev-deps bump | **HOLD** ✅ |
+| #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ |
 | #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only |
 | #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
 
@@ -69,15 +71,17 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ## CFW Open PRs (carolina-futons-web / Next.js)
 
-| PR | Title | CI |
-|----|-------|----|
-| #350 | feat(cf-9izd): fixture products for cart QA | ⏳ pending → millicent |
-| #331 | feat(cf-4bhw): Gift Registry | ❌ fail → rennala (cf-yhep) |
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ⏳ CI re-running (rennala fixed) |
-| #299 | fix(cf-urbq): dark mode font contrast | ⏳ CI pending (morgott fixed) |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail → morgott (cf-sk49) |
-| #281 | feat(cf-7axq): Add to Compare | ❌ fail → godfrey (cf-arfx) |
-| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass |
+| PR | Title | CI | Note |
+|----|-------|----|----|
+| #352 | feat(cf-3qt.7): BlogPosting JSON-LD on /blog/[slug] | ⏳ pending | radahn |
+| #351 | feat(cf-sb0i): wire BotanicalFooterDivider + PLP illus | ❌ fail | blaidd |
+| #350 | feat(cf-9izd): fixture products for cart QA | ✅ pass | ⚠️ rebase needed → millicent |
+| #331 | feat(cf-4bhw): Gift Registry | ❌ fail | rennala (cf-yhep) |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail | rennala fixed |
+| #299 | fix(cf-urbq): dark mode font contrast | ✅ pass | ⚠️ rebase needed → morgott |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ✅ pass | ⚠️ rebase needed → morgott |
+| #281 | feat(cf-7axq): Add to Compare | ✅ pass | ⚠️ rebase needed → godfrey |
+| #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | |
 
 ---
 
@@ -87,11 +91,17 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|------|
 | radahn | SEO+analytics — redirects, GA4, pixels, JSON-LD, OG, sitemap | cf-3qt.7 |
 | blaidd | Wire unwired illustrations (BotanicalFooterDivider + 4 PLP) | cf-sb0i |
-| godfrey | Fix PR #281 lint (Add to Compare) | cf-arfx |
+| godfrey | Fix EasterEggBear modal off-screen on mobile | cf-ggvw |
 | miquella | Playwright font-contrast audit (light + dark mode) | cf-tu3q |
 | rennala | Fix PR #331 lint (Gift Registry) | cf-yhep |
-| morgott | Fix PR #291 lint (PdpSizeGuide) | cf-sk49 |
-| millicent | PR #350 check + merge if green | cf-3ya6 |
+| morgott | Rebase + merge PRs #291 + #299 | cf-sk49/cf-urbq |
+| millicent | Rebase + merge PR #350 | cf-3ya6 |
+
+### Convoy status (mayor query)
+radahn cf-3qt.7 is 8-step. **Convoy candidates once PR fixes clear:**
+- morgott: fastest to free (just rebasing #291/#299) → convoy step 3+
+- rennala: free once #331 lint clears → convoy step 4+
+- godfrey: free once cf-ggvw (Easter egg, small fix) → convoy step 5+
 
 ---
 
@@ -99,6 +109,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
+| **Rebase conflicts** | PRs #281/#291/#299/#350 all ✅ CI but need crew rebase on main |
+| **Bear Easter egg mobile** | cf-ggvw → godfrey (portal + safe-area fix) |
 | **Font contrast** | cf-tu3q/miquella — audit in progress, beads to follow |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
 | **Velo #1125** | Codecov-only — admin merge eligible? |
@@ -116,11 +128,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-----|-------|------|
 | cf-3qt.7 | P1 | SEO+analytics | radahn |
 | cf-sb0i | P2 | Wire unwired illustrations | blaidd |
-| cf-arfx | P2 | Fix PR #281 lint (Add to Compare) | godfrey |
+| cf-ggvw | P2 | EasterEggBear mobile modal fix | godfrey |
 | cf-tu3q | P2 | Font contrast Playwright audit | miquella |
 | cf-yhep | P2 | Fix PR #331 lint (Gift Registry) | rennala |
-| cf-sk49 | P2 | Fix PR #291 lint (PdpSizeGuide) | morgott |
-| cf-3ya6 | P2 | PR #350 check + merge | millicent |
+| cf-sk49 | P2 | Rebase + merge PRs #291+#299 | morgott |
+| cf-3ya6 | P2 | Rebase + merge PR #350 | millicent |
 | cf-9t70 | P1 | /swatch-request — Wix CMS pending | — |
 | cf-0s4l | P3 | /sustainability CMS | miquella |
 
