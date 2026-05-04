@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 06:30 MT**
 
 ---
 
@@ -100,8 +100,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ CLEAN | **REFINERY RUNNING** — CI now PASS; squash-merge contamination eval in progress |
-| #383 | feat(cf-s44d): email trigger E2E | ✅ CLEAN | **REFINERY RUNNING** — CI now PASS; route.ts email guard bug still present |
+| #387 | fix(cf-uaoz): plp.spec.ts stabilize | ✅ MERGED | 12:28 UTC — refinery 88/100 PASS; squash safe |
+| #383 | feat(cf-s44d): email trigger E2E | ✅ CLEAN | **BLOCK** 57.6/100 — route.ts discriminated guard fix sent to miquella |
 | #386 | test(cf-1409): rewards E2E | ✅ MERGED | 11:58 UTC |
 | #384 | fix(cf-2jq9): .dark --cf-smoke token | ✅ MERGED | 11:58 UTC |
 | #382 | feat(cf-3qt.10): sofa-beds PLP | ✅ MERGED | 11:47 UTC |
@@ -116,10 +116,10 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | cf-3qt.13 — /shop index hub page | 🔧 |
-| rennala | cf-uaoz — PR #387 CI PASS; refinery eval in progress (branch: feat/cf-r9tf wrong) | ⚠️ |
+| rennala | cf-uaoz — PR #387 ✅ MERGED 12:28 UTC — free for next bead | ✅ |
 | blaidd | cf-3qt.12 — Sale PLP /shop/sale (branch: feat/cf-announcement-rotate — wrong) | ⚠️ |
 | godfrey | cf-3qt.14 — /search results page (branch: feat/cf-y2l3 — wrong) | ⚠️ |
-| miquella | cf-s44d — PR #383 CI PASS; refinery eval in progress (branch: main — wrong) | ⚠️ |
+| miquella | cf-s44d — PR #383 BLOCK 57.6/100 — route.ts fix nudged, awaiting push | ⚠️ |
 | morgott | cf-3qt.15 — newsletter wire (branch: main — wrong) | ⚠️ |
 | millicent | cf-h2em — Platform Beds PLP (branch: feat/cf-oht1 — wrong, respawn pending) | ⚠️ |
 
@@ -155,8 +155,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | cf-3qt.14 | P2 | /search results page | godfrey (new) |
 | cf-3qt.15 | P2 | Newsletter wire mailingListSignups | morgott (new) |
 | cf-h2em | P2 | Platform Beds PLP /shop/platform-beds | millicent — respawn pending |
-| cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | rennala — PR #387 BLOCK (rebase) |
-| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella — PR #383 BLOCK 62/100 |
+| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella — PR #383 BLOCK 57.6/100 — route.ts fix pending |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -171,6 +170,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | When |
 |----|-------|------|
+| #387 | fix(cf-uaoz): stabilize plp.spec.ts timeouts + selectors | 12:28 UTC |
 | #386 | test(cf-1409): rewards & gamification E2E | 11:58 UTC |
 | #384 | fix(cf-2jq9): globals.css .dark --cf-smoke token | 11:58 UTC |
 | #382 | feat(cf-3qt.10): sofa-beds PLP /shop/sofa-beds | 11:47 UTC |
@@ -201,4 +201,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | carolina-futons-stage3-velo | `0 6 * * *` | ✅ Running |
 
 ---
-*Cron: 1709bbed · Next refresh ~10 min · 9 beads active · #383/#387 CI now PASS — refinery running; crew branch drift detected (6 of 7 on wrong branches)*
+*Cron: 1709bbed · Next refresh ~10 min · 8 beads active · #387 MERGED 88/100; #383 BLOCK 57.6/100 (miquella fix pending); rennala free for next bead*
