@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 23:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 00:10 MT**
 
 ---
 
@@ -28,33 +28,26 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Feature | Status |
 |---------|--------|
-| LivingHero header | ✅ MERGED #347 |
-| LivingHero day→night flash | ✅ FIXED (33cbe6e) |
-| Footer white circles | ✅ FIXED (12978d4) |
-| Footer scene integrated | ✅ MERGED #354 — LivingFooterScene now absolute, no float |
-| Search product thumbnails | ✅ FIXED (b7c93cc) |
+| LivingHero + all phase fixes | ✅ MERGED |
+| Footer scene integrated | ✅ MERGED #354 |
+| Footer white circles | ✅ FIXED |
+| Search product thumbnails | ✅ FIXED |
 | Gift Registry /registry | ✅ MERGED #331 |
-| EasterEggBear mobile modal | ✅ MERGED #353 — portal fix |
+| EasterEggBear mobile modal | ✅ MERGED #353 |
 | SEO BlogPosting JSON-LD | ✅ MERGED #352 |
 | Illustrations wired | ✅ MERGED #351 |
-| Bear Easter egg persistence | ⏳ cf-okwz (P3) — Stilgar to pick: clipboard/localStorage/silent |
-| **P0: Zero products on PLP** | ⚠️ PARTIALLY FIXED — plp.ts fixture-gated (306eca7). Awaiting Stilgar directive: set Preview WIX_CLIENT_ID_HEADLESS=cb591c8e (real catalog) OR USE_FIXTURE=1 (5 test items) |
-| Font contrast audit | ⏳ miquella (cf-tu3q) |
+| Blog OG + Twitter card | ⏳ PR #355 — review running |
+| **P0: PLP zero products** | ⚠️ Code fix on main (306eca7). Awaiting Stilgar: Option A (Preview WIX_CLIENT_ID→cb591c8e) or B (USE_FIXTURE=1) |
+| Font contrast audit | ⏳ miquella cf-tu3q |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
-
-**carolinafutons.com still = Wix.** cfW on Vercel URL only until DNS flip (cf-3qt.8).
 
 ---
 
 ## ⚠️ P0 OPEN: Zero Products on PLP
 
-**Root cause:** Vercel Preview env uses WIX_CLIENT_ID_HEADLESS=6b4d4894 (staging headless). Staging Wix site has no collections → CATEGORY_NOT_FOUND → items=[]. Also breaks CI E2E.
-
-**Code fix pushed (306eca7):** `plp.ts` now honours USE_FIXTURE flag — fixture collection IDs no longer hit real Wix.
-
-**Remaining:** Stilgar must choose preview env strategy:
-- **Option A** (recommended): Change Preview WIX_CLIENT_ID_HEADLESS → cb591c8e (prod Wix client). Real catalog on preview URL.
-- **Option B**: Set NEXT_PUBLIC_USE_FIXTURE_PRODUCTS=1 on Vercel Preview + CI. Shows 5 fixture products only.
+**Root cause:** Preview env WIX_CLIENT_ID_HEADLESS=6b4d4894 (staging, no collections). Code fix pushed (306eca7). Awaiting Stilgar directive:
+- **Option A** (recommended): Change Preview WIX_CLIENT_ID_HEADLESS → cb591c8e. Real catalog visible on preview URL.
+- **Option B**: Set NEXT_PUBLIC_USE_FIXTURE_PRODUCTS=1 on Vercel Preview + CI. Shows 5 fixture products.
 
 ---
 
@@ -63,22 +56,21 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Env Var | Status |
 |---------|--------|
 | WIX_CLIENT_ID_HEADLESS (prod) | ✅ cb591c8e |
-| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — staging, no collections → P0 |
-| SMTP_HOST/PORT/USER/PASS (prod) | ✅ Set |
-| CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
-| EAS CFW_API_URL | ✅ carolina-futons-web.vercel.app |
+| WIX_CLIENT_ID_HEADLESS (preview) | ⚠️ 6b4d4894 — no collections → P0 |
+| SMTP / CROSS_RIG_SECRET (prod+EAS) | ✅ Set |
 | SENTRY_AUTH_TOKEN (EAS) | ⏳ Awaiting Stilgar |
 
 ---
 
 ## CF Open PRs (carolina-futons / Velo)
 
-| PR | Title | CI |
-|----|-------|----|
-| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail |
-| #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ |
-| #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only |
-| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail |
+| PR | Title | CI | Note |
+|----|-------|----|----|
+| #1135 | feat(cf-0s4l): Sustainability CMS collections | ⏳ pending | miquella: fix test counts (31→34) |
+| #1133 | feat(cf-y2l3): trade-in / trade-up program | ❌ fail | |
+| #1130 | chore(deps): dev-deps bump | **HOLD** ⏳ | |
+| #1125 | feat(cf-9t70): sampleRequests endpoint | ⚠️ codecov only | |
+| #1120 | feat(cf-3qt.4.4): delivery zone distance calc | ❌ fail | |
 
 ---
 
@@ -86,38 +78,26 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail | millicent fixing |
-| #299 | fix(cf-urbq): dark mode font contrast | ❌ fail | morgott: rebase on latest main |
-| #291 | feat(cf-ww8u): PdpSizeGuide | ❌ fail | morgott: rebase on latest main |
-| #281 | feat(cf-7axq): Add to Compare | ❌ fail | godfrey: rebase on latest main |
+| #355 | feat(cf-3qt.7): blog OG + Twitter card metadata | ⏳ pending | radahn — refinery review running |
+| #319 | feat(cf-3i8j): 2D drag-drop room planner | ✅ pass | ⚠️ merge conflict — millicent rebasing |
+| #299 | fix(cf-urbq): dark mode font contrast | ✅ pass | ⚠️ refinery blockers → morgott fixing |
+| #291 | feat(cf-ww8u): PdpSizeGuide | ✅ pass | ⚠️ refinery blockers → morgott fixing |
+| #281 | feat(cf-7axq): Add to Compare | ⏳ CI running | godfrey fixes pushed — awaiting green |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | |
-
----
-
-## Session Merges (this session)
-
-| PR | Title |
-|----|-------|
-| ✅ #354 | fix(cf-duua): LivingFooterScene out of flow |
-| ✅ #353 | fix(cf-ggvw): EasterEggBear portal fix |
-| ✅ #352 | feat(cf-3qt.7): SEO BlogPosting JSON-LD |
-| ✅ #351 | feat(cf-sb0i): illustrations wired |
-| ✅ #350 | feat(cf-9izd): fixture products |
-| ✅ #331 | feat(cf-4bhw): Gift Registry |
 
 ---
 
 ## Crew Assignments
 
-| Crew | Current Task | Bead | Status |
-|------|-------------|------|--------|
-| radahn | cf-3qt.7 shipped — awaiting next | — | 🆓 free |
-| rennala | cf-3qt.7 convoy done — awaiting next | — | 🆓 free |
-| blaidd | cf-sb0i shipped — awaiting next | — | 🆓 free |
-| godfrey | Rebase PR #281 on latest main | cf-7axq | rebasing |
-| miquella | Font-contrast audit + cf-0s4l next | cf-tu3q | in progress |
-| morgott | Rebase PRs #291+#299 on latest main | cf-duua closed | rebasing |
-| millicent | Fix PR #319 CI (room planner) | cf-3ya6 closed | ❌ fixing |
+| Crew | Current Task | Status |
+|------|-------------|--------|
+| radahn | PR #355 blog OG/Twitter card — in review | ⏳ CI pending |
+| rennala | cf-0s4l schema sign-off + Wix site ID for provision | ⏳ dependency |
+| blaidd | Free — awaiting next assignment | 🆓 |
+| godfrey | PR #281 refinery fixes pushed | ⏳ CI running |
+| miquella | Fix PR #1135 test count (31→34) | 🔧 fixing |
+| morgott | Fix PRs #291+#299 refinery blockers | 🔧 fixing |
+| millicent | Rebase PR #319 on latest main | 🔧 rebasing |
 
 ---
 
@@ -125,17 +105,18 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Issue | Status |
 |-------|--------|
-| **P0: PLP zero products** | Stilgar decision needed: Option A (prod Wix client on preview) vs Option B (USE_FIXTURE=1) |
-| **PRs #281/#291/#299** | Need rebase on main after P0 fix commit (306eca7) |
-| **CI E2E** | Fails until preview WIX env resolved — E2E hits staging Wix with no collections |
+| **P0: PLP zero products** | Stilgar directive needed (Option A vs B) |
+| **PR #291** | morgott: delete dead code, fix SVG marker IDs, unit label |
+| **PR #299** | morgott: test plan boxes + toHaveClass assertions |
+| **PR #319** | millicent: rebase conflict |
+| **PR #1135** | miquella: fix test counts 31→34, tick plan boxes |
+| **rennala** | Provide headless Wix site ID for cf-0s4l --provision |
 | **SENTRY_AUTH_TOKEN** | Mayor DM'd Stilgar — awaiting |
-| **Font contrast** | cf-tu3q/miquella — audit in progress |
 | **Theme pick** | /theme-a–d live — Stilgar to choose |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
-| **contactSubmissions 404** | Awaiting Stilgar DNS clearance |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending |
-| **v3 cabin/reading/falls/fog** | Need Stilgar page direction |
-| **Vercel prod redeploy** | Needed to activate new WIX_CLIENT_ID_HEADLESS |
+| **cf-okwz** (P3) | Bear Easter egg false persistence — Stilgar picks approach |
+| **Vercel prod redeploy** | Needed to activate WIX_CLIENT_ID_HEADLESS prod swap |
 
 ---
 
@@ -144,10 +125,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-tu3q | P2 | Font contrast Playwright audit | miquella |
-| cf-0s4l | P3 | /sustainability CMS | miquella (next) |
+| cf-0s4l | P3 | /sustainability CMS | miquella (PR #1135) |
 | cf-9t70 | P1 | /swatch-request — Wix CMS pending | — |
-| cf-okwz | P3 | EasterEggBear false "Code saved ✓" | unassigned |
-| cf-duua | P1 | Footer scene layout | ✅ closed (PR #354 merged) |
+| cf-okwz | P3 | EasterEggBear false persistence | unassigned |
 
 ---
 
