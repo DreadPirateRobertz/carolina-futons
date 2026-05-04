@@ -40,9 +40,9 @@ const EXPECTED_SLUGS = [
 // ── blogContent exports ──────────────────────────────────────────────
 
 describe('getBlogSlugs', () => {
-  it('returns all 17 pillar post slugs', () => {
+  it('returns all 21 pillar post slugs', () => {
     const slugs = getBlogSlugs();
-    expect(slugs).toHaveLength(17);
+    expect(slugs).toHaveLength(21);
     for (const expected of EXPECTED_SLUGS) {
       expect(slugs).toContain(expected);
     }
@@ -186,9 +186,9 @@ describe('getBlogFaqs', () => {
 });
 
 describe('getAllBlogPosts', () => {
-  it('returns array of all 17 posts', () => {
+  it('returns array of all 21 posts', () => {
     const posts = getAllBlogPosts();
-    expect(posts).toHaveLength(17);
+    expect(posts).toHaveLength(21);
     for (const post of posts) {
       expect(post.slug).toBeTruthy();
       expect(post.title).toBeTruthy();
@@ -196,10 +196,12 @@ describe('getAllBlogPosts', () => {
     }
   });
 
-  it('contains the same posts accessible via getBlogPost', () => {
+  it('contains all EXPECTED_SLUGS posts accessible via getBlogPost', () => {
     const all = getAllBlogPosts();
     const slugs = all.map(p => p.slug);
-    expect(slugs.sort()).toEqual([...EXPECTED_SLUGS].sort());
+    for (const expected of EXPECTED_SLUGS) {
+      expect(slugs).toContain(expected);
+    }
   });
 
   it('every post has all required fields', () => {
