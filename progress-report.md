@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:33 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:34 MT**
 
 ---
 
@@ -94,8 +94,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| ~~#365~~ | fix(cf-jcta+cf-32cy): CTA hover + /contact dark | ✅ MERGED 02:33 MT | |
-| #363 | fix(cf-xbj9): dark mode card wrappers | ✅ CLEAN | ⛔ 4th cycle — blaidd fixing 2 inputs |
+| #366 | fix(cf-ighf): charcoal/70 contrast fix FilterFirst | ✅ CLEAN | refinery running |
+| #363 | fix(cf-xbj9): dark mode card wrappers | ✅ CLEAN | blaidd adding ConsentBanner border (rennala review) |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -107,11 +107,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-------------|--------|
 | radahn | E2E checkout smoke test (Playwright, fixture mode) | 🔧 building |
 | rennala | cf-9t70 /swatch-request | ⏳ blocked on Wix CMS (Stilgar) |
-| blaidd | PR #363 cf-xbj9 — fixing 2 inputs + QA boxes | 🔧 took over from godfrey |
+| blaidd | PR #363 — adding ConsentBanner dark:border-cf-ink/30 (rennala review) | 🔧 final fix |
 | godfrey | 🆓 free (off PR #363) | — |
 | miquella | cf-0s4l BLOCKED — account mismatch | ⛔ Stilgar API key needed |
 | morgott | 🆓 free (#365 merged) | — |
-| millicent | cf-ighf light mode charcoal/50 | 🔧 in progress |
+| millicent | cf-ighf — PR #366 open, refinery running | 🔧 done |
 
 ---
 
@@ -137,7 +137,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 |------|-----|-------|------|
 | cf-xbj9 | P1 | dark:bg-cf-cream card wrappers | blaidd PR #363 (4th cycle) |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
-| cf-ighf | P3 | light mode charcoal/50 (2 nodes) | millicent |
+| cf-ighf | P3 | light mode charcoal/70 (2 nodes) — PR #366 | millicent (refinery) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
 
