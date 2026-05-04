@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-03 22:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-03 22:25 MT**
 
 ---
 
@@ -28,13 +28,14 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Feature | Status |
 |---------|--------|
-| LivingHero header | ✅ MERGED #347 — LivingHero in header, LivingSkyClient retired |
+| LivingHero header | ✅ MERGED #347 — LivingHero in header, bears live (porch day + stargazing night) |
+| Footer white circles | ✅ FIXED — STARS SVG removed from LivingFooterBg (P0, pushed direct to main) |
 | Theme previews A/B/C/D | ✅ LIVE on main — /theme-a /theme-b /theme-c /theme-d |
 | Design a Room | ✅ MERGED #343 — futon-in-room scene viewer live |
-| Home scroll crash | ✅ MERGED #345 — hydration mismatch fixed |
-| PDP duplicate financing | ✅ MERGED #346 — duplicate render removed |
-| Footer illustration | ✅ LIVE — night mountain scene |
-| Sale lightbox session gate | ✅ MERGED Velo #1134 — promo lightbox session-gated |
+| Auth dead-end redirect | ✅ MERGED #348 — safeNext() guard live |
+| /dashboard/profile | ✅ MERGED #349 — name, email, join date, logout live |
+| Sale lightbox session gate | ✅ MERGED Velo #1134 — session-gated |
+| Cart fixture preview | ✅ PR #350 open — NEXT_PUBLIC_USE_FIXTURE_PRODUCTS env gate |
 
 **carolinafutons.com still = Wix.** cfW visible on Vercel URL only until DNS flip (cf-3qt.8).
 
@@ -55,8 +56,7 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | PR | Title | CI |
 |----|-------|----|
-| #349 | feat(cf-3qt.3): /dashboard/profile | ⏳ pending |
-| #348 | fix(cf-w5ks): auth redirect ?next= flow | ⏳ pending |
+| #350 | feat(cf-9izd): seeded fixture products for cart QA | ⏳ pending |
 | #331 | feat(cf-4bhw): Gift Registry | ❌ fail |
 | #319 | feat(cf-3i8j): 2D drag-drop room planner | ❌ fail |
 | #299 | fix(cf-urbq): dark mode font contrast | ❌ fail |
@@ -76,10 +76,9 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 | godfrey | PDP Financing / BNPL | cf-10fx |
 | radahn | /sustainability CMS wiring | cf-0s4l |
 | rennala | BNPL Afterpay/Affirm | cf-d3hc |
-| millicent | Cart QA seeded-fixture preview | cf-9izd |
+| millicent | Standing by — cf-9izd closed, bd ready | — |
 | miquella | CFW shipping tier system | cf-eihx |
-| miquella | Parity audit | cf-rtd7 |
-| morgott | (cf-etv3 MERGED — reassign pending) | — |
+| morgott | Standing by — cf-etv3 closed, reassign pending | — |
 
 ---
 
@@ -87,30 +86,28 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 
 | Issue | Status |
 |-------|--------|
-| **5 failing CFW PRs** | #331/#319/#299/#291/#281 lint/typecheck — needs crew fix |
+| **5 failing CFW PRs** | #331/#319/#299/#291/#281 lint/typecheck — needs crew |
 | **Theme pick** | /theme-a /theme-b /theme-c /theme-d live — Stilgar to choose |
-| **Auth redirect bug** | cf-w5ks P2 — PR #348 ⏳ pending CI |
 | **Velo #1125** | Codecov-only fail — admin merge eligible? |
 | **cf-9t70 swatch CMS** | Wix Dashboard: SwatchRequests collection pending |
 | **contactSubmissions 404** | Awaiting Stilgar §1-§3 DNS clearance |
 | **DNS flip** (cf-cb9s) | Stilgar §1-§3 pending; §5 order-lookup 501. Dallas holding. |
-| **v3 illustrations** (cabin/reading/falls/fog) | No CFW components built — need page+placement direction from Stilgar |
+| **v3 cabin/reading/falls/fog** | No CFW components built — need Stilgar page direction |
+| **morgott/millicent idle** | Both free — dispatch to failing PRs or new beads |
 
 ---
 
-## In-Progress Beads (7 total)
+## In-Progress Beads (5 total)
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
 | cf-10fx | P1 | PDP Financing / BNPL | godfrey |
 | cf-9t70 | P1 | /swatch-request — code done, Wix CMS pending | morgott |
 | cf-sb0i | P2 | Wire unwired illustrations (footer divider + 4 PLP) | blaidd |
-| cf-9izd | P2 | Cart QA seeded-fixture preview deploy | millicent |
-| cf-w5ks | P2 | GAP-AUTH-1 dead-end auth redirect | — (PR #348 open) |
 | cf-0s4l | P3 | /sustainability — wire Wix CMS | radahn |
 | cf-eihx | P2 | CFW shipping tier system | miquella |
 
-**Outside bd:** cf-d3hc/rennala · cf-rtd7/miquella
+**Outside bd:** cf-d3hc/rennala
 
 ---
 
@@ -119,14 +116,14 @@ Channel A dual-write active: mobile fires both cfW `/api/cross-rig` + Wix concur
 ### v2 Botanical — WIRED ✅
 BotanicalMountainSkyline → /about | BotanicalTimeline → /about | BotanicalDesignARoom → /design-a-room | BotanicalGuides → /guides | BotanicalVisitUs → /visit | BotanicalReviews → /reviews
 
-### v2 Botanical — UNWIRED (cf-sb0i / blaidd)
+### v2 Botanical — IN PROGRESS (cf-sb0i/blaidd)
 BotanicalFooterDivider → above Footer (every page) | FutonsCategory → /shop/futon-frames | MurphyCategory → /shop/murphy-cabinet-beds | PlatformCategory → /shop/platform-beds | MattressesCategory → /shop/mattresses
 
 ### v3 Mascot — WIRED ✅
-MascotWorldHero → LivingHero daytime | StargazingHero → LivingHero night | MascotCategoryCard → /shop
+MascotWorldHero (porch, daytime) → LivingHero/header | StargazingHero (night) → LivingHero/header | MascotCategoryCard → /shop
 
 ### v3 Mascot — NO COMPONENT YET
-cabin (v3-03), reading (v3-04), falls (v3-05), fog (v3-06) — need Stilgar direction on pages
+cabin (v3-03), reading (v3-04), falls (v3-05), fog (v3-06) — need Stilgar page direction
 
 ---
 
