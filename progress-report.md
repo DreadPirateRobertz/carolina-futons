@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 04:58 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 05:02 MT**
 
 ---
 
@@ -38,7 +38,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Checkout route (cfW) | ✅ 3/3 PASS |
 | Full cfutons vitest suite | ✅ **40,158/40,158 PASS** |
 | E2E checkout (real payment) | ⛔ BLOCKED — P0 must resolve first; Stilgar enable Wix sandbox payment |
-| E2E fixture-mode smoke test | ✅ PR #368 + #377 follow-up MERGED |
+| E2E fixture-mode smoke test | ✅ PR #368 + #377 MERGED |
 
 ---
 
@@ -68,8 +68,8 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Fixture cart + order (E2E) | ✅ MERGED #374 |
 | PLP E2E smoke (5 routes) | ✅ MERGED #372 |
 | Render audit /registry /gift-cards | ✅ MERGED #375 |
-| **Hamburger menu z-index** | ✅ MERGED #378 (refinery 92/100 PASS) |
-| **PLP Futon Frames getCollectionPlp** | ✅ MERGED #370 (refinery PASS after rebase) |
+| Hamburger menu z-index | ✅ MERGED #378 |
+| PLP Futon Frames getCollectionPlp | ✅ MERGED #370 |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 | Footer living animation | 🔧 radahn — cf-45uk |
@@ -99,9 +99,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | refinery in-flight |
+| #380 | feat(cf-3qt.3): Playwright auth fixture | ✅ Vercel | **BLOCK**: checkout-smoke line 44 expects `#add-to-cart-status` visible for in-stock — element only renders on error/disabled. Rennala fix pending |
 | #376 | docs(cf-3qt.7): analytics env vars | ✅ Vercel | **BLOCK**: real GA4/Meta Pixel IDs in .env.example — Stilgar must replace with placeholders |
-| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ❌ Vercel fail | morgott fixing |
+| #373 | test(cf-3qt.2.13): search/compare/wishlist smoke | ✅ Vercel | refinery in-flight |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -112,12 +112,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | cf-45uk — footer living animation (LivingFooter.tsx) | 🔧 |
-| rennala | cf-3qt.3 Playwright auth fixture — PR #380 open, Vercel ✅ | ⏳ refinery |
+| rennala | PR #380 — fix checkout-smoke `#add-to-cart-status` assertion | 🔧 fix needed |
 | blaidd | cf-uaoz — plp.spec.ts CI flakiness stabilize | 🔧 |
-| godfrey | #378 MERGED ✅ — standing by | ⏳ |
-| miquella | #371 MERGED ✅ — standing by | ⏳ |
-| morgott | PR #373 Vercel fix — search/compare/wishlist smoke | 🔧 |
-| millicent | #1125 MERGED ✅ — standing by | ⏳ |
+| godfrey | cf-1409 — reward + challenge E2E tests | 🔧 |
+| miquella | cf-s44d — email trigger E2E (cart recovery + welcome) | 🔧 |
+| morgott | PR #373 refinery in-flight → next bead after clear | ⏳ |
+| millicent | standing by | ⏳ |
 
 ---
 
@@ -142,11 +142,13 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.3 | P1 | Account — Playwright auth fixture (storageState + globalSetup) | rennala |
-| cf-3qt.7 | P1 | SEO + analytics env vars | PR #376 BLOCK |
+| cf-3qt.3 | P1 | Account — Playwright auth fixture | rennala — PR #380 fix pending |
+| cf-3qt.7 | P1 | SEO + analytics env vars | PR #376 BLOCK (Stilgar) |
 | cf-9t70 | P1 | /swatch-request Wix CMS | blocked on Stilgar CMS creation |
 | cf-45uk | P2 | Footer living animation distinct from header | radahn |
 | cf-uaoz | P2 | plp.spec.ts CI flakiness stabilize | blaidd |
+| cf-1409 | P2 | Reward + challenge system E2E tests | godfrey |
+| cf-s44d | P2 | Email trigger E2E (cart recovery + welcome) | miquella |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -171,9 +173,9 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #1125 | sampleRequests Velo endpoint | 10:47 UTC |
 | #377 | E2E inline fixture check + OOS assert | 10:50 UTC |
 | #1133 | feat(cf-y2l3): trade-in/trade-up program | 10:5x UTC |
+| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | 11:0x UTC |
 | #378 | fix(cf-hmb1): hamburger z-index (z-[55]/z-[56]) | 11:0x UTC |
 | #370 | feat(cf-3qt.2): PLP Futon Frames getCollectionPlp | 11:0x UTC |
-| #371 | feat(cf-3qt.2.8): Murphy Cabinet Beds PLP | earlier |
 
 ---
 
