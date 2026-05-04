@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:40 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 02:43 MT**
 
 ---
 
@@ -63,8 +63,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **Products loading (ALL PLPs)** | ❌ 0 products — Wix OAuth not connected |
 | Dark mode card wrappers | ✅ MERGED #363 |
 | CTA hover + /contact dark | ✅ MERGED #365 |
-| Light mode charcoal/50→/70 | ✅ MERGED #366 |
-| Light mode charcoal/50→/70 (alt nodes) | ⏳ PR #367 pending CI + refinery |
+| Light mode charcoal/50→/70 | ✅ MERGED #366 + #367 |
 | Theme pick | ⏳ Stilgar to choose /theme-a–d |
 | contactSubmissions live | ⚠️ Stilgar must publish live Wix site |
 
@@ -96,8 +95,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #368 | test(e2e): checkout smoke — fixture-mode cart+checkout | ⏳ PENDING | radahn — awaiting CI |
-| #367 | fix(cf-ighf): charcoal/50→/70 alt nodes | ⏳ PENDING | millicent — refinery running |
+| #368 | test(e2e): checkout smoke — fixture-mode cart+checkout | ⏳ PENDING | radahn |
 | #356 | fix(cf-okwz): copy BEAR10 to clipboard | ✅ CLEAN | Stilgar approach approval needed |
 | #136 | docs(cf-93rb-B): design-tokens delta [DRAFT] | ✅ pass | draft |
 
@@ -108,12 +106,12 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | Crew | Current Task | Status |
 |------|-------------|--------|
 | radahn | PR #368 E2E fixture smoke test | ⏳ CI pending |
-| rennala | cf-9t70 /swatch-request | ⏳ blocked on Wix CMS (Stilgar) |
-| blaidd | ⚠️ DEAD SESSION — escalated to mayor | ⛔ |
-| godfrey | cf-3qt.2 — Home page (hero+collections) | 🔧 dispatched |
-| miquella | cf-3qt.2 — PLP Murphy Cabinet Beds | 🔧 dispatched |
-| morgott | cf-3qt.2 — PLP Futon Frames | 🔧 dispatched |
-| millicent | PR #367 cf-ighf alt nodes | ⏳ CI pending |
+| rennala | cf-3qt.2 page gap audit (cf-9t70 blocked) | 🔧 in progress |
+| blaidd | cf-3qt.2.9 — PDP /products/[slug] | 🔧 dispatched |
+| godfrey | cf-3qt.2.6 — Home page hero+collections | 🔧 dispatched |
+| miquella | cf-3qt.2.8 — PLP Murphy Cabinet Beds | 🔧 dispatched |
+| morgott | cf-3qt.2.7 — PLP Futon Frames | 🔧 dispatched |
+| millicent | cf-3qt.2.10 — Cart page | 🔧 dispatched |
 
 ---
 
@@ -130,7 +128,6 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | **SENTRY_AUTH_TOKEN** | Set in EAS |
 | **Theme pick** | Choose /theme-a–d |
 | **DNS flip** (cf-cb9s) | §1-§3 pending |
-| **blaidd dead session** | Mayor/Stilgar: restart needed |
 
 ---
 
@@ -138,7 +135,11 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 | Bead | Pri | Title | Crew |
 |------|-----|-------|------|
-| cf-3qt.2 | P1 | Commerce core — Home + PLPs + PDP + Cart | godfrey/morgott/miquella |
+| cf-3qt.2.6 | P1 | Home page — hero + collections | godfrey |
+| cf-3qt.2.7 | P1 | PLP Futon Frames | morgott |
+| cf-3qt.2.8 | P1 | PLP Murphy Cabinet Beds | miquella |
+| cf-3qt.2.9 | P1 | PDP /products/[slug] | blaidd |
+| cf-3qt.2.10 | P1 | Cart page | millicent |
 | cf-9t70 | P1 | /swatch-request Wix CMS | rennala (blocked) |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 | cf-0s4l | P3 | /sustainability provision | miquella (blocked) |
@@ -171,6 +172,7 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 | #365 | Dark mode CTA hover + /contact WCAG AA | 08:33 UTC |
 | #363 | Dark mode card bg-white → bg-cf-cream WCAG AA | 08:37 UTC |
 | #366 | Light mode charcoal/50→/70 FilterFirst WCAG AA | 08:38 UTC |
+| #367 | Light mode charcoal/50→/70 alt nodes WCAG AA | 08:4x UTC |
 
 ---
 
