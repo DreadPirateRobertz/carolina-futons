@@ -2624,6 +2624,19 @@ export async function get_weeklyBlogDigestCron(request) {
 // CORS allowlist (see backend/utils/cors): prod Vercel domain,
 // project-scoped Vercel domain, branch preview URLs, localhost dev.
 
+// Whitelist of accepted bed sizes — mirrors cfw `BedSize` type
+// (src/lib/contact/contact-schema.ts). The wrapper rejects any other value
+// silently (treats it as if `sizeOfInterest` were absent) so a malicious
+// client can't smuggle arbitrary text into the subject prefix.
+const SIZE_OF_INTEREST_WHITELIST = new Set(['twin', 'full', 'queen', 'king']);
+
+// sendEmail caps the subject at 300 chars via validateSchema. The size prefix
+// (`[Size: queen] ` = 14 chars max) plus a max-length subject would exceed
+// that cap and fail validation — the user would see a generic 400. Truncate
+// the combined subject so the prefix is preserved end-to-end and only the
+// trailing user copy is clipped if necessary.
+const SUBJECT_MAX_LEN = 300;
+
 /**
  * @function post_contactSubmissions
  * @route POST /_functions/contactSubmissions
@@ -2633,12 +2646,22 @@ export async function get_weeklyBlogDigestCron(request) {
  * @param {string} [request.body.json.phone] — optional, ≤20 chars
  * @param {string} [request.body.json.subject] — optional, ≤300 chars
  * @param {string} request.body.json.message — required, ≤2000 chars
+ * @param {('twin'|'full'|'queen'|'king')} [request.body.json.sizeOfInterest]
+ *   — optional bed size from cfw contact form size radio. When present, the
+ *   wrapper prepends `[Size: <value>] ` to the subject so the store sees it
+ *   in the triggered email + ContactSubmissions CMS row. Anything outside
+ *   the whitelist is silently dropped.
  * @returns {Promise<{status: number, body: string, headers: object}>}
  *   200 { success: true } on send;
  *   400 { success: false, error } on validation;
  *   429 { success: false, error } on per-email rate limit (3/hour);
  *   500 { success: false, error } on transport failure or sendEmail
  *   returning a non-object (webMethod proxy fault).
+ *
+ * Field passthrough audit (cfw `ContactRequest` ↔ this wrapper):
+ *   name, email, phone, subject, message — forwarded as-is to sendEmail.
+ *   sizeOfInterest                       — folded into the subject prefix.
+ *   No other cfw fields are silently dropped.
  */
 export async function post_contactSubmissions(request) {
   const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
@@ -2652,13 +2675,19 @@ export async function post_contactSubmissions(request) {
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
-    // cfw ContactRequest carries an optional `sizeOfInterest` (twin/full/queen/king)
-    // from the contact form size radio. sendEmail's signature has no first-class
-    // size field, so prepend it to the subject so the store sees it in the
-    // triggered-email body and the ContactSubmissions CMS row.
+    // sendEmail has no first-class size field, so fold sizeOfInterest into
+    // the subject. Whitelist values (see SIZE_OF_INTEREST_WHITELIST above)
+    // — unknown sizes are silently dropped to avoid prefix smuggling. The
+    // combined subject is truncated to SUBJECT_MAX_LEN so it never trips
+    // sendEmail's validateSchema cap.
     const rawSubject = typeof body.subject === 'string' ? body.subject : '';
-    const size = typeof body.sizeOfInterest === 'string' ? body.sizeOfInterest.trim() : '';
-    const subject = size ? `[Size: ${size}] ${rawSubject}`.trim() : rawSubject;
+    const sizeRaw = typeof body.sizeOfInterest === 'string'
+      ? body.sizeOfInterest.trim().toLowerCase()
+      : '';
+    const size = SIZE_OF_INTEREST_WHITELIST.has(sizeRaw) ? sizeRaw : '';
+    const subject = size
+      ? `[Size: ${size}] ${rawSubject}`.trim().slice(0, SUBJECT_MAX_LEN)
+      : rawSubject;
 
     const result = await sendEmail({
       name: body.name,
