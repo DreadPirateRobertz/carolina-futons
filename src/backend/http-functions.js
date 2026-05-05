@@ -1991,17 +1991,24 @@ export async function get_activeChallenges(request) {
       return response({ status: 429, body: json({ error: 'Rate limit exceeded' }), headers: jsonHeaders });
     }
 
-    // cf-9lp.1: surface cf-tlt's `internal_error` shape as 503 so generic REST
-    // consumers and monitoring probes stop treating a DB failure as success.
-    // Behavior change for existing consumers:
-    //   • Mobile app (cfutons_mobile wixClient.rawRequest) throws on non-2xx
-    //     and has isRetryableError→true for 5xx, so a transient DB blip now
-    //     triggers a retry instead of surfacing a silent empty list. This is
-    //     the desired UX — previously the user saw "no challenges" on failure.
-    //   • Generic REST / monitoring probes now see 503 and alert correctly.
-    // Body is still emitted ({ challenges: [], error: 'internal_error' }) for
-    // diagnostics, but callers that branch on status are the primary audience.
-    if (result.error === 'internal_error') {
+    // cf-gkgo: generalise error mapping beyond literal `internal_error`.
+    // Previously only `internal_error` returned 503; any other error string
+    // (e.g. `auth_required`, future error codes) silently returned 200 with an
+    // empty list — the same silent-failure pattern cf-9lp.1 was meant to fix.
+    //
+    // Strategy: map known client-class errors to their proper HTTP status, and
+    // treat every other error code (including unknown ones) as 503 fail-loud.
+    // Better to surface a server-class status for an unmapped error and force
+    // the caller to retry / engineer to investigate, than to hide it as 200.
+    if (result.error === 'auth_required') {
+      // Permissions.SiteMember should have rejected the call earlier, but if a
+      // stale session lets it through the webMethod surfaces this code (cf-1y7).
+      return unauthorized({ body: json(result), headers: jsonHeaders });
+    }
+    if (result.error) {
+      // internal_error (cf-tlt), db_error, timeout, or any future server-class code.
+      // Body still emits the original envelope for diagnostics; callers should
+      // branch on status.
       return response({ status: 503, body: json(result), headers: jsonHeaders });
     }
 
@@ -2824,12 +2831,14 @@ export async function post_trackCustomEvent(request) {
     try {
       body = await request.body.json();
     } catch (_) {
-      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+      // cf-gkgo: distinguish error modes — clients can branch on `error` to
+      // decide whether to retry (server-class) or fix-the-call (client-class).
+      return badRequest({ body: JSON.stringify({ success: false, error: 'invalid_json' }), headers: JSON_HEADERS });
     }
 
     const [eventName, params = {}] = Array.isArray(body?.args) ? body.args : [];
     if (!eventName || typeof eventName !== 'string') {
-      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+      return badRequest({ body: JSON.stringify({ success: false, error: 'missing_event_name' }), headers: JSON_HEADERS });
     }
 
     const cleanName = sanitize(eventName, 100)
@@ -2838,14 +2847,14 @@ export async function post_trackCustomEvent(request) {
       .replace(/^_|_$/g, '')
       .toLowerCase();
     if (!cleanName) {
-      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+      return badRequest({ body: JSON.stringify({ success: false, error: 'invalid_event_name' }), headers: JSON_HEADERS });
     }
 
     const safeParams = params && typeof params === 'object' && !Array.isArray(params) ? params : {};
 
     // Guard: public endpoint — cap payload to prevent unbounded storage writes.
     if (JSON.stringify(safeParams).length > 8192) {
-      return badRequest({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+      return badRequest({ body: JSON.stringify({ success: false, error: 'payload_too_large' }), headers: JSON_HEADERS });
     }
 
     const source = sanitize(String(safeParams.source || 'custom'), 50);
@@ -2853,7 +2862,7 @@ export async function post_trackCustomEvent(request) {
     const { checkRateLimit } = await import('backend/utils/rateLimit');
     const { allowed } = await checkRateLimit('CustomEventRateLimit', source, { max: 30, windowMs: 60_000 });
     if (!allowed) {
-      return response({ status: 429, body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+      return response({ status: 429, body: JSON.stringify({ success: false, error: 'rate_limited' }), headers: JSON_HEADERS });
     }
 
     await insertAnalyticsEvent({
@@ -2865,8 +2874,13 @@ export async function post_trackCustomEvent(request) {
 
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (post_trackCustomEvent):', err);
-    return serverError({ body: JSON.stringify({ success: false }), headers: JSON_HEADERS });
+    // cf-gkgo: errorId for log↔response correlation so support can find the
+    // original stack trace from a client-side report.
+    const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `tce-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    console.error(`HTTP function error (post_trackCustomEvent) errorId=${errorId}:`, err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'server_error', errorId }), headers: JSON_HEADERS });
   }
 }
 
@@ -2929,8 +2943,16 @@ export async function post_notifyMe(request) {
 
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (notifyMe):', err);
-    return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
+    // cf-gkgo: errorId for log↔response correlation. Previously the outer
+    // catch logged the error but returned an opaque 'Internal server error'
+    // string, leaving support unable to match a customer's failed signup to
+    // a server log entry. The errorId is logged with the stack trace and
+    // returned to the client so it can be surfaced in UI / support tickets.
+    const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `nm-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    console.error(`HTTP function error (notifyMe) errorId=${errorId}:`, err);
+    return serverError({ body: JSON.stringify({ success: false, error: 'server_error', errorId }), headers: JSON_HEADERS });
   }
 }
 
