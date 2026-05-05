@@ -1717,6 +1717,7 @@ describe('get_activeChallenges', () => {
       expect(body.challenges).toEqual([]);
     });
   });
+
 });
 
 // ── POST /_functions/challengeProgress ───────────────────────────────────────

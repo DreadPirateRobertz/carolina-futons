@@ -90,26 +90,42 @@ describe('post_trackCustomEvent — validation', () => {
   it('returns 400 when args array is missing', async () => {
     const res = await post_trackCustomEvent(makeRequest({}));
     expect(res.status).toBe(400);
-    expect(JSON.parse(res.body).success).toBe(false);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(false);
+    // cf-gkgo: distinguish error modes — missing event name has its own code
+    expect(body.error).toBe('missing_event_name');
   });
 
   it('returns 400 when eventName is empty string', async () => {
     const res = await post_trackCustomEvent(makeRequest(veloBody('', { source: 'winback' })));
     expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toBe('missing_event_name');
   });
 
   it('returns 400 when eventName is not a string', async () => {
     const res = await post_trackCustomEvent(makeRequest({ args: [42, {}] }));
     expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toBe('missing_event_name');
   });
 
-  it('returns 400 when body JSON is invalid', async () => {
+  it('returns 400 with error: invalid_json when body JSON is invalid', async () => {
     const req = {
       body: { json: async () => { throw new SyntaxError('Bad JSON'); } },
       headers: {},
     };
     const res = await post_trackCustomEvent(req);
     expect(res.status).toBe(400);
+    // cf-gkgo: parse failure was previously indistinguishable from
+    // missing-args; now carries its own code so client can branch on retry
+    // (server-class) vs surface-error (client-class).
+    expect(JSON.parse(res.body).error).toBe('invalid_json');
+  });
+
+  it('returns 400 with error: invalid_event_name when name sanitises to empty', async () => {
+    // Pure punctuation collapses to '' after the [^a-zA-Z0-9_] strip.
+    const res = await post_trackCustomEvent(makeRequest(veloBody('!!!---', { source: 'winback' })));
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body).error).toBe('invalid_event_name');
   });
 
   it('treats missing params arg as empty object (no crash)', async () => {
@@ -117,18 +133,20 @@ describe('post_trackCustomEvent — validation', () => {
     expect(res.status).toBe(200);
   });
 
-  it('returns 400 when params payload exceeds 8 KB', async () => {
+  it('returns 400 with error: payload_too_large when params payload exceeds 8 KB', async () => {
     const large = { source: 'winback', data: 'x'.repeat(9000) };
     const res = await post_trackCustomEvent(makeRequest(veloBody('winback_landing_view', large)));
     expect(res.status).toBe(400);
-    expect(JSON.parse(res.body).success).toBe(false);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(false);
+    expect(body.error).toBe('payload_too_large');
   });
 });
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 
 describe('post_trackCustomEvent — rate limiting', () => {
-  it('returns 429 when rate limit is exceeded for the source', async () => {
+  it('returns 429 with error: rate_limited when rate limit is exceeded for the source', async () => {
     const key = hashRateLimitKey('winback');
     __seed('CustomEventRateLimit', [{
       _id: 'rl-winback',
@@ -140,7 +158,10 @@ describe('post_trackCustomEvent — rate limiting', () => {
       makeRequest(veloBody('winback_landing_view', { source: 'winback' })),
     );
     expect(res.status).toBe(429);
-    expect(JSON.parse(res.body).success).toBe(false);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(false);
+    // cf-gkgo: rate-limit errors are now self-describing
+    expect(body.error).toBe('rate_limited');
   });
 
   it('allows the request when rate limit count is below max', async () => {
