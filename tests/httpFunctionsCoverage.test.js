@@ -11,6 +11,7 @@ import {
   __seed,
   __setQueryError,
   __setInsertError,
+  __getInserted,
 } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import {
@@ -1006,6 +1007,113 @@ describe('post_contactSubmissions', () => {
     const log = crmEmailLog();
     expect(log).toHaveLength(1);
     expect(log[0].contactId).toBe('owner-1');
+  });
+
+  it('prepends [Size: <sizeOfInterest>] to the subject so the store sees it', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+          message: 'Do you have queen futons in stock?',
+          sizeOfInterest: 'queen',
+        }),
+      }),
+    );
+    expect(result.status).toBe(200);
+    const log = crmEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].options.variables.subject).toBe('[Size: queen] Frame question');
+  });
+
+  it('omits the size prefix when sizeOfInterest is absent', async () => {
+    await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+          message: 'Hello',
+        }),
+      }),
+    );
+    const log = crmEmailLog();
+    expect(log[0].options.variables.subject).toBe('Frame question');
+  });
+
+  it('persists the prefixed subject on the ContactSubmissions CMS row', async () => {
+    __seed('ContactSubmissions', []);
+    await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Mattress recommendation',
+          message: 'Looking for a queen-size mattress for daily sleep.',
+          sizeOfInterest: 'queen',
+        }),
+      }),
+    );
+    const rows = __getInserted('ContactSubmissions');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].subject).toBe('[Size: queen] Mattress recommendation');
+  });
+
+  it('truncates the combined subject at the 300-char cap (no validation 400)', async () => {
+    // sendEmail.validateSchema rejects subject >300 chars. With a max-length
+    // raw subject, the prefix would push the total to 314 — would 400 if
+    // not truncated. Verify happy 200 + truncation preserves the prefix.
+    const longSubject = 'x'.repeat(300);
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: longSubject,
+          message: 'Hello',
+          sizeOfInterest: 'queen',
+        }),
+      }),
+    );
+    expect(result.status).toBe(200);
+    const log = crmEmailLog();
+    expect(log[0].options.variables.subject.length).toBe(300);
+    expect(log[0].options.variables.subject.startsWith('[Size: queen] ')).toBe(true);
+  });
+
+  it('drops sizeOfInterest values outside the {twin,full,queen,king} whitelist', async () => {
+    // Defensive: don't let a non-cfw caller smuggle arbitrary text into the
+    // subject prefix. Anything not in the whitelist is treated as absent.
+    await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Question',
+          message: 'Hi',
+          sizeOfInterest: '<script>alert(1)</script>',
+        }),
+      }),
+    );
+    const log = crmEmailLog();
+    expect(log[0].options.variables.subject).toBe('Question');
+  });
+
+  it('normalises sizeOfInterest casing/whitespace before applying the whitelist', async () => {
+    await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Question',
+          message: 'Hi',
+          sizeOfInterest: '  Queen  ',
+        }),
+      }),
+    );
+    const log = crmEmailLog();
+    expect(log[0].options.variables.subject).toBe('[Size: queen] Question');
   });
 
   it('returns 429 when sendEmail surfaces a rate-limit message', async () => {
