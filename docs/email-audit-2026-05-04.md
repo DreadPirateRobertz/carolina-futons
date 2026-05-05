@@ -1,4 +1,12 @@
-# Email Touchpoint Audit — 2026-05-04 (refreshed 2026-05-05)
+# Email Touchpoint Audit — 2026-05-04 (refreshed 2026-05-05; cf-6k6u corrections 2026-05-05 PM)
+
+> **cf-6k6u correction summary** (radahn 5-agent review on merged PR #1140):
+> 1. **Row 14 winback template IDs were fabricated.** Earlier revision listed `lifecycle_winback_30d/60d/90d`. Those template IDs do not exist. Real winback templates load at runtime from the `EmailSequences` Wix Data collection via `marketingSequences.web.js#loadActiveSteps('winback')`. Static analysis cannot enumerate them. Row 14 has been corrected.
+> 2. **F3/F4/F5 fix recipes did not say to delete the dormant duplicate handler block in `emailAutomation.web.js` (~lines 160–320).** That file exports `wixMembers_onMemberCreated`, `wixEcom_onOrderCreated`, `wixEcom_onFulfillmentCreated`, `wixEcom_onOrderCanceled`, and (post-cf-jmmk) a re-export of `wixEcom_onOrderDelivered` — none of which Wix registers (only `events.js` exports register). An engineer fixing F3 might edit the dormant `emailAutomation.web.js#wixEcom_onOrderCreated` (which already calls `sendOrderConfirmation`) and ship "no behaviour change". Each F3/F4/F5 recipe now explicitly says "**delete the dormant block in `emailAutomation.web.js`**" alongside the events.js wiring step.
+>
+> Also incorporated: F5 row + status-delta table updated for **cf-jmmk PR #1141 merged** (`cd9a11e5`) — rows 8 + 10 flip to ✅; Row 9 picks up a new dup-queue concern.
+
+
 
 **Bead:** cf-icww
 **Auditor:** rennala (cfutons crew)
@@ -39,13 +47,13 @@ Code refs use **symbol anchors** (function name) rather than line numbers, since
 | 5 | Order confirmation                     | `order_confirmation`                 | ❌      | ❌   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated`                  | F3 — events.js handler does not call `sendOrderConfirmation`; the call lives in dead duplicate at `emailAutomation.web.js#wixEcom_onOrderCreated`. **cf-i23b filed (bead CLOSED 2026-05-05); no merged PR yet — still verify on main.** |
 | 6 | Shipping notification (parcel)         | `order_shipped`                      | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onFulfillmentCreated` | F4 — handler defined only in `.web.js`. `events.js#wixEcom_onOrderFulfilled` exists but only dispatches mobile push + SMS via `notificationOrchestrator`, no email. **cf-icdc filed (bead CLOSED); no merged PR yet.** |
 | 7 | Shipping notification (LTL freight)    | `freight_shipped`                    | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onFulfillmentCreated` | F4 — same |
-| 8 | Delivery confirmation                  | `delivery_confirmation`              | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onOrderDelivered`   | F5 — handler defined only in `.web.js` on current main. **cf-jmmk PR #1141 OPEN — wires this in events.js. Expect F5 to flip to ✅ once #1141 merges.** |
+| 8 | Delivery confirmation                  | `delivery_confirmation`              | ✅      | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderDelivered` (post-cf-jmmk) | Wired by PR #1141 (merged `cd9a11e5`). Dormant duplicate `wixEcom_onOrderDelivered = handleOrderDelivered` still lingers in `emailAutomation.web.js` — drop in F3/F4 sweep |
 | 9 | Post-purchase Day 3 / 7 / 30 / referral| `post_purchase_1..3`, `post_purchase_referral` | ⚠️ | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated` → `triggerPostPurchaseSequence` | Countdown starts at *order* not *delivery* (CF-nkau spec says delivery). After cf-jmmk lands, both events queue post-purchase → potential duplicates unless one is removed. |
-| 10| Post-purchase Day-14 review reward     | `post_purchase_review_reward`        | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onOrderDelivered`   | F5 — same as row 8; flips once #1141 merges |
+| 10| Post-purchase Day-14 review reward     | `post_purchase_review_reward`        | ✅      | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderDelivered` (post-cf-jmmk) | Wired by PR #1141. See Row 9 dup-queue concern (post-purchase now queued from both order-created and order-delivered handlers) |
 | 11| Cart abandonment recovery (3-step)     | `cart_recovery_1..3`                 | ✅      | ✅   | ✅     | ✅        | `cartRecovery.web.js`, cron `triggerCartRecoveryCron`| |
 | 12| Browse recovery                        | `browse_recovery_1`                  | ✅      | ✅   | ✅     | ✅        | `browseAbandonment.web.js`, cron `triggerBrowseRecoveryCron` | |
 | 13| Re-engagement (Day 0 / 7 / 21)         | `reengagement_1..3`                  | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#triggerReengagement`, cron `triggerReengagementCron` | |
-| 14| Winback (UTM-based)                    | `lifecycle_winback_*` (in `lifecycleEmailTemplates.js`) | ✅ | ✅ | ✅ | ✅ | `lifecycleCron.web.js#scanAndTriggerWinback`, cron `scanAndTriggerWinbackCron` | Templates: `lifecycle_winback_30d`, `lifecycle_winback_60d`, `lifecycle_winback_90d` per `lifecycleEmailTemplates.js` |
+| 14| Winback (lapsed-customer scan)         | CMS-driven (see Note)                | ✅      | ✅   | ✅     | ✅        | `marketingSequences.web.js#scanAndTriggerWinback`, cron `scanAndTriggerWinbackCron` | Template IDs **not hardcoded** — `loadActiveSteps('winback')` reads them at runtime from the `EmailSequences` Wix Data collection (filtered by `sequenceType='winback'` AND `active=true`, ordered by `step` asc). Static audit cannot list the IDs without dumping the live collection. **CORRECTION (cf-6k6u):** an earlier revision of this row listed `lifecycle_winback_30d/60d/90d` — those IDs were fabricated and do not exist; ignore any fix recipe that hardcodes them. |
 | 15| Review-request (orders + 7d)           | `post_purchase_2`                    | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#runReviewRequestEmails`, cron `runReviewRequestEmailsCron` + `jobs.config` daily 10am EST | |
 | 16| Wishlist price-drop alerts             | `wishlist_price_drop`                | ✅      | ✅   | ✅     | ✅        | `wishlistAlerts.web.js#checkWishlistAlerts`, cron `checkWishlistAlerts` | Template literal at the `emailContact` call site in `wishlistAlerts.web.js` |
 | 17| Tier milestone (gamification)          | `tier_*_approach`/`*_achieved`       | ✅      | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated` → `checkAndTriggerTierMilestone` | CF-8onx |
@@ -71,7 +79,7 @@ Code refs use **symbol anchors** (function name) rather than line numbers, since
 |---------|---------|------------------|--------|-----------|----------------------------|
 | F3      | cf-i23b | CLOSED 2026-05-05 | (none on main yet) | n/a    | sendOrderConfirmation called in events.js#wixEcom_onOrderCreated |
 | F4      | cf-icdc | CLOSED 2026-05-05 | (none on main yet) | n/a    | events.js exports wixEcom_onFulfillmentCreated calling send{Shipping,Freight}Notification |
-| F5      | cf-jmmk | HOOKED            | #1141  | OPEN      | events.js exports wixEcom_onOrderDelivered calling delivery + Day-14 + NPS |
+| F5      | cf-jmmk | CLOSED 2026-05-05 | #1141  | MERGED `cd9a11e5` | ✅ already flipped — rows 8 + 10 now PASS on current main |
 | F1+F7   | cf-xdji | IN_PROGRESS       | (TBD)  | n/a       | resolveContactId helper used at captureExitIntentEmail + triggerWelcomeSeries + submitSwatchRequest |
 
 **Note for the merge gate:** beads CLOSED for F3/F4 without a corresponding merged PR look like bead-trail drift — flag back to mayor. This audit treats current `main` as the source of truth, so F3/F4 remain `❌` until code lands.
@@ -103,6 +111,11 @@ Code refs use **symbol anchors** (function name) rather than line numbers, since
 
 **Why it breaks:** Wix Stores' built-in receipt may still fire (platform-level), but the Velo `order_confirmation` template — the branded one with `firstName`/`orderNumber`/`itemSummary`/`estimatedDays` variables — is dormant.
 
+**Fix recipe:**
+1. **Add** call to `sendOrderConfirmation({contactId, email, firstName, orderNumber, total, itemSummary})` in `events.js#wixEcom_onOrderCreated` after the existing `if (!email) return` guard.
+2. **Delete the dormant block in `emailAutomation.web.js`** — `wixEcom_onOrderCreated` (the duplicate handler) AND its `sendOrderConfirmation({...})` call. Engineering hazard: editing the dormant copy looks like progress (the `sendOrderConfirmation` call is right there) but Wix never invokes it. Removing the dormant block prevents the next maintainer from "fixing" the wrong file.
+3. The same removal sweep should also drop the dormant `wixMembers_onMemberCreated`, `wixEcom_onOrderCanceled` blocks in `emailAutomation.web.js` — both are duplicated in `events.js` and only the events.js copies fire.
+
 **Fix in flight:** cf-i23b (bead CLOSED but no PR observed on main as of refresh).
 
 ### F4 — Shipping notifications never fire (P0, current main)
@@ -110,14 +123,18 @@ Code refs use **symbol anchors** (function name) rather than line numbers, since
 
 **Why it breaks:** Wiring contract above. `order_shipped` and `freight_shipped` templates never get triggered by tracking-info creation.
 
+**Fix recipe:**
+1. **Add** a `wixEcom_onFulfillmentCreated` (or extend the existing `wixEcom_onOrderFulfilled`) handler in `events.js` that calls `sendShippingNotification(...)` for parcel and `sendFreightShippingNotification(...)` for LTL freight, using the same parcel-vs-LTL split currently in the dormant copy.
+2. **Delete the dormant `wixEcom_onFulfillmentCreated` block in `emailAutomation.web.js`** once events.js owns the dispatch. Same engineering hazard as F3: the dormant copy looks complete and a future maintainer may try to "fix" it there.
+
 **Fix in flight:** cf-icdc (bead CLOSED but no PR observed on main as of refresh).
 
-### F5 — Delivery confirmation, Day-14 review reward, NPS survey never fire (P0, current main)
-**Where:** `wixEcom_onOrderDelivered` is defined ONLY in `emailAutomation.web.js` on `main` at audit time.
+### F5 — Delivery confirmation, Day-14 review reward, NPS survey never fire (P0 → resolved upstream)
+**Where:** `wixEcom_onOrderDelivered` was defined ONLY in `emailAutomation.web.js` at original audit time. **Resolved 2026-05-05 by PR #1141 (cf-jmmk merged at `cd9a11e5`)** — `events.js#wixEcom_onOrderDelivered` now dispatches via `handleOrderDelivered`. Rows 8 and 10 flip to `✅` against current main.
 
-**Why it breaks:** Wiring contract above.
+**Remaining dormant copy:** `emailAutomation.web.js` still re-exports `wixEcom_onOrderDelivered = handleOrderDelivered` (a no-op duplicate now that events.js owns the dispatch). Recommend dropping the duplicate export as part of the same dormant-block sweep called for in F3/F4.
 
-**Fix in flight:** **cf-jmmk PR #1141 OPEN** — wires `wixEcom_onOrderDelivered` in `events.js`. Once #1141 merges, rows 8 and 10 flip to `✅` and Row 9 escalates a new concern: both `wixEcom_onOrderCreated` and `wixEcom_onOrderDelivered` will queue the post-purchase sequence, producing duplicate Day-3/7/30 sends. Recommended follow-up bead: dedupe by `sequenceType + orderNumber` before insert in `queueEmail`, or remove the order-created branch.
+**Row 9 follow-up concern (new, post-#1141):** Both `wixEcom_onOrderCreated` and `wixEcom_onOrderDelivered` now queue the post-purchase sequence, producing duplicate Day-3/7/30 sends unless `enqueueEmail`'s dedup guard catches them on `sequenceType + orderNumber`. Verify on staging; if duplicates land, file a follow-up bead to remove the order-created branch (delivery-date countdown is the spec-correct trigger per CF-nkau).
 
 ### F6 — Contact form has no customer-side reply (P2)
 **Where:** `emailService.web.js#sendEmail`.
