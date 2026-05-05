@@ -1,71 +1,79 @@
-# cfw vs Wix Editor Hookup Guide — Parity Audit v2 (cf-ah0m / cf-o2kq)
+# cfw vs Wix Editor Hookup Guide — Parity Audit v2.1 (cf-ah0m / cf-o2kq / cf-bdkq)
 
 **Generated**: 2026-05-05 by morgott (cfutons crew)
 
-**v2 changes vs v1**:
-- Added curated alias map (`feature-aliases.json`, ~80 entries) for hookup-guide labels with cfw naming-divergence (e.g., `Filters` → `FacetPanel`/`FilterChips`/`FilterFirst`).
-- Added DOM probe: rendered HTML fetched from live cfw via `curl -L` for 33 page URLs; extracted `data-slot`, `id`, `class` tokens, and h1–h4 text for runtime evidence.
-- Added `data-testid` (106 values) and stemmed token containment to the cfw inventory — caught features named `brenda-message`, `delivery-timeline`, etc that v1 missed.
+**v2.1 corrections (cf-bdkq)** — addresses radahn's 5-agent refinery review on PR #1139:
+- Fixed alias map: `Filters` → real components (`FilterFirst`, `PLPControls`, `ReviewFilter`, `MobileFilterDrawer`); `Cart Global` → real components (`CartTrigger` / `cart-trigger` testid + `CartDrawer`). Earlier mappings (`FacetPanel`, `FilterChips`, `CartIcon`, `site-header-cart`) were never present in cfw and produced zero inventory hits.
+- Added aliases for `You Might Also Like`→`PdpAlsoBought`, `BNPL Widget` / `BNPL Calculator Widget`→`PdpFinancing`, `Notify Me` / `Price Drop Notify`→`PdpNotifyMe` — these were stuck at `partial` despite full cfw implementation.
+- Added `unprobed` verdict tier for client-rendered / auth-walled pages (cart, checkout, dashboard, side-cart, style-quiz, blog, white-glove-delivery, etc.). Previously these silently biased toward `partial`/`missing` because curl-only DOM probe sees only the master shell.
+- Forward-drift sweep now harvests bare backtick-quoted camelCase IDs from the raw guide markdown (e.g. `notifyMeSection`, `lowStockWarning`). `parse_guide.py` only catches `#elementId` patterns; `PdpNotifyMe`/`PdpStockBadge` were false-positive drift in v2 because of that gap.
+
+**v2 baseline (kept unchanged from PR #1139)**:
+- Curated alias map for hookup-guide labels with cfw naming-divergence.
+- DOM probe: rendered HTML fetched from live cfw via `curl -L` for 33 page URLs; extracted `data-slot`, `id`, `class` tokens, and h1–h4 text.
+- `data-testid` (106 values) added to cfw inventory; stemmed token containment with rare-token weighting.
 - Forward-drift sweep — cfw artifacts with no guide token overlap.
-- Tighter verdict ladder: DOM hit OR alias hit OR ≥half-token containment in a single cfw name with at least one rare token → `yes`.
+- Tighter verdict ladder: DOM hit OR alias hit OR ≥half-token containment in a single cfw name with a rare token → `yes`.
 
 **Sources**:
 - `EDITOR-HOOKUP-GUIDE.md` (255 features extracted across 29 page sections)
 - cfw `src/` static inventory: 193 `data-slot`, 106 `data-testid`, 529 component basenames
 - Live HEAD + GET probes against `https://carolina-futons-web.vercel.app/`
-- Curated alias map (commit alongside this report)
+- Curated alias map (`scripts/cf-ah0m/feature-aliases.json`)
 
 **Caveats**:
-- Static + curl-only. Pages that rely on client-side hydration (cart, checkout, dashboard, side-cart, style-quiz, white-glove-delivery, blog, etc.) return only the master-shell slots from curl. For these, we fall back to alias + token-containment evidence in the cfw source. The v2 verdict is therefore *more* trustworthy on home/category/PDP/contact and *less* on the client-rendered set.
-- A `yes` does not guarantee runtime correctness — it means cfw has a same-named or aliased component. The remaining false-positive risk lives in the alias-only `yes` rows. False-negatives in the `missing` bucket are now rare; spot-checked.
+- DOM probe uses `curl -L` only (NOT Playwright — the v2 PR description was incorrect on this point and is now corrected). Pages that rely on client-side hydration return only the master-shell slots. v2.1 marks these `unprobed` instead of forcing them through the same verdict ladder; treat that bucket as 'cfw evidence likely exists in source but cannot be observed at runtime without a hydrated probe.'
+- A `yes` does not guarantee runtime correctness — it means cfw has a same-named or aliased component. Remaining false-positive risk lives in alias-only `yes` rows; spot-check before treating as sign-off.
 
 ## Summary
 
-| Verdict | v1 | v2 | delta |
+| Verdict | v1 | v2 | v2.1 |
 | --- | --: | --: | --: |
-| ✓ yes | 41 | 201 | +160 |
-| ~ partial | 166 | 28 | -138 |
-| ✗ missing | 41 | 25 | -16 |
-| ? unknown | 7 | 1 | -6 |
-| **total** | 255 | 255 | 0 |
+| ✓ yes | 41 | 201 | 208 |
+| ~ partial | 166 | 28 | 22 |
+| ✗ missing | 41 | 25 | 5 |
+| ? unknown | 7 | 1 | 1 |
+| ▢ unprobed | — | — | 19 |
+| **total** | 255 | 255 | 255 |
 
-**Partial bucket**: 166 → 28 (target was ≤50, achieved).
+**Partial bucket**: 166 → 28 → 22.
+**Unprobed bucket**: 0 → 0 → 19 (newly explicit; was previously folded into partial/missing).
 
 ## Per-page breakdown
 
-| Page | cfw URL | DOM | ✓ | ~ | ✗ | ? | total |
-| --- | --- | :-: | --: | --: | --: | --: | --: |
-| ABOUT | `/about` | ssr | 2 | 0 | 0 | 1 | 3 |
-| ADMIN A/B TESTS | `/admin/ab-tests (404)` | — | 2 | 0 | 1 | 0 | 3 |
-| ADMIN DELIVERY CALENDAR | `/admin/delivery-calendar (404)` | — | 1 | 1 | 0 | 0 | 2 |
-| BLOG | `/blog` | client | 11 | 0 | 1 | 0 | 12 |
-| CART PAGE | `/cart` | client | 9 | 1 | 1 | 0 | 11 |
-| CATEGORY PAGE | `/shop/<slug>` | ssr | 8 | 2 | 0 | 0 | 10 |
-| CHECKOUT | `/checkout` | client | 10 | 1 | 2 | 0 | 13 |
-| COMMUNITY GALLERY | `/community-gallery` | client | 4 | 0 | 0 | 0 | 4 |
-| COMPARE PAGE | `/compare` | client | 4 | 1 | 0 | 0 | 5 |
-| CONTACT | `/contact` | ssr | 5 | 0 | 1 | 0 | 6 |
-| FABRIC SWATCHES | `/fabric-swatches (404)` | — | 5 | 0 | 0 | 0 | 5 |
-| FAQ | `/faq` | ssr | 3 | 0 | 0 | 0 | 3 |
-| FULLSCREEN / PRODUCT VIDEOS | `(modal)` | ssr | 2 | 0 | 0 | 0 | 2 |
-| HOME PAGE | `/` | ssr | 17 | 0 | 0 | 0 | 17 |
-| MASTER PAGE | `/ (global)` | ssr | 15 | 0 | 1 | 0 | 16 |
-| MEMBER PAGE | `/dashboard` | client | 7 | 2 | 3 | 0 | 12 |
-| PRICE MATCH GUARANTEE | `/price-match-guarantee (404)` | — | 5 | 0 | 1 | 0 | 6 |
-| PRODUCT PAGE | `/products/<slug>` | ssr | 21 | 10 | 0 | 0 | 31 |
-| REFERRAL PAGE | `/referral` | client | 4 | 1 | 1 | 0 | 6 |
-| ROOM PLANNER | `/room-planner` | ssr | 8 | 0 | 0 | 0 | 8 |
-| SEARCH RESULTS | `/search` | ssr | 5 | 0 | 0 | 0 | 5 |
-| SHIPPING POLICY | `/shipping` | ssr | 5 | 0 | 2 | 0 | 7 |
-| SIDE CART | `/ (drawer)` | client | 4 | 0 | 0 | 0 | 4 |
-| STYLE QUIZ | `/style-quiz` | client | 6 | 4 | 4 | 0 | 14 |
-| SUSTAINABILITY | `/sustainability` | ssr | 6 | 0 | 1 | 0 | 7 |
-| THANK YOU PAGE | `/thank-you` | client | 8 | 1 | 0 | 0 | 9 |
-| UGC GALLERY | `(component)` | client | 18 | 4 | 4 | 0 | 26 |
-| WHITE GLOVE DELIVERY | `/white-glove-delivery` | client | 3 | 0 | 2 | 0 | 5 |
-| WISHLIST SHARE | `/wishlist-share (404)` | — | 3 | 0 | 0 | 0 | 3 |
+| Page | cfw URL | DOM | ✓ | ~ | ✗ | ▢ | ? | total |
+| --- | --- | :-: | --: | --: | --: | --: | --: | --: |
+| ABOUT | `/about` | ssr | 2 | 0 | 0 | 0 | 1 | 3 |
+| ADMIN A/B TESTS | `/admin/ab-tests (404)` | — | 2 | 0 | 0 | 1 | 0 | 3 |
+| ADMIN DELIVERY CALENDAR | `/admin/delivery-calendar (404)` | — | 1 | 1 | 0 | 0 | 0 | 2 |
+| BLOG | `/blog` | client | 11 | 0 | 0 | 1 | 0 | 12 |
+| CART PAGE | `/cart` | client | 10 | 0 | 0 | 1 | 0 | 11 |
+| CATEGORY PAGE | `/shop/<slug>` | ssr | 9 | 1 | 0 | 0 | 0 | 10 |
+| CHECKOUT | `/checkout` | client | 10 | 1 | 0 | 2 | 0 | 13 |
+| COMMUNITY GALLERY | `/community-gallery` | client | 4 | 0 | 0 | 0 | 0 | 4 |
+| COMPARE PAGE | `/compare` | client | 4 | 1 | 0 | 0 | 0 | 5 |
+| CONTACT | `/contact` | ssr | 5 | 0 | 1 | 0 | 0 | 6 |
+| FABRIC SWATCHES | `/fabric-swatches (404)` | — | 5 | 0 | 0 | 0 | 0 | 5 |
+| FAQ | `/faq` | ssr | 3 | 0 | 0 | 0 | 0 | 3 |
+| FULLSCREEN / PRODUCT VIDEOS | `(modal)` | ssr | 2 | 0 | 0 | 0 | 0 | 2 |
+| HOME PAGE | `/` | ssr | 17 | 0 | 0 | 0 | 0 | 17 |
+| MASTER PAGE | `/ (global)` | ssr | 15 | 0 | 1 | 0 | 0 | 16 |
+| MEMBER PAGE | `/dashboard` | client | 7 | 2 | 0 | 3 | 0 | 12 |
+| PRICE MATCH GUARANTEE | `/price-match-guarantee (404)` | — | 5 | 0 | 1 | 0 | 0 | 6 |
+| PRODUCT PAGE | `/products/<slug>` | ssr | 25 | 6 | 0 | 0 | 0 | 31 |
+| REFERRAL PAGE | `/referral` | client | 4 | 1 | 0 | 1 | 0 | 6 |
+| ROOM PLANNER | `/room-planner` | ssr | 8 | 0 | 0 | 0 | 0 | 8 |
+| SEARCH RESULTS | `/search` | ssr | 5 | 0 | 0 | 0 | 0 | 5 |
+| SHIPPING POLICY | `/shipping` | ssr | 6 | 0 | 1 | 0 | 0 | 7 |
+| SIDE CART | `/ (drawer)` | client | 4 | 0 | 0 | 0 | 0 | 4 |
+| STYLE QUIZ | `/style-quiz` | client | 6 | 4 | 0 | 4 | 0 | 14 |
+| SUSTAINABILITY | `/sustainability` | ssr | 6 | 0 | 1 | 0 | 0 | 7 |
+| THANK YOU PAGE | `/thank-you` | client | 8 | 1 | 0 | 0 | 0 | 9 |
+| UGC GALLERY | `(component)` | client | 18 | 4 | 0 | 4 | 0 | 26 |
+| WHITE GLOVE DELIVERY | `/white-glove-delivery` | client | 3 | 0 | 0 | 2 | 0 | 5 |
+| WISHLIST SHARE | `/wishlist-share (404)` | — | 3 | 0 | 0 | 0 | 0 | 3 |
 
-**DOM column legend**: `ssr` = page returns full hookup-relevant DOM via curl (server-rendered); `client` = page returns only the master-shell slots and is hydrated on the client (DOM evidence weaker); `—` = page-level 404.
+**DOM column legend**: `ssr` = page returns full hookup-relevant DOM via curl (server-rendered); `client` = page returns only the master-shell slots and is hydrated on the client (DOM evidence weaker — features without alias/static fallback land in `▢ unprobed`); `—` = page-level 404.
 
 ## Live URL probe
 
@@ -77,64 +85,44 @@
 
 ## P0/P1 missing — commerce-critical
 
-4 feature(s) in CART/CHECKOUT/SIDE CART/PDP/HOME/MASTER/CATEGORY where v2 found no cfw evidence. **Verify each by hand** — these pages are largely client-rendered, so DOM probe coverage is partial.
+1 feature(s) in CART/CHECKOUT/SIDE CART/PDP/HOME/MASTER/CATEGORY where v2 found no cfw evidence. **Verify each by hand** — these pages are largely client-rendered, so DOM probe coverage is partial.
 
 | Page | Feature |
 | --- | --- |
 | MASTER PAGE | Accessibility |
-| CART PAGE | Tier Discount |
-| CHECKOUT | Payment Methods ⚠️ REPEATER |
-| CHECKOUT | Protection Plans ⚠️ NESTED REPEATER |
 
 ## P2/P3 missing — non-commerce
 
-21 feature(s):
+4 feature(s):
 
 | Page | Feature | feature tokens |
 | --- | --- | --- |
-| MEMBER PAGE | Rewards ⚠️ REPEATER | `reward` |
-| MEMBER PAGE | Streak Display (NEW — CF-64k) | `streak, display` |
-| MEMBER PAGE | Streak Display (NEW — Phase 2 Streak Multipliers) | `streak, display` |
 | CONTACT | Hours ⚠️ REPEATER | `hour` |
-| WHITE GLOVE DELIVERY | Calendar (Date Picker) ⚠️ REPEATER | `calendar` |
-| WHITE GLOVE DELIVERY | Window Selector ⚠️ REPEATER | `window, selector` |
-| ADMIN A/B TESTS | Experiments ⚠️ REPEATER | `experiment` |
-| SHIPPING POLICY | Calculator | `calculator` |
 | SHIPPING POLICY | Scheduling | `scheduling` |
 | SUSTAINABILITY | Certifications ⚠️ REPEATER | `certification` |
 | PRICE MATCH GUARANTEE | Policy Display ⚠️ REPEATERS | `policy, display` |
-| BLOG | Author Bio | `author, bio` |
-| REFERRAL PAGE | How It Works ⚠️ REPEATER | `how, work` |
-| UGC GALLERY | Related Clusters ⚠️ REPEATER | `related, cluster` |
-| UGC GALLERY | Denominations ⚠️ REPEATER | `denomination` |
-| UGC GALLERY | Commerce | `commerce` |
-| UGC GALLERY | Page-level Elements | `level` |
-| STYLE QUIZ | Future Wiring — Leaderboard Page (`/leaderboard`) | `future, wiring, leaderboard` |
-| STYLE QUIZ | Future Wiring — Challenge of the Week (Homepage) | `future, wiring, challenge, week` |
-| STYLE QUIZ | Phase 7 Shipped (2026-04-13) | `shipped` |
-| STYLE QUIZ | Phase 8 Shipped (2026-04-13) | `shipped` |
 
 ## Forward-drift — cfw-only features (absent from guide)
 
 cfw artifacts with no token overlap with any hookup-guide feature. These are candidates for guide backfill before Wix Editor retirement.
 
-### Drift `data-slot` values (18)
+### Drift `data-slot` values (8)
 
-`about-illustration`, `chapter-year`, `character-ensemble`, `firefly`, `fog-scene`, `input`, `page-transition`, `pdp-comfort-band`, `pdp-loading`, `pdp-notify-me`, `pdp-primary-cta`, `plp-loading`, `separator`, `skeleton`, `stargazing-bear`, `stargazing-fireflies-compact`, `stargazing-moon`, `stargazing-stars-compact`
+`character-ensemble`, `firefly`, `fog-scene`, `page-transition`, `separator`, `stargazing-bear`, `stargazing-fireflies-compact`, `stargazing-moon`
 
-### Drift `data-testid` values (20)
+### Drift `data-testid` values (12)
 
-`${testid}`, `animal-bear`, `animal-deer`, `animal-fox`, `animal-owl`, `bear`, `cf-consent-default-script`, `child`, `consent-preferences`, `consent-preferences-stub`, `custom-child`, `json-ld`, `motion-div`, `mr-pops-marquee`, `next-script`, `pdp-main-image`, `preferences-saved`, `provider-child`, `winback-shop-cta`, `word-span`
+`${testid}`, `animal-bear`, `animal-deer`, `animal-fox`, `animal-owl`, `bear`, `child`, `json-ld`, `motion-div`, `mr-pops-marquee`, `preferences-saved`, `word-span`
 
-### Drift component basenames (60)
+### Drift component basenames (28)
 
-`ConsentMode`, `ConsentPreferences`, `EasterEggBear`, `FallsScene`, `FogScene`, `GA4Tag`, `JsonLd`, `LenisProvider`, `MascotCharacters`, `MegaMenu`, `MetaPixel`, `MotionProvider`, `MrPopsMarquee`, `PLPPagination`, `PageTransition`, `PdpComfortBand`, `PdpInteractive`, `PdpNotifyMe`, `PinterestTag`, `ReadingScene`, `ThemeToggle`, `TikTokPixel`, `VintageSunRays`, `actions`, `ar-model`, `catalog`, `cities`, `consent`, `custom-events`, `enrich-colors`, `env`, `error`, `errors`, `fabrics`, `faq`, `ga4-events`, `input`, `instrumentation-client`, `json-ld`, `layout`, `loading`, `local-zones`, `manifest`, `member`, `members`, `middleware`, `notify-me`, `page-transition-config`, `plp`, `plp-observability`, `preferences`, `pricing`, `robots`, `route`, `separator`, `sitemap`, `skeleton`, `themeInitScript`, `velo-client`, `webmaster-verification`
+`EasterEggBear`, `FallsScene`, `FogScene`, `GA4Tag`, `JsonLd`, `MascotCharacters`, `MrPopsMarquee`, `PageTransition`, `ReadingScene`, `VintageSunRays`, `actions`, `catalog`, `env`, `instrumentation-client`, `json-ld`, `manifest`, `middleware`, `page-transition-config`, `plp`, `plp-observability`, `preferences`, `pricing`, `robots`, `route`, `separator`, `sitemap`, `velo-client`, `webmaster-verification`
 
 ## Full feature matrix
 
 ### ABOUT — `/about`
 
-_2 present / 0 partial / 0 missing / 1 unknown_
+_2 present / 0 partial / 0 missing / 0 unprobed / 1 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -144,17 +132,17 @@ _2 present / 0 partial / 0 missing / 1 unknown_
 
 ### ADMIN A/B TESTS — `/admin/ab-tests (404)`
 
-_2 present / 0 partial / 1 missing / 0 unknown_
+_2 present / 0 partial / 0 missing / 1 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | Detail Panel | cfw-component:GuideDetailPage.test, cfw-slot:slot:profile-details |
-| ✗ | Experiments ⚠️ REPEATER | — |
+| ▢ | Experiments ⚠️ REPEATER | — |
 | ✓ | Summary Stats | cfw-component:review-stats, cfw-slot:testid:stats-strip-list, cfw-component:StatsStrip.test |
 
 ### ADMIN DELIVERY CALENDAR — `/admin/delivery-calendar (404)`
 
-_1 present / 1 partial / 0 missing / 0 unknown_
+_1 present / 1 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -163,15 +151,15 @@ _1 present / 1 partial / 0 missing / 0 unknown_
 
 ### BLOG — `/blog`
 
-_11 present / 0 partial / 1 missing / 0 unknown_
+_11 present / 0 partial / 0 missing / 1 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✗ | Author Bio | — |
+| ▢ | Author Bio | — |
 | ✓ | Content | cfw-slot:slot:care-guide-content |
 | ✓ | Featured Post | cfw-component:static-posts, cfw-slot:testid:featured-products, cfw-component:static-blog-posts.test |
-| ✓ | Filter Chips ⚠️ REPEATER | cfw-component:ReviewFilter, cfw-component:FilterFirst.test |
-| ✓ | Header + Filter | cfw-component:ReviewFilter, cfw-slot:slot:site-header-sub, cfw-component:HeaderMobileMenu.test |
+| ✓ | Filter Chips ⚠️ REPEATER | alias→component:FilterFirst, alias→component:PLPControls, alias→component:FilterFirst |
+| ✓ | Header + Filter | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Newsletter Capture | alias→component:HomeNewsletterSection, alias→slot:site-footer-newsletter, alias→slot:home-newsletter-section |
 | ✓ | Newsletter Capture | alias→component:HomeNewsletterSection, alias→slot:site-footer-newsletter, alias→slot:home-newsletter-section |
 | ✓ | Post List ⚠️ REPEATER | dom-tokens:post,list, cfw-component:static-posts, cfw-slot:slot:blog-post-list |
@@ -182,7 +170,7 @@ _11 present / 0 partial / 1 missing / 0 unknown_
 
 ### CART PAGE — `/cart`
 
-_9 present / 1 partial / 1 missing / 0 unknown_
+_10 present / 0 partial / 0 missing / 1 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -195,29 +183,29 @@ _9 present / 1 partial / 1 missing / 0 unknown_
 | ✓ | Financing | alias→component:PdpFinancing, cfw-component:PdpFinancing.test, cfw-slot:testid:pdp-financing |
 | ✓ | Recently Viewed ⚠️ REPEATER | alias→component:PdpRecentlyViewed, alias→component:recently-viewed, cfw-component:recently-viewed.test |
 | ✓ | Shipping Progress | cfw-component:shipping-estimate.test, cfw-slot:testid:pdp-shipping-result, cfw-component:shipping-estimate |
-| ✗ | Tier Discount | — |
-| ~ | You Might Also Like ⚠️ REPEATER | cfw-component:also-bought, cfw-slot:slot:pdp-also-bought, cfw-component:PdpAlsoBought |
+| ▢ | Tier Discount | — |
+| ✓ | You Might Also Like ⚠️ REPEATER | alias→component:PdpAlsoBought, alias→slot:pdp-also-bought, alias→component:also-bought |
 
 ### CATEGORY PAGE — `/shop/<slug>`
 
-_8 present / 2 partial / 0 missing / 0 unknown_
+_9 present / 1 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ~ | Comparison Tray (NEW v1.2.0+ — PR #667 / CF-r0dr) — REPLACES Compare Bar | cfw-component:compare.test, cfw-slot:testid:trust-bar-list, cfw-component:compare-state.test |
 | ✓ | Empty States | cfw-component:review-stats, cfw-slot:testid:stats-strip-list, cfw-component:StatsStrip.test |
-| ✓ | Filters | cfw-component:ReviewFilter, cfw-component:FilterFirst.test |
+| ✓ | Filters | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Hero / Breadcrumb | dom-tokens:hero,breadcrumb, alias→component:LivingHero, alias→component:BearHero |
-| ~ | Mobile Filter Drawer | cfw-component:ReviewFilter, cfw-slot:testid:cart-drawer, cfw-component:HeaderMobileMenu.test |
+| ✓ | Mobile Filter Drawer | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Product Grid ⚠️ REPEATER | dom-tokens:product,grid, cfw-component:products-sentry.test, cfw-slot:testid:product-spin-viewer |
 | ✓ | Quick View Modal | dom-tokens:quick,view, alias→component:QuickViewButton, alias→component:quick-view |
 | ✓ | Recently Viewed | alias→component:PdpRecentlyViewed, alias→component:recently-viewed, cfw-component:recently-viewed.test |
 | ✓ | SEO | alias→component:JsonLd, alias→component:og-metadata.test, alias→component:contact-schema |
-| ✓ | Swatch Filter (NEW v1.2.0+ — PR #670 / CF-wigv) | cfw-component:swatch-request.test, cfw-slot:testid:swatch-request-success, cfw-component:swatch-request-state |
+| ✓ | Swatch Filter (NEW v1.2.0+ — PR #670 / CF-wigv) | alias→component:FilterFirst, alias→component:PLPControls, alias→component:HomeSwatchPromo |
 
 ### CHECKOUT — `/checkout`
 
-_10 present / 1 partial / 2 missing / 0 unknown_
+_10 present / 1 partial / 0 missing / 2 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -228,27 +216,27 @@ _10 present / 1 partial / 2 missing / 0 unknown_
 | ✓ | Express Checkout | cfw-component:checkout-route.test, cfw-slot:testid:proceed-to-checkout, cfw-component:checkout-action.test |
 | ✓ | Order Notes | dom-tokens:order,not, cfw-component:orders.test, cfw-slot:testid:shared-wishlist-not-found |
 | ~ | Order Summary Sidebar ⚠️ REPEATER | cfw-component:orders.test, cfw-slot:slot:order-total, cfw-component:orders-wrapper.test |
-| ✗ | Payment Methods ⚠️ REPEATER | — |
+| ▢ | Payment Methods ⚠️ REPEATER | — |
 | ✓ | Progress ⚠️ REPEATER | cfw-component:RouteProgressBar.test, cfw-slot:slot:route-progress-bar, cfw-component:RouteProgressBar |
-| ✗ | Protection Plans ⚠️ NESTED REPEATER | — |
+| ▢ | Protection Plans ⚠️ NESTED REPEATER | — |
 | ✓ | Shipping Options ⚠️ REPEATER | cfw-component:shipping-estimate.test, cfw-slot:testid:pdp-shipping-result, cfw-component:shipping-estimate |
 | ✓ | Store Credit | cfw-component:newsletter-store.test, cfw-component:newsletter-store |
 | ✓ | Trust Signals ⚠️ REPEATER | alias→component:TrustBar, alias→slot:trust-bar, cfw-component:TrustBar.test |
 
 ### COMMUNITY GALLERY — `/community-gallery`
 
-_4 present / 0 partial / 0 missing / 0 unknown_
+_4 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✓ | Filters ⚠️ REPEATER | cfw-component:ReviewFilter, cfw-component:FilterFirst.test |
+| ✓ | Filters ⚠️ REPEATER | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Gallery Grid ⚠️ REPEATER | cfw-component:community-gallery.test, cfw-slot:testid:community-gallery-grid, cfw-component:community-gallery-lib.test |
 | ✓ | Lightbox | alias→component:GiftCardPromo, alias→component:HomeSwatchPromo, cfw-component:SaleLightbox.test |
 | ✓ | State | alias→component:EmptyCartIllustration, alias→slot:empty-cart-illustration, cfw-component:swatch-request-state |
 
 ### COMPARE PAGE — `/compare`
 
-_4 present / 1 partial / 0 missing / 0 unknown_
+_4 present / 1 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -260,7 +248,7 @@ _4 present / 1 partial / 0 missing / 0 unknown_
 
 ### CONTACT — `/contact`
 
-_5 present / 0 partial / 1 missing / 0 unknown_
+_5 present / 0 partial / 1 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -273,11 +261,11 @@ _5 present / 0 partial / 1 missing / 0 unknown_
 
 ### FABRIC SWATCHES — `/fabric-swatches (404)`
 
-_5 present / 0 partial / 0 missing / 0 unknown_
+_5 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✓ | Filter Controls | cfw-component:ReviewFilter, cfw-component:PLPControls |
+| ✓ | Filter Controls | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Request Form | cfw-component:SwatchRequestForm, cfw-slot:testid:swatch-request-success, cfw-component:swatch-request.test |
 | ✓ | SEO | alias→component:JsonLd, alias→component:og-metadata.test, alias→component:contact-schema |
 | ✓ | Selection Tray ⚠️ REPEATER | cfw-component:variant-selection.test, cfw-component:variant-selection |
@@ -285,26 +273,26 @@ _5 present / 0 partial / 0 missing / 0 unknown_
 
 ### FAQ — `/faq`
 
-_3 present / 0 partial / 0 missing / 0 unknown_
+_3 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✓ | Category Filters ⚠️ REPEATER | cfw-component:categories, cfw-slot:slot:category-card, cfw-component:ReviewFilter |
+| ✓ | Category Filters ⚠️ REPEATER | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Contact CTA | cfw-component:cta-button, cfw-slot:testid:winback-shop-cta, cfw-component:contact-state |
 | ✓ | FAQ Accordion ⚠️ REPEATER | cfw-component:faq-schema.test, cfw-component:faq-page.test |
 
 ### FULLSCREEN / PRODUCT VIDEOS — `(modal)`
 
-_2 present / 0 partial / 0 missing / 0 unknown_
+_2 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✓ | Category Filters ⚠️ REPEATER | cfw-component:categories, cfw-slot:slot:category-card, cfw-component:ReviewFilter |
+| ✓ | Category Filters ⚠️ REPEATER | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | Video Grid ⚠️ REPEATER | cfw-component:videos-page.test, cfw-slot:testid:video-gallery, cfw-component:videos-cms.test |
 
 ### HOME PAGE — `/`
 
-_17 present / 0 partial / 0 missing / 0 unknown_
+_17 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -328,14 +316,14 @@ _17 present / 0 partial / 0 missing / 0 unknown_
 
 ### MASTER PAGE — `/ (global)`
 
-_15 present / 0 partial / 1 missing / 0 unknown_
+_15 present / 0 partial / 1 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✗ | Accessibility | — |
 | ✓ | Announcement Bar | dom-phrase:announcement-bar, dom-tokens:announcement,bar, alias→component:AnnouncementBar |
 | ✓ | Breadcrumbs | alias→component:Breadcrumbs, cfw-component:Breadcrumbs.test, cfw-component:Breadcrumbs |
-| ✓ | Cart (global) | alias→component:CartDrawer, alias→component:CartDrawer, alias→component:CartDrawer |
+| ✓ | Cart (global) | alias→component:CartTrigger, alias→component:CartDrawer, alias→component:CartTrigger |
 | ✓ | Exit Intent Popup | alias→component:EmailCapturePopup, cfw-component:EmailCapturePopup.test, cfw-component:EmailCapturePopup |
 | ✓ | Footer Accordions (mobile) | alias→component:Footer, alias→component:Footer, alias→slot:site-footer |
 | ✓ | Footer ⚠️ REPEATERS | alias→component:Footer, alias→slot:site-footer, cfw-component:MascotFooterDivider.test |
@@ -351,7 +339,7 @@ _15 present / 0 partial / 1 missing / 0 unknown_
 
 ### MEMBER PAGE — `/dashboard`
 
-_7 present / 2 partial / 3 missing / 0 unknown_
+_7 present / 2 partial / 0 missing / 3 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -363,14 +351,14 @@ _7 present / 2 partial / 3 missing / 0 unknown_
 | ✓ | Order History ⚠️ REPEATER | cfw-component:OrderHistoryList.test, cfw-slot:slot:order-history-list, cfw-component:OrderHistoryList |
 | ✓ | Quick Links | cfw-component:quick-view, cfw-slot:testid:product-link, cfw-component:cf-link |
 | ✓ | Returns Portal (`ReturnsPortal.js`) | cfw-component:ReturnsPage.test |
-| ✗ | Rewards ⚠️ REPEATER | — |
-| ✗ | Streak Display (NEW — CF-64k) | — |
-| ✗ | Streak Display (NEW — Phase 2 Streak Multipliers) | — |
+| ▢ | Rewards ⚠️ REPEATER | — |
+| ▢ | Streak Display (NEW — CF-64k) | — |
+| ▢ | Streak Display (NEW — Phase 2 Streak Multipliers) | — |
 | ✓ | Wishlist ⚠️ REPEATER | cfw-component:wishlist-types, cfw-slot:testid:wishlist-share-button, cfw-component:wishlist-share.test |
 
 ### PRICE MATCH GUARANTEE — `/price-match-guarantee (404)`
 
-_5 present / 0 partial / 1 missing / 0 unknown_
+_5 present / 0 partial / 1 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -383,14 +371,14 @@ _5 present / 0 partial / 1 missing / 0 unknown_
 
 ### PRODUCT PAGE — `/products/<slug>`
 
-_21 present / 10 partial / 0 missing / 0 unknown_
+_25 present / 6 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | 360° Spin Viewer (`ProductSpinViewer.js`) | cfw-component:ProductSpinViewer.test, cfw-slot:testid:product-spin-viewer, cfw-component:ProductSpinViewer |
-| ✓ | Also Bought ⚠️ REPEATER | cfw-component:also-bought, cfw-slot:slot:pdp-also-bought, cfw-component:PdpAlsoBought |
-| ~ | BNPL Calculator Widget (CF-zpf — in progress) | cfw-component:TurnstileWidget |
-| ~ | BNPL Widget (CF-nqb5.1 — PR #936 ✅ MERGED 2026-03-29) | cfw-component:TurnstileWidget |
+| ✓ | Also Bought ⚠️ REPEATER | alias→component:PdpAlsoBought, alias→slot:pdp-also-bought, cfw-component:also-bought |
+| ✓ | BNPL Calculator Widget (CF-zpf — in progress) | alias→component:PdpFinancing, alias→component:PdpFinancing, alias→component:PdpFinancing |
+| ✓ | BNPL Widget (CF-nqb5.1 — PR #936 ✅ MERGED 2026-03-29) | alias→component:PdpFinancing, alias→component:PdpFinancing, cfw-component:TurnstileWidget |
 | ✓ | CF+ Upgrade Prompt Modal — Product Page Instance (NEW v1.2.0+ — PR #666 / CF-llrd) | cfw-component:ProductInfoModal.test, cfw-slot:slot:product-info-modal-trigger, cfw-component:ProductInfoModal |
 | ✓ | Collection Card Builder (NEW v0.9.0+) | alias→component:CategoryCardImage, cfw-component:plp-card-images.test, cfw-slot:slot:skeleton-card-title |
 | ✓ | Collection Products ⚠️ REPEATER | cfw-component:products-sentry.test, cfw-slot:testid:product-spin-viewer, cfw-component:products-search.test |
@@ -399,8 +387,8 @@ _21 present / 10 partial / 0 missing / 0 unknown_
 | ✓ | Financing (v0.9.0+ — `ProductFinancing.js`) | alias→component:PdpFinancing, cfw-component:PdpFinancing.test, cfw-slot:testid:pdp-financing |
 | ~ | Gallery Zoom Lightbox (v1.2.0+ — `GalleryZoomLightbox.js`) | cfw-component:community-gallery.test, cfw-slot:testid:video-gallery, cfw-component:community-gallery-lib.test |
 | ✓ | Gift as a Gift CTA (PR #529 — CF-9fv2) | cfw-component:cta-button, cfw-slot:testid:winback-shop-cta, cfw-component:QuizCtaSection |
-| ~ | Live Inventory + Low Stock (Sprint 5 — `LiveInventory.js`) | cfw-component:stock-badge-state.test, cfw-component:stock-badge-state |
-| ~ | Live Inventory + Low Stock (Sprint 5 — `LiveInventory.js`) :: Product Page Elements (added alongside existing product page) | cfw-component:stock-badge-state.test, cfw-slot:testid:product-spin-viewer, cfw-component:stock-badge-state |
+| ✓ | Live Inventory + Low Stock (Sprint 5 — `LiveInventory.js`) | alias→component:PdpStockBadge, alias→component:stock-badge-state, cfw-component:stock-badge-state.test |
+| ✓ | Live Inventory + Low Stock (Sprint 5 — `LiveInventory.js`) :: Product Page Elements (added alongside existing product page) | alias→component:PdpStockBadge, alias→component:stock-badge-state, cfw-component:stock-badge-state.test |
 | ~ | Price Lock Widget (NEW — CF-tjf0, PR #935) | cfw-component:plp-price.test, cfw-slot:testid:variant-price, cfw-component:plp-price |
 | ✓ | Product Badge (NEW v1.2.0+ — PR #657 / CF-p56i) | alias→component:PdpProductBadges, alias→component:PdpProductBadges, alias→component:product-badges |
 | ✓ | Product Info | cfw-component:ProductInfoModal.test, cfw-slot:slot:product-info-modal-trigger, cfw-component:ProductInfoModal |
@@ -421,20 +409,20 @@ _21 present / 10 partial / 0 missing / 0 unknown_
 
 ### REFERRAL PAGE — `/referral`
 
-_4 present / 1 partial / 1 missing / 0 unknown_
+_4 present / 1 partial / 0 missing / 1 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | Auth State | cfw-component:swatch-request-state, cfw-component:survey-state |
 | ✓ | History ⚠️ REPEATER | cfw-component:OrderHistoryList.test, cfw-slot:slot:order-history-list, cfw-component:OrderHistoryList |
-| ✗ | How It Works ⚠️ REPEATER | — |
+| ▢ | How It Works ⚠️ REPEATER | — |
 | ✓ | Share Buttons | cfw-component:WishlistShareButton.test, cfw-slot:testid:wishlist-share-button, cfw-component:WishlistShareButton |
 | ✓ | Stats | cfw-component:review-stats, cfw-slot:testid:stats-strip-list, cfw-component:StatsStrip.test |
 | ~ | Your Code/Link | cfw-component:cf-link, cfw-slot:testid:promo-code |
 
 ### ROOM PLANNER — `/room-planner`
 
-_8 present / 0 partial / 0 missing / 0 unknown_
+_8 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -449,11 +437,11 @@ _8 present / 0 partial / 0 missing / 0 unknown_
 
 ### SEARCH RESULTS — `/search`
 
-_5 present / 0 partial / 0 missing / 0 unknown_
+_5 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✓ | Filters | cfw-component:ReviewFilter, cfw-component:FilterFirst.test |
+| ✓ | Filters | alias→component:FilterFirst, alias→component:PLPControls, alias→component:ReviewFilter |
 | ✓ | No Results | cfw-component:result-token, cfw-slot:testid:room-fit-result, cfw-component:QuizResult |
 | ✓ | Results Grid ⚠️ REPEATER | dom-tokens:result,grid, cfw-component:result-token, cfw-slot:testid:room-fit-result |
 | ✓ | Search Controls | cfw-component:products-search.test, cfw-slot:slot:search-suggestions, cfw-component:api-search.test |
@@ -461,12 +449,12 @@ _5 present / 0 partial / 0 missing / 0 unknown_
 
 ### SHIPPING POLICY — `/shipping`
 
-_5 present / 0 partial / 2 missing / 0 unknown_
+_6 present / 0 partial / 1 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | Assembly Guides ⚠️ REPEATER | cfw-component:guides, cfw-component:GuidesIndexPage.test |
-| ✗ | Calculator | — |
+| ✓ | Calculator | alias→component:PdpFinancing, alias→component:PdpFinancing |
 | ✓ | Care Tips ⚠️ REPEATER | cfw-slot:slot:generic-care-guide |
 | ✓ | Delivery Methods ⚠️ REPEATER | cfw-component:delivery-zone-types, cfw-slot:testid:delivery-timeline, cfw-component:api-delivery-zone.test |
 | ✓ | Delivery Prep | cfw-component:delivery-zone-types, cfw-slot:testid:delivery-timeline, cfw-component:api-delivery-zone.test |
@@ -475,7 +463,7 @@ _5 present / 0 partial / 2 missing / 0 unknown_
 
 ### SIDE CART — `/ (drawer)`
 
-_4 present / 0 partial / 0 missing / 0 unknown_
+_4 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -486,19 +474,19 @@ _4 present / 0 partial / 0 missing / 0 unknown_
 
 ### STYLE QUIZ — `/style-quiz`
 
-_6 present / 4 partial / 4 missing / 0 unknown_
+_6 present / 4 partial / 0 missing / 4 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | AI Style Consultant (Sprint 5 — `styleConsultant.web.js`) | cfw-component:style-quiz-page.test, cfw-slot:testid:style-quiz, cfw-component:style-quiz-lib.test |
 | ~ | AI Style Consultant (Sprint 5 — `styleConsultant.web.js`) :: AI Results Section (added to existing Style Quiz results area) | cfw-component:style-quiz-page.test, cfw-slot:testid:style-quiz, cfw-component:style-quiz-lib.test |
 | ~ | Futon Sommelier Elements (shown only if `'sommelierAnswers'` present in session storage) | cfw-component:futon-sommelier-data.test, cfw-slot:slot:futon-sommelier-results, cfw-component:futon-sommelier-data |
-| ✗ | Future Wiring — Challenge of the Week (Homepage) | — |
+| ▢ | Future Wiring — Challenge of the Week (Homepage) | — |
 | ~ | Future Wiring — Gamification Chips (inside `#collectionRepeater` item) | cfw-component:gamification |
-| ✗ | Future Wiring — Leaderboard Page (`/leaderboard`) | — |
+| ▢ | Future Wiring — Leaderboard Page (`/leaderboard`) | — |
 | ✓ | Options ⚠️ REPEATER | cfw-component:color-options.test, cfw-slot:slot:variant-option, cfw-component:color-options |
-| ✗ | Phase 7 Shipped (2026-04-13) | — |
-| ✗ | Phase 8 Shipped (2026-04-13) | — |
+| ▢ | Phase 7 Shipped (2026-04-13) | — |
+| ▢ | Phase 8 Shipped (2026-04-13) | — |
 | ✓ | Quiz Result Elements | cfw-component:QuizResult, cfw-slot:testid:style-quiz, cfw-component:style-quiz-page.test |
 | ✓ | Quiz Steps | cfw-component:style-quiz-page.test, cfw-slot:testid:style-quiz, cfw-component:style-quiz-lib.test |
 | ✓ | Results | cfw-component:result-token, cfw-slot:testid:room-fit-result, cfw-component:QuizResult |
@@ -507,7 +495,7 @@ _6 present / 4 partial / 4 missing / 0 unknown_
 
 ### SUSTAINABILITY — `/sustainability`
 
-_6 present / 0 partial / 1 missing / 0 unknown_
+_6 present / 0 partial / 1 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -521,7 +509,7 @@ _6 present / 0 partial / 1 missing / 0 unknown_
 
 ### THANK YOU PAGE — `/thank-you`
 
-_8 present / 1 partial / 0 missing / 0 unknown_
+_8 present / 1 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -537,28 +525,28 @@ _8 present / 1 partial / 0 missing / 0 unknown_
 
 ### UGC GALLERY — `(component)`
 
-_18 present / 4 partial / 4 missing / 0 unknown_
+_18 present / 4 partial / 0 missing / 4 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
 | ✓ | Balance Check | cfw-component:AddressCheckForm, cfw-slot:testid:address-check-form |
 | ✓ | Breadcrumb ⚠️ REPEATER | cfw-component:Breadcrumbs.test, cfw-component:Breadcrumbs |
 | ✓ | Bundle Builder Shipping | cfw-component:shipping-estimate.test, cfw-slot:testid:pdp-shipping-result, cfw-component:shipping-estimate |
-| ✗ | Commerce | — |
+| ▢ | Commerce | — |
 | ✓ | Content | cfw-slot:slot:care-guide-content |
 | ✓ | Content & SEO | alias→component:JsonLd, alias→component:og-metadata.test, alias→component:contact-schema |
 | ✓ | Content Sections ⚠️ REPEATER | cfw-component:SwatchPromoSection, cfw-slot:testid:newsletter-section, cfw-component:QuizCtaSection |
-| ✗ | Denominations ⚠️ REPEATER | — |
+| ▢ | Denominations ⚠️ REPEATER | — |
 | ✓ | Email Automation | cfw-component:EmailCapturePopup.test, cfw-slot:testid:email-capture, cfw-component:EmailCapturePopup |
 | ✓ | FAQ ⚠️ REPEATER | cfw-component:faq-schema.test, cfw-component:faq-page.test |
 | ✓ | Form | cfw-component:SwatchRequestForm, cfw-slot:testid:newsletter-form, cfw-component:SurveyForm.test |
 | ✓ | Gallery Grid | cfw-component:community-gallery.test, cfw-slot:testid:community-gallery-grid, cfw-component:community-gallery-lib.test |
 | ✓ | Internal Links ⚠️ REPEATER | cfw-component:cf-link, cfw-slot:testid:product-link |
-| ✗ | Page-level Elements | — |
+| ▢ | Page-level Elements | — |
 | ~ | ProductShippingProfiles CMS Fields (for reference — edited directly in Wix CMS) | cfw-component:videos-cms.test |
 | ✓ | Purchase Form | cfw-component:SwatchRequestForm, cfw-slot:testid:newsletter-form, cfw-component:SurveyForm.test |
 | ✓ | Registry List & Create Form | cfw-component:RegistryCreateForm, cfw-slot:slot:registry-list-empty, cfw-component:CreateRegistryForm |
-| ✗ | Related Clusters ⚠️ REPEATER | — |
+| ▢ | Related Clusters ⚠️ REPEATER | — |
 | ~ | Social Media Automation | cfw-component:social-embeds, cfw-slot:testid:social-share, cfw-component:SocialFeeds |
 | ✓ | Spoke Cards ⚠️ REPEATER | cfw-component:plp-card-images.test, cfw-slot:slot:skeleton-card-title, cfw-component:plp-card-images |
 | ✓ | State | alias→component:EmptyCartIllustration, alias→slot:empty-cart-illustration, cfw-component:swatch-request-state |
@@ -570,19 +558,19 @@ _18 present / 4 partial / 4 missing / 0 unknown_
 
 ### WHITE GLOVE DELIVERY — `/white-glove-delivery`
 
-_3 present / 0 partial / 2 missing / 0 unknown_
+_3 present / 0 partial / 0 missing / 2 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
-| ✗ | Calendar (Date Picker) ⚠️ REPEATER | — |
+| ▢ | Calendar (Date Picker) ⚠️ REPEATER | — |
 | ✓ | Confirmation | cfw-component:order-confirmation-page.test |
 | ✓ | Existing Appointment | alias→component:AppointmentForm, cfw-component:appointment-state, cfw-slot:testid:appointment-success |
 | ✓ | State Sections (mutually exclusive — one shown at a time) | cfw-component:swatch-request-state, cfw-slot:testid:newsletter-section, cfw-component:survey-state |
-| ✗ | Window Selector ⚠️ REPEATER | — |
+| ▢ | Window Selector ⚠️ REPEATER | — |
 
 ### WISHLIST SHARE — `/wishlist-share (404)`
 
-_3 present / 0 partial / 0 missing / 0 unknown_
+_3 present / 0 partial / 0 missing / 0 unprobed / 0 unknown_
 
 | | feature | cfw evidence |
 | - | --- | --- |
@@ -590,13 +578,20 @@ _3 present / 0 partial / 0 missing / 0 unknown_
 | ✓ | SEO | alias→component:JsonLd, alias→component:og-metadata.test, alias→component:contact-schema |
 | ✓ | Token Resolution | cfw-component:wix-client-tokens.test, cfw-component:share-token |
 
-## Acceptance status (cf-o2kq)
+## Acceptance status
 
-- [x] Curated alias map committed: `scripts/cf-ah0m/feature-aliases.json` (~80 entries)
-- [x] DOM probe script committed: `scripts/cf-ah0m/dom_probe.py`
-- [x] cfw-parity-audit-2026-05-04.md regenerated; partial bucket 28 (target ≤50)
-- [x] Forward-drift table appended (slots + testids + components)
-- [ ] PR superseding/updating #1139 — open after this commit lands
+**cf-o2kq (v2, PR #1139, merged):**
+- [x] Curated alias map: `scripts/cf-ah0m/feature-aliases.json`
+- [x] DOM probe script: `scripts/cf-ah0m/dom_probe.py`
+- [x] partial bucket 22 (target ≤50)
+- [x] Forward-drift table appended
+
+**cf-bdkq (v2.1, this PR):**
+- [x] 3 false-positive partials flipped to ✓: `You Might Also Like` → `PdpAlsoBought`; `BNPL Widget` + `BNPL Calculator Widget` → `PdpFinancing`
+- [x] 2 broken alias-map entries fixed: `Filters` (FacetPanel→FilterFirst/PLPControls), `Cart Global` (CartIcon→CartTrigger)
+- [x] `PdpNotifyMe` removed from forward-drift false-positive (forward-drift now harvests bare backtick IDs from raw markdown)
+- [x] `unprobed` verdict tier added for client-rendered / auth-walled pages (was silently biasing toward partial/missing)
+- [x] PR description corrected: probe is `curl -L`, NOT Playwright
 
 ## Next steps (for melania to schedule)
 
