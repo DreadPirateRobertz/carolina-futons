@@ -363,6 +363,23 @@ export async function wixEcom_onOrderFulfilled(event) {
 }
 
 /**
+ * Fired when an order is marked as delivered.
+ * Delegates to emailAutomation for delivery confirmation, post-purchase care
+ * sequence, Day-14 review reward, and NPS survey scheduling.
+ *
+ * cf-jmmk: previously defined only in emailAutomation.web.js, which Wix never
+ * dispatched events to (events.js is the only event-handler entry point).
+ */
+export async function wixEcom_onOrderDelivered(event) {
+  try {
+    const { handleOrderDelivered } = await import('backend/emailAutomation.web');
+    handleOrderDelivered(event);
+  } catch (err) {
+    console.error('[events] Error handling order delivered:', err);
+  }
+}
+
+/**
  * Fired when an order is cancelled.
  * Delegates to emailAutomation to cancel pending post-purchase care emails.
  */
