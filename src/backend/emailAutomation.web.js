@@ -48,6 +48,7 @@ import { buildFreightTrackingPayload } from 'backend/freightTracking.web';
 import { scheduleSurvey } from 'backend/surveyService.web';
 import { _getReferralLinkForMember } from 'backend/referralService.web';
 import { buildUnsubscribeUrl } from 'backend/utils/unsubToken';
+import { resolveContactId } from 'backend/contacts/contactResolver.web';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -492,6 +493,13 @@ export const triggerWelcomeSeries = webMethod(
         .find();
 
       if (existing.items.length > 0) return { success: false, queued: 0 };
+
+      // cf-xdji: ensure a CRM contact exists before queuing — Wix triggeredEmails
+      // dispatch resolves the recipient via contactId, so an empty string silently
+      // drops the send. resolveContactId returns '' only when email is invalid or
+      // the SDK call fails; in either case skip queueing.
+      const cleanContactId = await resolveContactId(cleanEmail, cleanName);
+      if (!cleanContactId) return { success: false, queued: 0 };
 
       let discountCode = '';
       let discountAvailable = false;
