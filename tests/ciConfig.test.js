@@ -1,9 +1,11 @@
 /**
- * ciConfig.test.js — CI workflow config correctness (CF-1d06, CF-7d6k)
+ * ciConfig.test.js — CI workflow config correctness (CF-7d6k)
  *
  * Validates that .github/workflows/ci.yml enforces:
- *   CF-1d06: fail_ci_if_error: true on all Codecov upload steps
  *   CF-7d6k: cache-dependency-path set on all setup-node steps
+ *
+ * (CF-1d06 Codecov assertion removed — Codecov uploads dropped per Stilgar
+ * 2026-05-04 CI silence directive.)
  */
 
 import { describe, it, expect } from 'vitest';
@@ -23,27 +25,6 @@ function getStepsByAction(workflow, actionPrefix) {
     .flatMap(job => job.steps || [])
     .filter(step => typeof step.uses === 'string' && step.uses.startsWith(actionPrefix));
 }
-
-// ── CF-1d06: fail_ci_if_error: true ─────────────────────────────────────────
-
-describe('CF-1d06: Codecov fail_ci_if_error', () => {
-  // Existence check matters: the for...of assertion below silently passes on empty arrays,
-  // so this guard ensures a missing step doesn't produce a false green.
-  it('ci.yml has at least one codecov upload step', () => {
-    const steps = getStepsByAction(ciYaml, 'codecov/codecov-action');
-    expect(steps.length).toBeGreaterThan(0);
-  });
-
-  it('all codecov upload steps have fail_ci_if_error: true', () => {
-    const codecovSteps = getStepsByAction(ciYaml, 'codecov/codecov-action');
-    for (const step of codecovSteps) {
-      expect(
-        step.with?.fail_ci_if_error,
-        `Step "${step.uses}" uses codecov-action but fail_ci_if_error is not true`
-      ).toBe(true);
-    }
-  });
-});
 
 // ── CF-7d6k: cache-dependency-path ──────────────────────────────────────────
 

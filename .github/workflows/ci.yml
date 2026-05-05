@@ -15,10 +15,9 @@ permissions:
 
 jobs:
   # ── Unit Tests ───────────────────────────────────────────────────────────────
-  # Runs Vitest across Node 20 + 22 matrix. On Node 20: also collects coverage
-  # and uploads to Codecov. Codecov bot posts PR comments automatically.
-  # Coverage thresholds: statements 90%, branches 85%, functions 88%, lines 91%.
-  # Secret required: CODECOV_TOKEN (fail_ci_if_error: true — Codecov errors fail the build)
+  # Runs Vitest across Node 20 + 22 matrix. On Node 22: also collects coverage
+  # locally (lcov + text). Coverage thresholds: statements 90%, branches 85%,
+  # functions 88%, lines 91%.
   test:
     runs-on: ubuntu-latest
     permissions:
@@ -76,19 +75,6 @@ jobs:
         if: matrix.node-version == 22
         run: npx vitest run --coverage
 
-      - name: Upload coverage to Codecov
-        # Dependabot PRs run with restricted GITHUB_TOKEN and cannot read
-        # repository secrets, so CODECOV_TOKEN is empty and the upload fails
-        # the whole job. Skip for dependabot — coverage still uploads on
-        # push to main and on every non-dependabot PR. (cf-ugo)
-        if: matrix.node-version == 22 && github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage/lcov.info
-          flags: unit
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
   # ── Lint ─────────────────────────────────────────────────────────────────────
   # ESLint on Node 20. Runs in parallel with test job. Fails fast on lint errors.
   lint:
@@ -114,8 +100,8 @@ jobs:
   # Full test suite with verbose + JUnit output + coverage in a single run.
   # On failure: auto-opens a GitHub issue tagged [bug, ci-nightly] with the
   # first 30 failed test lines + run URL.
-  # Uploads test-results/ artifact (retained 30 days). Coverage sent to Codecov
-  # with flag=nightly. Requires: CODECOV_TOKEN secret, issues: write permission.
+  # Uploads test-results/ artifact (retained 30 days). Requires issues: write
+  # permission for the failure-issue step.
   nightly-integration:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -143,15 +129,6 @@ jobs:
           npx vitest run --coverage --reporter=verbose --reporter=junit \
             --outputFile.junit=test-results/junit.xml 2>&1 | tee test-results/full-output.txt
         continue-on-error: true
-
-      - name: Upload nightly coverage to Codecov
-        if: steps.integration.outcome == 'success'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage/lcov.info
-          flags: nightly
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         if: always()
@@ -210,32 +187,6 @@ jobs:
               body,
               labels: ['bug', 'ci-nightly'],
             });
-
-      # CF-z6zl: Email alert on nightly test failure.
-      # Requires MAIL_USERNAME + MAIL_PASSWORD secrets (Gmail App Password).
-      # continue-on-error: true ensures a missing secret or SMTP hiccup does
-      # not mask the real test failure reported by the step below.
-      - name: Send email alert on nightly failure
-        if: steps.integration.outcome == 'failure'
-        uses: dawidd6/action-send-mail@v16
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          secure: false
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "[CF CI] Nightly tests FAILED -- run ${{ github.run_id }}"
-          to: carolinafutons@gmail.com
-          from: "Carolina Futons CI <${{ secrets.MAIL_USERNAME }}>"
-          body: |
-            Nightly integration tests failed for carolina-futons.
-
-            Repository: ${{ github.repository }}
-            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            A GitHub Issue has been opened automatically (labels: bug, ci-nightly).
-            Download the nightly-test-results artifact from the run for full output.
-        continue-on-error: true
 
       - name: Fail workflow if tests failed
         if: steps.integration.outcome == 'failure'
