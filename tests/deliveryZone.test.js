@@ -91,6 +91,53 @@ describe('get_deliveryZone — error handling', () => {
     const res = await get_deliveryZone(makeRequest({ zip: '28792' }));
     expect(res.status).toBe(500);
   });
+
+  it('returns 400 + success:false when service returns { error } envelope (cf-89xn lying-status)', async () => {
+    // The webMethod has its own input-validation branch that returns
+    // { error: 'Please enter a valid 5-digit zip code.' }. Spreading that
+    // into the 200 envelope used to produce { success: true, error: '...' } —
+    // exact cf-tvbi lying-status pattern. Wrapper now surfaces 400.
+    getDeliveryZone.mockResolvedValue({ error: 'Please enter a valid 5-digit zip code.' });
+    const res = await get_deliveryZone(makeRequest({ zip: '28792' }));
+    expect(res.status).toBe(400);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(false);
+    expect(body.error).toMatch(/5-digit zip/i);
+  });
+
+  it('keeps the OUT-OF-RANGE envelope (no `error` field) at 200 + success:true', async () => {
+    // Regression guard for cf-89xn: the lying-status fix narrows the 400
+    // branch to results with a non-empty `error` STRING. Out-of-range
+    // results carry a `message` field but no `error` — those are legitimate
+    // success responses (zip is valid, just not deliverable) and must keep
+    // the 200 + success:true envelope so cfw can render the "out of range"
+    // copy without branching on status.
+    getDeliveryZone.mockResolvedValue({
+      zone: 'outofrange',
+      label: 'Out of Range',
+      rate: null,
+      eta: null,
+      distanceMiles: 120,
+      message: 'We deliver within 60 miles of our Hendersonville, NC showroom.',
+    });
+    const res = await get_deliveryZone(makeRequest({ zip: '99999' }));
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(true);
+    expect(body.zone).toBe('outofrange');
+    expect(body.message).toMatch(/60 miles/i);
+    expect(body.error).toBeUndefined();
+  });
+
+  it('falls through to 200 when service result has empty-string `error` (defensive)', async () => {
+    // Empty string isn't a real service-rejection signal; treat as no-error.
+    getDeliveryZone.mockResolvedValue({ zone: 'local', rate: 25, eta: '1-2 business days', distanceMiles: 0, error: '' });
+    const res = await get_deliveryZone(makeRequest({ zip: '28792' }));
+    expect(res.status).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(true);
+    expect(body.zone).toBe('local');
+  });
 });
 
 describe('options_deliveryZone — CORS preflight', () => {
