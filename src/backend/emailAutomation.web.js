@@ -257,11 +257,14 @@ export function wixEcom_onFulfillmentCreated(event) {
 }
 
 /**
- * Triggered when an order is marked as delivered.
- * Sends a delivery confirmation email and queues the post-purchase care sequence.
- * Trigger for CF-nkau Day 3/7/30 drip: starts countdown from actual delivery date.
+ * Order-delivered fan-out: confirmation email, post-purchase care sequence,
+ * Day-14 review reward prompt, and NPS survey.
+ *
+ * cf-jmmk: Wix only fires events from events.js, so the Wix-shaped wrapper
+ * lives there and delegates to this helper. Each downstream call catches
+ * its own error so a single failure can't drop the others.
  */
-export function wixEcom_onOrderDelivered(event) {
+export function handleOrderDelivered(event) {
   const order = event.entity || event;
   const email = order.buyerInfo?.email || '';
   const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
@@ -277,12 +280,12 @@ export function wixEcom_onOrderDelivered(event) {
     email,
     firstName,
     orderNumber: String(orderNumber),
-  }).catch(err => logError('wixEcom_onOrderDelivered:confirmation', err));
+  }).catch(err => logError('handleOrderDelivered:confirmation', err));
 
   // CF-nkau: Queue post-purchase care sequence starting from delivery date
   // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
   triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
-    .catch(err => logError('wixEcom_onOrderDelivered:postPurchaseCare', err));
+    .catch(err => logError('handleOrderDelivered:postPurchaseCare', err));
 
   // CF-qy79: Queue Day-14 review prompt with points reward
   const productNames = lineItems
@@ -291,7 +294,7 @@ export function wixEcom_onOrderDelivered(event) {
     .join(', ');
   const primarySlug = extractPrimarySlug(lineItems);
   triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
-    .catch(err => logError('wixEcom_onOrderDelivered:reviewReward', err));
+    .catch(err => logError('handleOrderDelivered:reviewReward', err));
 
   // CF-1mlj: Queue 7-day NPS survey — fires after delivery, non-fatal
   scheduleSurvey({
@@ -299,8 +302,16 @@ export function wixEcom_onOrderDelivered(event) {
     orderId: order._id || String(orderNumber),
     email,
     deliveredAt: new Date(),
-  }).catch(err => logError('wixEcom_onOrderDelivered:survey', err));
+  }).catch(err => logError('handleOrderDelivered:survey', err));
 }
+
+/**
+ * @deprecated Wix events only dispatch from events.js — this name remains
+ * exported so existing unit tests that imported the function directly still
+ * work. New code should call `handleOrderDelivered` (and prod dispatch goes
+ * through events.js#wixEcom_onOrderDelivered).
+ */
+export const wixEcom_onOrderDelivered = handleOrderDelivered;
 
 /**
  * Triggered when an order is cancelled.

@@ -10,11 +10,13 @@ const mockTriggerRestockNotifications = vi.fn().mockResolvedValue({ success: tru
 const mockTriggerWelcomeSequence = vi.fn().mockResolvedValue({ success: true, queued: 3 });
 const mockTriggerPostPurchaseSequence = vi.fn().mockResolvedValue({ success: true, queued: 3 });
 const mockCancelSequenceForOrder = vi.fn().mockResolvedValue({ success: true, cancelled: 1 });
+const mockHandleOrderDelivered = vi.fn();
 vi.mock('backend/emailAutomation.web', () => ({
   triggerRestockNotifications: mockTriggerRestockNotifications,
   triggerWelcomeSequence: mockTriggerWelcomeSequence,
   triggerPostPurchaseSequence: mockTriggerPostPurchaseSequence,
   cancelSequenceForOrder: mockCancelSequenceForOrder,
+  handleOrderDelivered: mockHandleOrderDelivered,
 }));
 
 vi.mock('backend/utils/sanitize', () => ({
@@ -41,6 +43,7 @@ import {
   wixEcom_onOrderCreated,
   wixEcom_onOrderCanceled,
   wixEcom_onOrderApproved,
+  wixEcom_onOrderDelivered,
 } from '../src/backend/events.js';
 
 beforeEach(() => {
@@ -469,6 +472,50 @@ describe('wixEcom_onOrderCanceled', () => {
         entity: { number: 'ORD-ERR', buyerInfo: { email: 'err@test.com' } },
       })
     ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderDelivered (cf-jmmk) ──────────────────────────────
+
+describe('wixEcom_onOrderDelivered (cf-jmmk)', () => {
+  it('delegates to handleOrderDelivered with the dispatched event', async () => {
+    const event = {
+      entity: {
+        number: 'ORD-D-1',
+        buyerInfo: { email: 'buyer@test.com', contactId: 'cid-1' },
+        billingInfo: { firstName: 'Buyer' },
+        lineItems: [{ name: 'Eureka Futon', slug: 'eureka' }],
+        priceSummary: { total: { amount: 549 } },
+      },
+    };
+
+    await wixEcom_onOrderDelivered(event);
+
+    expect(mockHandleOrderDelivered).toHaveBeenCalledTimes(1);
+    expect(mockHandleOrderDelivered).toHaveBeenCalledWith(event);
+  });
+
+  it('does not throw when handleOrderDelivered throws', async () => {
+    mockHandleOrderDelivered.mockImplementationOnce(() => {
+      throw new Error('downstream broken');
+    });
+
+    await expect(
+      wixEcom_onOrderDelivered({
+        entity: { number: 'ORD-D-ERR', buyerInfo: { email: 'err@test.com' } },
+      })
+    ).resolves.not.toThrow();
+  });
+
+  it('still delegates when buyer email is empty (handler decides whether to skip)', async () => {
+    // Skipping is the helper's responsibility — events.js delegates regardless
+    // so a stricter helper rule (e.g. anonymized memberId-only orders) doesn't
+    // require an events.js change.
+    await wixEcom_onOrderDelivered({
+      entity: { number: 'ORD-D-NOEMAIL', buyerInfo: {} },
+    });
+
+    expect(mockHandleOrderDelivered).toHaveBeenCalledTimes(1);
   });
 });
 
