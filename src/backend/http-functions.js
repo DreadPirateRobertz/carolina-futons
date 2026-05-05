@@ -2652,11 +2652,19 @@ export async function post_contactSubmissions(request) {
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
+    // cfw ContactRequest carries an optional `sizeOfInterest` (twin/full/queen/king)
+    // from the contact form size radio. sendEmail's signature has no first-class
+    // size field, so prepend it to the subject so the store sees it in the
+    // triggered-email body and the ContactSubmissions CMS row.
+    const rawSubject = typeof body.subject === 'string' ? body.subject : '';
+    const size = typeof body.sizeOfInterest === 'string' ? body.sizeOfInterest.trim() : '';
+    const subject = size ? `[Size: ${size}] ${rawSubject}`.trim() : rawSubject;
+
     const result = await sendEmail({
       name: body.name,
       email: body.email,
       phone: body.phone,
-      subject: body.subject,
+      subject,
       message: body.message,
     });
 

@@ -1008,6 +1008,39 @@ describe('post_contactSubmissions', () => {
     expect(log[0].contactId).toBe('owner-1');
   });
 
+  it('prepends [Size: <sizeOfInterest>] to the subject so the store sees it', async () => {
+    const result = await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+          message: 'Do you have queen futons in stock?',
+          sizeOfInterest: 'queen',
+        }),
+      }),
+    );
+    expect(result.status).toBe(200);
+    const log = crmEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].options.variables.subject).toBe('[Size: queen] Frame question');
+  });
+
+  it('omits the size prefix when sizeOfInterest is absent', async () => {
+    await post_contactSubmissions(
+      buildReq({
+        body: JSON.stringify({
+          name: 'Stilgar',
+          email: 'stilgar@example.com',
+          subject: 'Frame question',
+          message: 'Hello',
+        }),
+      }),
+    );
+    const log = crmEmailLog();
+    expect(log[0].options.variables.subject).toBe('Frame question');
+  });
+
   it('returns 429 when sendEmail surfaces a rate-limit message', async () => {
     // 4th submission within the 1-hour window trips _checkEmailRateLimit
     // (max 3 — see emailService.web.js EMAIL_RATE_LIMIT_MAX).
