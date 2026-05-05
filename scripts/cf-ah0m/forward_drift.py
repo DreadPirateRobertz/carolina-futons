@@ -49,6 +49,20 @@ for r in features:
     for eid in r.get("element_ids", []):
         guide_tokens |= tokens_of(eid)
 
+# Also harvest backtick-quoted identifiers from the raw guide markdown.
+# parse_guide.py only catches `#elementId` patterns; many guide sections list
+# element IDs as bare backtick strings (e.g. `notifyMeSection`, `lowStockWarning`).
+# Without this harvest, cfw components named after those bare-id features
+# (PdpNotifyMe, PdpStockBadge) get false-positive forward-drift flags.
+GUIDE_MD = Path("/Users/hal/gt/cfutons/EDITOR-HOOKUP-GUIDE.md")
+if GUIDE_MD.exists():
+    text = GUIDE_MD.read_text()
+    # Only camelCase / PascalCase tokens — skip code snippets (`foo()`, `foo.bar`)
+    bare_ids = re.findall(r"`([a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*)`", text)
+    bare_ids += re.findall(r"`([A-Z][a-zA-Z0-9]+)`", text)
+    for bid in bare_ids:
+        guide_tokens |= tokens_of(bid)
+
 print(f"guide token universe: {len(guide_tokens)}")
 
 # Drift = cfw artifact with NO token overlap with the guide universe

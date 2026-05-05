@@ -230,6 +230,17 @@ def verdict_for(row: dict) -> dict:
     if len(chits) > 1:
         evidence.append(f"cfw-component:{chits[1]}")
 
+    # Pages where curl-only DOM probe returns just the master shell. These
+    # are client-rendered or auth-walled, so a missing verdict here is
+    # systematically underconfident — promote to "unprobed" instead.
+    CLIENT_RENDERED_PAGES = {
+        "CART PAGE", "CHECKOUT", "MEMBER PAGE", "STYLE QUIZ",
+        "REFERRAL PAGE", "THANK YOU PAGE", "BLOG", "BLOG POST",
+        "COMMUNITY GALLERY", "UGC GALLERY", "SIDE CART",
+        "COMPARE PAGE", "WHITE GLOVE DELIVERY",
+        "ADMIN DELIVERY CALENDAR", "ADMIN A/B TESTS",
+    }
+
     if not tokens and not eids:
         verdict = "unknown"
     elif e_dom:
@@ -246,6 +257,8 @@ def verdict_for(row: dict) -> dict:
         verdict = "partial"
     elif chits or shits:
         verdict = "partial"
+    elif page in CLIENT_RENDERED_PAGES:
+        verdict = "unprobed"
     else:
         verdict = "missing"
 

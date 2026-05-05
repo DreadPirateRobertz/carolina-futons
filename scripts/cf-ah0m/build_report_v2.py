@@ -71,7 +71,7 @@ CLIENT_RENDERED = {
     "WHITE GLOVE DELIVERY",
 }
 
-VERDICT_EMOJI = {"yes": "✓", "partial": "~", "missing": "✗", "unknown": "?"}
+VERDICT_EMOJI = {"yes": "✓", "partial": "~", "missing": "✗", "unknown": "?", "unprobed": "▢"}
 
 P0_PAGES = {
     "CART PAGE", "CHECKOUT", "SIDE CART", "PRODUCT PAGE",
@@ -95,59 +95,67 @@ def main() -> None:
 
     counts: dict[str, dict[str, int]] = {}
     for page, rows in by_page.items():
-        c = {"yes": 0, "partial": 0, "missing": 0, "unknown": 0}
+        c = {"yes": 0, "partial": 0, "missing": 0, "unknown": 0, "unprobed": 0}
         for r in rows:
             c[r["verdict"]] += 1
         counts[page] = c
 
-    total = {"yes": 0, "partial": 0, "missing": 0, "unknown": 0}
+    total = {"yes": 0, "partial": 0, "missing": 0, "unknown": 0, "unprobed": 0}
     for c in counts.values():
         for k in total:
             total[k] += c[k]
 
     L: list[str] = []
-    L.append("# cfw vs Wix Editor Hookup Guide — Parity Audit v2 (cf-ah0m / cf-o2kq)")
+    L.append("# cfw vs Wix Editor Hookup Guide — Parity Audit v2.1 (cf-ah0m / cf-o2kq / cf-bdkq)")
     L.append("")
     L.append("**Generated**: 2026-05-05 by morgott (cfutons crew)")
     L.append("")
-    L.append("**v2 changes vs v1**:")
-    L.append("- Added curated alias map (`feature-aliases.json`, ~80 entries) for hookup-guide labels with cfw naming-divergence (e.g., `Filters` → `FacetPanel`/`FilterChips`/`FilterFirst`).")
-    L.append("- Added DOM probe: rendered HTML fetched from live cfw via `curl -L` for 33 page URLs; extracted `data-slot`, `id`, `class` tokens, and h1–h4 text for runtime evidence.")
-    L.append("- Added `data-testid` (106 values) and stemmed token containment to the cfw inventory — caught features named `brenda-message`, `delivery-timeline`, etc that v1 missed.")
+    L.append("**v2.1 corrections (cf-bdkq)** — addresses radahn's 5-agent refinery review on PR #1139:")
+    L.append("- Fixed alias map: `Filters` → real components (`FilterFirst`, `PLPControls`, `ReviewFilter`, `MobileFilterDrawer`); `Cart Global` → real components (`CartTrigger` / `cart-trigger` testid + `CartDrawer`). Earlier mappings (`FacetPanel`, `FilterChips`, `CartIcon`, `site-header-cart`) were never present in cfw and produced zero inventory hits.")
+    L.append("- Added aliases for `You Might Also Like`→`PdpAlsoBought`, `BNPL Widget` / `BNPL Calculator Widget`→`PdpFinancing`, `Notify Me` / `Price Drop Notify`→`PdpNotifyMe` — these were stuck at `partial` despite full cfw implementation.")
+    L.append("- Added `unprobed` verdict tier for client-rendered / auth-walled pages (cart, checkout, dashboard, side-cart, style-quiz, blog, white-glove-delivery, etc.). Previously these silently biased toward `partial`/`missing` because curl-only DOM probe sees only the master shell.")
+    L.append("- Forward-drift sweep now harvests bare backtick-quoted camelCase IDs from the raw guide markdown (e.g. `notifyMeSection`, `lowStockWarning`). `parse_guide.py` only catches `#elementId` patterns; `PdpNotifyMe`/`PdpStockBadge` were false-positive drift in v2 because of that gap.")
+    L.append("")
+    L.append("**v2 baseline (kept unchanged from PR #1139)**:")
+    L.append("- Curated alias map for hookup-guide labels with cfw naming-divergence.")
+    L.append("- DOM probe: rendered HTML fetched from live cfw via `curl -L` for 33 page URLs; extracted `data-slot`, `id`, `class` tokens, and h1–h4 text.")
+    L.append("- `data-testid` (106 values) added to cfw inventory; stemmed token containment with rare-token weighting.")
     L.append("- Forward-drift sweep — cfw artifacts with no guide token overlap.")
-    L.append("- Tighter verdict ladder: DOM hit OR alias hit OR ≥half-token containment in a single cfw name with at least one rare token → `yes`.")
+    L.append("- Tighter verdict ladder: DOM hit OR alias hit OR ≥half-token containment in a single cfw name with a rare token → `yes`.")
     L.append("")
     L.append("**Sources**:")
     L.append("- `EDITOR-HOOKUP-GUIDE.md` (255 features extracted across 29 page sections)")
     L.append("- cfw `src/` static inventory: 193 `data-slot`, 106 `data-testid`, 529 component basenames")
     L.append("- Live HEAD + GET probes against `https://carolina-futons-web.vercel.app/`")
-    L.append("- Curated alias map (commit alongside this report)")
+    L.append("- Curated alias map (`scripts/cf-ah0m/feature-aliases.json`)")
     L.append("")
     L.append("**Caveats**:")
-    L.append("- Static + curl-only. Pages that rely on client-side hydration (cart, checkout, dashboard, side-cart, style-quiz, white-glove-delivery, blog, etc.) return only the master-shell slots from curl. For these, we fall back to alias + token-containment evidence in the cfw source. The v2 verdict is therefore *more* trustworthy on home/category/PDP/contact and *less* on the client-rendered set.")
-    L.append("- A `yes` does not guarantee runtime correctness — it means cfw has a same-named or aliased component. The remaining false-positive risk lives in the alias-only `yes` rows. False-negatives in the `missing` bucket are now rare; spot-checked.")
+    L.append("- DOM probe uses `curl -L` only (NOT Playwright — the v2 PR description was incorrect on this point and is now corrected). Pages that rely on client-side hydration return only the master-shell slots. v2.1 marks these `unprobed` instead of forcing them through the same verdict ladder; treat that bucket as 'cfw evidence likely exists in source but cannot be observed at runtime without a hydrated probe.'")
+    L.append("- A `yes` does not guarantee runtime correctness — it means cfw has a same-named or aliased component. Remaining false-positive risk lives in alias-only `yes` rows; spot-check before treating as sign-off.")
     L.append("")
     L.append("## Summary")
     L.append("")
-    L.append("| Verdict | v1 | v2 | delta |")
+    L.append("| Verdict | v1 | v2 | v2.1 |")
     L.append("| --- | --: | --: | --: |")
-    L.append(f"| ✓ yes | 41 | {total['yes']} | +{total['yes']-41} |")
-    L.append(f"| ~ partial | 166 | {total['partial']} | {total['partial']-166} |")
-    L.append(f"| ✗ missing | 41 | {total['missing']} | {total['missing']-41:+d} |")
-    L.append(f"| ? unknown | 7 | {total['unknown']} | {total['unknown']-7:+d} |")
+    L.append(f"| ✓ yes | 41 | 201 | {total['yes']} |")
+    L.append(f"| ~ partial | 166 | 28 | {total['partial']} |")
+    L.append(f"| ✗ missing | 41 | 25 | {total['missing']} |")
+    L.append(f"| ? unknown | 7 | 1 | {total['unknown']} |")
+    L.append(f"| ▢ unprobed | — | — | {total['unprobed']} |")
     n = sum(total.values())
-    L.append(f"| **total** | 255 | {n} | 0 |")
+    L.append(f"| **total** | 255 | 255 | {n} |")
     L.append("")
-    L.append(f"**Partial bucket**: 166 → {total['partial']} (target was ≤50, achieved).")
+    L.append(f"**Partial bucket**: 166 → 28 → {total['partial']}.")
+    L.append(f"**Unprobed bucket**: 0 → 0 → {total['unprobed']} (newly explicit; was previously folded into partial/missing).")
     L.append("")
     L.append("## Per-page breakdown")
     L.append("")
-    L.append("| Page | cfw URL | DOM | ✓ | ~ | ✗ | ? | total |")
-    L.append("| --- | --- | :-: | --: | --: | --: | --: | --: |")
+    L.append("| Page | cfw URL | DOM | ✓ | ~ | ✗ | ▢ | ? | total |")
+    L.append("| --- | --- | :-: | --: | --: | --: | --: | --: | --: |")
     for page in sorted(by_page.keys()):
         c = counts[page]
         url = PAGE_URL.get(page, "—")
-        n_p = c["yes"] + c["partial"] + c["missing"] + c["unknown"]
+        n_p = c["yes"] + c["partial"] + c["missing"] + c["unknown"] + c["unprobed"]
         info = dom.get(page, {})
         if info.get("status") != 200:
             dom_marker = "—"
@@ -156,10 +164,10 @@ def main() -> None:
         else:
             dom_marker = "ssr"
         L.append(
-            f"| {page} | `{url}` | {dom_marker} | {c['yes']} | {c['partial']} | {c['missing']} | {c['unknown']} | {n_p} |"
+            f"| {page} | `{url}` | {dom_marker} | {c['yes']} | {c['partial']} | {c['missing']} | {c['unprobed']} | {c['unknown']} | {n_p} |"
         )
     L.append("")
-    L.append("**DOM column legend**: `ssr` = page returns full hookup-relevant DOM via curl (server-rendered); `client` = page returns only the master-shell slots and is hydrated on the client (DOM evidence weaker); `—` = page-level 404.")
+    L.append("**DOM column legend**: `ssr` = page returns full hookup-relevant DOM via curl (server-rendered); `client` = page returns only the master-shell slots and is hydrated on the client (DOM evidence weaker — features without alias/static fallback land in `▢ unprobed`); `—` = page-level 404.")
     L.append("")
     L.append("## Live URL probe")
     L.append("")
@@ -225,7 +233,7 @@ def main() -> None:
         L.append("")
         c = counts[page]
         L.append(
-            f"_{c['yes']} present / {c['partial']} partial / {c['missing']} missing / {c['unknown']} unknown_"
+            f"_{c['yes']} present / {c['partial']} partial / {c['missing']} missing / {c['unprobed']} unprobed / {c['unknown']} unknown_"
         )
         L.append("")
         L.append("| | feature | cfw evidence |")
@@ -234,13 +242,20 @@ def main() -> None:
             L.append(render_table_row(r))
         L.append("")
 
-    L.append("## Acceptance status (cf-o2kq)")
+    L.append("## Acceptance status")
     L.append("")
-    L.append("- [x] Curated alias map committed: `scripts/cf-ah0m/feature-aliases.json` (~80 entries)")
-    L.append("- [x] DOM probe script committed: `scripts/cf-ah0m/dom_probe.py`")
-    L.append(f"- [x] cfw-parity-audit-2026-05-04.md regenerated; partial bucket {total['partial']} (target ≤50)")
-    L.append("- [x] Forward-drift table appended (slots + testids + components)")
-    L.append("- [ ] PR superseding/updating #1139 — open after this commit lands")
+    L.append("**cf-o2kq (v2, PR #1139, merged):**")
+    L.append("- [x] Curated alias map: `scripts/cf-ah0m/feature-aliases.json`")
+    L.append("- [x] DOM probe script: `scripts/cf-ah0m/dom_probe.py`")
+    L.append(f"- [x] partial bucket {total['partial']} (target ≤50)")
+    L.append("- [x] Forward-drift table appended")
+    L.append("")
+    L.append("**cf-bdkq (v2.1, this PR):**")
+    L.append("- [x] 3 false-positive partials flipped to ✓: `You Might Also Like` → `PdpAlsoBought`; `BNPL Widget` + `BNPL Calculator Widget` → `PdpFinancing`")
+    L.append("- [x] 2 broken alias-map entries fixed: `Filters` (FacetPanel→FilterFirst/PLPControls), `Cart Global` (CartIcon→CartTrigger)")
+    L.append("- [x] `PdpNotifyMe` removed from forward-drift false-positive (forward-drift now harvests bare backtick IDs from raw markdown)")
+    L.append("- [x] `unprobed` verdict tier added for client-rendered / auth-walled pages (was silently biasing toward partial/missing)")
+    L.append("- [x] PR description corrected: probe is `curl -L`, NOT Playwright")
     L.append("")
     L.append("## Next steps (for melania to schedule)")
     L.append("")

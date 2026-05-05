@@ -1,14 +1,29 @@
 {
   "_comment": "Hookup-guide feature label tokens → cfw component prefixes / data-slot fragments. Used by match_v2.py to resolve naming-divergence false positives in the partial bucket. Each key maps to one or more cfw substrings; if any cfw name (component or data-slot) contains any of the substrings (case-insensitive), it counts as strong evidence.",
 
-  "filters": ["FacetPanel", "FilterChips", "MobileFilterDrawer", "filter-chip", "facet"],
-  "filter chips": ["FilterChips", "filter-chip"],
-  "filter": ["FacetPanel", "FilterChips", "filter-chip", "facet"],
+  "filters": ["FilterFirst", "PLPControls", "ReviewFilter", "MobileFilterDrawer"],
+  "filter chips": ["FilterFirst", "PLPControls"],
+  "filter": ["FilterFirst", "PLPControls", "ReviewFilter"],
+  "swatch filter": ["FilterFirst", "PLPControls", "swatch"],
 
-  "cart global": ["CartIcon", "CartDrawer", "site-header-cart", "cart-button"],
+  "cart global": ["CartTrigger", "CartDrawer", "cart-trigger"],
+  "cart icon": ["CartTrigger", "cart-trigger"],
   "side cart": ["CartDrawer", "side-cart", "cart-drawer"],
   "items": ["LineItem", "CartLine", "cart-lines"],
   "tier discount": ["FreeShippingProgress", "shipping-progress", "tier"],
+
+  "you might also like": ["PdpAlsoBought", "pdp-also-bought", "also-bought"],
+  "also like": ["PdpAlsoBought", "pdp-also-bought"],
+  "also bought": ["PdpAlsoBought", "pdp-also-bought"],
+
+  "bnpl": ["PdpFinancing", "pdp-financing", "afterpay-teaser"],
+  "bnpl widget": ["PdpFinancing", "pdp-financing"],
+  "bnpl calculator widget": ["PdpFinancing", "pdp-financing"],
+  "bnpl calculator": ["PdpFinancing", "pdp-financing"],
+
+  "notify me": ["PdpNotifyMe", "pdp-notify-me", "notify-me-success"],
+  "price drop notify": ["PdpNotifyMe", "pdp-notify-me"],
+  "low stock": ["PdpStockBadge", "stock-badge-state"],
 
   "hero section": ["LivingHero", "Hero", "MascotWorldHero"],
   "hero": ["LivingHero", "Hero", "MascotWorldHero", "BearHero", "CabinHero"],
