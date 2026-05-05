@@ -1,0 +1,135 @@
+{
+  "_comment": "Hookup-guide feature label tokens → cfw component prefixes / data-slot fragments. Used by match_v2.py to resolve naming-divergence false positives in the partial bucket. Each key maps to one or more cfw substrings; if any cfw name (component or data-slot) contains any of the substrings (case-insensitive), it counts as strong evidence.",
+
+  "filters": ["FacetPanel", "FilterChips", "MobileFilterDrawer", "filter-chip", "facet"],
+  "filter chips": ["FilterChips", "filter-chip"],
+  "filter": ["FacetPanel", "FilterChips", "filter-chip", "facet"],
+
+  "cart global": ["CartIcon", "CartDrawer", "site-header-cart", "cart-button"],
+  "side cart": ["CartDrawer", "side-cart", "cart-drawer"],
+  "items": ["LineItem", "CartLine", "cart-lines"],
+  "tier discount": ["FreeShippingProgress", "shipping-progress", "tier"],
+
+  "hero section": ["LivingHero", "Hero", "MascotWorldHero"],
+  "hero": ["LivingHero", "Hero", "MascotWorldHero", "BearHero", "CabinHero"],
+
+  "category cards": ["CategoryCard", "CategoryCardImage"],
+  "category card": ["CategoryCard"],
+
+  "trust bar": ["TrustBar", "trust-bar"],
+  "testimonials": ["TestimonialsStrip"],
+  "smooth scroll triggers": ["ScrollStory", "scroll-story", "RouteProgress", "route-progress"],
+  "quiz cta": ["HomeQuizCta", "FutonSommelierQuiz", "quiz-cta"],
+  "newsletter": ["HomeNewsletterSection", "NewsletterModal", "site-footer-newsletter", "home-newsletter"],
+  "newsletter modal": ["NewsletterModal", "EmailCapturePopup"],
+  "gift card": ["GiftCardPicker", "GiftCardPromo", "gift-card-promo"],
+  "swatch promo": ["HomeSwatchPromo", "SwatchRequest", "fabric-swatches"],
+  "blog teasers": ["HomeBlogTeasers", "BlogTeaser", "blog-teaser"],
+  "social feeds": ["SocialFeedEmbed", "social-feeds"],
+  "video showcase": ["VideoShowcase", "PdpProductVideo", "ProductVideoBlock"],
+  "recently viewed": ["RecentlyViewed", "recently-viewed"],
+  "continue shopping": ["ContinueShopping", "continue-shopping"],
+
+  "mobile drawer": ["MobileNav", "MobileDrawer", "MobileMenu", "site-header-mobile"],
+  "navigation": ["SiteHeader", "MainNav", "site-header"],
+  "header shipping progress": ["FreeShippingProgress", "ShippingProgress", "shipping-progress"],
+  "schema": ["JsonLd", "json-ld", "schema-org", "structured-data"],
+  "breadcrumbs": ["Breadcrumbs"],
+  "announcement bar": ["AnnouncementBar", "announcement-bar"],
+  "sticky nav": ["StickyHeader", "BackToTop", "site-header-sub"],
+  "back to top": ["BackToTop", "back-to-top"],
+  "promo lightbox": ["PromoLightbox", "GiftCardPromo", "HomeSwatchPromo"],
+  "exit intent popup": ["EmailCapturePopup", "ExitIntent", "exit-intent"],
+  "footer accordions": ["FooterAccordion", "Footer"],
+  "footer": ["SiteFooter", "Footer", "site-footer"],
+  "pwa install banner": ["PwaInstall", "AppDownloadBanner", "InstallPrompt"],
+  "accessibility": ["SkipLink", "skip-to-content", "VisuallyHidden", "a11y"],
+
+  "related products": ["RelatedProducts", "PdpRelated"],
+  "collection products": ["CollectionGrid", "PlpGrid", "ProductGrid"],
+  "product options": ["PdpFabricSwatches", "PdpVariantSelector", "VariantSelector", "ProductOptions"],
+  "variant swatches": ["PdpFabricSwatches", "VariantSwatches"],
+  "financing": ["PdpFinancing", "ProductFinancing", "BnplCalculator", "Affirm", "Afterpay"],
+  "reviews": ["PdpReviews", "ReviewsSection", "ReviewCard"],
+  "size guide": ["PdpSizeGuide", "SizeGuide", "size-guide"],
+  "delivery estimator": ["DeliveryEstimator", "delivery-zone", "DeliveryZone"],
+  "product badge": ["PdpProductBadges", "ProductBadge", "product-badges"],
+  "sticky add-to-cart": ["StickyAddToCart", "PdpStickyBar", "sticky-atc"],
+  "promo banner carousel": ["PromoBannerCarousel", "PromoCarousel", "PdpPromoBanner"],
+  "collection card builder": ["CollectionCard", "CategoryCard"],
+  "empty state builder": ["EmptyState", "EmptyCart", "empty-cart"],
+  "social story helpers": ["ScrollStory", "SocialStory"],
+  "info modal": ["PdpInfoModal", "ProductInfoModal", "CareGuide"],
+  "care guide": ["CareGuide", "PdpInfoModal"],
+  "qa": ["PdpQA", "QuestionsAnswers", "GuestQuestions"],
+  "questions answers": ["PdpQA", "QuestionsAnswers"],
+
+  "category hero": ["CategoryHero", "PlpHero", "ShopHero"],
+  "product grid": ["ProductGrid", "PlpGrid", "CollectionGrid"],
+  "quick view": ["QuickView", "quick-view"],
+  "filter chips ⚠️ repeater": ["FilterChips"],
+  "mobile filter drawer": ["MobileFilterDrawer", "FacetDrawer"],
+  "comparison tray": ["CompareTray", "ComparisonTray", "compare-tray"],
+  "see it in store": ["StoreLocator", "see-in-store", "showroom"],
+
+  "shipping progress": ["FreeShippingProgress", "ShippingProgress"],
+  "totals": ["CartTotals", "OrderSummary", "cart-summary"],
+  "cross-sell": ["CrossSell", "Upsell", "RelatedProducts"],
+  "tier": ["TierDiscount", "loyalty-tier"],
+
+  "trust signals": ["TrustBar", "CheckoutTrust", "trust-bar"],
+  "order notes": ["OrderNotes", "checkout-notes"],
+  "order summary": ["OrderSummary", "cart-summary", "checkout-summary"],
+  "payment methods": ["PaymentMethods", "PaymentSelector", "StripePayment"],
+  "afterpay": ["AfterpayBlock", "Afterpay"],
+  "shipping options": ["ShippingOptions", "ShippingMethod", "RatePicker"],
+  "address validation": ["AddressForm", "AddressValidation"],
+  "delivery estimate": ["DeliveryEstimator", "DeliveryEstimate"],
+  "summary sidebar": ["OrderSummary", "CheckoutSidebar", "cart-summary"],
+  "express": ["ExpressCheckout", "ApplePay", "GooglePay"],
+  "store credit": ["StoreCredit", "credit-balance"],
+  "protection plans": ["ProtectionPlan", "warranty-upsell"],
+
+  "side cart panel": ["CartDrawer", "side-cart"],
+  "progress bars": ["FreeShippingProgress", "ShippingProgress"],
+
+  "search results": ["SearchResults", "search-results"],
+  "search suggestions": ["SearchSuggestions", "search-autocomplete"],
+
+  "rewards": ["LoyaltyRewards", "RewardsList", "rewards-list"],
+  "streak display": ["StreakDisplay", "streak-counter", "Streak"],
+  "cf+ upgrade prompt modal": ["CfPlusUpgrade", "PremiumUpgrade", "MembershipUpgrade"],
+
+  "hours": ["BusinessHours", "ContactHours", "ShowroomHours", "hours"],
+  "appointment": ["AppointmentForm", "BookAppointment", "showroom-visit"],
+  "directions": ["StoreMap", "showroom-map", "directions"],
+
+  "team": ["TeamSection", "AboutTeam", "about-team"],
+  "values": ["AboutValues", "values-list"],
+  "story": ["AboutStory", "OurStory", "about-story"],
+
+  "faq accordion": ["FaqAccordion", "FaqList", "faq-accordion"],
+  "faq schema": ["JsonLd", "FaqJsonLd", "faq-jsonld"],
+
+  "calendar": ["DeliveryCalendar", "CalendarPicker"],
+  "window selector": ["DeliveryWindow", "TimeSlot"],
+
+  "experiments": ["AbTestList", "ExperimentList"],
+
+  "policy display": ["PolicyText", "PriceMatchPolicy"],
+  "my requests": ["MyRequests", "RequestList"],
+
+  "author bio": ["AuthorBio", "BlogAuthor"],
+
+  "certifications": ["Certifications", "CertList"],
+
+  "how it works": ["HowItWorks"],
+
+  "url params": ["SearchParams", "url-params"],
+
+  "calculator": ["ShippingCalculator", "Calculator"],
+  "scheduling": ["DeliveryCalendar", "Schedule"],
+
+  "decorative": ["DecorBackground", "decor"],
+  "seo": ["JsonLd", "Metadata", "schema"]
+}
