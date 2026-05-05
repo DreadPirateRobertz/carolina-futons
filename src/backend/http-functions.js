@@ -3115,7 +3115,7 @@ export function options_sampleRequests(request) {
 //   (3) other CRM resolution gap
 // is the actual cause.
 //
-// Inline-auth gated (mirrors post_importProductOptions pattern, cf-44mq).
+// Inline-auth gated via Bearer token in the Authorization header.
 // REMOVE in follow-up cleanup PR once cf-9ieq closes.
 
 export async function post_contactSubmissionsDiagnostic(request) {
