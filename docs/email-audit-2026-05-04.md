@@ -1,140 +1,184 @@
-# Email Touchpoint Audit — 2026-05-04
+# Email Touchpoint Audit — 2026-05-04 (refreshed 2026-05-05)
 
 **Bead:** cf-icww
 **Auditor:** rennala (cfutons crew)
-**Method:** Static analysis of `src/backend/`. Live STAGING_SITE / production sends were not verified — see *Verification gaps* at bottom.
-**Scope:** all welcome + touch emails dispatched via `triggeredEmails.emailContact` (Wix CRM Triggered Emails).
+**Method:** Static analysis of `src/backend/` against `main` at `4dabfd96`. Live STAGING_SITE / production sends were not verified — see *Verification gaps* at bottom.
+**Scope of detail rows:** all welcome + touch emails dispatched via `triggeredEmails.emailContact` (Wix CRM Triggered Emails). 31 rows total.
+**Scope of acceptance test plan (§Verification gaps):** P0/P1 findings only — `✅` rows in the table are statically asserted, not runtime-asserted; STAGING expansion for the `✅` set is out of scope for this audit and tracked as cf-icww.followup-tests.
+**In-flight fixes referenced:** cf-i23b (F3, bead closed), cf-icdc (F4, bead closed), cf-jmmk (F5, PR #1141 OPEN), cf-xdji (F1+F7, in_progress). Those landings change F3/F4/F5 row state — see "Status delta vs. PRs in flight" below.
+
+## Wiring contract (load-bearing)
+
+The audit's three P0 findings (F3/F4/F5) and the `✅` on every event-driven row depend on a single Wix Velo contract:
+
+> **Backend event handlers are auto-registered only from `backend/events.js`.** Functions matching the `wix*_on*` naming pattern that live in any other backend file (including `*.web.js` SPI files) are **not** wired into the Wix events bus and will never be invoked by Wix Stores / CRM / Members.
+
+Source: Wix Velo "Backend Events" reference (https://dev.wix.com/docs/velo/api-reference/wix-stores-backend/events) — handlers are registered by exporting from `backend/events.js`. The SPI `.web.js` files expose webMethods, not event subscriptions; an exported `wix*_on*` function in those files is dormant.
+
+If this contract is wrong, F3/F4/F5 collapse. Anyone refuting the audit should refute this contract first.
 
 ## Legend
 
-- **Trigger** — is the trigger function actually wired to fire?
-- **Send** — does the send call reach `triggeredEmails.emailContact` with the required arguments?
-- **Render** — does a template ID exist in the registry?
-- **Data-bind** — are all variable names referenced by the trigger free of `undefined`/missing-key risk?
+- **Trigger** — does the trigger function actually wire to fire on the source event?
+- **Send** — does the send call reach `triggeredEmails.emailContact` with the required arguments when triggered?
+- **Render** — does a template ID exist in the registry (in `emailAutomation.web.js#SEQUENCES` or as a literal `'foo'` argument to `emailContact`)?
+- **Data-bind** — are all variable names referenced by the trigger free of `undefined`/missing-key risk *at the call site* (template-side render is verified separately on staging — see Verification gaps)?
 
-`✅` = looks good statically. `⚠️` = works but has a gap. `❌` = broken / dead path.
-**Live render verification** for every row needs STAGING_SITE access (Stilgar) — flagged at end.
+`✅` static-pass. `⚠️` works but with a caveat. `❌` broken / dead path.
+
+Code refs use **symbol anchors** (function name) rather than line numbers, since lines drift (miquella feedback).
 
 ## Summary table
 
-| # | Email                                  | Template ID                         | Trigger | Send | Render | Data-bind | Notes |
-|---|----------------------------------------|-------------------------------------|---------|------|--------|-----------|-------|
-| 1 | Welcome drip — exit-intent capture     | `welcome_series_1..3`               | ✅      | ❌   | ✅     | ⚠️       | F1 — empty `recipientContactId` blocks send |
-| 2 | Welcome drip — `triggerWelcomeSeries`  | `welcome_series_1..5`               | ✅      | ❌   | ✅     | ⚠️       | F1 — same root cause |
-| 3 | Welcome drip — member signup           | `welcome_series_1..5`               | ✅      | ✅   | ✅     | ✅        | Wired via `events.js#wixMembers_onMemberCreated` |
-| 4 | Welcome drip — `subscribeToNewsletter` | (none — never queued)               | ❌      | n/a  | n/a    | n/a       | F2 — webMethod inserts subscriber but never queues welcome |
-| 5 | Order confirmation                     | `order_confirmation`                | ❌      | ❌   | ✅     | ✅        | F3 — only-wired handler in `events.js` does not call `sendOrderConfirmation`; the call lives in dead-code copy of `wixEcom_onOrderCreated` inside `emailAutomation.web.js` |
-| 6 | Shipping notification (parcel)         | `order_shipped`                     | ❌      | ✅   | ✅     | ✅        | F4 — `wixEcom_onFulfillmentCreated` defined ONLY in `emailAutomation.web.js`; not wired in `events.js` |
-| 7 | Shipping notification (LTL freight)    | `freight_shipped`                   | ❌      | ✅   | ✅     | ✅        | F4 — same |
-| 8 | Delivery confirmation                  | `delivery_confirmation`             | ❌      | ✅   | ✅     | ✅        | F5 — `wixEcom_onOrderDelivered` defined ONLY in `emailAutomation.web.js` |
-| 9 | Post-purchase Day 3 / 7 / 30 / referral| `post_purchase_1..3`, `post_purchase_referral` | ⚠️ | ✅   | ✅     | ✅        | Fires from `events.js#wixEcom_onOrderCreated` so countdown starts at *order* not *delivery* (CF-nkau spec says delivery) |
-| 10| Post-purchase Day-14 review reward     | `post_purchase_review_reward`       | ❌      | ✅   | ✅     | ✅        | F5 — depends on `wixEcom_onOrderDelivered` |
-| 11| Cart abandonment recovery (3-step)     | `cart_recovery_1..3`                | ✅      | ✅   | ✅     | ✅        | Cron `triggerCartRecoveryCron` + `cartRecovery.web.js` |
-| 12| Browse recovery                        | `browse_recovery_1`                 | ✅      | ✅   | ✅     | ✅        | Cron `triggerBrowseRecoveryCron` |
-| 13| Re-engagement (Day 0 / 7 / 21)         | `reengagement_1..3`                 | ✅      | ✅   | ✅     | ✅        | Cron `triggerReengagementCron` |
-| 14| Winback (UTM-based)                    | (lifecycle templates)               | ✅      | ✅   | ✅     | ✅        | Cron `scanAndTriggerWinbackCron` |
-| 15| Review-request (orders + 7d)           | `post_purchase_2`                   | ✅      | ✅   | ✅     | ✅        | Cron `runReviewRequestEmailsCron`; also wired via `jobs.config` |
-| 16| Wishlist price-drop alerts             | (in `wishlistAlerts.web.js`)        | ✅      | ✅   | ✅     | ✅        | Cron `checkWishlistAlerts` |
-| 17| Tier milestone (gamification)          | `tier_*_approach`/`*_achieved`      | ✅      | ✅   | ✅     | ✅        | Wired via `events.js#wixEcom_onOrderCreated` post-purchase block (CF-8onx) |
-| 18| Contact form (owner notification)      | `contact_form_submission`           | ✅      | ✅   | ✅     | ✅        | `emailService.sendEmail` — sends to `SITE_OWNER_CONTACT_ID` |
-| 19| Contact form (customer auto-reply)     | (none)                              | ❌      | n/a  | n/a    | n/a       | F6 — no customer-side reply email sent (godfrey's PR #15 path) |
-| 20| Swatch request (owner notification)    | `contact_form_submission`           | ✅      | ✅   | ✅     | ✅        | `submitSwatchRequest` |
-| 21| Swatch request (customer confirmation) | `swatch_confirmation`               | ⚠️      | ✅   | ✅     | ✅        | F7 — only fires if a CRM contact already exists for the email; new visitors get nothing |
-| 22| Swatch follow-up sequence              | `swatch_followup_arrived/decide`    | ✅      | ✅   | ✅     | ✅        | Day 3/10 post-ship via cron |
-| 23| Consultation follow-up                 | `consultation_followup`             | ✅      | ✅   | ✅     | ✅        | CF-tcj5 |
-| 24| Newsletter signup confirmation         | (Klaviyo handles via ESP)           | ✅      | ✅   | n/a    | n/a       | `subscribeToNewsletter` calls `_syncToESPInternal` (best-effort) |
-| 25| Birthday reward                        | `birthday_reward_*`                 | ✅      | ✅   | ✅     | ✅        | `birthdayRewardService.web.js` |
-| 26| Gift card delivery                     | (in `giftCards.web.js`)             | ✅      | ✅   | ✅     | ✅        | Two send sites |
-| 27| Fabric sample confirmation/fulfillment | `fabric_sample_*`                   | ✅      | ✅   | ✅     | ✅        | `fabricSampleService.web.js` |
-| 28| Product Q&A owner alert                | `OWNER_EMAIL_TEMPLATE`              | ✅      | ✅   | ✅     | ✅        | `productQA.web.js` |
-| 29| Restock notification                   | `restock_notification`              | ✅      | ✅   | ✅     | ✅        | Triggered from `wixStores_onInventoryVariantUpdated` |
-| 30| Review thank-you                       | `review_thank_you`                  | ✅      | ✅   | ✅     | ✅        | `reviewsService.web.js` |
-| 31| Content schedule cron                  | (publisher, not email)              | ✅      | n/a  | n/a    | n/a       | `processContentScheduleCron` schedules CMS content; no email side-effect |
+| # | Email                                  | Template ID                          | Trigger | Send | Render | Data-bind | Anchor                                              | Notes |
+|---|----------------------------------------|--------------------------------------|---------|------|--------|-----------|-----------------------------------------------------|-------|
+| 1 | Welcome drip — exit-intent capture     | `welcome_series_1..3`                | ✅      | ❌   | ✅     | ⚠️        | `newsletterService.web.js#captureExitIntentEmail`   | F1 — `recipientContactId: ''` blocks send |
+| 2 | Welcome drip — `triggerWelcomeSeries`  | `welcome_series_1..5`                | ✅      | ❌   | ✅     | ⚠️        | `emailAutomation.web.js#triggerWelcomeSeries`       | F1 — same root cause |
+| 3 | Welcome drip — member signup           | `welcome_series_1..5`                | ✅      | ✅   | ✅     | ✅        | `events.js#wixMembers_onMemberCreated`              | Wired correctly |
+| 4 | Welcome drip — `subscribeToNewsletter` | (none — never queued)                | ❌      | n/a  | n/a    | n/a       | `newsletterService.web.js#subscribeToNewsletter`    | F2 — webMethod inserts subscriber but never queues welcome |
+| 5 | Order confirmation                     | `order_confirmation`                 | ❌      | ❌   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated`                  | F3 — events.js handler does not call `sendOrderConfirmation`; the call lives in dead duplicate at `emailAutomation.web.js#wixEcom_onOrderCreated`. **cf-i23b filed (bead CLOSED 2026-05-05); no merged PR yet — still verify on main.** |
+| 6 | Shipping notification (parcel)         | `order_shipped`                      | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onFulfillmentCreated` | F4 — handler defined only in `.web.js`. `events.js#wixEcom_onOrderFulfilled` exists but only dispatches mobile push + SMS via `notificationOrchestrator`, no email. **cf-icdc filed (bead CLOSED); no merged PR yet.** |
+| 7 | Shipping notification (LTL freight)    | `freight_shipped`                    | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onFulfillmentCreated` | F4 — same |
+| 8 | Delivery confirmation                  | `delivery_confirmation`              | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onOrderDelivered`   | F5 — handler defined only in `.web.js` on current main. **cf-jmmk PR #1141 OPEN — wires this in events.js. Expect F5 to flip to ✅ once #1141 merges.** |
+| 9 | Post-purchase Day 3 / 7 / 30 / referral| `post_purchase_1..3`, `post_purchase_referral` | ⚠️ | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated` → `triggerPostPurchaseSequence` | Countdown starts at *order* not *delivery* (CF-nkau spec says delivery). After cf-jmmk lands, both events queue post-purchase → potential duplicates unless one is removed. |
+| 10| Post-purchase Day-14 review reward     | `post_purchase_review_reward`        | ❌      | ✅   | ✅     | ✅        | `emailAutomation.web.js#wixEcom_onOrderDelivered`   | F5 — same as row 8; flips once #1141 merges |
+| 11| Cart abandonment recovery (3-step)     | `cart_recovery_1..3`                 | ✅      | ✅   | ✅     | ✅        | `cartRecovery.web.js`, cron `triggerCartRecoveryCron`| |
+| 12| Browse recovery                        | `browse_recovery_1`                  | ✅      | ✅   | ✅     | ✅        | `browseAbandonment.web.js`, cron `triggerBrowseRecoveryCron` | |
+| 13| Re-engagement (Day 0 / 7 / 21)         | `reengagement_1..3`                  | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#triggerReengagement`, cron `triggerReengagementCron` | |
+| 14| Winback (UTM-based)                    | `lifecycle_winback_*` (in `lifecycleEmailTemplates.js`) | ✅ | ✅ | ✅ | ✅ | `lifecycleCron.web.js#scanAndTriggerWinback`, cron `scanAndTriggerWinbackCron` | Templates: `lifecycle_winback_30d`, `lifecycle_winback_60d`, `lifecycle_winback_90d` per `lifecycleEmailTemplates.js` |
+| 15| Review-request (orders + 7d)           | `post_purchase_2`                    | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#runReviewRequestEmails`, cron `runReviewRequestEmailsCron` + `jobs.config` daily 10am EST | |
+| 16| Wishlist price-drop alerts             | `wishlist_price_drop`                | ✅      | ✅   | ✅     | ✅        | `wishlistAlerts.web.js#checkWishlistAlerts`, cron `checkWishlistAlerts` | Template literal at the `emailContact` call site in `wishlistAlerts.web.js` |
+| 17| Tier milestone (gamification)          | `tier_*_approach`/`*_achieved`       | ✅      | ✅   | ✅     | ✅        | `events.js#wixEcom_onOrderCreated` → `checkAndTriggerTierMilestone` | CF-8onx |
+| 18| Contact form (owner notification)      | `contact_form_submission`            | ✅      | ✅   | ✅     | ✅        | `emailService.web.js#sendEmail`                     | Sends to `SITE_OWNER_CONTACT_ID` secret |
+| 19| Contact form (customer auto-reply)     | (none)                               | ❌      | n/a  | n/a    | n/a       | `emailService.web.js#sendEmail` (gap)               | F6 — no customer-side reply email sent. *PR #15* in the original bead description was an external issue tracker reference; treat as historical, not a code path. |
+| 20| Swatch request (owner notification)    | `contact_form_submission`            | ✅      | ✅   | ✅     | ✅        | `emailService.web.js#submitSwatchRequest`           | |
+| 21| Swatch request (customer confirmation) | `swatch_confirmation`                | ⚠️      | ✅   | ✅     | ✅        | `emailService.web.js#submitSwatchRequest`           | F7 — only fires if a CRM contact already exists; new visitors get nothing. **cf-xdji in_progress — adds `resolveContactId` helper used by F1 + F7.** |
+| 22| Swatch follow-up sequence              | `swatch_followup_arrived/decide`     | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#SEQUENCES.swatch_followup`  | Day 3/10 post-ship via cron |
+| 23| Consultation follow-up                 | `consultation_followup`              | ✅      | ✅   | ✅     | ✅        | `emailAutomation.web.js#SEQUENCES.consultation`     | CF-tcj5 |
+| 24| Newsletter signup → ESP sync (Klaviyo) | (Klaviyo handles via ESP)            | ✅      | ⚠️   | n/a    | n/a       | `newsletterService.web.js#_syncToESPInternal`       | Caveat — fire-and-forget; `_syncToESPInternal(...)` is `.catch(() => {})`, so silent failures are masked. Cannot statically verify Klaviyo actually receives. (Adjusted from `✅` per silent-failure-hunter feedback.) |
+| 25| Birthday reward                        | `birthday_reward_*`                  | ✅      | ✅   | ✅     | ✅        | `birthdayRewardService.web.js`                      | |
+| 26| Gift card delivery                     | `gift_card_delivered_to_buyer`, `gift_card_delivered_to_recipient` | ✅ | ✅ | ✅ | ✅ | `giftCards.web.js` (two `emailContact` sites) | |
+| 27| Fabric sample confirmation/fulfillment | `fabric_sample_confirmation`, `fabric_sample_fulfillment` | ✅ | ✅ | ✅ | ✅ | `fabricSampleService.web.js`                       | |
+| 28| Product Q&A owner alert                | `OWNER_EMAIL_TEMPLATE` (constant)    | ✅      | ✅   | ✅     | ✅        | `productQA.web.js`                                  | |
+| 29| Restock notification                   | `restock_notification`               | ✅      | ✅   | ✅     | ✅        | Triggered from `events.js#wixStores_onInventoryVariantUpdated` | |
+| 30| Review thank-you                       | `review_thank_you`                   | ✅      | ✅   | ✅     | ✅        | `reviewsService.web.js`                             | |
+
+(Removed prior row 31 "content schedule cron" — `processContentScheduleCron` schedules CMS content publishing, has no `triggeredEmails.emailContact` call site, and is therefore out of scope for this audit. Mentioned originally only because the bead description listed it.)
+
+## Status delta vs. PRs in flight
+
+| Finding | Bead    | Bead status      | PR     | PR status | Audit row will flip when… |
+|---------|---------|------------------|--------|-----------|----------------------------|
+| F3      | cf-i23b | CLOSED 2026-05-05 | (none on main yet) | n/a    | sendOrderConfirmation called in events.js#wixEcom_onOrderCreated |
+| F4      | cf-icdc | CLOSED 2026-05-05 | (none on main yet) | n/a    | events.js exports wixEcom_onFulfillmentCreated calling send{Shipping,Freight}Notification |
+| F5      | cf-jmmk | HOOKED            | #1141  | OPEN      | events.js exports wixEcom_onOrderDelivered calling delivery + Day-14 + NPS |
+| F1+F7   | cf-xdji | IN_PROGRESS       | (TBD)  | n/a       | resolveContactId helper used at captureExitIntentEmail + triggerWelcomeSeries + submitSwatchRequest |
+
+**Note for the merge gate:** beads CLOSED for F3/F4 without a corresponding merged PR look like bead-trail drift — flag back to mayor. This audit treats current `main` as the source of truth, so F3/F4 remain `❌` until code lands.
 
 ## Findings (P0/P1) — broken or dead
 
 ### F1 — Welcome series for anonymous + member-self-trigger paths fails to send (P1)
 **Where:**
-- `src/backend/newsletterService.web.js:453` (`captureExitIntentEmail`) inserts `recipientContactId: ''`
-- `src/backend/emailAutomation.web.js:487` (`triggerWelcomeSeries`) inserts `recipientContactId: ''`
+- `newsletterService.web.js#captureExitIntentEmail` inserts `recipientContactId: ''` (in the `wixData.insert('EmailQueue', { … })` block).
+- `emailAutomation.web.js#triggerWelcomeSeries` inserts `recipientContactId: ''` (in the per-step `queueEmail({ … })` call).
 
-**Why it breaks:** `processEmailQueue` calls `sendQueuedEmail` (`emailAutomation.web.js:1485`) which `throw new Error('No contact ID for recipient')` when `recipientContactId` is empty. Items retry until `MAX_RETRIES`, then status='failed'.
+**Why it breaks:** `processEmailQueue` (`emailAutomation.web.js`, called by `get_processEmailQueueCron`) delegates send to `sendQueuedEmail`, which `throw new Error('No contact ID for recipient')` when `recipientContactId` is empty. Items retry until `MAX_RETRIES`, then `status='failed'`.
 
-**Result:** Exit-intent welcome series and member-self-trigger welcome series never deliver. Member-signup path (F3 ✅) works because `wixMembers_onMemberCreated` passes `member._id` as `contactId`.
+**Result:** Exit-intent welcome series and member-self-trigger welcome series never deliver. Member-signup path (Row #3 ✅) works because `wixMembers_onMemberCreated` passes `member._id` as `contactId`.
 
-**Fix:** Resolve a Wix CRM contact via `contacts.appendOrCreateContact({ emails: [{ email }] })` before queueing, then store the returned `contactId` on the queue row.
+**Fix in flight:** cf-xdji — `resolveContactId(email, firstName)` helper using `contacts.appendOrCreateContact(...)` from `wix-crm-backend`, called before queueing.
 
 ### F2 — `subscribeToNewsletter` does not actually queue the welcome series (P1)
-**Where:** `src/backend/newsletterService.web.js:333..389` and the comment in `src/backend/styleQuiz.web.js:327` ("subscribeToNewsletter deduplicates silently and triggers the welcome flow").
+**Where:** `newsletterService.web.js#subscribeToNewsletter`. Comment in `styleQuiz.web.js` (in the `if (!alreadySubscribed)` branch) reads "subscribeToNewsletter deduplicates silently and triggers the welcome flow."
 
 **Why it breaks:** `subscribeToNewsletter` inserts a `NewsletterSubscribers` row and fires-and-forgets `_syncToESPInternal(...)`. There is no call to `triggerWelcomeSequence`, `triggerWelcomeSeries`, or `enqueueEmail` for `welcome_series_*`. The misleading comment in styleQuiz means callers believe a welcome flow runs.
 
-**Fix:** Either rename `subscribeToNewsletter` to make its scope honest, or call `triggerWelcomeSeries(cleanEmail, '')` (after F1 is fixed) at the success branch.
+**Decision needed:** rename `subscribeToNewsletter` to make scope honest, OR call `triggerWelcomeSeries(cleanEmail, '')` (post-F1) at the success branch. Tracked at cf-icww.followup-f2.
 
-### F3 — `order_confirmation` template never sends (P0)
+### F3 — `order_confirmation` template never sends (P0, current main)
 **Where:** Two competing definitions of `wixEcom_onOrderCreated`:
-- `src/backend/events.js:214` — wired by Wix; calls `triggerPostPurchaseSequence` (Day-3+ care guide), **does NOT call `sendOrderConfirmation`**.
-- `src/backend/emailAutomation.web.js:183` — dead code; would call `sendOrderConfirmation` but Wix only auto-registers handlers exported from `backend/events.js`.
+- `events.js#wixEcom_onOrderCreated` — wired by Wix; calls `triggerPostPurchaseSequence` (Day-3+ care guide), **does NOT call `sendOrderConfirmation`**.
+- `emailAutomation.web.js#wixEcom_onOrderCreated` — dead code; would call `sendOrderConfirmation` but does not run.
 
-**Why it breaks:** Wix Stores' built-in receipt email may still fire (platform-level), but the Velo `order_confirmation` template — the branded one with `firstName`/`orderNumber`/`itemSummary`/`estimatedDays` variables — is dormant. If Velo template was meant to replace the platform default, customers receive a less branded receipt; if it was additive, customers receive *one* receipt instead of two.
+**Why it breaks:** Wix Stores' built-in receipt may still fire (platform-level), but the Velo `order_confirmation` template — the branded one with `firstName`/`orderNumber`/`itemSummary`/`estimatedDays` variables — is dormant.
 
-**Fix:** Add `sendOrderConfirmation({contactId, email, firstName, orderNumber, total, itemSummary})` at the top of `events.js#wixEcom_onOrderCreated` (after the `if (!email) return` guard). Delete the dead-code copy in `emailAutomation.web.js` to prevent further confusion.
+**Fix in flight:** cf-i23b (bead CLOSED but no PR observed on main as of refresh).
 
-### F4 — Shipping notifications never fire (P0)
-**Where:** `wixEcom_onFulfillmentCreated` is defined ONLY in `src/backend/emailAutomation.web.js:218`. `events.js` has no such handler.
+### F4 — Shipping notifications never fire (P0, current main)
+**Where:** `wixEcom_onFulfillmentCreated` is defined ONLY in `emailAutomation.web.js`. `events.js` exports `wixEcom_onOrderFulfilled` instead, but that handler dispatches *mobile push* via `orderStatusWebhook.web` and *SMS* via `notificationOrchestrator.web` — no email send.
 
-**Why it breaks:** Wix auto-registers event handlers from `backend/events.js`. `.web.js` files expose webMethods — exporting a `wix*_on*` name from them is not an event registration. Both `order_shipped` and `freight_shipped` templates never get triggered by tracking-info creation.
+**Why it breaks:** Wiring contract above. `order_shipped` and `freight_shipped` templates never get triggered by tracking-info creation.
 
-**Fix:** Move `wixEcom_onFulfillmentCreated` body into `events.js` (or have `events.js` import-and-call). The send-side functions (`sendShippingNotification`, `sendFreightShippingNotification`) are correct.
+**Fix in flight:** cf-icdc (bead CLOSED but no PR observed on main as of refresh).
 
-### F5 — Delivery confirmation, Day-14 review reward, NPS survey never fire (P0)
-**Where:** `wixEcom_onOrderDelivered` is defined ONLY in `src/backend/emailAutomation.web.js:264`. `events.js` has no such handler.
+### F5 — Delivery confirmation, Day-14 review reward, NPS survey never fire (P0, current main)
+**Where:** `wixEcom_onOrderDelivered` is defined ONLY in `emailAutomation.web.js` on `main` at audit time.
 
-**Why it breaks:** Same as F4. Affects:
-- `delivery_confirmation` template (sendDeliveryConfirmation)
-- `post_purchase_review_reward` (CF-qy79 Day-14 review prompt)
-- NPS survey scheduling (CF-1mlj)
-- The "post-purchase sequence starting from delivery date" requirement (CF-nkau spec) — currently the sequence starts from order *creation* via the `events.js` order-created handler.
+**Why it breaks:** Wiring contract above.
 
-**Fix:** Add `wixEcom_onOrderDelivered` to `events.js`, copying logic verbatim from `emailAutomation.web.js:264`. Then audit whether the order-created path should still queue post-purchase or whether the Day-3/7/30 timing should reset to delivery date.
+**Fix in flight:** **cf-jmmk PR #1141 OPEN** — wires `wixEcom_onOrderDelivered` in `events.js`. Once #1141 merges, rows 8 and 10 flip to `✅` and Row 9 escalates a new concern: both `wixEcom_onOrderCreated` and `wixEcom_onOrderDelivered` will queue the post-purchase sequence, producing duplicate Day-3/7/30 sends. Recommended follow-up bead: dedupe by `sequenceType + orderNumber` before insert in `queueEmail`, or remove the order-created branch.
 
 ### F6 — Contact form has no customer-side reply (P2)
-**Where:** `src/backend/emailService.web.js#sendEmail` (line 105+).
+**Where:** `emailService.web.js#sendEmail`.
 
-**Why it's a gap:** Only the site owner gets `contact_form_submission`. The submitter sees a UI confirmation ("Thanks!") but no email confirmation lands in their inbox — common reason customers re-submit the form. Bead description references "godfrey's PR #15 path" which suggests an auto-reply was planned.
+**Why it's a gap:** Only the site owner gets `contact_form_submission`. The submitter sees a UI confirmation but no email confirmation lands in their inbox — common reason customers re-submit. The "PR #15" reference in the original cf-icww description is an external/historical issue reference, not a code path on current main.
 
-**Fix:** Resolve/append a CRM contact, then call `triggeredEmails.emailContact('contact_form_auto_reply', contactId, { variables: { customerName, originalMessage } })` after the owner notification. Template needs to be created.
+**Fix:** Resolve/append a CRM contact (use cf-xdji's helper once landed), then call `triggeredEmails.emailContact('contact_form_auto_reply', contactId, { variables })`. Template needs to be created. Tracked at cf-icww.followup-f6.
 
 ### F7 — Swatch confirmation skipped for new visitors (P2)
-**Where:** `src/backend/emailService.web.js:259..280`.
+**Where:** `emailService.web.js#submitSwatchRequest`.
 
-**Why it's a gap:** `submitSwatchRequest` fires the customer-side `swatch_confirmation` only if `contacts.queryContacts().eq('primaryInfo.email', cleanEmail)` already returns a hit. First-time submitters (no prior CRM contact) get no email. The owner-side notification fires either way.
+**Why it's a gap:** `submitSwatchRequest` fires the customer-side `swatch_confirmation` only if `contacts.queryContacts().eq('primaryInfo.email', cleanEmail)` already returns a hit. First-time submitters get no email. The owner-side notification fires either way.
 
-**Fix:** Use `contacts.appendOrCreateContact({ emails: [{ email: cleanEmail }] })` first to guarantee a contactId, then send.
+**Fix in flight:** cf-xdji — same `resolveContactId` helper used by F1.
 
 ## Verification gaps — require STAGING_SITE access
 
 Static analysis cannot prove:
-- HTML template renders (no blank emails) — requires triggering each template on staging and inspecting received HTML.
-- Variables actually bind (no literal `{{firstName}}` left over) — requires received-email inspection.
-- CTA links resolve to the correct production URLs with UTM params intact.
-- Send-window throttling (`isInSendWindow`) does not delay transactional emails past their useful TTL.
-- Klaviyo ESP sync fires on `subscribeToNewsletter` (best-effort `_syncToESPInternal` swallows errors silently).
 
-Suggested STAGING_SITE acceptance test plan (hand-off to whoever runs it):
-1. New visitor → exit-intent popup → confirm `welcome_series_1` arrives. **Expect F1 to surface.**
-2. New member signup → confirm `welcome_series_1` arrives. **Expect ✅.**
-3. Test order placement → confirm `order_confirmation` arrives. **Expect F3 to surface (template silent).**
-4. Mark fulfillment with tracking → confirm `order_shipped` or `freight_shipped` arrives. **Expect F4 (silent).**
-5. Mark order delivered → confirm `delivery_confirmation` + Day-14 reward + NPS survey scheduled. **Expect F5 (silent).**
-6. Add to cart, abandon → wait 1 hr → confirm `cart_recovery_1`. Should ✅.
-7. Submit contact form → confirm owner email arrives, no customer reply. **Expect F6 (no customer email).**
-8. Submit swatch request as a brand-new email → confirm only owner side arrives. **Expect F7 (customer email skipped).**
+| Gap                                          | What needs to happen on staging                                          |
+|----------------------------------------------|--------------------------------------------------------------------------|
+| HTML body actually renders (not blank)       | View raw HTML source of received email; assert `<html>` body is non-empty |
+| No literal `{{var}}` left after binding      | Grep raw HTML for `{{` / `}}` / `undefined` / `null` strings              |
+| CTA links resolve to correct prod URLs       | Click each CTA in received email; expect `https://www.carolinafutons.com/...` (or `staging.carolinafutons.com` on STAGING_SITE) with intended path |
+| UTM params survive end-to-end                | Inspect each CTA href: must contain `utm_source`/`utm_medium`/`utm_campaign` matching template assertion |
+| Send-window throttling does not eat TTL      | Trigger a send outside the configured window (`isInSendWindow`); confirm reschedule, then forward-clock test confirms eventual send before TTL |
+| Klaviyo ESP sync actually fires (Row 24)     | Subscribe via `subscribeToNewsletter`, then check Klaviyo dashboard for the new profile within 60s |
+
+### P0/P1 acceptance test plan (revised)
+
+Each step lists trigger + arrival assertion + HTML/UTM/throttle expectation. Test order matches Recommended Fix Order so the remediation can be verified iteratively.
+
+1. **F4 (Row 6/7) — shipping email after fulfillment:** Mark a test order fulfilled with parcel tracking. Assert `order_shipped` arrives within 5 min. Open raw source: assert no `{{` substrings, `firstName`/`orderNumber`/`trackingNumber` bound, tracking link host matches carrier (e.g. `ups.com`). Repeat with LTL carrier (`XPO`) for `freight_shipped`.
+
+2. **F5 (Row 8/10) — delivery + Day-14 reward + NPS:** Mark a test order delivered. Assert (a) `delivery_confirmation` arrives within 5 min, (b) `post_purchase_review_reward` queues with `scheduledFor = deliveredAt + 14d` (inspect `EmailQueue`), (c) NPS survey row inserted in `Surveys` with `deliveredAt + 7d`. Open `delivery_confirmation` raw source: assert `firstName`/`orderNumber` bound, no `{{`.
+
+3. **F3 (Row 5) — order confirmation:** Place a test order. Assert `order_confirmation` arrives within 5 min. Verify body shows correct `total` (currency-formatted), `itemSummary` (no `[object Object]`), `estimatedDays` (numeric string).
+
+4. **F1 (Row 1/2) — exit-intent + member-self-trigger welcome:** (a) New-visitor exit-intent submit. Assert `welcome_series_1` arrives within 5 min. Inspect `EmailQueue` row: `recipientContactId` is non-empty (proves `resolveContactId` ran). (b) Member calls `triggerWelcomeSeries` — same assertions.
+
+5. **Welcome member signup (Row 3) — regression check after F1:** New member signup. Assert `welcome_series_1` still arrives. Confirms F1 helper change didn't break the member-signup contactId path.
+
+6. **F6 (Row 19) — contact form auto-reply (after template+wire):** Submit contact form as a brand-new email. Assert (a) owner email arrives at `SITE_OWNER_CONTACT_ID` recipient, (b) customer email arrives at submitter. Body of customer email echoes the original `subject` + `message`.
+
+7. **F7 (Row 21) — swatch confirmation for new visitor:** Submit swatch request from a brand-new email (no prior CRM contact). Assert `swatch_confirmation` arrives at submitter. Verify `swatchList` correctly comma-joined.
+
+8. **F2 (Row 4) — subscribeToNewsletter welcome (decision-dependent):** Submit `subscribeToNewsletter` directly (not exit-intent). Outcome depends on the F2 decision: if "auto-trigger" wins, assert `welcome_series_1` arrives; if "rename" wins, assert no welcome and downstream callers (e.g. styleQuiz) call `triggerWelcomeSeries` directly.
+
+### Cart-abandonment timing knob
+
+Step 6 in the prior plan ("wait 1 hr") was unrealistic for staging tests. `processCartRecovery` reads `scheduledFor` from each `EmailQueue` row — testers can short-circuit by either:
+- inserting a queue row with `scheduledFor = now` and `templateId='cart_recovery_1'` directly, or
+- calling `processEmailQueue({ now: Date.now() + 3600_000 })` from the wix-jobs runner / admin webMethod console to fast-forward the scheduler.
+
+Document this in the staging runbook so subsequent audits aren't blocked on real-time waits.
 
 ## Recommended fix order
 
-1. **F4 + F5** — copy/move event handlers into `events.js`. Trivial; unblocks the entire post-fulfillment touch funnel.
-2. **F3** — add the `sendOrderConfirmation` call in `events.js#wixEcom_onOrderCreated`. Delete the dead handler in `emailAutomation.web.js` to prevent the next maintainer falling for it.
-3. **F1** — introduce a single `resolveContactId(email, firstName)` helper that does `contacts.appendOrCreateContact`, and use it at every queue site that currently passes `''`. Same helper fixes F7.
-4. **F2** — decide whether `subscribeToNewsletter` should auto-trigger the welcome flow. If yes, add a call after the dedup check (post-F1).
-5. **F6** — design + create `contact_form_auto_reply` template; wire up after F1/F7 helper exists.
+1. **F4 + F5** (cf-icdc, cf-jmmk) — copy/move event handlers into `events.js`. cf-jmmk PR #1141 is up; cf-icdc bead is closed but no PR landed yet — flag to mayor for missing-PR drift.
+2. **F3** (cf-i23b) — same shape. Bead CLOSED but no merged PR; same drift concern as F4.
+3. **F1 + F7** (cf-xdji) — single `resolveContactId(email, firstName)` helper used at every queue/send site that currently passes `''` or skips on missing contact.
+4. **F2** — decision then implementation; tracked separately.
+5. **F6** — design `contact_form_auto_reply` template, then wire after F1/F7 helper exists.
+6. **Row 9 dedupe** (post-F5 merge) — once `wixEcom_onOrderDelivered` lands, dedupe post-purchase queue inserts by `sequenceType + orderNumber` so the order-created and order-delivered handlers don't double-queue.
