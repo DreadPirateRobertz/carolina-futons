@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-04-17 (v4.5 — CMS collections 32→36: added Landings, PressMentions, PressKitAssets, ComparisonFeatures to provisioning manifest + setup guide for cf-3qt Phase 4/5 migration. Dashboard needed: provision 4 new collections on STAGING_SITE (cf-3qt). Previous: v4.4 — CMS collections 28→32: added PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. v4.3 — Phase 8 COMPLETE. v4.2 — Night shift 5 merges.)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-05-05 (v4.6 — Post-cf-3qt session refresh: (a) confirmed PushTokens / SpinGrants / MobileChallengeCompletions / CrossRigSyncLog present on STAGING_SITE per Wix Data API verification 2026-05-05; (b) flagged cf-c6g5 — STAGING_SITE Triggered Emails dashboard is empty, 20 templates need batch-copy from prod, all email touchpoints currently 500; (c) added Diagnostic Endpoints section (`/_functions/contactSubmissionsDiagnostic`, /api/auth/diag pending quartz); (d) added Repo Drift lessons from cf-w1lg (cfutons monorepo ↔ carolina-futons-stage3-velo divergence — cfw → Velo HTTP calls 404 until publish); (e) Hookup-coverage snapshot from cf-ah0m + cf-o2kq parity audit: 255 features, 201✓ / 28~ / 25✗ / 1?; (f) Phase 8 cutover prep link. Previous: v4.5 — CMS collections 32→36: added Landings, PressMentions, PressKitAssets, ComparisonFeatures (cf-3qt Phase 4/5). v4.4 — CMS 28→32: PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. v4.3 — Phase 8 COMPLETE. v4.2 — Night shift 5 merges.)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -21,7 +21,8 @@ All required dashboard/API configurations are now in place for editor hookup:
 | **UPS carrier** | CONFIGURED | Live rates + $49.99 fallback |
 | **Local Pickup** | CONFIGURED | $0 (Hendersonville showroom) |
 | **Local Delivery** | CONFIGURED | $49.99 flat rate |
-| **CMS collections** | 36 TOTAL | 32 provisioned on staging; cf-3qt adds Landings, PressMentions, PressKitAssets, ComparisonFeatures (manifest updated; dashboard provisioning pending) |
+| **CMS collections** | 36 TOTAL | 36 confirmed on STAGING_SITE 2026-05-05 — earlier 4 (PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog) verified via Wix Data API; cf-3qt 4 (Landings, PressMentions, PressKitAssets, ComparisonFeatures) confirmed too. Dashboard provisioning complete. |
+| **Triggered Emails** | EMPTY | ⚠️ STAGING_SITE dashboard has NO sender + NO templates (cf-c6g5). 20 templates need batch-copy from prod by Stilgar. Every `triggeredEmails.emailContact()` call → 500. Blocks contact form, welcome series, order/shipping/delivery confirms, abandoned cart, re-engagement, NPS, swatch confirm. See "Triggered Email Templates Required (cf-c6g5)" below. |
 | **Back In Stock** | BLOCKED | API returns NOT_SUPPORTED — needs manual dashboard toggle |
 | **Wix Payments** | CONNECTED | Credit/Debit, Apple Pay, Google Pay, PayPal, Afterpay, Affirm — activates at Premium upgrade |
 | **Manual Payments** | CONNECTED | In-store cash/check at Hendersonville showroom |
@@ -82,6 +83,157 @@ All write endpoints with `Permissions.Anyone` are rate-limited using the shared 
 | `TrackingRateLimit` | `subscribeToNotifications` | 5/hr per email |
 
 **Security fix applied (v1.0.0)**: Anonymous bucket DoS vector was patched — rate limit keys now use the caller's email/memberId, never `'anonymous'` as a fallback that creates a shared bucket across all callers.
+
+---
+
+## 📨 Triggered Email Templates Required (cf-c6g5 — added 2026-05-05)
+
+> **Status (2026-05-05)**: STAGING_SITE Wix Studio Dashboard → Triggered Emails is **EMPTY**. No sender, no templates. Every `triggeredEmails.emailContact()` call resolves to *"Not Found: the requested item no longer exists"* and the Velo wrapper turns that into 500. The contact form, every welcome / order / shipping / delivery email, abandoned-cart, browse-recovery, re-engagement, NPS, post-purchase, swatch-confirmation, and recovery-discount flows are all silently broken on staging behind 500s.
+>
+> **Fix path (preferred)**: Stilgar logs into PROD `carolinafutons.com` Wix Studio dashboard → Triggered Emails → exports each template (or copies HTML + variables) → recreates on STAGING_SITE. ~30–60 min manual work.
+>
+> **Verify**: godfrey's `/_functions/contactSubmissionsDiagnostic` (see Diagnostic Endpoints section below) returns `{ ok: true }` on both schema-validate + emailContact steps.
+
+### 20 templates needed (batch-copy from prod)
+
+| # | Template ID | Purpose / Trigger |
+|---|---|---|
+| 1 | `contact_form_submission` | Owner notification for /contact form (also linked to swatch request) |
+| 2 | `welcome_series_1` | Member onboarding step 1 (`wixMembers_onMemberCreated`) |
+| 3 | `welcome_series_2` | Member onboarding step 2 (T+1 day) |
+| 4 | `welcome_series_3` | Member onboarding step 3 (T+3 day) |
+| 5 | `welcome_series_4` | Member onboarding step 4 (T+7 day) |
+| 6 | `welcome_series_5` | Member onboarding step 5 (T+14 day) |
+| 7 | `order_confirmation` | Buyer confirmation (`wixEcom_onOrderCreated`) |
+| 8 | `order_shipped` | Parcel/UPS shipping notification |
+| 9 | `freight_shipped` | LTL freight shipping notification (PRO number) |
+| 10 | `delivery_confirmation` | `wixEcom_onOrderDelivered` |
+| 11 | `post_purchase_review_reward` | Day-14 review-and-earn-points |
+| 12 | `nps_survey` | Post-purchase NPS prompt |
+| 13 | `swatch_confirmation` | Customer confirmation for swatch requests |
+| 14 | `abandoned_cart_recovery` | `cartRecoveryService.web` — coupon + cart-restore link |
+| 15 | `browse_recovery` | Anonymous browse-recovery flow |
+| 16 | `reengagement_1` | Inactive-member re-engagement step 1 |
+| 17 | `reengagement_2` | Re-engagement step 2 |
+| 18 | `reengagement_3` | Re-engagement step 3 |
+| 19 | `post_purchase_care` | Care-guide nudge ~T+30 day |
+| 20 | `recovery_discount` | Last-chance discount in re-engagement chain |
+
+### Required template variables (intersection across templates)
+
+`customerName` · `customerEmail` · `customerPhone` · `subject` · `message` · `submittedAt` · `firstName` · `orderNumber` · `total` · `itemSummary` · `itemCount` · `estimatedDays` · `trackingNumber` · `trackingUrl` · `proNumber` · `carrier` · `productName` · `swatchList` · `estimatedArrival` · `couponCode` · `cartRestoreUrl`
+
+### Sender configuration
+
+Sender email: `carolinafutons@gmail.com` (preferred) or `noreply@carolinafutons.com` (if SPF/DKIM are configured for that subdomain).
+
+### Acceptance
+
+- [ ] Sender configured on STAGING_SITE
+- [ ] All 20 templates created + published with the variables above
+- [ ] `contactSubmissionsDiagnostic` returns `{ ok: true }` on both steps
+- [ ] cfw end-to-end against staging: contact form, newsletter, swatch request all return 200 + email arrives at `halworker85+test@gmail.com`
+
+---
+
+## 🩺 Diagnostic Endpoints (added 2026-05-05)
+
+Self-rotating diagnostic endpoints used by godfrey + quartz to verify infra health from the cfw side without touching the dashboard.
+
+| Endpoint | Repo | Purpose | Status |
+|---|---|---|---|
+| `/_functions/contactSubmissionsDiagnostic` | `carolina-futons-stage3-velo` (Velo) | Two-step probe: (1) schema-validate a fixture payload through `validateContactRequest` + `validateSchema`; (2) attempt `triggeredEmails.emailContact('contact_form_submission', siteOwnerContactId, { variables: fixture })` and report the raw error. Output is JSON with `{ ok, step, error? }`. | Live; currently fails on step 2 — see cf-c6g5. |
+| `/api/auth/diag` | `carolina-futons-web` (Next.js) | Verify the Wix Members auth flow (member-create → JWT → CRM lookup) without exercising the UI. Returns `{ ok, member: { _id, loginEmail }, jwt: { iss, exp } }`. | **Pending quartz ship.** |
+
+### Self-rotating tokens
+
+Both endpoints are guarded by a per-environment static token (`DIAG_TOKEN`) that is rotated weekly from the GitHub Actions secret store. Caller passes `?token=<value>` (Velo) or `Authorization: Bearer <value>` (Next.js).
+
+- Token rotation cadence: every Sunday 00:00 UTC, automated via the `rotate-diag-tokens.yml` workflow (cf-quartz).
+- Old + new token both accepted for a 24-hour overlap window so in-flight CI runs don't break.
+- On rotation, GH secret `DIAG_TOKEN_CFW` is updated; Vercel and Wix env vars are updated by the workflow's deploy step.
+
+### Self-test invocation
+
+```bash
+# Velo diagnostic (cf-foo0 / cf-c6g5 verification)
+curl -sS "https://chrisdealglass.wixstudio.com/my-site/_functions/contactSubmissionsDiagnostic?token=$DIAG_TOKEN_CFW" | jq
+
+# Next.js auth diagnostic (when quartz ships)
+curl -sS -H "Authorization: Bearer $DIAG_TOKEN_CFW" \
+  https://carolina-futons-web.vercel.app/api/auth/diag | jq
+```
+
+---
+
+## 🔀 Repo Drift Lessons — cfutons monorepo ↔ stage3-velo (cf-w1lg, added 2026-05-05)
+
+> **Lesson**: We have **two** repos that look like Velo source. Only one publishes to the live site. They drift, and every drift becomes a 404 or a stale handler in production.
+
+### Topology
+
+| Repo | Role | Wix CLI publish? |
+|---|---|---|
+| [`DreadPirateRobertz/carolina-futons`](https://github.com/DreadPirateRobertz/carolina-futons) | cfutons monorepo (this repo) — Velo source-of-truth, plus all docs, audit reports, parity manifests, ops runbooks | **No** |
+| [`DreadPirateRobertz/carolina-futons-stage3-velo`](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo) | Wix CLI deploy target — what `wix preview` and `wix publish` actually read | **Yes** |
+
+### What goes wrong
+
+When a `/_functions/<name>` HTTP function or a `*.web.js` webMethod is added to the cfutons monorepo and not mirrored into stage3-velo, the cfw Next.js app hits a **404** from the live Velo URL — even though the code "exists". Symptoms:
+
+- `POST /_functions/contactSubmissions` → 404 → cfw `/contact` shows generic transport error (cf-foo0, cf-9ieq)
+- `POST /_functions/sampleRequests` → 404 → swatch-request flow fails silently
+- `POST /_functions/mailingListSignups` → 404 → newsletter footer "couldn't sign up"
+- `GET /_functions/deliveryZone` → 404 → PDP delivery estimator shows fallback band
+- `GET /_functions/unsubscribe` → 404 → 1-click email unsubscribe broken
+
+### Convergence in flight
+
+- **PR #15** on `carolina-futons-stage3-velo`: ports `post_contactSubmissions` + `backend/utils/cors.js` (cf-foo0). Reviewed; awaiting Stilgar Wix Publish.
+- **`fix/cf-w1lg-velo-convergence-4-endpoints`** branch: ports the remaining 4 (`sampleRequests`, `mailingListSignups`, `deliveryZone`, `unsubscribe`). Stacked on top of #15.
+- After both publish, drift backlog is empty and we have clean parity for the contact / swatch / newsletter / delivery-zone / unsubscribe surfaces.
+
+### Standing rule
+
+Every PR that touches `src/backend/http-functions.js` or `src/backend/*.web.js` in the cfutons monorepo MUST also produce a stage3-velo PR before it counts as "merged" for cfw consumers. CI gate proposed in cf-w1lg follow-up.
+
+### Long-term
+
+Investigate publishing from the cfutons monorepo directly so there's only one source-of-truth. Tracked in cf-3qt Phase 9 follow-up.
+
+---
+
+## 📊 Hookup Coverage Snapshot — cfw vs Wix Editor (cf-ah0m / cf-o2kq, 2026-05-05)
+
+Automated parity audit of THIS guide vs `https://carolina-futons-web.vercel.app/`. Source: `cfw-parity-audit-2026-05-04.md` (PR #1139, v2 commit `0a288781`).
+
+| | count | % |
+|---|---:|---:|
+| ✓ feature present in cfw | 201 | 78.8% |
+| ~ partial / ambiguous | 28 | 11.0% |
+| ✗ no cfw evidence | 25 | 9.8% |
+| ? unknown / out-of-scope | 1 | 0.4% |
+| **total parsed from this guide** | **255** | 100% |
+
+**Page-level 404s on cfw (guide enumerates, no Vercel route):**
+`/wishlist`, `/wishlist-share`, `/price-match-guarantee`, `/fabric-swatches`, `/sign-in`. Each needs a deprecate-or-rebuild decision before Wix Editor retirement.
+
+**Forward-drift (cfw has, guide doesn't mention):** 18 `data-slot` values, 20 `data-testid` values, 60 component basenames. Largest clusters: mascot scenes (StargazingHero, MascotFooterDivider, FogScene, FallsScene, EasterEggBear), analytics tags (GA4Tag, MetaPixel, PinterestTag, ConsentMode), PDP add-ons (PdpComfortBand, PdpNotifyMe, PdpInteractive), MegaMenu, page-transition.
+
+The audit scripts live in `scripts/cf-ah0m/` (parser + alias map + DOM probe + report builder) — regenerable from this guide + `carolina-futons-web/src`. Re-run after every guide refresh.
+
+---
+
+## 🚀 Phase 8 Cutover Prep (added 2026-05-05)
+
+Prep work for the Wix Editor → Vercel cutover lives at `cf-roadmap-2026-05-05.md` (TBD — Stilgar to author after the email-infra unblock from cf-c6g5). Until that ships, the operational blockers tracked here are:
+
+1. **cf-c6g5** — STAGING_SITE Triggered Emails dashboard population (P0).
+2. **cf-w1lg** — stage3-velo HTTP-function convergence (P1, in flight).
+3. **cf-ah0m / cf-o2kq follow-ups** — five `/wishlist`, `/wishlist-share`, `/price-match-guarantee`, `/fabric-swatches`, `/sign-in` page-route decisions; UGC GALLERY scope triage.
+4. **cf-oi01** — End-to-end real shipping + payments test on the Vercel preview before cutover (Melania driving).
+
+Every item above must be ✓ before cf-3qt Phase 9 (Wix Studio retirement) is unblocked.
 
 ---
 
