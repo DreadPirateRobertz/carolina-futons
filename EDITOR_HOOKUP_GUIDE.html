@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v4.5 · Updated 2026-04-17 — CMS collections 32→36: added Landings, PressMentions, PressKitAssets, ComparisonFeatures to provisioning manifest + setup guide for cf-3qt Phase 4/5 migration. Dashboard needed: provision 4 new collections on STAGING_SITE (cf-3qt). Previous: v4.4 — CMS collections 28→32: added PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. v4.3 — Phase 8 COMPLETE.</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v4.6 · Updated 2026-05-05 — Post-cf-3qt session refresh: 36 CMS collections confirmed on STAGING_SITE; cf-c6g5 flagged (STAGING_SITE Triggered Emails dashboard EMPTY — 20 templates need Stilgar batch-copy from prod; every email touchpoint currently 500); diagnostic endpoints (<code>/_functions/contactSubmissionsDiagnostic</code> + pending <code>/api/auth/diag</code>) documented; cf-w1lg repo-drift lessons (cfutons monorepo ↔ stage3-velo) added; cfw parity snapshot from cf-ah0m/cf-o2kq (255 features 201✓/28~/25✗/1?). Previous: v4.5 — CMS 32→36 (Landings, PressMentions, PressKitAssets, ComparisonFeatures); v4.4 — CMS 28→32 (PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog); v4.3 — Phase 8 COMPLETE.</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -6547,6 +6547,52 @@ document.getElementById('priorityFilter').addEventListener('change', render);
 // Initial render
 render();
 </script>
+
+<section style="max-width:1200px;margin:32px auto;padding:24px;background:var(--off-white);border:1px solid var(--espresso-light);border-radius:var(--radius-lg);font-family:var(--font-body);color:var(--espresso);">
+  <h2 style="font-family:var(--font-heading);margin-top:0;">v4.6 Refresh — 2026-05-05 (cf-qdxi)</h2>
+  <p style="font-size:0.95em;line-height:1.5;">Post-cf-3qt session findings. The full prose lives in <code>EDITOR-HOOKUP-GUIDE.md</code> at the matching headings; this is the visible-on-render condensation so Stilgar doesn't bounce off a blank screen.</p>
+
+  <h3 id="cms-collections-confirmed-2026-05-05" style="color:var(--espresso);">36 CMS collections confirmed on STAGING_SITE (2026-05-05)</h3>
+  <p style="font-size:0.92em;">Wix Data API verification round confirms all 36 collections are present and queryable: 28 base + 4 mobile/spin (PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog) + 4 cf-3qt (Landings, PressMentions, PressKitAssets, ComparisonFeatures). Phase 6 + cf-3qt manifest is now backed by reality, not aspiration.</p>
+
+  <h3 id="triggered-emails-cf-c6g5" style="color:var(--danger);">⚠️ STAGING_SITE Triggered Emails — EMPTY (cf-c6g5, P0)</h3>
+  <p style="font-size:0.92em;">Wix Studio Dashboard → Triggered Emails on STAGING_SITE has <strong>NO sender configured and NO templates</strong>. Every <code>triggeredEmails.emailContact()</code> call resolves to <em>"Not Found: the requested item no longer exists"</em>; the Velo wrapper turns that into 500. Contact form, welcome series, order/shipping/delivery confirmations, abandoned-cart, browse-recovery, re-engagement, NPS, post-purchase, swatch-confirmation, and recovery-discount flows are <strong>all silently broken on staging</strong>.</p>
+  <p style="font-size:0.92em;"><strong>20 templates need batch-copy from prod by Stilgar</strong> (~30–60 min): <code>contact_form_submission</code>, <code>welcome_series_1..5</code>, <code>order_confirmation</code>, <code>order_shipped</code>, <code>freight_shipped</code>, <code>delivery_confirmation</code>, <code>post_purchase_review_reward</code>, <code>nps_survey</code>, <code>swatch_confirmation</code>, <code>abandoned_cart_recovery</code>, <code>browse_recovery</code>, <code>reengagement_1..3</code>, <code>post_purchase_care</code>, <code>recovery_discount</code>. Sender: <code>carolinafutons@gmail.com</code>. Verify via godfrey's <code>/_functions/contactSubmissionsDiagnostic</code>.</p>
+
+  <h3 id="diagnostic-endpoints" style="color:var(--espresso);">🩺 Diagnostic endpoints</h3>
+  <ul style="font-size:0.92em;">
+    <li><code>/_functions/contactSubmissionsDiagnostic</code> (Velo, live) — two-step probe: schema-validate fixture → attempt <code>triggeredEmails.emailContact</code>. Currently fails on step 2 (cf-c6g5).</li>
+    <li><code>/api/auth/diag</code> (Next.js, pending quartz ship) — verify Wix Members auth → JWT → CRM lookup without UI.</li>
+    <li>Both endpoints guarded by <code>DIAG_TOKEN</code> rotated weekly via <code>rotate-diag-tokens.yml</code> GH Action; 24-hour overlap window for in-flight CI runs.</li>
+  </ul>
+
+  <h3 id="repo-drift-cf-w1lg" style="color:var(--espresso);">🔀 Repo drift — cfutons monorepo ↔ stage3-velo (cf-w1lg)</h3>
+  <p style="font-size:0.92em;">The <code>carolina-futons</code> monorepo is the Velo source-of-truth, but <code>carolina-futons-stage3-velo</code> is what <code>wix preview</code> and <code>wix publish</code> actually read. When a <code>/_functions/&lt;name&gt;</code> handler is added to the monorepo and not mirrored into stage3-velo, the cfw Next.js app gets a 404 from production. Caught for <code>contactSubmissions</code>, <code>sampleRequests</code>, <code>mailingListSignups</code>, <code>deliveryZone</code>, <code>unsubscribe</code> — all in flight via stage3-velo PR #15 (cf-foo0) + branch <code>fix/cf-w1lg-velo-convergence-4-endpoints</code> (cf-w1lg).</p>
+  <p style="font-size:0.92em;"><strong>Standing rule:</strong> every PR that touches <code>src/backend/http-functions.js</code> or <code>src/backend/*.web.js</code> in the monorepo MUST also produce a stage3-velo PR before it counts as "merged" for cfw consumers.</p>
+
+  <h3 id="hookup-coverage-cf-ah0m" style="color:var(--espresso);">📊 Hookup coverage snapshot — cf-ah0m / cf-o2kq</h3>
+  <p style="font-size:0.92em;">Automated parity audit of THIS guide vs <code>https://carolina-futons-web.vercel.app/</code>. From <code>cfw-parity-audit-2026-05-04.md</code> (PR #1139 v2 commit <code>0a288781</code>):</p>
+  <table style="width:100%;max-width:560px;border-collapse:collapse;font-size:0.9em;">
+    <tr style="background:#e8d5b7;"><th style="text-align:left;padding:6px 10px;border:1px solid #c8b89a;">verdict</th><th style="text-align:right;padding:6px 10px;border:1px solid #c8b89a;">count</th><th style="text-align:right;padding:6px 10px;border:1px solid #c8b89a;">%</th></tr>
+    <tr><td style="padding:6px 10px;border:1px solid #ddd;">✓ feature present in cfw</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">201</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">78.8%</td></tr>
+    <tr style="background:#fafaf8;"><td style="padding:6px 10px;border:1px solid #ddd;">~ partial / ambiguous</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">28</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">11.0%</td></tr>
+    <tr><td style="padding:6px 10px;border:1px solid #ddd;">✗ no cfw evidence</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">25</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">9.8%</td></tr>
+    <tr style="background:#fafaf8;"><td style="padding:6px 10px;border:1px solid #ddd;">? unknown / out-of-scope</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">1</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">0.4%</td></tr>
+    <tr style="font-weight:600;"><td style="padding:6px 10px;border:1px solid #ddd;">total parsed</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">255</td><td style="padding:6px 10px;border:1px solid #ddd;text-align:right;">100%</td></tr>
+  </table>
+  <p style="font-size:0.92em;margin-top:12px;"><strong>Page-level 404s on cfw</strong> (guide enumerates, no Vercel route): <code>/wishlist</code>, <code>/wishlist-share</code>, <code>/price-match-guarantee</code>, <code>/fabric-swatches</code>, <code>/sign-in</code> — each needs a deprecate-or-rebuild decision before Wix Editor retirement.</p>
+  <p style="font-size:0.92em;"><strong>Forward-drift</strong> (cfw has, this guide doesn't mention): 18 <code>data-slot</code> values, 20 <code>data-testid</code> values, 60 component basenames. Largest clusters: mascot scenes (StargazingHero, MascotFooterDivider, FogScene, FallsScene, EasterEggBear), analytics tags (GA4Tag, MetaPixel, PinterestTag, ConsentMode), PDP add-ons (PdpComfortBand, PdpNotifyMe, PdpInteractive), MegaMenu, page-transition.</p>
+
+  <h3 id="phase-8-cutover-prep" style="color:var(--espresso);">🚀 Phase 8 cutover prep</h3>
+  <p style="font-size:0.92em;">Roadmap doc <code>cf-roadmap-2026-05-05.md</code> is pending — Stilgar to author after the cf-c6g5 email-infra unblock. Operational blockers tracked here:</p>
+  <ol style="font-size:0.92em;">
+    <li><strong>cf-c6g5</strong> — STAGING_SITE Triggered Emails dashboard population (P0).</li>
+    <li><strong>cf-w1lg</strong> — stage3-velo HTTP-function convergence (P1, in flight).</li>
+    <li><strong>cf-ah0m / cf-o2kq follow-ups</strong> — five page-route decisions; UGC GALLERY scope triage.</li>
+    <li><strong>cf-oi01</strong> — End-to-end real shipping + payments test on the Vercel preview before cutover (Melania driving).</li>
+  </ol>
+  <p style="font-size:0.92em;">Every item above must be ✓ before cf-3qt Phase 9 (Wix Studio retirement) is unblocked.</p>
+</section>
 
 <section style="max-width:1200px;margin:32px auto;padding:24px;background:var(--off-white);border:1px solid var(--espresso-light);border-radius:var(--radius-lg);font-family:var(--font-body);color:var(--espresso);">
   <h2 style="font-family:var(--font-heading);margin-top:0;">Feature Log</h2>
