@@ -3000,6 +3000,16 @@ export async function get_deliveryZone(request) {
   }
   try {
     const result = await _getDeliveryZone(zip);
+    // cf-89xn: don't spread service result blindly — `getDeliveryZone` returns
+    // { error: '...' } on its own input validation, which when spread into a
+    // 200 envelope produces { success: true, error: '...' } (cf-tvbi
+    // lying-status pattern). Surface as 400 so cfw can branch on status.
+    if (result && typeof result.error === 'string') {
+      return badRequest({
+        body: JSON.stringify({ success: false, error: result.error }),
+        headers: JSON_HEADERS,
+      });
+    }
     return ok({ body: JSON.stringify({ success: true, ...result }), headers: JSON_HEADERS });
   } catch (err) {
     console.error('HTTP function error (deliveryZone):', err);

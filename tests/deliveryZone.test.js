@@ -91,6 +91,19 @@ describe('get_deliveryZone — error handling', () => {
     const res = await get_deliveryZone(makeRequest({ zip: '28792' }));
     expect(res.status).toBe(500);
   });
+
+  it('returns 400 + success:false when service returns { error } envelope (cf-89xn lying-status)', async () => {
+    // The webMethod has its own input-validation branch that returns
+    // { error: 'Please enter a valid 5-digit zip code.' }. Spreading that
+    // into the 200 envelope used to produce { success: true, error: '...' } —
+    // exact cf-tvbi lying-status pattern. Wrapper now surfaces 400.
+    getDeliveryZone.mockResolvedValue({ error: 'Please enter a valid 5-digit zip code.' });
+    const res = await get_deliveryZone(makeRequest({ zip: '28792' }));
+    expect(res.status).toBe(400);
+    const body = JSON.parse(res.body);
+    expect(body.success).toBe(false);
+    expect(body.error).toMatch(/5-digit zip/i);
+  });
 });
 
 describe('options_deliveryZone — CORS preflight', () => {
