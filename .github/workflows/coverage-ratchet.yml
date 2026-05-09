@@ -53,8 +53,14 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        # `npm ci` is strict (will not mutate package-lock.json); the
+        # repo's main CI uses `npm install --ignore-scripts` because the
+        # @wix/cli postinstall is unwanted there. The ratchet doesn't
+        # need the CLI at all and writing back into the lockfile (e.g.
+        # the `name` field, which is absent from package.json) ends up
+        # in the auto-PR diff. Use `npm ci` to keep ratchet PRs clean.
         if: steps.skip.outputs.skip != 'true'
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
 
       - name: Unit tests with coverage (json-summary already enabled)
         if: steps.skip.outputs.skip != 'true'
