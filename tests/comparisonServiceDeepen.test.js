@@ -75,7 +75,6 @@ beforeEach(() => {
 const {
   getComparisonData,
   buildShareableUrl,
-  trackComparison,
   getPopularComparisons,
   findSharedCategory,
   buildComparisonRows,
@@ -370,81 +369,6 @@ describe('hasDifferences deepened', () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════
-// trackComparison — deepened branches
-// ═════════════════════════════════════════════════════════════════════
-describe('trackComparison deepened', () => {
-  it('increments existing record viewCount from 0 to 1', async () => {
-    __seed('CompareHistory', [{
-      _id: 'ch1',
-      comparisonKey: 'id-a|id-b',
-      productIds: ['id-a', 'id-b'],
-      viewCount: 0,
-      lastViewed: new Date('2025-01-01'),
-    }]);
-    const result = await trackComparison(['id-a', 'id-b']);
-    expect(result).toBe(true);
-    const record = _collections.CompareHistory.find(r => r._id === 'ch1');
-    expect(record.viewCount).toBe(1);
-  });
-
-  it('updates lastViewed timestamp on increment', async () => {
-    const oldDate = new Date('2020-01-01');
-    __seed('CompareHistory', [{
-      _id: 'ch1',
-      comparisonKey: 'id-a|id-b',
-      productIds: ['id-a', 'id-b'],
-      viewCount: 5,
-      lastViewed: oldDate,
-    }]);
-    await trackComparison(['id-a', 'id-b']);
-    const record = _collections.CompareHistory.find(r => r._id === 'ch1');
-    expect(record.lastViewed.getTime()).toBeGreaterThan(oldDate.getTime());
-  });
-
-  it('creates new record with sorted IDs for 3 products', async () => {
-    __seed('CompareHistory', []);
-    await trackComparison(['c-id', 'a-id', 'b-id']);
-    const record = _collections.CompareHistory[0];
-    expect(record.comparisonKey).toBe('a-id|b-id|c-id');
-    expect(record.productIds).toEqual(['a-id', 'b-id', 'c-id']);
-    expect(record.productCount).toBe(3);
-    expect(record.viewCount).toBe(1);
-  });
-
-  it('caps productIds at MAX_COMPARE before sorting', async () => {
-    __seed('CompareHistory', []);
-    await trackComparison(['e-id', 'd-id', 'c-id', 'b-id', 'a-id']);
-    const record = _collections.CompareHistory[0];
-    // Should only include first 3 (e, d, c) then sorted
-    expect(record.productIds.length).toBe(3);
-    expect(record.productIds).toEqual(['c-id', 'd-id', 'e-id']);
-  });
-
-  it('returns false for null input', async () => {
-    expect(await trackComparison(null)).toBe(false);
-  });
-
-  it('returns false for undefined input', async () => {
-    expect(await trackComparison(undefined)).toBe(false);
-  });
-
-  it('handles record with missing viewCount gracefully', async () => {
-    __seed('CompareHistory', [{
-      _id: 'ch1',
-      comparisonKey: 'id-a|id-b',
-      productIds: ['id-a', 'id-b'],
-      // viewCount intentionally omitted
-      lastViewed: new Date('2025-01-01'),
-    }]);
-    const result = await trackComparison(['id-a', 'id-b']);
-    expect(result).toBe(true);
-    const record = _collections.CompareHistory.find(r => r._id === 'ch1');
-    expect(record.viewCount).toBe(1); // (undefined || 0) + 1
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════
 // getPopularComparisons — deepened branches
 // ═════════════════════════════════════════════════════════════════════
 describe('getPopularComparisons deepened', () => {

@@ -10,7 +10,6 @@ import {
   applyForAffiliate,
   getMyAffiliateAccount,
   createAffiliateLink,
-  trackAffiliateClick,
   recordAffiliateConversion,
   getAffiliateDashboard,
   requestPayout,
@@ -220,46 +219,6 @@ describe('createAffiliateLink — deep edge cases', () => {
   });
 });
 
-// ── trackAffiliateClick — deep edge cases ────────────────────────────
-
-describe('trackAffiliateClick — deep edge cases', () => {
-  it('normalizes lowercase to uppercase for matching', async () => {
-    __seed(LINKS, [{ _id: 'lnk-1', linkCode: 'ABCDEF1234', productId: 'p1', clicks: 0 }]);
-    let updated = null;
-    __onUpdate((col, item) => { if (col === LINKS) updated = item; });
-
-    const result = await trackAffiliateClick('abcdef1234');
-    expect(result.success).toBe(true);
-    expect(updated.clicks).toBe(1);
-  });
-
-  it('strips non-alphanumeric chars from code before lookup', async () => {
-    __seed(LINKS, [{ _id: 'lnk-2', linkCode: 'ABCDEF1234', productId: 'p1', clicks: 5 }]);
-    let updated = null;
-    __onUpdate((col, item) => { if (col === LINKS) updated = item; });
-
-    const result = await trackAffiliateClick('ABC-DEF-1234');
-    expect(result.success).toBe(true);
-    expect(updated.clicks).toBe(6);
-  });
-
-  it('handles null link code', async () => {
-    const result = await trackAffiliateClick(null);
-    expect(result.success).toBe(false);
-  });
-
-  it('initializes clicks from null to 1', async () => {
-    __seed(LINKS, [{ _id: 'lnk-3', linkCode: 'NULLCLICK1', productId: 'p1', clicks: null }]);
-    let updated = null;
-    __onUpdate((col, item) => { if (col === LINKS) updated = item; });
-
-    const result = await trackAffiliateClick('NULLCLICK1');
-    expect(result.success).toBe(true);
-    expect(updated.clicks).toBe(1);
-  });
-});
-
-// ── recordAffiliateConversion — commission calculation edge cases ─────
 
 describe('recordAffiliateConversion — commission calculation edge cases', () => {
   beforeEach(() => {

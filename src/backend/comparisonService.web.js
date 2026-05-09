@@ -324,63 +324,6 @@ export const buildShareableUrl = webMethod(
   }
 );
 
-// ─── trackComparison ─────────────────────────────────────────────
-
-/**
- * Log a comparison to CompareHistory CMS collection for analytics.
- * Tracks which products are compared together to surface popular comparisons.
- *
- * @param {string[]} productIds - Array of product IDs that were compared
- * @returns {Promise<boolean>} True if tracked successfully
- */
-export const trackComparison = webMethod(
-  Permissions.Anyone,
-  async (productIds, sessionToken) => {
-    try {
-      if (!Array.isArray(productIds) || productIds.length < 2) return false;
-      const validIds = productIds.slice(0, MAX_COMPARE).map(id => validateId(id)).filter(Boolean);
-      if (validIds.length < 2) return false;
-
-      const rlKey = sessionToken ? `session:${sessionToken}` : `ids:${validIds[0]}`;
-      const { allowed } = await checkRateLimit('ComparisonRateLimit', rlKey, { max: 20, windowMs: 60_000 });
-      if (!allowed) return false;
-
-      // Sort IDs for consistent dedup (A vs B same as B vs A)
-      const sortedIds = [...validIds].sort();
-      const comparisonKey = sortedIds.join('|');
-
-      // Check if this comparison already exists
-      const existing = await wixData.query('CompareHistory')
-        .eq('comparisonKey', comparisonKey)
-        .limit(1)
-        .find();
-
-      if (existing.items.length > 0) {
-        // Increment view count
-        const record = existing.items[0];
-        record.viewCount = (record.viewCount || 0) + 1;
-        record.lastViewed = new Date();
-        await wixData.update('CompareHistory', record);
-      } else {
-        // Create new record
-        await wixData.insert('CompareHistory', {
-          comparisonKey,
-          productIds: sortedIds,
-          productCount: sortedIds.length,
-          viewCount: 1,
-          lastViewed: new Date(),
-        });
-      }
-
-      logAuditEvent('CompareHistory', 'track', comparisonKey, { productCount: sortedIds.length });
-      return true;
-    } catch (err) {
-      console.error('[comparisonService] Error tracking comparison:', err);
-      return false;
-    }
-  }
-);
-
 // ─── getPopularComparisons ───────────────────────────────────────
 
 /**

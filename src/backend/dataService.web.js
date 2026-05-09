@@ -465,26 +465,3 @@ export const getVideos = webMethod(
   }
 );
 
-/**
- * Increment a video's view count.
- * @param {string} videoId - The Videos record ID.
- * @returns {Promise<void>}
- */
-export const trackVideoView = webMethod(
-  Permissions.Anyone,
-  async (videoId) => {
-    try {
-      if (!videoId) return;
-      const cleanId = sanitize(videoId, 50).replace(/[^a-zA-Z0-9_-]/g, '');
-      if (!cleanId) return;
-
-      const record = await wixData.get('Videos', cleanId);
-      if (!record) return;
-
-      record.viewCount = (record.viewCount || 0) + 1;
-      await wixData.update('Videos', record);
-    } catch (err) {
-      console.error('Error tracking video view:', err);
-    }
-  }
-);

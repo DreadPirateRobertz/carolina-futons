@@ -76,7 +76,6 @@ const mod = await import('../src/backend/comparisonService.web.js');
 const {
   getComparisonData,
   buildShareableUrl,
-  trackComparison,
   getPopularComparisons,
   findSharedCategory,
   buildComparisonRows,
@@ -505,57 +504,6 @@ describe('buildShareableUrl', () => {
     const url = await buildShareableUrl(['a', 'b', 'c', 'd', 'e']);
     const ids = url.split('ids=')[1].split(',');
     expect(ids.length).toBeLessThanOrEqual(4);
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════
-// trackComparison
-// ═════════════════════════════════════════════════════════════════════
-describe('trackComparison', () => {
-  it('creates new record for first-time comparison', async () => {
-    __seed('CompareHistory', []);
-    const result = await trackComparison(['id-a', 'id-b']);
-    expect(result).toBe(true);
-    expect(_collections.CompareHistory).toHaveLength(1);
-    expect(_collections.CompareHistory[0].viewCount).toBe(1);
-  });
-
-  it('sorts IDs for dedup (A,B same as B,A)', async () => {
-    __seed('CompareHistory', []);
-    await trackComparison(['id-b', 'id-a']);
-    expect(_collections.CompareHistory[0].comparisonKey).toBe('id-a|id-b');
-  });
-
-  it('increments viewCount for existing comparison', async () => {
-    __seed('CompareHistory', [{
-      _id: 'ch1',
-      comparisonKey: 'id-a|id-b',
-      productIds: ['id-a', 'id-b'],
-      viewCount: 3,
-      lastViewed: new Date('2025-01-01'),
-    }]);
-    const result = await trackComparison(['id-b', 'id-a']);
-    expect(result).toBe(true);
-    const record = _collections.CompareHistory.find(r => r._id === 'ch1');
-    expect(record.viewCount).toBe(4);
-  });
-
-  it('returns false for fewer than 2 IDs', async () => {
-    expect(await trackComparison(['id-a'])).toBe(false);
-  });
-
-  it('returns false for non-array', async () => {
-    expect(await trackComparison('id-a')).toBe(false);
-  });
-
-  it('returns false when all IDs invalid', async () => {
-    expect(await trackComparison(['', null])).toBe(false);
-  });
-
-  it('stores productCount in new records', async () => {
-    __seed('CompareHistory', []);
-    await trackComparison(['id-a', 'id-b', 'id-c']);
-    expect(_collections.CompareHistory[0].productCount).toBe(3);
   });
 });
 

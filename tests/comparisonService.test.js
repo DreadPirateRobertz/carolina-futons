@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   getComparisonData,
   buildShareableUrl,
-  trackComparison,
   getPopularComparisons,
   findSharedCategory,
   buildComparisonRows,
@@ -528,85 +527,6 @@ describe('edge cases', () => {
     const priceRow = rows[0];
     expect(priceRow.cells[1].value).toBe('$349.00'); // discounted price shown
     expect(priceRow.cells[1].raw).toBe(349);
-  });
-});
-
-// ─── trackComparison ────────────────────────────────────────────
-
-describe('trackComparison', () => {
-  beforeEach(() => {
-    __reset();
-  });
-
-  it('returns false for less than 2 product IDs', async () => {
-    expect(await trackComparison(['prod-1'])).toBe(false);
-    expect(await trackComparison([])).toBe(false);
-  });
-
-  it('returns false for non-array input', async () => {
-    expect(await trackComparison('not-array')).toBe(false);
-  });
-
-  it('creates new CompareHistory record for first comparison', async () => {
-    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id]);
-    expect(result).toBe(true);
-  });
-
-  it('increments viewCount for repeated comparisons', async () => {
-    // First comparison
-    await trackComparison([futonFrame._id, wallHuggerFrame._id]);
-    // Second comparison (same products, even in different order)
-    const result = await trackComparison([wallHuggerFrame._id, futonFrame._id]);
-    expect(result).toBe(true);
-  });
-
-  it('sorts product IDs for consistent dedup', async () => {
-    // A,B and B,A should resolve to same comparison key
-    await trackComparison(['b-id', 'a-id']);
-    __seed('CompareHistory', [{
-      _id: 'ch-1',
-      comparisonKey: 'a-id|b-id',
-      productIds: ['a-id', 'b-id'],
-      viewCount: 1,
-      lastViewed: new Date(),
-    }]);
-    const result = await trackComparison(['b-id', 'a-id']);
-    expect(result).toBe(true);
-  });
-
-  it('filters out invalid IDs', async () => {
-    const result = await trackComparison(['<script>', futonFrame._id]);
-    expect(result).toBe(false); // only 1 valid ID
-  });
-
-  it('limits to MAX_COMPARE products', async () => {
-    const ids = [futonFrame._id, wallHuggerFrame._id, metalFrame._id, outdoorFrame._id, futonMattress._id];
-    const result = await trackComparison(ids);
-    expect(result).toBe(true); // first 3 valid IDs used
-  });
-
-  it('returns false when rate limited', async () => {
-    __seed('ComparisonRateLimit', [{
-      _id: 'rl-t1',
-      key: hashRateLimitKey('session:track-tok'),
-      count: 20,
-      windowStart: new Date(Date.now() - 1_000),
-    }]);
-
-    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id], 'track-tok');
-    expect(result).toBe(false);
-  });
-
-  it('allows tracking when under rate limit', async () => {
-    __seed('ComparisonRateLimit', [{
-      _id: 'rl-t2',
-      key: hashRateLimitKey('session:track-ok'),
-      count: 5,
-      windowStart: new Date(Date.now() - 1_000),
-    }]);
-
-    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id], 'track-ok');
-    expect(result).toBe(true);
   });
 });
 

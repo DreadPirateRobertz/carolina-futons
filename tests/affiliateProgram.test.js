@@ -7,7 +7,6 @@ import {
   getMyAffiliateAccount,
   createAffiliateLink,
   getMyAffiliateLinks,
-  trackAffiliateClick,
   recordAffiliateConversion,
   getMyCommissions,
   getAffiliateDashboard,
@@ -293,66 +292,6 @@ describe('getMyAffiliateLinks', () => {
   });
 });
 
-// ── trackAffiliateClick ─────────────────────────────────────────────
-
-describe('trackAffiliateClick', () => {
-  it('increments click count for valid link code', async () => {
-    __seed(LINKS, [{
-      _id: 'link-001',
-      linkCode: 'CODE000001',
-      clicks: 10,
-      conversions: 0,
-      revenue: 0,
-    }]);
-
-    let updated = null;
-    __onUpdate((col, item) => {
-      if (col === LINKS) updated = item;
-    });
-
-    const result = await trackAffiliateClick('CODE000001');
-    expect(result.success).toBe(true);
-    expect(updated.clicks).toBe(11);
-  });
-
-  it('returns affiliate info for landing page', async () => {
-    __seed(LINKS, [{
-      _id: 'link-001',
-      linkCode: 'CODE000001',
-      productId: 'product-123',
-      clicks: 10,
-    }]);
-    __seed(ACCOUNTS, [{
-      _id: 'aff-001',
-      memberId: 'member-001',
-      displayName: 'Jane',
-      status: 'active',
-    }]);
-
-    const result = await trackAffiliateClick('CODE000001');
-    expect(result.success).toBe(true);
-    expect(result.productId).toBe('product-123');
-  });
-
-  it('fails for invalid link code', async () => {
-    const result = await trackAffiliateClick('INVALID001');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('not found');
-  });
-
-  it('fails for empty code', async () => {
-    const result = await trackAffiliateClick('');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('required');
-  });
-
-  it('sanitizes link code input', async () => {
-    const result = await trackAffiliateClick('<script>alert(1)</script>');
-    expect(result.success).toBe(false);
-  });
-});
-
-// ── recordAffiliateConversion ───────────────────────────────────────
 
 describe('recordAffiliateConversion', () => {
   beforeEach(() => {

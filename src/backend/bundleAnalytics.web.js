@@ -21,71 +21,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
-import { checkRateLimit } from 'backend/utils/rateLimit';
-
-const VALID_EVENTS = ['impression', 'click', 'add_to_cart', 'purchase'];
-const VALID_SOURCES = ['product_page', 'cart', 'homepage', 'category'];
-
-/**
- * Track a bundle impression or interaction event.
- *
- * @param {Object} data
- * @param {string} data.bundleId - Bundle identifier.
- * @param {string} data.bundleName - Bundle display name.
- * @param {string} data.event - Event type: 'impression'|'click'|'add_to_cart'|'purchase'
- * @param {string} [data.source] - Where the bundle was displayed.
- * @param {string} [data.sessionId] - Session ID for anonymous tracking.
- * @param {number} [data.revenue] - Revenue amount for purchase events.
- * @returns {Promise<{success: boolean}>}
- */
-export const trackBundleImpression = webMethod(
-  Permissions.Anyone,
-  async (data) => {
-    try {
-      const bundleId = validateId(data.bundleId);
-      if (!bundleId) {
-        return { success: false, error: 'Valid bundle ID is required.' };
-      }
-
-      const event = sanitize(data.event, 20);
-      if (!VALID_EVENTS.includes(event)) {
-        return { success: false, error: 'Invalid event type. Must be impression, click, add_to_cart, or purchase.' };
-      }
-
-      const { allowed } = await checkRateLimit('BundleImpressionRateLimit', bundleId, { max: 60, windowMs: 60_000 });
-      if (!allowed) return { success: true }; // Silent drop for tracking
-
-      let memberId = '';
-      try {
-        const member = await currentMember.getMember();
-        if (member) memberId = member._id;
-      } catch {
-        // Anonymous user — continue without memberId
-      }
-
-      const source = sanitize(data.source || '', 30);
-
-      const record = {
-        bundleId,
-        bundleName: sanitize(data.bundleName || '', 200),
-        event,
-        memberId,
-        sessionId: sanitize(data.sessionId || '', 100),
-        source: VALID_SOURCES.includes(source) ? source : 'product_page',
-        revenue: event === 'purchase' ? Math.max(0, Number(data.revenue) || 0) : 0,
-        timestamp: new Date(),
-      };
-
-      await wixData.insert('BundleAnalytics', record);
-      return { success: true };
-    } catch (err) {
-      console.error('[bundleAnalytics] Error tracking bundle impression:', err);
-      return { success: false, error: 'Failed to track event.' };
-    }
-  }
-);
 
 /**
  * Get analytics summary for a specific bundle.

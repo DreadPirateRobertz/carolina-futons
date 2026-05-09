@@ -20,7 +20,6 @@ import {
   generateReferralCode,
   redeemReferralCode,
   getVideos,
-  trackVideoView,
 } from '../src/backend/dataService.web.js';
 
 // Set up default mock state before each test
@@ -555,33 +554,3 @@ describe('getVideos', () => {
   });
 });
 
-describe('trackVideoView', () => {
-  it('increments view count', async () => {
-    await trackVideoView('vid-001');
-    // No error thrown — increment happened via mock update
-  });
-
-  it('no-ops for null videoId', async () => {
-    await expect(trackVideoView(null)).resolves.not.toThrow();
-  });
-
-  it('no-ops for nonexistent video', async () => {
-    await expect(trackVideoView('nonexistent')).resolves.not.toThrow();
-  });
-
-  it('no-ops for empty string', async () => {
-    await expect(trackVideoView('')).resolves.not.toThrow();
-  });
-
-  it('no-ops for undefined', async () => {
-    await expect(trackVideoView(undefined)).resolves.not.toThrow();
-  });
-
-  it('sanitizes videoId with special characters', async () => {
-    await expect(trackVideoView('../../etc/passwd')).resolves.not.toThrow();
-  });
-
-  it('handles HTML injection in videoId', async () => {
-    await expect(trackVideoView('<script>alert(1)</script>')).resolves.not.toThrow();
-  });
-});
