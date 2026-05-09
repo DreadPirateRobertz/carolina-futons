@@ -2888,6 +2888,84 @@ export function options_trackCustomEvent(request) {
   return response(corsPreflight(request));
 }
 
+// ── cfw → Velo Module Dispatcher (cf-vtx5) ──────────────────────────────────
+// cfw's lib/wix/velo-client.ts#callVelo posts to /_functions/<module>/<method>
+// with body { args: [...] }. Wix HTTP routing exposes <method> via
+// request.path[0]. The dispatcher reads the method off the path, looks it up
+// in a per-module allowlist Set, and forwards body.args into the matching
+// webMethod export. Each module dispatcher is ~15 lines; new methods are
+// surfaced by adding a name to the Set.
+//
+// Permission model: webMethods are called from backend code, so Wix's
+// client-side Permissions gating is bypassed. Each webMethod self-guards via
+// currentMember.getMember() where appropriate (verified per allowlist entry).
+// The allowlist itself doubles as the "what cfw can call" audit surface.
+//
+// Reference module: wishlistService. Pattern replicates verbatim across
+// gamificationCore, loyaltyService, referralService, styleQuiz,
+// pushNotificationService — godfrey owns the rollout (see
+// docs/cf-vtx5-dispatcher-design.md).
+
+import * as wishlistServiceModule from 'backend/wishlistService.web';
+
+const WISHLIST_SERVICE_ALLOWLIST = new Set([
+  // SiteMember-permission methods that self-guard via currentMember.getMember()
+  'addToWishlist',
+  'removeFromWishlist',
+  'getWishlist',
+  'getWishlistByMemberId',
+  'isOnWishlist',
+]);
+
+export async function post_wishlistService(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  const method = (request.path && request.path[0]) || '';
+
+  if (!WISHLIST_SERVICE_ALLOWLIST.has(method)) {
+    return notFound({
+      body: JSON.stringify({ success: false, error: 'unknown_method', method }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  const args = Array.isArray(body?.args) ? body.args : null;
+  if (args === null) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'args_must_be_array' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    const fn = wishlistServiceModule[method];
+    const result = await fn(...args);
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `wld-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    console.error(`HTTP function error (post_wishlistService:${method}) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+export function options_wishlistService(request) {
+  return response(corsPreflight(request));
+}
+
 // ── Back-in-Stock Notify Me ──────────────────────────────────────────────────
 // URL: POST https://www.carolinafutons.com/_functions/notifyMe
 // Receives email + productId from cfw PdpNotifyMe server action.
