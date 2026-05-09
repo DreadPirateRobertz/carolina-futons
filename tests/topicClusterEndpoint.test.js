@@ -36,7 +36,6 @@ vi.mock('backend/seoHelpers.web', () => ({
   buildSitemapXml: vi.fn(() => ''),
   getRobotsTxtContent: vi.fn(() => ''),
 }));
-vi.mock('backend/blogRssFeed.web', () => ({ generateBlogRssFeed: vi.fn() }));
 vi.mock('wix-data', () => ({
   default: { query: vi.fn(() => ({ find: vi.fn(() => Promise.resolve({ items: [], totalCount: 0 })) })) },
 }));
