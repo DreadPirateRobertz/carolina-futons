@@ -7,6 +7,32 @@
 **Wix Studio prod**: https://www.carolinafutons.com/
 **Prior baseline**: `lighthouse-baseline.md` (godfrey, 2026-05-04)
 
+## cfw-a6g pixel-lazyOnload verdict (2026-05-09 PR #481)
+
+After landing **PR #481** (cfw-a6g — switched 4 analytics pixels from `afterInteractive` to `lazyOnload`), re-audited the 4 high-traffic pages on mobile:
+
+| Page | Pre-#481 Perf | Post-#481 Perf | Δ | Pre LCP | Post LCP | Pre TBT | Post TBT |
+|---|---|---|---|---|---|---|---|
+| Home | 67 | **75** | +8 | 6.1 s | **4.4 s** | 126 ms | 105 ms |
+| Futon Frames PLP | 74 | **82** | +8 ✓ | 5.7 s | **3.8 s** | 64 ms | **16 ms** |
+| Cart | 79 | **86** | +7 ✓ | 4.9 s | **3.5 s** | 53 ms | 30 ms |
+| Kingston PDP | 56 | **71** | +15 | 6.9 s | **5.2 s** | 382 ms | **182 ms** |
+
+Cart + PLP cleared the **80+ Perf gate**. Home + Kingston still below it but trending upward (Kingston jumped 15 points in one PR).
+
+Long-task topology now: every page has the **138 KiB Next framework chunk** as the dominant long-task (60-153 ms most pages; **386 ms on Kingston specifically**). `fbevents.js` only shows up on cart/PDP at ~50 ms — the lazyOnload defer is working as designed (loads after page reaches idle).
+
+### Two follow-ups filed
+
+- **cf-byms** — Home LCP 4.4 s, suspect LivingHero multi-phase SVG paint cost (4 phases mounted simultaneously even though only one is visible).
+- **cf-r192** — Kingston 386 ms framework long-task + 117 KiB wix-admin chunk leak (despite cf-g6vx, a new chunk reappeared with exactly the 9 sub-package modules `wix-client.ts` imports — Turbopack is leaking server-only code into a client async chunk through the server-action graph).
+
+### Sluggishness verdict
+
+Stilgar's mobile-sluggishness P0 (cfw-a6g) is **resolved as the user-perceptible issue** on home + cart + PLP. All three cleared 75+ Perf and brought TBT below 110 ms. Kingston PDP is the remaining regression page; cf-byms + cf-r192 are the path to clearing 80+ on it.
+
+---
+
 ## Post-fix verdict (2026-05-09)
 
 After landing **PR #468** (P0-1 image constrainer), **PR #469** (P0-2 PdpInteractive dynamic-split), and **PR #471** (P0-1 followup — 4 missed sites + query-string regex fix), re-ran on the same 3 critical pages.
