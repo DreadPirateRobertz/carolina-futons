@@ -135,8 +135,22 @@ describe('cf-vtx5 · post_gamificationCore dispatcher', () => {
     expect(JSON.parse(res.body)).toEqual({ success: false, error: 'rate_limit' });
   });
 
-  it('cf-yvs4: defaults soft-fail status to 400 when error string has no recognized marker', async () => {
+  it('cf-mgnh: unclassified soft-fail (business-logic outcome) stays 200 + envelope', async () => {
+    // cf-yvs4 originally defaulted unclassified strings to 400. cf-mgnh
+    // refined the mapper: unrecognised strings are presumed to be
+    // business-logic outcomes and pass through as 200 so cfw doesn't
+    // throw VeloRpcError on routine outcomes. Real validation errors
+    // (start with "Invalid ", "must be", "is required") are still 400.
     vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'something else broke' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({ success: false, error: 'something else broke' });
+  });
+
+  it('cf-mgnh: validation-shaped error string ("Invalid product ID.") still maps to 400', async () => {
+    // Validation-class strings have a recognisable prefix/suffix; those
+    // remain 400 so cfw can branch on schema-level failure correctly.
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Invalid product ID.' });
     const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
     expect(res.status).toBe(400);
   });
@@ -312,11 +326,28 @@ describe('cf-vtx5 · post_submitSurvey', () => {
     expect(JSON.parse(res.body)).toEqual({ success: true });
   });
 
-  it('cf-yvs4: maps webMethod soft-failure {success:false} to a matching 4xx', async () => {
+  it('cf-mgnh: business-logic soft-failure ("Survey already completed") stays 200 + envelope', async () => {
+    // Idempotent business outcome — the survey row exists, the caller owns
+    // it, and the system enforced the once-only rule. Returning 4xx would
+    // force cfw to wrap a routine outcome in try/catch. 200 + envelope lets
+    // cfw branch on body.success.
     vi.mocked(submitSurveyResponse).mockResolvedValue({ success: false, error: 'Survey already completed' });
     const res = await post_submitSurvey(flatReq({ score: 5, orderId: 'order-1' }));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
     expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Survey already completed' });
+  });
+
+  it('cf-yvs4: security-class soft-failure ("Authentication required") still maps to 401', async () => {
+    // The 401 mapping for security-class strings survives cf-mgnh — only the
+    // unclassified business-logic default-400 changed. This pin guards
+    // against the regression "we made everything 200 again".
+    vi.mocked(submitSurveyResponse).mockResolvedValue({ success: false, error: 'Authentication required' });
+    // Pre-check passes (caller has a member + matching orderId), so the
+    // webMethod is invoked and surfaces its own auth_required envelope.
+    __setMember({ _id: 'member-77', loginEmail: 'm@e.com' });
+    __seed('Survey', [{ _id: 'sv-1', memberId: 'member-77', orderId: 'order-1' }]);
+    const res = await post_submitSurvey(flatReq({ score: 5, orderId: 'order-1' }));
+    expect(res.status).toBe(401);
   });
 
   it('cf-yvs4 IDOR: returns 404 when the orderId does not belong to the caller', async () => {
