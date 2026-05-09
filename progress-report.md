@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 16:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-04 17:07 MT**
 
 ---
 
@@ -61,17 +61,29 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ## CFW Open PRs (carolina-futons-web / Next.js)
 
+⚠️ **MASS SESSION DEATH ~17:00 MT** — all hooks empty, fix directives sent to blaidd/millicent/miquella/rennala
+
 | PR | Title | CI | Note |
 |----|-------|----|----|
-| #442 | feat(cf-l6aj.20): Spin Wheel — prize wheel + 24h cookie | ⏳ PENDING | rennala (on hold — opened in violation) |
+| #452 | feat(cf-l6aj.15): DragDropRoomPlanner + localStorage | ❌ FAIL | millicent — react-hooks/set-state-in-effect:64, unused var:81 |
+| #451 | docs(cf-3qt.8.29): Vercel custom domain setup runbook | ✅ GREEN | blaidd — **MERGE READY** |
+| #450 | feat(cf-l6aj.16): Gift Registry localStorage-backed | ❌ FAIL | blaidd — react-hooks/set-state-in-effect:19+25 |
+| #449 | test(cf-l6aj.9): E2E coverage PdpRecentlyViewed rail | ✅ GREEN | godfrey — **MERGE READY** |
+| #448 | feat(cf-3qt.8): pre-cutover synthetic monitor | ✅ GREEN | millicent — **MERGE READY** |
+| #447 | feat(cf-l6aj.3): richer Featured cards color count+swatches | ❌ FAIL | radahn — CI still red post-rebase |
+| #446 | feat(cf-l6aj.14): shareable style-quiz result URL | ✅ GREEN | morgott — **MERGE READY** |
+| #445 | feat(cf-l6aj.18): Referral Program /referral dashboard | ✅ GREEN | morgott — **MERGE READY** |
+| #444 | feat(cf-l6aj.10): Gift Card promo section home page | ✅ GREEN | millicent — **MERGE READY** |
+| #443 | fix(cf-3qt.8): remove pre-launch noindex from layout | ✅ GREEN | millicent — **MERGE READY** |
+| #442 | feat(cf-l6aj.20): Spin Wheel prize wheel 24h cookie | ❌ FAIL | miquella — react-hooks/set-state-in-effect:92 |
 | #441 | feat(cf-l6aj.11): MegaMenu hover/focus panel (216 vitest) | ✅ GREEN | blaidd — **MERGE READY** |
-| #440 | feat(cf-l6aj.17): Bundle Builder frame+mattress tiered discount | ✅ GREEN | rennala — awaiting PM review |
-| #439 | feat(cf-l6aj.19): Futon Sommelier 4-question recommender | ✅ GREEN | rennala — awaiting PM review |
-| #438 | feat(cf-l6aj.22): /survey NPS page + server action | ❌ FAIL | rennala — ESLint apostrophe SurveyForm.tsx:88 |
-| #437 | feat(cf-l6aj.21): /near/[city] added to sitemap | ✅ GREEN | rennala — **MERGE READY** |
-| #436 | feat(cf-l6aj.8): RecentlyViewedStrip home (11 unit + 1 E2E) | ✅ GREEN | miquella — **MERGE READY** |
-| #435 | feat(cf-l6aj.4): blog teasers (9 unit + 4 E2E) | ❌ FAIL | rennala — TS2556 BlogTeasers.test.tsx:10 |
-| #434 | feat(cf-l6aj.9): HomeNewsletterSection inline strip | ✅ GREEN | rennala — **MERGE READY** |
+| #440 | feat(cf-l6aj.17): Bundle Builder frame+mattress tiered discount | ✅ GREEN | rennala — **MERGE READY** |
+| #439 | feat(cf-l6aj.19): Futon Sommelier 4-question recommender | ✅ GREEN | rennala — **MERGE READY** |
+| #438 | feat(cf-l6aj.22): /survey NPS page + server action | ❌ FAIL | rennala (HOLD) — ESLint apostrophe SurveyForm.tsx:88 |
+| #437 | feat(cf-l6aj.21): /near/[city] added to sitemap | ✅ GREEN | **MERGE READY** |
+| #436 | feat(cf-l6aj.8): RecentlyViewedStrip home (11 unit + 1 E2E) | ✅ GREEN | **MERGE READY** |
+| #435 | feat(cf-l6aj.4): blog teasers (9 unit + 4 E2E) | ❌ FAIL | rennala (HOLD) — TS2556 BlogTeasers.test.tsx:10 |
+| #434 | feat(cf-l6aj.9): HomeNewsletterSection inline strip | ✅ GREEN | **MERGE READY** |
 | #433 | feat(cf-l6aj.2): CMS product badges New/Sale/Bestseller/CF+ | ✅ MERGED | 18 session merges |
 | Earlier | #415–#432 | ✅ MERGED | 17 PRs |
 | #427 | test(cf-pmdf): MascotCategoryCard reduced-motion E2E | ✅ MERGED | 90/100 |
@@ -99,15 +111,17 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ## Crew Assignments
 
+⚠️ ALL SESSIONS DEAD AS OF ~17:00 MT — watchdog DEAD alert on blaidd, mass hook-empty confirmed
+
 | Crew | Current Task | Status |
 |------|-------------|--------|
-| millicent | robots noindex fix PR + pre-cutover checklist doc | 🔧 dispatched |
-| morgott | cf-l6aj.14 — Style Quiz Result page | 🔧 in progress |
-| radahn | cf-l6aj.3 — richer Featured cards (24/31 tests, 30-60min to PR) | 🔧 in progress |
-| blaidd | PR #441 ✅ merged → next bead | 🔧 awaiting merge |
-| rennala | **ON HOLD** — fix #435 + #438 only; 4th violation (PR #442 opened) | ⛔ suspended |
-| godfrey | cf-j2r7 — recently-viewed PDP rail | 🔧 in progress |
-| miquella | cf-l6aj.23 — parity audit doc; PR #436 ✅ merge ready | 🔧 in progress |
+| millicent | cf-l6aj.15 — DragDropRoomPlanner, PR #452 ❌ | ⛔ session dead — fix directive sent |
+| morgott | cf-l6aj.18 done (PR #445 ✅) + cf-l6aj.14 done (PR #446 ✅) — needs next bead | 🔧 idle |
+| radahn | cf-l6aj.3 — PR #447 ❌ CI still failing post-rebase | ⛔ session dead |
+| blaidd | cf-l6aj.16 — PR #450 ❌ FAIL — **SESSION DEAD (watchdog)** | ⛔ dead — fix directive sent |
+| rennala | **ON HOLD** — fix #435 (TS2556) + #438 (ESLint apostrophe) ONLY | ⛔ hold enforced — nudged |
+| godfrey | cf-j2r7 done (PR #449 ✅) — needs next bead | 🔧 idle |
+| miquella | cf-l6aj.20 — Spin Wheel PR #442 ❌ FAIL | ⛔ session dead — fix directive sent |
 
 ---
 
@@ -130,18 +144,14 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 
 ---
 
-## In-Progress Beads
+## In-Progress Beads (db snapshot)
 
 | Bead | Pri | Title | Status |
 |------|-----|-------|--------|
-| cf-l6aj.11 | P2 | Mega-menu hover panel — blaidd | 🔧 in progress |
-| cf-l6aj.3 | P2 | Featured products richer cards — radahn | 🔧 in progress |
-| cf-l6aj.1.1 | P2 | PdpAlsoBought tests — millicent | 🔧 in progress |
-| cf-j2r7 | P2 | PDP recently-viewed rail — godfrey | 🔧 in progress |
-| cf-l6aj.8 | P3 | Recently Viewed home strip — miquella | 🔧 dispatched |
-| cf-l6aj.13.1 | P3 | PWA icon PNGs 192px + 512px | 🔧 in progress |
-| cf-l6aj.14 | P3 | Style Quiz Result page — morgott | 🔧 in progress |
-| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar |
+| cf-3qt.7 | P1 | SEO + analytics — code COMPLETE | PR #376 blocked Stilgar env vars |
+| cf-j2r7 | P2 | PDP recently-viewed rail — godfrey | PR #449 ✅ done |
+| cf-l6aj.3 | P2 | Featured products richer cards — radahn | PR #447 ❌ CI fail |
+| cf-q90y.1 | P2 | Orphan illustration deletes — radahn | stale — PR #428 merged |
 | cf-okwz | P3 | EasterEggBear clipboard | PR #356 pending Stilgar |
 
 ---
@@ -202,4 +212,4 @@ Channel A dual-write active. CROSS_RIG_SECRET: **Vercel Prod ✅ + EAS ✅ + Wix
 Progress report auto-pushed every 10 min via cron `de1e2247` (session-only, 7-day TTL).
 
 ---
-*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) + f01ec08c (PM cross-sync 30min) · Design migration 100% COMPLETE · Session merges: #415–#433 (18 PRs) · PRs #434/#436/#437 ✅ GREEN awaiting merge · #435/#438 ❌ FAIL fix in progress · rennala: 2x direct commit violation flagged · P0 OAuth = FilterFirst empty hero — deferred Stilgar · ⚠️ Vercel personal account*
+*Cron: 353ab5c0 (progress refresh) + de1e2247 (auto-push) + f01ec08c (PM cross-sync 30min) · Design migration 100% COMPLETE · Session merges: #415–#433 (18 PRs) · MERGE READY: #434 #436 #437 #439 #440 #441 #443 #444 #445 #446 #448 #449 #451 (13 PRs) · CI FAIL: #435 #438 (rennala HOLD) #442 (miquella) #447 (radahn) #450 #452 (blaidd/millicent) · ALL SESSIONS DEAD 17:00 MT — watchdog DEAD blaidd · P0 OAuth = FilterFirst empty — deferred Stilgar · ⚠️ Vercel personal account*
