@@ -68,6 +68,14 @@ jobs:
       - name: Check mock coverage (ratchet)
         run: node scripts/check-mock-coverage.mjs
 
+      - name: Check HTTP endpoint test coverage (cf-2gux radahn retro)
+        run: |
+          # Fail if src/backend/http-functions.js gains a new post_*/get_*/...
+          # export without a tests/ file referencing it. Codifies the
+          # rennala-pattern check that caught the cf-yvs4 / cf-9ieq IDOR gaps.
+          # Pre-existing gaps live in tests/.http-endpoint-baseline.json.
+          node scripts/check-http-endpoint-test-coverage.mjs
+
       - name: Run tests
         run: npm test
 

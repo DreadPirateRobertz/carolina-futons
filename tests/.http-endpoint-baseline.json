@@ -1,0 +1,10 @@
+{
+  "_doc": "Frozen baseline of HTTP-method exports in src/backend/http-functions.js that lacked test coverage when scripts/check-http-endpoint-test-coverage.mjs was introduced (cf-2gux follow-up — radahn cf-vtx5 cluster-retro). New gaps fail CI; entries here pass. When an entry gains a real test, remove it from this list — the script's --list mode reports candidates.",
+  "_added": "2026-05-09",
+  "_added_by": "millicent",
+  "uncovered": [
+    "get_runReviewRequestEmailsCron",
+    "get_scanAndTriggerWinbackCron",
+    "post_contactSubmissionsDiagnostic"
+  ]
+}
