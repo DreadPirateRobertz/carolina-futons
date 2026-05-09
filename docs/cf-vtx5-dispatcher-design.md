@@ -183,6 +183,36 @@ export async function post_submitSurvey(request) {
 
 **Discipline:** every shim line gets a `// cfw "<field>" → Velo "<field>"` comment so the next maintainer can audit the mapping at a glance. If a shim grows more than 5 lines, the cfw payload is probably mis-shaped — escalate the cfw PR back to fix the source rather than carrying the divergence forever.
 
+**Post-merge finding (2026-05-09)** — godfrey's stage3-velo `post_submitSurvey` (commit `592f2f4a` on stage3-velo) lands without the shim and is silently broken:
+
+```js
+// stage3-velo/src/backend/http-functions.js#post_submitSurvey (current)
+const result = await submitSurveyResponse({ surveyId: survey._id, score, comments });
+```
+
+But `surveyService.web.js#submitSurveyResponse` requires `data.orderId` (line 150) and `data.npsScore` (line 154). Three mismatches:
+
+| Wrapper passes | webMethod expects | Behaviour |
+|----------------|-------------------|-----------|
+| `surveyId`     | `orderId`         | webMethod ignores `surveyId`, returns `{success:false, error:'orderId is required'}` |
+| `score`        | `npsScore`        | `isValidNpsScore(undefined)` → false → `{success:false, error:'npsScore must be...'}` |
+| `comments`     | `comment`         | persisted as `null` (truthy check on `data.comment` is false) |
+
+Result: every cfw NPS submission gets a 200 with `{success:false, error:'orderId is required'}` — the same silent-failure shape cf-jqkg/cf-vtx5 was meant to eliminate.
+
+Corrected wrapper (orderId is already extracted from body earlier):
+
+```js
+const veloPayload = {
+  orderId,                  // already validated above; pass through
+  npsScore: score,          // cfw "score" → Velo "npsScore"
+  comment: comments,        // cfw "comments" → Velo "comment"
+};
+const result = await submitSurveyResponse(veloPayload);
+```
+
+Drop the `getSurveyForOrder(orderId)` pre-lookup too — the webMethod does its own `query(SURVEY_COLLECTION).eq('memberId', memberId).eq('orderId', orderId)` with the IDOR-guarded memberId, so the wrapper's lookup is both duplicated work and a privacy weakening.
+
 ### Auth gating — Wix session token verification
 
 cfw's `callVelo` forwards `Authorization: Bearer <accessToken>` when the caller passes an `accessToken` (e.g. `loyaltyService` paths in `carolina-futons-web/src/app/actions/loyalty.ts`). Inside the Velo runtime, `currentMember.getMember()` reads from either the Wix session cookie OR the bearer token — so SiteMember webMethods that already self-guard via `currentMember.getMember()` work without dispatcher-side changes.
