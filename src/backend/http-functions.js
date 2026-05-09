@@ -42,9 +42,11 @@ import { submitSwatchRequest } from 'backend/swatchRequest.web';
 import * as _gamificationCoreModule from 'backend/gamificationCore.web';
 import * as _loyaltyServiceModule from 'backend/loyaltyService.web';
 import * as _pushNotificationServiceModule from 'backend/pushNotificationService.web';
-import * as _wishlistServiceModule from 'backend/wishlistService.web';
+// wishlistService namespace import is performed by PR #1164's dispatcher
+// block (`import * as wishlistServiceModule from 'backend/wishlistService.web';`).
+// Don't re-import here.
 import * as _styleQuizModule from 'backend/styleQuiz.web';
-import { submitSurveyResponse, getSurveyForOrder } from 'backend/surveyService.web';
+import { submitSurveyResponse } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
 
 /**
@@ -3348,39 +3350,40 @@ function _veloDispatchErrorId() {
 }
 
 async function _veloDispatch(request, registry, scope) {
-  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
-  const methodName = request.path && request.path[0];
-  if (!methodName) {
-    return badRequest({
-      body: JSON.stringify({ error: `${scope}/<method> required` }),
-      headers: JSON_HEADERS,
-    });
-  }
-  const fn = registry[methodName];
-  if (typeof fn !== 'function') {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  const methodName = (request.path && request.path[0]) || '';
+
+  if (!methodName || typeof registry[methodName] !== 'function') {
     return notFound({
-      body: JSON.stringify({ error: `unknown method: ${scope}/${methodName}` }),
+      body: JSON.stringify({ error: 'unknown_method', method: methodName }),
       headers: JSON_HEADERS,
     });
   }
 
-  let body = {};
+  let body;
   try {
     body = await request.body.json();
-  } catch (_) {
-    // Tolerate empty / non-JSON body — registry methods that take zero
-    // args (e.g., gamificationCore/getActivityFeed) need to call through.
+  } catch (err) {
+    return badRequest({
+      body: JSON.stringify({ error: 'invalid_json', detail: err && err.message }),
+      headers: JSON_HEADERS,
+    });
   }
-  const args = Array.isArray(body && body.args) ? body.args : [];
+  if (!body || !Array.isArray(body.args)) {
+    return badRequest({
+      body: JSON.stringify({ error: 'args_must_be_array' }),
+      headers: JSON_HEADERS,
+    });
+  }
 
   try {
-    const result = await fn(...args);
+    const result = await registry[methodName](...body.args);
     return ok({ body: JSON.stringify(result == null ? null : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (${scope}/${methodName}) errorId=${errorId}:`, err);
+    console.error(`HTTP function error (post_${scope}:${methodName}) errorId=${errorId}:`, err);
     return serverError({
-      body: JSON.stringify({ error: 'server_error', errorId }),
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
     });
   }
@@ -3432,18 +3435,10 @@ export async function post_pushNotificationService(request) {
 }
 export function options_pushNotificationService(request) { return response(corsPreflight(request)); }
 
-// wishlistService — cfw lib/wix/wishlist.ts uses w(method).
-const _WISHLIST_METHODS = {
-  addToWishlist: _wishlistServiceModule.addToWishlist,
-  getWishlist: _wishlistServiceModule.getWishlist,
-  getWishlistByMemberId: _wishlistServiceModule.getWishlistByMemberId,
-  isOnWishlist: _wishlistServiceModule.isOnWishlist,
-  removeFromWishlist: _wishlistServiceModule.removeFromWishlist,
-};
-export async function post_wishlistService(request) {
-  return _veloDispatch(request, _WISHLIST_METHODS, 'wishlistService');
-}
-export function options_wishlistService(request) { return response(corsPreflight(request)); }
+// wishlistService dispatcher landed earlier in this file via rennala's
+// PR #1164 (lines ~2920+). cf-vtx5.fu2 removes this duplicate block — the
+// merge of #1168 stacked on top of #1164 produced two `post_wishlistService`
+// exports, which a fresh build catches as a Rolldown parse error.
 
 // styleQuiz — cfw lib/wix/style-quiz.ts uses literal "styleQuiz/<method>".
 const _STYLE_QUIZ_METHODS = {
@@ -3486,19 +3481,30 @@ export async function post_recordSpinGrant(request) {
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      const errorId = _veloDispatchErrorId();
-      console.error(`HTTP function error (recordSpinGrant) errorId=${errorId} getMember failed:`, err);
-      return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+      // getMember() throws when no SiteMember context is available
+      // (cfw forgot to forward the Bearer token). Mirror the
+      // webMethod soft-error envelope so cfw branches on body.success.
+      console.warn('[recordSpinGrant] getMember failed — treating as unauthenticated:', err && err.message);
+      return ok({
+        body: JSON.stringify({ success: false, error: 'Authentication required' }),
+        headers: JSON_HEADERS,
+      });
     }
     if (!member || !member._id) {
-      return unauthorized({ body: JSON.stringify({ error: 'authentication required' }), headers: JSON_HEADERS });
+      return ok({
+        body: JSON.stringify({ success: false, error: 'Authentication required' }),
+        headers: JSON_HEADERS,
+      });
     }
     const result = await grantSpin(member._id);
-    return ok({ body: JSON.stringify(result == null ? { ok: true } : result), headers: JSON_HEADERS });
+    return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (recordSpinGrant) errorId=${errorId}:`, err);
-    return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+    console.error(`HTTP function error (post_recordSpinGrant) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
   }
 }
 export function options_recordSpinGrant(request) { return response(corsPreflight(request)); }
@@ -3506,66 +3512,68 @@ export function options_recordSpinGrant(request) { return response(corsPreflight
 /**
  * @function post_submitSurvey
  * @route POST /_functions/submitSurvey
- * @description cfw actions/survey.ts posts NPS feedback `{ score, comments,
- * orderId }`. Looks up the open Survey row for the orderId, confirms the
- * caller is the addressee, then forwards to surveyService.submitSurveyResponse
- * with the webMethod's expected shape.
+ * @description Thin shim around surveyService.submitSurveyResponse. cfw's
+ * actions/survey.ts posts `{ score, comments, orderId }`; the webMethod
+ * expects `{ orderId, npsScore, comment }` and resolves the member +
+ * survey row internally. We only do the field-name shim here — auth +
+ * survey lookup + double-submission guard live in the webMethod.
+ *
+ * Auth: webMethod requires a SiteMember context. cfw must forward the
+ * Bearer token (via callVelo's accessToken). If absent, the webMethod
+ * resolves no memberId and returns `{success:false, error:'Authentication required'}`
+ * which we forward verbatim as 200 — matches the dispatcher's
+ * "soft errors are 200, only unexpected throws are 500" contract.
+ *
  * @param {Object} request.body.json
  * @param {number} request.body.json.score — required, integer 0..10
- * @param {string} request.body.json.orderId — required, surveyService keying
- * @param {string} [request.body.json.comments] — optional, ≤ 2000 chars
+ * @param {string} request.body.json.orderId — required
+ * @param {string} [request.body.json.comments] — optional
  * @returns {Promise<{status: number, body: string, headers: object}>}
- *   200 on submit;
- *   400 on validation;
- *   401 if no authenticated member;
- *   404 if no open survey for that orderId;
- *   500 with errorId on failure.
+ *   200 with `{success, ...}` envelope from the webMethod;
+ *   400 on JSON parse / score-shape failure;
+ *   500 with errorId on unexpected throw.
  */
 export async function post_submitSurvey(request) {
   const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  let body;
   try {
-    let body;
-    try {
-      body = await request.body.json();
-    } catch (parseErr) {
-      console.warn('[submitSurvey] body parse failed:', parseErr && parseErr.message);
-      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
-    }
+    body = await request.body.json();
+  } catch (err) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json', detail: err && err.message }),
+      headers: JSON_HEADERS,
+    });
+  }
 
-    const score = Number(body && body.score);
-    const orderId = typeof (body && body.orderId) === 'string' ? body.orderId.trim() : '';
-    const comments = typeof (body && body.comments) === 'string' ? body.comments.slice(0, 2000) : '';
+  const score = Number(body && body.score);
+  const orderId = typeof (body && body.orderId) === 'string' ? body.orderId.trim() : '';
+  const comments = typeof (body && body.comments) === 'string' ? body.comments : null;
 
-    if (!Number.isInteger(score) || score < 0 || score > 10) {
-      return badRequest({ body: JSON.stringify({ error: 'score must be an integer 0..10' }), headers: JSON_HEADERS });
-    }
-    if (!orderId) {
-      return badRequest({ body: JSON.stringify({ error: 'orderId is required' }), headers: JSON_HEADERS });
-    }
+  if (!Number.isInteger(score) || score < 0 || score > 10) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'score must be an integer 0..10' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  if (!orderId) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'orderId is required' }),
+      headers: JSON_HEADERS,
+    });
+  }
 
-    let member;
-    try {
-      member = await currentMember.getMember();
-    } catch (err) {
-      const errorId = _veloDispatchErrorId();
-      console.error(`HTTP function error (submitSurvey) errorId=${errorId} getMember failed:`, err);
-      return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
-    }
-    if (!member || !member._id) {
-      return unauthorized({ body: JSON.stringify({ error: 'authentication required' }), headers: JSON_HEADERS });
-    }
-
-    const survey = await getSurveyForOrder(orderId);
-    if (!survey || !survey._id) {
-      return notFound({ body: JSON.stringify({ error: 'no open survey for that orderId' }), headers: JSON_HEADERS });
-    }
-
-    const result = await submitSurveyResponse({ surveyId: survey._id, score, comments });
-    return ok({ body: JSON.stringify(result == null ? { ok: true } : result), headers: JSON_HEADERS });
+  try {
+    // submitSurveyResponse expects { orderId, npsScore, comment } and resolves
+    // the member + Survey row + double-submission guard internally.
+    const result = await submitSurveyResponse({ orderId, npsScore: score, comment: comments });
+    return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (submitSurvey) errorId=${errorId}:`, err);
-    return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+    console.error(`HTTP function error (post_submitSurvey) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
   }
 }
 export function options_submitSurvey(request) { return response(corsPreflight(request)); }
