@@ -3427,7 +3427,17 @@ function _veloDispatchSoftFailStatus(errStr) {
     lowered.includes('internal_error') ||
     lowered.includes('database') ||
     lowered.includes('timeout') ||
-    lowered.includes('service unavailable')
+    lowered.includes('service unavailable') ||
+    // cf-mgnh.fu1: infra errors phrased as "Failed to <verb>" or
+    // "<noun> lookup failed" or "Submission failed". Examples on main:
+    //   surveyService 'Survey lookup failed' (wixData.query catch)
+    //   surveyService 'Failed to save survey response' (wixData.update catch)
+    //   communityPhoto 'Submission failed — please try again later.' (insert catch)
+    // All three are infra outages dressed up as soft fails. Without these
+    // patterns they fall through to null/200, hiding real outages from cfw.
+    lowered.startsWith('failed to ') ||
+    lowered.includes('lookup failed') ||
+    lowered.includes('submission failed')
   ) {
     return 503;
   }
@@ -3436,7 +3446,10 @@ function _veloDispatchSoftFailStatus(errStr) {
     lowered.startsWith('invalid ') ||
     lowered.includes('is required') ||
     lowered.includes('must be') ||
-    lowered.includes('malformed')
+    lowered.includes('malformed') ||
+    // cf-mgnh.fu1: length-cap rejections from communityPhoto + others —
+    // "imageUrl is too long" / "customerName is too long" etc.
+    lowered.includes('is too long')
   ) {
     return 400;
   }

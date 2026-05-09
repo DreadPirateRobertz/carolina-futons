@@ -161,6 +161,45 @@ describe('cf-vtx5 · post_gamificationCore dispatcher', () => {
     expect(res.status).toBe(401);
   });
 
+  it('cf-mgnh.fu1: maps "Survey lookup failed" infra error to 503 (was 200 lying-status)', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Survey lookup failed' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(503);
+  });
+
+  it('cf-mgnh.fu1: maps "Failed to save …" infra error to 503', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Failed to save survey response' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(503);
+  });
+
+  it('cf-mgnh.fu1: maps "Submission failed" infra error to 503', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Submission failed — please try again later.' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(503);
+  });
+
+  it('cf-mgnh.fu1: maps "is too long" length-cap to 400 (validation, was null/200)', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'imageUrl is too long' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(400);
+  });
+
+  it('cf-mgnh: business-logic outcome ("Wishlist is full") still falls through to 200', async () => {
+    // Regression guard — fu1 added 503/400 buckets but must not pull
+    // legitimate business-logic outcomes out of the 200 default.
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Wishlist is full (max 100 items)' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Wishlist is full (max 100 items)' });
+  });
+
+  it('cf-mgnh: "Survey already completed" still 200 (idempotent business outcome)', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Survey already completed' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(200);
+  });
+
   it('returns 500 with errorId + console-correlated log on unexpected throw', async () => {
     vi.mocked(getActiveChallenges).mockRejectedValue(new Error('Wix Data unavailable'));
     const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
