@@ -130,17 +130,33 @@ describe('cf-vtx5 · post_wishlistService dispatcher', () => {
     consoleErr.mockRestore();
   });
 
-  it('cf-yvs4: maps webMethod soft-failure to a matching 4xx (cf-89xn lying-status pattern removed)', async () => {
-    // PR #1164 originally returned 200 here so cfw could branch on body.
-    // cf-yvs4 (radahn's audit) flipped the contract: cfw treated success:false
-    // as success in some call sites, recreating the cf-89xn deliveryZone
-    // lying-status bug. velo-client.ts throws VeloRpcError on non-2xx and
-    // exposes res.body — the error string is still readable. 5xx still
-    // reserved for unexpected throws.
+  it('cf-yvs4: maps security-class soft-failure ("Not authenticated") to 401', async () => {
+    // PR #1164 originally returned 200 here. cf-yvs4 flipped to 4xx for
+    // classified failures so cfw monitoring sees them. cf-mgnh refined the
+    // mapper so business-logic outcomes still pass through as 200; only
+    // security/authz/not-found/rate-limit/infra/validation get a 4xx/5xx.
     vi.mocked(addToWishlist).mockResolvedValue({ success: false, error: 'Not authenticated.' });
     const res = await post_wishlistService(makeRequest('addToWishlist', { args: ['p-1', 'x', 100] }));
     expect(res.status).toBe(401);
     expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Not authenticated.' });
+  });
+
+  it('cf-mgnh: business-logic soft-failure ("Wishlist is full") stays 200 + envelope', async () => {
+    // The wishlist-full state is a successful authenticated request whose
+    // outcome happens to be "no, can't add more". Treating it as 400 would
+    // force cfw callers to wrap routine outcomes in try/catch (velo-client
+    // throws VeloRpcError on non-2xx). 200 + envelope lets cfw branch on
+    // body.success directly.
+    vi.mocked(addToWishlist).mockResolvedValue({
+      success: false,
+      error: 'Wishlist is full (max 100 items).',
+    });
+    const res = await post_wishlistService(makeRequest('addToWishlist', { args: ['p-1', 'x', 100] }));
+    expect(res.status).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({
+      success: false,
+      error: 'Wishlist is full (max 100 items).',
+    });
   });
 });
 

@@ -2973,7 +2973,12 @@ export async function post_wishlistService(request) {
     // succeed (cf-89xn pattern repeat).
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
-      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw
+      // can branch on body.success without try/catch wrapping the throw from
+      // velo-client's VeloRpcError. Only true client/server errors get 4xx/5xx.
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
     }
     return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
   } catch (err) {
@@ -3367,18 +3372,77 @@ function _veloDispatchErrorId() {
 // in the error — callers can still read the message. Returning 200 for
 // `{success:false}` is the cf-tvbi lying-status pattern cf-89xn already
 // removed from get_deliveryZone; same applies here.
+//
+// cf-mgnh refinement (2026-05-09): the original cf-yvs4 mapper defaulted
+// unrecognised error strings to 400, which conflated business-logic
+// outcomes ("Wishlist is full", "Survey already completed") with client
+// validation errors. The 5-class taxonomy below distinguishes:
+//
+//   security           → 401  (auth, unauthenticated, expired token)
+//   authz              → 403  (access denied, forbidden)
+//   not-found          → 404  (no survey/item/record for the caller)
+//   rate-limit         → 429  (too many requests)
+//   infra              → 503  (internal_error, db down, timeout)
+//   validation         → 400  (malformed input, invalid id, must-be-X)
+//   business-logic     → null (return 200 + envelope; cfw branches on body.success)
+//
+// Returning null signals the dispatcher to keep the 200 status for
+// successful authenticated requests whose outcome is a business-rule
+// state rather than a client error. cfw's velo-client throws
+// VeloRpcError on non-2xx, so 4xx forces try/catch wrapping for what
+// is otherwise a routine outcome (cf-mgnh discussion 2026-05-09).
 function _veloDispatchSoftFailStatus(errStr) {
   const lowered = String(errStr || '').toLowerCase();
-  if (lowered.includes('authentication') || lowered.includes('unauthorized') || lowered.includes('not authenticated')) {
+  if (
+    lowered.includes('authentication') ||
+    lowered.includes('unauthorized') ||
+    lowered.includes('not authenticated') ||
+    lowered.includes('auth_required') ||
+    lowered.includes('expired token')
+  ) {
     return 401;
   }
-  if (lowered.includes('rate limit') || lowered.includes('rate_limit') || lowered.includes('too many requests')) {
-    return 429;
+  if (
+    lowered.includes('access denied') ||
+    lowered.includes('forbidden') ||
+    lowered.includes('not allowed')
+  ) {
+    return 403;
   }
-  if (lowered.includes('not found') || lowered.includes('no survey found')) {
+  if (
+    lowered.includes('not found') ||
+    lowered.includes('no survey found') ||
+    lowered.includes('no record')
+  ) {
     return 404;
   }
-  return 400;
+  if (
+    lowered.includes('rate limit') ||
+    lowered.includes('rate_limit') ||
+    lowered.includes('too many requests')
+  ) {
+    return 429;
+  }
+  if (
+    lowered.includes('internal_error') ||
+    lowered.includes('database') ||
+    lowered.includes('timeout') ||
+    lowered.includes('service unavailable')
+  ) {
+    return 503;
+  }
+  if (
+    // Validation prefixes — webMethods that emit "Invalid foo." / "foo is required"
+    lowered.startsWith('invalid ') ||
+    lowered.includes('is required') ||
+    lowered.includes('must be') ||
+    lowered.includes('malformed')
+  ) {
+    return 400;
+  }
+  // Business-logic outcome (e.g. "Wishlist is full", "Survey already completed").
+  // Caller keeps 200 + envelope; cfw branches on body.success without try/catch.
+  return null;
 }
 
 async function _veloDispatch(request, registry, scope) {
@@ -3416,7 +3480,12 @@ async function _veloDispatch(request, registry, scope) {
     // callers can still read the error string.
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
-      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw
+      // can branch on body.success without try/catch wrapping the throw from
+      // velo-client's VeloRpcError. Only true client/server errors get 4xx/5xx.
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
     }
     return ok({ body: JSON.stringify(result == null ? null : result), headers: JSON_HEADERS });
   } catch (err) {
@@ -3542,7 +3611,12 @@ export async function post_recordSpinGrant(request) {
     const result = await grantSpin(member._id);
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
-      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw
+      // can branch on body.success without try/catch wrapping the throw from
+      // velo-client's VeloRpcError. Only true client/server errors get 4xx/5xx.
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
     }
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
@@ -3667,7 +3741,12 @@ export async function post_submitSurvey(request) {
     const result = await submitSurveyResponse({ orderId, npsScore: rawScore, comment: comments });
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
-      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw
+      // can branch on body.success without try/catch wrapping the throw from
+      // velo-client's VeloRpcError. Only true client/server errors get 4xx/5xx.
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
     }
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
@@ -3688,8 +3767,14 @@ export function options_submitSurvey(request) { return response(corsPreflight(re
 // (no Bearer token). Backend submitCommunityPhoto webMethod validates +
 // inserts into CommunityPhotos CMS for owner-side moderation.
 //
-// cf-yvs4 contract: 200 on success; 4xx on `{success:false}` envelope via
-// _veloDispatchSoftFailStatus; 5xx with errorId on unexpected throw.
+// Contract (cf-yvs4 + cf-mgnh refinement):
+//   200 on success or business-logic `{success:false}` outcome
+//   4xx on classified failures (auth/authz/not-found/rate-limit/validation)
+//   503 on classified infra failures
+//   500 with errorId on unexpected throw
+// _veloDispatchSoftFailStatus returns null for unclassified strings — caller
+// keeps the 200 + envelope contract so cfw doesn't throw VeloRpcError on
+// routine business outcomes.
 
 /**
  * @function post_submitCommunityPhoto
@@ -3721,7 +3806,12 @@ export async function post_submitCommunityPhoto(request) {
     const result = await submitCommunityPhoto(body);
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
-      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw
+      // can branch on body.success without try/catch wrapping the throw from
+      // velo-client's VeloRpcError. Only true client/server errors get 4xx/5xx.
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
     }
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
