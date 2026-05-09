@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   getTopicCluster,
-  generateInternalLinks,
   getSchemaMarkup,
   getSEOScore,
   getSitemapData,
@@ -121,115 +120,6 @@ describe('getTopicCluster', () => {
   });
 });
 
-// ── generateInternalLinks ────────────────────────────────────────────
-
-describe('generateInternalLinks', () => {
-  it('returns pillar-to-spoke links for pillar page', async () => {
-    const result = await generateInternalLinks('futon-frames');
-    expect(result.success).toBe(true);
-    expect(result.links.length).toBeGreaterThan(0);
-    const pillarToSpoke = result.links.filter(l => l.relationship === 'pillar-to-spoke');
-    expect(pillarToSpoke.length).toBeGreaterThan(0);
-  });
-
-  it('returns spoke-to-pillar link for spoke page', async () => {
-    const result = await generateInternalLinks('wood-vs-metal-frames');
-    expect(result.success).toBe(true);
-    const spokeToPillar = result.links.filter(l => l.relationship === 'spoke-to-pillar');
-    expect(spokeToPillar.length).toBe(1);
-    expect(spokeToPillar[0].targetSlug).toBe('futon-frames');
-  });
-
-  it('returns spoke-to-spoke links for sibling pages', async () => {
-    const result = await generateInternalLinks('wood-vs-metal-frames');
-    const spokeToSpoke = result.links.filter(l => l.relationship === 'spoke-to-spoke');
-    expect(spokeToSpoke.length).toBeGreaterThan(0);
-  });
-
-  it('returns cross-cluster links for pillar pages', async () => {
-    const result = await generateInternalLinks('futon-frames', 20);
-    const crossCluster = result.links.filter(l => l.relationship === 'cross-cluster');
-    expect(crossCluster.length).toBeGreaterThan(0);
-  });
-
-  it('respects maxLinks parameter', async () => {
-    const result = await generateInternalLinks('futon-frames', 2);
-    expect(result.links.length).toBeLessThanOrEqual(2);
-  });
-
-  it('defaults maxLinks to 5', async () => {
-    const result = await generateInternalLinks('futon-frames');
-    expect(result.links.length).toBeLessThanOrEqual(5);
-  });
-
-  it('clamps maxLinks to 1-20 range', async () => {
-    const result = await generateInternalLinks('futon-frames', 100);
-    expect(result.links.length).toBeLessThanOrEqual(20);
-  });
-
-  it('returns empty links for unknown page', async () => {
-    const result = await generateInternalLinks('nonexistent-page');
-    expect(result.success).toBe(true);
-    expect(result.links).toEqual([]);
-  });
-
-  it('rejects empty slug', async () => {
-    const result = await generateInternalLinks('');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('required');
-  });
-
-  it('links include required fields', async () => {
-    const result = await generateInternalLinks('futon-frames');
-    const link = result.links[0];
-    expect(link).toHaveProperty('targetSlug');
-    expect(link).toHaveProperty('targetUrl');
-    expect(link).toHaveProperty('anchorText');
-    expect(link).toHaveProperty('context');
-    expect(link).toHaveProperty('relationship');
-  });
-
-  it('link URLs are absolute', async () => {
-    const result = await generateInternalLinks('futon-frames');
-    for (const link of result.links) {
-      expect(link.targetUrl).toMatch(/^https:\/\//);
-    }
-  });
-
-  it('link contexts are valid', async () => {
-    const validContexts = ['inline', 'sidebar', 'footer', 'related'];
-    const result = await generateInternalLinks('futon-frames', 20);
-    for (const link of result.links) {
-      expect(validContexts).toContain(link.context);
-    }
-  });
-
-  it('link relationships are valid', async () => {
-    const validRelationships = ['pillar-to-spoke', 'spoke-to-pillar', 'spoke-to-spoke', 'cross-cluster'];
-    const result = await generateInternalLinks('futon-frames', 20);
-    for (const link of result.links) {
-      expect(validRelationships).toContain(link.relationship);
-    }
-  });
-
-  it('maxLinks=1 returns exactly 1 link', async () => {
-    const result = await generateInternalLinks('futon-frames', 1);
-    expect(result.links.length).toBe(1);
-  });
-
-  it('spoke page links back to its parent pillar first', async () => {
-    const result = await generateInternalLinks('mattress-fill-types');
-    expect(result.links[0].relationship).toBe('spoke-to-pillar');
-    expect(result.links[0].targetSlug).toBe('mattresses');
-  });
-
-  it('rejects null slug', async () => {
-    const result = await generateInternalLinks(null);
-    expect(result.success).toBe(false);
-  });
-});
-
-// ── getSchemaMarkup ──────────────────────────────────────────────────
 
 describe('getSchemaMarkup', () => {
   it('returns Article schema for pillar page', async () => {

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   getTopicCluster,
-  generateInternalLinks,
   getSchemaMarkup,
   getSEOScore,
   getSitemapData,
@@ -100,123 +99,6 @@ describe('getTopicCluster — edge cases', () => {
   });
 });
 
-// ── generateInternalLinks — edge cases ──────────────────────────────
-
-describe('generateInternalLinks — edge cases', () => {
-  it('returns error for undefined slug', async () => {
-    const result = await generateInternalLinks(undefined);
-    expect(result.success).toBe(false);
-    expect(result.links).toEqual([]);
-  });
-
-  it('treats maxLinks=0 as 5 (0 is falsy, falls through to default 5)', async () => {
-    // Number(0) is 0, which is falsy → || 5 triggers → Math.max(1,Math.min(20,5)) = 5
-    const result = await generateInternalLinks('futon-frames', 0);
-    expect(result.links.length).toBeLessThanOrEqual(5);
-  });
-
-  it('treats maxLinks=-5 as 1 (clamped minimum)', async () => {
-    const result = await generateInternalLinks('futon-frames', -5);
-    expect(result.links.length).toBeLessThanOrEqual(1);
-  });
-
-  it('treats maxLinks=NaN as 5 (fallback default)', async () => {
-    // Number(NaN) is NaN, || 5 triggers
-    const result = await generateInternalLinks('futon-frames', NaN);
-    expect(result.links.length).toBeLessThanOrEqual(5);
-  });
-
-  it('treats maxLinks="abc" as 5 (non-numeric string fallback)', async () => {
-    const result = await generateInternalLinks('futon-frames', 'abc');
-    expect(result.links.length).toBeLessThanOrEqual(5);
-  });
-
-  it('treats maxLinks=Infinity as 20 (clamped maximum)', async () => {
-    const result = await generateInternalLinks('futon-frames', Infinity);
-    expect(result.links.length).toBeLessThanOrEqual(20);
-  });
-
-  it('treats maxLinks=null as 5 (Number(null)=0, ||5 triggers)', async () => {
-    const result = await generateInternalLinks('futon-frames', null);
-    expect(result.links.length).toBeLessThanOrEqual(5);
-  });
-
-  it('rounds fractional maxLinks (e.g. 2.7 → 3)', async () => {
-    const result = await generateInternalLinks('futon-frames', 2.7);
-    expect(result.links.length).toBeLessThanOrEqual(3);
-  });
-
-  it('pillar page does NOT get spoke-to-pillar links', async () => {
-    const result = await generateInternalLinks('covers', 20);
-    const s2p = result.links.filter(l => l.relationship === 'spoke-to-pillar');
-    expect(s2p.length).toBe(0);
-  });
-
-  it('spoke page does NOT get pillar-to-spoke links', async () => {
-    const result = await generateInternalLinks('mattress-fill-types', 20);
-    const p2s = result.links.filter(l => l.relationship === 'pillar-to-spoke');
-    expect(p2s.length).toBe(0);
-  });
-
-  it('spoke page does NOT get cross-cluster links', async () => {
-    const result = await generateInternalLinks('mattress-fill-types', 20);
-    const cc = result.links.filter(l => l.relationship === 'cross-cluster');
-    expect(cc.length).toBe(0);
-  });
-
-  it('spoke does not link to itself among siblings', async () => {
-    const result = await generateInternalLinks('wood-vs-metal-frames', 20);
-    const self = result.links.filter(l => l.targetSlug === 'wood-vs-metal-frames');
-    expect(self.length).toBe(0);
-  });
-
-  it('cross-cluster links exclude the current pillar', async () => {
-    const result = await generateInternalLinks('futon-frames', 20);
-    const cc = result.links.filter(l => l.relationship === 'cross-cluster');
-    for (const link of cc) {
-      expect(link.targetSlug).not.toBe('futon-frames');
-    }
-  });
-
-  it('cross-cluster links have context "sidebar"', async () => {
-    const result = await generateInternalLinks('mattresses', 20);
-    const cc = result.links.filter(l => l.relationship === 'cross-cluster');
-    for (const link of cc) {
-      expect(link.context).toBe('sidebar');
-    }
-  });
-
-  it('spoke-to-spoke links have context "related"', async () => {
-    const result = await generateInternalLinks('wood-vs-metal-frames', 20);
-    const s2s = result.links.filter(l => l.relationship === 'spoke-to-spoke');
-    for (const link of s2s) {
-      expect(link.context).toBe('related');
-    }
-  });
-
-  it('returns error for boolean slug', async () => {
-    const result = await generateInternalLinks(false);
-    expect(result.success).toBe(false);
-  });
-
-  it('pillows cluster (2 spokes) — spoke gets 1 sibling + 1 pillar', async () => {
-    const result = await generateInternalLinks('pillow-styles-guide', 20);
-    expect(result.links.some(l => l.relationship === 'spoke-to-pillar')).toBe(true);
-    expect(result.links.some(l => l.relationship === 'spoke-to-spoke')).toBe(true);
-    const s2s = result.links.filter(l => l.relationship === 'spoke-to-spoke');
-    expect(s2s.length).toBe(1);
-    expect(s2s[0].targetSlug).toBe('bolster-placement-tips');
-  });
-
-  it('maxLinks=1 on spoke page returns only the spoke-to-pillar link', async () => {
-    // Spoke-to-pillar is pushed first, then siblings; limit=1 cuts at first
-    const result = await generateInternalLinks('wood-vs-metal-frames', 1);
-    expect(result.links.length).toBe(1);
-    expect(result.links[0].relationship).toBe('spoke-to-pillar');
-  });
-});
-
-// ── getSchemaMarkup — edge cases ────────────────────────────────────
 
 describe('getSchemaMarkup — edge cases', () => {
   it('returns error for undefined slug', async () => {

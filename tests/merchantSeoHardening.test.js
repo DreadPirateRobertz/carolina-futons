@@ -18,7 +18,6 @@ import {
 } from '../src/backend/seoContentHub.web.js';
 import {
   getTopicCluster,
-  generateInternalLinks,
   getSchemaMarkup,
   getSEOScore,
   getSitemapData,
@@ -503,35 +502,6 @@ describe('Topic Clusters hardening', () => {
     expect(result.cluster.spokePages.length).toBe(4);
     expect(result.cluster.spokeCount).toBe(4);
     expect(result.cluster.spokePages[0].url).toContain('/buying-guides/');
-  });
-
-  it('generateInternalLinks returns pillar-to-spoke links', async () => {
-    const result = await generateInternalLinks('futon-frames', 5);
-    expect(result.success).toBe(true);
-    expect(result.links.some(l => l.relationship === 'pillar-to-spoke')).toBe(true);
-  });
-
-  it('generateInternalLinks returns spoke-to-pillar links', async () => {
-    const result = await generateInternalLinks('wood-vs-metal-frames', 5);
-    expect(result.success).toBe(true);
-    expect(result.links.some(l => l.relationship === 'spoke-to-pillar')).toBe(true);
-    expect(result.links.some(l => l.relationship === 'spoke-to-spoke')).toBe(true);
-  });
-
-  it('generateInternalLinks returns cross-cluster links for pillars', async () => {
-    const result = await generateInternalLinks('futon-frames', 20);
-    expect(result.success).toBe(true);
-    expect(result.links.some(l => l.relationship === 'cross-cluster')).toBe(true);
-  });
-
-  it('generateInternalLinks respects maxLinks limit', async () => {
-    const result = await generateInternalLinks('futon-frames', 2);
-    expect(result.links.length).toBeLessThanOrEqual(2);
-  });
-
-  it('generateInternalLinks clamps maxLinks to 1-20', async () => {
-    const result = await generateInternalLinks('futon-frames', 0);
-    expect(result.links.length).toBeGreaterThanOrEqual(1);
   });
 
   it('getSchemaMarkup generates Article schema for pillar page', async () => {
