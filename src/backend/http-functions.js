@@ -35,6 +35,17 @@ import { getSecret } from 'wix-secrets-backend';
 import { subscribeToNewsletter } from 'backend/newsletterService.web';
 import { verifyUnsubToken } from 'backend/utils/unsubToken';
 import { submitSwatchRequest } from 'backend/swatchRequest.web';
+// cf-vtx5: namespace imports for the cfw → /_functions/<module>/<method>
+// dispatchers below. Each module's exported webMethods are gated to a
+// registry inside its dispatcher so unknown method names return 404 rather
+// than accidentally invoking an internal helper.
+import * as _gamificationCoreModule from 'backend/gamificationCore.web';
+import * as _loyaltyServiceModule from 'backend/loyaltyService.web';
+import * as _pushNotificationServiceModule from 'backend/pushNotificationService.web';
+import * as _wishlistServiceModule from 'backend/wishlistService.web';
+import * as _styleQuizModule from 'backend/styleQuiz.web';
+import { submitSurveyResponse, getSurveyForOrder } from 'backend/surveyService.web';
+import { grantSpin } from 'backend/spinRedemptionService.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -3306,3 +3317,255 @@ export async function post_contactSubmissionsDiagnostic(request) {
     });
   }
 }
+
+// ── cf-vtx5 cfw→Velo /_functions/<module>/<method> dispatchers ──────────────
+//
+// cfw's velo-client.ts posts to `/_functions/<module>/<method>` with body
+// `{ args: [...] }`. Wix maps `/_functions/foo/bar` to `post_foo(request)`
+// with `request.path === ['bar']` — there is no auto-routing to a webMethod
+// of the same name. cf-jqkg's audit (PR #1160) flagged 19 production paths
+// silently 404-ing because the dispatcher functions weren't there.
+//
+// Pattern: per-module dispatcher reads `request.path[0]` (method name),
+// looks up the webMethod in a registry (gates against accidental access to
+// non-listed exports), spreads `body.args` into the call, returns the bare
+// result as JSON (cfw casts response body to T directly — no envelope).
+// Errors return 5xx with `{error: 'server_error', errorId}` for ops grep.
+//
+// Auth note: SiteMember-permission webMethods normally rely on Velo's
+// in-runtime member context. When called via HTTP function the runtime
+// reads the Bearer token from the Authorization header (cfw forwards it
+// via `accessToken` in callVelo). If the token is invalid or absent,
+// `currentMember.getMember()` inside the webMethod throws and the
+// dispatcher returns 500 — not ideal UX but better than the 404 silent
+// failure this PR replaces. Auth-shape hardening tracked separately.
+
+function _veloDispatchErrorId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function _veloDispatch(request, registry, scope) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  const methodName = request.path && request.path[0];
+  if (!methodName) {
+    return badRequest({
+      body: JSON.stringify({ error: `${scope}/<method> required` }),
+      headers: JSON_HEADERS,
+    });
+  }
+  const fn = registry[methodName];
+  if (typeof fn !== 'function') {
+    return notFound({
+      body: JSON.stringify({ error: `unknown method: ${scope}/${methodName}` }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  let body = {};
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    // Tolerate empty / non-JSON body — registry methods that take zero
+    // args (e.g., gamificationCore/getActivityFeed) need to call through.
+  }
+  const args = Array.isArray(body && body.args) ? body.args : [];
+
+  try {
+    const result = await fn(...args);
+    return ok({ body: JSON.stringify(result == null ? null : result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (${scope}/${methodName}) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+// gamificationCore — cfw lib/wix/gamification.ts uses g(method).
+const _GAMIFICATION_METHODS = {
+  getActiveChallenges: _gamificationCoreModule.getActiveChallenges,
+  getActivityFeed: _gamificationCoreModule.getActivityFeed,
+  getLeaderboard: _gamificationCoreModule.getLeaderboard,
+  getMemberTier: _gamificationCoreModule.getMemberTier,
+  getStreakData: _gamificationCoreModule.getStreakData,
+  receiveGamificationEvent: _gamificationCoreModule.receiveGamificationEvent,
+  recordChallengeProgress: _gamificationCoreModule.recordChallengeProgress,
+  recoverStreak: _gamificationCoreModule.recoverStreak,
+};
+export async function post_gamificationCore(request) {
+  return _veloDispatch(request, _GAMIFICATION_METHODS, 'gamificationCore');
+}
+export function options_gamificationCore(request) { return response(corsPreflight(request)); }
+
+// loyaltyService — cfw lib/wix/loyalty.ts uses m(method).
+const _LOYALTY_METHODS = {
+  getAvailableRewards: _loyaltyServiceModule.getAvailableRewards,
+  getChallengeCatalog: _loyaltyServiceModule.getChallengeCatalog,
+  getChallengeLeaderboard: _loyaltyServiceModule.getChallengeLeaderboard,
+  getLeaderboard: _loyaltyServiceModule.getLeaderboard,
+  getLoyaltyTiers: _loyaltyServiceModule.getLoyaltyTiers,
+  getMyAchievements: _loyaltyServiceModule.getMyAchievements,
+  getMyActivity: _loyaltyServiceModule.getMyActivity,
+  getMyBurnRate: _loyaltyServiceModule.getMyBurnRate,
+  getMyDailyQuests: _loyaltyServiceModule.getMyDailyQuests,
+  getMyLoyaltyAccount: _loyaltyServiceModule.getMyLoyaltyAccount,
+  getMyStreakData: _loyaltyServiceModule.getMyStreakData,
+  redeemReward: _loyaltyServiceModule.redeemReward,
+};
+export async function post_loyaltyService(request) {
+  return _veloDispatch(request, _LOYALTY_METHODS, 'loyaltyService');
+}
+export function options_loyaltyService(request) { return response(corsPreflight(request)); }
+
+// pushNotificationService — cfw lib/wix/preferences.ts uses m(method).
+const _PUSH_METHODS = {
+  getMyPushPreferences: _pushNotificationServiceModule.getMyPushPreferences,
+  managePushPreferences: _pushNotificationServiceModule.managePushPreferences,
+};
+export async function post_pushNotificationService(request) {
+  return _veloDispatch(request, _PUSH_METHODS, 'pushNotificationService');
+}
+export function options_pushNotificationService(request) { return response(corsPreflight(request)); }
+
+// wishlistService — cfw lib/wix/wishlist.ts uses w(method).
+const _WISHLIST_METHODS = {
+  addToWishlist: _wishlistServiceModule.addToWishlist,
+  getWishlist: _wishlistServiceModule.getWishlist,
+  getWishlistByMemberId: _wishlistServiceModule.getWishlistByMemberId,
+  isOnWishlist: _wishlistServiceModule.isOnWishlist,
+  removeFromWishlist: _wishlistServiceModule.removeFromWishlist,
+};
+export async function post_wishlistService(request) {
+  return _veloDispatch(request, _WISHLIST_METHODS, 'wishlistService');
+}
+export function options_wishlistService(request) { return response(corsPreflight(request)); }
+
+// styleQuiz — cfw lib/wix/style-quiz.ts uses literal "styleQuiz/<method>".
+const _STYLE_QUIZ_METHODS = {
+  captureQuizLead: _styleQuizModule.captureQuizLead,
+  getPersonalizedCopy: _styleQuizModule.getPersonalizedCopy,
+  getQuizOptions: _styleQuizModule.getQuizOptions,
+  getQuizRecommendations: _styleQuizModule.getQuizRecommendations,
+};
+export async function post_styleQuiz(request) {
+  return _veloDispatch(request, _STYLE_QUIZ_METHODS, 'styleQuiz');
+}
+export function options_styleQuiz(request) { return response(corsPreflight(request)); }
+
+// ── cf-vtx5 concrete-gap wrappers ─────────────────────────────────────────
+//
+// Two of the three concrete gaps from cf-jqkg's audit are unblocked here.
+// The third (submitCommunityPhoto) is held pending Stilgar/mayor decision
+// on whether storage lives in a Wix CMS collection or external (Cloudinary
+// etc.) — tracked as a separate bead.
+
+/**
+ * @function post_recordSpinGrant
+ * @route POST /_functions/recordSpinGrant
+ * @description cfw spin.ts fires this fire-and-forget after a successful
+ * spin. Records the grant in `SpinGrants` (idempotent, 30-day expiry per
+ * grantSpin's existing logic). Auth: required SiteMember; relies on the
+ * member context the webMethod runtime sets from the Authorization header.
+ * @param {Object} request.body.json
+ * @param {string} [request.body.json.prizeId] — diagnostic only; the actual
+ *   grant write uses memberId from the Wix runtime.
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 { spinId } on success;
+ *   401 if no authenticated member;
+ *   500 with errorId on failure.
+ */
+export async function post_recordSpinGrant(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      const errorId = _veloDispatchErrorId();
+      console.error(`HTTP function error (recordSpinGrant) errorId=${errorId} getMember failed:`, err);
+      return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+    }
+    if (!member || !member._id) {
+      return unauthorized({ body: JSON.stringify({ error: 'authentication required' }), headers: JSON_HEADERS });
+    }
+    const result = await grantSpin(member._id);
+    return ok({ body: JSON.stringify(result == null ? { ok: true } : result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (recordSpinGrant) errorId=${errorId}:`, err);
+    return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+  }
+}
+export function options_recordSpinGrant(request) { return response(corsPreflight(request)); }
+
+/**
+ * @function post_submitSurvey
+ * @route POST /_functions/submitSurvey
+ * @description cfw actions/survey.ts posts NPS feedback `{ score, comments,
+ * orderId }`. Looks up the open Survey row for the orderId, confirms the
+ * caller is the addressee, then forwards to surveyService.submitSurveyResponse
+ * with the webMethod's expected shape.
+ * @param {Object} request.body.json
+ * @param {number} request.body.json.score — required, integer 0..10
+ * @param {string} request.body.json.orderId — required, surveyService keying
+ * @param {string} [request.body.json.comments] — optional, ≤ 2000 chars
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 on submit;
+ *   400 on validation;
+ *   401 if no authenticated member;
+ *   404 if no open survey for that orderId;
+ *   500 with errorId on failure.
+ */
+export async function post_submitSurvey(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  try {
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (parseErr) {
+      console.warn('[submitSurvey] body parse failed:', parseErr && parseErr.message);
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const score = Number(body && body.score);
+    const orderId = typeof (body && body.orderId) === 'string' ? body.orderId.trim() : '';
+    const comments = typeof (body && body.comments) === 'string' ? body.comments.slice(0, 2000) : '';
+
+    if (!Number.isInteger(score) || score < 0 || score > 10) {
+      return badRequest({ body: JSON.stringify({ error: 'score must be an integer 0..10' }), headers: JSON_HEADERS });
+    }
+    if (!orderId) {
+      return badRequest({ body: JSON.stringify({ error: 'orderId is required' }), headers: JSON_HEADERS });
+    }
+
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      const errorId = _veloDispatchErrorId();
+      console.error(`HTTP function error (submitSurvey) errorId=${errorId} getMember failed:`, err);
+      return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+    }
+    if (!member || !member._id) {
+      return unauthorized({ body: JSON.stringify({ error: 'authentication required' }), headers: JSON_HEADERS });
+    }
+
+    const survey = await getSurveyForOrder(orderId);
+    if (!survey || !survey._id) {
+      return notFound({ body: JSON.stringify({ error: 'no open survey for that orderId' }), headers: JSON_HEADERS });
+    }
+
+    const result = await submitSurveyResponse({ surveyId: survey._id, score, comments });
+    return ok({ body: JSON.stringify(result == null ? { ok: true } : result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (submitSurvey) errorId=${errorId}:`, err);
+    return serverError({ body: JSON.stringify({ error: 'server_error', errorId }), headers: JSON_HEADERS });
+  }
+}
+export function options_submitSurvey(request) { return response(corsPreflight(request)); }
