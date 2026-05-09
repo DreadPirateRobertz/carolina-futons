@@ -1,0 +1,103 @@
+name: Velo /_functions smoke
+
+# Hits the 5 Velo /_functions endpoints on staging nightly + on-demand,
+# alerting via a GitHub Issue when expected !== actual status.
+#
+# Spec:   docs/qa/velo-functions-smoke-2026-05-05.md
+# Script: scripts/qa/velo-functions-smoke.mjs
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # nightly 09:00 UTC
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Velo origin (staging by default)'
+        required: false
+        default: 'https://chrisdealglass.wixstudio.com/my-site'
+      contact_valid_expect:
+        description: 'contactSubmissions valid path expected status (500 today; 200 once cf-c6g5 lands)'
+        required: false
+        default: '500'
+      newsletter_valid_expect:
+        description: 'mailingListSignups valid path expected status (400 today; 200 once newsletter healthy)'
+        required: false
+        default: '400'
+      unsub_invalid_expect:
+        description: 'unsubscribe invalid-token paths expected status (500 today; 400 once UNSUB_TOKEN_SECRET added)'
+        required: false
+        default: '500'
+  pull_request:
+    paths:
+      - 'scripts/qa/velo-functions-smoke.mjs'
+      - 'docs/qa/velo-functions-smoke-*.md'
+      - '.github/workflows/velo-smoke.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Velo smoke
+        id: smoke
+        env:
+          VELO_SMOKE_BASE: ${{ inputs.base || 'https://chrisdealglass.wixstudio.com/my-site' }}
+          CONTACT_VALID_EXPECT: ${{ inputs.contact_valid_expect || '500' }}
+          NEWSLETTER_VALID_EXPECT: ${{ inputs.newsletter_valid_expect || '400' }}
+          UNSUB_INVALID_TOKEN_EXPECT: ${{ inputs.unsub_invalid_expect || '500' }}
+        run: |
+          set +e
+          node scripts/qa/velo-functions-smoke.mjs | tee smoke.tap
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Surface failures in job summary
+        if: always()
+        run: |
+          {
+            echo "## Velo smoke results"
+            echo
+            echo '```'
+            cat smoke.tap || echo "(no output)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Alert on unexpected failure
+        if: failure() && steps.smoke.outputs.exit_code != '0' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE="[velo-smoke] unexpected status on $(date -u +%Y-%m-%d) — see job summary"
+          BODY=$(cat <<EOF
+          Nightly Velo /_functions smoke detected an unexpected status.
+
+          See the failed run: $RUN_URL
+
+          Either an endpoint regressed in production OR an underlying infra fix
+          shipped and the smoke spec needs updating (e.g., flip a
+          \`*_EXPECT\` env var). See \`docs/qa/velo-functions-smoke-*.md\` for
+          the contract.
+
+          Triggered by: \`$EVENT_NAME\` on \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`.
+          EOF
+          )
+          EXISTING=$(gh issue list --state open --label velo-smoke --json number --jq '.[0].number' --limit 1 || echo "")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label velo-smoke || \
+              gh issue create --title "$TITLE" --body "$BODY"
+          fi
