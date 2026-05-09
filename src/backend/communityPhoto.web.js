@@ -105,24 +105,27 @@ export const submitCommunityPhoto = webMethod(
     const invalid = _validateCommunityPhoto(data);
     if (invalid) return { success: false, error: invalid.error };
 
-    // Per-host rate limit — 5 submissions per hour from any single image
-    // host. Coarse but adequate as a UGC abuse damper; finer-grained
-    // by-IP rate-limiting lives one layer up (Wix platform / Cloudflare).
+    // cf-0h9q.fu: per-host rate-limit is a coarse UGC abuse damper, not
+    // the primary defense — moderation is. Tracked: cf-* follow-up to
+    // switch to IP-based or session-based keying once Wix HTTP function
+    // exposes request.ip cleanly to the webMethod surface (today only
+    // the wrapper sees it). Until then host-keying caps a single
+    // attacker domain but lets multiple attackers under different CDNs
+    // each get their own bucket — known limitation.
+    const host = (data.imageUrl.match(/^https:\/\/([^/]+)/) || [])[1] || 'unknown';
     try {
-      const host = (data.imageUrl.match(/^https:\/\/([^/]+)/) || [])[1] || 'unknown';
       const rl = await checkRateLimit('CommunityPhotoRateLimit', host, {
         max: 5,
         windowMs: 60 * 60 * 1000,
       });
       if (!rl.allowed) {
-        // Phrasing chosen to match _veloDispatchSoftFailStatus's
-        // "too many requests" → 429 mapping.
         return { success: false, error: 'Too many requests — please try again later.' };
       }
     } catch (err) {
       // Fail-open on rate-limit infra error — sanity-cap by relying on
-      // moderation. Logged so ops can spot a broken rate-limit store.
-      logError('communityPhoto.submitCommunityPhoto.rateLimit', err);
+      // moderation. Log includes the host so ops can spot whether a
+      // single domain is repeatedly tripping a broken rate-limit store.
+      logError(`communityPhoto.submitCommunityPhoto.rateLimit host=${host}`, err);
     }
 
     const row = {
