@@ -136,7 +136,7 @@
 
   "author bio": ["AuthorBio", "BlogAuthor"],
 
-  "certifications": ["Certifications", "CertList"],
+  "certifications": ["certifications-heading", "Certifications", "CertList", "FSC", "GOTS", "CertiPUR"],
 
   "how it works": ["HowItWorks"],
 
