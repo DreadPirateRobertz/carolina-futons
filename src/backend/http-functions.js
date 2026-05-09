@@ -49,6 +49,8 @@ import * as _styleQuizModule from 'backend/styleQuiz.web';
 import { submitSurveyResponse } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
 import { submitCommunityPhoto } from 'backend/communityPhoto.web';
+// cf-bkxh: namespace import for giftRegistry dispatcher.
+import * as _giftRegistryModule from 'backend/giftRegistry.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -3732,3 +3734,31 @@ export async function post_submitCommunityPhoto(request) {
   }
 }
 export function options_submitCommunityPhoto(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/giftRegistry/<method> dispatcher ─────────────────────────────
+//
+// cf-bkxh (cf-vtx5.fu held-list). cfw's actions/registry.ts uses
+// `r(method) = giftRegistry/${method}` to call 5 webMethods on
+// `backend/giftRegistry.web`. Surfaced during my cf-vtx5 callsite probe
+// but NOT in the original cf-jqkg 22-route list. All 5 cfw method names
+// match backend exports verbatim — no rename needed, just add to the
+// dispatcher allowlist.
+//
+// Method-name reconciliation: backend exports 8 methods (createRegistry,
+// deleteRegistry, getMyRegistries, getPublicRegistry, markItemPurchased,
+// getRegistry, addRegistryItem, removeRegistryItem). The 5 below are
+// what cfw actually calls; the other 3 are intentionally omitted from
+// the allowlist (defense — unknown methods 404 rather than reflectively
+// invoking by name).
+
+const _GIFT_REGISTRY_METHODS = {
+  createRegistry: _giftRegistryModule.createRegistry,
+  deleteRegistry: _giftRegistryModule.deleteRegistry,
+  getMyRegistries: _giftRegistryModule.getMyRegistries,
+  getPublicRegistry: _giftRegistryModule.getPublicRegistry,
+  markItemPurchased: _giftRegistryModule.markItemPurchased,
+};
+export async function post_giftRegistry(request) {
+  return _veloDispatch(request, _GIFT_REGISTRY_METHODS, 'giftRegistry');
+}
+export function options_giftRegistry(request) { return response(corsPreflight(request)); }

@@ -179,19 +179,31 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
     expect(JSON.parse(res.body).error).toBe('invalid_json');
   });
 
-  it('returns 500 + errorId when wixData throws unexpectedly (infra)', async () => {
-    // submitCommunityPhoto's own catch returns success:false (4xx), so to
-    // exercise the wrapper's 5xx path we need the wrapper-level try/catch
-    // to fire. Easiest: make request.body.json reject with a thrown Error
-    // (not SyntaxError). The wrapper's outer catch covers that.
-    const req = {
-      body: { json: async () => { throw new TypeError('something else'); } },
-      headers: { origin: goodOrigin },
-    };
-    const res = await post_submitCommunityPhoto(req);
-    // TypeError on body parse is still treated as invalid_json by the
-    // wrapper (any thrown error in the parse step). Status 400.
-    expect(res.status).toBe(400);
+  it('cf-0h9q.fu: returns 500 + errorId when submitCommunityPhoto throws past its own catch', async () => {
+    // submitCommunityPhoto's own try/catch catches wixData.insert errors
+    // and returns {success:false} (4xx, already covered above). The
+    // wrapper's outer 500 path fires when submitCommunityPhoto itself
+    // throws (not when it gracefully fails). vi.doMock + cache-buster
+    // re-import forces submitCommunityPhoto to throw and asserts the
+    // wrapper's serverError path is reached, including errorId in
+    // console.error log for ops correlation.
+    const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.doMock('backend/communityPhoto.web', () => ({
+      submitCommunityPhoto: vi.fn().mockRejectedValue(new Error('Velo runtime exploded')),
+      _validateCommunityPhoto: vi.fn(() => null),
+    }));
+    const { post_submitCommunityPhoto: wrapper } = await import('../src/backend/http-functions.js?cf-0h9q-throw');
+    const res = await wrapper(flatReq(VALID_BODY));
+    expect(res.status).toBe(500);
+    const body = JSON.parse(res.body);
+    expect(body).toMatchObject({ success: false, error: 'server_error' });
+    expect(typeof body.errorId).toBe('string');
+    expect(body.errorId.length).toBeGreaterThan(0);
+    const logged = consoleErr.mock.calls.flat().map(String).join('\n');
+    expect(logged).toContain(body.errorId);
+    expect(logged).toContain('post_submitCommunityPhoto');
+    consoleErr.mockRestore();
+    vi.doUnmock('backend/communityPhoto.web');
   });
 
   it('options preflight responds', () => {
