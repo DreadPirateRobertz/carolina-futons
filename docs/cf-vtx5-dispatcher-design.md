@@ -129,3 +129,119 @@ For Anyone-permission webMethods (e.g. `styleQuiz#captureQuizLead`), no member g
 - Whether to enforce a strict `Permissions.Anyone`-only allowlist at the HTTP boundary, OR rely entirely on webMethod self-guards. (My recommendation: rely on self-guards but add a comment in each dispatcher pointing at this audit doc so future maintainers know why permission checks aren't duplicated.)
 - Whether the dispatcher should rate-limit at the module level. (Most webMethods already rate-limit individually; module-level rate-limit could double-charge legitimate users. Recommend leaving rate-limit to the webMethod.)
 - Method-name allowlist additions for newly-shipped webMethods — process: PR-time review of any new webMethod with `Permissions.Anyone` or `Permissions.SiteMember`, decision recorded in commit message.
+
+## Melania review-pass addenda (2026-05-09)
+
+### CORS — use `backend/utils/cors.js` (godfrey's cf-w1lg helper)
+
+Every dispatcher and standalone wrapper **must** route CORS through `corsHeaders(request, …)` and `corsPreflight(request)` from `backend/utils/cors.js`. The reference implementation does this at:
+- `post_wishlistService` line ~1: `corsHeaders(request, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'})`
+- `options_wishlistService`: `response(corsPreflight(request))`
+
+The helper handles the Vercel preview wildcard (`carolina-futons-web-git-<branch>-...`), localhost dev, and the production cfw domain — re-implementing it inline would drift. Don't hand-roll Access-Control-Allow-Origin headers in any new dispatcher.
+
+### Field-name shim pattern (for standalone wrappers — cf-jqkg gap 3)
+
+Standalone wrappers (the 3 flat-URL gaps + any future cfw direct-fetch endpoint) often face a payload-shape mismatch between cfw and the Velo webMethod. The shim lives in the wrapper, not the webMethod, so the webMethod's contract stays stable for any other (Wix-internal) callers.
+
+**Worked example: `post_submitSurvey`** (cf-jqkg gap 3)
+
+cfw posts (per `carolina-futons-web/src/app/actions/survey.ts`):
+```json
+{ "score": 9, "comments": "delivery was fast", "orderId": "ord-123" }
+```
+
+`surveyService.web.js#submitSurveyResponse(data)` expects:
+```json
+{ "orderId": "ord-123", "npsScore": 9, "comment": "delivery was fast" }
+```
+
+Shim shape inside the wrapper:
+```js
+export async function post_submitSurvey(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({ body: JSON.stringify({ success: false, error: 'invalid_json' }), headers: JSON_HEADERS });
+  }
+  // cf-vtx5 shim: translate cfw payload shape → submitSurveyResponse contract
+  const veloPayload = {
+    orderId: body.orderId,
+    npsScore: body.score,        // cfw "score" → Velo "npsScore"
+    comment: body.comments ?? '', // cfw "comments" → Velo "comment"
+  };
+  try {
+    const result = await submitSurveyResponse(veloPayload);
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    /* errorId pattern from cf-gkgo */
+  }
+}
+```
+
+**Discipline:** every shim line gets a `// cfw "<field>" → Velo "<field>"` comment so the next maintainer can audit the mapping at a glance. If a shim grows more than 5 lines, the cfw payload is probably mis-shaped — escalate the cfw PR back to fix the source rather than carrying the divergence forever.
+
+**Post-merge finding (2026-05-09)** — godfrey's stage3-velo `post_submitSurvey` (commit `592f2f4a` on stage3-velo) lands without the shim and is silently broken:
+
+```js
+// stage3-velo/src/backend/http-functions.js#post_submitSurvey (current)
+const result = await submitSurveyResponse({ surveyId: survey._id, score, comments });
+```
+
+But `surveyService.web.js#submitSurveyResponse` requires `data.orderId` (line 150) and `data.npsScore` (line 154). Three mismatches:
+
+| Wrapper passes | webMethod expects | Behaviour |
+|----------------|-------------------|-----------|
+| `surveyId`     | `orderId`         | webMethod ignores `surveyId`, returns `{success:false, error:'orderId is required'}` |
+| `score`        | `npsScore`        | `isValidNpsScore(undefined)` → false → `{success:false, error:'npsScore must be...'}` |
+| `comments`     | `comment`         | persisted as `null` (truthy check on `data.comment` is false) |
+
+Result: every cfw NPS submission gets a 200 with `{success:false, error:'orderId is required'}` — the same silent-failure shape cf-jqkg/cf-vtx5 was meant to eliminate.
+
+Corrected wrapper (orderId is already extracted from body earlier):
+
+```js
+const veloPayload = {
+  orderId,                  // already validated above; pass through
+  npsScore: score,          // cfw "score" → Velo "npsScore"
+  comment: comments,        // cfw "comments" → Velo "comment"
+};
+const result = await submitSurveyResponse(veloPayload);
+```
+
+Drop the `getSurveyForOrder(orderId)` pre-lookup too — the webMethod does its own `query(SURVEY_COLLECTION).eq('memberId', memberId).eq('orderId', orderId)` with the IDOR-guarded memberId, so the wrapper's lookup is both duplicated work and a privacy weakening.
+
+### Auth gating — Wix session token verification
+
+cfw's `callVelo` forwards `Authorization: Bearer <accessToken>` when the caller passes an `accessToken` (e.g. `loyaltyService` paths in `carolina-futons-web/src/app/actions/loyalty.ts`). Inside the Velo runtime, `currentMember.getMember()` reads from either the Wix session cookie OR the bearer token — so SiteMember webMethods that already self-guard via `currentMember.getMember()` work without dispatcher-side changes.
+
+**Three classes of cfw call shape, by auth posture:**
+
+| Class                   | cfw signal                                         | Dispatcher / wrapper duty                                                            | Example modules / gaps        |
+|-------------------------|----------------------------------------------------|--------------------------------------------------------------------------------------|--------------------------------|
+| **Authenticated**        | `accessToken` passed to `callVelo`; `Authorization: Bearer …` header | None — webMethod self-guards via `currentMember.getMember()`. Just verify allowlist  | `loyaltyService`, `gamificationCore`, `wishlistService`, `pushNotificationService`, authenticated `referralService` |
+| **Anonymous (rate-limited)** | No `accessToken`; cfw rate-limits at the action layer | None — webMethod is `Permissions.Anyone` and rate-limits internally                  | `styleQuiz#captureQuizLead`, `submitCommunityPhoto` (gap 2), `submitSurvey` (gap 3 — but see note) |
+| **Mixed**                | cfw passes accessToken when available, falls back to anon | Webmethod must distinguish — return `{success:false, error:'auth_required'}` for anon when feature requires it | `referralService#getMyReferralCode` (auth) vs `getReferralByCode` (anon) |
+
+**Gotcha for `submitSurvey`:** the webMethod (`submitSurveyResponse`) is `Permissions.SiteMember` and IDOR-guards via `currentMember.getMember()` to confirm the surveyed order belongs to the caller. cfw's `survey.ts` currently makes a direct fetch WITHOUT forwarding the bearer token — so the wrapper will return `{success: false, error: 'Authentication required'}`. Two fixes:
+1. cfw side: forward the access token in `survey.ts`'s fetch call (preferred — preserves the IDOR guard).
+2. Velo side: relax the webMethod to take `{ orderId, memberToken }` and resolve memberId from a signed token stored on the survey row at delivery time.
+
+Recommend (1); flag this in the cf-vtx5 follow-up so the survey wrapper isn't shipped half-broken.
+
+**For dispatcher-routed modules (`gamificationCore`, `loyaltyService`, etc.):** no special handling — the bearer token threads through Wix's HTTP function runtime to the webMethod's `currentMember` lookup. The reference implementation's wishlistService dispatcher does no auth work and that's correct: `addToWishlist` line 51 calls `currentMember.getMember()` first thing. Spot-check this for every method as you add it to a new module's allowlist.
+
+**Verify pattern:** before adding a method to a module's allowlist, grep its body for `currentMember.getMember()` (SiteMember-protected) OR confirm it's intentionally Anyone (rate-limited + sanitised). Document the choice in a comment next to the allowlist Set entry:
+
+```js
+const LOYALTY_SERVICE_ALLOWLIST = new Set([
+  // SiteMember — self-guards via currentMember.getMember() in resolveCallerMemberId()
+  'getMyLoyaltyAccount',
+  'getMyActivity',
+  'redeemReward',
+  // Anyone — public leaderboard
+  'getLeaderboard',
+]);
+```
