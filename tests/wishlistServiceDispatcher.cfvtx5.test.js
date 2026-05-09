@@ -130,13 +130,16 @@ describe('cf-vtx5 · post_wishlistService dispatcher', () => {
     consoleErr.mockRestore();
   });
 
-  it('forwards the webMethod\'s {success:false, error} envelope on logical failure (does NOT 500)', async () => {
-    // When the webMethod resolves with {success:false}, the dispatcher must
-    // pass that through as 200 — the caller branches on the body, not the
-    // status. Reserves 500 for unexpected throws.
+  it('cf-yvs4: maps webMethod soft-failure to a matching 4xx (cf-89xn lying-status pattern removed)', async () => {
+    // PR #1164 originally returned 200 here so cfw could branch on body.
+    // cf-yvs4 (radahn's audit) flipped the contract: cfw treated success:false
+    // as success in some call sites, recreating the cf-89xn deliveryZone
+    // lying-status bug. velo-client.ts throws VeloRpcError on non-2xx and
+    // exposes res.body — the error string is still readable. 5xx still
+    // reserved for unexpected throws.
     vi.mocked(addToWishlist).mockResolvedValue({ success: false, error: 'Not authenticated.' });
     const res = await post_wishlistService(makeRequest('addToWishlist', { args: ['p-1', 'x', 100] }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(401);
     expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Not authenticated.' });
   });
 });
