@@ -48,6 +48,7 @@ import * as _pushNotificationServiceModule from 'backend/pushNotificationService
 import * as _styleQuizModule from 'backend/styleQuiz.web';
 import { submitSurveyResponse } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
+import { submitCommunityPhoto } from 'backend/communityPhoto.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -3677,3 +3678,57 @@ export async function post_submitSurvey(request) {
   }
 }
 export function options_submitSurvey(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/submitCommunityPhoto ─────────────────────────────────────────
+//
+// cf-0h9q (cf-vtx5.fu / cf-jqkg gap #2). cfw's /community-gallery posts
+// {imageUrl, customerName, location, caption, productSlug} as anonymous
+// (no Bearer token). Backend submitCommunityPhoto webMethod validates +
+// inserts into CommunityPhotos CMS for owner-side moderation.
+//
+// cf-yvs4 contract: 200 on success; 4xx on `{success:false}` envelope via
+// _veloDispatchSoftFailStatus; 5xx with errorId on unexpected throw.
+
+/**
+ * @function post_submitCommunityPhoto
+ * @route POST /_functions/submitCommunityPhoto
+ * @param {Object} request.body.json
+ * @param {string} request.body.json.imageUrl     — required, https URL, ≤500 chars
+ * @param {string} request.body.json.customerName — required, ≤200 chars
+ * @param {string} [request.body.json.location]   — ≤200 chars
+ * @param {string} [request.body.json.caption]    — ≤2000 chars
+ * @param {string} [request.body.json.productSlug] — slug, ≤100 chars
+ * @returns {Promise<{status: number, body: string, headers: object}>}
+ *   200 `{success:true, photoId}` on insert;
+ *   400 / 429 `{success:false, error}` on validation / rate-limit;
+ *   500 `{success:false, error:'server_error', errorId}` on unexpected throw.
+ */
+export async function post_submitCommunityPhoto(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (err) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json', detail: err && err.message }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    const result = await submitCommunityPhoto(body);
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
+    return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (post_submitCommunityPhoto) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+export function options_submitCommunityPhoto(request) { return response(corsPreflight(request)); }
