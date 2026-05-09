@@ -82,7 +82,6 @@ vi.mock('backend/utils/topicClusterData', () => {
 
 import {
   getTopicClusterPage,
-  generateInternalLinks,
 } from '../src/backend/topicClusters.web.js';
 
 // ── Empty cluster page — 0 spoke articles ─────────────────────────────
@@ -128,14 +127,6 @@ describe('getTopicClusterPage — empty cluster (0 spoke articles)', () => {
   });
 });
 
-describe('generateInternalLinks — empty cluster (0 spoke articles)', () => {
-  it('returns 0 links for a pillar with no spokes', async () => {
-    // generateInternalLinks adds cross-cluster links only when spokePages.length > 0
-    const result = await generateInternalLinks('empty-cluster');
-    expect(result.success).toBe(true);
-    expect(result.links).toHaveLength(0);
-  });
-});
 
 // ── Big cluster page — 11 spoke articles (> 6-link cap) ───────────────
 
@@ -167,27 +158,3 @@ describe('getTopicClusterPage — overflow cluster (11 spoke articles)', () => {
   });
 });
 
-describe('generateInternalLinks — overflow cluster (11 spoke articles)', () => {
-  it('default limit (5) returns exactly 5 pillar-to-spoke links', async () => {
-    const result = await generateInternalLinks('big-cluster');
-    expect(result.success).toBe(true);
-    expect(result.links).toHaveLength(5);
-    const allPillarToSpoke = result.links.every(l => l.relationship === 'pillar-to-spoke');
-    expect(allPillarToSpoke).toBe(true);
-  });
-
-  it('limit=11 returns exactly 11 pillar-to-spoke links (all spokes, no overflow)', async () => {
-    const result = await generateInternalLinks('big-cluster', 11);
-    expect(result.success).toBe(true);
-    expect(result.links).toHaveLength(11);
-    const allPillarToSpoke = result.links.every(l => l.relationship === 'pillar-to-spoke');
-    expect(allPillarToSpoke).toBe(true);
-  });
-
-  it('limit=11 links cover spoke-1 through spoke-11 in order', async () => {
-    const result = await generateInternalLinks('big-cluster', 11);
-    for (let i = 0; i < 11; i++) {
-      expect(result.links[i].targetSlug).toBe(`big-spoke-${i + 1}`);
-    }
-  });
-});

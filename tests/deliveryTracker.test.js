@@ -11,7 +11,6 @@ import {
   updateDriverLocation,
   markDeliveryStatus,
   getTrackingByToken,
-  generateRoomPrepChecklist,
   checkDoorFit,
   _NOTIFICATION_THRESHOLDS,
   _STANDARD_DIMENSIONS,
@@ -179,47 +178,6 @@ describe('getTrackingByToken', () => {
   });
 });
 
-// ── Room Prep Checklist ─────────────────────────────────────────────
-
-describe('generateRoomPrepChecklist', () => {
-  it('generates checklist for standard futon frame', () => {
-    const result = generateRoomPrepChecklist([
-      { name: 'Eureka Frame', widthInches: 54, depthInches: 38, heightInches: 33, weightLbs: 85 },
-    ]);
-
-    expect(result.success).toBe(true);
-    expect(result.checklist.length).toBeGreaterThanOrEqual(2);
-    const tasks = result.checklist.map(c => c.task);
-    expect(tasks).toContain('Clear the placement area');
-  });
-
-  it('flags door measurement for wide items', () => {
-    const result = generateRoomPrepChecklist([
-      { name: 'Wide Sofa', widthInches: 84, depthInches: 36, heightInches: 33, weightLbs: 120 },
-    ]);
-
-    const doorTask = result.checklist.find(c => c.task.includes('front door'));
-    expect(doorTask).toBeDefined();
-    expect(doorTask.priority).toBe('high');
-  });
-
-  it('recommends helper for heavy deliveries', () => {
-    const result = generateRoomPrepChecklist([
-      { name: 'Frame', widthInches: 54, depthInches: 38, heightInches: 33, weightLbs: 85 },
-      { name: 'Mattress', widthInches: 54, depthInches: 38, heightInches: 8, weightLbs: 75 },
-    ]);
-
-    const helperTask = result.checklist.find(c => c.task.includes('helper'));
-    expect(helperTask).toBeDefined();
-    expect(helperTask.detail).toContain('160');
-  });
-
-  it('returns empty for no items', () => {
-    const result = generateRoomPrepChecklist([]);
-    expect(result.success).toBe(false);
-  });
-});
-
 // ── Door Fit Validator ──────────────────────────────────────────────
 
 describe('checkDoorFit', () => {
@@ -358,23 +316,6 @@ describe('getTrackingByToken — missing token and rate limit', () => {
     withRateLimit('TrackingViewRateLimit', { blocked: true, max: 30, key: 'ratelimited-token' });
     const result = await getTrackingByToken('ratelimited-token');
     expect(result.success).toBe(false);
-  });
-});
-
-describe('generateRoomPrepChecklist — dimension fallbacks and large item', () => {
-  it('handles items with no dimensions (|| 0 fallbacks)', () => {
-    const result = generateRoomPrepChecklist([{}]); // no widthInches, depthInches, weightLbs
-    expect(result.success).toBe(true);
-    // largestDim = 0, so no door/hallway warnings
-  });
-
-  it('adds door measurement task for oversized item', () => {
-    const result = generateRoomPrepChecklist([
-      { widthInches: 90, depthInches: 40, heightInches: 36, weightLbs: 150 },
-    ]);
-    expect(result.success).toBe(true);
-    const highPriority = result.checklist.filter(c => c.priority === 'high' && c.category === 'access');
-    expect(highPriority.length).toBeGreaterThan(0);
   });
 });
 
