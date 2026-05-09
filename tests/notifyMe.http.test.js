@@ -142,13 +142,19 @@ describe('post_notifyMe — validation', () => {
 // ── Downstream failure ────────────────────────────────────────────────────────
 
 describe('post_notifyMe — downstream failure', () => {
-  it('returns 500 when wixData.insert throws', async () => {
+  it('returns 500 with server_error code + errorId when wixData.insert throws', async () => {
     __setInsertError('NotifyMe', new Error('Wix Data store unavailable'));
     const res = await post_notifyMe(makeRequest());
     expect(res.status).toBe(500);
     const body = JSON.parse(res.body);
     expect(body.success).toBe(false);
-    expect(body.error).toMatch(/internal server error/i);
+    // Wrapper returns a stable `server_error` code + correlated `errorId`
+    // (silent-failure-hunter PR #18 follow-up) so cfw can echo the id back
+    // and ops can grep Velo logs by it. Regression guard against a future
+    // revert to a generic 'Internal server error' user-facing string.
+    expect(body.error).toBe('server_error');
+    expect(body.errorId).toEqual(expect.any(String));
+    expect(body.errorId.length).toBeGreaterThan(0);
   });
 
   it('still returns CORS headers on a 500 path so the browser can read the body', async () => {
