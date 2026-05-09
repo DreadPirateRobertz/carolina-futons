@@ -97,7 +97,6 @@ const {
   generateReferralCode,
   redeemReferralCode,
   getVideos,
-  trackVideoView,
 } = mod;
 
 // ═════════════════════════════════════════════════════════════════════
@@ -605,50 +604,3 @@ describe('getVideos', () => {
   });
 });
 
-// ═════════════════════════════════════════════════════════════════════
-// trackVideoView
-// ═════════════════════════════════════════════════════════════════════
-describe('trackVideoView', () => {
-  it('increments view count', async () => {
-    __seed('Videos', [{ _id: 'v1', viewCount: 5 }]);
-    await trackVideoView('v1');
-    const updated = _collections.Videos.find(v => v._id === 'v1');
-    expect(updated.viewCount).toBe(6);
-  });
-
-  it('handles missing viewCount (defaults to 0 + 1)', async () => {
-    __seed('Videos', [{ _id: 'v1' }]);
-    await trackVideoView('v1');
-    const updated = _collections.Videos.find(v => v._id === 'v1');
-    expect(updated.viewCount).toBe(1);
-  });
-
-  it('does nothing for empty videoId', async () => {
-    __seed('Videos', [{ _id: 'v1', viewCount: 5 }]);
-    await trackVideoView('');
-    expect(_collections.Videos[0].viewCount).toBe(5);
-  });
-
-  it('does nothing for null videoId', async () => {
-    await trackVideoView(null);
-    // No error thrown
-  });
-
-  it('does nothing for non-existent video', async () => {
-    __seed('Videos', []);
-    await trackVideoView('nonexistent');
-    // No error thrown
-  });
-
-  it('strips special chars from videoId', async () => {
-    __seed('Videos', [{ _id: 'v1', viewCount: 0 }]);
-    await trackVideoView('v1<script>');
-    const updated = _collections.Videos.find(v => v._id === 'v1');
-    expect(updated.viewCount).toBe(1);
-  });
-
-  it('does nothing if cleaned videoId is empty', async () => {
-    await trackVideoView('!!!');
-    // All chars stripped, no lookup
-  });
-});

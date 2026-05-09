@@ -267,65 +267,6 @@ export const getStreamPins = webMethod(
   }
 );
 
-// ── Engagement Tracking ─────────────────────────────────────────────
-
-/**
- * Track a viewer engagement event.
- *
- * @param {Object} params
- * @param {string} params.streamId
- * @param {string} params.action - 'join' | 'pin_click' | 'add_to_cart' | 'vod_play'
- * @param {string} [params.productId]
- * @param {string} [params.memberId]
- * @returns {Promise<{success: boolean}>}
- * @permission Anyone
- */
-export const trackEngagement = webMethod(
-  Permissions.Anyone,
-  async (params = {}) => {
-    try {
-      const streamId = sanitize(params.streamId, 50);
-      const action = sanitize(params.action, 50);
-      const validActions = ['join', 'pin_click', 'add_to_cart', 'vod_play'];
-
-      if (!streamId || !validActions.includes(action)) return { success: false };
-
-      const { allowed } = await checkRateLimit(
-        'StreamEngagementRateLimit', streamId, { max: 60, windowMs: 60_000 }
-      );
-      if (!allowed) return { success: false };
-
-      await wixData.insert(ENGAGEMENT_COLLECTION, {
-        streamId,
-        action,
-        productId: sanitize(params.productId || '', 50),
-        memberId: sanitize(params.memberId || '', 50),
-        timestamp: new Date(),
-      });
-
-      // Update pin stats for product actions
-      if ((action === 'pin_click' || action === 'add_to_cart') && params.productId) {
-        const pins = await wixData.query(PINS_COLLECTION)
-          .eq('streamId', streamId)
-          .eq('productId', sanitize(params.productId, 50))
-          .limit(1)
-          .find();
-
-        if (pins.items.length > 0) {
-          const pin = pins.items[0];
-          if (action === 'pin_click') pin.clicks = (pin.clicks || 0) + 1;
-          if (action === 'add_to_cart') pin.addToCarts = (pin.addToCarts || 0) + 1;
-          await wixData.update(PINS_COLLECTION, pin);
-        }
-      }
-
-      return { success: true };
-    } catch (err) {
-      console.error('[liveShopping] trackEngagement error:', err);
-      return { success: false };
-    }
-  }
-);
 
 /**
  * Get stream analytics summary.

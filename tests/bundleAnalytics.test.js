@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __setRoles } from './__mocks__/wix-members-backend.js';
 import {
-  trackBundleImpression,
   getBundleAnalytics,
   getBundlePerformance,
   getRecommendedBundles,
@@ -12,109 +11,6 @@ beforeEach(() => {
   resetData();
   __setMember({ _id: 'admin-1', loginEmail: 'admin@carolinafutons.com' });
   __setRoles([{ _id: 'admin' }]);
-});
-
-// ── trackBundleImpression ─────────────────────────────────────────────
-
-describe('trackBundleImpression', () => {
-  it('tracks an impression event', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-frame-cover',
-      bundleName: 'Frame + Cover Combo',
-      event: 'impression',
-      source: 'product_page',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('tracks a click event', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-frame-cover',
-      bundleName: 'Frame + Cover Combo',
-      event: 'click',
-      source: 'homepage',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('tracks an add_to_cart event', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-complete',
-      bundleName: 'Complete Futon Set',
-      event: 'add_to_cart',
-      source: 'category',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('tracks a purchase event with revenue', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-complete',
-      bundleName: 'Complete Futon Set',
-      event: 'purchase',
-      revenue: 499.99,
-      source: 'cart',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('requires valid bundle ID', async () => {
-    const result = await trackBundleImpression({
-      bundleId: '',
-      event: 'impression',
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('bundle ID');
-  });
-
-  it('rejects invalid event type', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-1',
-      event: 'invalid',
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Invalid event');
-  });
-
-  it('works for anonymous users', async () => {
-    __setMember(null);
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-1',
-      bundleName: 'Test Bundle',
-      event: 'impression',
-      sessionId: 'session-abc123',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('defaults source to product_page for invalid source', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-1',
-      bundleName: 'Test',
-      event: 'impression',
-      source: 'invalid_source',
-    });
-
-    expect(result.success).toBe(true);
-  });
-
-  it('only records revenue for purchase events', async () => {
-    const result = await trackBundleImpression({
-      bundleId: 'bundle-1',
-      bundleName: 'Test',
-      event: 'impression',
-      revenue: 999,
-    });
-
-    expect(result.success).toBe(true);
-  });
 });
 
 // ── getBundleAnalytics ────────────────────────────────────────────────

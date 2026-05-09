@@ -11,7 +11,6 @@ import {
   getStreams,
   pinProduct,
   getStreamPins,
-  trackEngagement,
   getStreamAnalytics,
 } from '../src/backend/liveShopping.web.js';
 
@@ -204,45 +203,6 @@ describe('getStreamPins', () => {
   });
 });
 
-// ── Engagement Tracking ─────────────────────────────────────────────
-
-describe('trackEngagement', () => {
-  it('records a join event', async () => {
-    const result = await trackEngagement({ streamId: 'stream-1', action: 'join' });
-    expect(result.success).toBe(true);
-
-    const inserted = __getInserted('StreamEngagement');
-    expect(inserted).toHaveLength(1);
-    expect(inserted[0].action).toBe('join');
-  });
-
-  it('records add_to_cart and updates pin stats', async () => {
-    __seed('StreamProductPins', [
-      { _id: 'pin-1', streamId: 'stream-1', productId: 'prod-1', clicks: 5, addToCarts: 2 },
-    ]);
-
-    await trackEngagement({
-      streamId: 'stream-1',
-      action: 'add_to_cart',
-      productId: 'prod-1',
-    });
-
-    const inserted = __getInserted('StreamEngagement');
-    expect(inserted[0].action).toBe('add_to_cart');
-  });
-
-  it('rejects invalid actions', async () => {
-    const result = await trackEngagement({ streamId: 'stream-1', action: 'invalid' });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects missing streamId', async () => {
-    const result = await trackEngagement({ action: 'join' });
-    expect(result.success).toBe(false);
-  });
-});
-
-// ── Analytics ───────────────────────────────────────────────────────
 
 describe('getStreamAnalytics', () => {
   it('computes viewer count and conversion rate', async () => {

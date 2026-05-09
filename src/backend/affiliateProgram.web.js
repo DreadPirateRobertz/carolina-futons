@@ -329,50 +329,6 @@ export const getMyAffiliateLinks = webMethod(
   }
 );
 
-// ── trackAffiliateClick ─────────────────────────────────────────────
-
-/**
- * Track a click on an affiliate link. Public endpoint for landing pages.
- * @param {string} linkCode - The affiliate link code
- * @returns {Promise<{success: boolean, productId?: string, error?: string}>}
- */
-export const trackAffiliateClick = webMethod(
-  Permissions.Anyone,
-  async (linkCode) => {
-    try {
-      const cleanCode = sanitize(linkCode, 20).toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (!cleanCode) {
-        return { success: false, error: 'Link code is required' };
-      }
-
-      const { allowed } = await checkRateLimit('AffiliateClickRateLimit', cleanCode, { max: 60, windowMs: 60_000 });
-      if (!allowed) return { success: true }; // Silent drop for tracking
-
-      const result = await wixData.query(LINKS_COLLECTION)
-        .eq('linkCode', cleanCode)
-        .limit(1)
-        .find();
-
-      if (result.items.length === 0) {
-        return { success: false, error: 'Affiliate link not found' };
-      }
-
-      const link = result.items[0];
-      link.clicks = (link.clicks || 0) + 1;
-      await wixData.update(LINKS_COLLECTION, link);
-
-      return {
-        success: true,
-        productId: link.productId,
-        linkCode: link.linkCode,
-      };
-    } catch (err) {
-      console.error('trackAffiliateClick error:', err);
-      return { success: false, error: 'Unable to track click' };
-    }
-  }
-);
-
 // ── recordAffiliateConversion ───────────────────────────────────────
 
 /**
