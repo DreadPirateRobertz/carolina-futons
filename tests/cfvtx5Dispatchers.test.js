@@ -78,6 +78,7 @@ import { captureQuizLead } from 'backend/styleQuiz.web';
 import { submitSurveyResponse } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __seed, __reset as __resetData } from './__mocks__/wix-data.js';
 
 const goodOrigin = 'https://carolina-futons-web.vercel.app';
 
@@ -98,6 +99,7 @@ function flatReq(body) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  __resetData();
   __setMember(null);
 });
 
@@ -123,11 +125,26 @@ describe('cf-vtx5 · post_gamificationCore dispatcher', () => {
     expect(JSON.parse(res.body)).toMatchObject({ error: 'unknown_method', method: 'updateStreakState' });
   });
 
-  it('forwards soft failures verbatim as 200 (no 5xx for {success:false})', async () => {
+  it('cf-yvs4: maps {success:false} envelopes to the matching 4xx status', async () => {
+    // Default soft-fail → 400; "rate_limit" string → 429; "Authentication
+    // required" → 401. cf-89xn lying-status removal applied to all 22
+    // dispatchers per radahn's audit (cf-yvs4).
     vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'rate_limit' });
     const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(429);
     expect(JSON.parse(res.body)).toEqual({ success: false, error: 'rate_limit' });
+  });
+
+  it('cf-yvs4: defaults soft-fail status to 400 when error string has no recognized marker', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'something else broke' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(400);
+  });
+
+  it('cf-yvs4: maps "Authentication required" soft-fail to 401', async () => {
+    vi.mocked(gamificationGetLeaderboard).mockResolvedValue({ success: false, error: 'Authentication required' });
+    const res = await post_gamificationCore(dispatcherReq('getLeaderboard'));
+    expect(res.status).toBe(401);
   });
 
   it('returns 500 with errorId + console-correlated log on unexpected throw', async () => {
@@ -244,10 +261,10 @@ describe('cf-vtx5 · post_recordSpinGrant', () => {
     expect(vi.mocked(grantSpin)).toHaveBeenCalledWith('member-77');
   });
 
-  it('returns 200 + {success:false, "Authentication required"} when no member', async () => {
+  it('cf-yvs4: returns 401 + {success:false, "Authentication required"} when no member', async () => {
     __setMember(null);
     const res = await post_recordSpinGrant(flatReq({}));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(401);
     expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'Authentication required' });
     expect(vi.mocked(grantSpin)).not.toHaveBeenCalled();
   });
@@ -272,6 +289,12 @@ describe('cf-vtx5 · post_recordSpinGrant', () => {
 // ── post_submitSurvey ─────────────────────────────────────────────────────────
 
 describe('cf-vtx5 · post_submitSurvey', () => {
+  beforeEach(() => {
+    // Default: authenticated member + a Survey row owned by them at order-1.
+    __setMember({ _id: 'member-77', loginEmail: 'm@e.com' });
+    __seed('Survey', [{ _id: 'srv-1', memberId: 'member-77', orderId: 'order-1' }]);
+  });
+
   it('shims cfw shape {score, comments, orderId} → webMethod {orderId, npsScore, comment}', async () => {
     vi.mocked(submitSurveyResponse).mockResolvedValue({ success: true });
     await post_submitSurvey(flatReq({ score: 8, orderId: 'order-1', comments: 'Liked it' }));
@@ -282,21 +305,51 @@ describe('cf-vtx5 · post_submitSurvey', () => {
     });
   });
 
-  it('forwards the webMethod envelope verbatim as 200', async () => {
+  it('forwards the webMethod envelope verbatim as 200 on success', async () => {
     vi.mocked(submitSurveyResponse).mockResolvedValue({ success: true });
     const res = await post_submitSurvey(flatReq({ score: 10, orderId: 'order-1' }));
     expect(res.status).toBe(200);
     expect(JSON.parse(res.body)).toEqual({ success: true });
   });
 
-  it('forwards soft-failure {success:false, error} as 200 (matches dispatcher contract)', async () => {
-    vi.mocked(submitSurveyResponse).mockResolvedValue({ success: false, error: 'Authentication required' });
+  it('cf-yvs4: maps webMethod soft-failure {success:false} to a matching 4xx', async () => {
+    vi.mocked(submitSurveyResponse).mockResolvedValue({ success: false, error: 'Survey already completed' });
     const res = await post_submitSurvey(flatReq({ score: 5, orderId: 'order-1' }));
-    expect(res.status).toBe(200);
-    expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Authentication required' });
+    expect(res.status).toBe(400);
+    expect(JSON.parse(res.body)).toEqual({ success: false, error: 'Survey already completed' });
   });
 
-  it('returns 400 when score is not an integer 0..10', async () => {
+  it('cf-yvs4 IDOR: returns 404 when the orderId does not belong to the caller', async () => {
+    // Pre-check pulls a Survey row scoped to the caller's memberId — a
+    // different member's orderId returns no rows → 404.
+    __setMember({ _id: 'attacker-99', loginEmail: 'a@e.com' });
+    const res = await post_submitSurvey(flatReq({ score: 8, orderId: 'order-1' }));
+    expect(res.status).toBe(404);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: expect.stringMatching(/no survey/i) });
+    expect(vi.mocked(submitSurveyResponse)).not.toHaveBeenCalled();
+  });
+
+  it('cf-yvs4: returns 401 when no SiteMember context', async () => {
+    __setMember(null);
+    const res = await post_submitSurvey(flatReq({ score: 5, orderId: 'order-1' }));
+    expect(res.status).toBe(401);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'Authentication required' });
+    expect(vi.mocked(submitSurveyResponse)).not.toHaveBeenCalled();
+  });
+
+  it('cf-yvs4: rejects non-number score type (string "5", boolean true, null)', async () => {
+    // Number(…) coerced these to valid integers in the old code; tighten to
+    // typeof === 'number' so JSON-typed inputs are required.
+    const res1 = await post_submitSurvey(flatReq({ score: '5', orderId: 'order-1' }));
+    expect(res1.status).toBe(400);
+    const res2 = await post_submitSurvey(flatReq({ score: true, orderId: 'order-1' }));
+    expect(res2.status).toBe(400);
+    const res3 = await post_submitSurvey(flatReq({ score: null, orderId: 'order-1' }));
+    expect(res3.status).toBe(400);
+    expect(vi.mocked(submitSurveyResponse)).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when score is out of range', async () => {
     const res1 = await post_submitSurvey(flatReq({ score: 11, orderId: 'order-1' }));
     expect(res1.status).toBe(400);
     const res2 = await post_submitSurvey(flatReq({ score: 5.5, orderId: 'order-1' }));

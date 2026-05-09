@@ -2962,6 +2962,16 @@ export async function post_wishlistService(request) {
   try {
     const fn = wishlistServiceModule[method];
     const result = await fn(...args);
+    // cf-yvs4: align wishlist dispatcher to the lying-status fix applied
+    // to _veloDispatch + post_recordSpinGrant + post_submitSurvey. cfw's
+    // velo-client.ts throws VeloRpcError on non-2xx and exposes res.body
+    // — the friendly error string is still readable. Returning 200 +
+    // {success:false} let cfw's `if (!result?.success)` branch silently
+    // succeed (cf-89xn pattern repeat).
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
     return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -3349,13 +3359,32 @@ function _veloDispatchErrorId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// cf-yvs4: map a webMethod soft-failure envelope to the right HTTP status.
+// cfw's velo-client.ts throws VeloRpcError on non-2xx and surfaces res.body
+// in the error — callers can still read the message. Returning 200 for
+// `{success:false}` is the cf-tvbi lying-status pattern cf-89xn already
+// removed from get_deliveryZone; same applies here.
+function _veloDispatchSoftFailStatus(errStr) {
+  const lowered = String(errStr || '').toLowerCase();
+  if (lowered.includes('authentication') || lowered.includes('unauthorized') || lowered.includes('not authenticated')) {
+    return 401;
+  }
+  if (lowered.includes('rate limit') || lowered.includes('rate_limit') || lowered.includes('too many requests')) {
+    return 429;
+  }
+  if (lowered.includes('not found') || lowered.includes('no survey found')) {
+    return 404;
+  }
+  return 400;
+}
+
 async function _veloDispatch(request, registry, scope) {
   const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   const methodName = (request.path && request.path[0]) || '';
 
   if (!methodName || typeof registry[methodName] !== 'function') {
     return notFound({
-      body: JSON.stringify({ error: 'unknown_method', method: methodName }),
+      body: JSON.stringify({ success: false, error: 'unknown_method', method: methodName }),
       headers: JSON_HEADERS,
     });
   }
@@ -3365,19 +3394,27 @@ async function _veloDispatch(request, registry, scope) {
     body = await request.body.json();
   } catch (err) {
     return badRequest({
-      body: JSON.stringify({ error: 'invalid_json', detail: err && err.message }),
+      body: JSON.stringify({ success: false, error: 'invalid_json', detail: err && err.message }),
       headers: JSON_HEADERS,
     });
   }
   if (!body || !Array.isArray(body.args)) {
     return badRequest({
-      body: JSON.stringify({ error: 'args_must_be_array' }),
+      body: JSON.stringify({ success: false, error: 'args_must_be_array' }),
       headers: JSON_HEADERS,
     });
   }
 
   try {
     const result = await registry[methodName](...body.args);
+    // cf-yvs4: if the webMethod resolves with `{success:false}`, surface the
+    // matching HTTP status rather than 200 (lying-status pattern). cfw's
+    // velo-client throws VeloRpcError on non-2xx and exposes res.body so
+    // callers can still read the error string.
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
     return ok({ body: JSON.stringify(result == null ? null : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
@@ -3475,28 +3512,35 @@ export function options_styleQuiz(request) { return response(corsPreflight(reque
  *   500 with errorId on failure.
  */
 export async function post_recordSpinGrant(request) {
-  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   try {
     let member;
     try {
       member = await currentMember.getMember();
     } catch (err) {
       // getMember() throws when no SiteMember context is available
-      // (cfw forgot to forward the Bearer token). Mirror the
-      // webMethod soft-error envelope so cfw branches on body.success.
+      // (cfw forgot to forward the Bearer token). cf-yvs4: return 401 not
+      // 200 so cfw's velo-client.ts surfaces the failure as a thrown
+      // VeloRpcError rather than the silent lying-status it gets today.
       console.warn('[recordSpinGrant] getMember failed — treating as unauthenticated:', err && err.message);
-      return ok({
+      return response({
+        status: 401,
         body: JSON.stringify({ success: false, error: 'Authentication required' }),
         headers: JSON_HEADERS,
       });
     }
     if (!member || !member._id) {
-      return ok({
+      return response({
+        status: 401,
         body: JSON.stringify({ success: false, error: 'Authentication required' }),
         headers: JSON_HEADERS,
       });
     }
     const result = await grantSpin(member._id);
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
@@ -3534,7 +3578,7 @@ export function options_recordSpinGrant(request) { return response(corsPreflight
  *   500 with errorId on unexpected throw.
  */
 export async function post_submitSurvey(request) {
-  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   let body;
   try {
     body = await request.body.json();
@@ -3545,16 +3589,20 @@ export async function post_submitSurvey(request) {
     });
   }
 
-  const score = Number(body && body.score);
-  const orderId = typeof (body && body.orderId) === 'string' ? body.orderId.trim() : '';
-  const comments = typeof (body && body.comments) === 'string' ? body.comments : null;
-
-  if (!Number.isInteger(score) || score < 0 || score > 10) {
+  // cf-yvs4: tighten score type check. `Number(…)` accepts strings ("5"),
+  // booleans (true → 1), null (→ 0), trailing-junk strings — all of which
+  // we don't want from a JSON-typed API. Require a real number coming
+  // through the wire.
+  const rawScore = body && body.score;
+  if (typeof rawScore !== 'number' || !Number.isInteger(rawScore) || rawScore < 0 || rawScore > 10) {
     return badRequest({
       body: JSON.stringify({ success: false, error: 'score must be an integer 0..10' }),
       headers: JSON_HEADERS,
     });
   }
+  const orderId = typeof (body && body.orderId) === 'string' ? body.orderId.trim() : '';
+  const comments = typeof (body && body.comments) === 'string' ? body.comments : null;
+
   if (!orderId) {
     return badRequest({
       body: JSON.stringify({ success: false, error: 'orderId is required' }),
@@ -3562,10 +3610,62 @@ export async function post_submitSurvey(request) {
     });
   }
 
+  // cf-yvs4 IDOR defense-in-depth: do an explicit memberId-scoped Survey
+  // lookup before delegating. submitSurveyResponse already does this
+  // internally (queries `Survey` collection with eq('memberId', memberId)
+  // .eq('orderId', orderId)), so the wrapper-layer check is redundant but
+  // explicit — catches any future regression where the webMethod's IDOR
+  // check is removed or weakened.
+  let member;
   try {
-    // submitSurveyResponse expects { orderId, npsScore, comment } and resolves
-    // the member + Survey row + double-submission guard internally.
-    const result = await submitSurveyResponse({ orderId, npsScore: score, comment: comments });
+    member = await currentMember.getMember();
+  } catch (err) {
+    console.warn('[submitSurvey] getMember failed — treating as unauthenticated:', err && err.message);
+    return response({
+      status: 401,
+      body: JSON.stringify({ success: false, error: 'Authentication required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  if (!member || !member._id) {
+    return response({
+      status: 401,
+      body: JSON.stringify({ success: false, error: 'Authentication required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  try {
+    const lookup = await wixData.query('Survey')
+      .eq('memberId', member._id)
+      .eq('orderId', orderId)
+      .limit(1)
+      .find({ suppressAuth: true });
+    if (lookup.items.length === 0) {
+      return response({
+        status: 404,
+        body: JSON.stringify({ success: false, error: 'No survey found for this order' }),
+        headers: JSON_HEADERS,
+      });
+    }
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (post_submitSurvey) errorId=${errorId} ownership lookup failed:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    // submitSurveyResponse expects { orderId, npsScore, comment } and
+    // re-resolves the member + Survey row + double-submission guard. Our
+    // ownership pre-check above just ensures the orderId belongs to the
+    // caller before we delegate.
+    const result = await submitSurveyResponse({ orderId, npsScore: rawScore, comment: comments });
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
