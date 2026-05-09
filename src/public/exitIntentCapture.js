@@ -206,18 +206,16 @@ export async function submitExitCapture(email) {
   }
 
   try {
-    const { subscribeToNewsletter, captureExitIntentEmail } = await import('backend/newsletterService.web');
+    const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+    // cf-3l0d Option B: subscribeToNewsletter now auto-queues the welcome
+    // series internally (resolves a CRM contactId, calls triggerWelcomeSequence).
+    // The previously redundant captureExitIntentEmail call was removed —
+    // dedup in triggerWelcomeSequence already handled the duplicate, and the
+    // captureExitIntentEmail path was broken (F1: empty contactId).
     const result = await subscribeToNewsletter(email, { source: 'exit_intent_popup' });
 
     if (!result.success) {
       return result;
-    }
-
-    // Queue welcome series into EmailQueue — failure here should not block capture
-    try {
-      await captureExitIntentEmail(email);
-    } catch (queueErr) {
-      console.warn('EmailQueue welcome series failed (non-blocking):', queueErr);
     }
 
     markExitIntentShown();

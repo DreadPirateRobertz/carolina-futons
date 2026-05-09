@@ -379,6 +379,16 @@ export const subscribeToNewsletter = webMethod(
       // but syncToESP webMethod requires SiteMember)
       _syncToESPInternal(cleaned, source).catch(() => {});
 
+      // cf-3l0d Option B (post-cf-xdji): auto-trigger the welcome series so
+      // every caller of subscribeToNewsletter gets the welcome flow. The
+      // trigger resolves a CRM contact via cf-xdji's resolveContactId and
+      // delegates to triggerWelcomeSequence (whose dedup guard prevents
+      // double-queue on repeat subscribes). Non-blocking — a welcome-trigger
+      // failure does not fail the subscribe call.
+      _triggerWelcomeFlowInternal(cleaned, source).catch((err) => {
+        console.warn('[newsletterService] welcome auto-trigger failed (non-blocking):', err?.message ?? err);
+      });
+
       logAuditEvent('NewsletterSubscribers', 'subscribe', cleaned, { source });
       return { success: true, discountCode: DISCOUNT_CODE };
     } catch (err) {
@@ -394,6 +404,38 @@ const WELCOME_STEPS = [
   { step: 2, templateId: 'welcome_series_2', delayHours: 72 },
   { step: 3, templateId: 'welcome_series_3', delayHours: 168 },
 ];
+
+/**
+ * Internal welcome-flow trigger called by subscribeToNewsletter (cf-3l0d).
+ * Resolves a Wix CRM contactId for the email, then delegates to the
+ * existing triggerWelcomeSequence in emailAutomation. Wrapped in a
+ * try/catch + dynamic imports so a missing helper file (during the brief
+ * window between this branch landing and cf-xdji shipping resolveContactId)
+ * does not break the subscribe flow.
+ *
+ * @param {string} email - Already-validated lowercase email
+ * @param {string} [source=''] - Capture source label for logging
+ * @returns {Promise<void>}
+ */
+async function _triggerWelcomeFlowInternal(email, source = '') {
+  try {
+    const { resolveContactId } = await import('backend/contacts/contactResolver.web');
+    const contactId = await resolveContactId(email, '');
+    if (!contactId) {
+      console.warn('[newsletterService] welcome auto-trigger skipped — resolveContactId returned empty', { email, source });
+      return;
+    }
+    const { triggerWelcomeSequence } = await import('backend/emailAutomation.web');
+    // triggerWelcomeSequence has its own dedup (queries EmailQueue for an
+    // existing welcome step 1 row keyed on recipientEmail) so repeat
+    // subscribe calls don't double-queue.
+    await triggerWelcomeSequence(contactId, email, '');
+  } catch (err) {
+    // Re-throw so the caller's .catch logs with context. We deliberately
+    // do not swallow here — silent-failure-hunter would (rightly) flag it.
+    throw err;
+  }
+}
 
 /**
  * Capture an exit-intent email and queue the welcome series into EmailQueue.
