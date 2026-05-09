@@ -7,8 +7,10 @@ src/backend/*.web.js, classify into:
   HTTP-EXPOSED  — http-functions.js imports OR calls NAME (cfw can reach it)
   EVENT-WIRED   — events.js or *.events.js references NAME
   FRONTEND      — src/public, src/pages, or any non-.web.js Velo source calls NAME
-  INTERNAL      — only called by another src/backend/*.web.js module
-  DEAD          — no caller anywhere outside the defining file
+  INTERNAL      — called by another src/backend/*.web.js module OR by another
+                  exported function in the SAME .web.js file (e.g. generatePinContent
+                  is called by syncCatalogBatch in the same pinterestCatalogSync.web.js)
+  DEAD          — no caller anywhere
 
 Plus secondary flag SUSPICIOUS:
   - Permissions.Anyone, no HTTP wrapper / cfw caller
@@ -22,14 +24,17 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path("/tmp/cfutons-velo-dead")
+# ROOT auto-detects from script location: scripts/cf-dead-routes/ → repo root.
+# Override via CFUTONS_ROOT env var if running from a non-standard checkout.
+ROOT = Path(__import__("os").environ.get("CFUTONS_ROOT") or Path(__file__).resolve().parents[2])
 SRC = ROOT / "src"
 BACKEND = SRC / "backend"
 HTTP_FILE = BACKEND / "http-functions.js"
 EVENTS_FILE = BACKEND / "events.js"
 
-# cfw repo for cross-rig caller check (gap-finder per cf-hpwy)
-CFW_SRC = Path("/Users/hal/gt/carolina-futons-web/src")
+# cfw repo for cross-rig caller check (gap-finder per cf-hpwy).
+# Override via CFW_SRC env var if cfw lives elsewhere.
+CFW_SRC = Path(__import__("os").environ.get("CFW_SRC") or "/Users/hal/gt/carolina-futons-web/src")
 
 # `export const NAME = webMethod(Permissions.X, ...`
 WM_RE = re.compile(
@@ -140,11 +145,24 @@ def classify_method(
     in_public = False
     in_pages = False
     in_pdocs_backend = False  # other backend (not defining file, not http-functions, not events)
+    in_same_file = False  # NAME( call inside the defining file (excluding the export decl)
     sample_callers: list[str] = []
 
     for fp in files:
         rel = str(fp.relative_to(ROOT))
         if rel == defining_file:
+            # v2 fix: same-file detection. Scan the defining file for NAME(
+            # call sites — `pat_call` requires `\bNAME\s*\(` which excludes the
+            # export declaration `export const NAME = webMethod(` (no `(` directly
+            # after NAME) and excludes JSDoc / log-string mentions.
+            try:
+                self_text = fp.read_text(errors="ignore")
+            except OSError:
+                continue
+            if pat_call.search(self_text):
+                in_same_file = True
+                if len(sample_callers) < 5:
+                    sample_callers.append(f"{rel} (same-file)")
             continue
         if rel == "src/backend/http-functions.js":
             continue  # handled
@@ -175,7 +193,7 @@ def classify_method(
         buckets.append("EVENT-WIRED")
     if in_public or in_pages:
         buckets.append("FRONTEND")
-    if in_pdocs_backend:
+    if in_pdocs_backend or in_same_file:
         buckets.append("INTERNAL")
     if not buckets:
         buckets = ["DEAD"]
@@ -219,6 +237,7 @@ def classify_method(
         "in_public": in_public,
         "in_pages": in_pages,
         "in_other_backend": in_pdocs_backend,
+        "in_same_file": in_same_file,
         "sample_callers": sample_callers,
         "cfw_high_refs": cfw_high[:6],
         "cfw_low_refs": cfw_low[:6],
