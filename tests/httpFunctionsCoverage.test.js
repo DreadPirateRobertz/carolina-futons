@@ -1004,9 +1004,10 @@ describe('post_contactSubmissions', () => {
     expect(result.status).toBe(200);
     expect(JSON.parse(result.body)).toEqual({ success: true });
     expect(result.headers['Access-Control-Allow-Origin']).toBe(goodOrigin);
+    // cf-hafn: customer-side auto-reply also lands in the log; scope to owner.
     const log = crmEmailLog();
-    expect(log).toHaveLength(1);
-    expect(log[0].contactId).toBe('owner-1');
+    const ownerLog = log.filter((e) => e.contactId === 'owner-1');
+    expect(ownerLog).toHaveLength(1);
   });
 
   it('prepends [Size: <sizeOfInterest>] to the subject so the store sees it', async () => {
@@ -1022,9 +1023,11 @@ describe('post_contactSubmissions', () => {
       }),
     );
     expect(result.status).toBe(200);
+    // cf-hafn: customer-side auto-reply also lands in the log; scope to owner.
     const log = crmEmailLog();
-    expect(log).toHaveLength(1);
-    expect(log[0].options.variables.subject).toBe('[Size: queen] Frame question');
+    const ownerLog = log.filter((e) => e.contactId === 'owner-1');
+    expect(ownerLog).toHaveLength(1);
+    expect(ownerLog[0].options.variables.subject).toBe('[Size: queen] Frame question');
   });
 
   it('omits the size prefix when sizeOfInterest is absent', async () => {

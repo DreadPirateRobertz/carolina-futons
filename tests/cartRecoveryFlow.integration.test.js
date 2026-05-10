@@ -600,8 +600,10 @@ describe('Email Service Integration', () => {
 
     expect(result.success).toBe(true);
     const emailLog = __getEmailLog();
-    expect(emailLog).toHaveLength(1);
-    expect(emailLog[0].templateId).toBe('contact_form_submission');
+    // cf-hafn: sendEmail also fires a customer-side auto-reply now; scope
+    // this assertion to the owner notification specifically.
+    const ownerLog = emailLog.find((e) => e.templateId === 'contact_form_submission');
+    expect(ownerLog).toBeDefined();
   });
 });
 
