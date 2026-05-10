@@ -47,6 +47,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -62,7 +63,10 @@ const PROMO_RATE_LIMIT_COLLECTION = 'PromoRateLimits';
 /**
  * Check and increment the per-key rate limit for promo code attempts.
  * Returns { allowed: true } or { allowed: false, reason: 'rate_limited' }.
- * Fails open on DB error (prefer availability over false rejections for promo codes).
+ *
+ * cf-c0np (cf-3ldu F4): migrated from local re-implementation to the
+ * canonical wixData-backed helper. Closes the cf-sec1 plaintext-key gap
+ * and aligns with cf-8p52 fail-closed-on-DB-error policy.
  *
  * @param {string} key - Rate limit bucket key (IP or injectable token for tests)
  * @param {Object} [opts]
@@ -70,49 +74,11 @@ const PROMO_RATE_LIMIT_COLLECTION = 'PromoRateLimits';
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function _checkPromoRateLimit(key, opts = {}) {
-  const now = (opts && opts.now != null) ? opts.now : Date.now();
-  try {
-    const cleanKey = sanitize(String(key || ''), 100);
-
-    const existing = await wixData.query(PROMO_RATE_LIMIT_COLLECTION)
-      .eq('key', cleanKey)
-      .limit(1)
-      .find();
-
-    if (existing.items.length === 0) {
-      await wixData.insert(PROMO_RATE_LIMIT_COLLECTION, {
-        key: cleanKey,
-        count: 1,
-        windowStart: new Date(now),
-      });
-      return { allowed: true };
-    }
-
-    const record = existing.items[0];
-    const windowAge = now - new Date(record.windowStart).getTime();
-
-    if (windowAge > PROMO_RATE_LIMIT_WINDOW_MS) {
-      await wixData.update(PROMO_RATE_LIMIT_COLLECTION, {
-        ...record,
-        count: 1,
-        windowStart: new Date(now),
-      });
-      return { allowed: true };
-    }
-
-    if (record.count >= PROMO_RATE_LIMIT_MAX) {
-      return { allowed: false, reason: 'rate_limited' };
-    }
-
-    await wixData.update(PROMO_RATE_LIMIT_COLLECTION, {
-      ...record,
-      count: record.count + 1,
-    });
-    return { allowed: true };
-  } catch (err) {
-    console.warn('[promotionsEngine] Promo rate limit check failed, allowing request:', err?.message ?? err);
-    return { allowed: true }; // Fail open — don't block on DB errors
-  }
+  return checkRateLimit(PROMO_RATE_LIMIT_COLLECTION, String(key || ''), {
+    now: opts && opts.now,
+    max: PROMO_RATE_LIMIT_MAX,
+    windowMs: PROMO_RATE_LIMIT_WINDOW_MS,
+  });
 }
 
 // ── Public API ─────────────────────────────────────────────────────
