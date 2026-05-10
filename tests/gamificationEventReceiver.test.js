@@ -2458,3 +2458,60 @@ describe('cf-bvn: lastActivityAt is stamped on every MemberPoints write path', (
     expect(Math.abs(updated[0].lastActivityAt.getTime() - Date.now())).toBeLessThan(5000);
   });
 });
+
+// ── cf-m3tj: synthetic mobile challenge events ─────────────────────────────
+//
+// completeMobileChallenge dispatches one of three synthetic event names per
+// the cf-m3tj fix. Verifies receiveGamificationEvent resolves them to the
+// right point values AND treats them as FIXED_AWARD (no streak multiplier),
+// matching the spec'd flat 75/50/100 awards.
+
+describe('cf-m3tj — synthetic mobile challenge events', () => {
+  beforeEach(() => {
+    __reset();
+    vi.clearAllMocks();
+  });
+
+  it('gamification_mobile_ar_discovery awards 75 pts to a new member', async () => {
+    const result = await receiveGamificationEvent('gamification_mobile_ar_discovery', { productId: 'prod-1' }, 'mem-mobile-1');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(75);
+    expect(result.pointsEarned).toBe(75);
+  });
+
+  it('gamification_mobile_quiz_completion awards 50 pts to a new member', async () => {
+    const result = await receiveGamificationEvent('gamification_mobile_quiz_completion', { score: 9, total: 10 }, 'mem-mobile-2');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(50);
+    expect(result.pointsEarned).toBe(50);
+  });
+
+  it('gamification_mobile_social_share awards 100 pts to a new member', async () => {
+    const result = await receiveGamificationEvent('gamification_mobile_social_share', { platform: 'instagram' }, 'mem-mobile-3');
+    expect(result.success).toBe(true);
+    expect(result.newTotal).toBe(100);
+    expect(result.pointsEarned).toBe(100);
+  });
+
+  it('mobile awards are FIXED — not multiplied by an active 3x streak', async () => {
+    // Member with 7-day streak (3x multiplier). For a non-fixed event like
+    // add_to_cart this would be 5 * 3 = 15. For a mobile event it must stay
+    // flat at the spec'd 75 — completeMobileChallenge enforces idempotency
+    // upstream, so the streak multiplier would distort the spec.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-22T14:00:00Z'));
+    __seed('MemberPoints', [{
+      _id: 'mp-1', memberId: 'mem-streak', totalPoints: 0, tier: 'Trail Blazer',
+      currentStreakDays: 7, streakStartDate: '2026-03-15',
+      lastActivityDate: '2026-03-21',
+      streakMultiplier: 3,
+    }]);
+    const result = await receiveGamificationEvent(
+      'gamification_mobile_ar_discovery',
+      { productId: 'prod-1' },
+      'mem-streak',
+    );
+    expect(result.pointsEarned).toBe(75); // not 225
+    vi.useRealTimers();
+  });
+});

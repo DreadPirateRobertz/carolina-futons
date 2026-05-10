@@ -86,7 +86,22 @@ const FIXED_AWARD_EVENTS = new Set([
   'gamification_birthday_bonus',
   'gamification_anniversary_bonus',
   'video_review_approved', // 500 pts, not streak-multiplied — one-time exclusive award
+  // cf-m3tj: mobile challenge awards are flat per spec (75/50/100). Idempotency
+  // is enforced upstream in completeMobileChallenge via MobileChallengeCompletions,
+  // so the synthetic event only fires on a fresh completion.
+  'gamification_mobile_ar_discovery',
+  'gamification_mobile_quiz_completion',
+  'gamification_mobile_social_share',
 ]);
+
+// cf-m3tj: mobile challenge → award table. Mirrors POINTS_BY_TYPE in
+// mobileChallengeService.web.js — kept here so resolvePoints can resolve the
+// synthetic event without importing the mobile module (would create a cycle).
+const MOBILE_CHALLENGE_POINTS = {
+  gamification_mobile_ar_discovery: 75,
+  gamification_mobile_quiz_completion: 50,
+  gamification_mobile_social_share: 100,
+};
 
 /**
  * Receive a gamification event and award points to the member.
@@ -387,6 +402,13 @@ function resolvePoints(eventName, payload) {
       return POINT_VALUES.WISHLIST_ADD;
     case 'video_review_approved':
       return POINT_VALUES.VIDEO_REVIEW;
+    // cf-m3tj: synthetic mobile challenge events. Idempotency lives in
+    // completeMobileChallenge (per-day-per-productId for AR / per-day for
+    // quiz+social), so the synthetic only fires on a fresh completion.
+    case 'gamification_mobile_ar_discovery':
+    case 'gamification_mobile_quiz_completion':
+    case 'gamification_mobile_social_share':
+      return MOBILE_CHALLENGE_POINTS[eventName];
     default:
       return null;
   }
