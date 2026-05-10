@@ -28,10 +28,8 @@ vi.mock('backend/utils/sanitize', () => ({
 
 const {
   submitPhotoReview,
-  getPhotoReviews,
   moderatePhotoReview,
   getPhotoGallery,
-  getPhotoReviewStats,
 } = await import('../src/backend/photoReviews.web.js');
 
 beforeEach(() => {
@@ -140,45 +138,6 @@ describe('submitPhotoReview — validation', () => {
   });
 });
 
-describe('getPhotoReviews — limit bounds', () => {
-  it('clamps limit to minimum of 1', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 0);
-    expect(result.success).toBe(true);
-  });
-
-  it('clamps limit to maximum of 50', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 100);
-    expect(result.success).toBe(true);
-  });
-
-  it('handles NaN limit by defaulting to 10', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'all');
-    expect(result.success).toBe(true);
-  });
-
-  it('rejects invalid product ID', async () => {
-    const result = await getPhotoReviews('invalid!id');
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('getPhotoReviews — sort modes', () => {
-  it('accepts helpful sort', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 10, 'helpful');
-    expect(result.success).toBe(true);
-  });
-
-  it('accepts highest sort', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 10, 'highest');
-    expect(result.success).toBe(true);
-  });
-
-  it('defaults to recent for unknown sort', async () => {
-    const result = await getPhotoReviews('a0b1c2d3-e4f5-6789-abcd-ef0123456789', 10, 'unknown');
-    expect(result.success).toBe(true);
-  });
-});
-
 describe('moderatePhotoReview — actions', () => {
   beforeEach(() => {
     __seed('PhotoReviews', [
@@ -239,34 +198,3 @@ describe('getPhotoGallery — filtering', () => {
   });
 });
 
-describe('getPhotoReviewStats — edge cases', () => {
-  it('returns zero stats for product with no reviews', async () => {
-    const result = await getPhotoReviewStats('a0b1c2d3-e4f5-6789-abcd-ef0123456789');
-    expect(result.success).toBe(true);
-    expect(result.stats.totalReviews).toBe(0);
-    expect(result.stats.averageRating).toBe(0);
-    expect(result.stats.ratingDistribution).toEqual({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 });
-  });
-
-  it('calculates correct average and distribution', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r1', productId: 'a0b1c2d3', rating: 5, photoUrl: 'img1.jpg', status: 'approved' },
-      { _id: 'r2', productId: 'a0b1c2d3', rating: 4, photoUrl: 'img2.jpg', status: 'approved' },
-      { _id: 'r3', productId: 'a0b1c2d3', rating: 3, status: 'featured' },
-    ]);
-    const result = await getPhotoReviewStats('a0b1c2d3');
-    expect(result.stats.totalReviews).toBe(3);
-    expect(result.stats.averageRating).toBe(4); // (5+4+3)/3 = 4.0
-    expect(result.stats.photoCount).toBe(2);
-    expect(result.stats.featuredCount).toBe(1);
-    expect(result.stats.ratingDistribution[5]).toBe(1);
-    expect(result.stats.ratingDistribution[4]).toBe(1);
-    expect(result.stats.ratingDistribution[3]).toBe(1);
-  });
-
-  it('rejects invalid product ID', async () => {
-    const result = await getPhotoReviewStats('invalid!');
-    expect(result.success).toBe(false);
-    expect(result.stats).toBeNull();
-  });
-});

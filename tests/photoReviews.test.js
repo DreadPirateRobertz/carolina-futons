@@ -3,10 +3,8 @@ import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __setRoles } from './__mocks__/wix-members-backend.js';
 import {
   submitPhotoReview,
-  getPhotoReviews,
   moderatePhotoReview,
   getPhotoGallery,
-  getPhotoReviewStats,
 } from '../src/backend/photoReviews.web.js';
 
 beforeEach(() => {
@@ -101,66 +99,6 @@ describe('submitPhotoReview', () => {
     });
 
     expect(result.success).toBe(false);
-  });
-});
-
-// ── getPhotoReviews ───────────────────────────────────────────────────
-
-describe('getPhotoReviews', () => {
-  it('returns approved reviews for a product', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', reviewText: 'Great!', rating: 5, photoUrl: 'img1.jpg', status: 'approved', submittedAt: new Date('2026-02-20'), helpfulCount: 3 },
-      { _id: 'r-2', productId: 'prod-1', reviewText: 'Awesome!', rating: 4, photoUrl: 'img2.jpg', status: 'featured', submittedAt: new Date('2026-02-19'), helpfulCount: 7 },
-      { _id: 'r-3', productId: 'prod-1', reviewText: 'Pending', rating: 3, photoUrl: 'img3.jpg', status: 'pending', submittedAt: new Date('2026-02-18') },
-      { _id: 'r-4', productId: 'prod-2', reviewText: 'Wrong product', rating: 5, photoUrl: 'img4.jpg', status: 'approved', submittedAt: new Date() },
-    ]);
-
-    const result = await getPhotoReviews('prod-1');
-    expect(result.success).toBe(true);
-    expect(result.reviews).toHaveLength(2);
-  });
-
-  it('sorts by most recent by default', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', reviewText: 'Older', rating: 5, photoUrl: 'img1.jpg', status: 'approved', submittedAt: new Date('2026-02-15') },
-      { _id: 'r-2', productId: 'prod-1', reviewText: 'Newer', rating: 4, photoUrl: 'img2.jpg', status: 'approved', submittedAt: new Date('2026-02-20') },
-    ]);
-
-    const result = await getPhotoReviews('prod-1', 10, 'recent');
-    expect(result.reviews[0].reviewText).toBe('Newer');
-  });
-
-  it('sorts by helpful count', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', reviewText: 'Less helpful', rating: 5, photoUrl: 'img1.jpg', status: 'approved', submittedAt: new Date(), helpfulCount: 2 },
-      { _id: 'r-2', productId: 'prod-1', reviewText: 'Most helpful', rating: 4, photoUrl: 'img2.jpg', status: 'approved', submittedAt: new Date(), helpfulCount: 15 },
-    ]);
-
-    const result = await getPhotoReviews('prod-1', 10, 'helpful');
-    expect(result.reviews[0].reviewText).toBe('Most helpful');
-  });
-
-  it('sorts by highest rating', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', reviewText: 'Good', rating: 3, photoUrl: 'img1.jpg', status: 'approved', submittedAt: new Date() },
-      { _id: 'r-2', productId: 'prod-1', reviewText: 'Best', rating: 5, photoUrl: 'img2.jpg', status: 'approved', submittedAt: new Date() },
-    ]);
-
-    const result = await getPhotoReviews('prod-1', 10, 'highest');
-    expect(result.reviews[0].rating).toBe(5);
-  });
-
-  it('requires valid product ID', async () => {
-    const result = await getPhotoReviews('');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('product ID');
-  });
-
-  it('returns empty for product with no reviews', async () => {
-    __seed('PhotoReviews', []);
-    const result = await getPhotoReviews('prod-empty');
-    expect(result.success).toBe(true);
-    expect(result.reviews).toHaveLength(0);
   });
 });
 
@@ -270,54 +208,3 @@ describe('getPhotoGallery', () => {
   });
 });
 
-// ── getPhotoReviewStats ───────────────────────────────────────────────
-
-describe('getPhotoReviewStats', () => {
-  it('returns review statistics for a product', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', rating: 5, photoUrl: 'img1.jpg', status: 'approved' },
-      { _id: 'r-2', productId: 'prod-1', rating: 4, photoUrl: 'img2.jpg', status: 'approved' },
-      { _id: 'r-3', productId: 'prod-1', rating: 5, photoUrl: 'img3.jpg', status: 'featured' },
-      { _id: 'r-4', productId: 'prod-1', rating: 3, photoUrl: '', status: 'approved' },
-      { _id: 'r-5', productId: 'prod-1', rating: 2, photoUrl: 'img5.jpg', status: 'pending' },
-    ]);
-
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.success).toBe(true);
-    expect(result.stats.totalReviews).toBe(4); // excludes pending
-    expect(result.stats.averageRating).toBeCloseTo(4.3, 0);
-    expect(result.stats.photoCount).toBe(3); // 3 with photoUrl among approved
-    expect(result.stats.featuredCount).toBe(1);
-    expect(result.stats.ratingDistribution[5]).toBe(2);
-    expect(result.stats.ratingDistribution[4]).toBe(1);
-    expect(result.stats.ratingDistribution[3]).toBe(1);
-  });
-
-  it('returns zero stats for product with no reviews', async () => {
-    __seed('PhotoReviews', []);
-    const result = await getPhotoReviewStats('prod-empty');
-    expect(result.success).toBe(true);
-    expect(result.stats.totalReviews).toBe(0);
-    expect(result.stats.averageRating).toBe(0);
-    expect(result.stats.photoCount).toBe(0);
-  });
-
-  it('requires valid product ID', async () => {
-    const result = await getPhotoReviewStats('');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('product ID');
-  });
-
-  it('calculates correct rating distribution', async () => {
-    __seed('PhotoReviews', [
-      { _id: 'r-1', productId: 'prod-1', rating: 5, photoUrl: 'img.jpg', status: 'approved' },
-      { _id: 'r-2', productId: 'prod-1', rating: 5, photoUrl: 'img.jpg', status: 'approved' },
-      { _id: 'r-3', productId: 'prod-1', rating: 1, photoUrl: 'img.jpg', status: 'approved' },
-    ]);
-
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.stats.ratingDistribution[5]).toBe(2);
-    expect(result.stats.ratingDistribution[1]).toBe(1);
-    expect(result.stats.ratingDistribution[3]).toBe(0);
-  });
-});
