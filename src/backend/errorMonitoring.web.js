@@ -100,8 +100,17 @@ export const logError = webMethod(
 
       const rateLimitKey = cleanUserId || cleanPage || 'anon';
       const rateLimitMax = rateLimitKey === 'anon' ? 200 : 30;
-      const { allowed } = await checkRateLimit('ErrorLogRateLimit', rateLimitKey, { max: rateLimitMax, windowMs: 60_000 });
+      const { allowed, reason } = await checkRateLimit('ErrorLogRateLimit', rateLimitKey, { max: rateLimitMax, windowMs: 60_000 });
       if (!allowed) {
+        // cf-sazb: distinguish 'rate_limited' (intentional throttle, caller can drop)
+        // from 'db_error' (rate-limit collection sick — we did NOT log the original
+        // error and the caller deserves to know). cf-3ldu.F2 introduced the
+        // db_error path; reporting it as `success: true, throttled: true` made
+        // a real failure look like a deliberate throttle.
+        if (reason === 'db_error') {
+          console.error(`[errorMonitoring] Rate-limit DB error; original error NOT logged for key=${rateLimitKey}`);
+          return { success: false, error: 'rate_limit_db_error' };
+        }
         console.warn(`[errorMonitoring] Error flood throttled for key=${rateLimitKey}`);
         return { success: true, throttled: true };
       }
