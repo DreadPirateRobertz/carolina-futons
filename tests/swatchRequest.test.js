@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from 'wix-data';
 import { __reset as __resetCrm, __seedContacts, __getEmailLog } from 'wix-crm-backend';
+import { withRateLimit } from './helpers/withRateLimit.js';
 
 import { submitSwatchRequest } from '../src/backend/swatchRequest.web.js';
 
@@ -545,5 +546,29 @@ describe('submitSwatchRequest — productSlug sanitization', () => {
     });
     const [record] = __getInserted('SwatchRequests');
     expect(record.productSlug).toBeUndefined();
+  });
+});
+
+// ── F1 rate-limit (cf-32u1.1) ──────────────────────────────────────
+describe('submitSwatchRequest — rate limit (cf-32u1.1 F1)', () => {
+  it('blocks once the email is at the persisted limit', async () => {
+    withRateLimit('SwatchRequestRateLimit', { blocked: true, max: 5, key: validContact.email });
+    const result = await submitSwatchRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again later/i);
+    // No record was written, so the spam path is closed.
+    expect(__getInserted('SwatchRequests')).toEqual([]);
+  });
+
+  it('allows submissions under the limit', async () => {
+    withRateLimit('SwatchRequestRateLimit', { blocked: false, max: 5, key: validContact.email });
+    const result = await submitSwatchRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(true);
   });
 });

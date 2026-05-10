@@ -30,16 +30,24 @@ vi.mock('wix-media-backend', () => ({
   },
 }));
 
-const mockWixData = {
-  get: vi.fn(),
-  query: vi.fn(),
-  insert: vi.fn().mockResolvedValue({}),
-};
-mockWixData.query.mockReturnValue({
-  eq: vi.fn().mockReturnThis(),
-  descending: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  find: vi.fn().mockResolvedValue({ items: [] }),
+// cf-32u1.1 F2: roomStaging now imports backend/utils/rateLimit, which
+// imports wix-data eagerly at module-load. The mockWixData factory has
+// to be available at hoist time (before vi.mock runs), so we wrap it
+// in vi.hoisted() instead of declaring it as a plain top-level const.
+const { mockWixData } = vi.hoisted(() => {
+  const m = {
+    get: vi.fn(),
+    query: vi.fn(),
+    insert: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
+  };
+  m.query.mockReturnValue({
+    eq: vi.fn().mockReturnThis(),
+    descending: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    find: vi.fn().mockResolvedValue({ items: [] }),
+  });
+  return { mockWixData: m };
 });
 vi.mock('wix-data', () => ({ default: mockWixData }));
 
@@ -159,5 +167,34 @@ describe('getRoomUploadConfig', () => {
   it('returns upload folder path', async () => {
     const config = await getRoomUploadConfig();
     expect(config.uploadFolder).toBe('/room-staging/uploads');
+  });
+});
+
+// ── F2 rate-limit (cf-32u1.1) ──────────────────────────────────────
+describe('generateStagedRoom — rate limit (cf-32u1.1 F2)', () => {
+  it('blocks when the (sessionId, productId) bucket is at the persisted limit', async () => {
+    // Override the default empty-items query: rate-limit lookup returns
+    // a record AT max so checkRateLimit refuses, the AI API never gets
+    // hit, and the cache never gets touched.
+    mockWixData.query.mockReturnValueOnce({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockResolvedValue({
+        items: [{ _id: 'rl', key: 'mock-hash', count: 5, windowStart: new Date() }],
+        totalCount: 1,
+      }),
+    });
+
+    const result = await generateStagedRoom(
+      'https://example.com/room.jpg',
+      'prod-123',
+      { sessionId: 'sess-bot' },
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again/i);
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockWixData.insert).not.toHaveBeenCalledWith('RoomStagingCache', expect.anything());
   });
 });
