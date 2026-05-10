@@ -1,5 +1,24 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-04 17:07 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-09 18:00 MT**
+
+## Session 2026-05-09 Summary
+
+| Done | Detail |
+|------|--------|
+| ✅ cf-uggz CLOSED | Cambridge Futon Frame staging config — 3-step unlock, Size (Full=$1499/Queen=$1549/King=$1599) + Finish (Cherry/Chocolate/Natural/Black Walnut/Dark Chocolate), 15 variants, priceRange $1,499–$1,599 |
+| ✅ cf-g2sa CLOSED | Wix CLI publish GH Action — already shipped (PR #22+#23 merged) |
+| ✅ PR #498 MERGED | cfw-x20: FilterFirst two-column layout + bears.jpg (blaidd, rebased onto cf-htou+cfw-uwg) |
+| ✅ Catalog: 34 products | Staging per-size variant pricing complete (33→34 with Cambridge) |
+| ✅ cf-jvut → rennala | E2E challenge/reward gamification testing dispatched |
+| ✅ cf-n7ni → blaidd | Footer.tsx tagline+copyright getSiteContent refactor dispatched |
+| ✅ cf-wp45 → miquella | brenda-admin-guide.md docs dispatched |
+
+### 🚨 Stilgar Required
+| Bead | What's Needed |
+|------|--------------|
+| **cf-c6g5 (P0)** | STAGING_SITE email infrastructure — sender + 13 triggered templates. Wix Dashboard → Settings → Triggered Emails. Melania cannot access (dashboard-only). |
+| **cf-oi01 (P1)** | UPS_CLIENT_ID/SECRET/ACCOUNT_NUMBER + Stripe test keys + PayPal sandbox for real E2E test. Pull from Wix staging Secrets Manager. |
+| **cf-3qt.8 (P1)** | DNS cutover — Vercel Pro upgrade + go/no-go signal. Pre-cutover checklist from docs commit c19a44fe. |
 
 ---
 
