@@ -1,5 +1,14 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-09 19:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:40 MT**
+
+## Session 2026-05-10 — Wave 6
+| Done | Detail |
+|------|--------|
+| ✅ PR #1213 MERGED | cf-4x7e chunk 2 — tradeProgram.web.js deleted (-2174 LOC, 13 methods, morgott) |
+| ✅ PR #1214 MERGED | cf-38bi WWEX freight feasibility brief (miquella). Rec: defer until cf-ph3g.p2 |
+| ✅ cf-38bi CLOSED | WWEX brief accepted, defer decision recorded |
+| 🔄 cf-4x7e chunk 3 | morgott GREEN-LIT — productPassport + catalogImport (11 methods) |
+| 🔄 PR #515 (cf-1eb5) | r3 ALL CI GREEN. Screenshot comparison ✅ — menu integrated, copy correct. Awaiting Stilgar visual sign-off. |
 
 ## Session 2026-05-09 — Wave 4/5
 | Done | Detail |
@@ -52,7 +61,7 @@
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
-| PR #515 (cf-1eb5) | P1 | REJECTED TWICE — blaidd iterating: fix wording/menu/font/size from v9 design spec |
+| PR #515 (cf-1eb5) | P1 | r3 ALL GREEN. Menu integrated ✅ copy correct ✅ — awaiting Stilgar visual confirm to merge |
 | PR #1201 (cf-r1cl) | P1 | Add pin-head-sha to required status checks after merge |
 | cfw-nsk FB redirect | P2 | Still reproducing? Need HAR if yes, close bead if gone |
 
