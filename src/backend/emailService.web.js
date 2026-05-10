@@ -99,6 +99,43 @@ export async function _checkEmailRateLimit(key, opts = {}) {
 const RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
 
 /**
+ * Resolve the site owner Wix contact ID with explicit error handling
+ * (cf-secrets.F1 — secrets-audit P2).
+ *
+ * Wix Secrets Manager rejects with a "Secret not found" error when
+ * `SITE_OWNER_CONTACT_ID` isn't configured. The bare `await` was
+ * propagating the rejection up to the caller's catch which logged a
+ * generic "Failed to send …" — Stilgar saw no signal that the root
+ * cause was secret misconfiguration, customers hit failure-soft with
+ * no owner notification.
+ *
+ * @param {string} [callSite] - Diagnostic label for the warn log
+ *   (e.g. 'sendEmail', 'submitSwatchRequest'). Helps triage which
+ *   surface tripped the missing-secret path.
+ * @returns {Promise<string|null>} Contact ID, or `null` if the secret
+ *   is missing/empty (with an explicit warn logged).
+ */
+async function _resolveSiteOwnerContactId(callSite = 'unknown') {
+  let value;
+  try {
+    value = await getSecret('SITE_OWNER_CONTACT_ID');
+  } catch (err) {
+    console.warn(
+      `[emailService] SITE_OWNER_CONTACT_ID missing — owner notification skipped (${callSite}):`,
+      err?.message ?? err,
+    );
+    return null;
+  }
+  if (!value) {
+    console.warn(
+      `[emailService] SITE_OWNER_CONTACT_ID resolved to empty value — owner notification skipped (${callSite})`,
+    );
+    return null;
+  }
+  return value;
+}
+
+/**
  * Send a contact form submission to the store owner via triggered email.
  * Also saves the submission to the `ContactSubmissions` CMS collection.
  *
@@ -145,7 +182,16 @@ export const sendEmail = webMethod(
 
       // Retrieve the site owner's Wix contact ID from Secrets Manager.
       // This is the recipient of all contact form notifications.
-      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+      // cf-secrets.F1 (P2): explicit fail path. If the secret is missing
+      // the bare await rejects and propagates up to the outer catch which
+      // returns the generic "Failed to send message" error — Stilgar gets
+      // no signal that the cause was secret misconfiguration, customers
+      // hit the failure-soft path with no owner notification (silent
+      // customer-service blackout).
+      const siteOwnerContactId = await _resolveSiteOwnerContactId('sendEmail');
+      if (!siteOwnerContactId) {
+        return { success: false, message: 'Could not deliver your message. Please call (828) 252-9449.' };
+      }
       await triggeredEmails.emailContact(
         resolveTemplateId('contact_form_submission'),
         siteOwnerContactId,
@@ -287,7 +333,11 @@ export const submitSwatchRequest = webMethod(
         return { success: false, message: RATE_LIMIT_MESSAGE };
       }
 
-      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+      // cf-secrets.F1 (P2): explicit fail path — see sendEmail for context.
+      const siteOwnerContactId = await _resolveSiteOwnerContactId('submitSwatchRequest');
+      if (!siteOwnerContactId) {
+        return { success: false, message: 'Could not deliver your swatch request. Please call (828) 252-9449.' };
+      }
 
       // Persist to CMS for record-keeping
       await wixData.insert('ContactSubmissions', {
@@ -436,7 +486,11 @@ export const sendOrderNotification = webMethod(
   Permissions.SiteMember,
   async (orderDetails) => {
     try {
-      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+      // cf-secrets.F1 (P2): explicit fail path — see sendEmail for context.
+      const siteOwnerContactId = await _resolveSiteOwnerContactId('sendOrderNotification');
+      if (!siteOwnerContactId) {
+        return { success: false };
+      }
       await triggeredEmails.emailContact(
         resolveTemplateId('new_order_notification'),
         siteOwnerContactId,
