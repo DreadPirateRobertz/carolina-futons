@@ -1,16 +1,36 @@
 # CF Project Progress Report
 **Auto-refreshed every 10 min | Last updated: 2026-05-10 01:58 MT**
 
+## Session 2026-05-10 — Wave 8 (02:00–02:30 MT)
+| Done | Detail |
+|------|--------|
+| ✅ PR #1218 MERGED | cf-hafn — contact_form_auto_reply auto-reply (rennala). Fixed 3 test assertions on re-push. |
+| ✅ PR #1219 MERGED | cf-4x7e chunk 4 — socialStoryScheduler+fulfillment+deliveryTracker (-5596 LOC, 17 methods, morgott). SUPERSEDE greenlit. |
+| ✅ PR #1216 MERGED | cf-3qt.9 Wix retirement checklist (godfrey). CI green post-rebase. |
+| ✅ PR #1197 MERGED | cf-jvut staging probe runbook (docs-only, admin — stale CI failure). |
+| ✅ PR #1220 MERGED | cf-w1u1 email triggers E2E plan (docs). |
+| ✅ PR #1221 MERGED | cf-dtu6 VALID_CATEGORIES extraction + catalogImport deletion. 0.03% coverage gap → --admin. |
+| ✅ PR #1222 MERGED | cf-3qt.8 order-rate baseline capture script + runbook (millicent). |
+| ✅ PR #1223 MERGED | cf-sq0d detector v3 — filesystem-path reference flagging (morgott). |
+| ✅ cf-dtu6 CLOSED | VALID_CATEGORIES extracted, catalogImport.web.js deleted. |
+| ✅ cf-sq0d CLOSED | Detector v3 shipped. |
+| 🔍 cf-1eb5 r5 VERIFIED | Melania screenshot-verified all 3 bears visible. Sent to Stilgar for approval. |
+| 🔄 PR #524 REFIX | miquella pushed fix (LivingFooterBg not wired in Footer.tsx). CI running. |
+| 🔄 PR #1218 rennala fix | 3 test assertions scoped to owner email (filter by templateId/contactId). |
+| ⏳ PR #515 | cf-1eb5 r5 awaiting Stilgar visual sign-off. |
+| ⏳ PR #507 | cf-3lly mobile viewport — awaiting Stilgar mobile check (e2e flaky newsletter). |
+| 📋 cfw-ajk status | Sent to Stilgar: EPIC deferred, 11 sub-beads unfiled, docs merged (#484/#489), no implementation yet. |
+
 ## Session 2026-05-10 — Wave 7
 | Done | Detail |
 |------|--------|
 | ✅ PR #1215 MERGED | cf-quba.fu1 — pinterestCatalogSync.generatePinContent added to allowlist |
 | ✅ cf-jqkg CLOSED | PRs #1160+#1178+#1188 all merged — stale bead |
 | ✅ cf-mgnh CLOSED | PRs #1178+#1188 merged — stale bead |
-| 🔄 PR #1217 CI | cf-4x7e chunk 3 — productPassport (-1074 LOC, 6 methods). catalogImport DEFERRED → cf-dtu6+cf-sq0d filed |
-| 🚨 cf-1eb5 r3 feedback | Stilgar: POSITIVE. R4 needed: (a) orange text, (b) don't cover bears, (c) match v9 style → blaidd dispatched |
-| 🆕 cf-96m8 FILED | Footer LivingSky always-night illustration (Stilgar request). miquella dispatched. |
-| 🔄 cf-1216 CONFLICT | godfrey rebase needed — progress-report.md conflict |
+| ✅ PR #1217 MERGED | cf-4x7e chunk 3 — productPassport (-1074 LOC, 6 methods). catalogImport DEFERRED → cf-dtu6+cf-sq0d filed |
+| 🚨 cf-1eb5 r4 REJECTED | Stilgar: center bear hidden. r5 spec: taller hero, text at bottom, bottom-up gradient. blaidd dispatched. |
+| ✅ cf-96m8 FILED | Footer LivingSky always-night illustration (Stilgar request). miquella dispatched. |
+| ✅ PR #1216 MERGED | godfrey cf-3qt.9 retirement checklist — CI green post-rebase. |
 
 ## Session 2026-05-10 — Wave 6
 | Done | Detail |
