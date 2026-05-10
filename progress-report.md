@@ -1,5 +1,23 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:57 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 04:17 MT**
+
+## Session 2026-05-10 — Wave 29 (PR clearance + CI stabilization)
+| Done | Detail |
+|------|--------|
+| ✅ PR #1305 MERGED | **P1 CI FIX**: logError distinguishes rate-limit db_error from throttle. Main was CI-red after cf-8p52 fail-closed change. Fixed in 1 wave. |
+| ✅ PRs #1301 #1303 #1304 #1306 MERGED | cf-qjhf (deliveryScheduling canonical RL), cf-4x7e chunk B file 6 (futonSommelier), cf-secrets.F1, cf-c0np (3 remaining RL migrations). All rebased on fixed main before merge. |
+| ✅ PRs #1307 #1308 MERGED | cf-lzkm (checkRateLimit audit), cf-ox0h.fu1 (cron canonical-source decision). |
+| ✅ stage3-velo PR #38 MERGED | cf-ox0h.1: 3 HTTP cron handlers deleted (F4 cutover gate). |
+| 🧹 14 PRs merged wave 28-29 | cfutons queue fully empty. Main is GREEN. |
+| 🔄 PR #1301 conflict resolved | Melania resolved deliveryScheduling.web.js + tests/deliveryScheduling.test.js rebase conflict between cf-32u1.F4 and cf-qjhf. |
+
+**Lesson learned**: errorMonitoring CI failures were a REAL regression (not flakiness) from cf-8p52 fail-closed. Millicent caught the root cause and shipped the fix within one wave. PR #1305 is the fix.
+
+**Worker Map (04:17 MT):**
+blaidd: cf-gqdf (DNS TTL script) + cf-jo07 (cfw blocked) | godfrey: cf-ybsf (health keyword fix)
+millicent: cf-aqo7 closed → idle (standby) | miquella: cf-bbo8 (SEO P1)
+morgott: cf-4x7e + cf-641x | radahn: cf-r9r3 (cfw scroll jitter) + cf-3qt.8.35
+rennala: cf-za1o (F3 fix)
 
 ## Session 2026-05-10 — Wave 28 (post-compaction)
 | Done | Detail |
