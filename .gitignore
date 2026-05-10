@@ -92,3 +92,4 @@ overseer.json
 daemon.json
 dolt-server.port
 _mayor_backup/
+/snapshots/
