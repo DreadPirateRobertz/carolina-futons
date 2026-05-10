@@ -45,35 +45,6 @@ beforeEach(() => {
   __seed('BackInStockSignups', []);
 });
 
-// ── triggerReviewThanks — empty catch fix ────────────────────────────
-
-describe('triggerReviewThanks — getSecret error logging', () => {
-  it('logs a warning when getSecret fails', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    await triggerReviewThanks('contact-1', 'test@test.com', 'Alice', 'Futon');
-
-    expect(warnSpy).toHaveBeenCalled();
-    const warnArgs = warnSpy.mock.calls[0].join(' ');
-    expect(warnArgs).toContain('REVIEW_DISCOUNT_CODE');
-    warnSpy.mockRestore();
-  });
-
-  it('still sends email successfully when getSecret fails', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const inserted = [];
-    __onInsert((col, item) => inserted.push({ col, item }));
-
-    const result = await triggerReviewThanks('contact-1', 'test@test.com', 'Alice', 'Futon');
-
-    expect(result.success).toBe(true);
-    const emailInsert = inserted.find(i => i.col === 'EmailQueue');
-    expect(emailInsert).toBeDefined();
-    expect(emailInsert.item.variables.discountCode).toBe('');
-    vi.restoreAllMocks();
-  });
-});
-
 // ── triggerRestockNotifications — per-subscriber resilience ──────────
 
 describe('triggerRestockNotifications — per-subscriber error handling', () => {

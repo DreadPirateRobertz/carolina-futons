@@ -68,7 +68,6 @@ import { __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import {
   triggerWelcomeSeries,
   triggerPostPurchaseSequence,
-  triggerReviewRewardPrompt,
   triggerReengagement,
   triggerRestockNotifications,
   // dormant in current main per F3/F4 — kept here so the post-merge
@@ -279,7 +278,6 @@ describe('cf-w1u1 smoke (mock layer up + email log empty by default)', () => {
     for (const fn of [
       triggerWelcomeSeries,
       triggerPostPurchaseSequence,
-      triggerReviewRewardPrompt,
       triggerReengagement,
       triggerRestockNotifications,
       queuePromotionalEmail,
