@@ -13,6 +13,8 @@ import {
   _checkBookingRateLimit,
   _checkCancelRateLimit,
 } from '../src/backend/deliveryScheduling.web.js';
+// cf-qjhf (cf-32u1 F4): rate-limit helpers now defer to canonical
+// checkRateLimit which hashes keys before storage — seed with the hash.
 import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -783,20 +785,16 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
     // Count should now be 3 — verify via a 5-count seed + call that hits limit
   });
 
-  // cf-32u1.F4 (cf-sec1 CMEK): regression guard — the rate-limit
-  // collection must never persist plaintext customer email at rest.
-  it('persists a hashed key, NOT plaintext email (cf-32u1.F4 cf-sec1 compliance)', async () => {
-    let inserted;
-    __onInsert((collection, record) => {
-      if (collection === BOOKING_RL_COLLECTION) inserted = record;
-    });
-    await _checkBookingRateLimit('cmek-check@test.com');
-    expect(inserted).toBeDefined();
-    expect(inserted.key).not.toBe('cmek-check@test.com');
-    expect(inserted.key).not.toContain('@');
-    expect(inserted.key).toBe(hashRateLimitKey('cmek-check@test.com'));
-    // Hash output is FNV-1a 8-char hex per the canonical helper.
-    expect(inserted.key).toMatch(/^[0-9a-f]{8}$/);
+  it('cf-qjhf: bucket key is hashed (no plaintext email at rest)', async () => {
+    // Insert a fresh record via the wrapper, then inspect the seeded
+    // store to confirm the stored key is the FNV-1a hash of the email,
+    // not the email itself.
+    await _checkBookingRateLimit('hash-check@test.com');
+    const records = await import('./__mocks__/wix-data.js').then(m => m.__getInserted(BOOKING_RL_COLLECTION));
+    expect(records).toHaveLength(1);
+    expect(records[0].key).not.toBe('hash-check@test.com');
+    expect(records[0].key).not.toContain('@');
+    expect(records[0].key).toBe(hashRateLimitKey('hash-check@test.com'));
   });
 });
 
@@ -826,7 +824,7 @@ describe('cancelAppointment — rate limiting (CF-ylof)', () => {
   it('blocks cancel after 3 attempts by same token key in 1 hour', async () => {
     __seed(CANCEL_RL_COLLECTION, [{
       _id: 'rl-cancel',
-      key: cancelToken.slice(0, 10), // rate key derived from token prefix
+      key: hashRateLimitKey(cancelToken.slice(0, 10)),
       count: 3,
       windowStart: new Date(Date.now() - 10 * 60 * 1000), // 10 min ago — within window
     }]);
@@ -843,7 +841,7 @@ describe('cancelAppointment — rate limiting (CF-ylof)', () => {
   it('_checkCancelRateLimit blocks at limit', async () => {
     __seed(CANCEL_RL_COLLECTION, [{
       _id: 'rl-cz',
-      key: 'exhausted-key',
+      key: hashRateLimitKey('exhausted-key'),
       count: 3,
       windowStart: new Date(Date.now() - 5 * 60 * 1000),
     }]);
@@ -854,7 +852,7 @@ describe('cancelAppointment — rate limiting (CF-ylof)', () => {
   it('_checkCancelRateLimit resets after 1h window expires', async () => {
     __seed(CANCEL_RL_COLLECTION, [{
       _id: 'rl-old',
-      key: 'old-key',
+      key: hashRateLimitKey('old-key'),
       count: 3,
       windowStart: new Date(Date.now() - 61 * 60 * 1000), // 61 min ago
     }]);

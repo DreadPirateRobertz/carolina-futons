@@ -472,82 +472,42 @@ const CANCEL_RL_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 /**
  * Check and record a rate-limit attempt for appointment bookings.
  * Allows up to BOOKING_RL_MAX bookings per 24h per email.
- * Fails open on DB error to avoid blocking legitimate users.
+ *
+ * cf-qjhf (cf-32u1 F4): migrated from local re-implementation to the
+ * canonical wixData-backed helper. The previous local impl stored
+ * plaintext lowercased emails as bucket keys (cf-sec1 CMEK gap) and
+ * failed-open on DB error (which cf-8p52 flipped to fail-closed for
+ * the canonical helper). Both gaps close by deferring to the canonical.
  *
  * @param {string} email - Normalized customer email (rate limit key)
  * @param {Object} [opts] - { now: number } override for testing
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function _checkBookingRateLimit(email, opts = {}) {
-  const now = opts.now != null ? opts.now : Date.now();
-  try {
-    // cf-32u1.F4 (cf-sec1 CMEK): hash the key before storing/querying so
-    // the rate-limit collection never holds plaintext customer email at
-    // rest. Mirrors the canonical helper at utils/rateLimit.js (FNV-1a,
-    // hashRateLimitKey). Sanitize-then-lowercase before hashing so the
-    // hash input matches the canonical helper's contract.
-    const cleanEmail = sanitize(email, 254).toLowerCase();
-    const cleanKey = hashRateLimitKey(cleanEmail);
-    const existing = await wixData.query(BOOKING_RL_COLLECTION)
-      .eq('key', cleanKey).limit(1).find();
-
-    if (existing.items.length === 0) {
-      await wixData.insert(BOOKING_RL_COLLECTION, { key: cleanKey, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    const record = existing.items[0];
-    if (now - new Date(record.windowStart).getTime() > BOOKING_RL_WINDOW_MS) {
-      await wixData.update(BOOKING_RL_COLLECTION, { ...record, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    if (record.count >= BOOKING_RL_MAX) return { allowed: false, reason: 'rate_limited' };
-
-    await wixData.update(BOOKING_RL_COLLECTION, { ...record, count: record.count + 1 });
-    return { allowed: true };
-  } catch (err) {
-    console.warn('[deliveryScheduling] Booking rate limit check failed, allowing:', err?.message);
-    return { allowed: true };
-  }
+  return checkRateLimit(BOOKING_RL_COLLECTION, email, {
+    now: opts.now,
+    max: BOOKING_RL_MAX,
+    windowMs: BOOKING_RL_WINDOW_MS,
+  });
 }
 
 /**
  * Check and record a rate-limit attempt for appointment cancellations.
  * Allows up to CANCEL_RL_MAX cancels per 1h per rate key.
  * Rate key is the first 10 chars of the cancel token — opaque but consistent.
- * Fails open on DB error.
+ *
+ * cf-qjhf (cf-32u1 F4): same migration as _checkBookingRateLimit above.
  *
  * @param {string} key - Rate limit key (cancel token prefix)
  * @param {Object} [opts] - { now: number } override for testing
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function _checkCancelRateLimit(key, opts = {}) {
-  const now = opts.now != null ? opts.now : Date.now();
-  try {
-    const cleanKey = sanitize(key, 50);
-    const existing = await wixData.query(CANCEL_RL_COLLECTION)
-      .eq('key', cleanKey).limit(1).find();
-
-    if (existing.items.length === 0) {
-      await wixData.insert(CANCEL_RL_COLLECTION, { key: cleanKey, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    const record = existing.items[0];
-    if (now - new Date(record.windowStart).getTime() > CANCEL_RL_WINDOW_MS) {
-      await wixData.update(CANCEL_RL_COLLECTION, { ...record, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    if (record.count >= CANCEL_RL_MAX) return { allowed: false, reason: 'rate_limited' };
-
-    await wixData.update(CANCEL_RL_COLLECTION, { ...record, count: record.count + 1 });
-    return { allowed: true };
-  } catch (err) {
-    console.warn('[deliveryScheduling] Cancel rate limit check failed, allowing:', err?.message);
-    return { allowed: true };
-  }
+  return checkRateLimit(CANCEL_RL_COLLECTION, key, {
+    now: opts.now,
+    max: CANCEL_RL_MAX,
+    windowMs: CANCEL_RL_WINDOW_MS,
+  });
 }
 
 // ── Showroom Appointment Booking ─────────────────────────────────────
