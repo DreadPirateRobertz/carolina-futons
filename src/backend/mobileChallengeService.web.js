@@ -30,6 +30,16 @@ const POINTS_BY_TYPE = {
   [MOBILE_CHALLENGE_TYPES.SOCIAL_SHARE]: 100,
 };
 
+// cf-m3tj: synthetic event names dispatched into receiveGamificationEvent so
+// the canonical web pipeline (PointsLedger + MemberPoints + tier milestone +
+// bonus-spin) processes mobile challenge awards. Mirrors point values above;
+// gamificationCore.web.js MOBILE_CHALLENGE_POINTS table must stay in sync.
+const SYNTHETIC_EVENT_BY_TYPE = {
+  [MOBILE_CHALLENGE_TYPES.AR_DISCOVERY]: 'gamification_mobile_ar_discovery',
+  [MOBILE_CHALLENGE_TYPES.QUIZ_COMPLETION]: 'gamification_mobile_quiz_completion',
+  [MOBILE_CHALLENGE_TYPES.SOCIAL_SHARE]: 'gamification_mobile_social_share',
+};
+
 const VALID_TYPES = new Set(Object.values(MOBILE_CHALLENGE_TYPES));
 
 function _todayStart() {
@@ -69,7 +79,7 @@ export async function completeMobileChallenge(memberId, challengeType, params = 
     }
 
     const pointsAwarded = POINTS_BY_TYPE[challengeType];
-    await wixData.insert(
+    const insertedRow = await wixData.insert(
       MOBILE_CHALLENGES_COLLECTION,
       {
         memberId,
@@ -82,6 +92,39 @@ export async function completeMobileChallenge(memberId, challengeType, params = 
       },
       { suppressAuth: true }
     );
+
+    // cf-m3tj fix: dispatch synthetic event into receiveGamificationEvent so
+    // the canonical pipeline (PointsLedger insert, MemberPoints update, tier
+    // milestone notification, BonusSpinGrants check) actually moves the
+    // member's balance. Pre-cf-m3tj this step was missing — the completion
+    // row was written but the member earned 0 points. Idempotency is already
+    // enforced above (alreadyAwarded short-circuit), so the synthetic only
+    // fires on a fresh completion. Non-blocking: if the synthetic fails the
+    // completion row stays — backfill via cf-m3tj-followup script.
+    const syntheticEventName = SYNTHETIC_EVENT_BY_TYPE[challengeType];
+    if (syntheticEventName) {
+      try {
+        const { receiveGamificationEvent } = await import('backend/gamificationCore.web');
+        await receiveGamificationEvent(
+          syntheticEventName,
+          {
+            completionId: insertedRow._id,
+            productId: params.productId || null,
+            score: params.score ?? null,
+            total: params.total ?? null,
+            platform: params.platform || null,
+          },
+          memberId,
+        );
+      } catch (err) {
+        console.error(
+          `[mobileChallengeService] synthetic ${syntheticEventName} dispatch failed for member ${memberId}, completion ${insertedRow._id}:`,
+          err,
+        );
+        // Non-blocking — see comment above. Logged with completionId so a
+        // backfill job can find orphaned completions.
+      }
+    }
 
     return { success: true, alreadyAwarded: false, pointsAwarded };
   } catch (err) {
