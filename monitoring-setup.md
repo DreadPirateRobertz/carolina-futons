@@ -1,9 +1,32 @@
-# Uptime Monitoring — cf-3qt.8.3
+# Uptime Monitoring — cf-3qt.8.3 + cf-3qt.8.31
 
-**Service:** UptimeRobot (free tier)  
-**Target:** carolinafutons.com  
-**Alert email:** carolinafutons@gmail.com  
-**Status:** Awaiting API key — run `scripts/setup-monitors.sh` once key is added to secrets.env
+**Service:** UptimeRobot (free tier)
+**Target:** carolinafutons.com (post-cutover) / `https://carolina-futons-web.vercel.app` (pre-cutover preview)
+**Alert email:** carolinafutons@gmail.com
+**Status:** **PENDING_KEY** — engineering side complete, blocked on Stilgar UptimeRobot account creation. Cloudflare Turnstile gates the signup so headless / programmatic creation is not possible.
+
+> **Endpoint:** `/api/health` ships in cfw PR #554 (cf-x6ph + cf-x0ks). Schema:
+> `{ status: 'ok', uptime: <int>, commit: <sha>, ts: <ISO> }` with
+> `Cache-Control: no-store`. UptimeRobot keyword check on `"ok"` will match.
+> 9 unit tests pin the contract. Full ops runbook at
+> `carolina-futons-web/docs/monitoring-runbook.md` (lands with PR #554).
+
+## Activation handoff to Stilgar
+
+To activate monitoring (cf-3qt.8.31 acceptance):
+
+1. **Stilgar:** sign up at https://uptimerobot.com using `carolinafutons@gmail.com` (resolves the Turnstile gate).
+2. **Stilgar:** Profile → API Settings → **Create Main API Key** → copy.
+3. **Stilgar OR godfrey:** add to `/Users/hal/gt/cfutons/refinery/rig/scripts/secrets.env`:
+   ```
+   UPTIMEROBOT_API_KEY=ur1234567-...
+   UPTIMEROBOT_ALERT_CONTACT_ID=<see step 4 below>
+   ```
+   **Never commit secrets.env.**
+4. **Stilgar OR godfrey:** Dashboard → **My Settings → Alert Contacts** → confirm `carolinafutons@gmail.com` is verified (it auto-creates from the signup email; the contact ID is the integer in the row's edit URL).
+5. **godfrey:** ETA <10 min from key delivery — runs `bash scripts/setup-monitors.sh`, verifies 4 monitors live, fires the mis-config alert test (§4 of `carolina-futons-web/docs/monitoring-runbook.md`), commits this doc with `Status: LIVE` + monitor IDs to main.
+
+The setup script is ready (`scripts/setup-monitors.sh`) and gated on `UPTIMEROBOT_API_KEY:?` so it errors loudly if the key is missing.
 
 ---
 
@@ -91,4 +114,4 @@ UptimeRobot free includes a public status page. After setup, enable at:
 
 ---
 
-*Setup scripted by miquella for cf-3qt.8.3. Awaiting UPTIMEROBOT_API_KEY in secrets.env to run.*
+*Setup scripted by miquella for cf-3qt.8.3. cf-3qt.8.31 (godfrey 2026-05-10): doc updated with current status + Stilgar handoff. Mayor escalation `hq-wisp-wgxbf` filed for the API-key block. Endpoint contract documented in `carolina-futons-web/docs/monitoring-runbook.md` (cfw PR #554).*
