@@ -88,7 +88,6 @@ const {
   getUpsellRecommendations,
   trackGuideEngagement,
   logUpsellConversion,
-  getAssemblyFollowUpData,
   getReviewSolicitationData,
 } = mod;
 
@@ -382,49 +381,6 @@ describe('logUpsellConversion', () => {
     _mockMemberId = null;
     const result = await logUpsellConversion({ sourceOrderId: 'o1', sourceProductId: 'p1', recommendedProductId: 'p2' });
     expect(result.success).toBe(false);
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════
-// getAssemblyFollowUpData
-// ═════════════════════════════════════════════════════════════════════
-describe('getAssemblyFollowUpData', () => {
-  it('returns assembly guides and support info', async () => {
-    __seed('ProductCareGuides', [
-      { _id: 'g1', productCategory: 'futon-frames', guideType: 'assembly', active: true, priority: 1, title: 'Frame Assembly', steps: null },
-    ]);
-    const result = await getAssemblyFollowUpData('order-1', ['futon-frames']);
-    expect(result.success).toBe(true);
-    expect(result.guides).toHaveLength(1);
-    expect(result.supportPhone).toBe('(828) 252-9449');
-    expect(result.supportEmail).toBe('support@carolinafutons.com');
-  });
-
-  it('requires valid orderId', async () => {
-    const result = await getAssemblyFollowUpData('', ['futon-frames']);
-    expect(result.success).toBe(false);
-  });
-
-  it('requires categories array', async () => {
-    const result = await getAssemblyFollowUpData('order-1', null);
-    expect(result.success).toBe(false);
-  });
-
-  it('returns empty guides with support info for empty valid categories', async () => {
-    const result = await getAssemblyFollowUpData('order-1', ['', '']);
-    expect(result.success).toBe(true);
-    expect(result.guides).toEqual([]);
-    expect(result.supportPhone).toBeTruthy();
-  });
-
-  it('only returns assembly-type guides', async () => {
-    __seed('ProductCareGuides', [
-      { _id: 'g1', productCategory: 'futons', guideType: 'assembly', active: true, priority: 1, steps: null },
-      { _id: 'g2', productCategory: 'futons', guideType: 'warranty', active: true, priority: 2, steps: null },
-    ]);
-    const result = await getAssemblyFollowUpData('o1', ['futons']);
-    expect(result.guides).toHaveLength(1);
-    expect(result.guides[0]._id).toBe('g1');
   });
 });
 

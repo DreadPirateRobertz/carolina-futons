@@ -141,40 +141,6 @@ export const triggerCartAbandonSequence = webMethod(Permissions.Admin, async (pa
   }
 });
 
-// ── triggerPostPurchaseSequence ───────────────────────────────────────────────
-
-/**
- * Trigger the post-purchase follow-up sequence.
- *
- * @param {Object} params
- * @param {string} params.email
- * @param {string} params.contactId
- * @param {string} [params.firstName]
- * @param {string} params.orderNumber
- * @param {number} [params.total]
- * @returns {Promise<{success: boolean, enqueued: number, error?: string}>}
- */
-export const triggerPostPurchaseSequence = webMethod(Permissions.Admin, async (params) => {
-  const { email, contactId, firstName = '', orderNumber, total = 0 } = params ?? {};
-
-  if (!email) return { success: false, error: 'email is required' };
-  if (!contactId) return { success: false, error: 'contactId is required' };
-
-  try {
-    const steps = await loadActiveSteps('post_purchase');
-    const enqueued = await enqueueSequenceSteps(steps, {
-      email,
-      contactId,
-      sequenceType: 'post_purchase',
-      variables: { firstName, orderNumber, total: String(total) },
-    });
-    return { success: true, enqueued };
-  } catch (err) {
-    logError('triggerPostPurchaseSequence failed', err);
-    return { success: false, error: err?.message ?? 'unknown error' };
-  }
-});
-
 // ── triggerReviewRequestSequence ──────────────────────────────────────────────
 
 /**

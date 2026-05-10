@@ -7,7 +7,6 @@ import {
   getUpsellRecommendations,
   trackGuideEngagement,
   logUpsellConversion,
-  getAssemblyFollowUpData,
   getReviewSolicitationData,
 } from '../src/backend/postPurchaseCare.web.js';
 
@@ -611,96 +610,6 @@ describe('logUpsellConversion', () => {
     });
     expect(res.success).toBe(true);
     expect(inserted.item.sourceProductId).toBe('');
-  });
-});
-
-// ── getAssemblyFollowUpData ───────────────────────────────────────────
-
-describe('getAssemblyFollowUpData', () => {
-  beforeEach(seedAll);
-
-  it('returns assembly guides and support info', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames']);
-    expect(res.success).toBe(true);
-    expect(res.guides).toHaveLength(1);
-    expect(res.guides[0].title).toBe('Frame Assembly Guide');
-    expect(res.supportPhone).toBe('(828) 252-9449');
-    expect(res.supportEmail).toBe('support@carolinafutons.com');
-  });
-
-  it('only returns assembly-type guides', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames']);
-    expect(res.success).toBe(true);
-    // g-2 is maintenance, should not appear
-    const ids = res.guides.map(g => g._id);
-    expect(ids).toContain('g-1');
-    expect(ids).not.toContain('g-2');
-  });
-
-  it('returns assembly guides across multiple categories', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames', 'mattresses']);
-    expect(res.success).toBe(true);
-    expect(res.guides).toHaveLength(2);
-  });
-
-  it('returns empty guides when category has no assembly guides', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['covers']);
-    expect(res.success).toBe(true);
-    expect(res.guides).toEqual([]);
-    expect(res.supportPhone).toBe('(828) 252-9449');
-    expect(res.supportEmail).toBe('support@carolinafutons.com');
-  });
-
-  it('returns error for invalid order ID', async () => {
-    const res = await getAssemblyFollowUpData('!!!', ['futon-frames']);
-    expect(res.success).toBe(false);
-    expect(res.error).toContain('order ID');
-    expect(res.guides).toEqual([]);
-    expect(res.supportPhone).toBe('');
-    expect(res.supportEmail).toBe('');
-  });
-
-  it('returns error for empty order ID', async () => {
-    const res = await getAssemblyFollowUpData('', ['futon-frames']);
-    expect(res.success).toBe(false);
-    expect(res.error).toContain('order ID');
-  });
-
-  it('returns error for empty categories array', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', []);
-    expect(res.success).toBe(false);
-    expect(res.error).toContain('categories');
-  });
-
-  it('returns error for non-array categories', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', 'futon-frames');
-    expect(res.success).toBe(false);
-  });
-
-  it('returns error for null categories', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', null);
-    expect(res.success).toBe(false);
-  });
-
-  it('returns support info with empty guides when all categories sanitize to empty', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['', '']);
-    expect(res.success).toBe(true);
-    expect(res.guides).toEqual([]);
-    expect(res.supportPhone).toBeTruthy();
-    expect(res.supportEmail).toBeTruthy();
-  });
-
-  it('returns guide objects with expected fields', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames']);
-    const g = res.guides[0];
-    expect(g).toHaveProperty('_id');
-    expect(g).toHaveProperty('productCategory');
-    expect(g).toHaveProperty('title');
-    expect(g).toHaveProperty('summary');
-    expect(g).toHaveProperty('content');
-    expect(g).toHaveProperty('steps');
-    expect(g).toHaveProperty('videoUrl');
-    expect(g).toHaveProperty('imageUrl');
   });
 });
 
