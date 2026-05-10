@@ -260,3 +260,65 @@ export const submitFabricSampleRequest = webMethod(
     }
   }
 );
+
+// ── cf-unxw — FE/BE name reconciliation ──────────────────────────────────────
+//
+// src/public/FabricSampleRequest.js imports `getAvailableSwatches` and
+// `submitFabricSample` from this module, but the backend originally only
+// exported `submitFabricSampleRequest` and had no swatch-list method.
+// Production Velo widget was silently broken (modal opens but swatches
+// never render; submit throws). Same pattern class as cf-hpb2 referralService
+// rename — Stilgar precedent is to add backend aliases rather than touch
+// Wix Velo Editor pages.
+
+/**
+ * List swatches available for the customer-facing fabric sample request
+ * widget. Returns the catalog ordered by `sortOrder` for stable display.
+ *
+ * @function getAvailableSwatches
+ * @returns {Promise<{success: boolean, data?: {swatches: Array}, error?: string}>}
+ *   On success: `{success:true, data:{swatches:[…]}}` with each swatch
+ *   carrying `_id`, `swatchId`, `swatchName`, `swatchImage`, `colorFamily`,
+ *   `colorHex`, `material`.
+ *   On failure: `{success:false, error}` (FE disables the request button).
+ * @permission Anyone
+ */
+export const getAvailableSwatches = webMethod(
+  Permissions.Anyone,
+  async () => {
+    try {
+      const result = await wixData.query('FabricSwatches')
+        .ascending('sortOrder')
+        .limit(100)
+        .find();
+      const swatches = result.items.map((item) => ({
+        _id:          item._id,
+        swatchId:     item.swatchId,
+        // FE's $w('#swatchSelectRepeater').data uses `swatchName`. Some
+        // older rows wrote the name into the generic `name` field; coerce.
+        swatchName:   item.swatchName || item.name || '',
+        swatchImage:  item.swatchImage,
+        colorFamily:  item.colorFamily,
+        colorHex:     item.colorHex,
+        material:     item.material,
+      }));
+      return { success: true, data: { swatches } };
+    } catch (err) {
+      console.error('[fabricSampleService] getAvailableSwatches error:', err);
+      return { success: false, error: 'Unable to load swatches.' };
+    }
+  },
+);
+
+/**
+ * Backend-side alias for `submitFabricSampleRequest` so the FE Velo widget's
+ * `submitFabricSample(...)` import resolves without touching the Editor.
+ *
+ * NOTE: FE call passes `{ swatchIds, contactInfo: {name, email, address}, productId }`.
+ * The canonical `submitFabricSampleRequest` expects a richer `contactInfo`
+ * (name + email + address1/city/state/zip) and `productSlug` (not `productId`).
+ * The shape mismatch is a SEPARATE bug — see cf-unxw.fu1 (TODO). This alias
+ * unblocks the import resolution failure but the widget still won't submit
+ * cleanly until the FE shape is fixed (or a shape-shimming wrapper is added).
+ */
+export const submitFabricSample = submitFabricSampleRequest;

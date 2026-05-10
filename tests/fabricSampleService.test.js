@@ -10,7 +10,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted, __setInsertError } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
-import { submitFabricSampleRequest } from '../src/backend/fabricSampleService.web.js';
+import {
+  submitFabricSampleRequest,
+  submitFabricSample,
+  getAvailableSwatches,
+} from '../src/backend/fabricSampleService.web.js';
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -579,5 +583,53 @@ describe('phone format validation', () => {
     const result = await submitWithPhone('(555) 123-4567');
     expect(result.success).toBe(true);
     // Phone stored — CRM upsert received it (no error from that path)
+  });
+});
+
+// ── cf-unxw — getAvailableSwatches + submitFabricSample alias ────────────────
+
+describe('cf-unxw · getAvailableSwatches', () => {
+  it('returns the seeded FabricSwatches catalog as { success: true, data: { swatches } }', async () => {
+    __seed('FabricSwatches', [
+      { _id: 'sw-1', swatchId: 'NAT-01', swatchName: 'Natural Oatmeal', sortOrder: 1, colorFamily: 'neutral', material: 'cotton' },
+      { _id: 'sw-2', swatchId: 'ESP-01', swatchName: 'Espresso Brown',  sortOrder: 2, colorFamily: 'brown',   material: 'linen' },
+    ]);
+    const result = await getAvailableSwatches();
+    expect(result.success).toBe(true);
+    expect(result.data.swatches).toHaveLength(2);
+    expect(result.data.swatches[0]).toMatchObject({
+      _id: 'sw-1',
+      swatchId: 'NAT-01',
+      swatchName: 'Natural Oatmeal',
+      colorFamily: 'neutral',
+      material: 'cotton',
+    });
+  });
+
+  it('coerces legacy `name` field to `swatchName` for older CMS rows', async () => {
+    __seed('FabricSwatches', [
+      { _id: 'sw-old', name: 'Slate Blue', sortOrder: 1 },
+    ]);
+    const result = await getAvailableSwatches();
+    expect(result.data.swatches[0].swatchName).toBe('Slate Blue');
+  });
+
+  it('returns empty array (still success:true) when CMS is empty', async () => {
+    __seed('FabricSwatches', []);
+    const result = await getAvailableSwatches();
+    expect(result).toEqual({ success: true, data: { swatches: [] } });
+  });
+});
+
+describe('cf-unxw · submitFabricSample alias', () => {
+  it('is the same wrapper as submitFabricSampleRequest (FE import resolves)', () => {
+    expect(submitFabricSample).toBe(submitFabricSampleRequest);
+  });
+
+  it('routes through to the canonical implementation when invoked', async () => {
+    __seed('FabricSwatches', SWATCHES);
+    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+    expect(result.requestId).toBeTruthy();
   });
 });
