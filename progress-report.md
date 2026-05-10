@@ -1,19 +1,21 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:37 MT**
 
-## Session 2026-05-10 — Wave 9 (02:20–02:30 MT)
+## Session 2026-05-10 — Wave 9 (02:20–02:37 MT)
 | Done | Detail |
 |------|--------|
-| ✅ PR #1225 MERGED | cf-4x7e chunk 5 — bundleBuilder.web.js (morgott). 10 dead deleted, 3 alive kept. 0.04% gap → --admin. |
+| ✅ PR #1225 MERGED | cf-4x7e chunk 5 — bundleBuilder.web.js (morgott). 0.04% gap → --admin. |
 | ✅ PR #1226 MERGED | cf-3qt.8 item 1 — Wix CMS snapshot script + runbook (millicent). 0.03% gap → --admin. |
-| ✅ PR #507 MERGED | cf-3lly mobile viewport fix (blaidd). Stilgar approved: "right edge looks good". --admin (flaky newsletter e2e). |
-| ✅ PR #524 MERGED | cf-96m8 footer LivingSky (miquella). Confirmed cycling — 4 phases via useTimeOfDay. Stilgar approved. |
-| ✅ cf-3lly CLOSED | Mobile viewport bead closed. |
-| ✅ cf-96m8 CLOSED | Footer LivingSky bead closed. |
-| 📊 Stilgar DM sent | cfw-5uw compare: PR #495 merged 21:33 MT. Variant wave-2: 34 products done, 3 blocked on photo uploads. |
-| 🔍 cf-1eb5 r5 RE-VERIFIED | Gatekeeper screenshot taken — all 3 bears visible, text bottom-left, coral heading. Sent Vercel URL to Stilgar. |
-| ⏳ PR #515 | cf-1eb5 r5 awaiting Stilgar final visual sign-off to merge. |
-| 🔄 PR #1227 | morgott cf-4x7e chunk 7 (dataService) — test(22) pending. |
+| ✅ PR #507 MERGED | cf-3lly mobile viewport (blaidd, cfw). Stilgar: "right edge looks good". --admin. |
+| ✅ PR #524 MERGED | cf-96m8 footer LivingSky (miquella, cfw). useTimeOfDay 4-phase cycling confirmed. |
+| ✅ PR #1227 MERGED | cf-4x7e chunk 6 — dataService (morgott). 7 dead, 3 alive. 0.06% gap → --admin. |
+| ✅ PR #1228 MERGED | cf-3qt.8 item 2 — DNS TTL drop runbook (millicent). 0.05% gap → --admin. |
+| ✅ cf-3lly + cf-96m8 CLOSED | Beads closed post-merge. |
+| ✅ cf-3qt.8.30 FILED | Synthetic monitoring bead (P1) → godfrey. /api/health + UptimeRobot + Discord alert. |
+| 📊 Stilgar DMs sent | cfw-5uw status ✅, variant wave-2 ✅, cf-1eb5 r5 gatekeeper verify, cf-hafn template reg reminder, coverage drift advisory. |
+| ⚠️ Coverage drift | Main ~84.95% (below 85%). SUPERSEDE pass cascade. 1 chunk left (blogService) → will also --admin. Awaiting Stilgar guidance. |
+| ⏳ PR #515 | cf-1eb5 r5 bears — awaiting Stilgar final sign-off. All CI green. |
+| 🔄 cf-xdji | shiny polecat, no PR yet. Mayor nudged to check/re-route. |
 
 ## Session 2026-05-10 — Wave 8 (02:00–02:20 MT)
 | Done | Detail |
