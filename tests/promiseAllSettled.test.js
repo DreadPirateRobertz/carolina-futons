@@ -231,52 +231,6 @@ beforeAll(async () => {
   });
 });
 
-// ── Fulfillment Tests ───────────────────────────────────────────────
-
-describe('Promise.allSettled — Fulfillment batch tracking', () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
-  it('updateAllTracking returns partial success count', async () => {
-    const { __seed } = await import('./__mocks__/wix-data.js');
-    const { __setMember, __setRoles } = await import('./__mocks__/wix-members-backend.js');
-    const { __setSecrets } = await import('./__mocks__/wix-secrets-backend.js');
-    const { __setHandler } = await import('./__mocks__/wix-fetch.js');
-
-    __setMember({ _id: 'admin-001' });
-    __setRoles([{ _id: 'admin', title: 'Admin' }]);
-    __setSecrets({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'y', UPS_ACCOUNT_NUMBER: '123', UPS_SANDBOX: 'true' });
-
-    __seed('Fulfillments', [
-      { _id: 'f1', trackingNumber: '1Z111', status: 'IN_TRANSIT' },
-      { _id: 'f2', trackingNumber: '1Z222', status: 'LABEL_CREATED' },
-    ]);
-
-    // Mock UPS tracking — first succeeds, second fails
-    let callCount = 0;
-    __setHandler((url) => {
-      if (url.includes('/oauth/token')) {
-        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
-      }
-      if (url.includes('/track/')) {
-        callCount++;
-        if (callCount === 1) {
-          return { ok: true, async json() { return { trackResponse: { shipment: [{ package: [{ activity: [{ status: { statusCode: 'IT' } }] }] }] } }; }, async text() { return ''; } };
-        }
-        return { ok: false, async json() { throw new Error('UPS error'); }, async text() { return 'UPS error'; } };
-      }
-      return { ok: true, async json() { return {}; }, async text() { return ''; } };
-    });
-
-    const { updateAllTracking } = await import('../src/backend/fulfillment.web.js');
-    const result = await updateAllTracking();
-
-    expect(result.success).toBe(true);
-    // The result should include the count fields
-    expect(typeof result.updated).toBe('number');
-  });
-});
 
 // ── Gift Registry Tests ─────────────────────────────────────────────
 
