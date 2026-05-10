@@ -212,10 +212,23 @@ export function wixEcom_onOrderCreated(event) {
 }
 
 /**
- * Triggered when an order fulfillment is created (shipped).
- * Sends a shipping notification with tracking info to the buyer.
+ * Helper: dispatch a partial-shipment notification email for a fulfillment.
+ * Routes LTL-freight tracking to the freight template, parcel tracking to
+ * the standard shipping template. Used by both events.js#wixEcom_onFulfillmentCreated
+ * and events.js#wixEcom_onFulfillmentUpdated (cf-fovb) — Wix only auto-registers
+ * handlers from events.js, so the actual Wix-shaped wrappers live there and
+ * delegate here.
+ *
+ * Caller passes the full fulfillment event; this helper:
+ *   1. Resolves email + contact + order number from the event
+ *   2. Returns early if email or tracking number is absent (no-op for
+ *      shipping-status-only updates that lack a tracking number)
+ *   3. Detects LTL freight carriers and dispatches to the right template
+ *
+ * @param {Object} event - Wix Stores fulfillment event
+ * @returns {void}
  */
-export function wixEcom_onFulfillmentCreated(event) {
+export function handleFulfillmentShippingNotification(event) {
   const fulfillment = event.entity || event;
   const order = fulfillment.order || {};
   const email = order.buyerInfo?.email || fulfillment.buyerInfo?.email || '';
@@ -225,6 +238,10 @@ export function wixEcom_onFulfillmentCreated(event) {
   const tracking = fulfillment.trackingInfo || {};
 
   if (!email) return;
+  // cf-fovb guard: onFulfillmentUpdated fires for non-tracking changes too
+  // (status flips, line-item edits). Without a tracking number there is no
+  // useful customer-facing partial-shipment email to send — skip silently.
+  if (!tracking.trackingNumber) return;
 
   // Detect LTL freight carriers (XPO, Estes, WWEX) and route to freight email.
   // Parcel carriers (UPS, USPS, FedEx) use the standard shipping notification.
@@ -255,6 +272,17 @@ export function wixEcom_onFulfillmentCreated(event) {
     }).catch(err => console.error('Error sending fulfillment notification:', err));
   }
 }
+
+/**
+ * cf-fovb: dormant duplicate kept as a thin re-export for any in-tree callers
+ * (tests etc.) that referenced the old Wix-shaped name. Wix events register
+ * only from backend/events.js, so this export is NOT auto-dispatched —
+ * events.js#wixEcom_onFulfillmentCreated owns the wiring and delegates here.
+ *
+ * @deprecated use handleFulfillmentShippingNotification directly. Removed in
+ * a follow-up sweep.
+ */
+export const wixEcom_onFulfillmentCreated = handleFulfillmentShippingNotification;
 
 /**
  * Order-delivered fan-out: confirmation email, post-purchase care sequence,

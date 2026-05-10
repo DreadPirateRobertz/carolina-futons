@@ -363,6 +363,46 @@ export async function wixEcom_onOrderFulfilled(event) {
 }
 
 /**
+ * Fired when an individual fulfillment is created (a single shipment within
+ * an order — e.g., the mattress ships before the bedframe accessories on a
+ * multi-shipment LTL order). Sends a partial-shipment customer-facing email
+ * with tracking + carrier so the buyer isn't waiting silently for weeks.
+ *
+ * cf-fovb: previously defined only in emailAutomation.web.js, which Wix never
+ * dispatched events to (events.js is the only event-handler entry point —
+ * same wiring contract that gated cf-jmmk's onOrderDelivered fix).
+ */
+export async function wixEcom_onFulfillmentCreated(event) {
+  try {
+    const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
+    handleFulfillmentShippingNotification(event);
+  } catch (err) {
+    console.error('[events] Error handling fulfillment created:', err);
+  }
+}
+
+/**
+ * Fired when a fulfillment is updated — typically a tracking-number change or
+ * a status flip (in_progress → fulfilled). Re-dispatches the partial-shipment
+ * email so customers see the latest tracking. The handler delegates to the
+ * same helper as Created; the helper guards on `trackingInfo.trackingNumber`
+ * presence so non-tracking updates (status flips with no tracking yet) are
+ * silent no-ops.
+ *
+ * cf-fovb. Wix dedups by fulfillment ID + last-modified internally — this
+ * handler does not need its own dedup beyond the tracking-number presence
+ * guard.
+ */
+export async function wixEcom_onFulfillmentUpdated(event) {
+  try {
+    const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
+    handleFulfillmentShippingNotification(event);
+  } catch (err) {
+    console.error('[events] Error handling fulfillment updated:', err);
+  }
+}
+
+/**
  * Fired when an order is marked as delivered.
  * Delegates to emailAutomation for delivery confirmation, post-purchase care
  * sequence, Day-14 review reward, and NPS survey scheduling.
