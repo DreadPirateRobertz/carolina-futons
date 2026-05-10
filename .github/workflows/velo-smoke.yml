@@ -37,6 +37,14 @@ permissions:
   contents: read
   issues: write
 
+# cf-ra41: cancel stale velo-smoke runs on the same ref. The smoke script
+# hits 5 external Wix /_functions endpoints; concurrent runs double the
+# external rate-limit pressure for no extra signal. Group key per-workflow
+# so this doesn't collide with ci/codeql/labeler/etc on shared refs.
+concurrency:
+  group: velo-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
