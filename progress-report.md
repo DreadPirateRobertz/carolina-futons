@@ -1,5 +1,21 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:37 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:45 MT**
+
+## Session 2026-05-10 — Wave 10 (02:37–02:45 MT)
+| Done | Detail |
+|------|--------|
+| ✅ PR #515 MERGED | cf-1eb5 r5 bears header (blaidd, cfw). Stilgar: "Looks good!" ✅ |
+| ✅ PR #1229 MERGED | cf-4x7e chunk 8 — blogService (morgott). SUPERSEDE COMPLETE. 73 methods, -15,917 LOC. 0.08% gap → --admin. |
+| ✅ cf-1eb5 + cf-rtd7.1 CLOSED | Bears shipped; Velo webMethod verification documented. |
+| ✅ cf-cart-session-dual-write FILED | P2 bug from blaidd verification: cartSessionService dual-write never implemented (comment only). miquella assigned. |
+| ✅ cf-3qt.8.31 FILED | UptimeRobot activation — godfrey assigned (account create + API key + run setup-monitors.sh). |
+| ✅ cf-3qt.8.30 CLOSED | Duplicate of cf-3qt.8.3 (/api/health + monitoring-setup.md already existed). |
+| 📊 Stilgar DMs sent | cfw-ajk status (DEFERRED, ready to activate on word), cf-hafn manual template steps (reCAPTCHA blocks headless login). |
+| ✅ SUPERSEDE complete | morgott greenlit for KEEP-PARTIAL phase 3 (8 files / 54 methods). |
+| 🔄 millicent | Coverage recovery sprint started: main at 84.92%, target ≥85.0%. |
+| ⏳ cf-hafn | Stilgar must create `contact_form_auto_reply` template in Wix Triggered Emails dashboard (DM sent with steps). |
+| ⏳ cfw-ajk | Awaiting Stilgar activation word. Sub-beads ready to file. |
+| ⏳ cf-xdji | shiny polecat re-kicked by mayor. 5-min re-route window active. |
 
 ## Session 2026-05-10 — Wave 9 (02:20–02:37 MT)
 | Done | Detail |
