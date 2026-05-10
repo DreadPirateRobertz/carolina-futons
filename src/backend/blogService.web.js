@@ -1,14 +1,24 @@
 /**
- * Blog Service — web module wrapper for blogContent (static) and Wix Blog CMS (live).
+ * Blog Service — web module wrapper for the live Wix Blog CMS.
  * Exposes blog functions to public/page files via Wix web module convention.
+ *
+ * cf-4x7e Pass 2 chunk 8 retired the static-data wrappers
+ * (fetchBlogPost, fetchBlogSlugs, fetchBlogFaqs, getPostBySlug) — none
+ * had callers in cfutons or stage3-velo. The live methods kept here
+ * are wired by:
+ *   - getPublishedBlogPosts: src/pages/Blog.js (cfutons + stage3)
+ *   - getRecentPosts:        src/public/HomeBlogTeasers.js (cfutons + stage3)
+ *   - fetchAllBlogPosts:     stage3 src/public/HomeBlogTeasers.js
+ *   - getCategories:         stage3 src/pages/Blog.js
  *
  * @requires wix-web-module
  * @requires wix-blog-backend
- * @requires backend/blogContent
+ * @requires backend/blogContent — for fetchAllBlogPosts (the only static
+ *           wrapper still alive)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { posts as blogPosts } from 'wix-blog-backend';
-import { getAllBlogPosts, getBlogPost, getBlogSlugs, getBlogFaqs } from 'backend/blogContent';
+import { getAllBlogPosts } from 'backend/blogContent';
 
 const DEFAULT_PER_PAGE = 9;
 const FALLBACK_AUTHOR = 'Carolina Futons Team';
@@ -105,30 +115,6 @@ export const getRecentPosts = webMethod(
 );
 
 /**
- * Fetch a single published post from the Wix Blog CMS by its slug.
- * Returns a normalized post object, or null if not found or on error.
- *
- * @function getPostBySlug
- * @param {string} slug Post slug (from URL path)
- * @returns {Promise<Object|null>} Normalized post or null
- * @permission Anyone
- */
-export const getPostBySlug = webMethod(
-  Permissions.Anyone,
-  async (slug) => {
-    if (!slug || typeof slug !== 'string') return null;
-    try {
-      const response = await blogPosts.getPost(slug.trim());
-      return response.post ? normalizePost(response.post) : null;
-    } catch (err) {
-      if (err?.code === 404 || err?.message?.includes('not found')) return null;
-      console.error('[blogService] getPostBySlug failed:', err?.message);
-      return null;
-    }
-  }
-);
-
-/**
  * Return the sorted list of unique category labels found in recent posts.
  * Fetches up to 50 posts to collect categories; fails open → returns [].
  *
@@ -157,12 +143,6 @@ export const getCategories = webMethod(
   }
 );
 
-// ── Static data wrappers (legacy — used by Blog Post page and RSS) ────
+// ── Static data wrapper kept for stage3-velo's HomeBlogTeasers ────────
 
 export const fetchAllBlogPosts = webMethod(Permissions.Anyone, () => getAllBlogPosts());
-
-export const fetchBlogPost = webMethod(Permissions.Anyone, (slug) => getBlogPost(slug));
-
-export const fetchBlogSlugs = webMethod(Permissions.Anyone, () => getBlogSlugs());
-
-export const fetchBlogFaqs = webMethod(Permissions.Anyone, (slug) => getBlogFaqs(slug));

@@ -3,7 +3,7 @@
  * TDD tests for CMS-driven blog web methods:
  *   - getPublishedBlogPosts (paginated listing)
  *   - getRecentPosts (flat recent-N fetch)
- *   - getPostBySlug (single-post lookup)
+ * 
  *   - getCategories (category extraction)
  *
  * Uses wix-blog-backend mock; covers happy path, empty state, slug routing, and error paths.
@@ -20,7 +20,6 @@ import {
 import {
   getPublishedBlogPosts,
   getRecentPosts,
-  getPostBySlug,
   getCategories,
 } from '../src/backend/blogService.web.js';
 
@@ -292,65 +291,6 @@ describe('getRecentPosts — post fetch', () => {
   });
 });
 
-// ── getPostBySlug — slug routing ──────────────────────────────────────
-
-describe('getPostBySlug — slug routing', () => {
-  it('returns normalized post when slug matches', async () => {
-    __setPosts([makePost(1, { slug: 'how-to-care-for-your-futon' })]);
-    const result = await getPostBySlug('how-to-care-for-your-futon');
-    expect(result).not.toBeNull();
-    expect(result.slug).toBe('how-to-care-for-your-futon');
-  });
-
-  it('returns normalized post shape', async () => {
-    __setPosts([makePost(1, { slug: 'test-slug' })]);
-    const result = await getPostBySlug('test-slug');
-    expect(result).toHaveProperty('_id');
-    expect(result).toHaveProperty('title');
-    expect(result).toHaveProperty('slug');
-    expect(result).toHaveProperty('excerpt');
-    expect(result).toHaveProperty('coverImageUrl');
-    expect(result).toHaveProperty('category');
-    expect(result).toHaveProperty('authorName');
-  });
-
-  it('returns null when slug does not match any post', async () => {
-    __setPosts([makePost(1, { slug: 'some-other-post' })]);
-    const result = await getPostBySlug('nonexistent-slug');
-    expect(result).toBeNull();
-  });
-
-  it('returns null for null slug', async () => {
-    const result = await getPostBySlug(null);
-    expect(result).toBeNull();
-  });
-
-  it('returns null for empty string slug', async () => {
-    const result = await getPostBySlug('');
-    expect(result).toBeNull();
-  });
-
-  it('returns null on CMS error (fails open)', async () => {
-    __setPosts([makePost(1)]);
-    __setGetError(new Error('CMS down'));
-    const result = await getPostBySlug('post-1');
-    expect(result).toBeNull();
-  });
-
-  it('does not throw on error', async () => {
-    __setGetError(new Error('Network error'));
-    await expect(getPostBySlug('any-slug')).resolves.toBeNull();
-  });
-
-  it('trims whitespace from slug', async () => {
-    __setPosts([makePost(1, { slug: 'trimmed-slug' })]);
-    const result = await getPostBySlug('  trimmed-slug  ');
-    expect(result).not.toBeNull();
-    expect(result.slug).toBe('trimmed-slug');
-  });
-});
-
-// ── getCategories ─────────────────────────────────────────────────────
 
 describe('getCategories — category extraction', () => {
   it('returns sorted array of unique category labels', async () => {
