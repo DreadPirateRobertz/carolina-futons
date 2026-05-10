@@ -1,6 +1,17 @@
 # CF Project Progress Report
 **Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
 
+## Session 2026-05-10 — Wave 13
+| Done | Detail |
+|------|--------|
+| ✅ Dark mode audit COMPLETE | cf-ax24 epic filed. All pages walked: home, PLP, PDP, search, about, visit, cart drawer, mobile 375px, mobile menu. |
+| 🧪 Root cause found | Tailwind v4 semantic swap: cf-navy→#7ab0c8 (steel blue), cf-espresso→#f0e4d4 (cream) in dark mode. cf-sand=#1e2a3a, cf-cream=#263545 are correct dark surfaces. |
+| ✅ PASSING in dark | Header (bears+shrunken), mobile menu, cart drawer, footer, product cards, about/visit content, PLPControls (has dark:), search input (has dark:bg-cf-cream). |
+| 🆕 cf-ax24.1 FILED→blaidd | AnnouncementBar.tsx + GiftCardPromo.tsx: bg-cf-navy → add dark:bg-cf-sand dark:text-cf-ink |
+| 🆕 cf-ax24.2 FILED→blaidd | HomeNewsletterSection.tsx: bg-white input + bg-cf-navy button → dark: overrides |
+| 🆕 cf-ax24.3 FILED→blaidd | PdpShippingEstimate.tsx: bg-cf-espresso button → cream in dark mode (invisible). dark:bg-cf-sand dark:text-cf-ink fix. |
+| 📦 Batching order | All 3 child beads → ONE PR (cf-ukc6 Vercel credit conservation). blaidd notified with full spec. |
+
 ## Session 2026-05-10 — Wave 12
 | Done | Detail |
 |------|--------|
