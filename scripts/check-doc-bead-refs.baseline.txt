@@ -37,12 +37,6 @@ docs/TEST_STRATEGY.md:393 → cf-mdd
 docs/TEST_STRATEGY.md:394 → cf-bl8
 docs/TEST_STRATEGY.md:395 → cf-b2i
 docs/cf-uxcq-product-brief.md:3 → cf-ph3g.p3a
-docs/email-audit-2026-05-04.md:15 → cf-icww.followup
-docs/email-audit-2026-05-04.md:105 → cf-icww.followup
-docs/email-audit-2026-05-04.md:144 → cf-icww.followup
-docs/WIX-MCP-GAP-ANALYSIS.md:132 → cf-9g1g
-docs/WIX-MCP-GAP-ANALYSIS.md:227 → cf-9g1g
-docs/ELEMENT-ID-RECONCILIATION.md:6 → cf-nl57
 docs/MARKETING-STRATEGY.md:4 → cf-5ef
 docs/MARKETING-STRATEGY.md:72 → cf-7bk
 docs/MARKETING-STRATEGY.md:74 → cf-1nb
@@ -99,10 +93,6 @@ docs/reports/token-burn-audit.md:19 → cf-8iy
 docs/reports/token-burn-audit.md:47 → cf-8iy
 docs/reports/token-burn-audit.md:90 → cf-8iy
 docs/strategy/klaviyo-migration-spike.md:5 → cf-ztoy
-docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:126 → cf-test
-docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:282 → cf-test
-docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:313 → cf-test
-docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:341 → cf-test
 docs/superpowers/specs/2026-03-23-gamification-v2-cross-crew-strengthening.md:59 → cf-m1c
 docs/superpowers/specs/2026-03-23-gamification-v2-cross-crew-strengthening.md:116 → cf-m1c
 docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:49 → cf-2wxp

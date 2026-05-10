@@ -66,9 +66,20 @@ from pathlib import Path
 # with optional `.<suffix>` for sub-beads (e.g. `cf-3qt.8.31`). The
 # pattern is intentionally permissive on length so newly-coined IDs
 # parse correctly; the validity check is membership in `bd list`.
-BEAD_RE = re.compile(r"\bcf-[a-z0-9]{3,12}(?:\.[a-z0-9]+)*\b")
+# Real bead IDs are `cf-XXXX` (3–12 alnum) with optional dotted
+# sub-bead segments (`.8.31`). They never contain a second hyphen
+# — so `cf-test-zou-...` (a branch name) and `cf-foo-bar` (a
+# Tailwind utility composition) are NOT bead refs. The negative
+# lookahead `(?!-)` rejects those shapes.
+BEAD_RE = re.compile(r"\bcf-[a-z0-9]{3,12}(?:\.[a-z0-9]+)*(?!-)\b")
 
-FENCED_BLOCK_RE = re.compile(r"```[a-zA-Z0-9_-]*\n.*?\n```", re.DOTALL)
+# MULTILINE so `^` anchors to each line; the leading `[ \t]*` allows
+# indented fences (CommonMark-permitted, common inside nested
+# bullet lists where bash blocks pick up 2- or 4-space indent).
+FENCED_BLOCK_RE = re.compile(
+    r"^[ \t]*```[a-zA-Z0-9_-]*\n.*?\n[ \t]*```",
+    re.DOTALL | re.MULTILINE,
+)
 
 
 def strip_fenced_blocks(text: str) -> str:
