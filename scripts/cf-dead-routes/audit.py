@@ -4,13 +4,18 @@
 For each `export const NAME = webMethod(Permissions.X, ...)` in
 src/backend/*.web.js, classify into:
 
-  HTTP-EXPOSED  — http-functions.js imports OR calls NAME (cfw can reach it)
-  EVENT-WIRED   — events.js or *.events.js references NAME
-  FRONTEND      — src/public, src/pages, or any non-.web.js Velo source calls NAME
-  INTERNAL      — called by another src/backend/*.web.js module OR by another
-                  exported function in the SAME .web.js file (e.g. generatePinContent
-                  is called by syncCatalogBatch in the same pinterestCatalogSync.web.js)
-  DEAD          — no caller anywhere
+  HTTP-EXPOSED       — http-functions.js imports OR calls NAME (cfw can reach it)
+  EVENT-WIRED        — events.js or *.events.js references NAME
+  FRONTEND           — src/public, src/pages, or any non-.web.js Velo source calls NAME
+  INTERNAL           — called by another src/backend/*.web.js module OR by another
+                       exported function in the SAME .web.js file (e.g. generatePinContent
+                       is called by syncCatalogBatch in the same pinterestCatalogSync.web.js)
+  PATH-REFERENCED    — defining file's path appears as a quoted string in another
+                       file (script, test, doc generator) — e.g. fs.readFileSync,
+                       path.resolve, Vite ?raw imports, or a path inside an array.
+                       Symbol-level callers may not exist, but deleting the file
+                       still breaks the consumer. cf-sq0d / detector v3.
+  DEAD               — no caller anywhere
 
 Plus secondary flag SUSPICIOUS:
   - Permissions.Anyone, no HTTP wrapper / cfw caller
@@ -101,6 +106,84 @@ def all_source_files() -> list[Path]:
     return out
 
 
+# cf-sq0d (detector v3): scan callers that touch backend files by FILESYSTEM
+# PATH rather than by import. This catches the cf-4x7e Pass 2 chunk 3 blind-
+# spot where catalogImport.web.js had no symbol-level caller but
+# scripts/validate-catalog.js read it via fs.readFileSync as the canonical
+# source for VALID_CATEGORIES — deleting the file ENOENT'd the script.
+#
+# Patterns recognized (each as a quoted-string literal):
+#   1. Node-style fs reads:  fs.readFileSync('src/backend/<...>')
+#   2. Path resolution:       path.resolve(__dirname, '...src/backend/<...>')
+#   3. Vite-style ?raw:       import x from 'src/backend/<...>?raw'
+#   4. Quoted-bare paths in arrays / configs: ['src/backend/<...>', ...]
+#
+# Implementation strategy: a single regex that matches any quoted string
+# (single, double, or backtick) that contains the literal substring
+# `backend/<MODULE>.web.js` (with or without a `src/` prefix). This catches
+# all four patterns above with one pass — pattern-match-by-content is more
+# robust than enumerating each Node API by name.
+#
+# Search scope: scripts/, tests/, plus the regular src/ tree. Adding a new
+# directory? Append it to PATH_REF_DIRS below — keep the list small so we
+# don't regress to scanning node_modules.
+
+PATH_REF_DIRS = ("src", "scripts", "tests")
+
+# Match a quoted string containing `backend/<word>.web.js` (with optional
+# leading `src/`, optional trailing `?raw` or other suffix). The non-greedy
+# inner segment lets us catch path-resolve calls that embed the path inside
+# longer concatenations like `path.join(__dirname, '..', 'src/backend/x.web.js')`.
+QUOTED_PATH_RE = re.compile(
+    r"""['"`]([^'"`]*?(?:src/)?backend/[\w./-]+\.web\.js[^'"`]*)['"`]""",
+)
+
+
+def collect_path_referenced_files() -> dict[str, list[str]]:
+    """Return mapping of `src/backend/<file>.web.js` → list of caller rel-paths.
+
+    A caller counts when its source contains a quoted string that names the
+    backend file's path. The defining file itself is excluded — a self-
+    reference (e.g. an absolute path log line) shouldn't promote the file
+    out of DEAD.
+    """
+    refs: dict[str, set[str]] = {}
+    for top in PATH_REF_DIRS:
+        base = ROOT / top
+        if not base.exists():
+            continue
+        for fp in base.rglob("*"):
+            if not fp.is_file():
+                continue
+            if fp.suffix not in (".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"):
+                continue
+            try:
+                text = fp.read_text(errors="ignore")
+            except OSError:
+                continue
+            caller_rel = str(fp.relative_to(ROOT))
+            for m in QUOTED_PATH_RE.finditer(text):
+                quoted = m.group(1)
+                # Normalize: extract the `src/backend/<file>.web.js` portion.
+                # Strip query suffixes (?raw) and any leading `..//` noise.
+                idx = quoted.rfind("backend/")
+                if idx < 0:
+                    continue
+                tail = quoted[idx:]
+                # Truncate at first non-path char (?, #, space).
+                for sep in ("?", "#"):
+                    cut = tail.find(sep)
+                    if cut >= 0:
+                        tail = tail[:cut]
+                if not tail.endswith(".web.js"):
+                    continue
+                target = "src/" + tail  # canonical repo-relative form
+                if target == caller_rel:
+                    continue  # self-reference doesn't count
+                refs.setdefault(target, set()).add(caller_rel)
+    return {k: sorted(v) for k, v in refs.items()}
+
+
 def collect_web_methods() -> dict[str, dict]:
     methods: dict[str, dict] = {}
     for fp in BACKEND.rglob("*.web.js"):
@@ -173,9 +256,11 @@ def classify_method(
     cfw_files: list[Path],
     http_text: str,
     events_text: str,
+    path_refs: dict[str, list[str]] | None = None,
 ) -> dict:
     """Return classification for this webMethod."""
     defining_file = info["file"]
+    path_refs = path_refs or {}
     pat_call = re.compile(rf"\b{re.escape(name)}\s*\(")  # NAME(... call
     pat_import = re.compile(rf"\b{re.escape(name)}\b")  # any reference (for imports)
 
@@ -229,6 +314,16 @@ def classify_method(
         if len(sample_callers) < 5:
             sample_callers.append(rel)
 
+    # cf-sq0d: filesystem-path callers of the defining FILE (not the symbol).
+    # E.g. scripts/validate-catalog.js reads catalogImport.web.js via
+    # fs.readFileSync — none of the symbols are called, but deleting the file
+    # still breaks the script. Promote out of DEAD into PATH-REFERENCED.
+    path_callers = path_refs.get(defining_file, [])
+    in_path_ref = bool(path_callers)
+    if in_path_ref and len(sample_callers) < 5:
+        for caller in path_callers[: 5 - len(sample_callers)]:
+            sample_callers.append(f"{caller} (filesystem-path)")
+
     buckets: list[str] = []
     if in_http:
         buckets.append("HTTP-EXPOSED")
@@ -238,6 +333,8 @@ def classify_method(
         buckets.append("FRONTEND")
     if in_pdocs_backend or in_same_file:
         buckets.append("INTERNAL")
+    if in_path_ref:
+        buckets.append("PATH-REFERENCED")
     if not buckets:
         buckets = ["DEAD"]
 
@@ -266,6 +363,10 @@ def classify_method(
         gap_verdict = "WRAPPED-NO-CONSUMER"
     elif buckets == ["DEAD"] and not has_cfw_any:
         gap_verdict = "UNUSED-CAN-DELETE"
+    elif buckets == ["PATH-REFERENCED"] and not has_cfw_any:
+        # cf-sq0d: file is read by a script/test/doc generator but no symbol
+        # call site exists. Deletion needs the consumer migrated first.
+        gap_verdict = "PATH-CONSUMER-MIGRATE-FIRST"
     elif has_cfw_low:
         gap_verdict = "MAYBE-CFW-NAME-COLLISION"  # bare-word match only
     else:
@@ -285,6 +386,8 @@ def classify_method(
         "in_pages": in_pages,
         "in_other_backend": in_pdocs_backend,
         "in_same_file": in_same_file,
+        "in_path_ref": in_path_ref,
+        "path_ref_callers": path_callers[:6],
         "sample_callers": sample_callers,
         "cfw_high_refs": cfw_high[:6],
         "cfw_low_refs": cfw_low[:6],
@@ -311,8 +414,17 @@ def main() -> int:
     cfw_files = collect_cfw_files()
     print(f"cfw src files: {len(cfw_files)}", file=sys.stderr)
 
+    # cf-sq0d: filesystem-path-reference scan across src/ + scripts/ + tests/.
+    path_refs = collect_path_referenced_files()
+    print(
+        f"path-referenced backend files: {len(path_refs)}",
+        file=sys.stderr,
+    )
+
     rows = [
-        classify_method(name, info, files, cfw_files, http_text, events_text)
+        classify_method(
+            name, info, files, cfw_files, http_text, events_text, path_refs
+        )
         for name, info in methods.items()
     ]
 
