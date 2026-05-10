@@ -64,6 +64,12 @@ INTENTIONAL_ANYONE = frozenset({
     # ups-shipping — customer self-service tracking endpoint. Cited author
     # note + 6 actual internal callers.
     "ups-shipping.trackShipment",
+    # pinterestCatalogSync — internal helper called by syncCatalogBatch in the
+    # same module to compose pin content from a Wix product. Not exposed via
+    # http-functions.js; the public-verb prefix ("generate") and Anyone
+    # permission (inherited from sibling functions) trip the SUSPICIOUS
+    # heuristic. cf-quba.fu1 last false-positive cleanup.
+    "pinterestCatalogSync.generatePinContent",
 })
 
 
