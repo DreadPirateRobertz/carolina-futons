@@ -30,6 +30,12 @@ const BACKEND_DIR = resolve(REPO_ROOT, 'src/backend');
 
 function parseJobsConfig() {
   const text = readFileSync(JOBS_CONFIG_PATH, 'utf8');
+  // Matches `<key>: { functionLocation: '/file.web.js'`. Captures the cron
+  // entry name + the `functionLocation` path. Requires `functionLocation`
+  // to be the FIRST line inside the `{` — a future entry that puts
+  // `description` first would silently slip past validation. Verified
+  // safe today by the entry-count sanity check below + the existing
+  // jobs.config style.
   const re = /^\s*(\w+):\s*\{\s*\n\s*functionLocation:\s*['"](\/[^'"]+)['"]/gm;
   const out = [];
   let m;
@@ -39,10 +45,25 @@ function parseJobsConfig() {
   return out;
 }
 
+// Sanity floor — independent of the integrity assertions, this catches a
+// future jobs.config refactor that breaks the parser regex (entries written
+// in a different shape would yield 0 hits, integrity tests would silently
+// pass with no entries scanned, and a deletion regression could escape).
+function countJobsConfigEntriesCheap() {
+  const text = readFileSync(JOBS_CONFIG_PATH, 'utf8');
+  // Count `functionLocation:` lines — every entry has exactly one.
+  return (text.match(/^\s*functionLocation:/gm) || []).length;
+}
+
 function fileHasExport(filePath, exportName) {
   if (!existsSync(filePath)) return false;
   const src = readFileSync(filePath, 'utf8');
   const escaped = exportName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  // Matches `export const NAME =`, `export function NAME`, `export async
+  // function NAME`. Does NOT match named-export blocks (`export { NAME }`)
+  // or re-exports (`export { NAME } from './foo'`) — no cron currently
+  // points at those forms, so a future re-exported cron target would
+  // false-fail this test. Extend the alternation if/when that lands.
   const re = new RegExp(`^export\\s+(?:async\\s+)?(?:const|function)\\s+${escaped}\\b`, 'm');
   return re.test(src);
 }
@@ -52,6 +73,13 @@ describe('jobs.config — every cron entry resolves to a real export', () => {
 
   it('found at least one cron entry (sanity)', () => {
     expect(entries.length).toBeGreaterThan(5);
+  });
+
+  it('parser caught every functionLocation: line — no entries silently dropped', () => {
+    // Detects a regex regression where entries are written in a shape the
+    // primary regex doesn't match (e.g. `description` placed before
+    // `functionLocation`). pr-test-analyzer #2.
+    expect(entries.length).toBe(countJobsConfigEntriesCheap());
   });
 
   for (const { name, location } of entries) {
