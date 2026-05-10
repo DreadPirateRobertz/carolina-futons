@@ -1,5 +1,13 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:35 MT**
+
+## Session 2026-05-10 — Wave 22
+| Done | Detail |
+|------|--------|
+| ✅ cfutons PR #1259 MERGED | fix/cf-4x7e-fu1: jobs.config orphans fixed (4 broken crons) + jobsConfigIntegrity.test.js (22 tests). test(20)+test(22) PASS. |
+| ✅ cfutons PR #1260 MERGED | cf-3pwy: Wix Stores V1/V3 audit doc — clean V1/V3 boundary. cf-3pwy closed. |
+| ⏳ PR #540 (cfw) | ALL CI GREEN incl. e2e 6s pass. BLOCKED: Stilgar AM visual confirm → batch window. |
+| 📦 Batch queue (7 PRs) | morgott cf-641x, miquella cf-bbo8, jasper cf-ceex, obsidian cf-e55k, onyx cf-nm6p, opal cf-zmsq, quartz cf-mu05. All holding locally. |
 
 ## Session 2026-05-10 — Wave 21
 | Done | Detail |
