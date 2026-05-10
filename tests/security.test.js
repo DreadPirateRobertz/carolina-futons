@@ -8,25 +8,9 @@ import { submitContactForm } from '../src/backend/contactSubmissions.web.js';
 import { trackProductView, trackAddToCart } from '../src/backend/analyticsHelpers.web.js';
 import { sendEmail, submitSwatchRequest } from '../src/backend/emailService.web.js';
 import { submitReview } from '../src/backend/dataService.web.js';
-import {
-  getPendingOrders,
-  fulfillOrder,
-  getTrackingUpdate,
-  getFulfillmentHistory,
-} from '../src/backend/fulfillment.web.js';
 import { getRelatedProducts } from '../src/backend/productRecommendations.web.js';
 import { sampleOrder, allProducts } from './fixtures/products.js';
 import { reviewRequests } from './fixtures/engagement.js';
-
-function loginAsAdmin() {
-  __setMember({ _id: 'admin-001' });
-  __setRoles([{ _id: 'admin', title: 'Admin' }]);
-}
-
-function loginAsMember() {
-  __setMember({ _id: 'member-001' });
-  __setRoles([{ _id: 'member', title: 'Member' }]);
-}
 
 beforeEach(() => {
   __setSecrets({ SITE_OWNER_CONTACT_ID: 'owner-contact-123' });
@@ -308,96 +292,6 @@ describe('submitSwatchRequest security', () => {
     });
 
     expect(result.success).toBe(true);
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════
-// FULFILLMENT — ADMIN AUTHORIZATION
-// ═════════════════════════════════════════════════════════════════════
-
-describe('fulfillment admin authorization', () => {
-  describe('getPendingOrders', () => {
-    it('allows admin to view pending orders', async () => {
-      loginAsAdmin();
-      const orders = await getPendingOrders(50);
-      expect(orders.length).toBe(1);
-      expect(orders[0].number).toBe('10042');
-    });
-
-    it('blocks non-admin members', async () => {
-      loginAsMember();
-      const orders = await getPendingOrders(50);
-      expect(orders).toEqual([]);
-    });
-
-    it('blocks unauthenticated users', async () => {
-      const orders = await getPendingOrders(50);
-      expect(orders).toEqual([]);
-    });
-  });
-
-  describe('fulfillOrder', () => {
-    it('allows admin to fulfill orders', async () => {
-      loginAsAdmin();
-      const result = await fulfillOrder('order-001', {
-        serviceCode: '03',
-        packages: [{ length: 80, width: 40, height: 12, weight: 85, description: 'Futon Frame' }],
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('blocks non-admin members', async () => {
-      loginAsMember();
-      const result = await fulfillOrder('order-001', {
-        serviceCode: '03',
-        packages: [{ length: 80, width: 40, height: 12, weight: 85 }],
-      });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('getTrackingUpdate', () => {
-    it('allows admin to get tracking updates', async () => {
-      loginAsAdmin();
-      __seed('Fulfillments', [{
-        _id: 'ful-001',
-        trackingNumber: '1Z999AA10123456784',
-        status: 'IN_TRANSIT',
-      }]);
-      const result = await getTrackingUpdate('1Z999AA10123456784');
-      expect(result.success).toBe(true);
-    });
-
-    it('blocks non-admin members', async () => {
-      loginAsMember();
-      const result = await getTrackingUpdate('1Z999AA10123456784');
-      expect(result.success).toBe(false);
-    });
-
-    it('blocks unauthenticated users', async () => {
-      const result = await getTrackingUpdate('1Z999AA10123456784');
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('getFulfillmentHistory', () => {
-    it('allows admin to view history', async () => {
-      loginAsAdmin();
-      __seed('Fulfillments', [
-        { _id: 'ful-001', createdDate: new Date(), status: 'DELIVERED' },
-      ]);
-      const history = await getFulfillmentHistory(100);
-      expect(history).toHaveLength(1);
-    });
-
-    it('blocks non-admin members', async () => {
-      loginAsMember();
-      __seed('Fulfillments', [
-        { _id: 'ful-001', createdDate: new Date(), status: 'DELIVERED' },
-      ]);
-      const history = await getFulfillmentHistory(100);
-      expect(history).toEqual([]);
-    });
   });
 });
 

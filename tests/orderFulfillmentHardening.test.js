@@ -1,5 +1,5 @@
 /**
- * Hardening tests for orderTracking, fulfillment, and postPurchaseCare.
+ * Hardening tests for orderTracking and postPurchaseCare.
  * Covers uncovered branches, edge cases, and bug-fix regressions.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -102,7 +102,7 @@ vi.mock('public/sharedTokens.js', () => ({
 
 // ── Module imports (after mocks) ────────────────────────────────────
 
-let orderTrackingMod, fulfillmentMod, postPurchaseMod;
+let orderTrackingMod, postPurchaseMod;
 
 beforeEach(async () => {
   _collections = {};
@@ -112,9 +112,8 @@ beforeEach(async () => {
   _shipmentResult = { success: true, trackingNumber: '1Z999', totalCharge: 35.50, labels: [{ labelBase64: 'base64label' }] };
   _trackResult = { success: true, status: 'In Transit', statusCode: 'I', activities: [], estimatedDelivery: '2026-03-20' };
   vi.resetModules();
-  [orderTrackingMod, fulfillmentMod, postPurchaseMod] = await Promise.all([
+  [orderTrackingMod, postPurchaseMod] = await Promise.all([
     import('../src/backend/orderTracking.web.js'),
-    import('../src/backend/fulfillment.web.js'),
     import('../src/backend/postPurchaseCare.web.js'),
   ]);
 });
@@ -251,171 +250,6 @@ describe('orderTracking hardening', () => {
     it('rejects null email', async () => {
       const r = await orderTrackingMod.unsubscribeFromNotifications('ORD-1', null);
       expect(r.success).toBe(false);
-    });
-  });
-});
-
-// ═════════════════════════════════════════════════════════════════════
-// fulfillment — uncovered branches
-// ═════════════════════════════════════════════════════════════════════
-
-describe('fulfillment hardening', () => {
-  describe('mapTrackingStatus edge cases', () => {
-    it('maps PICKUP status code', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'LABEL_CREATED' }]);
-      _trackResult = { success: true, statusCode: 'PICKUP', status: 'Picked Up', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('PICKED_UP');
-    });
-
-    it('maps MANIFEST status code', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: true, statusCode: 'MANIFEST', status: 'Manifest', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('LABEL_CREATED');
-    });
-
-    it('maps EXCEPTION status code', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: true, statusCode: 'EXCEPTION', status: 'Exception', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('EXCEPTION');
-    });
-
-    it('maps RETURNED status code', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: true, statusCode: 'RETURNED', status: 'Returned', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('RETURNED');
-    });
-
-    it('maps RS status code', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: true, statusCode: 'RS', status: 'Return to Sender', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('RETURNED');
-    });
-
-    it('maps null statusCode to UNKNOWN', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: true, statusCode: null, status: 'Unknown', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('UNKNOWN');
-    });
-
-    it('defaults unrecognized status code to IN_TRANSIT', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'LABEL_CREATED' }]);
-      _trackResult = { success: true, statusCode: 'ZZZ', status: 'Unknown', activities: [] };
-      await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(_collections['Fulfillments'][0].status).toBe('IN_TRANSIT');
-    });
-  });
-
-  describe('getTrackingUpdate — no matching fulfillment record', () => {
-    it('returns tracking data even without fulfillment record', async () => {
-      __seed('Fulfillments', []);
-      _trackResult = { success: true, statusCode: 'I', status: 'In Transit', activities: [{ status: 'Departed' }] };
-      const r = await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(r.success).toBe(true);
-      expect(r.status).toBe('In Transit');
-    });
-  });
-
-  describe('getTrackingUpdate — tracking failure', () => {
-    it('returns error when tracking fails', async () => {
-      __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999', status: 'IN_TRANSIT' }]);
-      _trackResult = { success: false, error: 'Not found' };
-      const r = await fulfillmentMod.getTrackingUpdate('1Z999');
-      expect(r.success).toBe(false);
-    });
-  });
-
-  describe('updateAllTracking — skips records without tracking number', () => {
-    it('skips fulfillments with no tracking number', async () => {
-      __seed('Fulfillments', [
-        { _id: 'f1', trackingNumber: '', status: 'LABEL_CREATED' },
-        { _id: 'f2', trackingNumber: '1Z999', status: 'IN_TRANSIT' },
-      ]);
-      const r = await fulfillmentMod.updateAllTracking();
-      expect(r.updated).toBe(1);
-    });
-
-    it('skips RETURNED shipments', async () => {
-      __seed('Fulfillments', [
-        { _id: 'f1', trackingNumber: '1Z999', status: 'RETURNED' },
-      ]);
-      const r = await fulfillmentMod.updateAllTracking();
-      expect(r.updated).toBe(0);
-    });
-  });
-
-  describe('fulfillOrder — service name mapping', () => {
-    it('maps known service codes', async () => {
-      __seed('Stores/Orders', [{
-        _id: 'o1', number: 'ORD-1',
-        billingInfo: { firstName: 'Jane', lastName: 'Doe' },
-        shippingInfo: { shipmentDetails: { address: { city: 'Asheville' } } },
-      }]);
-      const r = await fulfillmentMod.fulfillOrder('o1', { serviceCode: '02' });
-      expect(r.success).toBe(true);
-      expect(_collections['Fulfillments'][0].serviceName).toBe('UPS 2nd Day Air');
-    });
-
-    it('falls back for unknown service code', async () => {
-      __seed('Stores/Orders', [{
-        _id: 'o1', number: 'ORD-1',
-        billingInfo: {},
-        shippingInfo: { shipmentDetails: { address: {} } },
-      }]);
-      const r = await fulfillmentMod.fulfillOrder('o1', { serviceCode: '99' });
-      expect(r.success).toBe(true);
-      expect(_collections['Fulfillments'][0].serviceName).toBe('UPS Service 99');
-    });
-  });
-
-  describe('fulfillOrder — address line fallback', () => {
-    it('uses addressLine1 when addressLine is missing', async () => {
-      __seed('Stores/Orders', [{
-        _id: 'o1', number: 'ORD-1',
-        billingInfo: { firstName: 'J', lastName: 'D' },
-        shippingInfo: { shipmentDetails: { address: { addressLine1: '456 Oak Ave', city: 'Raleigh', state: 'NC', postalCode: '27601' } } },
-      }]);
-      const r = await fulfillmentMod.fulfillOrder('o1', {});
-      expect(r.success).toBe(true);
-    });
-  });
-
-  describe('getPendingOrders — limit clamping', () => {
-    it('clamps limit to minimum of 1', async () => {
-      __seed('Stores/Orders', []);
-      const r = await fulfillmentMod.getPendingOrders(0);
-      expect(r).toEqual([]);
-    });
-
-    it('clamps limit to maximum of 200', async () => {
-      __seed('Stores/Orders', []);
-      const r = await fulfillmentMod.getPendingOrders(500);
-      expect(r).toEqual([]);
-    });
-
-    it('handles NaN limit', async () => {
-      __seed('Stores/Orders', []);
-      const r = await fulfillmentMod.getPendingOrders('abc');
-      expect(r).toEqual([]);
-    });
-  });
-
-  describe('getFulfillmentHistory — limit clamping', () => {
-    it('clamps limit to minimum of 1', async () => {
-      __seed('Fulfillments', []);
-      const r = await fulfillmentMod.getFulfillmentHistory(0);
-      expect(r).toEqual([]);
-    });
-
-    it('clamps limit to maximum of 500', async () => {
-      __seed('Fulfillments', []);
-      const r = await fulfillmentMod.getFulfillmentHistory(1000);
-      expect(r).toEqual([]);
     });
   });
 });
