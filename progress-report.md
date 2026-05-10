@@ -1,6 +1,14 @@
 # CF Project Progress Report
 **Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
 
+## Session 2026-05-10 — Wave 16
+| Done | Detail |
+|------|--------|
+| ✅ PR #548 MERGED | miquella: cf-7tkf a11y audit — 0 P0, 3 P1 findings. Admin-merge (doc-only, Vercel ✅, runners queued). cf-7tkf CLOSED. |
+| 🆕 cf-7tkf.1/.2 filed→blaidd | P1: placeholder contrast /40→/60 + close-button aria-label verify. Bundle into cf-r9r3 wave. |
+| 🔄 miquella→cf-rn4j | Dark mode wave 2 assigned. Pages: account/contact/getting-it-home/design-a-room/gift-cards/guides/reviews/quickview/compare. |
+| ⚠️ GitHub Actions runners | e2e stuck queued 0s on PRs #546/#547/#548 — all admin-merged (lint+Vercel green). Flagged to mayor for Stilgar. |
+
 ## Session 2026-05-10 — Wave 15
 | Done | Detail |
 |------|--------|
