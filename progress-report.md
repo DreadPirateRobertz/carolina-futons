@@ -1,5 +1,38 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 04:25 MT**
+
+## Session 2026-05-10 — Wave 25
+| Done | Detail |
+|------|--------|
+| ✅ PR #1267 MERGED | cf-qc7a discussions triage — 2 stale discussions flagged (only OP/admin can close). Bead closed. |
+| ✅ 8 workers reslung | blaidd→cf-pjdb (mobile smoke), millicent→cf-cmz0 (coverage health), miquella→cutover doc validation, morgott→cf-vty7, radahn→cf-vu40 (guest checkout E2E), rennala→cf-jsn2 (branch cleanup). |
+| 🔄 PRs #1268 #1269 | CI still running (cutover checklist + curl results docs) |
+| ✅ cf-dbw9 finding #3 | Radahn authorized to add cfw branch protection (mirror cfutons + enforce_admins=true). |
+| 🔄 cf-x0ks | Godfrey implementing /api/health route (P1 cutover blocker). |
+| ✅ cf-v8jj cf-5f9o | Miquella self-claimed: Phase 8 day-1 stability template + post-mortem template (211+241 lines). 5 branches held locally. |
+| ✅ cf-3pc5 DONE | Radahn: Velo smoke results doc on main. 4/5 PASS. contactSubmit 500 = expected (cf-c6g5 gate). |
+
+**Worker Map (04:25 MT):**
+blaidd: cf-pjdb (mobile smoke) | godfrey: cf-x0ks (/api/health route P1)
+millicent: cf-cmz0 (coverage health) | miquella: cutover doc cross-ref validation
+morgott: cf-vty7 (coverage R5 top-up) | radahn: cf-vu40 (guest checkout E2E) + cf-dbw9 #3
+rennala: cf-jsn2 (stale branch cleanup)
+
+## Session 2026-05-10 — Wave 24
+| Done | Detail |
+|------|--------|
+| 🚨 P1 CUTOVER BLOCKER | /api/health returns 404 on Vercel preview (PR #1269 finding). godfrey priority-switched to cf-x0ks (5-line Next.js route). |
+| ✅ PRs #1263 #1265 #1266 MERGED | cf-3l5l Pass3 triage, cf-khqd CI concurrency, cf-dbw9 .pem/.key gitignore. |
+| ✅ PR #1264 cherry-picked | cf-4x7e.fu1 polish — branch had accidental PR commit conflict; cherry-picked ee5be876 directly. |
+| 🔄 PRs #1267 #1268 #1269 | CI running — discussions triage, cutover checklist, curl results doc |
+| 🔄 PR #1261 (cf-xpqf) | BLOCKED 84.99% — morgott on coverage R5 |
+| ⚠️ /api/health MISSING | cf-x0ks filed, godfrey assigned. Route needed before UptimeRobot + cutover. |
+
+**AM Stilgar Gates:**
+1. PR #540 visual confirm → BATCH WINDOW OPEN (7 PRs)
+2. cf-dbw9 Track 3: Settings→Code security→enable 2 toggles on both repos
+3. UptimeRobot account creation (cf-3qt.8.31)
+4. Vercel Pro upgrade (before cutover night)
 
 ## Session 2026-05-10 — Wave 23 (WATCHDOG RESPONSE)
 | Done | Detail |
