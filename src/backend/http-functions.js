@@ -9,7 +9,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact, triggerWelcomeSeries } from 'backend/emailAutomation.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
@@ -3671,6 +3671,113 @@ export async function post_submitSurvey(request) {
   }
 }
 export function options_submitSurvey(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/queueWelcomeEmail (cf-uwfw / cf-7ozz.1) ──────────────────────
+//
+// cfw's src/app/api/email/trigger/route.ts posts to
+// /_functions/queueWelcomeEmail (via callVelo({method:'queueWelcomeEmail'}))
+// with body {args: [{type:'welcome', email}]}. Wix doesn't auto-route
+// /_functions/<name> to a webMethod of the same name — this wrapper
+// bridges to triggerWelcomeSeries(email, firstName).
+//
+// Auth: triggerWelcomeSeries is Permissions.SiteMember but bypasses the
+// permission check on backend-to-backend invocation; it self-guards via
+// resolveContactId (cf-xdji), so an anonymous trigger is safe — the
+// downstream queue still requires a resolvable email.
+
+export async function post_queueWelcomeEmail(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  // callVelo wraps the original payload in args:[payload] — accept both
+  // shapes so the wrapper works whether cfw routes via callVelo or a
+  // direct fetch.
+  const payload = (Array.isArray(body?.args) && body.args[0]) || body || {};
+  const email = typeof payload.email === 'string' ? payload.email.trim() : '';
+  const firstName = typeof payload.firstName === 'string' ? payload.firstName : '';
+  if (!email) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'email is required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  try {
+    const result = await triggerWelcomeSeries(email, firstName);
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (post_queueWelcomeEmail) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+export function options_queueWelcomeEmail(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/queueCartRecovery (cf-uwfw / cf-7ozz.1) ──────────────────────
+//
+// cfw's same route posts here for cart-recovery triggers with body
+// {args: [{type:'cart-recovery', items:[{productId, quantity}]}]}. The
+// payload is intentionally lean — it's a hint to seed the abandoned-cart
+// pipeline, NOT a complete cart row. The cron-driven
+// triggerAbandonedCartRecovery scans the AbandonedCarts CMS collection
+// and queues recovery emails for rows that have an email + checkoutId.
+//
+// For now this wrapper validates + returns a stub-success envelope so the
+// cfw route succeeds (e2e contract). A follow-up bead can wire the items
+// hint into an AbandonedCarts row enrichment if PM wants the cfw-side
+// trigger to actively seed cart rows. The cron remains the canonical
+// cart-recovery trigger.
+
+export async function post_queueCartRecovery(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  const payload = (Array.isArray(body?.args) && body.args[0]) || body || {};
+  const items = Array.isArray(payload.items) ? payload.items : null;
+  if (!items || items.length === 0) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'items[] is required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  // Validate item shape — productId + quantity required, prevents
+  // poisoned input from polluting any future AbandonedCarts seeding.
+  const valid = items.every((it) =>
+    it && typeof it === 'object'
+    && typeof it.productId === 'string' && it.productId.length > 0
+    && typeof it.quantity === 'number' && Number.isFinite(it.quantity) && it.quantity > 0,
+  );
+  if (!valid) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'each item must have productId (string) + quantity (positive number)' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  // Stub-success: the cron-side triggerAbandonedCartRecovery is the
+  // canonical path; this hint endpoint is a placeholder until a follow-up
+  // bead wires cfw items into an AbandonedCarts row creation.
+  return ok({
+    body: JSON.stringify({ success: true, accepted: items.length, note: 'cart-recovery hint accepted; cron remains canonical trigger' }),
+    headers: JSON_HEADERS,
+  });
+}
+export function options_queueCartRecovery(request) { return response(corsPreflight(request)); }
 
 // ── /_functions/submitCommunityPhoto ─────────────────────────────────────────
 //
