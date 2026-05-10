@@ -421,9 +421,11 @@ export const shippingConfig = {
   ],
 
   /**
-   * Legacy zone config — retained for dynamicPricing.web.js which uses zip3
-   * prefix ranges. Not used for delivery eligibility (see localZones above).
-   * `regional.states` is authoritative for shipping-rates-plugin eligibility.
+   * Legacy zip3-prefix zone config. Not used for delivery eligibility
+   * (see localZones above) — `regional.states` is authoritative for the
+   * shipping-rates-plugin eligibility check. Kept as a record of the
+   * historical zone definition; the original prefix-range consumer was
+   * retired with cf-4x7e Pass 2 chunk 12.
    */
   zones: {
     local: { prefixMin: 287, prefixMax: 289, name: 'WNC' },
