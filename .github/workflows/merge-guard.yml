@@ -1,0 +1,40 @@
+name: merge-guard
+
+# cf-a5w3 — see docs/ops/merge-ordering-protection.md for context.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  # One run per PR; a force-push cancels the prior run immediately so a
+  # re-trigger lands a clean status against the new SHA.
+  group: merge-guard-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pin-head-sha:
+    name: pin-head-sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Record PR head SHA
+        env:
+          # Quote-via-env so workflow-injection static analysis stays clean
+          # even though all four values are GitHub-controlled (no user input).
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # The check binds to PR_HEAD_SHA via the workflow run's commit
+          # context. GitHub's "Required status checks must pass on the latest
+          # commit" branch protection enforces that admin-merge is gated on
+          # this run completing for the latest head SHA — not a previous one.
+          echo "PR #${PR_NUMBER}"
+          echo "head SHA: ${PR_HEAD_SHA}"
+          echo "base ref: ${BASE_REF}"
+          echo "merge-guard ✓"
