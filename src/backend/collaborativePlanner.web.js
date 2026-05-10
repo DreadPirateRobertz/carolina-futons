@@ -20,11 +20,23 @@ import wixData from 'wix-data';
 import { realtime } from 'wix-realtime-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const SESSIONS_COLLECTION = 'PlannerSessions';
 const ITEMS_COLLECTION = 'PlannerItems';
 const MAX_PARTICIPANTS = 4;
 const SESSION_TTL_HOURS = 72;
+
+// cf-32u1.1 F3: rate-limit anonymous session/item mutations to bound
+// PlannerSessions + PlannerItems growth from bot traffic. 60/minute
+// per session lets a real four-person session edit fluidly while
+// throttling anything that wants to scale-bloat the collection.
+// `createSession` keys on the (sanitised) roomName because no
+// sessionId exists yet at that surface; the other 4 mutators key on
+// the actual sessionId.
+const PLANNER_RATE_LIMIT_COLLECTION = 'CollabPlannerRateLimit';
+const PLANNER_RATE_LIMIT_MAX = 60;
+const PLANNER_RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 
 // ── Session Management ──────────────────────────────────────────────
 
@@ -47,6 +59,17 @@ export const createSession = webMethod(
       const roomWidth = Math.min(Math.max(6, params.roomWidth || 12), 50);
       const roomLength = Math.min(Math.max(6, params.roomLength || 15), 50);
       const creatorName = sanitize(params.creatorName || 'Host', 100);
+
+      // cf-32u1.1 F3: throttle anonymous session creation. Bucket on
+      // creator name so a single attacker can't spam unique-roomName
+      // sessions to bloat the collection.
+      const limit = await checkRateLimit(PLANNER_RATE_LIMIT_COLLECTION, `create:${creatorName}`, {
+        max: PLANNER_RATE_LIMIT_MAX,
+        windowMs: PLANNER_RATE_LIMIT_WINDOW_MS,
+      });
+      if (!limit.allowed) {
+        return { success: false, sessionId: null, shareToken: null, error: 'Too many session creations. Please try again shortly.' };
+      }
 
       // Generate a URL-safe share token
       const shareToken = generateShareToken();
@@ -92,6 +115,15 @@ export const joinSession = webMethod(
     try {
       const cleanToken = sanitize(shareToken, 20);
       if (!cleanToken) return { success: false, session: null, error: 'Invalid token' };
+
+      // cf-32u1.1 F3: throttle anonymous joins per share-token bucket.
+      const limit = await checkRateLimit(PLANNER_RATE_LIMIT_COLLECTION, `join:${cleanToken}`, {
+        max: PLANNER_RATE_LIMIT_MAX,
+        windowMs: PLANNER_RATE_LIMIT_WINDOW_MS,
+      });
+      if (!limit.allowed) {
+        return { success: false, session: null, error: 'Too many join attempts. Please try again shortly.' };
+      }
 
       const result = await wixData.query(SESSIONS_COLLECTION)
         .eq('shareToken', cleanToken)
@@ -203,6 +235,15 @@ export const placeItem = webMethod(
         return { success: false, itemId: null, error: 'Missing required fields' };
       }
 
+      // cf-32u1.1 F3: cap PlannerItems growth per session.
+      const limit = await checkRateLimit(PLANNER_RATE_LIMIT_COLLECTION, `place:${sessionId}`, {
+        max: PLANNER_RATE_LIMIT_MAX,
+        windowMs: PLANNER_RATE_LIMIT_WINDOW_MS,
+      });
+      if (!limit.allowed) {
+        return { success: false, itemId: null, error: 'Too many edits. Please slow down.' };
+      }
+
       const price = typeof params.price === 'number' ? params.price : 0;
       const x = typeof params.x === 'number' ? params.x : 0;
       const y = typeof params.y === 'number' ? params.y : 0;
@@ -264,6 +305,15 @@ export const moveItem = webMethod(
       const item = await wixData.get(ITEMS_COLLECTION, cleanId);
       if (!item) return { success: false, error: 'Item not found' };
 
+      // cf-32u1.1 F3: bucket on session so a single mover can't spam.
+      const limit = await checkRateLimit(PLANNER_RATE_LIMIT_COLLECTION, `move:${item.sessionId}`, {
+        max: PLANNER_RATE_LIMIT_MAX,
+        windowMs: PLANNER_RATE_LIMIT_WINDOW_MS,
+      });
+      if (!limit.allowed) {
+        return { success: false, error: 'Too many edits. Please slow down.' };
+      }
+
       item.x = typeof x === 'number' ? x : item.x;
       item.y = typeof y === 'number' ? y : item.y;
       if (typeof rotation === 'number') item.rotation = rotation;
@@ -302,6 +352,15 @@ export const removeItem = webMethod(
       const cleanId = sanitize(itemId, 50);
       const item = await wixData.get(ITEMS_COLLECTION, cleanId);
       if (!item) return { success: false, error: 'Item not found' };
+
+      // cf-32u1.1 F3: bucket on session.
+      const limit = await checkRateLimit(PLANNER_RATE_LIMIT_COLLECTION, `remove:${item.sessionId}`, {
+        max: PLANNER_RATE_LIMIT_MAX,
+        windowMs: PLANNER_RATE_LIMIT_WINDOW_MS,
+      });
+      if (!limit.allowed) {
+        return { success: false, error: 'Too many edits. Please slow down.' };
+      }
 
       const sessionId = item.sessionId;
       await wixData.remove(ITEMS_COLLECTION, cleanId);

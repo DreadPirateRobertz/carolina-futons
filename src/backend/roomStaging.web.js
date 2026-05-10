@@ -25,6 +25,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import { mediaManager } from 'wix-media-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const MAX_IMAGE_SIZE_MB = 10;
 const STAGING_CACHE_COLLECTION = 'RoomStagingCache';
@@ -53,6 +54,9 @@ function buildProductPrompt(product) {
  * @param {string} productId - Wix product ID
  * @param {Object} [options]
  * @param {string} [options.placement='center'] - Where to place furniture: 'center', 'left', 'right', 'replace'
+ * @param {string} [options.sessionId] - Caller-supplied session identifier for rate-limit bucketing.
+ *   Defaults to 'anonymous' — clients SHOULD pass a stable sessionId (e.g. cart-session ID) so
+ *   honest users don't share a bucket with bot traffic. cf-32u1.1 F2.
  * @returns {Promise<{success: boolean, stagedImageUrl: string, prompt: string, error?: string}>}
  */
 export const generateStagedRoom = webMethod(
@@ -65,7 +69,24 @@ export const generateStagedRoom = webMethod(
       return { success: false, stagedImageUrl: '', error: 'Product ID required' };
     }
 
-    const { placement = 'center' } = options;
+    const { placement = 'center', sessionId } = options;
+
+    // cf-32u1.1 F2: rate-limit AI image generation to cap external API
+    // spend. Bucket is (sessionId, productId) — same product per session
+    // capped at 5/hour. Missing sessionId falls back to a shared
+    // 'anonymous' bucket that quickly throttles bot crawls.
+    const rateKey = `${sessionId || 'anonymous'}:${productId}`;
+    const limit = await checkRateLimit('RoomStagingRateLimit', rateKey, {
+      max: 5,
+      windowMs: 60 * 60 * 1000, // 1 hour
+    });
+    if (!limit.allowed) {
+      return {
+        success: false,
+        stagedImageUrl: '',
+        error: 'Too many staging requests. Please try again later.',
+      };
+    }
 
     try {
       // Fetch product data

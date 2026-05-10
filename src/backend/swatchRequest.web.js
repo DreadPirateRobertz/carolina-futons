@@ -21,6 +21,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { triggerSwatchFollowupSequence } from 'backend/emailAutomation.web';
 import { sendSwatchConfirmationEmail } from 'backend/emailService.web';
 import { logError } from 'backend/utils/errorHandler';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // Swatch nurture sequence: confirmation + Day 3 + Day 7 + Day 14
 const SWATCH_NURTURE = [
@@ -184,6 +185,17 @@ export const submitSwatchRequest = webMethod(
 
       const contact = validateContact(contactInfo);
       if (contact.error) return { success: false, error: contact.error };
+
+      // cf-32u1.1 F1: rate-limit anonymous swatch submissions to prevent
+      // CRM-contact bloat + EmailQueue spam. Bucket reuses the
+      // SwatchRequestRateLimit collection from the cf-3ldu inventory.
+      const limit = await checkRateLimit('SwatchRequestRateLimit', contact.email, {
+        max: 5,
+        windowMs: 60 * 60 * 1000, // 1 hour
+      });
+      if (!limit.allowed) {
+        return { success: false, error: 'Too many swatch requests. Please try again later.' };
+      }
 
       // Sanitize optional product slug
       const cleanSlug = rawSlug ? sanitize(String(rawSlug), 200).trim() || undefined : undefined;

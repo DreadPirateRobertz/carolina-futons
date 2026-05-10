@@ -5,6 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { withRateLimit } from './helpers/withRateLimit.js';
 import {
   createSession,
   joinSession,
@@ -237,5 +238,62 @@ describe('getSessionCart', () => {
     const result = await getSessionCart('sess-1');
     expect(result.items).toEqual([]);
     expect(result.total).toBe(0);
+  });
+});
+
+// ── F3 rate-limit (cf-32u1.1) ──────────────────────────────────────
+// Each of the 5 mutators uses a different key prefix on the same
+// CollabPlannerRateLimit collection (create:/join:/place:/move:/remove:).
+// The withRateLimit helper seeds a single record at the limit; we set
+// `key:` to match the prefix used by the mutator under test.
+describe('collaborativePlanner — rate limits (cf-32u1.1 F3)', () => {
+  // checkRateLimit lowercases the key before hashing, so the seeded key
+  // here MUST match the lowercased form to land in the same bucket.
+  it('createSession blocks when create:<creator> bucket is at limit', async () => {
+    withRateLimit('CollabPlannerRateLimit', { blocked: true, max: 60, key: 'create:host' });
+    const result = await createSession({ roomName: 'Spam Room', creatorName: 'Host' });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again/i);
+    expect(result.sessionId).toBeNull();
+  });
+
+  it('joinSession blocks when join:<token> bucket is at limit', async () => {
+    __seed('PlannerSessions', [{
+      _id: 'sess-1', shareToken: 'tok-abc', status: 'active',
+      participantCount: 1, participants: [{ name: 'Host', role: 'host' }],
+    }]);
+    withRateLimit('CollabPlannerRateLimit', { blocked: true, max: 60, key: 'join:tok-abc' });
+    const result = await joinSession('tok-abc', 'Bot');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again/i);
+  });
+
+  it('placeItem blocks when place:<sessionId> bucket is at limit', async () => {
+    __seed('PlannerSessions', [{ _id: 'sess-1', status: 'active', itemCount: 0 }]);
+    withRateLimit('CollabPlannerRateLimit', { blocked: true, max: 60, key: 'place:sess-1' });
+    const result = await placeItem({
+      sessionId: 'sess-1', productId: 'prod-1', productName: 'Sofa',
+    });
+    expect(result.success).toBe(false);
+    expect(result.itemId).toBeNull();
+    // No item written.
+    expect(__getInserted('PlannerItems')).toEqual([]);
+  });
+
+  it('moveItem blocks when move:<sessionId> bucket is at limit', async () => {
+    __seed('PlannerItems', [{ _id: 'item-1', sessionId: 'sess-1', x: 0, y: 0, rotation: 0 }]);
+    withRateLimit('CollabPlannerRateLimit', { blocked: true, max: 60, key: 'move:sess-1' });
+    const result = await moveItem('item-1', 5, 5, 90, 'Bot');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again/i);
+  });
+
+  it('removeItem blocks when remove:<sessionId> bucket is at limit', async () => {
+    __seed('PlannerItems', [{ _id: 'item-1', sessionId: 'sess-1' }]);
+    __seed('PlannerSessions', [{ _id: 'sess-1', status: 'active', itemCount: 1 }]);
+    withRateLimit('CollabPlannerRateLimit', { blocked: true, max: 60, key: 'remove:sess-1' });
+    const result = await removeItem('item-1', 'Bot');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many|try again/i);
   });
 });
