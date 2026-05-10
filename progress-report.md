@@ -1,5 +1,16 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:20 MT**
+
+## Session 2026-05-10 — Wave 11 (context resume)
+| Done | Detail |
+|------|--------|
+| ✅ PR #541 MERGED | blaidd: cf-b3mf REAL fix — inline 5 literal fallbacks in layout.tsx, drop "use client" import. Announcement bar P0 resolved. |
+| ✅ cf-b3mf CLOSED | Real root cause: ROTATION_MESSAGES undefined across "use client" boundary → fallback="" baked into RSC |
+| ✅ PR #1250 MERGED | morgott: cf-ivpn affiliateHelpers dead pair deletion (-717 LOC) |
+| ✅ cf-ivpn CLOSED | morgott done |
+| ✅ PR #1252 MERGED | millicent: cf-1vov security audit docs — 0 P0 secrets, 40 gitleaks all FP/historical |
+| ✅ cf-1vov CLOSED | No P0. 1 historical token (INLINE_AUTH_TOKEN, endpoint already deleted in #1208) |
+| 🚨 P1 ESCALATED → mayor | cfw/main branch protection MISSING (HTTP 404). cf has minimal. pin-head-sha not in required checks on either repo. Stilgar action before cutover. cf-dbw9 tracks. |
 
 ## Session 2026-05-10 — Wave 10 (02:37–02:45 MT)
 | Done | Detail |
@@ -119,6 +130,7 @@
 | cf-1eb5 | P1 | V9 full-header bear screenshot review before merge |
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
+| cf-dbw9 | P1 | Branch protection on cfw/main MISSING — wire before cutover (security-audit-2026-05-10.md) |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
 | PR #515 (cf-1eb5) | P1 | r4 IN PROGRESS — Stilgar: orange text + don't cover bears + v9 style. blaidd dispatched. |
 | cf-96m8 | P2 | Footer LivingSky always-night — miquella dispatched |
