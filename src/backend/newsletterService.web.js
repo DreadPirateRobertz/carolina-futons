@@ -23,6 +23,7 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const DISCOUNT_CODE = 'WELCOME10';
 const KLAVIYO_API_BASE = 'https://a.klaviyo.com/api';
@@ -37,9 +38,12 @@ export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Check and record a rate-limit attempt for a given key.
- * Allows up to RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per key.
- * Fails open (allows) if the DB check itself errors, to avoid blocking
- * legitimate users on infrastructure issues.
+ *
+ * cf-c0np (cf-3ldu F4): migrated from local re-implementation to the
+ * canonical wixData-backed helper. The previous local impl stored
+ * plaintext lowercased emails as bucket keys (cf-sec1 CMEK gap) and
+ * failed-open on DB error (cf-8p52 flipped the canonical helper to
+ * fail-closed). Both gaps close by deferring to the canonical.
  *
  * @param {string} key - Normalized identifier (email).
  * @param {Object} [opts]
@@ -47,50 +51,11 @@ export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function _checkRateLimit(key, opts = {}) {
-  const now = (opts && opts.now != null) ? opts.now : Date.now();
-  try {
-    const cleanKey = sanitize(key, 254).toLowerCase();
-
-    const existing = await wixData.query('NewsletterRateLimit')
-      .eq('key', cleanKey)
-      .limit(1)
-      .find();
-
-    if (existing.items.length === 0) {
-      await wixData.insert('NewsletterRateLimit', {
-        key: cleanKey,
-        count: 1,
-        windowStart: new Date(now),
-      });
-      return { allowed: true };
-    }
-
-    const record = existing.items[0];
-    const windowAge = now - new Date(record.windowStart).getTime();
-
-    if (windowAge > RATE_LIMIT_WINDOW_MS) {
-      // Window expired — reset counter
-      await wixData.update('NewsletterRateLimit', {
-        ...record,
-        count: 1,
-        windowStart: new Date(now),
-      });
-      return { allowed: true };
-    }
-
-    if (record.count >= RATE_LIMIT_MAX) {
-      return { allowed: false, reason: 'rate_limited' };
-    }
-
-    await wixData.update('NewsletterRateLimit', {
-      ...record,
-      count: record.count + 1,
-    });
-    return { allowed: true };
-  } catch (err) {
-    console.warn('[newsletterService] Rate limit check failed, allowing request:', err.message);
-    return { allowed: true }; // Fail open — don't block on DB errors
-  }
+  return checkRateLimit('NewsletterRateLimit', key, {
+    now: opts && opts.now,
+    max: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+  });
 }
 
 /**

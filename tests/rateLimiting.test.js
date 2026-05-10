@@ -30,16 +30,18 @@ import {
 const NOW = 1_700_000_000_000;
 const ONE_HOUR = 60 * 60 * 1000;
 
+// cf-c0np: both _checkPromoRateLimit and _checkContactRateLimit now
+// thin-wrap canonical checkRateLimit which hashes keys before storage.
+// Seed records using the FNV-1a hash of the raw input.
 function makePromoRecord(count, windowStart = NOW) {
-  return { _id: 'pr-1', key: 'test-ip', count, windowStart: new Date(windowStart) };
+  return { _id: 'pr-1', key: hashRateLimitKey('test-ip'), count, windowStart: new Date(windowStart) };
 }
 
-// Raw key — for tests of _checkContactRateLimit (local impl, no hashing)
 function makeContactRecord(count, windowStart = NOW) {
-  return { _id: 'cr-1', key: 'test@example.com', count, windowStart: new Date(windowStart) };
+  return { _id: 'cr-1', key: hashRateLimitKey('test@example.com'), count, windowStart: new Date(windowStart) };
 }
 
-// Hashed key — for tests of submitContactForm (uses shared checkRateLimit which hashes)
+// Hashed key for submitContactForm tests (same canonical helper).
 function makeHashedContactRecord(email, count, windowStart = NOW) {
   return { _id: 'cr-1', key: hashRateLimitKey(email.toLowerCase()), count, windowStart: new Date(windowStart) };
 }
@@ -81,16 +83,16 @@ describe('_checkPromoRateLimit', () => {
     expect(result).toEqual({ allowed: false, reason: 'rate_limited' });
   });
 
-  it('fails open (allows) when wixData query throws', async () => {
+  it('fails CLOSED when wixData query throws (cf-c0np / cf-8p52)', async () => {
     __setQueryError('PromoRateLimits', new Error('DB unavailable'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await _checkPromoRateLimit('test-ip', { now: NOW });
-    expect(result).toEqual({ allowed: true });
-    warnSpy.mockRestore();
+    expect(result).toEqual({ allowed: false, reason: 'db_error' });
+    errSpy.mockRestore();
   });
 
-  it('uses key as-is (for IP tokens, not lowercased like email)', async () => {
-    __seed('PromoRateLimits', [{ _id: 'pr-2', key: '192.168.1.1', count: 10, windowStart: new Date(NOW) }]);
+  it('uses key as-is then hashes (IP tokens are not lowercased like emails)', async () => {
+    __seed('PromoRateLimits', [{ _id: 'pr-2', key: hashRateLimitKey('192.168.1.1'), count: 10, windowStart: new Date(NOW) }]);
     const result = await _checkPromoRateLimit('192.168.1.1', { now: NOW + 1 });
     expect(result).toEqual({ allowed: false, reason: 'rate_limited' });
   });
@@ -186,12 +188,12 @@ describe('_checkContactRateLimit', () => {
     expect(result).toEqual({ allowed: false, reason: 'rate_limited' });
   });
 
-  it('fails open (allows) when wixData query throws', async () => {
+  it('fails CLOSED when wixData query throws (cf-c0np / cf-8p52)', async () => {
     __setQueryError('ContactRateLimits', new Error('DB unavailable'));
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await _checkContactRateLimit('test@example.com', { now: NOW });
-    expect(result).toEqual({ allowed: true });
-    warnSpy.mockRestore();
+    expect(result).toEqual({ allowed: false, reason: 'db_error' });
+    errSpy.mockRestore();
   });
 });
 

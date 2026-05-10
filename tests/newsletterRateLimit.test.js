@@ -18,6 +18,9 @@ import {
   subscribeToNewsletter,
   captureExitIntentEmail,
 } from '../src/backend/newsletterService.web.js';
+// cf-c0np: _checkRateLimit now defers to canonical helper which hashes
+// keys before storage. Seeded records must use hashRateLimitKey.
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // Note: no vi.mock() needed — vitest.config.js resolve.alias auto-redirects
 // all wix-* imports to tests/__mocks__/wix-*.js, and setup.js resets state
@@ -25,8 +28,8 @@ import {
 
 const NOW = 1_700_000_000_000; // fixed timestamp
 
-function makeRateLimitRecord(count, windowStart = NOW) {
-  return { _id: 'rl-1', key: 'test@example.com', count, windowStart: new Date(windowStart) };
+function makeRateLimitRecord(count, windowStart = NOW, email = 'test@example.com') {
+  return { _id: 'rl-1', key: hashRateLimitKey(email.toLowerCase()), count, windowStart: new Date(windowStart) };
 }
 
 function seedSubscriber(email = 'test@example.com') {
@@ -82,10 +85,12 @@ describe('_checkRateLimit', () => {
     expect(result.allowed).toBe(false);
   });
 
-  it('fails open when DB query throws', async () => {
+  it('fails CLOSED when DB query throws (cf-c0np / cf-8p52)', async () => {
     __setQueryError('NewsletterRateLimit', new Error('DB down'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await _checkRateLimit('test@example.com', { now: NOW });
-    expect(result).toEqual({ allowed: true });
+    expect(result).toEqual({ allowed: false, reason: 'db_error' });
+    errSpy.mockRestore();
   });
 
   it('window boundary — just expired allows (age > window)', async () => {
