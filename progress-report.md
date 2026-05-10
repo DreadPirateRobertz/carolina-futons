@@ -1,24 +1,34 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-09 18:00 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-09 18:30 MT**
 
-## Session 2026-05-09 Summary
-
+## Session 2026-05-09 — Wave 1 Merges
 | Done | Detail |
 |------|--------|
-| ✅ cf-uggz CLOSED | Cambridge Futon Frame staging config — 3-step unlock, Size (Full=$1499/Queen=$1549/King=$1599) + Finish (Cherry/Chocolate/Natural/Black Walnut/Dark Chocolate), 15 variants, priceRange $1,499–$1,599 |
-| ✅ cf-g2sa CLOSED | Wix CLI publish GH Action — already shipped (PR #22+#23 merged) |
-| ✅ PR #498 MERGED | cfw-x20: FilterFirst two-column layout + bears.jpg (blaidd, rebased onto cf-htou+cfw-uwg) |
-| ✅ Catalog: 34 products | Staging per-size variant pricing complete (33→34 with Cambridge) |
-| ✅ cf-jvut → rennala | E2E challenge/reward gamification testing dispatched |
-| ✅ cf-n7ni → blaidd | Footer.tsx tagline+copyright getSiteContent refactor dispatched |
-| ✅ cf-wp45 → miquella | brenda-admin-guide.md docs dispatched |
+| ✅ cf-uggz CLOSED | Cambridge Futon Frame staging — 15 variants, priceRange $1,499–$1,599 |
+| ✅ cf-g2sa CLOSED | Wix CLI publish GH Action already shipped |
+| ✅ PR #498 MERGED | cfw-x20: FilterFirst two-column + bears.jpg home hero |
+| ✅ Catalog: 34 products | Staging per-size variant pricing complete |
 
-### 🚨 Stilgar Required
-| Bead | What's Needed |
-|------|--------------|
-| **cf-c6g5 (P0)** | STAGING_SITE email infrastructure — sender + 13 triggered templates. Wix Dashboard → Settings → Triggered Emails. Melania cannot access (dashboard-only). |
-| **cf-oi01 (P1)** | UPS_CLIENT_ID/SECRET/ACCOUNT_NUMBER + Stripe test keys + PayPal sandbox for real E2E test. Pull from Wix staging Secrets Manager. |
-| **cf-3qt.8 (P1)** | DNS cutover — Vercel Pro upgrade + go/no-go signal. Pre-cutover checklist from docs commit c19a44fe. |
+## Session 2026-05-09 — Wave 2 (this turn)
+| Item | Status |
+|------|--------|
+| ✅ cf-m3tj MERGED | PR #1194 (rennala) — mobile gamification silent failure fixed |
+| ✅ cf-hpb2 MERGED | PR #1195 + stage3 #32 (godfrey) — referralService dispatcher |
+| ✅ cf-unxw stage3 MERGED | Stage3 #33 (godfrey) — fabricSampleService aliases |
+| ✅ PR #512 MERGED | Header bear medallion reverted (Stilgar rejection) |
+| ⚠️ PR #1196 CONFLICTING | cf-unxw cfutons main — godfrey rebasing |
+| 🔧 cf-1eb5 → blaidd | V9 full-header bear — MUST show Stilgar before merge |
+| 🔧 cf-a5w3 → miquella | Merge-ordering loss CI gate |
+| ⏳ PR #507 | iOS right-edge gap — awaiting Stilgar iPhone visual |
+
+## 🚨 Stilgar Required
+| Bead | Pri | Action |
+|------|-----|--------|
+| PR #507 (cf-3lly) | P1 | iPhone visual confirm — DO NOT MERGE without |
+| cf-1eb5 | P1 | V9 full-header bear screenshot review before merge |
+| cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
+| cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
+| cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
 
 ---
 
