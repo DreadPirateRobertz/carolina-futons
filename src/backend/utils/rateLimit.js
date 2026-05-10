@@ -105,13 +105,19 @@ export function hashRateLimitKey(key) {
  * (5xx during a real wixData outage) for a much smaller cutover blast
  * radius (no silent protection bypass).
  *
+ * cf-2enk: callers whose semantics break on silent throttle (errorMonitoring,
+ * tradeInService fail-open, email-queue retry, etc.) can opt into the
+ * fail-OPEN-on-db-error path with `failOpenOnDbError: true`. Default remains
+ * fail-closed — a new caller can't accidentally bypass rate-limit protection.
+ *
  * @param {string} collection - wixData collection name (e.g. 'QARateLimit').
  * @param {string} key - Normalized identifier (typically email).
  * @param {Object} [opts]
  * @param {number} [opts.now] - Timestamp override for testing (internal use only — never accept from callers).
  * @param {number} [opts.max] - Max calls per window (defaults to RATE_LIMIT_MAX). Callers may override per endpoint.
  * @param {number} [opts.windowMs] - Window duration in ms (defaults to RATE_LIMIT_WINDOW_MS = 1 hour). Use 60_000 for per-minute limits.
- * @returns {Promise<{allowed: boolean, reason?: string}>} — `reason: 'rate_limited'` when over limit, `'db_error'` when the wixData call itself failed (fail-closed).
+ * @param {boolean} [opts.failOpenOnDbError] - When true, db_error returns `{allowed: true, reason: 'db_error_fail_open'}` instead of fail-closed. For surface-during-outage callers ONLY (cf-2enk audit § FIX list).
+ * @returns {Promise<{allowed: boolean, reason?: string}>} — `reason: 'rate_limited'` when over limit, `'db_error'` when the wixData call itself failed (fail-closed default), `'db_error_fail_open'` when the caller opted into fail-open and the wixData call failed.
  */
 export async function checkRateLimit(collection, key, opts = {}) {
   const now = opts.now ?? Date.now();
@@ -160,8 +166,18 @@ export async function checkRateLimit(collection, key, opts = {}) {
     return { allowed: true };
   } catch (err) {
     logError(`rateLimit.checkRateLimit[${collection}/${storedKey}]`, err);
+    if (opts.failOpenOnDbError) {
+      // cf-2enk: caller opted into fail-open. Used by surface-during-outage
+      // callers whose semantics break worse on silent throttle than on
+      // bypassed-rate-limit (errorMonitoring/tradeInService fail-open intent/
+      // email-queue retry). The reason field stays distinct from a normal
+      // {allowed: true} so observability can still see the underlying outage.
+      return { allowed: true, reason: 'db_error_fail_open' };
+    }
     // cf-3ldu F2 / cf-8p52: fail CLOSED on DB error so a missing collection
-    // (or any wixData fault) cannot silently disable protection.
+    // (or any wixData fault) cannot silently disable protection. This is the
+    // default — only callers that have opted into failOpenOnDbError get the
+    // open path.
     return { allowed: false, reason: 'db_error' };
   }
 }

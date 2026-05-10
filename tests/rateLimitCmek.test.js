@@ -114,3 +114,58 @@ describe('checkRateLimit — fails CLOSED on wixData error', () => {
     errSpy.mockRestore();
   });
 });
+
+// ── cf-2enk — failOpenOnDbError opt-in ─────────────────────────────────────
+
+describe('checkRateLimit — failOpenOnDbError option', () => {
+  it('returns { allowed: true, reason: "db_error_fail_open" } when caller opts in and DB throws', async () => {
+    __setQueryError('FailOpenRateLimit', new Error('wixData unavailable'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await checkRateLimit('FailOpenRateLimit', 'user@example.com', {
+      now: NOW,
+      failOpenOnDbError: true,
+    });
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBe('db_error_fail_open');
+    errSpy.mockRestore();
+  });
+
+  it('default (no opt-in) still returns the fail-closed reason — security posture preserved', async () => {
+    __setQueryError('DefaultRateLimit', new Error('wixData unavailable'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await checkRateLimit('DefaultRateLimit', 'user@example.com', { now: NOW });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('db_error');
+    errSpy.mockRestore();
+  });
+
+  it('failOpenOnDbError=false explicit also fails closed (alias of default)', async () => {
+    __setQueryError('ExplicitFalseRateLimit', new Error('wixData unavailable'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await checkRateLimit('ExplicitFalseRateLimit', 'user@example.com', {
+      now: NOW,
+      failOpenOnDbError: false,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('db_error');
+    errSpy.mockRestore();
+  });
+
+  it('failOpenOnDbError does NOT bypass actual rate-limit hits (only db errors)', async () => {
+    // Pre-seed a rate-limit row at max count — happy path should still throttle
+    // even with failOpenOnDbError opt-in.
+    const { __seed } = await import('./__mocks__/wix-data.js');
+    __seed('NormalThrottleLimit', [{
+      key: hashRateLimitKey('user@example.com'),
+      count: 5,
+      windowStart: new Date(NOW),
+    }]);
+    const result = await checkRateLimit('NormalThrottleLimit', 'user@example.com', {
+      now: NOW,
+      max: 5,
+      failOpenOnDbError: true,
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('rate_limited');
+  });
+});

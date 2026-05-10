@@ -70,11 +70,15 @@ describe('deliveryScheduling — error catch paths', () => {
     expect(result).toEqual([]);
   });
 
-  it('bookAppointment returns failure on unexpected error', async () => {
-    // First insert is the rate limit record (fails open), second is the appointment itself
+  it('bookAppointment returns rate-limit message when rate-limit DB throws (cf-3ldu.F2 fail-closed default)', async () => {
+    // Pre-PR #1288 the rate-limit insert throwing failed open and the test
+    // asserted on the outer catch-block message ("Failed to book"). cf-3ldu.F2
+    // changed checkRateLimit to fail-CLOSED on db error: caller now hits the
+    // !allowed branch with reason='db_error' and emits the rate-limit message.
+    // The endpoint is in cf-lzkm KEEP — fail-closed is acceptable UX. This
+    // test guards the new behavior.
     vi.spyOn(wixData, 'insert')
-      .mockRejectedValueOnce(new Error('DB down')) // rate limit insert — fails open
-      .mockRejectedValueOnce(new Error('DB down')); // appointment insert — caught by outer try/catch
+      .mockRejectedValueOnce(new Error('DB down')); // rate-limit insert → reason='db_error' → caller emits rate-limit message
     const result = await bookAppointment({
       date: futureWed(),
       timeSlot: '10:00',
@@ -83,7 +87,7 @@ describe('deliveryScheduling — error catch paths', () => {
       customerEmail: 'test@example.com',
     });
     expect(result.success).toBe(false);
-    expect(result.message).toContain('Failed to book');
+    expect(result.message).toContain('Too many');
   });
 
   it('cancelAppointment returns failure on unexpected error', async () => {

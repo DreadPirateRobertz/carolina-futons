@@ -650,8 +650,13 @@ describe('confirmTradeIn — status overwrite guard', () => {
 describe('submitTradeInRequest — rate limit fail-open', () => {
   beforeEach(() => { __reset(); resetMembers(); vi.clearAllMocks(); });
 
-  it('allows submission when checkRateLimit throws (fail-open policy)', async () => {
-    checkRateLimit.mockRejectedValueOnce(new Error('DB unavailable'));
+  it('allows submission when checkRateLimit reports db_error_fail_open (cf-xcct fail-open policy)', async () => {
+    // cf-xcct: pre-cf-3ldu.F2 the caller wrapped checkRateLimit in try/catch
+    // to fail-open on a thrown error. Post-#1288 checkRateLimit no longer
+    // throws — it returns {allowed: true, reason: 'db_error_fail_open'} when
+    // the caller passes failOpenOnDbError: true (cf-2enk option). The
+    // submission must still go through.
+    checkRateLimit.mockResolvedValueOnce({ allowed: true, reason: 'db_error_fail_open' });
     const result = await submitTradeInRequest({
       firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com',
       itemType: 'frame', submittedCondition: 'good',
