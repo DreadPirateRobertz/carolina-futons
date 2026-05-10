@@ -1,5 +1,17 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-09 19:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-09 19:20 MT**
+
+## Session 2026-05-09 — Wave 4/5
+| Done | Detail |
+|------|--------|
+| ✅ cf-fovb CLOSED | PR #1202 merged — fulfillment events wiring (rennala) |
+| ✅ cf-9ieq CLOSED | PR #1208 + stage3 #35 merged — diagnostic endpoint out of prod (godfrey) |
+| ✅ cf-r1cl CLOSED | PR #1201 already merged earlier — stale CI view (millicent) |
+| ✅ cf-okwz CLOSED | Stale bead — already shipped in cfw PR #356 (godfrey) |
+| ✅ cf-1dvv CLOSED | NO-OP — referralService back-port already in PR #1195 (morgott) |
+| 🔄 PR #1209 CI | cf-4x7e Pass 1 decision matrix (morgott) — CI running |
+| 🚨 cf-1eb5 REJECTED | Stilgar rejection 2: wording/menu/font/size — blaidd iterating |
+| ✅ cf-4x7e Pass 2 | GREEN-LIT: accessibility+liveShopping chunk (~11 methods) |
 
 ## Session 2026-05-09 — Wave 3 Merges
 | Done | Detail |
@@ -40,7 +52,7 @@
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
-| PR #515 (cf-1eb5) | P1 | VISUAL SIGN-OFF on bears header — preview: carolina-futons-web-git-cf-1eb5-dreadpiraterobertzs-projects.vercel.app |
+| PR #515 (cf-1eb5) | P1 | REJECTED TWICE — blaidd iterating: fix wording/menu/font/size from v9 design spec |
 | PR #1201 (cf-r1cl) | P1 | Add pin-head-sha to required status checks after merge |
 | cfw-nsk FB redirect | P2 | Still reproducing? Need HAR if yes, close bead if gone |
 
