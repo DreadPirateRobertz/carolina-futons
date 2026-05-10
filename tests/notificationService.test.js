@@ -7,7 +7,6 @@ import {
   recordPriceSnapshots,
   checkWishlistAlerts,
   toggleProductAlerts,
-  getNotificationHistory,
 } from '../src/backend/notificationService.web.js';
 
 beforeEach(() => {
@@ -613,73 +612,3 @@ describe('toggleProductAlerts', () => {
   });
 });
 
-// ── getNotificationHistory ────────────────────────────────────────────
-
-describe('getNotificationHistory', () => {
-  it('returns recent notifications for a member', async () => {
-    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
-    __seed('NotificationLog', [
-      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', productName: 'Eureka', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
-      { _id: 'nl-2', memberId: 'member-1', productId: 'prod-2', productName: 'Phoenix', alertType: 'back_in_stock', sentAt: new Date('2026-02-19') },
-    ]);
-
-    const result = await getNotificationHistory();
-    expect(result.success).toBe(true);
-    expect(result.items).toHaveLength(2);
-  });
-
-  it('returns empty for unauthenticated user', async () => {
-    __setMember(null);
-    const result = await getNotificationHistory();
-    expect(result.success).toBe(false);
-    expect(result.items).toHaveLength(0);
-  });
-
-  it('respects custom limit parameter', async () => {
-    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
-    __seed('NotificationLog', [
-      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
-      { _id: 'nl-2', memberId: 'member-1', productId: 'prod-2', alertType: 'price_drop', sentAt: new Date('2026-02-19') },
-      { _id: 'nl-3', memberId: 'member-1', productId: 'prod-3', alertType: 'price_drop', sentAt: new Date('2026-02-18') },
-    ]);
-
-    const result = await getNotificationHistory(2);
-    expect(result.success).toBe(true);
-    expect(result.items).toHaveLength(2);
-  });
-
-  it('caps limit at 50 even if higher requested', async () => {
-    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
-    __seed('NotificationLog', [
-      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
-    ]);
-
-    // Request limit of 100, should be capped at 50
-    const result = await getNotificationHistory(100);
-    expect(result.success).toBe(true);
-    // Just verify it doesn't crash — actual cap is Math.min(100, 50) = 50
-    expect(result.items).toBeTruthy();
-  });
-
-  it('returns empty items for member with no notification history', async () => {
-    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
-    __seed('NotificationLog', []);
-
-    const result = await getNotificationHistory();
-    expect(result.success).toBe(true);
-    expect(result.items).toHaveLength(0);
-  });
-
-  it('only returns notifications for the current member', async () => {
-    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
-    __seed('NotificationLog', [
-      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
-      { _id: 'nl-2', memberId: 'member-2', productId: 'prod-2', alertType: 'price_drop', sentAt: new Date('2026-02-19') },
-    ]);
-
-    const result = await getNotificationHistory();
-    expect(result.success).toBe(true);
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0].memberId).toBe('member-1');
-  });
-});

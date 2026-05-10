@@ -370,48 +370,9 @@ export const notifyOwner = webMethod(
   }
 );
 
-/**
- * Get notification history for the current member's wishlist.
- * Used on Member Page to show recent alerts sent.
- *
- * @param {number} [limit=10] - Max results.
- * @returns {Promise<{items: Array, success: boolean}>}
- */
-export const getNotificationHistory = webMethod(
-  Permissions.SiteMember,
-  async (limit = 10) => {
-    try {
-      const { currentMember } = await import('wix-members-backend');
-      const member = await currentMember.getMember();
-      if (!member?._id) return { items: [], success: false };
-
-      const result = await wixData.query('NotificationLog')
-        .eq('memberId', member._id)
-        .descending('sentAt')
-        .limit(Math.min(limit, 50))
-        .find();
-
-      return { items: result.items, success: true };
-    } catch (err) {
-      logError('[notificationService] Error getting notification history', err);
-      return { items: [], success: false };
-    }
-  }
-);
-
 // ── Gamification push triggers ────────────────────────────────────────────────
 
 const NOTIFICATIONS_COLLECTION = 'Notifications';
-const GET_MY_NOTIFICATIONS_RATE_LIMIT = 20;
-const GET_MY_NOTIFICATIONS_WINDOW_MS = 60_000;
-
-/** In-memory rate limit store: memberId → { count, windowStart } */
-const _getMyNotificationsRateLimit = new Map();
-
-/** @internal — exposed for test reset only */
-export function _resetGetMyNotificationsRateLimit() {
-  _getMyNotificationsRateLimit.clear();
-}
 
 /**
  * Write a gamification push notification to the Notifications CMS collection.
@@ -588,62 +549,3 @@ export async function sendChallengeReminder(memberId, message) {
   }
 }
 
-/**
- * Get the authenticated member's gamification notifications.
- * Supports optional unreadOnly filter and limit (capped at 50).
- * Rate-limited to 20 calls per minute per member.
- *
- * @function getMyNotifications
- * @param {{ limit?: number, unreadOnly?: boolean }} options
- * @returns {Promise<{ notifications: Array } | { status: 401|429, error: string }>}
- * @permission SiteMember
- */
-export const getMyNotifications = webMethod(
-  Permissions.SiteMember,
-  async ({ limit = 20, unreadOnly = false } = {}) => {
-    let member;
-    try {
-      const { currentMember } = await import('wix-members-backend');
-      member = await currentMember.getMember();
-    } catch {
-      return { status: 401, error: 'Unauthenticated' };
-    }
-    if (!member?._id) return { status: 401, error: 'Unauthenticated' };
-    const memberId = member._id;
-
-    const now = Date.now();
-    const rl = _getMyNotificationsRateLimit.get(memberId) || { count: 0, windowStart: now };
-    if (now - rl.windowStart > GET_MY_NOTIFICATIONS_WINDOW_MS) {
-      rl.count = 0;
-      rl.windowStart = now;
-    }
-    rl.count += 1;
-    _getMyNotificationsRateLimit.set(memberId, rl);
-    if (rl.count > GET_MY_NOTIFICATIONS_RATE_LIMIT) {
-      return { status: 429, error: 'Rate limit exceeded' };
-    }
-
-    const safeLimit = Math.min(Math.max(1, Number(limit) || 20), 50);
-
-    let query = wixData
-      .query(NOTIFICATIONS_COLLECTION)
-      .eq('memberId', memberId)
-      .descending('createdAt');
-
-    if (unreadOnly) {
-      query = query.eq('read', false);
-    }
-
-    const res = await query.limit(safeLimit).find({ suppressAuth: true });
-
-    const notifications = res.items.map(item => ({
-      id: item._id,
-      type: item.type,
-      message: item.message,
-      read: item.read,
-      createdAt: item.createdAt,
-    }));
-
-    return { notifications };
-  }
-);
