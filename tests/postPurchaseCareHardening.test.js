@@ -7,7 +7,6 @@ import {
   getUpsellRecommendations,
   trackGuideEngagement,
   logUpsellConversion,
-  getAssemblyFollowUpData,
   getReviewSolicitationData,
 } from '../src/backend/postPurchaseCare.web.js';
 
@@ -382,52 +381,6 @@ describe('logUpsellConversion hardening', () => {
     });
     expect(res.success).toBe(true);
     expect(inserted.item.sourceProductId).toBe('');
-  });
-});
-
-// ── getAssemblyFollowUpData hardening ───────────────────────────────
-
-describe('getAssemblyFollowUpData hardening', () => {
-  beforeEach(seedAll);
-
-  it('handles undefined orderId', async () => {
-    const res = await getAssemblyFollowUpData(undefined, ['futon-frames']);
-    expect(res.success).toBe(false);
-  });
-
-  it('handles numeric orderId', async () => {
-    const res = await getAssemblyFollowUpData(12345, ['futon-frames']);
-    expect(res.success).toBe(false);
-  });
-
-  it('handles categories with only whitespace entries', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['   ', '  ']);
-    // sanitize trims whitespace → empty → filtered out → empty categories
-    // But the code returns success:true with empty guides + support info
-    expect(res.success).toBe(true);
-    expect(res.guides).toEqual([]);
-    expect(res.supportPhone).toBeTruthy();
-  });
-
-  it('limits categories to 10', async () => {
-    const cats = Array.from({ length: 15 }, (_, i) => `cat-${i}`);
-    const res = await getAssemblyFollowUpData('order-abc123', cats);
-    expect(res.success).toBe(true);
-  });
-
-  it('returns only active assembly guides', async () => {
-    // g-3 is inactive warranty guide for futon-frames — should not appear
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames']);
-    expect(res.success).toBe(true);
-    const ids = res.guides.map(g => g._id);
-    expect(ids).toContain('g-1');     // assembly, active
-    expect(ids).not.toContain('g-2'); // maintenance (wrong type)
-    expect(ids).not.toContain('g-3'); // warranty + inactive
-  });
-
-  it('returns assembly guides with parsed steps', async () => {
-    const res = await getAssemblyFollowUpData('order-abc123', ['futon-frames']);
-    expect(res.guides[0].steps).toEqual(['Unbox', 'Attach legs', 'Secure bolts']);
   });
 });
 

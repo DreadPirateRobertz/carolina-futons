@@ -5,7 +5,6 @@
  * Tests:
  *   triggerWelcomeSequence — reads welcome steps from EmailSequences CMS, enqueues with 0 delay
  *   triggerCartAbandonSequence — enqueues with 1hr delay, passes checkoutId
- *   triggerPostPurchaseSequence — enqueues with 72hr delay
  *   triggerReviewRequestSequence — enqueues with 168hr delay
  *   triggerWinbackSequence — enqueues with 720hr delay
  *   All sequences: skips inactive steps, handles empty CMS, validates required params
@@ -23,7 +22,6 @@ import { __reset as resetCRM } from './__mocks__/wix-crm-backend.js';
 import {
   triggerWelcomeSequence,
   triggerCartAbandonSequence,
-  triggerPostPurchaseSequence,
   triggerReviewRequestSequence,
   triggerWinbackSequence,
   scanAndTriggerWinback,
@@ -283,71 +281,6 @@ describe('triggerCartAbandonSequence', () => {
   });
 });
 
-// ── triggerPostPurchaseSequence ───────────────────────────────────────────────
-
-describe('triggerPostPurchaseSequence', () => {
-  it('enqueues post_purchase step with 72hr delay', async () => {
-    seedSequence('post_purchase', [{ delayHours: 72, templateId: 'tpl-post-purchase-1' }]);
-    __seed(EMAIL_QUEUE_COLLECTION, []);
-
-    const before = Date.now();
-    await triggerPostPurchaseSequence({
-      email: 'alice@example.com',
-      contactId: 'contact-1',
-      firstName: 'Alice',
-      orderNumber: '#1001',
-      total: 299.99,
-    });
-
-    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
-    expect(queued.length).toBe(1);
-    const scheduledMs = queued[0].scheduledFor.getTime();
-    expect(scheduledMs).toBeGreaterThanOrEqual(before + 72 * 3600 * 1000 - 100);
-  });
-
-  it('uses sequenceType post_purchase', async () => {
-    seedSequence('post_purchase', [{ delayHours: 72 }]);
-    __seed(EMAIL_QUEUE_COLLECTION, []);
-
-    await triggerPostPurchaseSequence({
-      email: 'alice@example.com',
-      contactId: 'contact-1',
-      firstName: 'Alice',
-      orderNumber: '#1001',
-      total: 299.99,
-    });
-
-    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
-    expect(queued[0].sequenceType).toBe('post_purchase');
-  });
-
-  it('passes orderNumber in variables', async () => {
-    seedSequence('post_purchase', [{ delayHours: 72 }]);
-    __seed(EMAIL_QUEUE_COLLECTION, []);
-
-    await triggerPostPurchaseSequence({
-      email: 'alice@example.com',
-      contactId: 'contact-1',
-      firstName: 'Alice',
-      orderNumber: '#1001',
-      total: 299.99,
-    });
-
-    const queued = __getInserted(EMAIL_QUEUE_COLLECTION);
-    const vars = JSON.parse(queued[0].variables);
-    expect(vars.orderNumber).toBe('#1001');
-  });
-
-  it('returns error on missing email', async () => {
-    const result = await triggerPostPurchaseSequence({
-      contactId: 'contact-1',
-      orderNumber: '#1001',
-      total: 99,
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
 // ── triggerReviewRequestSequence ──────────────────────────────────────────────
 
 describe('triggerReviewRequestSequence', () => {
@@ -581,23 +514,6 @@ describe('triggerCartAbandonSequence — error path', () => {
       email: 'alice@example.com',
       contactId: 'contact-1',
       checkoutId: 'checkout-1',
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
-    consoleSpy.mockRestore();
-  });
-});
-
-describe('triggerPostPurchaseSequence — error path', () => {
-  it('returns success:false when CMS query throws', async () => {
-    __setQueryError(EMAIL_SEQUENCES_COLLECTION, new Error('DB error'));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const result = await triggerPostPurchaseSequence({
-      email: 'alice@example.com',
-      contactId: 'contact-1',
-      orderNumber: 'ORD-001',
     });
 
     expect(result.success).toBe(false);

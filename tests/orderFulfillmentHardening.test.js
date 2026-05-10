@@ -368,23 +368,6 @@ describe('postPurchaseCare hardening', () => {
     });
   });
 
-  describe('getAssemblyFollowUpData — empty categories after sanitize', () => {
-    it('returns empty guides for all-empty categories', async () => {
-      const r = await postPurchaseMod.getAssemblyFollowUpData('o1', ['', '', '']);
-      expect(r.success).toBe(true);
-      expect(r.guides).toEqual([]);
-      expect(r.supportPhone).toBeTruthy();
-    });
-
-    it('returns guides with steps parsed', async () => {
-      __seed('ProductCareGuides', [
-        { _id: 'g1', productCategory: 'futons', guideType: 'assembly', active: true, priority: 1, title: 'Build It', steps: '["step1","step2"]' },
-      ]);
-      const r = await postPurchaseMod.getAssemblyFollowUpData('o1', ['futons']);
-      expect(r.guides[0].steps).toEqual(['step1', 'step2']);
-    });
-  });
-
   describe('getReviewSolicitationData — product reviewUrl construction', () => {
     it('builds per-product review URLs', async () => {
       const r = await postPurchaseMod.getReviewSolicitationData('o1', 'Jane', [

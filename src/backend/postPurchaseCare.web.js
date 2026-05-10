@@ -345,63 +345,6 @@ const SUPPORT_PHONE = '(828) 252-9449';
 const SUPPORT_EMAIL = 'support@carolinafutons.com';
 
 /**
- * Get assembly follow-up data for Day 3 email (72h post-purchase).
- * Returns assembly guides relevant to the ordered products plus support info.
- *
- * @param {string} orderId - The order ID.
- * @param {string[]} productCategories - Categories of products in the order.
- * @returns {Promise<{success: boolean, guides: Array, supportPhone: string, supportEmail: string, error?: string}>}
- */
-export const getAssemblyFollowUpData = webMethod(
-  Permissions.Anyone,
-  async (orderId, productCategories) => {
-    try {
-      const cleanOrderId = validateId(orderId);
-      if (!cleanOrderId) {
-        return { success: false, error: 'Valid order ID is required.', guides: [], supportPhone: '', supportEmail: '' };
-      }
-
-      if (!Array.isArray(productCategories) || productCategories.length === 0) {
-        return { success: false, error: 'Product categories are required.', guides: [], supportPhone: '', supportEmail: '' };
-      }
-
-      const categories = productCategories
-        .slice(0, 10)
-        .map(c => sanitize(c, 100))
-        .filter(Boolean);
-
-      if (categories.length === 0) {
-        return { success: true, guides: [], supportPhone: SUPPORT_PHONE, supportEmail: SUPPORT_EMAIL };
-      }
-
-      const result = await wixData.query('ProductCareGuides')
-        .hasSome('productCategory', categories)
-        .eq('guideType', 'assembly')
-        .eq('active', true)
-        .ascending('priority')
-        .limit(20)
-        .find();
-
-      const guides = result.items.map(item => ({
-        _id: item._id,
-        productCategory: item.productCategory,
-        title: item.title,
-        summary: item.summary,
-        content: item.content,
-        steps: parseSteps(item.steps),
-        videoUrl: item.videoUrl || '',
-        imageUrl: item.imageUrl || '',
-      }));
-
-      return { success: true, guides, supportPhone: SUPPORT_PHONE, supportEmail: SUPPORT_EMAIL };
-    } catch (err) {
-      console.error('[postPurchaseCare] Error getting assembly follow-up data:', err);
-      return { success: false, error: 'Failed to load assembly data.', guides: [], supportPhone: '', supportEmail: '' };
-    }
-  }
-);
-
-/**
  * Get review solicitation data for Day 7 email (168h post-purchase).
  * Returns review URLs and product info for the email template.
  *

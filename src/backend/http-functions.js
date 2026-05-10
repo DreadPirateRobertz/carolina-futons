@@ -13,7 +13,6 @@ import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, t
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
-import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
