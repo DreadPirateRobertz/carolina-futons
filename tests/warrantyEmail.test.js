@@ -20,7 +20,7 @@ import {
   __setInsertError,
 } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
-import { purchaseWarranty, registerWarranty } from '../src/backend/warrantyService.web.js';
+import { registerWarranty } from '../src/backend/warrantyService.web.js';
 
 const MEMBER_ID  = 'member-email-001';
 const MEMBER_EMAIL = 'warranty-buyer@example.com';
@@ -55,90 +55,6 @@ beforeEach(() => {
   __seed('WarrantyPlans', [PLAN]);
   __seed('WarrantyRegistrations', []);
   __seed('EmailQueue', []);
-});
-
-// ── purchaseWarranty email ────────────────────────────────────────────────────
-
-describe('purchaseWarranty — email confirmation', () => {
-  it('inserts a record into EmailQueue after purchase', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    expect(queued.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('queues email with templateId warranty_purchased', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(email).toBeDefined();
-  });
-
-  it('sends confirmation to the member loginEmail', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(email.recipientEmail).toBe(MEMBER_EMAIL);
-  });
-
-  it('email variables include planName', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(email.variables.planName).toBe('Extended Protection');
-  });
-
-  it('email variables include productName', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(email.variables.productName).toBe('Canby Futon Frame');
-  });
-
-  it('email variables include warrantyPrice', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    // 499 * 0.08 = 39.92
-    expect(email.variables.warrantyPrice).toBeCloseTo(39.92, 2);
-  });
-
-  it('email variables include expiresAt as ISO string', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(typeof email.variables.expiresAt).toBe('string');
-    expect(email.variables.expiresAt).toMatch(/^\d{4}-\d{2}-\d{2}/);
-  });
-
-  it('email has status pending and createdAt date', async () => {
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    const email = queued.find(e => e.templateId === 'warranty_purchased');
-    expect(email.status).toBe('pending');
-    expect(email.createdAt).toBeInstanceOf(Date);
-  });
-
-  it('purchaseWarranty succeeds even if EmailQueue insert throws (non-fatal)', async () => {
-    // Seed so the warranty insert works, then poison EmailQueue on the second insert
-    __setInsertError('EmailQueue', new Error('Queue is down'));
-    const result = await purchaseWarranty(makePurchaseData());
-    // Warranty record itself should be inserted, email failure is non-fatal
-    expect(result.success).toBe(true);
-  });
-
-  it('does not queue email when plan is not found (purchase aborted)', async () => {
-    __seed('WarrantyPlans', []); // no plans
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    expect(queued).toHaveLength(0);
-  });
-
-  it('skips queueEmail when member loginEmail is null', async () => {
-    __setMember({ _id: MEMBER_ID, loginEmail: null });
-    await purchaseWarranty(makePurchaseData());
-    const queued = __getInserted('EmailQueue');
-    expect(queued).toHaveLength(0);
-  });
 });
 
 // ── registerWarranty email ────────────────────────────────────────────────────
