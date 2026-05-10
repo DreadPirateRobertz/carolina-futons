@@ -101,6 +101,25 @@ def all_source_files() -> list[Path]:
     return out
 
 
+# cf-sq0d.fu2 (v3.2): strip JSDoc/block + line comments before checking
+# caller hits. Without this, a JSDoc `@param {Object} foo - data from
+# getAffiliateDashboard` line is credited as a real caller of the backend
+# `getAffiliateDashboard` webMethod.
+#
+# Two passes:
+#   1. Strip `/* … */` block comments (covers JSDoc and inline blocks).
+#   2. Strip `// …` line comments — but preserve URL schemes like `https://`
+#      by requiring the `//` to NOT be preceded by a `:` character.
+_BLOCK_COMMENT_RE = re.compile(r"/\*[\s\S]*?\*/")
+_LINE_COMMENT_RE = re.compile(r"(^|[^:])//[^\n]*")
+
+
+def strip_js_comments(text: str) -> str:
+    text = _BLOCK_COMMENT_RE.sub("", text)
+    # Replace match with the captured non-`:` prefix so URL `://` survives.
+    return _LINE_COMMENT_RE.sub(lambda m: m.group(1), text)
+
+
 def collect_web_methods() -> dict[str, dict]:
     methods: dict[str, dict] = {}
     for fp in BACKEND.rglob("*.web.js"):
@@ -329,6 +348,10 @@ def classify_method(
                 self_text = fp.read_text(errors="ignore")
             except OSError:
                 continue
+            # cf-sq0d.fu2: strip comments before the same-file call check so
+            # a JSDoc `@example NAME()` snippet in the defining file's own
+            # docstring isn't credited as a real same-file caller.
+            self_text = strip_js_comments(self_text)
             if pat_call.search(self_text):
                 in_same_file = True
                 if len(sample_callers) < 5:
@@ -342,13 +365,18 @@ def classify_method(
             text = fp.read_text(errors="ignore")
         except OSError:
             continue
-        if not pat_import.search(text):
+        # cf-sq0d.fu2 (v3.2): comment-strip before checking caller hits so
+        # JSDoc-only mentions ("@param … from getAffiliateDashboard") don't
+        # masquerade as callers. The local-def + backend-import checks below
+        # still run against the stripped view for the same reason.
+        stripped = strip_js_comments(text)
+        if not pat_import.search(stripped):
             continue
         # cf-sq0d.fu1: skip same-name-collision callers. If the file defines
         # its own function/const with this name AND has no explicit string
         # reference to the defining backend module, the name match is local —
         # not a backend caller.
-        if pat_local_def.search(text) and not pat_backend_import_quoted.search(text):
+        if pat_local_def.search(stripped) and not pat_backend_import_quoted.search(stripped):
             continue
         # any reference counts; don't require call form (could be re-export, type ref)
         if rel.startswith("src/public/"):
@@ -446,12 +474,21 @@ def main() -> int:
     print(f"scanning {len(files)} src files", file=sys.stderr)
     print(f"webMethods discovered: {len(methods)}", file=sys.stderr)
 
-    http_text = HTTP_FILE.read_text(errors="ignore") if HTTP_FILE.exists() else ""
-    events_text = EVENTS_FILE.read_text(errors="ignore") if EVENTS_FILE.exists() else ""
+    # cf-sq0d.fu2: strip JSDoc/line comments from the http and events text up
+    # front so a JSDoc-only mention (e.g. `// see also: post_someName`) in
+    # those files doesn't count as a wiring of NAME.
+    http_text = (
+        strip_js_comments(HTTP_FILE.read_text(errors="ignore")) if HTTP_FILE.exists() else ""
+    )
+    events_text = (
+        strip_js_comments(EVENTS_FILE.read_text(errors="ignore"))
+        if EVENTS_FILE.exists()
+        else ""
+    )
     # Also fold any *.events.js into events_text
     for fp in BACKEND.rglob("*.events.js"):
         try:
-            events_text += "\n" + fp.read_text(errors="ignore")
+            events_text += "\n" + strip_js_comments(fp.read_text(errors="ignore"))
         except OSError:
             continue
 
