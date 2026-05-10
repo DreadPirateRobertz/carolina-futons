@@ -1,26 +1,38 @@
 /**
  * @module inventoryService
- * @description Inventory management backend: variant-level stock tracking,
- * low stock alerts, restock suggestions based on sales velocity,
- * back-in-stock email signup, and pre-order mode.
+ * @description Inventory CMS read surface — public stock status / urgency
+ * lookups for the storefront, and the customer-facing back-in-stock email
+ * signup endpoint.
+ *
+ * cf-4x7e Pass 2 chunk 13 retired the admin dashboard / write surface
+ * (getInventoryDashboard, updateStockLevel, getRestockSuggestions,
+ * getBackInStockSignups, getBackInStockDashboard, markSignupsNotified —
+ * never wired) plus `getLowStockAlerts` (cross-file name-collision FP
+ * with inventoryAlerts.web.js's own webMethod of the same name).
+ *
+ * Live consumers of the methods kept here:
+ *   getStockStatus        — liveInventory.web.js, src/public/InventoryDisplay.js
+ *                           (cfutons + stage3)
+ *   signUpBackInStock     — liveInventory.web.js (cfutons + stage3)
+ *   getInventoryUrgency   — src/public/inventoryUrgency.js (cfutons + stage3)
  *
  * @requires wix-web-module
  * @requires wix-data
  * @requires backend/utils/sanitize
+ * @requires backend/utils/rateLimit
+ * @requires backend/utils/auditLog
  *
  * @setup
- * 1. Create `InventoryLevels` CMS collection:
- *    productId (text), variantId (text), sku (text), productName (text),
- *    variantLabel (text), quantity (number), threshold (number),
- *    preOrder (boolean), lastRestocked (dateTime), updatedAt (dateTime)
+ * Requires CMS collections:
  *
- * 2. Create `BackInStockSignups` CMS collection:
- *    email (text), productId (text), variantId (text),
- *    productName (text), signedUpAt (dateTime), notified (boolean)
+ *   InventoryLevels:
+ *     productId (text), variantId (text), variantLabel (text),
+ *     quantity (number), threshold (number), preOrder (boolean),
+ *     lastRestocked (dateTime)
  *
- * 3. Create `InventoryLog` CMS collection:
- *    productId (text), variantId (text), change (number),
- *    reason (text), timestamp (dateTime)
+ *   BackInStockSignups:
+ *     email (text), productId (text), variantId (text),
+ *     productName (text), signedUpAt (dateTime), notified (boolean)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -29,7 +41,8 @@ import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
-const SALES_VELOCITY_DAYS = 30;
+const LOW_STOCK_URGENCY_THRESHOLD = 5;
+const JUST_RESTOCKED_HOURS = 48;
 
 // ── Stock Status ────────────────────────────────────────────────────
 
@@ -85,202 +98,6 @@ export const getStockStatus = webMethod(
   }
 );
 
-// ── Inventory Dashboard ─────────────────────────────────────────────
-
-/**
- * Get all products sorted by stock level for admin dashboard.
- *
- * @param {string} [filter] - 'low_stock' | 'out_of_stock' | 'all'
- * @returns {Promise<{products: Array}>}
- */
-export const getInventoryDashboard = webMethod(
-  Permissions.Admin,
-  async (filter = 'all') => {
-    try {
-      const result = await wixData.query('InventoryLevels')
-        .ascending('quantity')
-        .limit(200)
-        .find();
-
-      let items = result.items.map(item => ({
-        _id: item._id,
-        productId: item.productId,
-        variantId: item.variantId,
-        sku: item.sku || '',
-        productName: item.productName || '',
-        variantLabel: item.variantLabel || '',
-        quantity: item.quantity,
-        threshold: item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD,
-        status: getVariantStatus(item.quantity, item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD),
-        preOrder: !!item.preOrder,
-        lastRestocked: item.lastRestocked,
-      }));
-
-      if (filter === 'low_stock') {
-        items = items.filter(i => i.status === 'low_stock');
-      } else if (filter === 'out_of_stock') {
-        items = items.filter(i => i.status === 'out_of_stock');
-      }
-
-      return { products: items };
-    } catch (err) {
-      console.error('Error getting inventory dashboard:', err);
-      return { products: [] };
-    }
-  }
-);
-
-// ── Stock Updates ───────────────────────────────────────────────────
-
-/**
- * Update stock level for a product variant.
- *
- * @param {string} productId
- * @param {string} variantId
- * @param {number} quantity - New absolute quantity
- * @param {Object} [options] - { threshold, preOrder, reason }
- * @returns {Promise<{success: boolean, previousQty: number, alerts: string[]}>}
- */
-export const updateStockLevel = webMethod(
-  Permissions.Admin,
-  async (productId, variantId, quantity, options = {}) => {
-    try {
-      if (!productId || !variantId) return { success: false, previousQty: 0, alerts: [] };
-
-      const cleanProductId = sanitize(productId, 50);
-      const cleanVariantId = sanitize(variantId, 50);
-      const newQty = Math.max(0, Math.floor(Number(quantity) || 0));
-      const alerts = [];
-
-      // Find existing record
-      const existing = await wixData.query('InventoryLevels')
-        .eq('productId', cleanProductId)
-        .eq('variantId', cleanVariantId)
-        .find();
-
-      const previousQty = existing.items.length > 0 ? existing.items[0].quantity : 0;
-      const threshold = options.threshold !== undefined
-        ? Math.max(0, Number(options.threshold) || 0)
-        : (existing.items[0]?.threshold != null ? existing.items[0].threshold : DEFAULT_LOW_STOCK_THRESHOLD);
-
-      const record = {
-        productId: cleanProductId,
-        variantId: cleanVariantId,
-        sku: options.sku ? sanitize(options.sku, 50) : (existing.items[0]?.sku || ''),
-        productName: options.productName ? sanitize(options.productName, 200) : (existing.items[0]?.productName || ''),
-        variantLabel: options.variantLabel ? sanitize(options.variantLabel, 200) : (existing.items[0]?.variantLabel || ''),
-        quantity: newQty,
-        threshold,
-        preOrder: options.preOrder !== undefined ? !!options.preOrder : (existing.items[0]?.preOrder || false),
-        updatedAt: new Date(),
-      };
-
-      if (existing.items.length > 0) {
-        record._id = existing.items[0]._id;
-        record.lastRestocked = newQty > previousQty ? new Date() : existing.items[0].lastRestocked;
-        await wixData.update('InventoryLevels', record);
-      } else {
-        record.lastRestocked = new Date();
-        await wixData.insert('InventoryLevels', record);
-      }
-
-      // Log the change
-      if (previousQty !== newQty) {
-        await wixData.insert('InventoryLog', {
-          productId: cleanProductId,
-          variantId: cleanVariantId,
-          change: newQty - previousQty,
-          reason: sanitize(options.reason || '', 200),
-          timestamp: new Date(),
-        });
-      }
-
-      // Generate alerts
-      if (newQty <= 0 && previousQty > 0) {
-        alerts.push('out_of_stock');
-      } else if (newQty <= threshold && newQty > 0) {
-        alerts.push('low_stock');
-      }
-
-      // Trigger back-in-stock notifications if restocked
-      if (newQty > 0 && previousQty <= 0) {
-        alerts.push('back_in_stock');
-      }
-
-      return { success: true, previousQty, alerts };
-    } catch (err) {
-      console.error('Error updating stock level:', err);
-      return { success: false, previousQty: 0, alerts: [] };
-    }
-  }
-);
-
-// ── Restock Suggestions ─────────────────────────────────────────────
-
-/**
- * Get restock suggestions based on sales velocity.
- * Calculates days until out of stock at current sales rate.
- *
- * @returns {Promise<{suggestions: Array}>}
- */
-export const getRestockSuggestions = webMethod(
-  Permissions.Admin,
-  async () => {
-    try {
-      const since = new Date(Date.now() - SALES_VELOCITY_DAYS * 24 * 60 * 60 * 1000);
-
-      // Get inventory changes (negative = sold)
-      const logResult = await wixData.query('InventoryLog')
-        .ge('timestamp', since)
-        .find();
-
-      // Group sales by product+variant
-      const salesByVariant = {};
-      for (const entry of logResult.items) {
-        if (entry.change >= 0) continue; // skip restocks
-        const key = `${entry.productId}:${entry.variantId}`;
-        salesByVariant[key] = (salesByVariant[key] || 0) + Math.abs(entry.change);
-      }
-
-      // Get current inventory levels
-      const inventoryResult = await wixData.query('InventoryLevels')
-        .find();
-
-      const suggestions = [];
-
-      for (const item of inventoryResult.items) {
-        const key = `${item.productId}:${item.variantId}`;
-        const totalSold = salesByVariant[key] || 0;
-        const dailyRate = totalSold / SALES_VELOCITY_DAYS;
-
-        if (dailyRate <= 0) continue;
-
-        const daysUntilOOS = item.quantity > 0 ? Math.floor(item.quantity / dailyRate) : 0;
-        const suggestedRestock = Math.ceil(dailyRate * 30); // 30-day supply
-
-        suggestions.push({
-          productId: item.productId,
-          variantId: item.variantId,
-          productName: item.productName || '',
-          variantLabel: item.variantLabel || '',
-          currentQty: item.quantity,
-          dailySalesRate: Math.round(dailyRate * 100) / 100,
-          daysUntilOOS,
-          suggestedRestock,
-        });
-      }
-
-      // Sort by urgency (lowest days until OOS first)
-      suggestions.sort((a, b) => a.daysUntilOOS - b.daysUntilOOS);
-
-      return { suggestions };
-    } catch (err) {
-      console.error('Error generating restock suggestions:', err);
-      return { suggestions: [] };
-    }
-  }
-);
-
 // ── Back In Stock Signup ────────────────────────────────────────────
 
 /**
@@ -332,186 +149,10 @@ export const signUpBackInStock = webMethod(
   }
 );
 
-/**
- * Get pending back-in-stock signups for a product.
- *
- * @param {string} productId
- * @returns {Promise<{signups: Array}>}
- */
-export const getBackInStockSignups = webMethod(
-  Permissions.Admin,
-  async (productId) => {
-    try {
-      if (!productId) return { signups: [] };
-
-      const result = await wixData.query('BackInStockSignups')
-        .eq('productId', sanitize(productId, 50))
-        .eq('notified', false)
-        .find();
-
-      return {
-        signups: result.items.map(i => ({
-          _id: i._id,
-          email: i.email,
-          variantId: i.variantId,
-          signedUpAt: i.signedUpAt,
-        })),
-      };
-    } catch (err) {
-      console.error('Error getting back-in-stock signups:', err);
-      return { signups: [] };
-    }
-  }
-);
-
-// ── Low Stock Alerts ────────────────────────────────────────────────
-
-/**
- * Get all products below their stock threshold.
- *
- * @returns {Promise<{alerts: Array}>}
- */
-export const getLowStockAlerts = webMethod(
-  Permissions.Admin,
-  async () => {
-    try {
-      const result = await wixData.query('InventoryLevels')
-        .ascending('quantity')
-        .find();
-
-      const alerts = result.items
-        .filter(item => {
-          const threshold = item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD;
-          return item.quantity <= threshold;
-        })
-        .map(item => ({
-          productId: item.productId,
-          variantId: item.variantId,
-          productName: item.productName || '',
-          variantLabel: item.variantLabel || '',
-          quantity: item.quantity,
-          threshold: item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD,
-          status: getVariantStatus(item.quantity, item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD),
-          sku: item.sku || '',
-        }));
-
-      return { alerts };
-    } catch (err) {
-      console.error('Error getting low stock alerts:', err);
-      return { alerts: [] };
-    }
-  }
-);
-
-// ── Back In Stock Dashboard ──────────────────────────────────────────
-
-/**
- * Get back-in-stock system status for admin dashboard.
- * Reports pending signups, recent notifications, and queue health.
- *
- * @function getBackInStockDashboard
- * @returns {Promise<Object>} { pendingSignups, notifiedCount, recentSignups }
- * @permission Admin
- */
-export const getBackInStockDashboard = webMethod(
-  Permissions.Admin,
-  async () => {
-    try {
-      const pending = await wixData.query('BackInStockSignups')
-        .eq('notified', false)
-        .limit(1000)
-        .find();
-
-      const notified = await wixData.query('BackInStockSignups')
-        .eq('notified', true)
-        .limit(1000)
-        .find();
-
-      // Group pending signups by product
-      const productMap = {};
-      for (const item of pending.items) {
-        const pid = item.productId;
-        if (!productMap[pid]) {
-          productMap[pid] = {
-            productId: pid,
-            productName: item.productName || '',
-            count: 0,
-            oldestSignup: item.signedUpAt,
-          };
-        }
-        productMap[pid].count += 1;
-        if (item.signedUpAt < productMap[pid].oldestSignup) {
-          productMap[pid].oldestSignup = item.signedUpAt;
-        }
-      }
-
-      return {
-        pendingSignups: pending.items.length,
-        notifiedCount: notified.items.length,
-        productBreakdown: Object.values(productMap),
-      };
-    } catch (err) {
-      console.error('[inventoryService] Error getting back-in-stock dashboard:', err);
-      return { pendingSignups: 0, notifiedCount: 0, productBreakdown: [] };
-    }
-  }
-);
-
-/**
- * Mark back-in-stock signups as notified after sending notifications.
- * Called by the notification flow after emails are sent.
- *
- * @function markSignupsNotified
- * @param {string} productId - Product ID to mark notified
- * @returns {Promise<{success: boolean, count: number}>}
- * @permission Admin
- */
-export const markSignupsNotified = webMethod(
-  Permissions.Admin,
-  async (productId) => {
-    if (!productId) {
-      console.error('[inventoryService] markSignupsNotified called without productId');
-      return { success: false, count: 0 };
-    }
-
-    try {
-      const cleanId = sanitize(productId, 50);
-      const result = await wixData.query('BackInStockSignups')
-        .eq('productId', cleanId)
-        .eq('notified', false)
-        .find();
-
-      let count = 0;
-      let failed = 0;
-      for (const item of result.items) {
-        try {
-          await wixData.update('BackInStockSignups', {
-            ...item,
-            notified: true,
-            notifiedAt: new Date(),
-          });
-          count += 1;
-        } catch (itemErr) {
-          failed += 1;
-          console.error(`[inventoryService] Failed to mark signup ${item._id} notified:`, itemErr);
-        }
-      }
-
-      return { success: failed === 0, count, failed };
-    } catch (err) {
-      console.error('[inventoryService] Error marking signups notified:', err);
-      return { success: false, count: 0, failed: 0 };
-    }
-  }
-);
-
 // ── Inventory Urgency ───────────────────────────────────────────────
 
-const LOW_STOCK_URGENCY_THRESHOLD = 5;
-const JUST_RESTOCKED_HOURS = 48;
-
 /**
- * Get urgency signal for a product — drives 'Only X left!' / 'Just restocked!' badges.
+ * Get inventory urgency level for a product (drives storefront badges).
  *
  * @param {string} productId
  * @returns {Promise<{level: string, count: number, message: string}>}
@@ -563,7 +204,3 @@ function getVariantStatus(quantity, threshold) {
   if (quantity <= threshold) return 'low_stock';
   return 'in_stock';
 }
-
-// Export for testing
-export const _DEFAULT_LOW_STOCK_THRESHOLD = DEFAULT_LOW_STOCK_THRESHOLD;
-export const _getVariantStatus = getVariantStatus;

@@ -23,7 +23,6 @@ import { injectProductMeta } from '../src/public/product/productSchema.js';
 
 // ── inventoryService (remaining fix) ────────────────────────────────
 import {
-  updateStockLevel,
 } from '../src/backend/inventoryService.web.js';
 
 beforeEach(() => {
@@ -131,68 +130,3 @@ describe('salePageHelpers — discountedPrice zero handling', () => {
   });
 });
 
-// ═══════════════════════════════════════════════════════════════════
-// inventoryService — remaining threshold fix in updateStockLevel
-// ═══════════════════════════════════════════════════════════════════
-
-describe('inventoryService updateStockLevel — threshold zero fallback fix', () => {
-  it('existing record with threshold 0 preserves 0 (not default 5)', async () => {
-    __seed('InventoryLevels', [{
-      _id: 'inv-1', productId: 'p-1', variantId: 'v-1',
-      quantity: 10, threshold: 0,
-    }]);
-    let updated;
-    __onUpdate((collection, item) => {
-      if (collection === 'InventoryLevels') updated = item;
-    });
-
-    const r = await updateStockLevel('p-1', 'v-1', 5);
-    expect(r.success).toBe(true);
-    expect(updated.threshold).toBe(0);
-  });
-
-  it('existing record with threshold null uses default 5', async () => {
-    __seed('InventoryLevels', [{
-      _id: 'inv-1', productId: 'p-1', variantId: 'v-1',
-      quantity: 10, threshold: null,
-    }]);
-    let updated;
-    __onUpdate((collection, item) => {
-      if (collection === 'InventoryLevels') updated = item;
-    });
-
-    const r = await updateStockLevel('p-1', 'v-1', 5);
-    expect(r.success).toBe(true);
-    expect(updated.threshold).toBe(5);
-  });
-
-  it('existing record with threshold undefined uses default 5', async () => {
-    __seed('InventoryLevels', [{
-      _id: 'inv-1', productId: 'p-1', variantId: 'v-1',
-      quantity: 10,
-    }]);
-    let updated;
-    __onUpdate((collection, item) => {
-      if (collection === 'InventoryLevels') updated = item;
-    });
-
-    const r = await updateStockLevel('p-1', 'v-1', 5);
-    expect(r.success).toBe(true);
-    expect(updated.threshold).toBe(5);
-  });
-
-  it('options.threshold overrides existing 0 threshold', async () => {
-    __seed('InventoryLevels', [{
-      _id: 'inv-1', productId: 'p-1', variantId: 'v-1',
-      quantity: 10, threshold: 0,
-    }]);
-    let updated;
-    __onUpdate((collection, item) => {
-      if (collection === 'InventoryLevels') updated = item;
-    });
-
-    const r = await updateStockLevel('p-1', 'v-1', 5, { threshold: 3 });
-    expect(r.success).toBe(true);
-    expect(updated.threshold).toBe(3);
-  });
-});
