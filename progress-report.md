@@ -1,5 +1,14 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:50 MT**
+
+## Session 2026-05-10 — Wave 20
+| Done | Detail |
+|------|--------|
+| ✅ Watchdog resolved | Dead session = hq-dog-alpha (now healthy). Duplicate Mac cfw-crew-{jasper..quartz} killed. Pop-os crew kept. |
+| ✅ New crew dispatched | jasper→cf-ceex (OG sweep 13 pages), obsidian→cf-e55k (twitter cards), onyx→cf-nm6p (BreadcrumbList), opal→cf-zmsq (a11y skip-nav+focus), quartz→cf-mu05 (image perf audit) |
+| 📦 All 5 beads HOLD | Pop-os crew working locally, NO pushes. Batch window opens when PR #540 clears. |
+| 📦 Batch queue ready | morgott (cf-641x) + miquella (cf-bbo8) also local-ready + held. 7 PRs total staging for next window. |
+| ⏳ PR #540 | Stilgar morning confirm — triggers BATCH WINDOW OPEN signal to all 7 crew. |
 
 ## Session 2026-05-10 — Wave 19
 | Done | Detail |
