@@ -8,6 +8,12 @@ permissions:
   contents: read
   pull-requests: write
 
+# cf-ra41: same-PR successive pushes cancel the older labeler run. Lightweight
+# but keeps the workflow consistent with ci.yml/codeql.yml/coverage-ratchet.yml.
+concurrency:
+  group: labeler-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Path-based labels from .github/labeler.yml
   label:

@@ -13,6 +13,14 @@ permissions:
   contents: read
   security-events: write
 
+# cf-ra41: cancel stale CodeQL scans when a new push lands on the same ref.
+# CodeQL scans take ~5min each; force-push iteration leaves the prior scan
+# running uselessly while the new one boots. Group key includes the workflow
+# name so other workflows' concurrency groups don't collide.
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze JavaScript
