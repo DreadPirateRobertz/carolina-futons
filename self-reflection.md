@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-10 Wave 11 (387faae7 — context-resume after compaction)
+
+### What worked well
+- **Context-resume cleanup**: After compaction, checked PR #541 CI status first (lint-typecheck-test ✓), merged immediately. No thrash.
+- **Security audit escalation**: Correctly escalated P1 branch protection gap (cfw/main HTTP 404) to mayor for Stilgar — within scope of immediate pre-cutover concern.
+- **PR #540 test diagnosis**: `getByRole` throwing "Found multiple elements" pointed directly to the mobile drawer duplication. `git diff main..origin/cf-jo07 -- HeaderMobileMenu.tsx` confirmed in one command. Fix spec to blaidd was exact (no ambiguity).
+- **Bead housekeeping**: Closed cf-b3mf, cf-ivpn, cf-1vov, cf-7ozz, cf-uwfw, cf-ioep in same sweep — clean signal to crew and mayor.
+
+### What to improve
+- **`git reset --hard` before understanding divergence**: Did a hard reset after seeing the stash-rebase failure. Correct outcome (remote had all relevant content), but should have checked `git log --oneline origin/main -5` FIRST to confirm remote was ahead, not behind. Blind reset on main branch is high-risk.
+- **Progress report rebase collision**: The `git stash pop → git pull --rebase` flow failed because prior commits had already touched progress-report.md. Pattern: for progress reports, always `git fetch && git log origin/main -1` before committing to detect fast-forward requirements.
+- **`tail -6` truncates CI error details**: `gh pr checks | tail -6` cut off the actual test failure error (`Found multiple elements`). Should always follow up with `gh run view --log-failed --job <id>` before trying to diagnose.
+
+### Pattern notes
+- **Post-compaction + remote-ahead**: When remote is many waves ahead of your local, `git reset --hard origin/main` is cleaner than rebasing over diverged progress-report commits.
+- **`getByRole` vs `getAllByRole`**: Mobile menus and drawers often duplicate accessible landmarks (nav, heading, link). Any test using `getByRole` for site-chrome elements should use `getAllByRole` if the component includes a responsive drawer/offcanvas.
+- **"use client" boundary**: Constants exported from `"use client"` modules resolve as `undefined` in Server Components. Only component references (Client References) work across the RSC boundary. Fallback strings for getSiteContent MUST be inlined in server context, not imported from client files.
+
 ## Session 2026-05-09 Wave 2 (387faae7 — watchdog response + PR merge wave)
 
 ### What worked well
