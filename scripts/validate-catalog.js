@@ -51,9 +51,12 @@ function extractFolderKeys(filePath) {
   return keys.map(s => s.replace(/'|:/g, '').trim());
 }
 
-// Files that contain VALID_CATEGORIES
+// Files that consume VALID_CATEGORIES (re-exporting via import). The
+// canonical list now lives in `src/backend/utils/catalogCategories.js`
+// (extracted in cf-dtu6 so the dead `catalogImport.web.js` could retire).
+// Each consumer must import from the canonical module — we verify that
+// by parsing the import statement, not the array literal itself.
 const categoryFiles = [
-  'src/backend/catalogImport.web.js',
   'src/backend/catalogContent.web.js',
   'src/backend/loadCatalogMaster.web.js',
   'src/backend/productVideos.web.js',
@@ -62,43 +65,33 @@ const categoryFiles = [
 // File with CATEGORY_FOLDERS
 const folderFile = 'src/backend/mediaGallery.web.js';
 
-// The canonical source: catalogImport.web.js (the importer defines what's valid)
-const canonicalPath = path.join(ROOT, categoryFiles[0]);
+// The canonical source: src/backend/utils/catalogCategories.js
+const canonicalRel = 'src/backend/utils/catalogCategories.js';
+const canonicalPath = path.join(ROOT, canonicalRel);
 const canonical = extractCategories(canonicalPath);
 if (!canonical) {
-  console.error('FATAL: Could not parse VALID_CATEGORIES from', categoryFiles[0]);
+  console.error('FATAL: Could not parse VALID_CATEGORIES from', canonicalRel);
   process.exit(1);
 }
 const canonicalSet = new Set(canonical);
 
-console.log(`Canonical categories (${categoryFiles[0]}): ${canonical.length}`);
+console.log(`Canonical categories (${canonicalRel}): ${canonical.length}`);
 console.log(`  ${canonical.join(', ')}\n`);
 
-// Check each file's VALID_CATEGORIES against canonical
+// Verify each consumer imports from the canonical module (no shadow constants)
+const importLine = "import { VALID_CATEGORIES } from 'backend/utils/catalogCategories'";
 for (const relPath of categoryFiles) {
   const fullPath = path.join(ROOT, relPath);
   if (!fs.existsSync(fullPath)) {
     error('category-sync', `File not found: ${relPath}`);
     continue;
   }
-  const cats = extractCategories(fullPath);
-  if (!cats) {
-    error('category-sync', `Could not parse VALID_CATEGORIES from ${relPath}`);
-    continue;
+  const src = fs.readFileSync(fullPath, 'utf8');
+  if (!src.includes(importLine)) {
+    error('category-sync', `${relPath} does not import VALID_CATEGORIES from canonical module — must add: ${importLine}`);
   }
-  const fileSet = new Set(cats);
-
-  // Check for entries missing from this file
-  for (const c of canonical) {
-    if (!fileSet.has(c)) {
-      error('category-sync', `${relPath} is missing category '${c}'`);
-    }
-  }
-  // Check for extra entries not in canonical
-  for (const c of cats) {
-    if (!canonicalSet.has(c)) {
-      error('category-sync', `${relPath} has extra category '${c}' not in canonical`);
-    }
+  if (/const\s+VALID_CATEGORIES\s*=\s*\[/.test(src)) {
+    error('category-sync', `${relPath} still defines a local VALID_CATEGORIES — should import from canonical module instead`);
   }
 }
 

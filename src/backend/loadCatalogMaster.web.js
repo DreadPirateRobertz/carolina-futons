@@ -17,15 +17,9 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { VALID_CATEGORIES } from 'backend/utils/catalogCategories';
 
 // ── Constants ────────────────────────────────────────────────────────
-
-const VALID_CATEGORIES = [
-  'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-  'casegoods-accessories', 'front-loading-nesting', 'wall-hugger-frames',
-  'unfinished-wood', 'covers', 'outdoor-furniture',
-  'pillows-702', 'log-frames',
-];
 
 const MAX_NAME_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 5000;
