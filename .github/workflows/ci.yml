@@ -13,6 +13,17 @@ on:
 permissions:
   contents: read
 
+# cf-khqd: cancel in-progress runs on the same branch when a new push lands.
+# Force-pushes / fixup commits on a feature branch leave the prior CI run
+# orphan; without this, both runs compete for runners + Vercel preview build
+# slots. `github.ref` keys per branch (PR or main), so concurrent PRs run
+# fully in parallel — only same-branch successive pushes cancel the old.
+# Main pushes are also covered: a quick succession of merges lands only one
+# CI run for the latest sha (squash-merge equivalent).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ── Unit Tests ───────────────────────────────────────────────────────────────
   # Runs Vitest across Node 20 + 22 matrix. On Node 22: also collects coverage
