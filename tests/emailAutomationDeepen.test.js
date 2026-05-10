@@ -3,7 +3,15 @@ import { __seed, __reset, __onInsert, __onUpdate } from './__mocks__/wix-data.js
 
 vi.mock('wix-crm-backend', () => ({
   triggeredEmails: { emailContact: vi.fn(async () => ({})) },
-  contacts: { queryContacts: vi.fn() },
+  // cf-trm0: cart_recovery cron + tier_milestone now resolve contactId
+  // before queueing via _resolveContactIdInternal → appendOrCreateContact.
+  // Mock returns a deterministic id so the cart-iteration path proceeds.
+  contacts: {
+    queryContacts: vi.fn(),
+    appendOrCreateContact: vi.fn(async (info) => ({
+      contactId: `contact-${info?.emails?.[0]?.email || 'unknown'}`,
+    })),
+  },
 }));
 
 vi.mock('wix-secrets-backend', () => ({
