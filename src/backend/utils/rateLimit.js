@@ -95,8 +95,15 @@ export function hashRateLimitKey(key) {
 /**
  * Check and record a rate-limit attempt for a given key in a given collection.
  * Allows up to RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per key.
- * Fails open (allows) if the DB check itself errors, to avoid blocking
- * legitimate users on infrastructure issues.
+ *
+ * cf-3ldu F2 / cf-8p52: fails CLOSED on DB error. Previously returned
+ * {allowed: true} to preserve availability when wixData itself was sick;
+ * the cf-3ldu audit flagged that this also silently disabled rate-limit
+ * protection when a backing collection was missing at cutover (failure
+ * mode indistinguishable from a transient outage). Closed-on-error
+ * surfaces the issue immediately and trades one transient blast radius
+ * (5xx during a real wixData outage) for a much smaller cutover blast
+ * radius (no silent protection bypass).
  *
  * @param {string} collection - wixData collection name (e.g. 'QARateLimit').
  * @param {string} key - Normalized identifier (typically email).
@@ -104,7 +111,7 @@ export function hashRateLimitKey(key) {
  * @param {number} [opts.now] - Timestamp override for testing (internal use only — never accept from callers).
  * @param {number} [opts.max] - Max calls per window (defaults to RATE_LIMIT_MAX). Callers may override per endpoint.
  * @param {number} [opts.windowMs] - Window duration in ms (defaults to RATE_LIMIT_WINDOW_MS = 1 hour). Use 60_000 for per-minute limits.
- * @returns {Promise<{allowed: boolean, reason?: string}>}
+ * @returns {Promise<{allowed: boolean, reason?: string}>} — `reason: 'rate_limited'` when over limit, `'db_error'` when the wixData call itself failed (fail-closed).
  */
 export async function checkRateLimit(collection, key, opts = {}) {
   const now = opts.now ?? Date.now();
@@ -153,6 +160,8 @@ export async function checkRateLimit(collection, key, opts = {}) {
     return { allowed: true };
   } catch (err) {
     logError(`rateLimit.checkRateLimit[${collection}/${storedKey}]`, err);
-    return { allowed: true }; // Fail open — don't block on DB errors
+    // cf-3ldu F2 / cf-8p52: fail CLOSED on DB error so a missing collection
+    // (or any wixData fault) cannot silently disable protection.
+    return { allowed: false, reason: 'db_error' };
   }
 }

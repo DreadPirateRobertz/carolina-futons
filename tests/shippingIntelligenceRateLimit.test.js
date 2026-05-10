@@ -147,12 +147,12 @@ describe('getShippingEstimate — rate limiting (20 req/min per member)', () => 
     expect(result.error ?? '').not.toMatch(/too many requests/i);
   });
 
-  it('fails open (allows) when the rate limit DB check throws', async () => {
+  it('fails CLOSED when the rate limit DB check throws (cf-3ldu F2 / cf-8p52)', async () => {
     __setMember(makeMember('m1'));
     __setQueryError(ESTIMATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await getShippingEstimate('prod-1', '28701');
-    expect(result.error ?? '').not.toMatch(/too many requests/i);
+    expect(result.error ?? '').toMatch(/too many requests/i);
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringMatching(/rateLimit/i),
       expect.any(String),
@@ -227,12 +227,12 @@ describe('calculateBundleQuote — rate limiting (10 req/min per member)', () =>
     expect(result.error ?? '').not.toMatch(/too many requests/i);
   });
 
-  it('fails open (allows) when the rate limit DB check throws', async () => {
+  it('fails CLOSED when the rate limit DB check throws (cf-3ldu F2 / cf-8p52)', async () => {
     __setMember(makeMember('m1'));
     __setQueryError(BUNDLE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await calculateBundleQuote(ITEMS, '28701');
-    expect(result.error ?? '').not.toMatch(/too many requests/i);
+    expect(result.error ?? '').toMatch(/too many requests/i);
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringMatching(/rateLimit/i),
       expect.any(String),
