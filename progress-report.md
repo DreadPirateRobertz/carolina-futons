@@ -1,14 +1,16 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 04:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 05:10 MT**
 
 ## Session 2026-05-10 — Wave 27
 | Done | Detail |
 |------|--------|
-| ✅ PR #1271 MERGED | Coverage R5 (cf-vty7): +38 tests, +0.21% branches, +0.20% functions. ALL CI GREEN. |
-| 🔄 PR #1261 (cf-xpqf) | Rebased on main (includes #1271). test(22) running. Merge when green. |
-| ⛔ cfw PRs #554 #553 BLOCKED | cfw enforce_admins=true + 1-review requirement — can't approve own PRs. **Morning gate for Stilgar.** PR #554 = /api/health P1 (lint+Vercel ✅, e2e = pre-existing infra). PR #553 = cf-v4py E2E spec. |
+| ✅ PR #1271 MERGED | Coverage R5 (cf-vty7): +38 tests, +0.21% branches, +0.20% functions. |
+| ✅ PR #1261 MERGED | cf-xpqf dead-code audit — rebased after #1271, test(22) PASS. Threshold held. |
+| ✅ PR #1277 MERGED | cf-ra41 CI concurrency — codeql/velo-smoke/labeler. All 6 cfutons workflows consistent. |
+| ⛔ cfw PRs #554 #553 BLOCKED | cfw enforce_admins=true + 1-review requirement — can't approve own PRs. **Morning gate for Stilgar.** PR #554 = /api/health P1 (godfrey, 8 tests, lint+Vercel ✅). |
 | ✅ miquella → cf-lt2l | PRE-FLIP smoke test execution on Vercel preview (cutover-verification-matrix.md). |
 | ✅ morgott → cf-q8m2 | cf-4x7e Pass 3 chunk A — delete dead methods from SUPERSEDE-scored files. |
+| ✅ millicent → cf-3qt.8.32 | Vercel Pro upgrade requirements — document what Stilgar needs before DNS flip. |
 | ✅ PRs #1268 #1270 #1272 #1273 #1274 MERGED | Doc batch: cutover checklist, cron audit, Lighthouse baseline, khqd-cfw deferred note, mobile smoke (10/10 PASS). |
 | ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged. |
 
