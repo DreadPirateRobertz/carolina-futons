@@ -21,7 +21,6 @@ import {
   triggerAbandonedCartRecovery,
   triggerPostPurchaseSequence,
   unsubscribeContact,
-  getEmailAutomationStats,
   processEmailQueue,
 } from '../src/backend/emailAutomation.web.js';
 import { sendEmail } from '../src/backend/emailService.web.js';
@@ -462,20 +461,6 @@ describe('Cart Stats Integration', () => {
     expect(stats.recentCarts).toHaveLength(3);
   });
 
-  it('email automation stats reflect queued recovery emails', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-1', sequenceType: 'cart_recovery', sequenceStep: 1, status: 'pending', createdAt: new Date() },
-      { _id: 'eq-2', sequenceType: 'cart_recovery', sequenceStep: 2, status: 'pending', createdAt: new Date() },
-      { _id: 'eq-3', sequenceType: 'cart_recovery', sequenceStep: 3, status: 'sent', createdAt: new Date() },
-      { _id: 'eq-4', sequenceType: 'welcome', sequenceStep: 1, status: 'sent', createdAt: new Date() },
-    ]);
-
-    const stats = await getEmailAutomationStats();
-    expect(stats.stats.cart_recovery.pending).toBe(2);
-    expect(stats.stats.cart_recovery.sent).toBe(1);
-    expect(stats.stats.welcome.sent).toBe(1);
-    expect(stats.totalEmails).toBe(4);
-  });
 });
 
 // ── Post-Purchase Sequence ─────────────────────────────────────────────

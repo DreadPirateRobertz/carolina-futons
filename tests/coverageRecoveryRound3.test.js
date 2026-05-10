@@ -107,12 +107,6 @@ describe('cf-4x7e cov r3: emailAutomation.web.js trigger empty-arg shells', () =
     expect(result).toBeDefined();
   });
 
-  it('triggerReviewRewardPrompt("", "", "", "") — empty-arg guard', async () => {
-    const { triggerReviewRewardPrompt } = await import('../src/backend/emailAutomation.web.js');
-    const result = await triggerReviewRewardPrompt('', '', '', '');
-    expect(result).toBeDefined();
-  });
-
   it('triggerRestockNotifications("") — empty-arg guard', async () => {
     const { triggerRestockNotifications } = await import('../src/backend/emailAutomation.web.js');
     const result = await triggerRestockNotifications('');

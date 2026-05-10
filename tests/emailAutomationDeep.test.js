@@ -14,14 +14,11 @@ import {
   triggerReengagement,
   processEmailQueue,
   unsubscribeContact,
-  getEmailAutomationStats,
   recordEmailEvent,
-  getEmailEvents,
   wixMembers_onMemberCreated,
   wixEcom_onOrderCreated,
   wixEcom_onOrderCanceled,
   triggerRestockNotifications,
-  triggerReviewThanks,
   _SEQUENCES,
   _MAX_RETRY_ATTEMPTS,
 } from '../src/backend/emailAutomation.web.js';
@@ -616,74 +613,6 @@ describe('recordEmailEvent — edge cases', () => {
   });
 });
 
-// ── getEmailEvents — days parameter edge cases ──────────────────────
-
-describe('getEmailEvents — lookback window edge cases', () => {
-  it('uses default 30-day window when days param omitted', async () => {
-    const twentyNineDaysAgo = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
-    const thirtyOneDaysAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-
-    __seed('EmailEvents', [
-      { _id: 'ev-recent', emailQueueId: 'eq-1', eventType: 'open', timestamp: twentyNineDaysAgo },
-      { _id: 'ev-old', emailQueueId: 'eq-2', eventType: 'open', timestamp: thirtyOneDaysAgo },
-    ]);
-
-    const result = await getEmailEvents();
-    expect(result.opens).toBe(1);
-  });
-
-  it('respects custom days parameter', async () => {
-    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-    const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
-
-    __seed('EmailEvents', [
-      { _id: 'ev-5d', emailQueueId: 'eq-1', eventType: 'open', timestamp: fiveDaysAgo },
-      { _id: 'ev-15d', emailQueueId: 'eq-2', eventType: 'click', linkUrl: '/x', timestamp: fifteenDaysAgo },
-    ]);
-
-    const result = await getEmailEvents(undefined, 7);
-    expect(result.opens).toBe(1);
-    expect(result.clicks).toBe(0);
-  });
-});
-
-// ── getEmailAutomationStats — unknown sequence types ────────────────
-
-describe('getEmailAutomationStats — edge cases', () => {
-  it('accumulates unknown sequence types dynamically', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-1', sequenceType: 'restock', status: 'sent', createdAt: new Date() },
-      { _id: 'eq-2', sequenceType: 'review_thanks', status: 'sent', createdAt: new Date() },
-    ]);
-
-    const result = await getEmailAutomationStats();
-    expect(result.stats.restock.sent).toBe(1);
-    expect(result.stats.review_thanks.sent).toBe(1);
-    expect(result.totalEmails).toBe(2);
-  });
-
-  it('does not count non-sent A/B variants in abResults', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-1', sequenceType: 'welcome', status: 'pending', abVariant: 'A', createdAt: new Date() },
-      { _id: 'eq-2', sequenceType: 'welcome', status: 'failed', abVariant: 'B', createdAt: new Date() },
-    ]);
-
-    const result = await getEmailAutomationStats();
-    expect(result.abResults.A.sent).toBe(0);
-    expect(result.abResults.B.sent).toBe(0);
-  });
-
-  it('handles items with missing sequenceType', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-1', status: 'sent', createdAt: new Date() },
-    ]);
-
-    const result = await getEmailAutomationStats();
-    expect(result.stats.unknown).toBeDefined();
-    expect(result.stats.unknown.sent).toBe(1);
-  });
-});
-
 // ── triggerRestockNotifications — full coverage ─────────────────────
 
 describe('triggerRestockNotifications', () => {
@@ -781,90 +710,6 @@ describe('triggerRestockNotifications', () => {
 
     expect(insertedItems[0].templateId).toBe('restock_notification');
     expect(insertedItems[0].sequenceType).toBe('restock');
-  });
-});
-
-// ── triggerReviewThanks — full coverage ──────────────────────────────
-
-describe('triggerReviewThanks', () => {
-  it('queues a review thank-you email with discount', async () => {
-    let insertedItems = [];
-    __onInsert((collection, item) => {
-      if (collection === 'EmailQueue') insertedItems.push(item);
-    });
-
-    const result = await triggerReviewThanks(
-      'a0b1c2d3-e4f5-6789-abcd-ef0123456789', 'reviewer@example.com', 'Jane', 'Eureka Frame'
-    );
-
-    expect(result.success).toBe(true);
-    expect(insertedItems).toHaveLength(1);
-    expect(insertedItems[0].templateId).toBe('review_thank_you');
-    expect(insertedItems[0].variables.discountCode).toBe('REVIEW10');
-    expect(insertedItems[0].variables.discountAvailable).toBe(true);
-    expect(insertedItems[0].variables.productName).toBe('Eureka Frame');
-  });
-
-  it('returns failure for empty email', async () => {
-    const result = await triggerReviewThanks('contact-1', '', 'Jane', 'Eureka');
-    expect(result.success).toBe(false);
-  });
-
-  it('returns failure for null email', async () => {
-    const result = await triggerReviewThanks('contact-1', null, 'Jane', 'Eureka');
-    expect(result.success).toBe(false);
-  });
-
-  it('returns failure for invalid email', async () => {
-    const result = await triggerReviewThanks('contact-1', 'not-an-email', 'Jane', 'Eureka');
-    expect(result.success).toBe(false);
-  });
-
-  it('skips unsubscribed contacts', async () => {
-    __seed('Unsubscribes', [{
-      email: 'reviewer@example.com',
-      sequenceType: 'review_thanks',
-      unsubscribedAt: new Date(),
-    }]);
-
-    const result = await triggerReviewThanks(
-      'contact-1', 'reviewer@example.com', 'Jane', 'Eureka'
-    );
-    expect(result.success).toBe(false);
-  });
-
-  it('sends without discount when secret is missing', async () => {
-    __resetSecrets();
-    __setSecrets({
-      WELCOME_DISCOUNT_CODE: 'WELCOME10',
-      RECOVERY_DISCOUNT_CODE: 'COMEBACK15',
-    });
-
-    let insertedItems = [];
-    __onInsert((collection, item) => {
-      if (collection === 'EmailQueue') insertedItems.push(item);
-    });
-
-    const result = await triggerReviewThanks(
-      'contact-1', 'reviewer@example.com', 'Jane', 'Eureka Frame'
-    );
-
-    expect(result.success).toBe(true);
-    expect(insertedItems[0].variables.discountCode).toBe('');
-    expect(insertedItems[0].variables.discountAvailable).toBe(false);
-  });
-
-  it('normalizes email to lowercase', async () => {
-    let insertedItems = [];
-    __onInsert((collection, item) => {
-      if (collection === 'EmailQueue') insertedItems.push(item);
-    });
-
-    await triggerReviewThanks(
-      'contact-1', 'REVIEWER@EXAMPLE.COM', 'Jane', 'Eureka'
-    );
-
-    expect(insertedItems[0].recipientEmail).toBe('reviewer@example.com');
   });
 });
 

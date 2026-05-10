@@ -351,35 +351,6 @@ describe('unsubscribeContact type-specific cancellation', () => {
   });
 });
 
-// ── 7. getEmailAutomationStats edge cases ────────────────────────────
-
-describe('getEmailAutomationStats', () => {
-  it('handles unknown sequenceType in stats gracefully', async () => {
-    __seed('EmailQueue', [
-      { _id: 's1', sequenceType: 'restock', status: 'sent', createdAt: new Date() },
-      { _id: 's2', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
-    ]);
-
-    const res = await getEmailAutomationStats();
-    expect(res.stats.restock).toBeDefined();
-    expect(res.stats.restock.sent).toBe(1);
-    expect(res.stats.welcome.sent).toBe(1);
-  });
-
-  it('A/B results only count sent items, not pending or failed', async () => {
-    __seed('EmailQueue', [
-      { _id: 'ab1', sequenceType: 'welcome', abVariant: 'A', status: 'sent', createdAt: new Date() },
-      { _id: 'ab2', sequenceType: 'welcome', abVariant: 'A', status: 'pending', createdAt: new Date() },
-      { _id: 'ab3', sequenceType: 'welcome', abVariant: 'B', status: 'failed', createdAt: new Date() },
-      { _id: 'ab4', sequenceType: 'welcome', abVariant: 'B', status: 'sent', createdAt: new Date() },
-    ]);
-
-    const res = await getEmailAutomationStats();
-    expect(res.abResults.A.sent).toBe(1);
-    expect(res.abResults.B.sent).toBe(1);
-  });
-});
-
 // ── 8. recordEmailEvent validation ───────────────────────────────────
 
 describe('recordEmailEvent validation', () => {
@@ -414,39 +385,6 @@ describe('recordEmailEvent validation', () => {
     const res = await recordEmailEvent({ emailQueueId: 'eq1', eventType: 'click', linkUrl: 'https://cf.com/product' });
     expect(res.success).toBe(true);
     expect(inserts[0].linkUrl).toBe('https://cf.com/product');
-  });
-});
-
-// ── 9. getEmailEvents filtering ──────────────────────────────────────
-
-describe('getEmailEvents', () => {
-  it('filters by sequenceType via cross-reference', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-w1', sequenceType: 'welcome' },
-      { _id: 'eq-c1', sequenceType: 'cart_recovery' },
-    ]);
-    __seed('EmailEvents', [
-      { _id: 'ev1', emailQueueId: 'eq-w1', eventType: 'open', timestamp: new Date() },
-      { _id: 'ev2', emailQueueId: 'eq-c1', eventType: 'click', timestamp: new Date() },
-      { _id: 'ev3', emailQueueId: 'eq-w1', eventType: 'click', timestamp: new Date() },
-    ]);
-
-    const res = await getEmailEvents('welcome');
-    expect(res.opens).toBe(1);
-    expect(res.clicks).toBe(1);
-    expect(res.events.length).toBe(2);
-  });
-
-  it('returns all events when no sequenceType filter', async () => {
-    __seed('EmailEvents', [
-      { _id: 'ev4', emailQueueId: 'eq1', eventType: 'open', timestamp: new Date() },
-      { _id: 'ev5', emailQueueId: 'eq2', eventType: 'click', timestamp: new Date() },
-    ]);
-
-    const res = await getEmailEvents();
-    expect(res.opens).toBe(1);
-    expect(res.clicks).toBe(1);
-    expect(res.events.length).toBe(2);
   });
 });
 
@@ -520,41 +458,6 @@ describe('triggerRestockNotifications', () => {
     expect((await triggerRestockNotifications('', [])).success).toBe(false);
     expect((await triggerRestockNotifications('prod1', [])).success).toBe(false);
     expect((await triggerRestockNotifications('prod1', 'not-array')).success).toBe(false);
-  });
-});
-
-// ── 11. triggerReviewThanks edge cases ───────────────────────────────
-
-describe('triggerReviewThanks', () => {
-  it('still sends email when discount secret is unavailable', async () => {
-    getSecret.mockRejectedValueOnce(new Error('Secret not found'));
-
-    const inserts = [];
-    __onInsert((col, item) => { if (col === 'EmailQueue') inserts.push(item); });
-
-    const res = await triggerReviewThanks('c1', 'rev@test.com', 'Jane', 'Modern Futon');
-    expect(res.success).toBe(true);
-    expect(inserts[0].variables.discountCode).toBe('');
-    expect(inserts[0].variables.discountAvailable).toBe(false);
-  });
-
-  it('skips unsubscribed reviewer', async () => {
-    __seed('Unsubscribes', [
-      { _id: 'u-rt', email: 'unsub@rev.com', sequenceType: 'review_thanks' },
-    ]);
-
-    const res = await triggerReviewThanks('c2', 'unsub@rev.com', 'Bob', 'Chair');
-    expect(res.success).toBe(false);
-  });
-
-  it('rejects invalid email', async () => {
-    const res = await triggerReviewThanks('c3', 'bad-email', 'X', 'Y');
-    expect(res.success).toBe(false);
-  });
-
-  it('rejects empty email', async () => {
-    const res = await triggerReviewThanks('c4', '', 'X', 'Y');
-    expect(res.success).toBe(false);
   });
 });
 

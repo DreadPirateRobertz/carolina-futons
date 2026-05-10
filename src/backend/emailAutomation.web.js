@@ -317,14 +317,10 @@ export function handleOrderDelivered(event) {
   triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
     .catch(err => logError('handleOrderDelivered:postPurchaseCare', err));
 
-  // CF-qy79: Queue Day-14 review prompt with points reward
-  const productNames = lineItems
-    .map(i => i.name || i.productName || '')
-    .filter(Boolean)
-    .join(', ');
-  const primarySlug = extractPrimarySlug(lineItems);
-  triggerReviewRewardPrompt(contactId, email, firstName, String(orderNumber), productNames, primarySlug)
-    .catch(err => logError('handleOrderDelivered:reviewReward', err));
+  // CF-qy79 review-reward prompt removed alongside triggerReviewRewardPrompt
+  // (cf-namd Pass 3 chunk B — webMethod was unreachable; the post-purchase
+  // sequence already covers the review surface via triggerPostPurchaseSequence
+  // step 2 above).
 
   // CF-1mlj: Queue 7-day NPS survey — fires after delivery, non-fatal
   scheduleSurvey({
@@ -683,87 +679,6 @@ export const triggerPostPurchaseSequence = webMethod(
     } catch (err) {
       console.error('Error queuing post-purchase sequence:', err);
       return { success: false, queued: 0 };
-    }
-  }
-);
-
-/**
- * Queue a Day-14 review prompt email for a delivered order.
- * Awards 100 pts for a review (+ 50 for photo) — points are awarded when
- * the member submits via gamification_submit_review, not by this email.
- * This just prompts them.
- *
- * CF-qy79
- *
- * @function triggerReviewRewardPrompt
- * @param {string} contactId
- * @param {string} email
- * @param {string} firstName
- * @param {string} orderNumber
- * @param {string} productNames - Comma-separated product names
- * @param {string} [slug=''] - Product slug for deep-linked review URL; falls back to /member-page#reviews
- * @returns {Promise<{success: boolean}>}
- * @permission Admin
- */
-export const triggerReviewRewardPrompt = webMethod(
-  Permissions.Admin,
-  async (contactId, email, firstName, orderNumber, productNames, slug = '') => {
-    try {
-      if (!email) return { success: false };
-
-      const cleanEmail = sanitize(email, 254).toLowerCase();
-      if (!validateEmail(cleanEmail)) return { success: false };
-
-      const cleanName = sanitize(firstName, 200);
-      const cleanContactId = sanitize(contactId, 50);
-      const cleanOrderNumber = sanitize(orderNumber, 20);
-      const cleanProductNames = sanitize(productNames, 500);
-
-      if (await isUnsubscribed(cleanEmail, 'post_purchase')) {
-        return { success: false };
-      }
-
-      // Don't send duplicate review prompts for the same order
-      const existing = await wixData.query('EmailQueue')
-        .eq('recipientEmail', cleanEmail)
-        .eq('sequenceType', 'post_purchase')
-        .eq('sequenceStep', 4)
-        .eq('checkoutId', cleanOrderNumber)
-        .find();
-
-      if (existing.items.length > 0) return { success: false };
-
-      const SITE_URL = 'https://www.carolinafutons.com';
-      const cleanSlug = validateSlug(slug);
-      if (!cleanSlug) console.warn('[emailAutomation] No product slug for review reward prompt, order', cleanOrderNumber, '— falling back to member-page');
-      const reviewUrl = cleanSlug
-        ? `${SITE_URL}/product-page/${cleanSlug}#reviews`
-        : `${SITE_URL}/member-page#reviews`;
-      const scheduledFor = new Date(Date.now() + 336 * 60 * 60 * 1000); // 14 days
-
-      await queueEmail({
-        templateId: 'post_purchase_review_reward',
-        recipientEmail: cleanEmail,
-        recipientContactId: cleanContactId,
-        variables: {
-          firstName: cleanName,
-          orderNumber: cleanOrderNumber,
-          productNames: cleanProductNames,
-          reviewUrl,
-          pointsReward: '100',
-          photoBonusPoints: '50',
-          email: cleanEmail,
-          checkoutId: cleanOrderNumber,
-        },
-        sequenceType: 'post_purchase',
-        sequenceStep: 4,
-        scheduledFor,
-      });
-
-      return { success: true };
-    } catch (err) {
-      console.error('[CF-qy79] Error queuing review reward prompt:', err);
-      return { success: false };
     }
   }
 );
@@ -1376,47 +1291,6 @@ export const unsubscribeContact = webMethod(
 );
 
 /**
- * Get email automation stats for admin dashboard.
- *
- * @function getEmailAutomationStats
- * @returns {Promise<Object>} Queue stats by sequence type and status
- * @permission Admin
- */
-export const getEmailAutomationStats = webMethod(
-  Permissions.Admin,
-  async () => {
-    try {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-      const result = await wixData.query('EmailQueue')
-        .ge('createdAt', thirtyDaysAgo)
-        .find();
-
-      const stats = { welcome: {}, cart_recovery: {}, post_purchase: {}, reengagement: {} };
-
-      for (const item of result.items) {
-        const seq = item.sequenceType || 'unknown';
-        if (!stats[seq]) stats[seq] = {};
-        stats[seq][item.status] = (stats[seq][item.status] || 0) + 1;
-      }
-
-      // A/B test results for welcome series
-      const abResults = { A: { sent: 0 }, B: { sent: 0 } };
-      for (const item of result.items) {
-        if (item.sequenceType === 'welcome' && item.abVariant && item.status === 'sent') {
-          abResults[item.abVariant].sent++;
-        }
-      }
-
-      return { stats, abResults, totalEmails: result.items.length };
-    } catch (err) {
-      console.error('Error getting email stats:', err);
-      return { stats: {}, abResults: {}, totalEmails: 0 };
-    }
-  }
-);
-
-/**
  * Record an email open, click, or conversion event for tracking.
  *
  * @function recordEmailEvent
@@ -1454,63 +1328,6 @@ export const recordEmailEvent = webMethod(
     } catch (err) {
       console.error('Error recording email event:', err);
       return { success: false };
-    }
-  }
-);
-
-/**
- * Get email open/click events for analytics.
- *
- * @function getEmailEvents
- * @param {string} [sequenceType] - Filter by sequence type
- * @param {number} [days=30] - Lookback window
- * @returns {Promise<{opens: number, clicks: number, events: Array}>}
- * @permission Admin
- */
-export const getEmailEvents = webMethod(
-  Permissions.Admin,
-  async (sequenceType, days = 30) => {
-    try {
-      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-      const eventsResult = await wixData.query('EmailEvents')
-        .ge('timestamp', since)
-        .find();
-
-      let events = eventsResult.items || [];
-
-      // If filtering by sequence type, cross-reference EmailQueue
-      if (sequenceType) {
-        const queueResult = await wixData.query('EmailQueue')
-          .eq('sequenceType', sequenceType)
-          .find();
-
-        const queueIds = new Set(queueResult.items.map(q => q._id));
-        events = events.filter(e => queueIds.has(e.emailQueueId));
-      }
-
-      let opens = 0, clicks = 0, conversions = 0;
-      for (const e of events) {
-        if (e.eventType === 'open') opens++;
-        else if (e.eventType === 'click') clicks++;
-        else if (e.eventType === 'conversion') conversions++;
-      }
-
-      return {
-        opens,
-        clicks,
-        conversions,
-        events: events.map(e => ({
-          _id: e._id,
-          emailQueueId: e.emailQueueId,
-          eventType: e.eventType,
-          linkUrl: e.linkUrl,
-          timestamp: e.timestamp,
-        })),
-      };
-    } catch (err) {
-      console.error('Error fetching email events:', err);
-      return { opens: 0, clicks: 0, conversions: 0, events: [] };
     }
   }
 );
@@ -1699,58 +1516,6 @@ export const triggerRestockNotifications = webMethod(
 // ── Review Thank-You ──────────────────────────────────────────────────
 
 /**
- * Queue a review thank-you email with discount code.
- *
- * @function triggerReviewThanks
- * @param {string} contactId - Reviewer's contact ID
- * @param {string} email - Reviewer's email
- * @param {string} firstName - Reviewer's first name
- * @param {string} productName - Product that was reviewed
- * @returns {Promise<{success: boolean}>}
- * @permission Admin
- */
-export const triggerReviewThanks = webMethod(
-  Permissions.Admin,
-  async (contactId, email, firstName, productName) => {
-    try {
-      const cleanEmail = (email || '').toLowerCase();
-      if (!cleanEmail || !validateEmail(cleanEmail)) return { success: false };
-      if (await isUnsubscribed(cleanEmail, 'review_thanks')) return { success: false };
-
-      let discountCode = '';
-      let discountAvailable = false;
-      try {
-        discountCode = await getSecret('REVIEW_DISCOUNT_CODE');
-        discountAvailable = !!discountCode;
-      } catch (e) {
-        console.warn('[emailAutomation] Could not retrieve review discount secret — sending review email without discount:', e.message);
-      }
-
-      await queueEmail({
-        templateId: SEQUENCES.review_thanks.steps[0].templateId,
-        recipientEmail: cleanEmail,
-        recipientContactId: sanitize(contactId, 50),
-        variables: {
-          firstName: sanitize(firstName, 200),
-          productName: sanitize(productName, 200),
-          discountCode,
-          discountAvailable,
-          email: cleanEmail,
-        },
-        sequenceType: 'review_thanks',
-        sequenceStep: 1,
-        scheduledFor: new Date(),
-      });
-
-      return { success: true };
-    } catch (err) {
-      console.error('[emailAutomation] Error triggering review thank-you:', err);
-      return { success: false };
-    }
-  }
-);
-
-/**
  * Check if current time is within the send window (business hours EST).
  * Returns { inWindow: boolean, nextWindowOpen?: Date }.
  */
@@ -1776,148 +1541,6 @@ function checkSendWindow(now = new Date()) {
 }
 
 // ── A/B Test Management ──────────────────────────────────────────────
-
-/**
- * Create a new A/B test configuration for a sequence.
- * Supports subject line variants and send-time offset variants.
- *
- * @function createAbTest
- * @param {Object} config
- * @param {string} config.sequenceType - Sequence to test (welcome, cart_recovery, etc.)
- * @param {number} config.testStep - Step number within the sequence to test
- * @param {Object} config.variants - { A: {...}, B: {...} } variant definitions
- * @param {number} [config.sampleSize=100] - Min sends per variant before resolving
- * @param {string} [config.metricField='openRate'] - Metric to compare (openRate or clickRate)
- * @returns {Promise<{success: boolean}>}
- * @permission Admin
- */
-export const createAbTest = webMethod(
-  Permissions.Admin,
-  async (config = {}) => {
-    try {
-      const { sequenceType, testStep, variants, sampleSize = 100, metricField = 'openRate' } = config;
-
-      if (!sequenceType || testStep == null) return { success: false, reason: 'Missing sequenceType or testStep' };
-      if (!variants || !variants.A || !variants.B) return { success: false, reason: 'Missing variant definitions' };
-      if (metricField !== 'openRate' && metricField !== 'clickRate') return { success: false, reason: 'Invalid metricField' };
-
-      // Prevent duplicate active tests for same sequence+step
-      const existing = await wixData.query('AbTests')
-        .eq('sequenceType', sequenceType)
-        .eq('testStep', testStep)
-        .eq('status', 'active')
-        .find();
-      if (existing.items.length > 0) return { success: false, reason: 'Active test already exists for this sequence step' };
-
-      await wixData.insert('AbTests', {
-        sequenceType,
-        testStep,
-        variantA: variants.A,
-        variantB: variants.B,
-        sampleSize,
-        metricField,
-        status: 'active',
-        winner: null,
-        variantARate: null,
-        variantBRate: null,
-        createdAt: new Date(),
-        resolvedAt: null,
-      });
-
-      return { success: true };
-    } catch (err) {
-      console.error('[emailAutomation] Error creating A/B test:', err);
-      return { success: false, error: err.message };
-    }
-  }
-);
-
-/**
- * Resolve an A/B test winner based on open/click rates.
- * Compares variant performance after sufficient sample size.
- *
- * @function resolveAbTestWinner
- * @param {string} testId - AbTests record _id
- * @returns {Promise<{success: boolean, winner?: string, variantARate?: number, variantBRate?: number, reason?: string}>}
- * @permission Admin
- */
-export const resolveAbTestWinner = webMethod(
-  Permissions.Admin,
-  async (testId) => {
-    try {
-      if (!testId) return { success: false, reason: 'Missing test ID' };
-
-      const testResult = await wixData.query('AbTests')
-        .eq('_id', testId)
-        .find();
-
-      if (testResult.items.length === 0) {
-        return { success: false, reason: 'Test not found' };
-      }
-
-      const test = testResult.items[0];
-
-      if (test.status !== 'active') {
-        return { success: false, reason: 'Test already resolved' };
-      }
-
-      // Get sent emails per variant (parallel, with pagination limit)
-      const queryVariant = (variant) => wixData.query('EmailQueue')
-        .eq('sequenceType', test.sequenceType)
-        .eq('sequenceStep', test.testStep)
-        .eq('abVariant', variant)
-        .eq('status', 'sent')
-        .limit(1000)
-        .find();
-
-      const [variantAResult, variantBResult] = await Promise.all([
-        queryVariant('A'), queryVariant('B'),
-      ]);
-
-      const aSent = variantAResult.items.length;
-      const bSent = variantBResult.items.length;
-
-      if (aSent < test.sampleSize || bSent < test.sampleSize) {
-        return { success: false, reason: `Sample size not met: A=${aSent}, B=${bSent}, required=${test.sampleSize}` };
-      }
-
-      // Get events for these emails
-      const aIds = new Set(variantAResult.items.map(i => i._id));
-      const bIds = new Set(variantBResult.items.map(i => i._id));
-
-      const eventsResult = await wixData.query('EmailEvents')
-        .eq('eventType', test.metricField === 'clickRate' ? 'click' : 'open')
-        .limit(1000)
-        .find();
-
-      let aEvents = 0;
-      let bEvents = 0;
-      for (const event of eventsResult.items) {
-        if (aIds.has(event.emailQueueId)) aEvents++;
-        if (bIds.has(event.emailQueueId)) bEvents++;
-      }
-
-      const variantARate = aSent > 0 ? aEvents / aSent : 0;
-      const variantBRate = bSent > 0 ? bEvents / bSent : 0;
-      const winner = variantARate >= variantBRate ? 'A' : 'B';
-
-      // Store results
-      await wixData.update('AbTests', {
-        ...test,
-        status: 'resolved',
-        winner,
-        variantARate,
-        variantBRate,
-        resolvedAt: new Date(),
-      });
-
-      return { success: true, winner, variantARate, variantBRate };
-    } catch (err) {
-      console.error('[emailAutomation] Error resolving A/B test:', err);
-      return { success: false, reason: err.message };
-    }
-  }
-);
 
 /**
  * Get all A/B test results.
@@ -1949,31 +1572,6 @@ export const getAbTestResults = webMethod(
     } catch (err) {
       console.error('[emailAutomation] Error getting A/B test results:', err);
       return { tests: [], error: err.message };
-    }
-  }
-);
-
-/**
- * Get active A/B test config for a sequence type.
- *
- * @function getAbTestConfig
- * @param {string} sequenceType
- * @returns {Promise<{test: Object|null}>}
- * @permission Admin
- */
-export const getAbTestConfig = webMethod(
-  Permissions.Admin,
-  async (sequenceType) => {
-    try {
-      const result = await wixData.query('AbTests')
-        .eq('sequenceType', sequenceType)
-        .eq('status', 'active')
-        .find();
-
-      return { test: result.items.length > 0 ? result.items[0] : null };
-    } catch (err) {
-      console.error('[emailAutomation] Error getting A/B test config:', err);
-      return { test: null, error: err.message };
     }
   }
 );

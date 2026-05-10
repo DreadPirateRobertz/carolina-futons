@@ -20,7 +20,6 @@ import {
   triggerReengagement,
   processEmailQueue,
   unsubscribeContact,
-  getEmailAutomationStats,
   wixMembers_onMemberCreated,
   wixEcom_onOrderCreated,
 } from '../src/backend/emailAutomation.web.js';
@@ -164,18 +163,6 @@ describe('welcome sequence lifecycle', () => {
     const processed = await processEmailQueue();
     expect(processed.sent).toBe(1);
 
-    // Update step 1 status for stats
-    __seed('EmailQueue', [
-      { _id: 'eq-int-0', sequenceType: 'welcome', status: 'sent', abVariant: welcomeEmails[0].abVariant, createdAt: new Date() },
-      { _id: 'eq-int-1', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date() },
-      { _id: 'eq-int-2', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date() },
-    ]);
-
-    // Stats reflect the state
-    const stats = await getEmailAutomationStats();
-    expect(stats.totalEmails).toBe(3);
-    expect(stats.stats.welcome.sent).toBe(1);
-    expect(stats.stats.welcome.pending).toBe(2);
   });
 });
 
@@ -675,19 +662,6 @@ describe('edge cases', () => {
 
     const cr = insertedItems.find(i => i.sequenceType === 'cart_recovery');
     expect(cr.variables.itemSummary).toBe('');
-  });
-
-  it('stats handle unknown sequence types gracefully', async () => {
-    __seed('EmailQueue', [
-      { _id: 'eq-unknown', sequenceType: 'mystery', status: 'sent', createdAt: new Date() },
-      { _id: 'eq-known', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
-    ]);
-
-    const stats = await getEmailAutomationStats();
-    // Unknown type gets its own bucket, doesn't crash
-    expect(stats.stats.mystery.sent).toBe(1);
-    expect(stats.stats.welcome.sent).toBe(1);
-    expect(stats.totalEmails).toBe(2);
   });
 
   it('processEmailQueue skips already-sent items', async () => {

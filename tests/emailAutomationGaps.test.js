@@ -8,7 +8,6 @@ import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets
 import { __getEmailLog } from './__mocks__/wix-crm-backend.js';
 import {
   triggerRestockNotifications,
-  triggerReviewThanks,
   _SEQUENCES,
 } from '../src/backend/emailAutomation.web.js';
 
@@ -125,80 +124,6 @@ describe('triggerRestockNotifications', () => {
   it('returns failure for null subscribers', async () => {
     const result = await triggerRestockNotifications('prod-1', null);
     expect(result.success).toBe(false);
-  });
-});
-
-// ── triggerReviewThanks ─────────────────────────────────────────────
-
-describe('triggerReviewThanks', () => {
-  it('queues a review thank-you email with discount code', async () => {
-    const inserted = [];
-    __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('Unsubscribes', []);
-
-    const result = await triggerReviewThanks('c1', 'alice@test.com', 'Alice', 'Eureka Futon');
-
-    expect(result.success).toBe(true);
-
-    const emailInserts = inserted.filter(i => i.col === 'EmailQueue');
-    expect(emailInserts).toHaveLength(1);
-    expect(emailInserts[0].item.templateId).toBe('review_thank_you');
-    expect(emailInserts[0].item.sequenceType).toBe('review_thanks');
-    expect(emailInserts[0].item.variables.firstName).toBe('Alice');
-    expect(emailInserts[0].item.variables.productName).toBe('Eureka Futon');
-    expect(emailInserts[0].item.variables.discountCode).toBe('REVIEW10');
-  });
-
-  it('sends email without discount when secret is unavailable', async () => {
-    const inserted = [];
-    __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('Unsubscribes', []);
-    __resetSecrets(); // No REVIEW_DISCOUNT_CODE available
-
-    const result = await triggerReviewThanks('c1', 'bob@test.com', 'Bob', 'Night Frame');
-
-    expect(result.success).toBe(true);
-    const emailInserts = inserted.filter(i => i.col === 'EmailQueue');
-    expect(emailInserts[0].item.variables.discountCode).toBe('');
-  });
-
-  it('skips unsubscribed contacts', async () => {
-    const inserted = [];
-    __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('Unsubscribes', [
-      { email: 'unsub@test.com', sequenceType: 'review_thanks' },
-    ]);
-
-    const result = await triggerReviewThanks('c1', 'unsub@test.com', 'Unsub', 'Futon');
-    expect(result.success).toBe(false);
-    expect(inserted.filter(i => i.col === 'EmailQueue')).toHaveLength(0);
-  });
-
-  it('returns failure for invalid email', async () => {
-    const result = await triggerReviewThanks('c1', 'bad-email', 'Test', 'Futon');
-    expect(result.success).toBe(false);
-  });
-
-  it('returns failure for empty email', async () => {
-    const result = await triggerReviewThanks('c1', '', 'Test', 'Futon');
-    expect(result.success).toBe(false);
-  });
-
-  it('sanitizes input values', async () => {
-    const inserted = [];
-    __onInsert((col, item) => inserted.push({ col, item }));
-    __seed('Unsubscribes', []);
-
-    await triggerReviewThanks(
-      '<script>alert(1)</script>',
-      'clean@test.com',
-      '<b>XSS</b>',
-      '<img onerror=alert(1)>'
-    );
-
-    const emailInserts = inserted.filter(i => i.col === 'EmailQueue');
-    expect(emailInserts[0].item.variables.firstName).not.toContain('<script>');
-    expect(emailInserts[0].item.recipientContactId).not.toContain('<script>');
   });
 });
 

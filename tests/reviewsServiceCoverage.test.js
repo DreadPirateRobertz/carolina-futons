@@ -17,8 +17,6 @@ import {
   flagReview,
   getPendingReviews,
   moderateReview,
-  getReviewStats,
-  addOwnerResponse,
   getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
@@ -429,68 +427,6 @@ describe('reviewsService — v8 coverage', () => {
     });
   });
 
-  // ── getReviewStats ────────────────────────────────────────────────
-
-  describe('getReviewStats', () => {
-    it('returns stats with default 30-day period', async () => {
-      const res = await getReviewStats();
-      expect(res.success).toBe(true);
-      expect(res.period).toBe('30 days');
-      expect(res).toHaveProperty('total');
-      expect(res).toHaveProperty('approved');
-      expect(res).toHaveProperty('pending');
-      expect(res).toHaveProperty('rejected');
-      expect(res).toHaveProperty('avgRating');
-      expect(res).toHaveProperty('verifiedPurchaseRate');
-      expect(res).toHaveProperty('withPhotos');
-    });
-
-    it('returns stats with custom period', async () => {
-      const res = await getReviewStats(7);
-      expect(res.success).toBe(true);
-      expect(res.period).toBe('7 days');
-    });
-
-    it('clamps days to valid range', async () => {
-      const res = await getReviewStats(999);
-      expect(res.success).toBe(true);
-      expect(res.period).toBe('365 days');
-    });
-
-    it('handles period with no reviews', async () => {
-      resetData();
-      __seed('Reviews', []);
-      const res = await getReviewStats(1);
-      expect(res.success).toBe(true);
-      expect(res.avgRating).toBe(0);
-    });
-  });
-
-  // ── addOwnerResponse ──────────────────────────────────────────────
-
-  describe('addOwnerResponse', () => {
-    it('adds an owner response to a review', async () => {
-      const res = await addOwnerResponse('r1', 'Thank you for your wonderful review!');
-      expect(res.success).toBe(true);
-    });
-
-    it('fails for invalid review ID', async () => {
-      const res = await addOwnerResponse('', 'Thanks for feedback!');
-      expect(res.success).toBe(false);
-    });
-
-    it('fails for response shorter than 5 chars', async () => {
-      const res = await addOwnerResponse('r1', 'Thx');
-      expect(res.success).toBe(false);
-      expect(res.error).toMatch(/at least 5/i);
-    });
-
-    it('fails for non-existent review', async () => {
-      const res = await addOwnerResponse('nope', 'Thank you very much!');
-      expect(res.success).toBe(false);
-    });
-  });
-
   // ── getCategoryReviewSummaries ────────────────────────────────────
 
   describe('getCategoryReviewSummaries', () => {
@@ -530,15 +466,6 @@ describe('reviewsService — v8 coverage', () => {
   // ── formatReview (indirectly via getProductReviews) ───────────────
 
   describe('formatReview (indirect)', () => {
-    it('formats ownerResponse and ownerResponseDate', async () => {
-      // Add an owner response then fetch
-      await addOwnerResponse('r1', 'Thanks for your feedback, we appreciate it!');
-      const res = await getProductReviews('p1');
-      const review = res.reviews.find(r => r._id === 'r1');
-      expect(review.ownerResponse).toBeTruthy();
-      expect(review.ownerResponseDate).toBeTruthy();
-    });
-
     it('returns null for missing ownerResponse', async () => {
       const res = await getProductReviews('p1');
       const review = res.reviews.find(r => r._id === 'r2');

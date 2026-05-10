@@ -35,7 +35,6 @@ vi.mock('wix-secrets-backend', () => ({
 import {
   triggerPostPurchaseSequence,
   recordEmailEvent,
-  getEmailEvents,
   wixEcom_onOrderCreated,
 } from '../src/backend/emailAutomation.web.js';
 
@@ -149,33 +148,6 @@ describe('recordEmailEvent: conversion event type', () => {
   it('rejects missing emailQueueId', async () => {
     const result = await recordEmailEvent({ eventType: 'conversion' });
     expect(result.success).toBe(false);
-  });
-});
-
-// ── getEmailEvents: conversion count ────────────────────────────────
-
-describe('getEmailEvents: includes conversions', () => {
-  it('counts conversions separately from opens and clicks', async () => {
-    __seed('EmailEvents', [
-      { _id: 'ev-1', emailQueueId: 'eq-1', eventType: 'open', timestamp: new Date(), linkUrl: '' },
-      { _id: 'ev-2', emailQueueId: 'eq-1', eventType: 'click', timestamp: new Date(), linkUrl: 'https://example.com' },
-      { _id: 'ev-3', emailQueueId: 'eq-1', eventType: 'conversion', timestamp: new Date(), linkUrl: '' },
-      { _id: 'ev-4', emailQueueId: 'eq-2', eventType: 'conversion', timestamp: new Date(), linkUrl: '' },
-    ]);
-
-    const result = await getEmailEvents();
-    expect(result.opens).toBe(1);
-    expect(result.clicks).toBe(1);
-    expect(result.conversions).toBe(2);
-  });
-
-  it('returns zero conversions when none recorded', async () => {
-    __seed('EmailEvents', [
-      { _id: 'ev-1', emailQueueId: 'eq-1', eventType: 'open', timestamp: new Date(), linkUrl: '' },
-    ]);
-
-    const result = await getEmailEvents();
-    expect(result.conversions).toBe(0);
   });
 });
 
