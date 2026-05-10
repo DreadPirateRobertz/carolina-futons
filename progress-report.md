@@ -1,5 +1,21 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
+
+## Session 2026-05-10 — Wave 23 (WATCHDOG RESPONSE)
+| Done | Detail |
+|------|--------|
+| ✅ 7 workers RESLUNG | blaidd→cf-01z3, godfrey→cf-z0ht, millicent→cf-xzj1, miquella→cf-0hzn, morgott→cf-vty7, radahn→cf-3pc5, rennala→cf-qc7a |
+| ✅ cfutons PR #1262 MERGED | coverage R4 preventive: Branches 85.01%→85.03% (+8 covered). 24 new tests. |
+| 🔄 PR #1261 (cf-xpqf) | test(22) FAIL 84.99% — morgott on cf-vty7 coverage top-up |
+| 🔄 cfutons PRs #1263/#1264/#1265 | tests running — merging when green |
+| ⏳ PR #540 (cfw) | ALL CI GREEN. BLOCKED: Stilgar AM visual confirm |
+| 📦 Batch queue (7 PRs + cfw CI) | All holding locally per cf-ukc6 |
+
+**Worker Map (03:45 MT):**
+blaidd: cf-01z3 (header scroll fix) | godfrey: cf-z0ht (Lighthouse baseline)
+millicent: cf-xzj1 (pre-cutover curls) | miquella: cf-0hzn (cutover checklist)
+morgott: cf-vty7 (coverage R5 top-up) | radahn: cf-3pc5 (Velo smoke)
+rennala: cf-qc7a (GH discussions triage)
 
 ## Session 2026-05-10 — Wave 22
 | Done | Detail |
