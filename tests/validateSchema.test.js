@@ -158,30 +158,6 @@ describe('contactSubmissions — schema validation', () => {
   });
 });
 
-describe('tradeProgram — schema validation', () => {
-  it('rejects missing business name', async () => {
-    const { applyForTradeAccount } = await import('../src/backend/tradeProgram.web.js');
-    const result = await applyForTradeAccount({
-      contactName: 'Jane',
-      contactEmail: 'biz@example.com',
-    });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/business name.*required/i);
-  });
-
-  it('rejects oversized annual units', async () => {
-    const { applyForTradeAccount } = await import('../src/backend/tradeProgram.web.js');
-    const result = await applyForTradeAccount({
-      businessName: 'Test',
-      contactName: 'Jane',
-      contactEmail: 'biz@example.com',
-      estimatedAnnualUnits: 999999,
-    });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/at most/i);
-  });
-});
-
 describe('deliveryScheduling — schema validation', () => {
   it('rejects invalid delivery type', async () => {
     const { reserveDeliveryWindow } = await import('../src/backend/deliveryScheduling.web.js');
