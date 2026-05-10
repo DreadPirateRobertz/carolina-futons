@@ -241,6 +241,68 @@ def collect_filesystem_path_refs(files: list[Path]) -> dict[str, list[str]]:
     return refs
 
 
+# cf-0ziz (cf-hpwy detector v4): module-namespace dispatcher detection.
+#
+# v3 closes the fs-path blind-spot. v4 closes the namespace-dispatcher
+# blind-spot — http-functions.js patterns of the shape:
+#
+#   import * as svcModule from 'backend/<file>.web';
+#   const ALLOWLIST = new Set(['methodA','methodB',...]);
+#   export async function post_svc(request) {
+#     const method = request.path[0];
+#     if (!ALLOWLIST.has(method)) return notFound(...);
+#     await svcModule[method](...args);
+#   }
+#
+# The `svcModule[method]()` call is dynamic — name-based grep can't tie
+# 'methodA' (an export of <file>.web.js) to its caller. v3 sees these
+# as WRAPPED-NO-CONSUMER (no direct cfw `/_functions/methodA` URL
+# match) when they're actually alive via /_functions/svc/methodA.
+#
+# Detection: grep http-functions.js for `import * as <id> from
+# 'backend/<file>.web'`, then for each detected id grep for
+# `<id>[<key>](...)` to confirm dispatcher use. If detected, every
+# export of <file>.web.js gets an OK-WIRED-VIA-DISPATCHER verdict.
+#
+# False-positive risk: a `import * as M` that just reads metadata
+# (e.g. `M.SOME_CONSTANT`) without `M[key](...)` would not match the
+# dispatcher pattern, so we only flag genuine dispatchers.
+DISPATCHER_IMPORT_RE = re.compile(
+    r"""import\s+\*\s+as\s+(\w+)\s+from\s+['"]backend/([^'"]+?)(?:\.web)?['"]"""
+)
+
+
+def collect_dispatcher_modules(http_text: str) -> dict[str, str]:
+    """Detect module-namespace dispatcher patterns in http-functions.js.
+
+    Returns a dict mapping defining-file basename → dispatcher alias name.
+    Only entries where the alias is later used in `<alias>[<key>](...)`
+    call shape are returned — bare metadata reads (`M.CONST`) are
+    filtered out so a non-dispatcher namespace import doesn't bleed
+    into the OK-WIRED-VIA-DISPATCHER bucket.
+
+    Example match:
+      import * as wishlistServiceModule from 'backend/wishlistService.web';
+      ...
+      await wishlistServiceModule[method](...args);
+    Yields: { 'wishlistService': 'wishlistServiceModule' }
+    """
+    out: dict[str, str] = {}
+    for m in DISPATCHER_IMPORT_RE.finditer(http_text):
+        alias, path = m.group(1), m.group(2)
+        # Confirm the alias is used in dynamic-key access shape somewhere.
+        # The discriminator is bracket-access (`alias[...]`) vs dot-access
+        # (`alias.SOMETHING`) — the former is a dispatcher, the latter is
+        # a metadata read. We just need to know the alias is used with a
+        # bracket — perfectly parsing nested brackets like
+        # `alias[request.path[0]](` is unnecessary and brittle.
+        call_pat = re.compile(rf"\b{re.escape(alias)}\s*\[")
+        if call_pat.search(http_text):
+            module_basename = path.rsplit("/", 1)[-1]
+            out[module_basename] = alias
+    return out
+
+
 def collect_cfw_files() -> list[Path]:
     if not CFW_SRC.exists():
         return []
@@ -296,6 +358,7 @@ def classify_method(
     http_text: str,
     events_text: str,
     fs_path_refs: dict[str, list[str]] | None = None,
+    dispatcher_modules: dict[str, str] | None = None,
 ) -> dict:
     """Return classification for this webMethod."""
     defining_file = info["file"]
@@ -430,8 +493,25 @@ def classify_method(
     has_cfw_low = bool(cfw_low)
     has_cfw_any = bool(cfw_high or cfw_low)
 
+    # cf-0ziz (v4): module-namespace dispatcher detection. If this method's
+    # defining-file is dispatched as a namespace import in http-functions.js
+    # (e.g. `import * as svcModule + svcModule[method](...)`), the method is
+    # reachable via the dispatcher route even without a direct cfw URL match.
+    in_dispatcher = False
+    dispatcher_alias = ""
+    if dispatcher_modules:
+        module_basename = _module_basename(defining_file)
+        if module_basename in dispatcher_modules:
+            in_dispatcher = True
+            dispatcher_alias = dispatcher_modules[module_basename]
+
     # Gap-finder verdict (cf-hpwy core deliverable)
-    if not in_http and has_cfw_high:
+    if in_dispatcher and not has_cfw_high:
+        # v4: dispatcher route is the WIRED path even without a direct cfw URL.
+        # Distinct verdict (OK-WIRED-VIA-DISPATCHER) so the operator can see
+        # the dispatch path is active and the method is alive.
+        gap_verdict = "OK-WIRED-VIA-DISPATCHER"
+    elif not in_http and has_cfw_high:
         gap_verdict = "GAP-CFW-WANTS"  # cfw calls it via /_functions or callVelo, no HTTP wrapper
     elif in_http and has_cfw_high:
         gap_verdict = "OK-WIRED"
@@ -460,6 +540,8 @@ def classify_method(
         "in_same_file": in_same_file,
         "in_filesystem_path": in_fs_path,
         "filesystem_path_consumers": fs_path_consumers[:6],
+        "in_dispatcher": in_dispatcher,
+        "dispatcher_alias": dispatcher_alias,
         "sample_callers": sample_callers,
         "cfw_high_refs": cfw_high[:6],
         "cfw_low_refs": cfw_low[:6],
@@ -505,9 +587,21 @@ def main() -> int:
         file=sys.stderr,
     )
 
+    # cf-0ziz (v4): detect module-namespace dispatchers in http-functions.js.
+    # Modules dispatched as `<alias>[<key>](...)` have ALL their exports
+    # implicitly wired even without a direct cfw URL match per export name.
+    dispatcher_modules = collect_dispatcher_modules(http_text)
+    print(
+        f"backend modules wired via namespace dispatcher: {len(dispatcher_modules)}",
+        file=sys.stderr,
+    )
+    for module_name, alias in sorted(dispatcher_modules.items()):
+        print(f"  {module_name} -> {alias}", file=sys.stderr)
+
     rows = [
         classify_method(
-            name, info, files, cfw_files, http_text, events_text, fs_path_refs
+            name, info, files, cfw_files, http_text, events_text,
+            fs_path_refs, dispatcher_modules,
         )
         for name, info in methods.items()
     ]
