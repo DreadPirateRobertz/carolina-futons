@@ -58,9 +58,17 @@ Re-run of `scripts/cf-dead-routes/audit.py` against current main:
 
 **Twist**: `src/public/FabricSampleRequest.js` (Wix Studio editor frontend) imports `getAvailableSwatches` and `submitFabricSample` from `backend/fabricSampleService.web` — **neither name exists** in the backend file. The backend has only `submitFabricSampleRequest`. There's a name mismatch that already breaks production for any Wix Studio page that calls `FabricSampleRequest.init()`.
 
-**Verdict: KEEP + file follow-up bead** for the frontend/backend reconcile. Deleting `submitFabricSampleRequest` now would mask the rename-or-rebuild decision.
+**Verdict (2026-05-09 follow-up cf-kg1x): Option C — DELETED both files.**
 
-**Recommended follow-up**: file P2 bead "fabric-sample frontend/backend name reconcile — decide rename / delete / rebuild." Fixing it requires either renaming `submitFabricSampleRequest` → `submitFabricSample` + adding `getAvailableSwatches`, or deleting both the backend file and the orphan frontend.
+The decision criteria from cf-kg1x: `grep -rn 'FabricSampleRequest\|initFabricSampleRequest\|fabricSampleSection' src/pages/` returned **zero callers** in any Wix Studio editor page. The live swatch-request flow is `Fabric Swatches.js` calling `swatchRequest.web.submitSwatchRequest` (cf-w1lg PR #15) — entirely independent of this orphan module. With no caller, the backend webMethod and the frontend module were both dead-on-arrival.
+
+**Action taken (cf-kg1x):**
+- Deleted `src/backend/fabricSampleService.web.js`
+- Deleted `src/public/FabricSampleRequest.js`
+- Deleted `tests/fabricSampleService.test.js`
+- Deleted `tests/fabricSampleRequest.test.js`
+
+**Original recommendation kept for history**: rename-or-rebuild was the alternative if a Wix Studio page had been wired. The grep confirmed none was.
 
 ### 2. `sendSwatchConfirmationEmail` (`emailService.web.js:306`)
 
