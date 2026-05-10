@@ -454,7 +454,7 @@ describe('lookupReturn', () => {
   it('rate limits after max attempts', async () => {
     const email = 'ratelimit-lookup@example.com';
     for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit(email);
+      await _checkRateLimit(email);
     }
     const result = await lookupReturn('10042', email);
     expect(result.success).toBe(false);
@@ -570,7 +570,7 @@ describe('submitGuestReturn', () => {
   it('rate limits after max attempts', async () => {
     const email = 'ratelimit-guest@example.com';
     for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit(email);
+      await _checkRateLimit(email);
     }
     const result = await submitGuestReturn({ ...validGuestData, email });
     expect(result.success).toBe(false);
@@ -884,30 +884,30 @@ describe('processRefund', () => {
 // ── _checkRateLimit ────────────────────────────────────────────────
 
 describe('_checkRateLimit', () => {
-  it('allows requests under the limit', () => {
-    expect(_checkRateLimit('user@test.com')).toBe(true);
-    expect(_checkRateLimit('user@test.com')).toBe(true);
+  it('allows requests under the limit', async () => {
+    expect(await _checkRateLimit('user@test.com')).toBe(true);
+    expect(await _checkRateLimit('user@test.com')).toBe(true);
   });
 
-  it('blocks after max attempts', () => {
+  it('blocks after max attempts', async () => {
     for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit('flood@test.com');
+      await _checkRateLimit('flood@test.com');
     }
-    expect(_checkRateLimit('flood@test.com')).toBe(false);
+    expect(await _checkRateLimit('flood@test.com')).toBe(false);
   });
 
-  it('tracks separate identifiers independently', () => {
+  it('tracks separate identifiers independently', async () => {
     for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit('a@test.com');
+      await _checkRateLimit('a@test.com');
     }
-    expect(_checkRateLimit('a@test.com')).toBe(false);
-    expect(_checkRateLimit('b@test.com')).toBe(true);
+    expect(await _checkRateLimit('a@test.com')).toBe(false);
+    expect(await _checkRateLimit('b@test.com')).toBe(true);
   });
 
-  it('uses "unknown" key for falsy identifier', () => {
-    expect(_checkRateLimit(null)).toBe(true);
-    expect(_checkRateLimit(undefined)).toBe(true);
-    expect(_checkRateLimit('')).toBe(true);
+  it('uses "unknown" key for falsy identifier', async () => {
+    expect(await _checkRateLimit(null)).toBe(true);
+    expect(await _checkRateLimit(undefined)).toBe(true);
+    expect(await _checkRateLimit('')).toBe(true);
   });
 
   it('getReturnReasons is a pure function independent of DB state', async () => {

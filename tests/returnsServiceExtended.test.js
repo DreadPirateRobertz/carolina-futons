@@ -24,6 +24,24 @@ vi.mock('wix-data', () => ({
   },
 }));
 
+// cf-3ldu.1: returnsService now uses the canonical checkRateLimit helper.
+// This test file's inline wix-data mock doesn't persist inserts between
+// query()s, which would make the canonical helper's read-then-write logic
+// always allow. Stub the helper directly so we can drive rate-limit
+// state from the test side.
+let _rlAllowed = true;
+let _rlAllowedSequence = null; // optional ordered sequence
+const _rlCalls = [];
+vi.mock('backend/utils/rateLimit', () => ({
+  checkRateLimit: vi.fn(async (collection, key) => {
+    _rlCalls.push({ collection, key });
+    if (_rlAllowedSequence && _rlAllowedSequence.length) {
+      return { allowed: _rlAllowedSequence.shift() };
+    }
+    return { allowed: _rlAllowed };
+  }),
+}));
+
 // Mock wix-members-backend
 const mockMember = {
   _id: 'member-001',
@@ -781,79 +799,50 @@ describe('returnsService — extended', () => {
 // ── Rate Limiting ──────────────────────────────────────────────────────
 
 describe('Rate limiting (hq-khcp)', () => {
+  // cf-3ldu.1: rate-limit moved from in-memory Map to canonical
+  // wixData-backed helper. The helper is mocked at module-level
+  // (see top of file); these tests drive its behavior via _rlAllowed
+  // / _rlAllowedSequence and assert the wrapper's reaction.
+
   beforeEach(() => {
-    _rateLimitMap.clear();
+    _rlAllowed = true;
+    _rlAllowedSequence = null;
+    _rlCalls.length = 0;
   });
 
-  it('_checkRateLimit allows up to RATE_LIMIT_MAX calls', () => {
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      expect(_checkRateLimit('test@example.com')).toBe(true);
-    }
-    expect(_checkRateLimit('test@example.com')).toBe(false);
+  it('_checkRateLimit returns the allowed flag from the canonical helper', async () => {
+    _rlAllowed = true;
+    expect(await _checkRateLimit('test@example.com')).toBe(true);
+    _rlAllowed = false;
+    expect(await _checkRateLimit('test@example.com')).toBe(false);
   });
 
-  it('_checkRateLimit tracks different identifiers independently', () => {
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit('a@example.com');
-    }
-    expect(_checkRateLimit('a@example.com')).toBe(false);
-    expect(_checkRateLimit('b@example.com')).toBe(true);
+  it('_checkRateLimit forwards the identifier to the canonical helper', async () => {
+    await _checkRateLimit('a@example.com');
+    await _checkRateLimit('b@example.com');
+    expect(_rlCalls.map((c) => c.key)).toEqual(['a@example.com', 'b@example.com']);
+    expect(_rlCalls.every((c) => c.collection === 'ReturnsLookupRateLimit')).toBe(true);
   });
 
-  it('_checkRateLimit unblocks after window expires', () => {
-    // Fill up the rate limit
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit('expire@example.com');
-    }
-    expect(_checkRateLimit('expire@example.com')).toBe(false);
-
-    // Manually age all timestamps beyond the window
-    const entry = _rateLimitMap.get('expire@example.com');
-    const expired = Date.now() - RATE_LIMIT_WINDOW_MS - 1;
-    entry.timestamps = entry.timestamps.map(() => expired);
-
-    // Should be allowed again after expiry
-    expect(_checkRateLimit('expire@example.com')).toBe(true);
+  it('_checkRateLimit uses "unknown" sentinel for falsy identifier', async () => {
+    await _checkRateLimit('');
+    await _checkRateLimit(null);
+    await _checkRateLimit(undefined);
+    expect(_rlCalls.every((c) => c.key === 'unknown')).toBe(true);
   });
 
-  it('lookupReturn returns rate limit error after too many attempts', async () => {
-    const wixData = (await import('wix-data')).default;
-    wixData.query.mockImplementation(() => ({
-      eq: vi.fn().mockReturnThis(),
-      descending: vi.fn().mockReturnThis(),
-      find: vi.fn(async () => ({ items: [recentOrder], totalCount: 1 })),
-    }));
-
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      await lookupReturn('10042', 'jane@example.com');
-    }
-
+  it('lookupReturn returns rate limit error when helper denies', async () => {
+    _rlAllowed = false;
     const result = await lookupReturn('10042', 'jane@example.com');
     expect(result.success).toBe(false);
     expect(result.error).toContain('Too many attempts');
   });
 
-  it('submitGuestReturn returns rate limit error after too many attempts', async () => {
-    const wixData = (await import('wix-data')).default;
-    wixData.query.mockImplementation(() => ({
-      eq: vi.fn().mockReturnThis(),
-      descending: vi.fn().mockReturnThis(),
-      find: vi.fn(async () => ({ items: [recentOrder], totalCount: 1 })),
-    }));
-    wixData.insert.mockResolvedValue({});
-
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      await submitGuestReturn({
-        orderNumber: '10042',
-        email: 'jane@example.com',
-        items: [{ lineItemId: 'li-1', quantity: 1 }],
-        reason: 'changed_mind',
-      });
-    }
-
+  it('submitGuestReturn returns rate limit error when helper denies', async () => {
+    _rlAllowed = false;
     const result = await submitGuestReturn({
       orderNumber: '10042',
-      email: 'jane@example.com',
+      email: 'jane-rl@example.com',
       items: [{ lineItemId: 'li-1', quantity: 1 }],
       reason: 'changed_mind',
     });
@@ -861,21 +850,12 @@ describe('Rate limiting (hq-khcp)', () => {
     expect(result.error).toContain('Too many attempts');
   });
 
-  it('rate limit does not block different emails', async () => {
-    // Exhaust rate limit for one email
-    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
-      _checkRateLimit('jane@example.com');
-    }
-    expect(_checkRateLimit('jane@example.com')).toBe(false);
-    // Different email should not be blocked
-    expect(_checkRateLimit('other@example.com')).toBe(true);
-  });
-
   it('rate limit check happens after input validation', async () => {
-    // Invalid input should fail validation before rate limiting
-    const result = await lookupReturn('', 'jane@example.com');
+    // Even when the helper would deny, invalid input fails validation
+    // first — so the rate-limit helper is never called.
+    _rlAllowed = false;
+    const result = await lookupReturn('', 'jane-novalidate@example.com');
     expect(result.error).toBe('Order number is required.');
-    // Rate limit was NOT consumed for invalid input
-    expect(_rateLimitMap.has('jane@example.com')).toBe(false);
+    expect(_rlCalls).toHaveLength(0);
   });
 });

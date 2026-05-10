@@ -153,8 +153,13 @@ describe('returnsService — error catch paths', () => {
   });
 
   it('lookupReturn returns error on DB failure', async () => {
-    vi.spyOn(wixData, 'query').mockImplementationOnce(() => {
-      throw new Error('DB down');
+    // cf-3ldu.1: rate-limit check now hits wixData first (and fails open
+    // on error), so target the Stores/Orders query specifically rather
+    // than mockImplementationOnce on the next call.
+    const realQuery = wixData.query.bind(wixData);
+    vi.spyOn(wixData, 'query').mockImplementation((collection) => {
+      if (collection === 'Stores/Orders') throw new Error('DB down');
+      return realQuery(collection);
     });
     const result = await lookupReturn('30001', 'cov@example.com');
     expect(result.success).toBe(false);
@@ -162,8 +167,10 @@ describe('returnsService — error catch paths', () => {
   });
 
   it('submitGuestReturn returns error on DB failure', async () => {
-    vi.spyOn(wixData, 'query').mockImplementationOnce(() => {
-      throw new Error('DB down');
+    const realQuery = wixData.query.bind(wixData);
+    vi.spyOn(wixData, 'query').mockImplementation((collection) => {
+      if (collection === 'Stores/Orders') throw new Error('DB down');
+      return realQuery(collection);
     });
     const result = await submitGuestReturn({
       orderNumber: '30001',

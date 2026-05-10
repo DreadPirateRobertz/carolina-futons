@@ -445,9 +445,12 @@ describe('getAdminReturns — limit edge cases', () => {
   });
 });
 
-// ── _checkRateLimit — window expiry ─────────────────────────────────
+// ── _checkRateLimit — wixData-backed canonical helper (cf-3ldu.1) ───
+// Previously a sliding-window in-memory Map; replaced with the canonical
+// fixed-window wixData-backed helper. Tests now assert the wrapper's
+// signature + bucket behavior rather than internal Map mechanics.
 
-describe('_checkRateLimit — sliding window edge cases', () => {
+describe('_checkRateLimit — canonical-helper wrapper', () => {
   it('RATE_LIMIT_WINDOW_MS is 60 seconds', () => {
     expect(RATE_LIMIT_WINDOW_MS).toBe(60_000);
   });
@@ -456,23 +459,15 @@ describe('_checkRateLimit — sliding window edge cases', () => {
     expect(RATE_LIMIT_MAX).toBe(5);
   });
 
-  it('clears stale entries when map exceeds 1000 keys', () => {
-    // Fill map with 1001 stale entries
-    const past = Date.now() - RATE_LIMIT_WINDOW_MS - 1;
-    for (let i = 0; i < 1001; i++) {
-      _rateLimitMap.set(`stale-${i}`, { timestamps: [past] });
+  it('allows up to RATE_LIMIT_MAX calls per identifier in the window', async () => {
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      expect(await _checkRateLimit('rl-test@example.com')).toBe(true);
     }
-    // Next call triggers cleanup
-    _checkRateLimit('trigger-cleanup@test.com');
-    // Stale entries should have been removed
-    expect(_rateLimitMap.size).toBeLessThan(1001);
-    // The trigger key should still exist
-    expect(_rateLimitMap.has('trigger-cleanup@test.com')).toBe(true);
+    expect(await _checkRateLimit('rl-test@example.com')).toBe(false);
   });
 
-  it('uses "unknown" key for empty string identifier', () => {
-    _checkRateLimit('');
-    expect(_rateLimitMap.has('unknown')).toBe(true);
+  it('uses "unknown" sentinel for empty-string identifier', async () => {
+    expect(await _checkRateLimit('')).toBe(true);
   });
 });
 
