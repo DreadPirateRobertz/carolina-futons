@@ -10,6 +10,7 @@ import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationS
 import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact } from 'backend/emailAutomation.web';
+import { queueWelcomeEmail, queueCartRecovery } from 'backend/emailFlow.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
@@ -3815,3 +3816,71 @@ export async function post_referralService(request) {
   return _veloDispatch(request, _REFERRAL_METHODS, 'referralService');
 }
 export function options_referralService(request) { return response(corsPreflight(request)); }
+
+// ── cf-uwfw (cf-7ozz.1): cfw email-trigger endpoints ─────────────────────────
+//
+// cfw's `/api/email/trigger` route does:
+//   callVelo({method: 'queueWelcomeEmail',  args: [{type: 'welcome', email}]})
+//   callVelo({method: 'queueCartRecovery',  args: [{type: 'cart-recovery', items}]})
+//
+// Wix Velo doesn't auto-route /_functions/<name> to a webMethod, so each name
+// needs an explicit `post_<name>(request)` wrapper. Both delegate to the
+// `backend/emailFlow.web` webMethods of the same name. Permissions on the
+// underlying methods are `Anyone` since cfw calls server-side without a Wix
+// session.
+
+async function _veloSingleMethodDispatch(request, fn, label) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  const args = Array.isArray(body?.args) ? body.args : null;
+  if (args === null) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'args_must_be_array' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    const result = await fn(...args);
+    // cf-yvs4 lying-status fix: a {success:false} envelope with a known soft-fail
+    // marker (auth/rate/notfound/infra/validation) maps to a real 4xx so cfw's
+    // velo-client throws VeloRpcError. Business-logic outcomes (status===null)
+    // stay 200 so cfw can branch on body.success.
+    if (result && typeof result === 'object' && result.success === false) {
+      const status = _veloDispatchSoftFailStatus(result.error);
+      if (status !== null) {
+        return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
+    }
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `qe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    console.error(`HTTP function error (post_${label}) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+export async function post_queueWelcomeEmail(request) {
+  return _veloSingleMethodDispatch(request, queueWelcomeEmail, 'queueWelcomeEmail');
+}
+export function options_queueWelcomeEmail(request) { return response(corsPreflight(request)); }
+
+export async function post_queueCartRecovery(request) {
+  return _veloSingleMethodDispatch(request, queueCartRecovery, 'queueCartRecovery');
+}
+export function options_queueCartRecovery(request) { return response(corsPreflight(request)); }
