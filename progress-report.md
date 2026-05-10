@@ -11,8 +11,8 @@
 | 🆕 cf-r9r3 FILED | P1: scroll jitter + shrunken header shows white not bears. blaidd after PR #540. |
 | 🆕 cf-52uc FILED | P1: 'Carolina Futons' white text → Carolina blue sweep. Single PR (Vercel credit conservation). |
 | ✅ cf-dbw9 UPDATED | Branch protection removed from scope — Stilgar will self-handle. millicent: dependabot re-enable only. |
-| ⏳ PR #540 | lint-typecheck-test pending (blaidd fix push). e2e ✅. Waiting Stilgar visual confirm. |
-| ⏳ PR #542 | cf-xqc0 radahn: lint ✅, e2e pending. No visual needed — merge when e2e clears. |
+| 🛑 PR #540 HOLD | Stilgar approved logos. BUNDLED: bears-in-shrunken + flicker fix + final-state-on-bears. blaidd expanding same branch (cf-jo07). ONE push then re-preview. |
+| ⏳ PR #542 | cf-xqc0 radahn: lint ✅, e2e pending. Merge when e2e clears (no visual, 1 Vercel build). |
 | 📨 rennala | cf-uwfw Velo wrappers verified — triggerWelcomeSeries wired, cartRecovery stub-accept shape-validates. Final gate: cfw e2e fixture-OFF post Wix CLI publish. |
 
 ## Session 2026-05-10 — Wave 11 (context resume)
