@@ -1,0 +1,130 @@
+# cf-b8n8 baseline — pre-existing `cf-XXXX` doc references that don't
+# resolve to a known bead. Generated 2026-05-10 by running:
+#
+#     python3 scripts/check-doc-bead-refs.py --strict
+#
+# These are tracked here so the script can run in CI without
+# blocking on the existing drift backlog. New PRs that introduce
+# additional unknown refs will fail (exit 1) until either:
+#   1. the new ref is fixed (point at the right bead), OR
+#   2. the new ref is added to this file (rare — usually means a new
+#      CSS class or category word that should go in the .allowlist).
+#
+# To triage: pick a line, find the doc + the intended bead, fix the
+# reference, drop the line from this file. Goal is shrinking this
+# list to zero.
+#
+# Format: `<path>:<line> → <ref>` (matches the script's report shape).
+# Lines starting with `#` and blank lines are ignored.
+
+docs/testing-master.md:27 → cf-9u1
+docs/cf-38bi-freight-booking-automation-brief.md:3 → cf-ph3g.p3b
+docs/cf-38bi-freight-booking-automation-brief.md:93 → cf-ph3g.p2
+docs/TEST_STRATEGY.md:358 → cf-295
+docs/TEST_STRATEGY.md:359 → cf-mnh
+docs/TEST_STRATEGY.md:360 → cf-vuk
+docs/TEST_STRATEGY.md:383 → cf-6ub
+docs/TEST_STRATEGY.md:384 → cf-xv3
+docs/TEST_STRATEGY.md:385 → cf-69b
+docs/TEST_STRATEGY.md:386 → cf-8gu
+docs/TEST_STRATEGY.md:387 → cf-e3o
+docs/TEST_STRATEGY.md:388 → cf-mnh
+docs/TEST_STRATEGY.md:389 → cf-1ur
+docs/TEST_STRATEGY.md:390 → cf-295
+docs/TEST_STRATEGY.md:391 → cf-6wc
+docs/TEST_STRATEGY.md:392 → cf-vuk
+docs/TEST_STRATEGY.md:393 → cf-mdd
+docs/TEST_STRATEGY.md:394 → cf-bl8
+docs/TEST_STRATEGY.md:395 → cf-b2i
+docs/cf-uxcq-product-brief.md:3 → cf-ph3g.p3a
+docs/email-audit-2026-05-04.md:15 → cf-icww.followup
+docs/email-audit-2026-05-04.md:105 → cf-icww.followup
+docs/email-audit-2026-05-04.md:144 → cf-icww.followup
+docs/WIX-MCP-GAP-ANALYSIS.md:132 → cf-9g1g
+docs/WIX-MCP-GAP-ANALYSIS.md:227 → cf-9g1g
+docs/ELEMENT-ID-RECONCILIATION.md:6 → cf-nl57
+docs/MARKETING-STRATEGY.md:4 → cf-5ef
+docs/MARKETING-STRATEGY.md:72 → cf-7bk
+docs/MARKETING-STRATEGY.md:74 → cf-1nb
+docs/MARKETING-STRATEGY.md:88 → cf-10x
+docs/MARKETING-STRATEGY.md:93 → cf-1nb
+docs/MARKETING-STRATEGY.md:133 → cf-uqr
+docs/stage3-velo-parity-2026-05-09.md:128 → cf-kull.fu
+docs/cf-hpb2-referralservice-comparison.md:3 → cf-vtx5.fu
+docs/cf-3qt-9-wix-retirement-checklist.md:22 → cf-yw0m
+docs/cf-3qt-9-wix-retirement-checklist.md:268 → cf-yw0m
+docs/cf-3qt-9-wix-retirement-checklist.md:308 → cf-yw0m
+docs/cf-3qt-9-wix-retirement-checklist.md:330 → cf-yw0m
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.1.md:3 → cf-sq0d.fu1
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.1.md:3 → cf-4x7e.1.fu1
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.1.md:153 → cf-sq0d.fu1
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.2.md:3 → cf-sq0d.fu2
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.2.md:126 → cf-sq0d.fu2
+docs/cf-4x7e/PASS1-MATRIX-UPDATED-v3.2.md:142 → cf-sq0d.fu2
+docs/audits/rate-limit-audit-2026-05-10.md:166 → cf-sec1
+docs/audits/webmethod-permissions-audit-2026-05-10.md:125 → cf-sec1
+docs/audits/webmethod-permissions-audit-2026-05-10.md:154 → cf-sec1
+docs/audits/cron-schedule-audit-2026-05-10.md:10 → cf-4x7e.fu1
+docs/audits/cron-schedule-audit-2026-05-10.md:156 → cf-4x7e.fu1
+docs/qa/email-triggers-e2e-2026-05-05.md:66 → cf-8onx
+docs/archives/report_from_radahn.md:11 → cf-rym
+docs/archives/report_from_radahn.md:12 → cf-k9d
+docs/archives/report_from_radahn.md:13 → cf-2lm
+docs/archives/report_from_radahn.md:19 → cf-dui
+docs/archives/report_from_radahn.md:20 → cf-vhy
+docs/archives/report_from_radahn.md:28 → cf-0bw
+docs/archives/report_from_radahn.md:29 → cf-y8x
+docs/archives/report_from_radahn.md:35 → cf-k5j
+docs/archives/report_from_radahn.md:36 → cf-0vr
+docs/archives/report_from_radahn.md:37 → cf-yd6
+docs/archives/report_from_radahn.md:38 → cf-rzr
+docs/cf-3qt.8/mobile-smoke-2026-05-10.md:7 → cf-pjdb.spec.ts
+docs/cf-3qt.8/lighthouse-baseline-2026-05-10.md:74 → cf-z0ht.fu1
+docs/cf-3qt.8/lighthouse-baseline-2026-05-10.md:77 → cf-z0ht.fu1
+docs/cf-3qt.8/pre-flip-smoke-results-2026-05-10.md:75 → cf-theme
+docs/guides/hand-draw-plugin-evaluation.md:3 → cf-jt12
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:88 → cf-ipg
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:89 → cf-7mr
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:103 → cf-xpqf.2
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:104 → cf-xpqf.3
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:106 → cf-xpqf.3
+docs/ops/cf-xpqf-helper-deadcode-audit-2026-05-10.md:114 → cf-sq0d.fu2
+docs/ops/merge-ordering-protection.md:5 → cf-vtx5.fu2
+docs/ops/merge-ordering-protection.md:5 → cf-bkxh.fu
+docs/ops/merge-ordering-protection.md:5 → cf-0h9q.fu1
+docs/ops/merge-ordering-protection.md:72 → cf-vtx5.fu2
+docs/ops/merge-ordering-protection.md:72 → cf-bkxh.fu
+docs/ops/merge-ordering-protection.md:72 → cf-0h9q.fu1
+docs/reports/token-burn-audit.md:19 → cf-8iy
+docs/reports/token-burn-audit.md:47 → cf-8iy
+docs/reports/token-burn-audit.md:90 → cf-8iy
+docs/strategy/klaviyo-migration-spike.md:5 → cf-ztoy
+docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:126 → cf-test
+docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:282 → cf-test
+docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:313 → cf-test
+docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md:341 → cf-test
+docs/superpowers/specs/2026-03-23-gamification-v2-cross-crew-strengthening.md:59 → cf-m1c
+docs/superpowers/specs/2026-03-23-gamification-v2-cross-crew-strengthening.md:116 → cf-m1c
+docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:49 → cf-2wxp
+docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:50 → cf-2gfp
+docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:58 → cf-yw0m
+docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:106 → cf-8du3
+docs/superpowers/specs/2026-03-28-wave31-epics-launch-to-revenue.md:250 → cf-hfao
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:19 → cf-blft
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:34 → cf-39ct
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:35 → cf-qgg0
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:36 → cf-j43m
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:37 → cf-5r7k
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:38 → cf-5ps3
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:50 → cf-p4iy
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:51 → cf-au1w
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:71 → cf-8du3
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:143 → cf-5r7k
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:144 → cf-qgg0
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:145 → cf-au1w
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:146 → cf-8du3
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:206 → cf-39ct
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:206 → cf-j43m
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:206 → cf-i8e5
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:206 → cf-blft
+docs/superpowers/specs/2026-03-28-wave30-hardening-optimization-design.md:206 → cf-p4iy

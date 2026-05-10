@@ -1,0 +1,43 @@
+# cf-b8n8 — non-bead `cf-*` tokens that show up in cfutons docs.
+#
+# Append one prefix per line. Lines starting with `#` and blank lines
+# are ignored. Allowlist matches are exact.
+#
+# ## When to add an entry
+#
+# - The token is a Tailwind / CSS class name (`cf-cta`, `cf-cream`)
+#   that bleeds into prose because someone described a UI element by
+#   its class.
+# - The token is an ad-hoc category word coined inside a doc
+#   (`cf-dead` for dead-code findings, `cf-current` as a section
+#   header style).
+# - The token is a documented placeholder (`cf-XXXX` shapes inside
+#   templates) that escaped the fenced-code-block strip because it
+#   sits in inline code that Markdown doesn't fence.
+#
+# ## When NOT to add an entry
+#
+# - The token is a real bead that was *renamed*. Fix the doc to point
+#   at the new ID instead of suppressing the warning.
+# - The token has a sub-bead suffix (`.followup`, `.fu1`) that does
+#   not resolve. The parent bead may exist but the sub-bead does not
+#   — fix the reference, do not allowlist.
+
+# ── Tailwind + brand-token CSS classes ────────────────────────────
+cf-blue
+cf-cream
+cf-cta
+cf-espresso
+cf-navy
+cf-sand
+cf-charcoal
+cf-divider
+cf-ink
+cf-paper
+cf-footer-bg
+
+# ── Ad-hoc category / status words used in audit docs ─────────────
+cf-dead
+cf-current
+cf-cutover
+cf-cya
