@@ -3817,8 +3817,21 @@ export async function post_submitCommunityPhoto(request) {
     });
   }
 
+  // cf-k5vr: extract the original client IP from x-forwarded-for and
+  // pass it to the webMethod as the rate-limit axis. Wix HTTP runs
+  // behind its own CDN, so x-forwarded-for is a comma-separated chain
+  // — the leftmost entry is the original client (the rest are Wix's
+  // intermediate proxies). When the header is missing or malformed,
+  // omit opts.rateLimitKey and let the webMethod fall back to the old
+  // imageUrl-host axis.
+  const xff = request.headers && (request.headers['x-forwarded-for'] || request.headers['X-Forwarded-For']);
+  const clientIp = typeof xff === 'string'
+    ? xff.split(',')[0].trim()
+    : '';
+  const opts = clientIp ? { rateLimitKey: clientIp } : {};
+
   try {
-    const result = await submitCommunityPhoto(body);
+    const result = await submitCommunityPhoto(body, opts);
     if (result && typeof result === 'object' && result.success === false) {
       const status = _veloDispatchSoftFailStatus(result.error);
       // cf-mgnh: status===null means business-logic outcome — keep 200 so cfw

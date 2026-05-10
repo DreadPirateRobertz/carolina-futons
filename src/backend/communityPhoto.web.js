@@ -90,31 +90,43 @@ export function _validateCommunityPhoto(data) {
 }
 
 /**
- * Submit a community photo. Anonymous; rate-limited per imageUrl host
- * (5 / hour) at the wrapper layer. Inserts a row with `status: 'pending'`
- * for the owner-side moderation flow.
+ * Submit a community photo. Anonymous; rate-limited (5 / hour). Inserts a
+ * row with `status: 'pending'` for the owner-side moderation flow.
  *
  * @function submitCommunityPhoto
  * @param {Object} data
+ * @param {Object} [opts]
+ * @param {string} [opts.rateLimitKey] - Identifier the rate limiter buckets
+ *   on. Wrappers that have access to the request object should pass the
+ *   client IP (taken from x-forwarded-for) here so the bucket axis is
+ *   per-client rather than per-imageUrl-host. When absent (e.g. direct
+ *   webMethod callsites with no HTTP context), falls back to the imageUrl
+ *   host — the original cf-0h9q axis.
  * @returns {Promise<{success: boolean, photoId?: string, error?: string}>}
  * @permission Anyone
  */
 export const submitCommunityPhoto = webMethod(
   Permissions.Anyone,
-  async (data) => {
+  async (data, opts = {}) => {
     const invalid = _validateCommunityPhoto(data);
     if (invalid) return { success: false, error: invalid.error };
 
-    // cf-0h9q.fu: per-host rate-limit is a coarse UGC abuse damper, not
-    // the primary defense — moderation is. Tracked: cf-* follow-up to
-    // switch to IP-based or session-based keying once Wix HTTP function
-    // exposes request.ip cleanly to the webMethod surface (today only
-    // the wrapper sees it). Until then host-keying caps a single
-    // attacker domain but lets multiple attackers under different CDNs
-    // each get their own bucket — known limitation.
+    // cf-k5vr: rate-limit on a per-client axis when the caller can supply
+    // one (the post_submitCommunityPhoto wrapper extracts x-forwarded-for
+    // and passes it). The previous host-axis was a coarse UGC abuse
+    // damper that shared one bucket across every photo URL on the same
+    // CDN — popular CDNs like static.wixstatic.com would rate-limit
+    // legitimate users while attackers under their own domain got fresh
+    // buckets. Falling back to host preserves the old behavior for
+    // direct webMethod callsites that don't have a request object.
     const host = (data.imageUrl.match(/^https:\/\/([^/]+)/) || [])[1] || 'unknown';
+    const rateLimitKey =
+      typeof opts.rateLimitKey === 'string' && opts.rateLimitKey.length > 0
+        ? opts.rateLimitKey
+        : host;
+    const axis = opts.rateLimitKey ? 'ip' : 'host';
     try {
-      const rl = await checkRateLimit('CommunityPhotoRateLimit', host, {
+      const rl = await checkRateLimit('CommunityPhotoRateLimit', rateLimitKey, {
         max: 5,
         windowMs: 60 * 60 * 1000,
       });
@@ -123,9 +135,12 @@ export const submitCommunityPhoto = webMethod(
       }
     } catch (err) {
       // Fail-open on rate-limit infra error — sanity-cap by relying on
-      // moderation. Log includes the host so ops can spot whether a
-      // single domain is repeatedly tripping a broken rate-limit store.
-      logError(`communityPhoto.submitCommunityPhoto.rateLimit host=${host}`, err);
+      // moderation. The axis label (ip|host) lets ops correlate a broken
+      // rate-limit store to which keying scheme was active. The key
+      // itself is sha256-style hashed inside checkRateLimit before
+      // storage so it never lands in the bucket DB plaintext, but we
+      // still avoid logging the raw IP here for defense in depth.
+      logError(`communityPhoto.submitCommunityPhoto.rateLimit axis=${axis}`, err);
     }
 
     const row = {

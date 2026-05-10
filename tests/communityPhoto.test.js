@@ -35,16 +35,19 @@ const VALID_BODY = {
   productSlug: 'eureka-futon-frame',
 };
 
-function flatReq(body) {
+function flatReq(body, headers = {}) {
   return {
     body: { json: async () => body },
-    headers: { origin: goodOrigin },
+    headers: { origin: goodOrigin, ...headers },
   };
 }
 
 beforeEach(() => {
   resetData();
   __seed('CommunityPhotos', []);
+  // cf-k5vr: clear before re-arming so per-test assertions on
+  // `mock.calls` see only this test's calls, not accumulated history.
+  vi.mocked(checkRateLimit).mockReset();
   vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
 });
 
@@ -119,7 +122,7 @@ describe('cf-0h9q · submitCommunityPhoto webMethod', () => {
     expect(rows[0].submittedAt).toBeInstanceOf(Date);
   });
 
-  it('rate-limit per host fires on 6th submission within window', async () => {
+  it('rate-limit fires on 6th submission within window', async () => {
     vi.mocked(checkRateLimit).mockResolvedValue({ allowed: false });
     const result = await submitCommunityPhoto(VALID_BODY);
     expect(result.success).toBe(false);
@@ -132,6 +135,34 @@ describe('cf-0h9q · submitCommunityPhoto webMethod', () => {
     const result = await submitCommunityPhoto(VALID_BODY);
     expect(result.success).toBe(true);
     expect(__getInserted('CommunityPhotos')).toHaveLength(1);
+  });
+
+  // cf-k5vr: per-client (IP) axis — preferred when wrapper supplies one.
+  it('cf-k5vr: opts.rateLimitKey overrides imageUrl-host axis', async () => {
+    await submitCommunityPhoto(VALID_BODY, { rateLimitKey: '203.0.113.7' });
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      '203.0.113.7',
+      expect.objectContaining({ max: 5, windowMs: 60 * 60 * 1000 }),
+    );
+  });
+
+  it('cf-k5vr: falls back to imageUrl host when opts is omitted', async () => {
+    await submitCommunityPhoto(VALID_BODY);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      'cdn.example.com',
+      expect.objectContaining({ max: 5, windowMs: 60 * 60 * 1000 }),
+    );
+  });
+
+  it('cf-k5vr: falls back to host when opts.rateLimitKey is empty/blank', async () => {
+    await submitCommunityPhoto(VALID_BODY, { rateLimitKey: '' });
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      'cdn.example.com',
+      expect.anything(),
+    );
   });
 
   it('returns success:false on wixData.insert throw', async () => {
@@ -167,6 +198,62 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
     const res = await post_submitCommunityPhoto(flatReq(VALID_BODY));
     expect(res.status).toBe(429);
     expect(JSON.parse(res.body).success).toBe(false);
+  });
+
+  // cf-k5vr: wrapper extracts x-forwarded-for and forwards as the
+  // rate-limit axis. Two clients on the same image host should land in
+  // independent buckets; one client posting to two hosts should share a
+  // bucket.
+  it('cf-k5vr: wrapper extracts leftmost x-forwarded-for as rateLimitKey', async () => {
+    const req = flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.42, 10.0.0.1, 10.0.0.2' });
+    await post_submitCommunityPhoto(req);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      '203.0.113.42',
+      expect.anything(),
+    );
+  });
+
+  it('cf-k5vr: wrapper accepts X-Forwarded-For (canonical capitalization)', async () => {
+    const req = flatReq(VALID_BODY, { 'X-Forwarded-For': '198.51.100.5' });
+    await post_submitCommunityPhoto(req);
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      '198.51.100.5',
+      expect.anything(),
+    );
+  });
+
+  it('cf-k5vr: missing x-forwarded-for falls back to host axis', async () => {
+    await post_submitCommunityPhoto(flatReq(VALID_BODY)); // no XFF header
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      'cdn.example.com',
+      expect.anything(),
+    );
+  });
+
+  it('cf-k5vr: same client IP across different image hosts shares one bucket', async () => {
+    const xff = { 'x-forwarded-for': '203.0.113.99' };
+    await post_submitCommunityPhoto(
+      flatReq({ ...VALID_BODY, imageUrl: 'https://cdn-a.example.com/p1.jpg' }, xff),
+    );
+    await post_submitCommunityPhoto(
+      flatReq({ ...VALID_BODY, imageUrl: 'https://cdn-b.example.com/p2.jpg' }, xff),
+    );
+    const keys = vi.mocked(checkRateLimit).mock.calls.map((call) => call[1]);
+    expect(keys).toEqual(['203.0.113.99', '203.0.113.99']);
+  });
+
+  it('cf-k5vr: different client IPs on the same image host get independent buckets', async () => {
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.10' }),
+    );
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.20' }),
+    );
+    const keys = vi.mocked(checkRateLimit).mock.calls.map((call) => call[1]);
+    expect(keys).toEqual(['203.0.113.10', '203.0.113.20']);
   });
 
   it('returns 400 invalid_json on body parse failure', async () => {
