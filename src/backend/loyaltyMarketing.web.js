@@ -42,8 +42,6 @@ const TIER_BENEFITS = {
   },
 };
 
-const TIER_UP_THRESHOLD_PERCENT = 0.8; // Alert at 80% of next tier
-
 /**
  * Get tier explainer data for the /loyalty page.
  * Returns tier comparison table data with benefits and thresholds.
@@ -105,162 +103,6 @@ export const getEnrollmentPrompt = webMethod(
     } catch (err) {
       console.error('[loyaltyMarketing] getEnrollmentPrompt error:', err);
       return { success: false, shouldPrompt: false, benefits: null };
-    }
-  }
-);
-
-/**
- * Check all loyalty members for tier-up proximity and queue notification emails.
- * Triggers at 80% of next tier threshold.
- *
- * @returns {Promise<{success: boolean, notified: number}>}
- * @permission Admin
- */
-export const checkTierUpNotifications = webMethod(
-  Permissions.Admin,
-  async () => {
-    try {
-      const result = await wixData.query('LoyaltyAccounts')
-        .ne('currentTier', 'Gold') // Gold members can't tier up
-        .limit(1000)
-        .find();
-
-      let notified = 0;
-
-      for (const account of result.items) {
-        const tier = account.currentTier || 'Bronze';
-        const tierInfo = TIER_THRESHOLDS[tier];
-        if (!tierInfo || !tierInfo.next) continue;
-
-        const totalSpend = account.totalSpend || 0;
-        const thresholdForAlert = tierInfo.nextMin * TIER_UP_THRESHOLD_PERCENT;
-
-        if (totalSpend >= thresholdForAlert && totalSpend < tierInfo.nextMin) {
-          // Check if already notified for this tier transition
-          const alreadyNotified = await wixData.query('EmailQueue')
-            .eq('recipientEmail', account.email)
-            .eq('templateId', 'tier_up_notification')
-            .eq('checkoutId', tierInfo.next) // reuse checkoutId for tier name dedup
-            .find();
-
-          if (alreadyNotified.items.length > 0) continue;
-
-          const remaining = tierInfo.nextMin - totalSpend;
-          const nextBenefits = TIER_BENEFITS[tierInfo.next];
-
-          await wixData.insert('EmailQueue', {
-            templateId: 'tier_up_notification',
-            recipientEmail: account.email,
-            recipientContactId: account.memberId || '',
-            variables: JSON.stringify({
-              firstName: account.firstName || '',
-              currentTier: tier,
-              nextTier: tierInfo.next,
-              remainingSpend: remaining.toFixed(2),
-              nextDiscount: nextBenefits.discount,
-              nextFreeShipping: nextBenefits.freeShipping,
-              email: account.email,
-            }),
-            sequenceType: 'loyalty_marketing',
-            sequenceStep: 1,
-            scheduledFor: new Date(),
-            status: 'pending',
-            createdAt: new Date(),
-            checkoutId: tierInfo.next,
-          });
-
-          notified++;
-        }
-      }
-
-      logAuditEvent('LoyaltyMarketing', 'tier_up_check', 'system', {
-        checked: result.items.length,
-        notified,
-      });
-
-      return { success: true, notified };
-    } catch (err) {
-      console.error('[loyaltyMarketing] checkTierUpNotifications error:', err);
-      return { success: false, notified: 0 };
-    }
-  }
-);
-
-/**
- * Generate monthly points statement for a member.
- *
- * @param {string} memberId
- * @returns {Promise<{success: boolean, statement: Object|null}>}
- * @permission Admin
- */
-export const generateMonthlyStatement = webMethod(
-  Permissions.Admin,
-  async (memberId) => {
-    try {
-      if (!memberId) return { success: false, statement: null };
-      const cleanId = sanitize(memberId, 50);
-
-      // Get account
-      const accounts = await wixData.query('LoyaltyAccounts')
-        .eq('memberId', cleanId)
-        .find();
-
-      if (accounts.items.length === 0) {
-        return { success: false, statement: null };
-      }
-
-      const account = accounts.items[0];
-      const tier = account.currentTier || 'Bronze';
-      const tierInfo = TIER_THRESHOLDS[tier];
-
-      // Get points activity from last 30 days
-      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const activity = await wixData.query('PointsHistory')
-        .eq('memberId', cleanId)
-        .ge('timestamp', since)
-        .limit(1000)
-        .find();
-
-      let earned = 0;
-      let redeemed = 0;
-      const breakdown = {};
-
-      for (const entry of activity.items) {
-        const amount = entry.points || 0;
-        if (amount > 0) {
-          earned += amount;
-          const source = entry.source || 'other';
-          breakdown[source] = (breakdown[source] || 0) + amount;
-        } else {
-          redeemed += Math.abs(amount);
-        }
-      }
-
-      const statement = {
-        memberId: cleanId,
-        email: account.email,
-        firstName: account.firstName || '',
-        currentTier: tier,
-        totalPoints: account.totalPoints || 0,
-        monthlyEarned: earned,
-        monthlyRedeemed: redeemed,
-        netChange: earned - redeemed,
-        breakdown: Object.entries(breakdown)
-          .sort((a, b) => b[1] - a[1])
-          .map(([source, points]) => ({ source, points })),
-        nextTier: tierInfo.next,
-        nextTierSpend: tierInfo.nextMin,
-        currentSpend: account.totalSpend || 0,
-        spendToNextTier: tierInfo.next
-          ? Math.max(0, tierInfo.nextMin - (account.totalSpend || 0))
-          : null,
-        generatedAt: new Date().toISOString(),
-      };
-
-      return { success: true, statement };
-    } catch (err) {
-      console.error('[loyaltyMarketing] generateMonthlyStatement error:', err);
-      return { success: false, statement: null };
     }
   }
 );
@@ -733,4 +575,3 @@ export const getBirthdayStatus = webMethod(
 // Exports for testing
 export const _TIER_THRESHOLDS = TIER_THRESHOLDS;
 export const _TIER_BENEFITS = TIER_BENEFITS;
-export const _TIER_UP_THRESHOLD_PERCENT = TIER_UP_THRESHOLD_PERCENT;

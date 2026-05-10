@@ -8,13 +8,10 @@ import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
 import {
   getTierExplainerData,
   getEnrollmentPrompt,
-  checkTierUpNotifications,
-  generateMonthlyStatement,
   calculatePointsFromSpend,
   getLoyaltyFaq,
   _TIER_THRESHOLDS,
   _TIER_BENEFITS,
-  _TIER_UP_THRESHOLD_PERCENT,
 } from '../src/backend/loyaltyMarketing.web.js';
 
 beforeEach(() => {
@@ -94,164 +91,9 @@ describe('getEnrollmentPrompt', () => {
   });
 });
 
-// ── Tier-Up Notifications ───────────────────────────────────────────
-
-describe('checkTierUpNotifications', () => {
-  it('notifies Bronze members at 80% of Silver threshold ($400+)', async () => {
-    __seed('LoyaltyAccounts', [
-      { email: 'close@example.com', memberId: 'mem-1', currentTier: 'Bronze', totalSpend: 420, firstName: 'Sarah' },
-    ]);
-    __seed('EmailQueue', []);
-
-    const result = await checkTierUpNotifications();
-    expect(result.success).toBe(true);
-    expect(result.notified).toBe(1);
-
-    const emails = __getInserted('EmailQueue');
-    expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('tier_up_notification');
-
-    const vars = JSON.parse(emails[0].variables);
-    expect(vars.nextTier).toBe('Silver');
-    expect(vars.remainingSpend).toBe('80.00');
-  });
-
-  it('does not notify members below 80% threshold', async () => {
-    __seed('LoyaltyAccounts', [
-      { email: 'far@example.com', memberId: 'mem-2', currentTier: 'Bronze', totalSpend: 200 },
-    ]);
-    __seed('EmailQueue', []);
-
-    const result = await checkTierUpNotifications();
-    expect(result.notified).toBe(0);
-  });
-
-  it('does not notify Gold members (max tier)', async () => {
-    __seed('LoyaltyAccounts', [
-      { email: 'gold@example.com', memberId: 'mem-3', currentTier: 'Gold', totalSpend: 2000 },
-    ]);
-    __seed('EmailQueue', []);
-
-    const result = await checkTierUpNotifications();
-    expect(result.notified).toBe(0);
-  });
-
-  it('does not double-notify for same tier transition', async () => {
-    __seed('LoyaltyAccounts', [
-      { email: 'close@example.com', memberId: 'mem-1', currentTier: 'Bronze', totalSpend: 420 },
-    ]);
-    __seed('EmailQueue', [
-      { recipientEmail: 'close@example.com', templateId: 'tier_up_notification', checkoutId: 'Silver' },
-    ]);
-
-    const result = await checkTierUpNotifications();
-    expect(result.notified).toBe(0);
-  });
-
-  it('notifies Silver members approaching Gold', async () => {
-    __seed('LoyaltyAccounts', [
-      { email: 'silver@example.com', memberId: 'mem-4', currentTier: 'Silver', totalSpend: 1250 },
-    ]);
-    __seed('EmailQueue', []);
-
-    const result = await checkTierUpNotifications();
-    expect(result.notified).toBe(1);
-
-    const vars = JSON.parse(__getInserted('EmailQueue')[0].variables);
-    expect(vars.nextTier).toBe('Gold');
-  });
-
-  it('logs to AuditLog', async () => {
-    __seed('LoyaltyAccounts', []);
-    __seed('EmailQueue', []);
-
-    await checkTierUpNotifications();
-    const audits = __getInserted('AuditLog');
-    expect(audits).toHaveLength(1);
-    expect(audits[0].collection).toBe('LoyaltyMarketing');
-  });
-});
-
-// ── Monthly Statement ───────────────────────────────────────────────
-
-describe('generateMonthlyStatement', () => {
-  it('generates statement with points summary', async () => {
-    const now = new Date();
-    __seed('LoyaltyAccounts', [
-      { memberId: 'mem-1', email: 'member@example.com', firstName: 'Sarah', currentTier: 'Silver', totalPoints: 750, totalSpend: 600 },
-    ]);
-    __seed('PointsHistory', [
-      { memberId: 'mem-1', points: 100, source: 'purchase', timestamp: now },
-      { memberId: 'mem-1', points: 50, source: 'review', timestamp: now },
-      { memberId: 'mem-1', points: -25, source: 'redemption', timestamp: now },
-    ]);
-
-    const result = await generateMonthlyStatement('mem-1');
-    expect(result.success).toBe(true);
-    expect(result.statement.monthlyEarned).toBe(150);
-    expect(result.statement.monthlyRedeemed).toBe(25);
-    expect(result.statement.netChange).toBe(125);
-  });
-
-  it('includes tier and progression info', async () => {
-    __seed('LoyaltyAccounts', [
-      { memberId: 'mem-1', email: 'member@example.com', currentTier: 'Silver', totalSpend: 800 },
-    ]);
-    __seed('PointsHistory', []);
-
-    const result = await generateMonthlyStatement('mem-1');
-    expect(result.statement.currentTier).toBe('Silver');
-    expect(result.statement.nextTier).toBe('Gold');
-    expect(result.statement.spendToNextTier).toBe(700);
-  });
-
-  it('Gold members have null next tier', async () => {
-    __seed('LoyaltyAccounts', [
-      { memberId: 'mem-1', email: 'gold@example.com', currentTier: 'Gold', totalSpend: 2000 },
-    ]);
-    __seed('PointsHistory', []);
-
-    const result = await generateMonthlyStatement('mem-1');
-    expect(result.statement.nextTier).toBeNull();
-    expect(result.statement.spendToNextTier).toBeNull();
-  });
-
-  it('includes points breakdown by source', async () => {
-    const now = new Date();
-    __seed('LoyaltyAccounts', [
-      { memberId: 'mem-1', email: 'm@example.com', currentTier: 'Bronze', totalPoints: 200 },
-    ]);
-    __seed('PointsHistory', [
-      { memberId: 'mem-1', points: 80, source: 'purchase', timestamp: now },
-      { memberId: 'mem-1', points: 50, source: 'purchase', timestamp: now },
-      { memberId: 'mem-1', points: 25, source: 'referral', timestamp: now },
-    ]);
-
-    const result = await generateMonthlyStatement('mem-1');
-    expect(result.statement.breakdown[0].source).toBe('purchase');
-    expect(result.statement.breakdown[0].points).toBe(130);
-    expect(result.statement.breakdown[1].source).toBe('referral');
-  });
-
-  it('returns failure for unknown member', async () => {
-    __seed('LoyaltyAccounts', []);
-    const result = await generateMonthlyStatement('nonexistent');
-    expect(result.success).toBe(false);
-  });
-
-  it('returns failure for empty memberId', async () => {
-    const result = await generateMonthlyStatement('');
-    expect(result.success).toBe(false);
-  });
-});
-
 // ── Constants ───────────────────────────────────────────────────────
 
 describe('loyalty marketing constants', () => {
-  it('tier-up threshold is 80%', () => {
-    expect(_TIER_UP_THRESHOLD_PERCENT).toBe(0.8);
-  });
-
   it('thresholds match loyaltyTiers.web.js values', () => {
     expect(_TIER_THRESHOLDS.Bronze.nextMin).toBe(500);
     expect(_TIER_THRESHOLDS.Silver.nextMin).toBe(1500);

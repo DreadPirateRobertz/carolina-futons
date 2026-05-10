@@ -27,7 +27,6 @@ beforeEach(() => {
 
 import {
   sendMonthlyLoyaltyStatements,
-  generateMonthlyStatement,
 } from '../src/backend/loyaltyMarketing.web.js';
 
 // ── Fixtures ───────────────────────────────────────────────────────────
@@ -54,39 +53,6 @@ function makePointsActivity(memberId = 'm-1', points = 100) {
     timestamp: new Date(),
   };
 }
-
-// ── generateMonthlyStatement ───────────────────────────────────────────
-
-describe('generateMonthlyStatement', () => {
-  it('returns statement with required fields', async () => {
-    __seed('LoyaltyAccounts', [makeAccount()]);
-    __seed('PointsHistory', [makePointsActivity('m-1', 150), makePointsActivity('m-1', -50)]);
-
-    const result = await generateMonthlyStatement('m-1');
-
-    expect(result.success).toBe(true);
-    expect(result.statement.memberId).toBe('m-1');
-    expect(result.statement.currentTier).toBe('Silver');
-    expect(result.statement.totalPoints).toBe(750);
-    expect(result.statement.monthlyEarned).toBe(150);
-    expect(result.statement.monthlyRedeemed).toBe(50);
-    expect(result.statement.email).toBe('member@test.com');
-  });
-
-  it('returns failure when account not found', async () => {
-    __seed('LoyaltyAccounts', []);
-
-    const result = await generateMonthlyStatement('m-missing');
-
-    expect(result.success).toBe(false);
-    expect(result.statement).toBeNull();
-  });
-
-  it('returns failure when memberId is empty', async () => {
-    const result = await generateMonthlyStatement('');
-    expect(result.success).toBe(false);
-  });
-});
 
 // ── sendMonthlyLoyaltyStatements ───────────────────────────────────────
 
