@@ -119,6 +119,109 @@ def collect_web_methods() -> dict[str, dict]:
     return methods
 
 
+# cf-sq0d (cf-hpwy detector v3): filesystem-path reference detection.
+#
+# The v2 detector closed the same-file caller blind-spot. v3 closes the
+# next layer up: a same-path-as-string caller. cf-4x7e Pass 2 chunk 3
+# (PR #1217) tripped on this when catalogImport.web.js was deleted —
+# all 5 of its webMethods were correctly DEAD per v2, but
+# scripts/validate-catalog.js and tests/validateCatalog.test.js both
+# read the file directly via fs.readFileSync as the canonical source for
+# VALID_CATEGORIES. v2 only scans for `import`/`from 'backend/...'`
+# patterns, so the filesystem-path reads slipped past.
+#
+# Patterns we now flag (any of these → file is FS-path-referenced):
+#   1. fs.readFileSync('...src/backend/<module>.web.js'...)        — Node
+#   2. path.resolve(__dirname, '...src/backend/<module>...')       — relative
+#   3. import x from '...src/backend/<module>?raw'                  — Vite ?raw
+#   4. quoted bare path in array/string: '...src/backend/<module>...' — generic
+#
+# All four collapse to the same shape: a quoted string literal containing
+# the substring `src/backend/<module>` (with or without the `.web.js`
+# suffix). One regex catches all four — we don't need to model each call
+# shape because the path string itself is the signal.
+#
+# False positive risk: a comment or doc that happens to quote the path
+# wouldn't be a real reference. Acceptable trade-off — comments referencing
+# the file are themselves a load-bearing signal that someone cared about
+# the file enough to write about it. Extreme false-positive cases (e.g.
+# CHANGELOG entries naming all 802 files) can be filtered out later by
+# adding a comment-stripping pass.
+FS_PATH_REF_RE_TEMPLATE = (
+    r"""['"`][^'"`]*src/backend/{module}(?:\.web)?\.js[^'"`]*['"`]"""
+)
+
+
+def _module_basename(file_rel: str) -> str:
+    """Return module basename (no extension) for fs-path lookup.
+
+    `src/backend/catalogImport.web.js` → `catalogImport`.
+    `src/backend/sub/foo.js`           → `foo`.
+    """
+    base = file_rel.rsplit("/", 1)[-1]
+    for suffix in (".web.js", ".js"):
+        if base.endswith(suffix):
+            return base[: -len(suffix)]
+    return base
+
+
+def collect_filesystem_path_refs(files: list[Path]) -> dict[str, list[str]]:
+    """Scan all source files for filesystem-path references to backend modules.
+
+    Returns a dict mapping module basename (e.g. 'catalogImport') → list of
+    relative source paths that reference it via a quoted filesystem path.
+    Self-references (the defining file referencing itself) are filtered —
+    only cross-file references prove an external consumer.
+    """
+    backend_modules: set[str] = set()
+    for fp in BACKEND.rglob("*.js"):
+        if not fp.is_file():
+            continue
+        backend_modules.add(_module_basename(str(fp.relative_to(ROOT))))
+
+    if not backend_modules:
+        return {}
+
+    # One compiled regex per backend module — anchored on a literal module
+    # name so backtracking is bounded.
+    patterns = {
+        mod: re.compile(FS_PATH_REF_RE_TEMPLATE.format(module=re.escape(mod)))
+        for mod in backend_modules
+    }
+
+    # Also scan files outside `src/` — scripts/, tests/ are the documented
+    # cf-4x7e blast site. Build a lazy file list that includes both src/ and
+    # the repo-root scripts/+tests/ trees if they exist.
+    scan_files: list[Path] = list(files)
+    for extra_root in ("scripts", "tests"):
+        extra_path = ROOT / extra_root
+        if not extra_path.exists():
+            continue
+        for p in extra_path.rglob("*"):
+            if not p.is_file():
+                continue
+            if p.suffix in (".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"):
+                scan_files.append(p)
+
+    refs: dict[str, list[str]] = {mod: [] for mod in backend_modules}
+    for fp in scan_files:
+        try:
+            rel = str(fp.relative_to(ROOT))
+        except ValueError:
+            continue
+        rel_basename = _module_basename(rel)
+        try:
+            text = fp.read_text(errors="ignore")
+        except OSError:
+            continue
+        for mod, pat in patterns.items():
+            if mod == rel_basename:
+                continue
+            if pat.search(text):
+                refs[mod].append(rel)
+    return refs
+
+
 def collect_cfw_files() -> list[Path]:
     if not CFW_SRC.exists():
         return []
@@ -173,6 +276,7 @@ def classify_method(
     cfw_files: list[Path],
     http_text: str,
     events_text: str,
+    fs_path_refs: dict[str, list[str]] | None = None,
 ) -> dict:
     """Return classification for this webMethod."""
     defining_file = info["file"]
@@ -229,6 +333,16 @@ def classify_method(
         if len(sample_callers) < 5:
             sample_callers.append(rel)
 
+    # cf-sq0d (v3): a file referenced by filesystem path from another module
+    # is NOT dead — deleting it would ENOENT the consumer. Surface these as a
+    # distinct bucket so the operator sees WHY the demotion happened (and can
+    # decide whether to refactor the consumer to use a proper import).
+    fs_path_consumers: list[str] = []
+    if fs_path_refs:
+        module_basename = _module_basename(defining_file)
+        fs_path_consumers = list(fs_path_refs.get(module_basename, []))
+    in_fs_path = bool(fs_path_consumers)
+
     buckets: list[str] = []
     if in_http:
         buckets.append("HTTP-EXPOSED")
@@ -238,6 +352,8 @@ def classify_method(
         buckets.append("FRONTEND")
     if in_pdocs_backend or in_same_file:
         buckets.append("INTERNAL")
+    if in_fs_path:
+        buckets.append("FILESYSTEM-PATH-REFERENCED")
     if not buckets:
         buckets = ["DEAD"]
 
@@ -285,6 +401,8 @@ def classify_method(
         "in_pages": in_pages,
         "in_other_backend": in_pdocs_backend,
         "in_same_file": in_same_file,
+        "in_filesystem_path": in_fs_path,
+        "filesystem_path_consumers": fs_path_consumers[:6],
         "sample_callers": sample_callers,
         "cfw_high_refs": cfw_high[:6],
         "cfw_low_refs": cfw_low[:6],
@@ -311,8 +429,20 @@ def main() -> int:
     cfw_files = collect_cfw_files()
     print(f"cfw src files: {len(cfw_files)}", file=sys.stderr)
 
+    # cf-sq0d (v3): scan for filesystem-path references once up front; pass
+    # the result into classify_method so each row can demote DEAD → INTERNAL
+    # when its defining file is read by path from elsewhere.
+    fs_path_refs = collect_filesystem_path_refs(files)
+    fs_path_referenced_modules = sum(1 for v in fs_path_refs.values() if v)
+    print(
+        f"backend modules referenced by filesystem-path: {fs_path_referenced_modules}",
+        file=sys.stderr,
+    )
+
     rows = [
-        classify_method(name, info, files, cfw_files, http_text, events_text)
+        classify_method(
+            name, info, files, cfw_files, http_text, events_text, fs_path_refs
+        )
         for name, info in methods.items()
     ]
 
