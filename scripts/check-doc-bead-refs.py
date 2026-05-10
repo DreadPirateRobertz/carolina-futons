@@ -143,6 +143,31 @@ def load_baseline(here: Path) -> set[str]:
     return entries
 
 
+def resolves(ref: str, known: set[str], allowlist: set[str]) -> bool:
+    """True if `ref` matches a known bead, an allowlist entry, or any
+    parent prefix when split on `.`.
+
+    cf-b8n8.fu1 (cf-byib): textual annotations like `cf-icww.followup`,
+    `cf-sq0d.fu2`, `cf-z0ht.fu1` aren't real sub-beads — they're
+    "follow-up to <parent>" notations widespread in cfutons docs. We
+    can't blanket-strip suffixes (cf-3qt.8.31 is a real sub-bead and
+    should win as exact match), so the resolver tries longest-first:
+    full ID, then progressively shorter dotted prefixes. cf-3qt.8.31
+    hits on the first try; cf-icww.followup falls back to cf-icww
+    (which exists) and is accepted.
+    """
+    if ref in known or ref in allowlist:
+        return True
+    parts = ref.split(".")
+    # Try shorter and shorter dotted prefixes (skip the full ref —
+    # already checked above).
+    for n in range(len(parts) - 1, 0, -1):
+        prefix = ".".join(parts[:n])
+        if prefix in known:
+            return True
+    return False
+
+
 def scan_repo(root: Path, known: set[str], allowlist: set[str]) -> list[str]:
     """Return a list of "<path>:<line> → <ref>" strings for unknown refs."""
     docs = root / "docs"
@@ -168,7 +193,7 @@ def scan_repo(root: Path, known: set[str], allowlist: set[str]) -> list[str]:
         stripped = strip_fenced_blocks(text)
         for match in BEAD_RE.finditer(stripped):
             ref = match.group(0)
-            if ref in known or ref in allowlist:
+            if resolves(ref, known, allowlist):
                 continue
             line = stripped[: match.start()].count("\n") + 1
             unknown.append(f"{path.relative_to(root)}:{line} → {ref}")
