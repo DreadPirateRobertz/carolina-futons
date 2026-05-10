@@ -165,6 +165,32 @@ describe('cf-0h9q · submitCommunityPhoto webMethod', () => {
     );
   });
 
+  // Trim guard: leading-whitespace imageUrl previously broke the host-axis
+  // bucket (regex /^https:.../ failed → 'unknown') AND landed leading
+  // whitespace in the CMS row. Trimming once at the top of the webMethod
+  // fixes both. Pin the host-bucket path so a future revert trips here.
+  it('trims leading whitespace on imageUrl for host-axis bucket', async () => {
+    await submitCommunityPhoto({
+      ...VALID_BODY,
+      imageUrl: '   https://cdn.example.com/uploads/p1.jpg',
+    });
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      'cdn.example.com',
+      expect.anything(),
+    );
+  });
+
+  it('trims leading whitespace on imageUrl before inserting into CMS', async () => {
+    await submitCommunityPhoto({
+      ...VALID_BODY,
+      imageUrl: '   https://cdn.example.com/uploads/p1.jpg',
+    });
+    const rows = __getInserted('CommunityPhotos');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].imageUrl).toBe('https://cdn.example.com/uploads/p1.jpg');
+  });
+
   it('returns success:false on wixData.insert throw', async () => {
     __setInsertError('CommunityPhotos', new Error('Wix Data unavailable'));
     const result = await submitCommunityPhoto(VALID_BODY);

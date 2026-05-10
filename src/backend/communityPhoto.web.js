@@ -111,6 +111,13 @@ export const submitCommunityPhoto = webMethod(
     const invalid = _validateCommunityPhoto(data);
     if (invalid) return { success: false, error: invalid.error };
 
+    // Trim once, reuse below — both the host-extraction regex and the
+    // sanitized CMS row need the leading-whitespace-stripped form.
+    // _validateCommunityPhoto only trims into a local var; without this
+    // line, a leading-space input would land 'unknown' in the host-axis
+    // bucket and a leading-space imageUrl in the CMS row.
+    const imageUrl = data.imageUrl.trim();
+
     // cf-k5vr: rate-limit on a per-client axis when the caller can supply
     // one (the post_submitCommunityPhoto wrapper extracts x-forwarded-for
     // and passes it). The previous host-axis was a coarse UGC abuse
@@ -119,7 +126,7 @@ export const submitCommunityPhoto = webMethod(
     // legitimate users while attackers under their own domain got fresh
     // buckets. Falling back to host preserves the old behavior for
     // direct webMethod callsites that don't have a request object.
-    const host = (data.imageUrl.match(/^https:\/\/([^/]+)/) || [])[1] || 'unknown';
+    const host = (imageUrl.match(/^https:\/\/([^/]+)/) || [])[1] || 'unknown';
     const rateLimitKey =
       typeof opts.rateLimitKey === 'string' && opts.rateLimitKey.length > 0
         ? opts.rateLimitKey
@@ -144,7 +151,7 @@ export const submitCommunityPhoto = webMethod(
     }
 
     const row = {
-      imageUrl: sanitize(data.imageUrl, FIELD_CAPS.imageUrl),
+      imageUrl: sanitize(imageUrl, FIELD_CAPS.imageUrl),
       customerName: sanitize(data.customerName, FIELD_CAPS.customerName),
       location: sanitize(data.location || '', FIELD_CAPS.location),
       caption: sanitize(data.caption || '', FIELD_CAPS.caption),

@@ -3475,10 +3475,10 @@ export function options_styleQuiz(request) { return response(corsPreflight(reque
 
 // ── cf-vtx5 concrete-gap wrappers ─────────────────────────────────────────
 //
-// Two of the three concrete gaps from cf-jqkg's audit are unblocked here.
-// The third (submitCommunityPhoto) is held pending Stilgar/mayor decision
-// on whether storage lives in a Wix CMS collection or external (Cloudinary
-// etc.) — tracked as a separate bead.
+// All three concrete gaps from cf-jqkg's audit are unblocked here. The
+// third (submitCommunityPhoto) was originally held pending a storage
+// decision; it later landed at post_submitCommunityPhoto below using
+// the Wix CMS CommunityPhotos collection (cf-0h9q).
 
 /**
  * @function post_recordSpinGrant
