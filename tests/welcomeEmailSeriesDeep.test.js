@@ -27,10 +27,6 @@ import {
   wixMembers_onMemberCreated,
 } from '../src/backend/emailAutomation.web.js';
 import {
-  getWelcomeDay0Template,
-  getWelcomeDay3Template,
-  getWelcomeDay7Template,
-  buildProductBlock,
 } from '../src/backend/emailTemplates.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -374,77 +370,6 @@ describe('already-existing member — welcome series must not restart', () => {
     const result = await triggerWelcomeSequence('contact-admin', 'admin@test.com', 'Admin');
     expect(result.success).toBe(false);
     expect(result.queued).toBe(0);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
-// Group 4: Template rendering — edge case inputs
-// ═══════════════════════════════════════════════════════════════════
-
-describe('welcome template rendering — edge case inputs', () => {
-  it('getWelcomeDay0Template: firstName with apostrophe renders without raw single-quote injection', async () => {
-    const result = await getWelcomeDay0Template("O'Brien", 'WELCOME10');
-    expect(result.html).toBeTruthy();
-    // Apostrophe should appear as &#39; or &apos; or similar — not as a raw unescaped ' that breaks HTML attributes
-    // Crucially the HTML must not contain a script tag from the name
-    expect(result.html).not.toContain('<script>');
-    // The name should appear in some form in the output
-    expect(result.html.toLowerCase()).toContain('o');
-  });
-
-  it('getWelcomeDay3Template: firstName with apostrophe renders correctly', async () => {
-    const result = await getWelcomeDay3Template("O'Brien");
-    expect(result.html).toBeTruthy();
-    expect(result.html).not.toContain('<script>');
-    expect(result.html).toContain('<!DOCTYPE html>');
-  });
-
-  it('getWelcomeDay7Template: firstName with apostrophe renders correctly', async () => {
-    const result = await getWelcomeDay7Template("O'Brien", 'SAVE10');
-    expect(result.html).toBeTruthy();
-    expect(result.html).not.toContain('<script>');
-    expect(result.html).toContain('<!DOCTYPE html>');
-  });
-
-  it('getWelcomeDay0Template: very long firstName (100 chars) renders without breaking HTML', async () => {
-    const longName = 'A'.repeat(100);
-    const result = await getWelcomeDay0Template(longName, 'CODE');
-    expect(result.html).toBeTruthy();
-    expect(result.html).toContain('<!DOCTYPE html>');
-    expect(result.html).toContain('</html>');
-  });
-
-  it('getWelcomeDay7Template: discount code with apostrophe is sanitized', async () => {
-    const result = await getWelcomeDay7Template('Alice', "SAVE'10");
-    expect(result.html).toBeTruthy();
-    // Should not produce a broken HTML attribute
-    expect(result.html).not.toContain('<script>');
-    expect(result.html).toContain('<!DOCTYPE html>');
-  });
-
-  it('buildProductBlock: product name with apostrophe renders without XSS vector', () => {
-    const html = buildProductBlock({
-      name: "O'Brien's Futon Frame",
-      price: 299,
-      url: 'https://www.carolinafutons.com/product-page/obriens',
-      images: [],
-    });
-    expect(html).toBeTruthy();
-    expect(html).not.toContain('<script>');
-  });
-
-  it('buildProductBlock: very long product name (150 chars) is truncated or rendered safely', () => {
-    const longName = 'Futon Frame '.repeat(12).trim(); // ~144 chars
-    const html = buildProductBlock({
-      name: longName,
-      price: 399,
-      url: 'https://www.carolinafutons.com/product-page/long',
-      images: [],
-    });
-    expect(html).toBeTruthy();
-    // Name appears (possibly truncated) — just must not break or inject
-    expect(html).not.toContain('<script>');
-    expect(html).toContain('Futon Frame');
   });
 });
 

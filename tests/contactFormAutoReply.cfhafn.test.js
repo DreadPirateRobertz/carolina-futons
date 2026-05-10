@@ -53,9 +53,12 @@ const validSubmission = () => ({
 describe('cf-hafn · contact_form_auto_reply template registration', () => {
   it('exposes contact_form_auto_reply in the template registry with the right variables', async () => {
     // The internal-only test export lets us pin the template shape so a
-    // future maintainer doesn't drop the registration silently.
-    const { getTemplate } = await import('../src/backend/emailTemplates.web.js');
-    const meta = await getTemplate('contact_form_auto_reply');
+    // future maintainer doesn't drop the registration silently. Reads the
+    // registry directly (cf-q8m2 retired the getTemplate webMethod wrapper
+    // — the registry data itself is unchanged and this test still verifies
+    // the same contract).
+    const { _TEMPLATE_REGISTRY } = await import('../src/backend/emailTemplates.web.js');
+    const meta = _TEMPLATE_REGISTRY['contact_form_auto_reply'];
     expect(meta).toBeTruthy();
     expect(meta.id).toBe('contact_form_auto_reply');
     expect(meta.category).toBe('transactional');
