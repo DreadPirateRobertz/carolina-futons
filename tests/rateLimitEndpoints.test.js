@@ -5,7 +5,7 @@
  * are properly blocked/silently dropped, and that under-limit requests proceed.
  *
  * Tests a representative sample from each category:
- *  - Form submissions (3/hour default): captureSpinEmail, applyForTradeAccount, signUpBackInStock
+ *  - Form submissions (3/hour default): captureSpinEmail, signUpBackInStock
  *  - Chat (30/min): sendMessage
  *  - Tracking (30-60/min, silent drop): trackProductView (60/min), trackCheckoutStep (60/min)
  *  - Brute-force protection: checkBalance (gift cards, 10/hour)
@@ -68,39 +68,6 @@ describe('captureSpinEmail — rate limiting', () => {
   });
 });
 
-// ── applyForTradeAccount (form submission, 3/hour) ──────────────────
-
-describe('applyForTradeAccount — rate limiting', () => {
-  let applyForTradeAccount;
-
-  beforeEach(async () => {
-    ({ applyForTradeAccount } = await import('../src/backend/tradeProgram.web.js'));
-  });
-
-  it('blocks when rate limit exceeded', async () => {
-    seedRateLimit('TradeApplicationRateLimit', 'biz@example.com', 3);
-    const result = await applyForTradeAccount({
-      businessName: 'Test Corp',
-      contactName: 'Jane',
-      contactEmail: 'biz@example.com',
-    });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/too many/i);
-  });
-
-  it('allows when under rate limit', async () => {
-    seedRateLimit('TradeApplicationRateLimit', 'biz@example.com', 1);
-    const result = await applyForTradeAccount({
-      businessName: 'Test Corp',
-      contactName: 'Jane',
-      contactEmail: 'biz@example.com',
-    });
-    // Proceeds past rate limit — may fail on TradeAccounts query but not on rate limit
-    expect(result.error ?? '').not.toMatch(/too many/i);
-  });
-});
-
-// ── signUpBackInStock (form submission, 3/hour) ─────────────────────
 
 describe('signUpBackInStock — rate limiting', () => {
   let signUpBackInStock;

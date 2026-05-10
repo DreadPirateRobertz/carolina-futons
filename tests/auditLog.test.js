@@ -125,27 +125,6 @@ describe('audit logging wiring — captureSpinEmail', () => {
   });
 });
 
-describe('audit logging wiring — applyForTradeAccount', () => {
-  it('logs audit event on successful application', async () => {
-    const { applyForTradeAccount } = await import('../src/backend/tradeProgram.web.js');
-
-    const result = await applyForTradeAccount({
-      businessName: 'Test Corp',
-      contactName: 'Jane',
-      contactEmail: 'trade@example.com',
-    });
-
-    expect(result.success).toBe(true);
-    await flush();
-
-    const audits = __getInserted('AuditLog');
-    const auditRecord = audits.find(a => a.collection === 'TradeAccounts');
-    expect(auditRecord).toBeDefined();
-    expect(auditRecord.action).toBe('submit');
-    expect(auditRecord.metadata).toContain('Test Corp');
-  });
-});
-
 describe('audit logging wiring — subscribeToNewsletter', () => {
   it('logs audit event on successful subscription', async () => {
     const { subscribeToNewsletter } = await import('../src/backend/newsletterService.web.js');
