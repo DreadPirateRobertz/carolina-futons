@@ -1,5 +1,19 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
+
+## Session 2026-05-10 — Wave 12
+| Done | Detail |
+|------|--------|
+| 🔗 PR #540 preview | Sent to mayor for Stilgar: https://carolina-futons-web-git-cf-jo07-dreadpiraterobertzs-projects.vercel.app |
+| ✅ PR #1254 MERGED | morgott: cf-4x7e Pass 2 chunk 16 — warrantyService KEEP-PARTIAL (-770 LOC). PASS 2 COMPLETE: 128 methods, -29,430 LOC |
+| ✅ cf-4x7e.1 CLOSED | Pass 2 matrix regen complete |
+| 🆕 cf-ukc6 FILED | P0 STANDING ORDER: Vercel build credit conservation — batch cfw merges, no WIP pushes. Relayed to all crew. |
+| 🆕 cf-r9r3 FILED | P1: scroll jitter + shrunken header shows white not bears. blaidd after PR #540. |
+| 🆕 cf-52uc FILED | P1: 'Carolina Futons' white text → Carolina blue sweep. Single PR (Vercel credit conservation). |
+| ✅ cf-dbw9 UPDATED | Branch protection removed from scope — Stilgar will self-handle. millicent: dependabot re-enable only. |
+| ⏳ PR #540 | lint-typecheck-test pending (blaidd fix push). e2e ✅. Waiting Stilgar visual confirm. |
+| ⏳ PR #542 | cf-xqc0 radahn: lint ✅, e2e pending. No visual needed — merge when e2e clears. |
+| 📨 rennala | cf-uwfw Velo wrappers verified — triggerWelcomeSeries wired, cartRecovery stub-accept shape-validates. Final gate: cfw e2e fixture-OFF post Wix CLI publish. |
 
 ## Session 2026-05-10 — Wave 11 (context resume)
 | Done | Detail |
@@ -130,7 +144,9 @@
 | cf-1eb5 | P1 | V9 full-header bear screenshot review before merge |
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
-| cf-dbw9 | P1 | Branch protection on cfw/main MISSING — wire before cutover (security-audit-2026-05-10.md) |
+| cf-r9r3 | P1 | Scroll jitter + shrunken header bears+logo — blaidd after #540 merges |
+| cf-52uc | P1 | Global white CF text → Carolina blue sweep (single batch PR) |
+| PR #540 | P1 | Logo placements visual confirm — preview sent, waiting response |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
 | PR #515 (cf-1eb5) | P1 | r4 IN PROGRESS — Stilgar: orange text + don't cover bears + v9 style. blaidd dispatched. |
 | cf-96m8 | P2 | Footer LivingSky always-night — miquella dispatched |
