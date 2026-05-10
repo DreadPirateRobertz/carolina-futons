@@ -1,14 +1,24 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:40 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:58 MT**
+
+## Session 2026-05-10 — Wave 7
+| Done | Detail |
+|------|--------|
+| ✅ PR #1215 MERGED | cf-quba.fu1 — pinterestCatalogSync.generatePinContent added to allowlist |
+| ✅ cf-jqkg CLOSED | PRs #1160+#1178+#1188 all merged — stale bead |
+| ✅ cf-mgnh CLOSED | PRs #1178+#1188 merged — stale bead |
+| 🔄 PR #1217 CI | cf-4x7e chunk 3 — productPassport (-1074 LOC, 6 methods). catalogImport DEFERRED → cf-dtu6+cf-sq0d filed |
+| 🚨 cf-1eb5 r3 feedback | Stilgar: POSITIVE. R4 needed: (a) orange text, (b) don't cover bears, (c) match v9 style → blaidd dispatched |
+| 🆕 cf-96m8 FILED | Footer LivingSky always-night illustration (Stilgar request). miquella dispatched. |
+| 🔄 cf-1216 CONFLICT | godfrey rebase needed — progress-report.md conflict |
 
 ## Session 2026-05-10 — Wave 6
 | Done | Detail |
 |------|--------|
 | ✅ PR #1213 MERGED | cf-4x7e chunk 2 — tradeProgram.web.js deleted (-2174 LOC, 13 methods, morgott) |
-| ✅ PR #1214 MERGED | cf-38bi WWEX freight feasibility brief (miquella). Rec: defer until cf-ph3g.p2 |
-| ✅ cf-38bi CLOSED | WWEX brief accepted, defer decision recorded |
-| 🔄 cf-4x7e chunk 3 | morgott GREEN-LIT — productPassport + catalogImport (11 methods) |
-| 🔄 PR #515 (cf-1eb5) | r3 ALL CI GREEN. Screenshot comparison ✅ — menu integrated, copy correct. Awaiting Stilgar visual sign-off. |
+| ✅ PR #1214 MERGED | cf-38bi WWEX freight feasibility brief (miquella). Rec: defer until cf-ph3g.p2 lands |
+| ✅ cf-38bi CLOSED | Bead closed post-merge |
+| ✅ PR #515 r3 screenshot | Menu integrated ✅ copy correct ✅ — sent to Stilgar via mayor |
 
 ## Session 2026-05-09 — Wave 4/5
 | Done | Detail |
@@ -61,7 +71,8 @@
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
-| PR #515 (cf-1eb5) | P1 | r3 ALL GREEN. Menu integrated ✅ copy correct ✅ — awaiting Stilgar visual confirm to merge |
+| PR #515 (cf-1eb5) | P1 | r4 IN PROGRESS — Stilgar: orange text + don't cover bears + v9 style. blaidd dispatched. |
+| cf-96m8 | P2 | Footer LivingSky always-night — miquella dispatched |
 | PR #1201 (cf-r1cl) | P1 | Add pin-head-sha to required status checks after merge |
 | cfw-nsk FB redirect | P2 | Still reproducing? Need HAR if yes, close bead if gone |
 
