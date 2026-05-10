@@ -27,36 +27,10 @@ describe('getReturnStats uses parallel queries', () => {
   });
 });
 
-// ── Issue #6: generateReferralCode collision risk ───────────────────
-
-describe('generateReferralCode uniqueness', () => {
-  beforeEach(() => {
-    resetData();
-    __setMember({ _id: 'member-abc-1234-5678', loginEmail: 'test@test.com' });
-  });
-
-  it('generates a code with random component', async () => {
-    const { generateReferralCode } = await import('../src/backend/dataService.web.js');
-    const result1 = await generateReferralCode();
-    expect(result1.success).toBe(true);
-    expect(result1.code).toMatch(/^CF-/);
-    // Code should be longer than just 8 chars from memberId to include randomness
-    expect(result1.code.length).toBeGreaterThan(5);
-  });
-
-  it('returns existing code if member already has one', async () => {
-    __seed('ReferralCodes', [{
-      _id: 'ref-1',
-      code: 'CF-EXISTING1',
-      memberId: 'member-abc-1234-5678',
-    }]);
-
-    const { generateReferralCode } = await import('../src/backend/dataService.web.js');
-    const result = await generateReferralCode();
-    expect(result.success).toBe(true);
-    expect(result.code).toBe('CF-EXISTING1');
-  });
-});
+// Issue #6 (generateReferralCode collision risk) — the parallel
+// dataService.generateReferralCode was retired in cf-4x7e Pass 2 chunk 6;
+// the live referralService.web.js::getReferralLink path is the canonical
+// referral-code surface and is covered by tests/referralService*.test.js.
 
 // ── Issue #8: validateId ignores maxLen parameter ───────────────────
 
