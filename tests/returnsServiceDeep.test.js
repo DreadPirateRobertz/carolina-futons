@@ -3,7 +3,7 @@
  * rate limiting, quantity clamping, type coercion, and immutability.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __seed, __onInsert, __onUpdate, __reset as resetData } from './__mocks__/wix-data.js';
+import wixData, { __seed, __onInsert, __onUpdate, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 
 vi.mock('backend/ups-shipping.web', () => ({
@@ -40,10 +40,10 @@ import {
   getAdminReturns,
   getReturnStats,
   processRefund,
-  _rateLimitMap,
   _checkRateLimit,
   RATE_LIMIT_MAX,
   RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_COLLECTION,
 } from '../src/backend/returnsService.web.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -107,7 +107,8 @@ function returnRecord(overrides = {}) {
 beforeEach(() => {
   resetData();
   resetMember();
-  _rateLimitMap.clear();
+  // cf-3ldu.1: rate limit is now wixData-backed in `ReturnsRateLimit`.
+  // resetData() wipes every collection so a separate clear is unnecessary.
   __setMember(MEMBER);
 });
 
@@ -445,9 +446,9 @@ describe('getAdminReturns — limit edge cases', () => {
   });
 });
 
-// ── _checkRateLimit — window expiry ─────────────────────────────────
+// ── _checkRateLimit — wixData-backed (cf-3ldu.1) ─────────────────────
 
-describe('_checkRateLimit — sliding window edge cases', () => {
+describe('_checkRateLimit — DB-backed window (cf-3ldu.1)', () => {
   it('RATE_LIMIT_WINDOW_MS is 60 seconds', () => {
     expect(RATE_LIMIT_WINDOW_MS).toBe(60_000);
   });
@@ -456,23 +457,51 @@ describe('_checkRateLimit — sliding window edge cases', () => {
     expect(RATE_LIMIT_MAX).toBe(5);
   });
 
-  it('clears stale entries when map exceeds 1000 keys', () => {
-    // Fill map with 1001 stale entries
-    const past = Date.now() - RATE_LIMIT_WINDOW_MS - 1;
-    for (let i = 0; i < 1001; i++) {
-      _rateLimitMap.set(`stale-${i}`, { timestamps: [past] });
-    }
-    // Next call triggers cleanup
-    _checkRateLimit('trigger-cleanup@test.com');
-    // Stale entries should have been removed
-    expect(_rateLimitMap.size).toBeLessThan(1001);
-    // The trigger key should still exist
-    expect(_rateLimitMap.has('trigger-cleanup@test.com')).toBe(true);
+  it('uses the ReturnsRateLimit collection', () => {
+    expect(RATE_LIMIT_COLLECTION).toBe('ReturnsRateLimit');
   });
 
-  it('uses "unknown" key for empty string identifier', () => {
-    _checkRateLimit('');
-    expect(_rateLimitMap.has('unknown')).toBe(true);
+  it('persists each call as a row in the rate-limit collection', async () => {
+    expect(await _checkRateLimit('persist@test.com')).toBe(true);
+    // The shared helper hashes the key before storing — assert at least
+    // one row landed without binding to the hash output.
+    const { items } = await wixData.query(RATE_LIMIT_COLLECTION).find();
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items[0].count).toBeGreaterThanOrEqual(1);
+  });
+
+  it('returns false (rate-limited) on the 6th call within the window', async () => {
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      expect(await _checkRateLimit('burst@test.com')).toBe(true);
+    }
+    expect(await _checkRateLimit('burst@test.com')).toBe(false);
+  });
+
+  it('persists count across calls — counter lives in the CMS row, not module state (cf-3ldu.1 cold-start property)', async () => {
+    // The whole point of cf-3ldu.1: the in-memory Map version reset to
+    // empty on cold start. With wixData persistence, the counter lives
+    // in the CMS row. Assert the row count == RATE_LIMIT_MAX after a
+    // burst so a future regression to module-level state fails this.
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      await _checkRateLimit('persist-counter@test.com');
+    }
+    const { items } = await wixData.query(RATE_LIMIT_COLLECTION).find();
+    const row = items.find((r) => r.count >= RATE_LIMIT_MAX);
+    expect(row).toBeDefined();
+    expect(row.count).toBe(RATE_LIMIT_MAX);
+  });
+
+  it('regression guard: returnsService no longer exports an in-memory _rateLimitMap', async () => {
+    const mod = await import('../src/backend/returnsService.web.js');
+    expect(mod._rateLimitMap).toBeUndefined();
+  });
+
+  it('treats empty identifier as the "unknown" key (kept from prior contract)', async () => {
+    await _checkRateLimit('');
+    const before = (await wixData.query(RATE_LIMIT_COLLECTION).find()).items;
+    await _checkRateLimit('');
+    const after = (await wixData.query(RATE_LIMIT_COLLECTION).find()).items;
+    expect(after.length).toBe(before.length); // Same row, count incremented
   });
 });
 

@@ -36,7 +36,6 @@ import {
   getAdminReturns,
   getReturnStats,
   processRefund,
-  _rateLimitMap,
 } from '../src/backend/returnsService.web.js';
 
 // ── Fixtures ────────────────────────────────────────────────────────
@@ -106,7 +105,7 @@ describe('Returns Portal Integration', () => {
   beforeEach(() => {
     resetData();
     resetMember();
-    _rateLimitMap.clear();
+    // cf-3ldu.1: rate limit is wixData-backed; resetData() wipes it.
     __setMember(MEMBER);
     __seed('Stores/Orders', [recentOrder()]);
     __seed('Returns', []);

@@ -31,41 +31,37 @@ import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const COLLECTION = 'Returns';
 const RETURN_WINDOW_DAYS = 30;
 const MAX_DETAILS_LEN = 2000;
 
 // ── Rate Limiting ────────────────────────────────────────────────────
-// Sliding window: max 5 attempts per email per 60 seconds.
-// Prevents order enumeration via brute-force lookupReturn/submitGuestReturn.
+// cf-3ldu.1 (P1): replaced an in-memory Map with the shared wixData-backed
+// `checkRateLimit` helper. Wix Velo serverless functions are stateless —
+// cold-starts reset module-level state, scale-out shards it. The prior
+// in-memory implementation was effectively non-functional under any real
+// traffic and could be bypassed by timing calls across cold-starts. The
+// shared helper persists counters in a CMS collection keyed on a hashed
+// identifier with a sliding window.
+//
+// Window: max 5 attempts per email per 60 seconds.
+// Collection: `ReturnsRateLimit` (wixData) — schema: `key: text, count:
+// number, windowStart: dateTime`.
+// Fail-open: helper allows on DB error to avoid blocking legitimate users
+// on infrastructure issues (logged via the helper's logError).
+const RATE_LIMIT_COLLECTION = 'ReturnsRateLimit';
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
-const _rateLimitMap = new Map();
 
-function _checkRateLimit(identifier) {
-  const now = Date.now();
+async function _checkRateLimit(identifier) {
   const key = identifier || 'unknown';
-  let entry = _rateLimitMap.get(key);
-  if (!entry) {
-    entry = { timestamps: [] };
-    _rateLimitMap.set(key, entry);
-  }
-  // Evict expired timestamps
-  entry.timestamps = entry.timestamps.filter(t => now - t < RATE_LIMIT_WINDOW_MS);
-  if (entry.timestamps.length >= RATE_LIMIT_MAX) {
-    return false; // rate limited
-  }
-  entry.timestamps.push(now);
-  // Periodic cleanup: remove stale entries when map exceeds 1000 keys
-  if (_rateLimitMap.size > 1000) {
-    for (const [k, v] of _rateLimitMap) {
-      if (v.timestamps.length === 0 || now - v.timestamps[v.timestamps.length - 1] > RATE_LIMIT_WINDOW_MS) {
-        _rateLimitMap.delete(k);
-      }
-    }
-  }
-  return true; // allowed
+  const result = await checkRateLimit(RATE_LIMIT_COLLECTION, key, {
+    max: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+  });
+  return result.allowed;
 }
 
 const VALID_REASONS = [
@@ -379,7 +375,7 @@ export const lookupReturn = webMethod(
       }
 
       // Rate limit by email to prevent order enumeration
-      if (!_checkRateLimit(cleanEmail)) {
+      if (!(await _checkRateLimit(cleanEmail))) {
         console.warn('[returnsService] Rate limit exceeded for lookupReturn:', cleanEmail);
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
@@ -449,7 +445,7 @@ export const submitGuestReturn = webMethod(
       }
 
       // Rate limit by email to prevent order enumeration
-      if (!_checkRateLimit(cleanEmail)) {
+      if (!(await _checkRateLimit(cleanEmail))) {
         console.warn('[returnsService] Rate limit exceeded for submitGuestReturn:', cleanEmail);
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
@@ -944,5 +940,7 @@ function formatAdminReturn(record) {
   };
 }
 
-// Test-only exports
-export { _rateLimitMap, _checkRateLimit, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS };
+// Test-only exports.
+// cf-3ldu.1: `_rateLimitMap` retired (in-memory Map removed). `_checkRateLimit`
+// is now an async wixData-backed wrapper.
+export { _checkRateLimit, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_COLLECTION };
