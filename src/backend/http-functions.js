@@ -2838,9 +2838,10 @@ export function options_mailingListSignups(request) {
 // ── Public Analytics Event Tracking ─────────────────────────────────────────
 // URL: POST https://www.carolinafutons.com/_functions/trackCustomEvent
 // Receives events from the cfw Next.js host (server components, Server Actions).
-// Mirror of the customEvents/trackCustomEvent webMethod which is unreachable
+// Wraps the customEvents/trackCustomEvent webMethod which is unreachable
 // from external callers (Wix webMethods only run within the Wix site runtime).
-// Rate-limited: 30 events/min per source (matches webMethod limit). cf-3qt.5.3
+// Rate-limited: 30 events/min per source (enforced inside the webMethod).
+// cf-3qt.5.3 (initial wrapper); cf-lsat (delegate to webMethod for parity).
 
 export async function post_trackCustomEvent(request) {
   const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json' });
@@ -2859,36 +2860,44 @@ export async function post_trackCustomEvent(request) {
       return badRequest({ body: JSON.stringify({ success: false, error: 'missing_event_name' }), headers: JSON_HEADERS });
     }
 
-    const cleanName = sanitize(eventName, 100)
-      .replace(/[^a-zA-Z0-9_]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '')
-      .toLowerCase();
-    if (!cleanName) {
+    // cf-lsat: if the event name sanitises to empty (only special chars),
+    // reject at the boundary. The webMethod doesn't do this — it would happily
+    // record `eventType: ''` — so the wrapper guards it before delegating.
+    if (eventName.replace(/[^a-zA-Z0-9_]/g, '').length === 0) {
       return badRequest({ body: JSON.stringify({ success: false, error: 'invalid_event_name' }), headers: JSON_HEADERS });
     }
 
     const safeParams = params && typeof params === 'object' && !Array.isArray(params) ? params : {};
 
     // Guard: public endpoint — cap payload to prevent unbounded storage writes.
+    // Enforced at the HTTP boundary (the webMethod doesn't size-cap because it
+    // trusts in-runtime callers); 8 KB caps a single event's payload at a
+    // reasonable upper bound for analytics use.
     if (JSON.stringify(safeParams).length > 8192) {
       return badRequest({ body: JSON.stringify({ success: false, error: 'payload_too_large' }), headers: JSON_HEADERS });
     }
 
-    const source = sanitize(String(safeParams.source || 'custom'), 50);
+    // cf-lsat: delegate to the webMethod for single-source-of-truth on event-
+    // name canonicalization (EVENT_NAME_MAP) + rate limiting + AnalyticsEvents
+    // schema. The previous inline implementation drifted from the webMethod —
+    // alias names like `quiz_start` landed raw instead of the canonical
+    // `quiz_started`, polluting the analytics table. Closes the cf-sq0d.fu2
+    // GAP-CFW-WANTS detector signal as a side effect (the webMethod now has a
+    // real symbol-level caller from http-functions.js).
+    const { trackCustomEvent } = await import('backend/customEvents.web');
+    const result = await trackCustomEvent(eventName, safeParams);
 
-    const { checkRateLimit } = await import('backend/utils/rateLimit');
-    const { allowed } = await checkRateLimit('CustomEventRateLimit', source, { max: 30, windowMs: 60_000 });
-    if (!allowed) {
-      return response({ status: 429, body: JSON.stringify({ success: false, error: 'rate_limited' }), headers: JSON_HEADERS });
+    if (result && result.success === false) {
+      // The webMethod returns {success:false} for both rate-limit hits and
+      // missing eventName. Here we know eventName is present (validated above),
+      // so a soft-fail is rate-limit. Surface as 429 so the cfw client can
+      // distinguish from a boundary-reject 400.
+      return response({
+        status: 429,
+        body: JSON.stringify({ success: false, error: 'rate_limited' }),
+        headers: JSON_HEADERS,
+      });
     }
-
-    await insertAnalyticsEvent({
-      memberId: safeParams.memberId || null,
-      eventType: cleanName,
-      source,
-      payload: safeParams,
-    });
 
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
