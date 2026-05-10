@@ -33,6 +33,11 @@ import {
   sendDeliveryConfirmation,
   sendABEmail,
 } from '../src/backend/emailService.web.js';
+// Stilgar 2026-05-10 wired TEMPLATE_ID_MAP — human-readable template
+// names ('order_confirmation' etc) now resolve to Wix CRM dashboard IDs
+// ('VJBTjjZ' etc) at dispatch time. Use the same resolver in test
+// assertions so the suite tracks any future ID rotation automatically.
+import { resolveTemplateId } from '../src/backend/emailTemplates.web.js';
 
 const baseOrder = {
   contactId: 'contact-buyer-1',
@@ -59,7 +64,7 @@ describe('sendOrderConfirmation — branch coverage', () => {
     expect(res).toEqual({ success: true });
     const log = __getEmailLog();
     expect(log).toHaveLength(1);
-    expect(log[0].templateId).toBe('order_confirmation');
+    expect(log[0].templateId).toBe(resolveTemplateId('order_confirmation'));
     expect(log[0].contactId).toBe('contact-buyer-1');
     const v = log[0].options.variables;
     expect(v.firstName).toBe('Casey');
@@ -130,7 +135,7 @@ describe('sendShippingNotification — branch coverage', () => {
     const res = await sendShippingNotification(baseShip);
     expect(res).toEqual({ success: true });
     const log = __getEmailLog();
-    expect(log[0].templateId).toBe('order_shipped');
+    expect(log[0].templateId).toBe(resolveTemplateId('order_shipped'));
     const v = log[0].options.variables;
     expect(v.trackingNumber).toBe('1Z999AA10123456784');
     expect(v.trackingUrl).toBe('https://ups.com/track?n=1Z999...');
@@ -268,7 +273,7 @@ describe('sendDeliveryConfirmation — branch coverage', () => {
     const res = await sendDeliveryConfirmation(baseDelivery);
     expect(res).toEqual({ success: true });
     const log = __getEmailLog();
-    expect(log[0].templateId).toBe('delivery_confirmation');
+    expect(log[0].templateId).toBe(resolveTemplateId('delivery_confirmation'));
     expect(log[0].options.variables.firstName).toBe('Sam');
     expect(log[0].options.variables.orderNumber).toBe('CF-44444');
   });
