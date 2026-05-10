@@ -1,5 +1,17 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 04:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 04:45 MT**
+
+## Session 2026-05-10 — Wave 26
+| Done | Detail |
+|------|--------|
+| ✅ PRs #1268 #1270 #1272 #1273 #1274 MERGED | Doc batch: cutover checklist, cron audit, Lighthouse baseline, khqd-cfw deferred note, mobile smoke (10/10 PASS). |
+| ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged → cf-x0ks filed for godfrey. |
+| 🔄 PR #1271 | Coverage R5 +38 tests (+0.20-0.21%). test(22) running. Gates PR #1261 (cf-xpqf). |
+| 🔄 PR #1261 | Still blocked on coverage. Will merge once #1271 lands and #1261 rebases. |
+| ✅ 5 branches merged tonight | 1268+1269+1270+1272+1273+1274+1267 = 7 doc merges. Total night: 15+ PRs. |
+
+**Blaidd confirmed**: cf-01z3 (scroll jitter fix) done locally with RAF coalescing + 30px hysteresis deadband. Holds on batch window.
+**Miquella holds 5 branches**: cf-bbo8 / cf-4f6l / cf-2r02 / cf-v8jj / cf-5f9o — all ready for BATCH WINDOW OPEN.
 
 ## Session 2026-05-10 — Wave 25
 | Done | Detail |
