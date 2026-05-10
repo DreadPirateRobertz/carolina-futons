@@ -17,7 +17,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
-import { triggeredEmails, contacts } from 'wix-crm-backend';
+import { triggeredEmails } from 'wix-crm-backend';
+import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 
@@ -271,12 +272,15 @@ async function sendGiftCardEmails(data) {
 
   // Send purchaser confirmation first — independent of recipient
   try {
-    const purchaserContact = await contacts.appendOrCreateContact({
-      emails: [{ email: data.purchaserEmail }],
-    });
+    // cf-xdji item-2: shared CRM-upsert helper. Returns null on validation
+    // or upstream failure — we throw so the existing catch+log path
+    // surfaces it as a "purchaser email not sent" outcome (recipient leg
+    // still runs independently below).
+    const purchaserContactId = await _resolveContactIdInternal(data.purchaserEmail);
+    if (!purchaserContactId) throw new Error('resolveContactId returned null for purchaser');
     await triggeredEmails.emailContact(
       'gift_card_purchase_confirmation',
-      purchaserContact.contactId,
+      purchaserContactId,
       {
         variables: {
           code: data.code,
@@ -294,12 +298,12 @@ async function sendGiftCardEmails(data) {
 
   // Send recipient notification — independent of purchaser
   try {
-    const recipientContact = await contacts.appendOrCreateContact({
-      emails: [{ email: data.recipientEmail }],
-    });
+    // cf-xdji item-2: shared CRM-upsert helper.
+    const recipientContactId = await _resolveContactIdInternal(data.recipientEmail);
+    if (!recipientContactId) throw new Error('resolveContactId returned null for recipient');
     await triggeredEmails.emailContact(
       'gift_card_received',
-      recipientContact.contactId,
+      recipientContactId,
       {
         variables: {
           code: data.code,

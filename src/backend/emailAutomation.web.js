@@ -42,6 +42,7 @@ import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
 import { sendOrderConfirmation, sendFreightShippingNotification, sendShippingNotification, sendDeliveryConfirmation } from 'backend/emailService.web';
+import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 import { buildFreightTrackingPayload } from 'backend/freightTracking.web';
 import { scheduleSurvey } from 'backend/surveyService.web';
 import { _getReferralLinkForMember } from 'backend/referralService.web';
@@ -506,6 +507,16 @@ export const triggerWelcomeSeries = webMethod(
         console.warn('[emailAutomation] Welcome discount unavailable:', e.message);
       }
 
+      // cf-xdji item-2: resolve a CRM contactId before queueing so
+      // processQueue's send step has a non-empty recipientContactId. Pre-fix
+      // this path queued with '' and every welcome row failed at send time
+      // with "No contact ID for recipient" (cf-icww F1).
+      const cleanContactId = await _resolveContactIdInternal(cleanEmail, cleanName);
+      if (!cleanContactId) {
+        console.warn('[emailAutomation] triggerWelcomeSeries skipped — resolveContactId returned null for', cleanEmail);
+        return { success: false, queued: 0 };
+      }
+
       const abVariant = selectABVariant(cleanEmail);
       const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
       const now = new Date();
@@ -523,7 +534,7 @@ export const triggerWelcomeSeries = webMethod(
         await queueEmail({
           templateId: step.templateId,
           recipientEmail: cleanEmail,
-          recipientContactId: '',
+          recipientContactId: cleanContactId,
           variables,
           sequenceType: 'welcome',
           sequenceStep: step.step,

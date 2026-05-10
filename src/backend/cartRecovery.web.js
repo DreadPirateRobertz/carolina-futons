@@ -15,7 +15,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { triggeredEmails, contacts } from 'wix-crm-backend';
+import { triggeredEmails } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
 import { findMemberRecord, computeTierInfo } from 'backend/gamificationCore.web';
@@ -205,16 +205,15 @@ export const sendRecoveryEmail = webMethod(
         console.warn('[cartRecovery] Coupon generation failed for cartId:', cartId, '— sending email without discount:', couponResult.message);
       }
 
-      let contactId;
-      try {
-        const contactResult = await contacts.appendOrCreateContact({ emails: [{ email: cartEmail }] });
-        contactId = contactResult?.contactId;
-      } catch (crmErr) {
-        console.error('[cartRecovery] CRM appendOrCreateContact failed for cartId:', cartId, '— error:', crmErr.message);
-        return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
-      }
+      // cf-xdji item-2: route through the shared resolveContactId helper so
+      // every queue site has a single CRM-upsert source of truth. Helper
+      // returns null on validation/upstream failure (logged with the email);
+      // we surface that as the same caller-facing error string as before
+      // to preserve cron-runner / dashboard observability.
+      const { _resolveContactIdInternal } = await import('backend/contacts/contactResolver.web');
+      const contactId = await _resolveContactIdInternal(cartEmail);
       if (!contactId) {
-        console.error('[cartRecovery] appendOrCreateContact returned no contactId for cartId:', cartId);
+        console.error('[cartRecovery] resolveContactId returned null for cartId:', cartId);
         return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
       }
 

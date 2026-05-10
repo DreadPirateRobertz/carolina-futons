@@ -131,6 +131,10 @@ async function upsertContact(contact) {
  * Enqueue swatch nurture sequence emails.
  */
 async function enqueueSwatch({ contactId, email, swatchNames, productSlug }) {
+  // cf-xdji item-2: caller is responsible for ensuring contactId is non-empty.
+  // We assert here so a future regression at the call site is loud rather than
+  // silently queueing a row that would fail at processQueue time.
+  if (!contactId) throw new Error('enqueueSwatch requires a non-empty contactId');
   const now = new Date();
   await Promise.all(
     SWATCH_NURTURE.map(({ step, templateId, delayHours }) => {
@@ -138,7 +142,7 @@ async function enqueueSwatch({ contactId, email, swatchNames, productSlug }) {
       return wixData.insert('EmailQueue', {
         templateId,
         recipientEmail: email,
-        recipientContactId: contactId || '',
+        recipientContactId: contactId,
         variables: {
           swatchNames,
           swatchCount: swatchNames.length,
@@ -211,16 +215,25 @@ export const submitSwatchRequest = webMethod(
       const inserted = await wixData.insert('SwatchRequests', record);
 
       // Enqueue nurture emails — log failure but don't fail the request
-      // (CMS record is already saved; email can be retried independently)
-      try {
-        await enqueueSwatch({
-          contactId: contactId || '',
-          email: contact.email,
-          swatchNames,
-          productSlug: cleanSlug || null,
-        });
-      } catch (emailErr) {
-        console.error('[swatchRequest] Failed to enqueue nurture emails:', emailErr);
+      // (CMS record is already saved; email can be retried independently).
+      // cf-xdji item-2: skip queueing entirely when contactId is empty —
+      // the queue row would just fail at processQueue time with "No contact
+      // ID for recipient" and consume retry budget. Without a contactId the
+      // nurture sequence can't deliver, so a missing-contact warn is the
+      // honest signal.
+      if (contactId) {
+        try {
+          await enqueueSwatch({
+            contactId,
+            email: contact.email,
+            swatchNames,
+            productSlug: cleanSlug || null,
+          });
+        } catch (emailErr) {
+          console.error('[swatchRequest] Failed to enqueue nurture emails:', emailErr);
+        }
+      } else {
+        console.warn('[swatchRequest] Skipping swatch nurture queue — upsertContact returned no contactId for', contact.email);
       }
 
       return { success: true, requestId: inserted._id };
