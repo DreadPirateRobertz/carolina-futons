@@ -27,7 +27,6 @@ import { getDeliveryZone as _getDeliveryZone } from 'backend/deliveryZoneService
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 import { receiveGamificationEvent, getActiveChallenges as _getActiveChallengesWebMethod, recordChallengeProgress as _recordChallengeProgressWebMethod } from 'backend/gamificationEventReceiver.web';
-import { getLeaderboard as _getLeaderboardWebMethod } from 'backend/loyaltyService.web';
 export { post_getLeaderboard } from 'backend/leaderboard-http';
 import { validateIncomingEvent, logEventTrace } from 'backend/utils/eventBus';
 import { runGarbageCollection } from 'backend/cmsGarbageCollector.web';
@@ -2351,7 +2350,7 @@ export async function get_leaderboard(request) {
       _leaderboardRateLimit.set(memberId, { count: 1, windowStart: now });
     }
 
-    const result = await _getLeaderboardWebMethod({ limit: rawLimit, period });
+    const result = await _loyaltyServiceModule.getLeaderboard({ limit: rawLimit, period });
     return ok({ body: json(result), headers: JSON_HEADERS });
   } catch (err) {
     console.error('HTTP function error (leaderboard):', err);
