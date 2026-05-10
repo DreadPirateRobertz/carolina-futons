@@ -48,8 +48,9 @@ Adding ignores:
 Deliberate non-goals:
   - Does NOT verify the bead is *open* or *the right priority* — only
     that it exists. Bead lifecycle is not a doc concern.
-  - Does NOT recurse into archived directories (`docs/archive/...`)
-    since archived docs intentionally reference retired beads.
+  - Does NOT recurse into archived directories (`docs/archive/...`,
+    `docs/archives/...`) since archived docs intentionally reference
+    retired beads.
 """
 
 from __future__ import annotations
@@ -174,13 +175,20 @@ def scan_repo(root: Path, known: set[str], allowlist: set[str]) -> list[str]:
     if not docs.is_dir():
         return []
 
-    archive = (docs / "archive").resolve()
+    # Both `docs/archive/` and `docs/archives/` are in use across the
+    # cfutons docs tree (legacy plural and current singular naming) —
+    # both are skipped because retired beads live there intentionally.
+    archive_roots = [
+        (docs / name).resolve()
+        for name in ("archive", "archives")
+        if (docs / name).is_dir()
+    ]
     unknown: list[str] = []
 
     for path in docs.rglob("*.md"):
-        # Archived docs intentionally reference retired beads.
         try:
-            if archive in path.resolve().parents:
+            resolved_parents = set(path.resolve().parents)
+            if any(root in resolved_parents for root in archive_roots):
                 continue
         except OSError:
             continue
