@@ -32,7 +32,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
-import { checkRateLimit } from 'backend/utils/rateLimit';
+import { checkRateLimit, hashRateLimitKey } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { validateSchema } from 'backend/utils/validateSchema';
 import { sendDeliveryBookingConfirmationSms } from 'backend/deliveryNotifications.web';
@@ -481,7 +481,13 @@ const CANCEL_RL_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 export async function _checkBookingRateLimit(email, opts = {}) {
   const now = opts.now != null ? opts.now : Date.now();
   try {
-    const cleanKey = sanitize(email, 254).toLowerCase();
+    // cf-32u1.F4 (cf-sec1 CMEK): hash the key before storing/querying so
+    // the rate-limit collection never holds plaintext customer email at
+    // rest. Mirrors the canonical helper at utils/rateLimit.js (FNV-1a,
+    // hashRateLimitKey). Sanitize-then-lowercase before hashing so the
+    // hash input matches the canonical helper's contract.
+    const cleanEmail = sanitize(email, 254).toLowerCase();
+    const cleanKey = hashRateLimitKey(cleanEmail);
     const existing = await wixData.query(BOOKING_RL_COLLECTION)
       .eq('key', cleanKey).limit(1).find();
 

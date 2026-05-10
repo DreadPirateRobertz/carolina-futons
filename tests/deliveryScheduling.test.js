@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   getAvailableDeliverySlots,
@@ -13,6 +13,7 @@ import {
   _checkBookingRateLimit,
   _checkCancelRateLimit,
 } from '../src/backend/deliveryScheduling.web.js';
+import { hashRateLimitKey } from '../src/backend/utils/rateLimit.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -733,7 +734,7 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
     // Seed a rate limit record that is already at max (5)
     __seed(BOOKING_RL_COLLECTION, [{
       _id: 'rl-bob',
-      key: 'bob@test.com',
+      key: hashRateLimitKey('bob@test.com'),
       count: 5,
       windowStart: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago — still within 24h window
     }]);
@@ -746,7 +747,7 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
     // Seed exhausted limit but with old window (>24h ago)
     __seed(BOOKING_RL_COLLECTION, [{
       _id: 'rl-bob',
-      key: 'bob@test.com',
+      key: hashRateLimitKey('bob@test.com'),
       count: 5,
       windowStart: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25h ago
     }]);
@@ -762,7 +763,7 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
   it('_checkBookingRateLimit blocks at limit', async () => {
     __seed(BOOKING_RL_COLLECTION, [{
       _id: 'rl-x',
-      key: 'flood@test.com',
+      key: hashRateLimitKey('flood@test.com'),
       count: 5,
       windowStart: new Date(Date.now() - 1000),
     }]);
@@ -773,13 +774,29 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
   it('_checkBookingRateLimit increments count on each call', async () => {
     __seed(BOOKING_RL_COLLECTION, [{
       _id: 'rl-inc',
-      key: 'inc@test.com',
+      key: hashRateLimitKey('inc@test.com'),
       count: 2,
       windowStart: new Date(Date.now() - 1000),
     }]);
     const result = await _checkBookingRateLimit('inc@test.com');
     expect(result.allowed).toBe(true);
     // Count should now be 3 — verify via a 5-count seed + call that hits limit
+  });
+
+  // cf-32u1.F4 (cf-sec1 CMEK): regression guard — the rate-limit
+  // collection must never persist plaintext customer email at rest.
+  it('persists a hashed key, NOT plaintext email (cf-32u1.F4 cf-sec1 compliance)', async () => {
+    let inserted;
+    __onInsert((collection, record) => {
+      if (collection === BOOKING_RL_COLLECTION) inserted = record;
+    });
+    await _checkBookingRateLimit('cmek-check@test.com');
+    expect(inserted).toBeDefined();
+    expect(inserted.key).not.toBe('cmek-check@test.com');
+    expect(inserted.key).not.toContain('@');
+    expect(inserted.key).toBe(hashRateLimitKey('cmek-check@test.com'));
+    // Hash output is FNV-1a 8-char hex per the canonical helper.
+    expect(inserted.key).toMatch(/^[0-9a-f]{8}$/);
   });
 });
 
