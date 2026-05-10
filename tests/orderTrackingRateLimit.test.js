@@ -138,16 +138,19 @@ describe('subscribeToNotifications — rate limiting', () => {
     expect(result.success).toBe(true);
   });
 
-  it('fails open (allows) when the rate limit DB check throws, and still persists the subscription', async () => {
+  it('fails closed (denies) when the rate limit DB check throws, and does NOT persist the subscription', async () => {
+    // cf-3ldu F2 / cf-8p52: helper fails CLOSED on DB error so a
+    // missing rate-limit collection (or wixData hiccup) can't silently
+    // disable protection at cutover.
     seedOrderAndFulfillment();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    let insertedCollection, insertedItem;
-    __onInsert((col, item) => { if (col === 'TrackingNotifications') { insertedCollection = col; insertedItem = item; } });
+    let insertedCollection;
+    __onInsert((col) => { if (col === 'TrackingNotifications') { insertedCollection = col; } });
     const result = await subscribeToNotifications('ORD-001', 'buyer@example.com');
-    expect(result.success).toBe(true);
-    expect(insertedCollection).toBe('TrackingNotifications');
-    expect(insertedItem.email).toBe('buyer@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
+    expect(insertedCollection).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String));
     warnSpy.mockRestore();
   });
@@ -230,12 +233,14 @@ describe('unsubscribeFromNotifications — rate limiting', () => {
     expect(result.success).toBe(true);
   });
 
-  it('fails open (allows) when the rate limit DB check throws', async () => {
+  it('fails closed (denies) when the rate limit DB check throws', async () => {
+    // cf-3ldu F2 / cf-8p52: fail-closed semantic.
     seedSubscription();
     __setQueryError(TRACKING_RATE_COLLECTION, new Error('DB down'));
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
     expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String));
     warnSpy.mockRestore();
   });

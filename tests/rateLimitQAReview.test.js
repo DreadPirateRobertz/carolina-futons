@@ -63,10 +63,10 @@ describe('checkRateLimit', () => {
     expect(result.allowed).toBe(false);
   });
 
-  it('fails open when DB query throws', async () => {
+  it('fails CLOSED when DB query throws (cf-3ldu F2 / cf-8p52)', async () => {
     __setQueryError(COLLECTION_QA, new Error('DB down'));
     const result = await checkRateLimit(COLLECTION_QA, 'test@example.com', { now: NOW });
-    expect(result).toEqual({ allowed: true });
+    expect(result).toEqual({ allowed: false, reason: 'db_error' });
   });
 
   it('window boundary — just expired (age > window) allows', async () => {

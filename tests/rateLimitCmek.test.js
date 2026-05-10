@@ -5,8 +5,8 @@
  * contain plaintext PII such as email addresses. The hash must be deterministic
  * so rate limiting continues to work correctly.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __getInserted, __onInsert } from './__mocks__/wix-data.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { __reset, __getInserted, __onInsert, __setQueryError } from './__mocks__/wix-data.js';
 import {
   hashRateLimitKey,
   checkRateLimit,
@@ -85,5 +85,32 @@ describe('checkRateLimit — stores hashed key, not plaintext PII', () => {
     // Should be allowed (count 1 < max 3) and no second insert
     expect(secondResult.allowed).toBe(true);
     expect(inserted).toHaveLength(1);
+  });
+});
+
+// ── cf-3ldu F2 / cf-8p52 — fail-closed on DB error ──────────────────────────
+
+describe('checkRateLimit — fails CLOSED on wixData error', () => {
+  it('returns { allowed: false, reason: "db_error" } when query throws', async () => {
+    __setQueryError('TestRateLimit', new Error('wixData unavailable'));
+    // Avoid noisy unhandled-error logs during the test.
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await checkRateLimit('TestRateLimit', 'user@example.com', { now: NOW });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('db_error');
+    errSpy.mockRestore();
+  });
+
+  it('returns { allowed: false, reason: "db_error" } when collection is missing (same fault as a real "Collection does not exist" error)', async () => {
+    // Simulating the cutover-time failure mode: a backing collection
+    // that was never created in the staging CMS produces the same
+    // wixData rejection as a generic outage. Either way the helper
+    // must fail closed so the missing-collection bug is loud.
+    __setQueryError('NonexistentRateLimit', new Error('Collection does not exist'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await checkRateLimit('NonexistentRateLimit', 'shopper@example.com', { now: NOW });
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('db_error');
+    errSpy.mockRestore();
   });
 });
