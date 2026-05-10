@@ -164,3 +164,183 @@ Static analysis can't prove:
 - Time zone semantics for `_todayStart()` align with the spec's "daily cap" expectation. Tester at midnight ET vs midnight UTC will catch the drift if any.
 
 Hand off to whoever owns the staging probe (Stilgar) — file the matrix results into this doc as `## Staging run results — <date>` so the doc becomes the canonical e2e record per cf-jvut acceptance.
+
+---
+
+## Probe-ready runbook (post cf-m3tj merge — 2026-05-10)
+
+cf-m3tj merged at `21dc7fa1` and closes G1 — `completeMobileChallenge` now dispatches a synthetic `gamification_mobile_*` event into `receiveGamificationEvent` for every fresh completion. The fix is on `main`; once Wix CLI publishes, this runbook validates the round-trip on staging.
+
+### Prerequisites for the runner (Stilgar)
+
+Set these once before running:
+
+```bash
+export STAGING_BASE_URL="https://staging.carolinafutons.com"   # confirm subdomain with melania
+export STAGING_BEARER="<owner-or-test-member-bearer-token>"   # from Wix Headless OAuth
+export TEST_MEMBER_ID="<member-id-from-the-bearer-token>"     # the member whose balance we measure
+export TEST_PRODUCT_ID="<any-stocked-product-id>"             # for AR Discovery + Social Share
+```
+
+Pick a fresh test member with no prior gamification activity if possible — makes the deltas unambiguous.
+
+### Step 0 — baseline snapshot
+
+Run these queries in the Wix Editor data console (or via the `_functions/loyalty/<memberId>` HTTP probe if exposed) and record the values into the table at the bottom of this section:
+
+| Field | Query | Capture |
+|-------|-------|---------|
+| `P0` (current points) | `MemberPoints.eq('memberId', $TEST_MEMBER_ID)` → `currentPoints` | __ |
+| `L0` (ledger entry count) | `MemberPointsLedger.eq('memberId', $TEST_MEMBER_ID).count()` | __ |
+| `C0` (completion row count) | `MobileChallengeCompletions.eq('memberId', $TEST_MEMBER_ID).count()` | __ |
+| Active SpinGrants for member | `SpinGrants.eq('memberId', $TEST_MEMBER_ID).eq('status', 'pending')` | __ rows |
+
+### Step 1 — fire AR Discovery (expected +75 pts)
+
+```bash
+curl -X POST "$STAGING_BASE_URL/_functions/crossRigEvent" \
+  -H "Authorization: Bearer $STAGING_BEARER" \
+  -H 'Content-Type: application/json' \
+  -d "{\"event\":\"ar_discovery_completed\",\"productId\":\"$TEST_PRODUCT_ID\",\"platform\":\"ios\"}"
+```
+
+Expected response: `{"success":true}`. Wait 5 s, then re-query:
+
+| Assertion | Expected post-trigger | Observed |
+|-----------|------------------------|----------|
+| `MobileChallengeCompletions` count for `(memberId, challengeType='ar_discovery', today)` | `C0 + 1` | __ |
+| `MobileChallengeCompletions` last row `pointsAwarded` | `75` | __ |
+| `MemberPoints.currentPoints` | `P0 + 75` *(this is the cf-m3tj fix landing)* | __ |
+| `MemberPointsLedger` count | `L0 + 1` | __ |
+| Last ledger entry `delta` | `75` | __ |
+| Last ledger entry `eventName` | `gamification_mobile_ar_discovery` | __ |
+
+If any "Observed" row diverges from "Expected", **stop and report** — the cf-m3tj fix isn't behaving as designed.
+
+### Step 2 — re-fire AR Discovery same product same day (idempotency)
+
+```bash
+# Same curl as Step 1 — verbatim repeat
+```
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| `MobileChallengeCompletions` count | unchanged from Step 1 (already-awarded short-circuit) | __ |
+| `MemberPoints.currentPoints` | unchanged from Step 1 | __ |
+| `MemberPointsLedger` count | unchanged from Step 1 | __ |
+
+### Step 3 — fire Quiz Completion (expected +50 pts)
+
+```bash
+curl -X POST "$STAGING_BASE_URL/_functions/crossRigEvent" \
+  -H "Authorization: Bearer $STAGING_BEARER" \
+  -H 'Content-Type: application/json' \
+  -d '{"event":"quiz_completed","score":9,"total":10,"platform":"ios"}'
+```
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| `MobileChallengeCompletions` last row `challengeType` | `quiz_completion` | __ |
+| `MobileChallengeCompletions` last row `score` / `total` | `9` / `10` | __ |
+| `MemberPoints.currentPoints` | `P0 + 75 + 50 = P0 + 125` | __ |
+| `MemberPointsLedger` last entry `eventName` | `gamification_mobile_quiz_completion` | __ |
+| Last ledger entry `delta` | `50` | __ |
+
+### Step 4 — re-fire Quiz Completion same day (idempotency)
+
+```bash
+# Verbatim repeat of Step 3
+```
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| Counts unchanged from Step 3 | yes | __ |
+
+### Step 5 — fire Social Share (expected +100 pts)
+
+```bash
+curl -X POST "$STAGING_BASE_URL/_functions/crossRigEvent" \
+  -H "Authorization: Bearer $STAGING_BEARER" \
+  -H 'Content-Type: application/json' \
+  -d "{\"event\":\"social_share_completed\",\"productId\":\"$TEST_PRODUCT_ID\",\"platform\":\"instagram\"}"
+```
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| `MobileChallengeCompletions` last row `challengeType` | `social_share` | __ |
+| `MemberPoints.currentPoints` | `P0 + 225` | __ |
+| `MemberPointsLedger` count | `L0 + 3` | __ |
+| Last ledger entry `eventName` | `gamification_mobile_social_share` | __ |
+| Last ledger entry `delta` | `100` | __ |
+
+### Step 6 — flat-award sanity check (no streak distortion)
+
+If the test member happens to have an active streak multiplier (≥ 2x), confirm the mobile awards stayed FIXED rather than multiplied:
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| `MemberPoints.streakMultiplier` at probe time | record actual value | __ |
+| Sum of mobile ledger deltas across Steps 1, 3, 5 | `225` exactly (NOT `225 × multiplier`) | __ |
+
+If the sum exceeds 225, FIXED_AWARD_EVENTS isn't covering the synthetic events — bug, file a follow-up.
+
+### Step 7 — BonusSpinGrants check (closes G2)
+
+| Assertion | Expected | Observed |
+|-----------|----------|----------|
+| Inspect `BonusSpinGrants.eq('active', true)` for any rows where `triggerEvent` IN `('gamification_mobile_ar_discovery','gamification_mobile_quiz_completion','gamification_mobile_social_share')` | enumerate rows | __ |
+| If any matched: `SpinGrants.eq('memberId', $TEST_MEMBER_ID)` count | `prior + count of matches` | __ |
+| If none matched: skip — G2 has nothing to fire on this dataset | n/a | n/a |
+
+### Step 8 — G3 probe (AR cap divergence — should still be observable)
+
+Fire `ar_discovery_completed` with a DIFFERENT productId same day:
+
+```bash
+curl -X POST "$STAGING_BASE_URL/_functions/crossRigEvent" \
+  -H "Authorization: Bearer $STAGING_BEARER" \
+  -H 'Content-Type: application/json' \
+  -d '{"event":"ar_discovery_completed","productId":"<DIFFERENT_PRODUCT_ID>","platform":"ios"}'
+```
+
+| Assertion | Expected (current behaviour) | Observed |
+|-----------|------------------------------|----------|
+| `MobileChallengeCompletions` count | `C0 + 4` (AR1, Quiz, Social, AR2) | __ |
+| `MemberPoints.currentPoints` | `P0 + 300` (75 + 50 + 100 + 75) | __ |
+
+This confirms G3 is real — same-day per-productId scope means a member can earn AR Discovery multiple times in a day. Web-side `gamification_ar_discovery` would block via CF-0gly lifetime cap, but the synthetic event names diverge so the web cap doesn't apply. Tracked as separate-bead scope; this row is informational, not a failure.
+
+### Run-results template
+
+Once the probe completes, paste the captured table values into a section like this and commit:
+
+```markdown
+## Staging run results — YYYY-MM-DD
+
+Runner: <name>
+Staging branch / build: <vercel-deploy-id or wix-publish-id>
+
+### Baseline (Step 0)
+- P0 = ___ , L0 = ___ , C0 = ___
+
+### Per-step deltas
+| Step | Expected | Observed | Pass / Fail |
+|------|----------|----------|-------------|
+| 1 — AR Discovery first fire | currentPoints += 75, ledger += 1 | … | __ |
+| 2 — AR Discovery re-fire | unchanged | … | __ |
+| 3 — Quiz Completion first | += 50 | … | __ |
+| 4 — Quiz Completion re-fire | unchanged | … | __ |
+| 5 — Social Share first | += 100 | … | __ |
+| 6 — flat-award sanity | sum = 225 exactly | … | __ |
+| 7 — BonusSpinGrants | matches config | … | __ |
+| 8 — G3 cap probe | += 75 (still earnable) | … | __ |
+
+### Findings
+- G1 (cf-m3tj fix verified): __
+- G2 (BonusSpinGrants on mobile): __
+- G3 (AR cap divergence): __ (file as cf-mobile-ar-cap if confirmed and PM still wants it fixed)
+
+cf-jvut acceptance: ___ (pass / partial / fail).
+```
+
+Once filed, mark cf-jvut closed if all steps pass; file follow-up beads for any divergence.
