@@ -79,12 +79,17 @@ describe('Brand palette compliance (CF-a1ps)', () => {
     }
   });
 
-  it('bundleBuilder TIERS use only brand-approved badge colors', async () => {
-    // Dynamic import to access the TIERS constant indirectly via getBundleRecommendations
-    // We test the actual module exports the correct colors
-    const mod = await import('../src/backend/bundleBuilder.web.js');
-    // The TIERS are not exported, but we can verify no mauve via the module source
-    // Instead, test that the exported function doesn't produce mauve badges
-    expect(mod.getBundleRecommendations).toBeDefined();
+  it('bundleBuilder _TIERS use only brand-approved badge colors', async () => {
+    // _TIERS is a test-only re-export. cf-4x7e chunk 5 retired
+    // getBundleRecommendations, so the assertion now reaches through
+    // _TIERS directly rather than depending on the dead method's existence.
+    const { _TIERS } = await import('../src/backend/bundleBuilder.web.js');
+    const badgeColors = Object.values(_TIERS).map(t => (t.badgeColor || '').toLowerCase());
+    for (const banned of BANNED_COLORS) {
+      expect(badgeColors).not.toContain(banned.toLowerCase());
+    }
+    for (const c of badgeColors) {
+      expect(BRAND_PALETTE.has(c), `_TIERS badge color ${c} must be in brand palette`).toBe(true);
+    }
   });
 });
