@@ -30,8 +30,6 @@ const {
   getFeaturedProducts,
   getSaleProducts,
   getBundleSuggestion,
-  getBestsellers,
-  trackRecentlyViewed,
   getRecentlyViewed,
   getSimilarProducts,
   getCustomersAlsoBought,
@@ -233,44 +231,6 @@ describe('getBundleSuggestion — edge cases', () => {
   });
 });
 
-// ── trackRecentlyViewed — edge cases ─────────────────────────────────
-
-describe('trackRecentlyViewed — edge cases', () => {
-  it('rejects invalid product ID', async () => {
-    const result = await trackRecentlyViewed('invalid!');
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects null product ID', async () => {
-    const result = await trackRecentlyViewed(null);
-    expect(result.success).toBe(false);
-  });
-
-  it('inserts viewed product with memberId and viewedAt', async () => {
-    let inserted = null;
-    __onInsert((col, item) => {
-      if (col === 'RecentlyViewed') inserted = item;
-    });
-    await trackRecentlyViewed('aaa00000-0000-0000-0000-000000000001');
-    expect(inserted).not.toBeNull();
-    expect(inserted.memberId).toBe('a0b1c2d3-e4f5-6789-abcd-ef0123456789');
-    expect(inserted.productId).toBe('aaa00000-0000-0000-0000-000000000001');
-    expect(inserted.viewedAt).toBeInstanceOf(Date);
-  });
-
-  it('deduplicates by removing existing entry first', async () => {
-    __seed('RecentlyViewed', [
-      { _id: 'rv-1', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', productId: 'aaa00000-0000-0000-0000-000000000001', viewedAt: new Date() },
-    ]);
-    let removed = false;
-    __onRemove((col, id) => {
-      if (col === 'RecentlyViewed' && id === 'rv-1') removed = true;
-    });
-    await trackRecentlyViewed('aaa00000-0000-0000-0000-000000000001');
-    expect(removed).toBe(true);
-  });
-});
-
 // ── getRecentlyViewed — edge cases ───────────────────────────────────
 
 describe('getRecentlyViewed — edge cases', () => {
@@ -399,23 +359,6 @@ describe('getCustomersAlsoBought — edge cases', () => {
     ]);
     const result = await getCustomersAlsoBought('aaa00000-0000-0000-0000-000000000001');
     expect(result.products).toEqual([]);
-  });
-});
-
-// ── getBestsellers — edge cases ──────────────────────────────────────
-
-describe('getBestsellers — edge cases', () => {
-  it('returns empty when no products exist', async () => {
-    expect(await getBestsellers()).toEqual([]);
-  });
-
-  it('falls back to Bestseller ribbon when no analytics', async () => {
-    __seed('Stores/Products', [
-      { _id: 'aaa00000-0000-0000-0000-000000000001', name: 'Best', ribbon: 'Bestseller', price: 500, slug: 'best' },
-    ]);
-    const result = await getBestsellers();
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Best');
   });
 });
 

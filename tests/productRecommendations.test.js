@@ -9,8 +9,6 @@ import {
   getFeaturedProducts,
   getSaleProducts,
   getBundleSuggestion,
-  getBestsellers,
-  trackRecentlyViewed,
   getRecentlyViewed,
   getSimilarProducts,
   getCustomersAlsoBought,
@@ -255,72 +253,6 @@ describe('getBundleSuggestion', () => {
   });
 });
 
-// ── getBestsellers ──────────────────────────────────────────────────
-
-describe('getBestsellers', () => {
-  it('returns products with Bestseller ribbon as fallback', async () => {
-    const results = await getBestsellers(4);
-    expect(results.length).toBeGreaterThan(0);
-  });
-
-  it('uses ProductAnalytics weekSales when collection exists', async () => {
-    __seed('ProductAnalytics', [
-      { _id: 'pa-1', productId: 'prod-frame-001', weekSales: 15 },
-      { _id: 'pa-2', productId: 'prod-matt-001', weekSales: 10 },
-    ]);
-    const results = await getBestsellers(4);
-    expect(results.length).toBeGreaterThan(0);
-    const ids = results.map(r => r._id);
-    expect(ids).toContain('prod-frame-001');
-  });
-
-  it('falls back to newest products when no analytics or ribbon', async () => {
-    __seed('Stores/Products', allProducts.map(p => ({ ...p, ribbon: '' })));
-    const results = await getBestsellers(4);
-    expect(results.length).toBeGreaterThan(0);
-  });
-
-  it('respects limit parameter', async () => {
-    const results = await getBestsellers(2);
-    expect(results.length).toBeLessThanOrEqual(2);
-  });
-});
-
-// ── trackRecentlyViewed ────────────────────────────────────────────
-
-describe('trackRecentlyViewed', () => {
-  beforeEach(() => {
-    resetData();
-    __seed('Stores/Products', allProducts);
-    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
-  });
-
-  it('tracks a viewed product for logged-in member', async () => {
-    const result = await trackRecentlyViewed('prod-frame-001');
-    expect(result.success).toBe(true);
-  });
-
-  it('fails when not authenticated', async () => {
-    __setMember(null);
-    const result = await trackRecentlyViewed('prod-frame-001');
-    expect(result.success).toBe(false);
-  });
-
-  it('fails for invalid product ID', async () => {
-    const result = await trackRecentlyViewed('');
-    expect(result.success).toBe(false);
-  });
-
-  it('deduplicates existing entries', async () => {
-    __seed('RecentlyViewed', [
-      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2026-02-20') },
-    ]);
-
-    const result = await trackRecentlyViewed('prod-frame-001');
-    expect(result.success).toBe(true);
-  });
-});
-
 // ── getRecentlyViewed ──────────────────────────────────────────────
 
 describe('getRecentlyViewed', () => {
@@ -501,13 +433,6 @@ describe('Call-for-price product filtering (CF-hma6)', () => {
 
   it('getFeaturedProducts excludes call-for-price products', async () => {
     const results = await getFeaturedProducts(20);
-    const ids = results.map(r => r._id);
-    expect(ids).not.toContain('prod-cfp-001');
-    expect(ids).not.toContain('prod-cfp-002');
-  });
-
-  it('getBestsellers excludes call-for-price products', async () => {
-    const results = await getBestsellers(20);
     const ids = results.map(r => r._id);
     expect(ids).not.toContain('prod-cfp-001');
     expect(ids).not.toContain('prod-cfp-002');
@@ -732,24 +657,6 @@ describe('getSaleProducts edge cases', () => {
   it('respects limit parameter', async () => {
     const results = await getSaleProducts(1);
     expect(results.length).toBeLessThanOrEqual(1);
-  });
-});
-
-describe('trackRecentlyViewed edge cases', () => {
-  beforeEach(() => {
-    resetData();
-    __seed('Stores/Products', allProducts);
-    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
-  });
-
-  it('fails for null product ID', async () => {
-    const result = await trackRecentlyViewed(null);
-    expect(result.success).toBe(false);
-  });
-
-  it('sanitizes product ID input', async () => {
-    const result = await trackRecentlyViewed('<script>alert(1)</script>');
-    expect(result.success).toBe(false);
   });
 });
 
@@ -1144,53 +1051,6 @@ describe('getCustomersAlsoBought — frequency ranking', () => {
     // deleted-product-1 not in Stores/Products → filtered out
     const ids = result.products.map(p => p._id);
     expect(ids).not.toContain('deleted-product-1');
-  });
-});
-
-// ── trackRecentlyViewed — MAX cap trim ──────────────────────────
-
-describe('trackRecentlyViewed — trim behavior', () => {
-  beforeEach(() => {
-    resetData();
-    __seed('Stores/Products', allProducts);
-    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
-  });
-
-  it('trims entries beyond MAX_RECENTLY_VIEWED (20)', async () => {
-    // Seed 21 RecentlyViewed entries
-    const entries = [];
-    for (let i = 0; i < 21; i++) {
-      entries.push({
-        _id: `rv-${i}`,
-        memberId: 'member-1',
-        productId: `prod-${i}`,
-        viewedAt: new Date(Date.now() - i * 1000),
-      });
-    }
-    __seed('RecentlyViewed', entries);
-
-    // Track another product — should trigger trim (now 22 → trimmed to 20)
-    const result = await trackRecentlyViewed('prod-frame-001');
-    expect(result.success).toBe(true);
-
-    // Verify trim actually occurred — request all 25, should get ≤ 20
-    const viewed = await getRecentlyViewed(25);
-    expect(viewed.success).toBe(true);
-    expect(viewed.products.length).toBeLessThanOrEqual(20);
-  });
-
-  it('updates viewedAt when re-viewing a product (dedup — removes old, inserts fresh)', async () => {
-    __seed('RecentlyViewed', [
-      { _id: 'rv-old', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2025-01-01') },
-    ]);
-    const result = await trackRecentlyViewed('prod-frame-001');
-    expect(result.success).toBe(true);
-
-    // Verify dedup: product still appears exactly once, not duplicated
-    const viewed = await getRecentlyViewed(20);
-    expect(viewed.success).toBe(true);
-    const frameEntries = viewed.products.filter(p => p._id === 'prod-frame-001');
-    expect(frameEntries.length).toBe(1);
   });
 });
 
