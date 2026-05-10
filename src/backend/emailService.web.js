@@ -175,6 +175,24 @@ export const sendEmail = webMethod(
         status: 'new',
       });
 
+      // cf-hafn (cf-icww F6): customer-side auto-reply so the submitter sees
+      // an inbox acknowledgement matching their submission. Pre-cf-hafn the
+      // contact form was a silent confirmation gap — customers re-submitted
+      // because they had no email proof. Non-blocking: owner notification +
+      // CMS row already happened, so a customer-side failure must NOT flip
+      // the overall result. Uses contacts.appendOrCreateContact directly
+      // (same pattern as cartRecovery / giftCards / swatchRequest); when
+      // cf-xdji's resolveContactId helper lands, refactor in a follow-up
+      // sweep.
+      _sendCustomerContactAutoReply({
+        email: cleanEmail,
+        name: cleanName,
+        subject: cleanSubject,
+        message: cleanMessage,
+      }).catch((err) => {
+        console.warn('[emailService] customer auto-reply failed (non-blocking):', err?.message ?? err);
+      });
+
       logAuditEvent('ContactSubmissions', 'send_email', cleanEmail, { subject: cleanSubject });
       return { success: true };
     } catch (err) {
@@ -183,6 +201,48 @@ export const sendEmail = webMethod(
     }
   }
 );
+
+/**
+ * Internal customer-side auto-reply (cf-hafn). Resolves a Wix CRM contact
+ * for the submitter via contacts.appendOrCreateContact (idempotent — Wix
+ * dedupes by email), then fires the `contact_form_auto_reply` triggered
+ * email so the submitter sees an inbox confirmation matching their
+ * submission. Wrapped in try/catch so a missing contactId silently degrades
+ * (warn logged) and a transient CRM/Triggered-Emails failure can't fail
+ * the parent sendEmail call.
+ *
+ * Variables passed to the template (registered in
+ * emailTemplates.web.js#TEMPLATE_REGISTRY.contact_form_auto_reply):
+ *   customerName  — sanitised name
+ *   subject       — original subject (or empty string)
+ *   message       — original message body
+ *   replyEta      — static copy explaining when a human replies
+ *   supportPhone  — fallback phone number
+ *
+ * @param {{email: string, name: string, subject: string, message: string}} args
+ * @returns {Promise<void>}
+ */
+async function _sendCustomerContactAutoReply({ email, name, subject, message }) {
+  const contactResult = await contacts.appendOrCreateContact({
+    name: name ? { first: name } : undefined,
+    emails: [{ email }],
+  });
+  const customerContactId = contactResult?.contactId || contactResult?._id;
+  if (!customerContactId) {
+    console.warn('[emailService] customer auto-reply skipped — appendOrCreateContact returned empty', { email });
+    return;
+  }
+  await triggeredEmails.emailContact('contact_form_auto_reply', customerContactId, {
+    variables: {
+      customerName: name,
+      subject: subject || '',
+      message: message || '',
+      replyEta: 'within 1 business day',
+      supportPhone: '(828) 252-9449',
+      email,
+    },
+  });
+}
 
 /**
  * Submit a fabric swatch request. Stores in ContactSubmissions CMS and

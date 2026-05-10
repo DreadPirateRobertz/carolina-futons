@@ -192,6 +192,24 @@ const TEMPLATE_REGISTRY = {
     category: 'transactional',
   },
 
+  // Contact form auto-reply (cf-hafn / cf-icww F6)
+  // Customer-side acknowledgement after submitting the contact form. Owner
+  // notification is the existing `contact_form_submission` template (in the
+  // Wix CRM Triggered Emails dashboard, not registered here as the dashboard
+  // is the source of truth for that one). This auto-reply closes the
+  // silent-confirmation gap surfaced in cf-icww F6 — submitters were getting
+  // a UI "thanks" but no inbox confirmation, leading to repeat submissions.
+  contact_form_auto_reply: {
+    id: 'contact_form_auto_reply',
+    name: 'Contact Form — Customer Auto-Reply',
+    sequence: 'contact',
+    step: 1,
+    subjectLine: 'We got your message — Carolina Futons',
+    previewText: 'A real human will reply within 1 business day. Here\'s what you sent.',
+    variables: ['customerName', 'subject', 'message', 'replyEta', 'supportPhone', 'email'],
+    category: 'transactional',
+  },
+
   // Promotional
   promotional_sale: {
     id: 'promotional_sale',

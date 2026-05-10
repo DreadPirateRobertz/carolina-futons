@@ -26,13 +26,16 @@ describe('sendEmail', () => {
 
     expect(result).toEqual({ success: true });
 
+    // cf-hafn: sendEmail also fires a customer-side auto-reply (separate
+    // template). This assertion scopes to the owner notification specifically;
+    // contactFormAutoReply.cfhafn.test.js covers the auto-reply leg.
     const emails = __getEmailLog();
-    expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('contact_form_submission');
-    expect(emails[0].contactId).toBe('owner-contact-123');
-    expect(emails[0].options.variables.customerName).toBe('John Doe');
-    expect(emails[0].options.variables.customerEmail).toBe('john@example.com');
-    expect(emails[0].options.variables.subject).toBe('Question about futons');
+    const ownerEmail = emails.find((e) => e.templateId === 'contact_form_submission');
+    expect(ownerEmail).toBeDefined();
+    expect(ownerEmail.contactId).toBe('owner-contact-123');
+    expect(ownerEmail.options.variables.customerName).toBe('John Doe');
+    expect(ownerEmail.options.variables.customerEmail).toBe('john@example.com');
+    expect(ownerEmail.options.variables.subject).toBe('Question about futons');
   });
 
   it('persists submission to ContactSubmissions CMS', async () => {
