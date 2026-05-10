@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert } from './__mocks__/wix-data.js';
-import { __setSecrets, __failNext } from './__mocks__/wix-secrets-backend.js';
+import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import {
   sendEmail,
@@ -437,5 +437,31 @@ describe('sendOrderNotification', () => {
     expect(result).toEqual({ success: true });
     const emails = __getEmailLog();
     expect(emails[0].options.variables.itemCount).toBe('1');
+  });
+
+  // cf-d8ta (cf-7pd6 F1): the previous bare `getSecret()` call rejected
+  // when SITE_OWNER_CONTACT_ID was absent, surfacing as a generic
+  // "Error sending order notification" with no signal that the cause was
+  // a missing secret. The fix returns a structured failure so cutover-night
+  // observability can distinguish missing-secret from other failures.
+  it('returns structured failure when SITE_OWNER_CONTACT_ID secret is missing', async () => {
+    __resetSecrets(); // clear all secrets including the beforeEach default
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await sendOrderNotification({
+      number: '10043',
+      buyerName: 'No Owner',
+      total: '$10',
+      lineItems: [{ name: 'Item' }],
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe('site_owner_contact_id_missing');
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/SITE_OWNER_CONTACT_ID/),
+      expect.anything(),
+    );
+    // No email should have been queued — owner notify is the only side effect.
+    const emails = __getEmailLog();
+    expect(emails).toHaveLength(0);
+    warnSpy.mockRestore();
   });
 });

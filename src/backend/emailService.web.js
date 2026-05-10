@@ -99,40 +99,34 @@ export async function _checkEmailRateLimit(key, opts = {}) {
 const RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
 
 /**
- * Resolve the site owner Wix contact ID with explicit error handling
- * (cf-secrets.F1 — secrets-audit P2).
+ * Resolve the site owner's Wix contact ID, returning null if the secret is
+ * absent or unreadable. cf-d8ta (cf-7pd6 F1): previous call sites called
+ * `getSecret('SITE_OWNER_CONTACT_ID')` bare, so a missing secret rejected
+ * inside submitContactForm / submitSwatchRequest / sendOrderNotification
+ * and surfaced as a generic "Failed to send" error — silently dropping
+ * owner notifications without a distinct log signal at cutover.
  *
- * Wix Secrets Manager rejects with a "Secret not found" error when
- * `SITE_OWNER_CONTACT_ID` isn't configured. The bare `await` was
- * propagating the rejection up to the caller's catch which logged a
- * generic "Failed to send …" — Stilgar saw no signal that the root
- * cause was secret misconfiguration, customers hit failure-soft with
- * no owner notification.
+ * Returning null lets callers explicitly decide between "skip owner notify
+ * but keep customer-facing path" (contact + swatch) and "fail this whole
+ * webMethod" (sendOrderNotification — owner notify is the only thing it does).
  *
- * @param {string} [callSite] - Diagnostic label for the warn log
- *   (e.g. 'sendEmail', 'submitSwatchRequest'). Helps triage which
- *   surface tripped the missing-secret path.
- * @returns {Promise<string|null>} Contact ID, or `null` if the secret
- *   is missing/empty (with an explicit warn logged).
+ * @returns {Promise<string|null>} contactId or null when missing/empty/erroring.
  */
-async function _resolveSiteOwnerContactId(callSite = 'unknown') {
-  let value;
+async function _resolveSiteOwnerContactId() {
   try {
-    value = await getSecret('SITE_OWNER_CONTACT_ID');
+    const id = await getSecret('SITE_OWNER_CONTACT_ID');
+    if (!id) {
+      console.warn('[emailService] SITE_OWNER_CONTACT_ID secret returned empty — owner notification skipped');
+      return null;
+    }
+    return id;
   } catch (err) {
     console.warn(
-      `[emailService] SITE_OWNER_CONTACT_ID missing — owner notification skipped (${callSite}):`,
+      '[emailService] SITE_OWNER_CONTACT_ID secret missing or unreadable — owner notification skipped:',
       err?.message ?? err,
     );
     return null;
   }
-  if (!value) {
-    console.warn(
-      `[emailService] SITE_OWNER_CONTACT_ID resolved to empty value — owner notification skipped (${callSite})`,
-    );
-    return null;
-  }
-  return value;
 }
 
 /**
@@ -180,36 +174,34 @@ export const sendEmail = webMethod(
         return { success: false, message: RATE_LIMIT_MESSAGE };
       }
 
-      // Retrieve the site owner's Wix contact ID from Secrets Manager.
-      // This is the recipient of all contact form notifications.
-      // cf-secrets.F1 (P2): explicit fail path. If the secret is missing
-      // the bare await rejects and propagates up to the outer catch which
-      // returns the generic "Failed to send message" error — Stilgar gets
-      // no signal that the cause was secret misconfiguration, customers
-      // hit the failure-soft path with no owner notification (silent
-      // customer-service blackout).
-      const siteOwnerContactId = await _resolveSiteOwnerContactId('sendEmail');
-      if (!siteOwnerContactId) {
-        return { success: false, message: 'Could not deliver your message. Please call (828) 252-9449.' };
+      // cf-d8ta (cf-7pd6 F1): resolve the owner contact ID through a safe
+      // helper. If the secret itself is missing or unreadable we log it
+      // explicitly and skip owner notification — the rest of the flow
+      // (CMS insert + customer auto-reply per cf-hafn) still runs. If the
+      // secret is present but triggeredEmails.emailContact throws (real
+      // delivery failure), let it bubble to the outer catch so the
+      // customer sees the user-friendly fallback-phone error.
+      const siteOwnerContactId = await _resolveSiteOwnerContactId();
+      if (siteOwnerContactId) {
+        await triggeredEmails.emailContact(
+          resolveTemplateId('contact_form_submission'),
+          siteOwnerContactId,
+          {
+            variables: {
+              customerName: cleanName,
+              customerEmail: cleanEmail,
+              customerPhone: cleanPhone,
+              subject: cleanSubject,
+              message: cleanMessage,
+              submittedAt: new Date().toLocaleString('en-US', {
+                timeZone: 'America/New_York',
+                dateStyle: 'full',
+                timeStyle: 'short',
+              }),
+            },
+          }
+        );
       }
-      await triggeredEmails.emailContact(
-        resolveTemplateId('contact_form_submission'),
-        siteOwnerContactId,
-        {
-          variables: {
-            customerName: cleanName,
-            customerEmail: cleanEmail,
-            customerPhone: cleanPhone,
-            subject: cleanSubject,
-            message: cleanMessage,
-            submittedAt: new Date().toLocaleString('en-US', {
-              timeZone: 'America/New_York',
-              dateStyle: 'full',
-              timeStyle: 'short',
-            }),
-          },
-        }
-      );
 
       // Persist the submission to CMS for record-keeping and dashboard access
       await wixData.insert('ContactSubmissions', {
@@ -333,11 +325,10 @@ export const submitSwatchRequest = webMethod(
         return { success: false, message: RATE_LIMIT_MESSAGE };
       }
 
-      // cf-secrets.F1 (P2): explicit fail path — see sendEmail for context.
-      const siteOwnerContactId = await _resolveSiteOwnerContactId('submitSwatchRequest');
-      if (!siteOwnerContactId) {
-        return { success: false, message: 'Could not deliver your swatch request. Please call (828) 252-9449.' };
-      }
+      // cf-d8ta (cf-7pd6 F1): resolve owner contact ID safely so a missing
+      // SITE_OWNER_CONTACT_ID secret no longer aborts the swatch request.
+      // The CMS insert + customer confirmation must run regardless.
+      const siteOwnerContactId = await _resolveSiteOwnerContactId();
 
       // Persist to CMS for record-keeping
       await wixData.insert('ContactSubmissions', {
@@ -349,25 +340,30 @@ export const submitSwatchRequest = webMethod(
         status: 'swatch_request',
       });
 
-      // Notify store owner
-      await triggeredEmails.emailContact(
-        resolveTemplateId('contact_form_submission'),
-        siteOwnerContactId,
-        {
-          variables: {
-            customerName: cleanName,
-            customerEmail: cleanEmail,
-            customerPhone: '',
-            subject: `Fabric Swatch Request — ${cleanProductName}`,
-            message: `Swatches requested: ${cleanSwatches.join(', ')}\n\nShip to:\n${cleanName}\n${cleanAddress}`,
-            submittedAt: new Date().toLocaleString('en-US', {
-              timeZone: 'America/New_York',
-              dateStyle: 'full',
-              timeStyle: 'short',
-            }),
-          },
-        }
-      );
+      // Notify store owner — only when the secret resolved. If the secret
+      // is missing we logged a warn in _resolveSiteOwnerContactId and skip;
+      // if it's present and emailContact throws, the throw propagates to
+      // the outer catch so the customer sees the friendly error.
+      if (siteOwnerContactId) {
+        await triggeredEmails.emailContact(
+          resolveTemplateId('contact_form_submission'),
+          siteOwnerContactId,
+          {
+            variables: {
+              customerName: cleanName,
+              customerEmail: cleanEmail,
+              customerPhone: '',
+              subject: `Fabric Swatch Request — ${cleanProductName}`,
+              message: `Swatches requested: ${cleanSwatches.join(', ')}\n\nShip to:\n${cleanName}\n${cleanAddress}`,
+              submittedAt: new Date().toLocaleString('en-US', {
+                timeZone: 'America/New_York',
+                dateStyle: 'full',
+                timeStyle: 'short',
+              }),
+            },
+          }
+        );
+      }
 
       // Send customer confirmation email (best-effort — don't fail the request if this fails)
       try {
@@ -486,10 +482,13 @@ export const sendOrderNotification = webMethod(
   Permissions.SiteMember,
   async (orderDetails) => {
     try {
-      // cf-secrets.F1 (P2): explicit fail path — see sendEmail for context.
-      const siteOwnerContactId = await _resolveSiteOwnerContactId('sendOrderNotification');
+      // cf-d8ta (cf-7pd6 F1): owner notification is the only thing this
+      // method does, so a missing SITE_OWNER_CONTACT_ID secret returns
+      // a structured failure with explicit reason rather than the generic
+      // "Error sending order notification" the outer catch would log.
+      const siteOwnerContactId = await _resolveSiteOwnerContactId();
       if (!siteOwnerContactId) {
-        return { success: false };
+        return { success: false, reason: 'site_owner_contact_id_missing' };
       }
       await triggeredEmails.emailContact(
         resolveTemplateId('new_order_notification'),
