@@ -133,10 +133,9 @@ describe('shippingConfig', () => {
     }
   });
 
-  it('has legacy zones config for dynamicPricing.web.js compat', () => {
+  it('exposes legacy zip3-prefix zones config', () => {
     expect(shippingConfig.zones.local.prefixMin).toBe(287);
     expect(shippingConfig.zones.local.prefixMax).toBe(289);
-    // Regional: state list for shipping eligibility + prefix range for dynamic pricing
     expect(shippingConfig.zones.regional.states).toContain('NC');
     expect(shippingConfig.zones.regional.states).toContain('GA');
     expect(shippingConfig.zones.regional.states).toContain('VA');
