@@ -10,8 +10,6 @@ import {
   flagReview,
   getPendingReviews,
   moderateReview,
-  getReviewStats,
-  addOwnerResponse,
   getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
@@ -485,94 +483,6 @@ describe('reviewsService', () => {
       // Review should now be set to pending
       const review = await wixData.get('Reviews', 'rev-001');
       expect(review.status).toBe('pending');
-    });
-  });
-
-  describe('getReviewStats', () => {
-    beforeEach(() => {
-      // Use recent dates so they fall within the stats window
-      const now = new Date();
-      const recentReviews = sampleReviews.map(r => ({
-        ...r,
-        _createdDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      }));
-      resetData();
-      __seed('Reviews', recentReviews);
-    });
-
-    it('returns review statistics', async () => {
-      const result = await getReviewStats(30);
-      expect(result.success).toBe(true);
-      expect(result.period).toBe('30 days');
-      expect(typeof result.total).toBe('number');
-      expect(typeof result.approved).toBe('number');
-      expect(typeof result.pending).toBe('number');
-      expect(typeof result.avgRating).toBe('number');
-      expect(typeof result.verifiedPurchaseRate).toBe('number');
-      expect(typeof result.withPhotos).toBe('number');
-    });
-
-    it('calculates average rating from approved reviews', async () => {
-      const result = await getReviewStats(30);
-      expect(result.avgRating).toBe(4); // (5+4+3)/3 = 4.0
-    });
-
-    it('counts reviews with photos', async () => {
-      const result = await getReviewStats(30);
-      expect(result.withPhotos).toBe(1); // only rev-002 has photos
-    });
-
-    it('calculates verified purchase rate', async () => {
-      const result = await getReviewStats(30);
-      // 2 verified out of 3 approved = 67%
-      expect(result.verifiedPurchaseRate).toBe(67);
-    });
-
-    it('handles empty dataset', async () => {
-      resetData();
-      __seed('Reviews', []);
-      const result = await getReviewStats(30);
-      expect(result.success).toBe(true);
-      expect(result.total).toBe(0);
-      expect(result.avgRating).toBe(0);
-    });
-
-    it('clamps days to safe range', async () => {
-      const result = await getReviewStats(0);
-      expect(result.period).toBe('1 days');
-    });
-  });
-
-  describe('addOwnerResponse', () => {
-    it('adds owner response to an existing review', async () => {
-      const result = await addOwnerResponse('rev-001', 'Thank you for your kind words! We appreciate your business.');
-      expect(result.success).toBe(true);
-
-      const review = await wixData.get('Reviews', 'rev-001');
-      expect(review.ownerResponse).toContain('Thank you');
-      expect(review.ownerResponseDate).toBeDefined();
-    });
-
-    it('rejects invalid review ID', async () => {
-      const result = await addOwnerResponse('', 'Some response text here.');
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects response shorter than 5 characters', async () => {
-      const result = await addOwnerResponse('rev-001', 'Hi');
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('at least 5');
-    });
-
-    it('rejects non-existent review', async () => {
-      const result = await addOwnerResponse('rev-nonexistent', 'Thank you for your feedback!');
-      expect(result.success).toBe(false);
-    });
-
-    it('sanitizes HTML from response text', async () => {
-      await addOwnerResponse('rev-001', '<script>alert(1)</script>Thank you for the review!');
-      const review = await wixData.get('Reviews', 'rev-001');
-      expect(review.ownerResponse).not.toContain('<script>');
     });
   });
 

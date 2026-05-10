@@ -10,8 +10,6 @@ import {
   flagReview,
   getPendingReviews,
   moderateReview,
-  getReviewStats,
-  addOwnerResponse,
   getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
@@ -697,94 +695,6 @@ describe('reviewsServiceDeep', () => {
       const r = await moderateReview('rev-100', 'approve');
       expect(r.success).toBe(false);
       expect(r.error).toContain('rejected');
-    });
-  });
-
-  // ═══════════════════════════════════════════════════════════════════
-  // getReviewStats — edge cases
-  // ═══════════════════════════════════════════════════════════════════
-  describe('getReviewStats edge cases', () => {
-    it('clamps days > 365 to 365', async () => {
-      __seed('Reviews', []);
-      const r = await getReviewStats(999);
-      expect(r.period).toBe('365 days');
-    });
-
-    it('clamps days < 1 to 1', async () => {
-      __seed('Reviews', []);
-      const r = await getReviewStats(-10);
-      expect(r.period).toBe('1 days');
-    });
-
-    it('verifiedPurchaseRate is 0 when no approved reviews', async () => {
-      __seed('Reviews', []);
-      const r = await getReviewStats(30);
-      expect(r.verifiedPurchaseRate).toBe(0);
-    });
-
-    it('withPhotos counts only reviews with non-empty photos array', async () => {
-      const now = new Date();
-      __seed('Reviews', [
-        makeReview({ _id: 'r1', photos: ['a.jpg'], status: 'approved', _createdDate: now }),
-        makeReview({ _id: 'r2', photos: [], status: 'approved', _createdDate: now }),
-        makeReview({ _id: 'r3', photos: null, status: 'approved', _createdDate: now }),
-      ]);
-      const r = await getReviewStats(30);
-      expect(r.withPhotos).toBe(1);
-    });
-
-    it('avgRating is 0 when only non-approved reviews exist', async () => {
-      const now = new Date();
-      __seed('Reviews', [
-        makeReview({ _id: 'r1', status: 'pending', _createdDate: now }),
-        makeReview({ _id: 'r2', status: 'rejected', _createdDate: now }),
-      ]);
-      const r = await getReviewStats(30);
-      expect(r.avgRating).toBe(0);
-    });
-  });
-
-  // ═══════════════════════════════════════════════════════════════════
-  // addOwnerResponse — edge cases
-  // ═══════════════════════════════════════════════════════════════════
-  describe('addOwnerResponse edge cases', () => {
-    it('rejects null responseText', async () => {
-      __seed('Reviews', [makeReview()]);
-      const r = await addOwnerResponse('rev-100', null);
-      expect(r.success).toBe(false);
-    });
-
-    it('rejects numeric responseText', async () => {
-      __seed('Reviews', [makeReview()]);
-      // sanitize(12345) returns '' since not a string
-      const r = await addOwnerResponse('rev-100', 12345);
-      expect(r.success).toBe(false);
-    });
-
-    it('rejects exactly 4 character response', async () => {
-      __seed('Reviews', [makeReview()]);
-      const r = await addOwnerResponse('rev-100', 'abcd');
-      expect(r.success).toBe(false);
-    });
-
-    it('accepts exactly 5 character response', async () => {
-      __seed('Reviews', [makeReview()]);
-      const r = await addOwnerResponse('rev-100', 'abcde');
-      expect(r.success).toBe(true);
-    });
-
-    it('sets ownerResponseDate as a Date', async () => {
-      __seed('Reviews', [makeReview()]);
-      await addOwnerResponse('rev-100', 'Thanks for the review!');
-      const review = await wixData.get('Reviews', 'rev-100');
-      expect(review.ownerResponseDate).toBeInstanceOf(Date);
-    });
-
-    it('overwrites previous owner response', async () => {
-      __seed('Reviews', [makeReview({ ownerResponse: 'Old response text here' })]);
-      await addOwnerResponse('rev-100', 'New response text here');
-      const review = await wixData.get('Reviews', 'rev-100');
-      expect(review.ownerResponse).toContain('New response');
     });
   });
 

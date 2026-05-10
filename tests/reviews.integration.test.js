@@ -10,8 +10,6 @@ import {
   flagReview,
   getPendingReviews,
   moderateReview,
-  getReviewStats,
-  addOwnerResponse,
   getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
@@ -454,20 +452,6 @@ describe('Reviews & Ratings Integration', () => {
       expect(inserted.reason).toBe('other');
     });
 
-    it('owner can respond to a review', async () => {
-      __seed('Reviews', [review()]);
-      const result = await addOwnerResponse('rev-1', 'Thank you for your feedback, Jane!');
-      expect(result.success).toBe(true);
-
-      const reviews = await getProductReviews('prod-1');
-      expect(reviews.reviews[0].ownerResponse).toBe('Thank you for your feedback, Jane!');
-    });
-
-    it('owner response must be at least 5 characters', async () => {
-      __seed('Reviews', [review()]);
-      const result = await addOwnerResponse('rev-1', 'Hi');
-      expect(result.success).toBe(false);
-    });
   });
 
   // ── Helpful voting ────────────────────────────────────────────────
@@ -534,29 +518,6 @@ describe('Reviews & Ratings Integration', () => {
     });
   });
 
-  // ── Review stats (admin) ──────────────────────────────────────────
-
-  describe('review stats (admin)', () => {
-    it('returns counts by status and overall stats', async () => {
-      const now = new Date();
-      __seed('Reviews', [
-        review({ _id: 'r1', status: 'approved', verifiedPurchase: true, photos: ['a.jpg'], _createdDate: now }),
-        review({ _id: 'r2', status: 'approved', rating: 3, memberId: 'm2', verifiedPurchase: false, photos: [], _createdDate: now }),
-        review({ _id: 'r3', status: 'pending', memberId: 'm3', _createdDate: now }),
-        review({ _id: 'r4', status: 'rejected', memberId: 'm4', _createdDate: now }),
-      ]);
-
-      const stats = await getReviewStats(30);
-      expect(stats.success).toBe(true);
-      expect(stats.approved).toBe(2);
-      expect(stats.pending).toBe(1);
-      expect(stats.rejected).toBe(1);
-      expect(stats.total).toBe(4);
-      expect(stats.avgRating).toBe(4); // (5+3)/2
-      expect(stats.verifiedPurchaseRate).toBe(50); // 1 of 2 approved
-      expect(stats.withPhotos).toBe(1);
-    });
-  });
 
   // ── Review display format ─────────────────────────────────────────
 

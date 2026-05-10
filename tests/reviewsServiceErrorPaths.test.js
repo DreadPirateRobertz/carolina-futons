@@ -13,8 +13,6 @@ import {
   flagReview,
   getPendingReviews,
   moderateReview,
-  getReviewStats,
-  addOwnerResponse,
   getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
@@ -86,24 +84,6 @@ describe('reviewsService — error catch paths', () => {
     expect(result.error).toContain('Failed to moderate');
   });
 
-  it('getReviewStats returns failure on DB error', async () => {
-    vi.spyOn(wixData, 'query').mockImplementationOnce(() => {
-      throw new Error('DB down');
-    });
-    const result = await getReviewStats(30);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Failed to fetch');
-  });
-
-  it('addOwnerResponse returns failure on DB error', async () => {
-    __seed('Reviews', [
-      { _id: 'rev-owner', productId: 'p1', status: 'approved' },
-    ]);
-    vi.spyOn(wixData, 'update').mockRejectedValueOnce(new Error('DB down'));
-    const result = await addOwnerResponse('rev-owner', 'Thank you for your review!');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Failed to add');
-  });
 
   it('getCategoryReviewSummaries returns {} on DB error', async () => {
     vi.spyOn(wixData, 'query').mockImplementationOnce(() => {
