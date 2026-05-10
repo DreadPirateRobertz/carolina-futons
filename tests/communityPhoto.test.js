@@ -188,7 +188,7 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
     // wrapper's serverError path is reached, including errorId in
     // console.error log for ops correlation.
     const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.doMock('backend/communityPhoto.web', () => ({
+    vi.doMock('backend/communityPhoto.web', () => ({ // vi-domock-legacy
       submitCommunityPhoto: vi.fn().mockRejectedValue(new Error('Velo runtime exploded')),
       _validateCommunityPhoto: vi.fn(() => null),
     }));
