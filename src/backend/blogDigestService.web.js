@@ -126,43 +126,6 @@ export const sendWeeklyBlogDigest = webMethod(
 );
 
 /**
- * Preview what this week's digest would include without sending.
- *
- * @function previewWeeklyBlogDigest
- * @param {number} [lookbackDays=7]
- * @returns {Promise<{success: boolean, posts?: Array, subscriberCount?: number, weekLabel?: string, alreadySent?: boolean, error?: string}>}
- * @permission Admin
- */
-export const previewWeeklyBlogDigest = webMethod(
-  Permissions.Admin,
-  async (lookbackDays = 7) => {
-    try {
-      const safeDays = Math.max(1, Math.min(30, Math.floor(lookbackDays)));
-      const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
-      const weekOf = getWeekStart(new Date());
-
-      const alreadySent = await wixData.query('BlogDigestLog')
-        .ge('weekOf', weekOf)
-        .find();
-
-      const recentPosts = await fetchRecentPosts(since);
-      const subscribers = await fetchActiveSubscribers();
-
-      return {
-        success: true,
-        posts: recentPosts.map(normalizePostForEmail),
-        subscriberCount: subscribers.length,
-        weekLabel: formatWeekLabel(since, new Date()),
-        alreadySent: alreadySent.items.length > 0,
-      };
-    } catch (err) {
-      logError('blogDigestService.previewWeeklyBlogDigest', err);
-      return { success: false, error: err.message };
-    }
-  }
-);
-
-/**
  * Fetch up to MAX_POSTS_FETCH posts from the blog API, filter to those published
  * on or after `since`, sort newest-first, then slice to MAX_POSTS_IN_DIGEST.
  * @param {Date} since

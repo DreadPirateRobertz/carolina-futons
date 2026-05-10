@@ -1,5 +1,5 @@
 // blogDigestService.test.js — CF-e3yo: Blog → newsletter automation weekly digest
-// Covers: sendWeeklyBlogDigest, previewWeeklyBlogDigest, helper functions.
+// Covers: sendWeeklyBlogDigest + helper functions.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed, __onInsert, __setInsertError } from 'wix-data';
 import { __reset as blogReset, __setPosts } from 'wix-blog-backend';
@@ -8,7 +8,6 @@ import { get_weeklyBlogDigestCron } from '../src/backend/http-functions.js';
 
 import {
   sendWeeklyBlogDigest,
-  previewWeeklyBlogDigest,
   _DIGEST_TEMPLATE,
   _SEQUENCE_TYPE,
   _SITE_URL,
@@ -368,60 +367,6 @@ describe('sendWeeklyBlogDigest — error handling', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/Blog API unavailable/);
     expect(result.queued).toBe(0);
-  });
-});
-
-// ── previewWeeklyBlogDigest ───────────────────────────────────────────
-
-describe('previewWeeklyBlogDigest', () => {
-  it('returns posts and subscriber count without sending', async () => {
-    __setPosts([makePost()]);
-    __seed('NewsletterSubscribers', [
-      { _id: 'sub-1', email: 'alice@example.com', status: 'active' },
-      { _id: 'sub-2', email: 'bob@example.com', status: 'active' },
-    ]);
-
-    const inserted = makeInsertSpy();
-
-    const result = await previewWeeklyBlogDigest();
-
-    expect(result.success).toBe(true);
-    expect(result.posts).toHaveLength(1);
-    expect(result.subscriberCount).toBe(2);
-    expect(result.alreadySent).toBe(false);
-    expect(inserted.filter(i => i._coll === 'EmailQueue')).toHaveLength(0);
-  });
-
-  it('reports alreadySent=true when log exists for this week', async () => {
-    __setPosts([makePost()]);
-    __seed('BlogDigestLog', [
-      { _id: 'log-1', weekOf: _getWeekStart(new Date()), sentAt: new Date() },
-    ]);
-
-    const result = await previewWeeklyBlogDigest();
-
-    expect(result.success).toBe(true);
-    expect(result.alreadySent).toBe(true);
-  });
-
-  it('includes weekLabel in preview', async () => {
-    __setPosts([makePost()]);
-
-    const result = await previewWeeklyBlogDigest();
-
-    expect(result.weekLabel).toBeDefined();
-    expect(typeof result.weekLabel).toBe('string');
-    expect(result.weekLabel.length).toBeGreaterThan(0);
-  });
-
-  it('returns success=false on error', async () => {
-    const { __setListError } = await import('wix-blog-backend');
-    __setListError(new Error('oops'));
-
-    const result = await previewWeeklyBlogDigest();
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
   });
 });
 
