@@ -1,74 +1,57 @@
 /**
  * @module errorMonitoring
- * @description Centralized error logging and monitoring dashboard backend.
- * Logs errors to ErrorLogs CMS collection, groups similar errors, tracks
- * frequency, and alerts on rate spikes.
+ * @description Centralized error logging — `logError` accepts errors from any
+ * page or backend module, deduplicates by message+context group key, and
+ * persists to ErrorLogs / ErrorGroups CMS collections. Plus the
+ * `createErrorBoundaryLogger` factory, which wraps logError for use inside
+ * React-style error boundaries (auto-flags checkout/payment as critical).
+ *
+ * cf-4x7e Pass 2 chunk 9 retired the dashboard / alerting surface that
+ * used to live here (getErrorDashboard, getErrorDetails,
+ * updateErrorGroupStatus, checkErrorRateSpike, getErrorFrequency,
+ * configureAlert, getAlertRules, checkAlertConditions). All 8 had zero
+ * callers in cfutons monorepo, stage3-velo, or cfw — admin tooling
+ * built but never wired. Refer to git history for the dashboard
+ * implementation if revived.
  *
  * @requires wix-web-module
  * @requires wix-data
- * @requires wix-members-backend
+ * @requires wix-members-backend (logError reads userId, no role-gating)
  *
  * @setup
- * Create CMS collection "ErrorLogs" with fields:
- * - errorGroup (Text) - Hash key for grouping similar errors
- * - message (Text) - Error message
- * - stack (Text) - Stack trace
- * - page (Text) - Page where error occurred
- * - context (Text) - Module/function context
- * - userId (Text) - Current member ID if available
- * - userAgent (Text) - Browser user agent
- * - severity (Text) - "error" | "warning" | "critical"
- * - metadata (Text/JSON) - Additional context as JSON string
- * - _createdDate (DateTime) - Auto
+ * Requires CMS collections:
  *
- * Create CMS collection "ErrorGroups" with fields:
- * - groupKey (Text) - Unique hash for error grouping
- * - message (Text) - Representative error message
- * - firstSeen (DateTime) - When this error first occurred
- * - lastSeen (DateTime) - Most recent occurrence
- * - occurrenceCount (Number) - Total times this error has occurred
- * - status (Text) - "active" | "resolved" | "ignored"
- * - affectedPages (Text/JSON) - JSON array of pages affected
- * - sampleStack (Text) - Representative stack trace
- * - resolvedBy (Text) - Who resolved it
- * - resolvedDate (DateTime) - When it was resolved
+ *   ErrorLogs:
+ *     errorGroup (Text)  — Hash key for grouping similar errors
+ *     message (Text)     — Error message
+ *     stack (Text)       — Stack trace
+ *     page (Text)        — Page where error occurred
+ *     context (Text)     — Module/function context
+ *     userId (Text)      — Current member ID if available
+ *     userAgent (Text)   — Browser user agent
+ *     severity (Text)    — "error" | "warning" | "critical"
+ *     metadata (Text/JSON) — Additional context as JSON string
+ *     _createdDate (DateTime) — Auto
  *
- * Create CMS collection "AlertRules" with fields:
- * - name (Text) - Alert rule name
- * - contextPattern (Text) - Optional context filter (substring match)
- * - messagePattern (Text) - Optional message filter (case-insensitive substring)
- * - severityFilter (Text) - Optional severity filter: "error" | "warning" | "critical" | ""
- * - thresholdCount (Number) - Error count threshold to trigger alert (min 1)
- * - windowMinutes (Number) - Time window in minutes to check (1-1440)
- * - enabled (Boolean) - Whether the rule is active
+ *   ErrorGroups:
+ *     groupKey (Text)         — Unique hash for error grouping
+ *     message (Text)          — Representative error message
+ *     firstSeen (DateTime)    — When this error first occurred
+ *     lastSeen (DateTime)     — Most recent occurrence
+ *     occurrenceCount (Number) — Total times this error has occurred
+ *     status (Text)           — "active" | "resolved" | "ignored"
+ *     affectedPages (Text/JSON) — JSON array of pages affected
+ *     sampleStack (Text)      — Representative stack trace
+ *     resolvedBy (Text)       — Who resolved it (admin only; not currently set)
+ *     resolvedDate (DateTime) — When it was resolved
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const ERROR_LOGS_COLLECTION = 'ErrorLogs';
 const ERROR_GROUPS_COLLECTION = 'ErrorGroups';
-const ALERT_RULES_COLLECTION = 'AlertRules';
-const ALERT_THRESHOLD_MULTIPLIER = 10;
-const BASELINE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-const SPIKE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-
-// ── Admin check ─────────────────────────────────────────────────────
-
-async function requireAdmin() {
-  const member = await currentMember.getMember();
-  if (!member || !member._id) {
-    throw new Error('Authentication required.');
-  }
-  const roles = await currentMember.getRoles();
-  const isAdmin = roles.some(r => r.title === 'Admin' || r._id === 'admin');
-  if (!isAdmin) {
-    throw new Error('Admin access required.');
-  }
-  return member._id;
-}
 
 // ── Error group key generation ──────────────────────────────────────
 
@@ -182,459 +165,6 @@ export const logError = webMethod(
   }
 );
 
-// ── getErrorDashboard ───────────────────────────────────────────────
-
-export const getErrorDashboard = webMethod(
-  Permissions.SiteMember,
-  async (options = {}) => {
-    try {
-      await requireAdmin();
-
-      const { days = 7, limit = 50 } = options;
-      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-      // Get active error groups sorted by occurrence count
-      const groups = await wixData.query(ERROR_GROUPS_COLLECTION)
-        .ne('status', 'ignored')
-        .ge('lastSeen', cutoff)
-        .descending('occurrenceCount')
-        .limit(limit)
-        .find();
-
-      // Get total error count for the period
-      const totalLogs = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', cutoff)
-        .count();
-
-      // Get error count by severity
-      const criticalCount = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', cutoff)
-        .eq('severity', 'critical')
-        .count();
-
-      const warningCount = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', cutoff)
-        .eq('severity', 'warning')
-        .count();
-
-      return {
-        success: true,
-        summary: {
-          totalErrors: totalLogs,
-          criticalErrors: criticalCount,
-          warnings: warningCount,
-          activeGroups: groups.items.filter(g => g.status === 'active').length,
-          resolvedGroups: groups.items.filter(g => g.status === 'resolved').length,
-          period: `${days} days`,
-        },
-        topErrors: groups.items.map(g => ({
-          _id: g._id,
-          groupKey: g.groupKey,
-          message: g.message,
-          occurrenceCount: g.occurrenceCount,
-          firstSeen: g.firstSeen,
-          lastSeen: g.lastSeen,
-          status: g.status,
-          affectedPages: safeParseJSON(g.affectedPages, []),
-          sampleStack: g.sampleStack,
-        })),
-      };
-    } catch (err) {
-      console.error('getErrorDashboard error:', err);
-      return { success: false, error: 'Unable to load error dashboard' };
-    }
-  }
-);
-
-// ── getErrorDetails ─────────────────────────────────────────────────
-
-export const getErrorDetails = webMethod(
-  Permissions.SiteMember,
-  async (groupKey) => {
-    try {
-      await requireAdmin();
-
-      const cleanKey = sanitize(groupKey, 500);
-      if (!cleanKey) return { success: false, error: 'Group key required' };
-
-      // Get the error group
-      const groupResult = await wixData.query(ERROR_GROUPS_COLLECTION)
-        .eq('groupKey', cleanKey)
-        .find();
-
-      if (groupResult.items.length === 0) {
-        return { success: false, error: 'Error group not found' };
-      }
-
-      const group = groupResult.items[0];
-
-      // Get recent individual log entries for this group
-      const logs = await wixData.query(ERROR_LOGS_COLLECTION)
-        .eq('errorGroup', cleanKey)
-        .descending('_createdDate')
-        .limit(50)
-        .find();
-
-      return {
-        success: true,
-        group: {
-          _id: group._id,
-          groupKey: group.groupKey,
-          message: group.message,
-          occurrenceCount: group.occurrenceCount,
-          firstSeen: group.firstSeen,
-          lastSeen: group.lastSeen,
-          status: group.status,
-          affectedPages: safeParseJSON(group.affectedPages, []),
-          sampleStack: group.sampleStack,
-          resolvedBy: group.resolvedBy || null,
-          resolvedDate: group.resolvedDate || null,
-        },
-        recentLogs: logs.items.map(log => ({
-          _id: log._id,
-          message: log.message,
-          stack: log.stack,
-          page: log.page,
-          context: log.context,
-          userId: log.userId,
-          userAgent: log.userAgent,
-          severity: log.severity,
-          metadata: safeParseJSON(log.metadata, {}),
-          createdDate: log._createdDate,
-        })),
-      };
-    } catch (err) {
-      console.error('getErrorDetails error:', err);
-      return { success: false, error: 'Unable to load error details' };
-    }
-  }
-);
-
-// ── updateErrorGroupStatus ──────────────────────────────────────────
-
-export const updateErrorGroupStatus = webMethod(
-  Permissions.SiteMember,
-  async (groupId, newStatus) => {
-    try {
-      const adminId = await requireAdmin();
-
-      const cleanId = sanitize(groupId, 50);
-      if (!cleanId) return { success: false, error: 'Group ID required' };
-
-      const validStatuses = ['active', 'resolved', 'ignored'];
-      if (!validStatuses.includes(newStatus)) {
-        return { success: false, error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` };
-      }
-
-      const group = await wixData.get(ERROR_GROUPS_COLLECTION, cleanId);
-      if (!group) {
-        return { success: false, error: 'Error group not found' };
-      }
-
-      group.status = newStatus;
-      if (newStatus === 'resolved') {
-        group.resolvedBy = adminId;
-        group.resolvedDate = new Date();
-      }
-
-      await wixData.update(ERROR_GROUPS_COLLECTION, group);
-
-      return { success: true, status: newStatus };
-    } catch (err) {
-      console.error('updateErrorGroupStatus error:', err);
-      return { success: false, error: 'Unable to update error group status' };
-    }
-  }
-);
-
-// ── checkErrorRateSpike ─────────────────────────────────────────────
-
-export const checkErrorRateSpike = webMethod(
-  Permissions.SiteMember,
-  async () => {
-    try {
-      await requireAdmin();
-
-      const now = Date.now();
-      const baselineCutoff = new Date(now - BASELINE_WINDOW_MS);
-      const spikeCutoff = new Date(now - SPIKE_WINDOW_MS);
-
-      // Count errors in the last 24 hours for baseline
-      const baselineCount = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', baselineCutoff)
-        .count();
-
-      // Count errors in the last hour
-      const spikeCount = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', spikeCutoff)
-        .count();
-
-      // Calculate hourly baseline rate (24h / 24 = avg errors per hour)
-      const hourlyBaseline = baselineCount / 24;
-      const isSpike = hourlyBaseline > 0 && spikeCount >= hourlyBaseline * ALERT_THRESHOLD_MULTIPLIER;
-
-      return {
-        success: true,
-        isSpike,
-        currentHourCount: spikeCount,
-        hourlyBaseline: Math.round(hourlyBaseline * 100) / 100,
-        threshold: Math.round(hourlyBaseline * ALERT_THRESHOLD_MULTIPLIER),
-        baselinePeriod: '24 hours',
-        spikePeriod: '1 hour',
-      };
-    } catch (err) {
-      console.error('checkErrorRateSpike error:', err);
-      return { success: false, error: 'Unable to check error rate' };
-    }
-  }
-);
-
-// ── getErrorFrequency ───────────────────────────────────────────────
-
-export const getErrorFrequency = webMethod(
-  Permissions.SiteMember,
-  async (days = 7) => {
-    try {
-      await requireAdmin();
-
-      const safeDays = Math.min(Math.max(1, days), 90);
-      const cutoff = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
-
-      // Get all error logs in the period
-      const logs = await wixData.query(ERROR_LOGS_COLLECTION)
-        .ge('_createdDate', cutoff)
-        .descending('_createdDate')
-        .limit(1000)
-        .find();
-
-      // Group by date for frequency chart
-      const byDate = {};
-      const bySeverity = { error: 0, warning: 0, critical: 0 };
-      const byPage = {};
-
-      for (const log of logs.items) {
-        // By date
-        const date = log._createdDate
-          ? new Date(log._createdDate).toISOString().split('T')[0]
-          : 'unknown';
-        byDate[date] = (byDate[date] || 0) + 1;
-
-        // By severity
-        const sev = log.severity || 'error';
-        bySeverity[sev] = (bySeverity[sev] || 0) + 1;
-
-        // By page
-        if (log.page) {
-          byPage[log.page] = (byPage[log.page] || 0) + 1;
-        }
-      }
-
-      // Convert to sorted array
-      const frequency = Object.entries(byDate)
-        .map(([date, count]) => ({ date, count }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      const topPages = Object.entries(byPage)
-        .map(([page, count]) => ({ page, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-
-      return {
-        success: true,
-        period: `${safeDays} days`,
-        totalErrors: logs.items.length,
-        frequency,
-        bySeverity,
-        topPages,
-      };
-    } catch (err) {
-      console.error('getErrorFrequency error:', err);
-      return { success: false, error: 'Unable to load error frequency' };
-    }
-  }
-);
-
-// ── configureAlert ──────────────────────────────────────────────────
-
-/**
- * Create a new alert rule in the AlertRules collection.
- * Normalizes severity to lowercase and clamps numeric ranges.
- *
- * @param {Object} alertConfig
- * @param {string} alertConfig.name - Alert name (sanitized, max 200 chars)
- * @param {string} [alertConfig.contextPattern] - Context substring filter
- * @param {string} [alertConfig.messagePattern] - Message substring filter (case-insensitive)
- * @param {string} [alertConfig.severityFilter] - "error"|"warning"|"critical" (case-insensitive)
- * @param {number} alertConfig.thresholdCount - Error count to trigger (min 1)
- * @param {number} alertConfig.windowMinutes - Time window in minutes (1-1440)
- * @param {boolean} [alertConfig.enabled=true] - Whether rule is active
- * @returns {Promise<{success: boolean, rule?: Object, error?: string}>}
- */
-export const configureAlert = webMethod(
-  Permissions.SiteMember,
-  async (alertConfig = {}) => {
-    try {
-      await requireAdmin();
-
-      const {
-        name,
-        contextPattern,
-        messagePattern,
-        severityFilter,
-        thresholdCount,
-        windowMinutes,
-        enabled,
-      } = alertConfig;
-
-      const cleanName = sanitize(name, 200);
-      if (!cleanName) return { success: false, error: 'Alert name is required' };
-
-      if (typeof thresholdCount !== 'number' || !isFinite(thresholdCount)) {
-        return { success: false, error: 'thresholdCount is required and must be a number' };
-      }
-
-      if (typeof windowMinutes !== 'number' || !isFinite(windowMinutes)) {
-        return { success: false, error: 'windowMinutes is required and must be a number' };
-      }
-
-      const normalizedSeverity = typeof severityFilter === 'string'
-        ? severityFilter.toLowerCase() : '';
-
-      const rule = {
-        name: cleanName,
-        contextPattern: sanitize(contextPattern, 200) || '',
-        messagePattern: sanitize(messagePattern, 200) || '',
-        severityFilter: ['error', 'warning', 'critical'].includes(normalizedSeverity)
-          ? normalizedSeverity : '',
-        thresholdCount: Math.max(1, Math.round(thresholdCount)),
-        windowMinutes: Math.min(1440, Math.max(1, Math.round(windowMinutes))),
-        enabled: enabled !== false,
-      };
-
-      const inserted = await wixData.insert(ALERT_RULES_COLLECTION, rule);
-
-      return { success: true, rule: { ...rule, _id: inserted._id } };
-    } catch (err) {
-      console.error('configureAlert error:', err);
-      return { success: false, error: 'Unable to configure alert' };
-    }
-  }
-);
-
-// ── getAlertRules ──────────────────────────────────────────────────
-
-/**
- * Retrieve all configured alert rules (max 100). Admin only.
- * @returns {Promise<{success: boolean, rules?: Array<Object>, error?: string}>}
- */
-export const getAlertRules = webMethod(
-  Permissions.SiteMember,
-  async () => {
-    try {
-      await requireAdmin();
-
-      const result = await wixData.query(ALERT_RULES_COLLECTION)
-        .limit(100)
-        .find();
-
-      return {
-        success: true,
-        rules: result.items.map(r => ({
-          _id: r._id,
-          name: r.name,
-          contextPattern: r.contextPattern,
-          messagePattern: r.messagePattern,
-          severityFilter: r.severityFilter,
-          thresholdCount: r.thresholdCount,
-          windowMinutes: r.windowMinutes,
-          enabled: r.enabled,
-        })),
-      };
-    } catch (err) {
-      console.error('getAlertRules error:', err);
-      return { success: false, error: 'Unable to load alert rules' };
-    }
-  }
-);
-
-// ── checkAlertConditions ───────────────────────────────────────────
-
-/**
- * Evaluate all enabled alert rules against recent ErrorLogs.
- * Fail-closed: if a rule's query fails, it reports triggered=true with
- * evaluationFailed=true so callers never miss a potential incident.
- *
- * @returns {Promise<{success: boolean, alerts?: Array<{rule: string, ruleId: string, triggered: boolean, evaluationFailed?: boolean, currentCount: number|null, threshold: number, window: string}>, error?: string}>}
- */
-export const checkAlertConditions = webMethod(
-  Permissions.SiteMember,
-  async () => {
-    try {
-      await requireAdmin();
-
-      const rulesResult = await wixData.query(ALERT_RULES_COLLECTION)
-        .eq('enabled', true)
-        .find();
-
-      const alerts = [];
-
-      for (const rule of rulesResult.items) {
-        try {
-          const windowCutoff = new Date(Date.now() - rule.windowMinutes * 60 * 1000);
-
-          // Build query matching this rule's filters
-          let query = wixData.query(ERROR_LOGS_COLLECTION)
-            .ge('_createdDate', windowCutoff);
-
-          if (rule.contextPattern) {
-            query = query.contains('context', rule.contextPattern);
-          }
-          if (rule.severityFilter) {
-            query = query.eq('severity', rule.severityFilter);
-          }
-
-          let count;
-          if (rule.messagePattern) {
-            const result = await query.limit(1000).find();
-            const lowerPattern = rule.messagePattern.toLowerCase();
-            count = result.items.filter(i =>
-              (i.message || '').toLowerCase().includes(lowerPattern)
-            ).length;
-          } else {
-            count = await query.count();
-          }
-
-          alerts.push({
-            rule: rule.name,
-            ruleId: rule._id,
-            triggered: count >= rule.thresholdCount,
-            currentCount: count,
-            threshold: rule.thresholdCount,
-            window: `${rule.windowMinutes} minutes`,
-          });
-        } catch (ruleErr) {
-          console.error(`checkAlertConditions: rule "${rule.name}" (${rule._id}) failed:`, ruleErr);
-          alerts.push({
-            rule: rule.name,
-            ruleId: rule._id,
-            triggered: true,
-            evaluationFailed: true,
-            error: 'Rule evaluation failed',
-            currentCount: null,
-            threshold: rule.thresholdCount,
-            window: `${rule.windowMinutes} minutes`,
-          });
-        }
-      }
-
-      return { success: true, alerts };
-    } catch (err) {
-      console.error('checkAlertConditions error:', err);
-      return { success: false, error: 'ALERT SYSTEM FAILURE: Unable to evaluate alert conditions' };
-    }
-  }
-);
-
 // ── createErrorBoundaryLogger ──────────────────────────────────────
 
 const CRITICAL_CONTEXTS = ['checkout', 'payment'];
@@ -676,14 +206,4 @@ export function createErrorBoundaryLogger(context) {
       return { success: false, error: 'Error boundary logging failed' };
     }
   };
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────
-
-function safeParseJSON(str, fallback) {
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return fallback;
-  }
 }
