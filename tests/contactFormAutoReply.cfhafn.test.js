@@ -73,7 +73,7 @@ describe('cf-hafn · sendEmail customer auto-reply', () => {
     expect(result.success).toBe(true);
     const log = __getEmailLog();
 
-    const ownerEmail = log.find((e) => e.templateId === 'contact_form_submission');
+    const ownerEmail = log.find((e) => e.templateId === 'VJBU6zD');
     const customerEmail = log.find((e) => e.templateId === 'VJBOnfD');
 
     expect(ownerEmail).toBeDefined();
@@ -132,7 +132,7 @@ describe('cf-hafn · auto-reply is non-blocking', () => {
     await flushMicrotasks();
 
     expect(result.success).toBe(true); // owner email + CMS row already happened
-    expect(__getEmailLog().some((e) => e.templateId === 'contact_form_submission')).toBe(true);
+    expect(__getEmailLog().some((e) => e.templateId === 'VJBU6zD')).toBe(true);
     expect(consoleWarn).toHaveBeenCalledWith(
       expect.stringContaining('customer auto-reply failed'),
       expect.any(String),

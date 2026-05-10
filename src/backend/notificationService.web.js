@@ -32,6 +32,7 @@ import { sanitize, validateId } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 import { getTodayET, computeStreakDanger } from 'backend/utils/dateUtils';
 import { getGamePrefsForMember } from 'backend/memberGamePreferences.web';
+import { resolveTemplateId } from 'backend/emailTemplates.web';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10% minimum drop to trigger alert
 const NOTIFICATION_COOLDOWN_DAYS = 7; // Don't re-notify same product within 7 days
@@ -264,7 +265,7 @@ async function sendAlert(memberId, product, alertType, alertData) {
 
     if (alertType === 'price_drop') {
       await triggeredEmails.emailContact(
-        'price_drop_alert',
+        resolveTemplateId('price_drop_alert'),
         contactId,
         {
           variables: {
@@ -279,7 +280,7 @@ async function sendAlert(memberId, product, alertType, alertData) {
       );
     } else if (alertType === 'back_in_stock') {
       await triggeredEmails.emailContact(
-        'back_in_stock_alert',
+        resolveTemplateId('back_in_stock_alert'),
         contactId,
         {
           variables: {
@@ -353,7 +354,7 @@ export const notifyOwner = webMethod(
       if (!ownerId) {
         console.warn('[notificationService] notifyOwner: SITE_OWNER_CONTACT_ID secret not set — falling back to console');
       } else {
-        await triggeredEmails.emailContact('owner_alert', ownerId, {
+        await triggeredEmails.emailContact(resolveTemplateId('owner_alert'), ownerId, {
           variables: { subject: safeSubject, message: safeMessage },
         });
         return { success: true, method: 'triggered_email' };

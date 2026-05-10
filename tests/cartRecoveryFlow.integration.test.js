@@ -582,7 +582,7 @@ describe('Queue Processing', () => {
 
     const emailLog = __getEmailLog();
     expect(emailLog).toHaveLength(1);
-    expect(emailLog[0].templateId).toBe('cart_recovery_1');
+    expect(emailLog[0].templateId).toBe('VJBTMzv'); // dashboard ID for cart_recovery_1
   });
 });
 
@@ -602,7 +602,7 @@ describe('Email Service Integration', () => {
     const emailLog = __getEmailLog();
     // cf-hafn: sendEmail also fires a customer-side auto-reply now; scope
     // this assertion to the owner notification specifically.
-    const ownerLog = emailLog.find((e) => e.templateId === 'contact_form_submission');
+    const ownerLog = emailLog.find((e) => e.templateId === 'VJBU6zD');
     expect(ownerLog).toBeDefined();
   });
 });

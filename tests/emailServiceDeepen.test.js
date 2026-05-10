@@ -66,7 +66,7 @@ describe('sendEmail', () => {
   it('calls triggeredEmails.emailContact with contact_form_submission template', async () => {
     await sendEmail(validForm);
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'contact_form_submission',
+      'VJBU6zD', // dashboard ID for contact_form_submission
       'owner-contact-id-123',
       expect.objectContaining({
         variables: expect.objectContaining({
@@ -160,7 +160,7 @@ describe('submitSwatchRequest', () => {
   it('notifies store owner via triggered email', async () => {
     await submitSwatchRequest(validSwatch);
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'contact_form_submission',
+      'VJBU6zD', // dashboard ID for contact_form_submission
       'owner-contact-id-123',
       expect.objectContaining({
         variables: expect.objectContaining({
@@ -213,7 +213,7 @@ describe('submitSwatchRequest', () => {
     // Only the owner notification, no confirmation
     expect(mockEmailContact).toHaveBeenCalledTimes(1);
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'contact_form_submission',
+      'VJBU6zD', // dashboard ID for contact_form_submission
       expect.any(String),
       expect.any(Object),
     );
@@ -369,7 +369,7 @@ describe('sendOrderNotification', () => {
   it('calls triggeredEmails with correct variables', async () => {
     await sendOrderNotification(validOrder);
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'new_order_notification',
+      'VJBUDr1', // dashboard ID for new_order_notification
       'owner-contact-id-123',
       {
         variables: {

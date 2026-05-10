@@ -77,7 +77,7 @@ describe('sendEmail', () => {
     });
     expect(r.success).toBe(true);
     expect(_emailsSent).toHaveLength(1);
-    expect(_emailsSent[0].templateId).toBe('contact_form_submission');
+    expect(_emailsSent[0].templateId).toBe('VJBU6zD'); // dashboard ID for contact_form_submission
     expect(_emailsSent[0].contactId).toBe('owner-contact-id');
     expect(_emailsSent[0].opts.variables.customerName).toBe('Jane Doe');
     expect(_collections['ContactSubmissions']).toHaveLength(1);
@@ -163,7 +163,7 @@ describe('sendOrderNotification', () => {
       lineItems: [{ name: 'Futon' }, { name: 'Cover' }],
     });
     expect(r.success).toBe(true);
-    expect(_emailsSent[0].templateId).toBe('new_order_notification');
+    expect(_emailsSent[0].templateId).toBe('VJBUDr1'); // dashboard ID for new_order_notification
     expect(_emailsSent[0].opts.variables.orderNumber).toBe('ORD-123');
     expect(_emailsSent[0].opts.variables.itemCount).toBe('2');
   });

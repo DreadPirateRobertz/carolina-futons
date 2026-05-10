@@ -30,7 +30,7 @@ describe('sendEmail', () => {
     // template). This assertion scopes to the owner notification specifically;
     // contactFormAutoReply.cfhafn.test.js covers the auto-reply leg.
     const emails = __getEmailLog();
-    const ownerEmail = emails.find((e) => e.templateId === 'contact_form_submission');
+    const ownerEmail = emails.find((e) => e.templateId === 'VJBU6zD'); // contact_form_submission
     expect(ownerEmail).toBeDefined();
     expect(ownerEmail.contactId).toBe('owner-contact-123');
     expect(ownerEmail.options.variables.customerName).toBe('John Doe');
@@ -204,7 +204,7 @@ describe('submitSwatchRequest', () => {
     expect(result).toEqual({ success: true });
     const emails = __getEmailLog();
     expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('contact_form_submission');
+    expect(emails[0].templateId).toBe('VJBU6zD'); // dashboard ID for contact_form_submission
     expect(emails[0].options.variables.subject).toContain('Fabric Swatch Request');
     expect(emails[0].options.variables.subject).toContain('Eureka Futon Frame');
     expect(emails[0].options.variables.message).toContain('Natural Oak');
@@ -360,7 +360,7 @@ describe('sendOrderNotification', () => {
 
     const emails = __getEmailLog();
     expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('new_order_notification');
+    expect(emails[0].templateId).toBe('VJBUDr1'); // dashboard ID for new_order_notification
     expect(emails[0].options.variables.orderNumber).toBe('10042');
     expect(emails[0].options.variables.customerName).toBe('Jane Smith');
     expect(emails[0].options.variables.itemCount).toBe('2');

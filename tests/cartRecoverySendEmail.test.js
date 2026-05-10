@@ -86,7 +86,7 @@ describe('sendRecoveryEmail — success', () => {
     await sendRecoveryEmail(CART_ID);
     const log = __getEmailLog();
     expect(log.length).toBe(1);
-    expect(log[0].templateId).toBe('cart_recovery_1');
+    expect(log[0].templateId).toBe('VJBTMzv'); // dashboard ID for cart_recovery_1
   });
 
   it('sends triggered email to resolved contactId (not raw email)', async () => {
