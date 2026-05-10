@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 05:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 05:45 MT**
 
 ## Session 2026-05-10 — Wave 27
 | Done | Detail |
@@ -16,6 +16,17 @@
 | ✅ PR #1278 MERGED | cf-3ldu rate-limit audit — F1(P1) in-memory Map → cf-3ldu.1 filed + assigned rennala. |
 | 🔄 PR #1279 #1280 | cf-z0ht.fu1 + cf-3qt.8.31 — tests running. |
 | ⚠️ cf-3ldu.1 NEW P1 | returnsService.web.js in-memory rate limit — survives cold-start → real security gap. Rennala implementing fix. |
+| ✅ PRs #1279 #1280 #1281 #1282 #1283 #1284 #1285 MERGED | Lighthouse root cause + UptimeRobot + PRE-FLIP 20/20 + Vercel Pro CLEAR + contactImport delete + webMethod permissions audit + morgott emailTemplates dead-method deletion |
+| ✅ ALL 7 WORKERS DISPATCHED | blaidd→cf-ox0h.1(P1 cron dedup), millicent→cf-3qt.8.33, miquella→cf-po31, morgott→cf-namd(chunk B), others active |
+
+**🎯 MAJOR CUTOVER GATES CLEARED OVERNIGHT:**
+- ✅ Vercel Pro Plus already active (no billing action needed)
+- ✅ PRE-FLIP smoke test 20/20 PASS on Vercel preview
+
+**Worker Map (05:45 MT):**
+blaidd: cf-ox0h.1 (P1 cron dedup) | godfrey: cf-3qt.8.31 (UptimeRobot) | millicent: cf-3qt.8.33 (monitoring)
+miquella: cf-po31 (webMethod permissions) | morgott: cf-namd (chunk B dead methods) | radahn: cf-jzsd + cf-oi01 + cf-dbw9
+rennala: cf-3ldu.1 (rate limit fix P1) + cf-v4py
 | ✅ PRs #1268 #1270 #1272 #1273 #1274 MERGED | Doc batch: cutover checklist, cron audit, Lighthouse baseline, khqd-cfw deferred note, mobile smoke (10/10 PASS). |
 | ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged. |
 
