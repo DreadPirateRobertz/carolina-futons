@@ -139,7 +139,7 @@ Per cfw `docs/cf-3qt/GSC-SUBMISSION-RUNBOOK.md`:
 |---|---|
 | 36 | Stop `pre-cutover-monitor.sh`. Save the log. |
 | 37 | Tally: total uptime %, # of 5xx, # of orders placed, P0/P1 incident count |
-| 38 | Vercel Web Vitals — RUM LCP / INP / CLS distributions vs. pre-cutover Lighthouse baseline (`docs/lighthouse-pre-cutover-2026-05-05.md` cfw repo) |
+| 38 | Vercel Web Vitals — RUM LCP / INP / CLS distributions vs. pre-cutover Lighthouse baseline ([`docs/lighthouse-pre-cutover-2026-05-05.md`](./lighthouse-pre-cutover-2026-05-05.md), this repo) |
 | 39 | Search Console — index coverage for new domain, any spike in errors |
 | 40 | melania compiles → cfw `docs/cf-3qt-day1-stability-report-<DATE>.md` (template at `cf-3qt-day1-stability-report-TEMPLATE.md`) |
 | 41 | If GREEN: monitor continues for 30 days (Phase 9 prereq, cf-3qt.9) |
