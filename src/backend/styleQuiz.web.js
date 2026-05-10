@@ -323,8 +323,9 @@ export const captureQuizLead = webMethod(
       const { allowed } = await checkRateLimit('QuizLeadRateLimit', cleaned);
       if (!allowed) return { success: false, message: 'Too many requests. Please try again later.' };
 
-      // Delegate to newsletterService for CMS insert + Klaviyo sync.
-      // subscribeToNewsletter deduplicates silently and triggers the welcome flow.
+      // Delegate to newsletterService for CMS insert + Klaviyo sync + welcome flow.
+      // subscribeToNewsletter deduplicates silently AND queues the welcome
+      // series via cf-3l0d's auto-trigger (post-cf-xdji contactId resolver).
       const { subscribeToNewsletter } = await import('backend/newsletterService.web');
       await subscribeToNewsletter(cleaned, { source: 'style_quiz' });
 
