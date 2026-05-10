@@ -378,7 +378,13 @@ export const markItemPurchased = webMethod(Permissions.Anyone, async (itemId, da
     });
     if (schemaErrors.length > 0) return { success: false, error: schemaErrors[0] };
 
-    const { allowed } = await checkRateLimit('RegistryPurchaseRateLimit', itemId);
+    // cf-za1o (cf-3ldu F3): rate-limit by buyer+item, not item alone.
+    // The previous itemId-only key meant 3 buyers total could claim
+    // any given registry item per hour — a legitimate baby shower
+    // with multiple attendees would block the 4th+ buyer.
+    const rlBuyer = sanitize(data?.buyerName || 'anonymous', 50).toLowerCase();
+    const rlKey = `${rlBuyer}:${itemId}`;
+    const { allowed } = await checkRateLimit('RegistryPurchaseRateLimit', rlKey);
     if (!allowed) return { success: false, error: 'Too many requests. Please try again later.' };
 
     const item = await wixData.get('GiftRegistryItems', itemId);

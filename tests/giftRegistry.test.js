@@ -427,6 +427,39 @@ describe('markItemPurchased', () => {
     const result = await markItemPurchased('i-1', null);
     expect(result.success).toBe(false);
   });
+
+  // cf-za1o (cf-3ldu F3): rate-limit must be keyed per-buyer-per-item,
+  // not per-item alone. Multiple legitimate buyers should each be able
+  // to claim the same item without blocking each other.
+  it('rate-limit allows different buyers to claim the same item', async () => {
+    __seed('GiftRegistryItems', [
+      { _id: 'i-rl', registryId: 'r-1', quantity: 10, purchasedQuantity: 0 },
+    ]);
+
+    // Default canonical helper allows 3 calls per key per hour. Run 4
+    // consecutive purchases from 4 different buyers — none should be
+    // rate-limited.
+    for (const buyer of ['Alice', 'Bob', 'Charlie', 'Dana']) {
+      const result = await markItemPurchased('i-rl', { buyerName: buyer, quantity: 1 });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  it('rate-limit blocks the same buyer after RATE_LIMIT_MAX claims on the same item', async () => {
+    __seed('GiftRegistryItems', [
+      { _id: 'i-spam', registryId: 'r-1', quantity: 10, purchasedQuantity: 0 },
+    ]);
+
+    // Same buyer + same item = same bucket. After 3 successes the 4th
+    // should be rate-limited (default max=3).
+    for (let i = 0; i < 3; i++) {
+      const result = await markItemPurchased('i-spam', { buyerName: 'Eve', quantity: 1 });
+      expect(result.success).toBe(true);
+    }
+    const blocked = await markItemPurchased('i-spam', { buyerName: 'Eve', quantity: 1 });
+    expect(blocked.success).toBe(false);
+    expect(blocked.error).toMatch(/Too many requests/);
+  });
 });
 
 // ── deleteRegistry ───────────────────────────────────────────────────
