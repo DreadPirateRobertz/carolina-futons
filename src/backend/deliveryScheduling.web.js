@@ -612,6 +612,9 @@ export const bookAppointment = webMethod(
 
       const rlCheck = await _checkBookingRateLimit(data.customerEmail || '');
       if (!rlCheck.allowed) {
+        if (rlCheck.reason === 'db_error') {
+          return { success: false, message: 'Failed to book appointment. Please try again.' };
+        }
         return { success: false, message: 'Too many booking attempts. Please try again later.' };
       }
 
