@@ -1,6 +1,17 @@
 # CF Project Progress Report
 **Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
 
+## Session 2026-05-10 — Wave 15
+| Done | Detail |
+|------|--------|
+| ✅ PR #546 MERGED | cf-ax24 dark mode wave — admin merge (lint+Vercel ✅, e2e stuck queued 15min, 7-line additive CSS change). cf-ax24 epic + all 3 child beads CLOSED. |
+| ✅ PR #1255 MERGED | miquella: cf-lsat — EVENT_NAME_MAP alias drift fix, real data-quality bug. Pre-existing test(20)/(22) failures. cf-lsat CLOSED. |
+| ✅ #543/#544/#545 MERGED | Dependabot: hono 4.12.18, fast-uri 3.1.2, ip-address+express-rate-limit. |
+| 📬 millicent cf-dbw9 | Track 2 ✅ (dependabot). Track 3 + Track 1 (cfutons-web 404) escalated to mayor for Stilgar. |
+| 📬 rennala cf-w1u1 | DEFERRED — staging Wix functions inaccessible. Staging URL + member token needed from Stilgar. |
+| 🆕 cfw beads filed | cf-7tkf (a11y audit), cf-rn4j (dark mode wave 2), cf-9kjw (contact/form dark), cf-5rmn (SEO audit), cf-641x (PDP gallery) — for incoming jasper/obsidian/onyx/opal/quartz crew. |
+| ⏳ Polecat promotion | Relayed to mayor: needs `gt crew start cfutons_web jasper obsidian onyx opal quartz` on pop-os Linux. |
+
 ## Session 2026-05-10 — Wave 14
 | Done | Detail |
 |------|--------|
