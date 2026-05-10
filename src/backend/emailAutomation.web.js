@@ -1005,6 +1005,16 @@ export const triggerAbandonedCartRecovery = webMethod(
         const cartTotalNum = Number(cart.cartTotal) || 0;
         const qualifiesForFreeShipping = cartTotalNum >= CART_FREE_SHIPPING_THRESHOLD;
 
+        // cf-trm0: resolve contactId once for all cart_recovery steps. Same
+        // pattern as cartRecovery.web.js webMethod path (PR #1236) — skip the
+        // entire cart if the helper can't resolve so we don't queue rows
+        // that processQueue would reject for missing contactId.
+        const cartContactId = await _resolveContactIdInternal(cartEmail);
+        if (!cartContactId) {
+          console.warn('[emailAutomation] cart_recovery: resolveContactId returned null for', cartEmail, '— skipping cart', cart.checkoutId);
+          continue;
+        }
+
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
 
@@ -1056,7 +1066,7 @@ export const triggerAbandonedCartRecovery = webMethod(
           await queueEmail({
             templateId: step.templateId,
             recipientEmail: cartEmail,
-            recipientContactId: '',
+            recipientContactId: cartContactId,
             variables,
             sequenceType: 'cart_recovery',
             sequenceStep: step.step,
@@ -2173,12 +2183,20 @@ export async function checkAndTriggerTierMilestone(memberId, email, firstName, n
 
       if (alreadySent) continue;
 
+      // cf-trm0: resolve contactId before queueing — skip this milestone if
+      // the helper can't resolve so processQueue doesn't reject the row.
+      const milestoneContactId = await _resolveContactIdInternal(cleanEmail, cleanName);
+      if (!milestoneContactId) {
+        console.warn('[emailAutomation] tier_milestone: resolveContactId returned null for', cleanEmail, '— skipping', milestone.milestoneKey);
+        continue;
+      }
+
       // Queue email
       try {
         await wixData.insert('EmailQueue', {
           templateId: milestone.templateId,
           recipientEmail: cleanEmail,
-          recipientContactId: '',
+          recipientContactId: milestoneContactId,
           variables: {
             firstName: cleanName,
             currentPoints: newTotal,

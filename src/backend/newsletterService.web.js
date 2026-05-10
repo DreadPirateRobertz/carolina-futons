@@ -22,6 +22,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 
 const DISCOUNT_CODE = 'WELCOME10';
 const KLAVIYO_API_BASE = 'https://a.klaviyo.com/api';
@@ -485,6 +486,18 @@ export const captureExitIntentEmail = webMethod(
         return { success: false, message: 'Too many requests. Please try again later.' };
       }
 
+      // cf-trm0: resolve contactId once before queueing the welcome
+      // series. Stage3-velo's exitIntentCapture.js still calls this entry
+      // point (cfutons routes through subscribeToNewsletter → resolveContactId
+      // post-cf-3l0d, but stage3 hasn't caught up yet). Helper returns null
+      // on validation/CRM upstream failure — surface as the same caller-
+      // facing failure shape so the popup can retry/show error.
+      const exitContactId = await _resolveContactIdInternal(cleaned);
+      if (!exitContactId) {
+        console.error('[newsletterService] captureExitIntentEmail: resolveContactId returned null for', cleaned);
+        return { success: false, message: 'Failed to resolve CRM contact for welcome email' };
+      }
+
       // Queue all 3 welcome series steps into EmailQueue
       const now = new Date();
       for (const step of WELCOME_STEPS) {
@@ -492,7 +505,7 @@ export const captureExitIntentEmail = webMethod(
         await wixData.insert('EmailQueue', {
           templateId: step.templateId,
           recipientEmail: cleaned,
-          recipientContactId: '',
+          recipientContactId: exitContactId,
           variables: {
             discountCode: DISCOUNT_CODE,
             email: cleaned,

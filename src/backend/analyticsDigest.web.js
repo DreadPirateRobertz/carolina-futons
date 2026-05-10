@@ -11,6 +11,7 @@ import wixData from 'wix-data';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { CUSTOM_EVENTS } from 'backend/customEvents.web';
 import { ANALYTICS_EVENTS_COLLECTION } from 'backend/utils/analyticsEvents';
+import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 
 const ORDERS_COLLECTION = 'Stores/Orders';
 const TOP_PRODUCTS_LIMIT = 5;
@@ -160,11 +161,19 @@ export const sendWeeklyDigestEmail = webMethod(
       const html = buildDigestEmailHtml(digest);
       const subject = `Weekly Analytics Digest — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
+      // cf-trm0: resolve contactId before queueing — skip if helper can't
+      // resolve so processQueue doesn't reject the row at dispatch time.
+      const digestContactId = await _resolveContactIdInternal(recipient);
+      if (!digestContactId) {
+        console.error('[analyticsDigest] sendWeeklyDigestEmail: resolveContactId returned null for', recipient);
+        return { success: false, error: 'Failed to resolve CRM contact for digest email' };
+      }
+
       // Queue the email
       await wixData.insert('EmailQueue', {
         templateId: 'analytics_digest',
         recipientEmail: recipient,
-        recipientContactId: '',
+        recipientContactId: digestContactId,
         variables: JSON.stringify({ subject, html }),
         sequenceType: 'analytics_digest',
         sequenceStep: 1,
