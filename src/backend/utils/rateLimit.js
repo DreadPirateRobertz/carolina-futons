@@ -16,6 +16,62 @@ import { logError } from 'backend/utils/errorHandler';
 export const RATE_LIMIT_MAX = 3;
 export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
+// cf-owrr: Wix's edge layer appends ONE entry to the X-Forwarded-For chain
+// when a request reaches the Velo HTTP function. The chain shape is:
+//
+//   <client-supplied entries>, <wix-edge-observed-client-ip>
+//
+// The leftmost entries are CLIENT-CONTROLLABLE (the client can ship any
+// X-Forwarded-For value in the request headers). Only the rightmost entry
+// is trustworthy because it was written by the Wix edge after observing
+// the actual TCP peer. Trusting the leftmost gives an attacker per-request
+// bucket bypass: rotate the leftmost spoofed IP each request, never share
+// a bucket with the previous request.
+//
+// Default trustedProxies = 1 strips the rightmost entry (Wix edge) and
+// returns the entry just before it (the real client). If the chain has
+// fewer entries than the trustedProxies count we don't have a reliable
+// client IP, so return null and let the caller fall back to a different
+// axis (e.g. imageUrl host).
+const DEFAULT_TRUSTED_PROXIES = 1;
+
+/**
+ * Extract the trusted client IP from a Velo HTTP function request.
+ *
+ * Reads `request.headers['x-forwarded-for']` (with a case-insensitive
+ * fallback), splits on commas, strips the rightmost `trustedProxies`
+ * entries (default 1 = the Wix edge entry), and returns the new
+ * rightmost entry — which is the actual client IP that Wix observed.
+ *
+ * Returns `null` when the chain is empty, the header is missing, or the
+ * chain has fewer entries than `trustedProxies` (in which case the
+ * caller should pick a different rate-limit axis rather than guess).
+ *
+ * @param {Object} request - Velo HTTP function `request` object.
+ * @param {Object} [opts]
+ * @param {number} [opts.trustedProxies] - Number of rightmost entries
+ *   to strip before reading the client IP. Defaults to 1 for the Wix
+ *   edge. Test harnesses can pass 0 when the test fakes the chain
+ *   without the edge entry.
+ * @returns {string|null} The trusted client IP, or null when unavailable.
+ */
+export function extractTrustedClientIp(request, opts = {}) {
+  const trustedProxies = opts.trustedProxies ?? DEFAULT_TRUSTED_PROXIES;
+  const headers = request && request.headers;
+  if (!headers) return null;
+  const xff = headers['x-forwarded-for'] || headers['X-Forwarded-For'];
+  if (typeof xff !== 'string' || xff.length === 0) return null;
+  const entries = xff
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (entries.length === 0) return null;
+  // Strip the rightmost `trustedProxies` entries. If we don't have enough
+  // entries to do that safely, return null (caller falls back).
+  if (entries.length <= trustedProxies) return null;
+  return entries[entries.length - 1 - trustedProxies];
+}
+
 /**
  * One-way FNV-1a hash of a rate-limit key.
  * CF-sec1 CMEK compliance: bucket keys stored in wixData must not contain
