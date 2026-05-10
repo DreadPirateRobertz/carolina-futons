@@ -1,5 +1,19 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:25 MT**
+
+## Session 2026-05-10 — Wave 18
+| Done | Detail |
+|------|--------|
+| ✅ cfw PR #551 MERGED | blaidd: cf-yq3h+cf-7tkf bundle — 50 dark surfaces, 16 files. cf-7tkf.2 verified correct (no code change). cf-yq3h+cf-7tkf.1+cf-7tkf.2 CLOSED. |
+| ✅ cfw PR #550 MERGED | miquella: cf-5rmn SEO audit. Baseline strong (all schema present). 2 P1 findings. cf-5rmn CLOSED. |
+| ✅ cfutons PR #1257 MERGED | morgott: cf-qmxf root cause — manual cancellations by Stilgar, NOT runner capacity. cf-qmxf CLOSED. |
+| ✅ cf-bbo8 FILED | P1 SEO canonical fix (PDP+PLP alternates:canonical — ~6 lines). Batch with next cfw window. |
+| ✅ morgott→cf-641x | PDP gallery + keyboard nav. Hold branch until PR #540 clears. Batch with cf-bbo8. |
+| 🔄 PR #1258 | millicent coverage fix — test(22) failed 84.98% vs 85%. Nudged for top-up. Rebase + push needed. |
+| ⏳ PR #540 | cf-jo07 CF blue wordmark — ALL CI GREEN. Stilgar morning confirm. Mayor flagged. |
+| ⏳ cf-dbw9 Track 3 | validity_checks + non_provider_patterns — Stilgar dashboard flip. |
+| ⏳ cf-3qt.8.31 | UptimeRobot activation — godfrey. No status yet. |
+| 📌 e2e standing | cfw "0s elapsed" e2e = Stilgar manual cancels (confirmed cf-qmxf). Admin-merge with lint+Vercel ✅ correct. |
 
 ## Session 2026-05-10 — Wave 17 (post-compaction)
 | Done | Detail |
