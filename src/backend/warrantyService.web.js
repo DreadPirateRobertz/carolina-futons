@@ -1,10 +1,13 @@
 /**
  * @module warrantyService
- * @description Extended warranty program — purchasable warranty tiers at checkout,
- * warranty registration portal, and claims submission flow. Provides tiered
- * protection plans (Basic/Extended/Premium) with price calculation based on
- * product price, warranty registration for purchased products, and a claims
- * workflow for covered issues.
+ * @description Extended warranty program — registration portal for purchased
+ * warranties, customer-side details/claims surface. cf-4x7e Pass 2 chunk 16
+ * retired the upstream warranty-plan purchase surface (getWarrantyPlans,
+ * calculateWarrantyPrice, purchaseWarranty — never wired; the ProductPage
+ * checkout flow doesn't currently sell extended warranties). Kept the
+ * registerWarranty + getMyWarranties live endpoints and defensively kept
+ * the claims UI surface (getWarrantyDetails, submitClaim, getClaimStatus,
+ * getMyClaims — Stilgar's open question).
  *
  * @requires wix-web-module
  * @requires wix-data
@@ -56,7 +59,6 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
 
-const MAX_PRODUCT_PRICE = 25000;
 const VALID_ISSUE_TYPES = ['structural', 'fabric', 'mechanism', 'accidental', 'stain', 'other'];
 const MIN_DESCRIPTION_LENGTH = 10;
 const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
@@ -120,202 +122,6 @@ function generateClaimNumber() {
   const seq = String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0');
   return `CLM-${date}-${seq}`;
 }
-
-/**
- * Get available warranty plans. Plans are global (not per-category) and
- * sorted by priority.
- *
- * @param {string} productCategory - Product category slug (for future per-category filtering).
- * @returns {Promise<{success: boolean, plans: Array}>}
- */
-export const getWarrantyPlans = webMethod(
-  Permissions.Anyone,
-  async (productCategory) => {
-    try {
-      const category = sanitize(productCategory, 100);
-      if (!category) {
-        return { success: false, error: 'Product category is required.', plans: [] };
-      }
-
-      const result = await wixData.query('WarrantyPlans')
-        .eq('active', true)
-        .ascending('priority')
-        .limit(10)
-        .find();
-
-      const plans = result.items.map(item => ({
-        _id: item._id,
-        name: item.name,
-        tierSlug: item.tierSlug,
-        durationYears: item.durationYears,
-        coverageType: item.coverageType,
-        priceMultiplier: item.priceMultiplier,
-        description: item.description,
-        coveredItems: parseJsonArray(item.coveredItems),
-        excludedItems: parseJsonArray(item.excludedItems),
-        priority: item.priority,
-      }));
-
-      return { success: true, plans };
-    } catch (err) {
-      console.error('[warrantyService] Error getting warranty plans:', err);
-      return { success: false, error: 'Failed to load warranty plans.', plans: [] };
-    }
-  }
-);
-
-/**
- * Calculate warranty price for a specific plan and product price.
- *
- * @param {string} planId - Warranty plan ID.
- * @param {number} productPrice - Product price in dollars.
- * @returns {Promise<{success: boolean, price: number, planName: string, durationYears: number}>}
- */
-export const calculateWarrantyPrice = webMethod(
-  Permissions.Anyone,
-  async (planId, productPrice) => {
-    try {
-      const cleanId = validateId(planId);
-      if (!cleanId) {
-        return { success: false, error: 'Valid plan ID is required.' };
-      }
-
-      const price = Number(productPrice);
-      if (!price || price <= 0) {
-        return { success: false, error: 'Valid product price is required.' };
-      }
-
-      const cappedPrice = Math.min(price, MAX_PRODUCT_PRICE);
-
-      const result = await wixData.query('WarrantyPlans')
-        .eq('_id', cleanId)
-        .eq('active', true)
-        .find();
-
-      if (result.items.length === 0) {
-        return { success: false, error: 'Warranty plan not found.' };
-      }
-
-      const plan = result.items[0];
-      const warrantyPrice = Math.round(cappedPrice * plan.priceMultiplier * 100) / 100;
-
-      return {
-        success: true,
-        price: warrantyPrice,
-        planName: plan.name,
-        durationYears: plan.durationYears,
-        coverageType: plan.coverageType,
-      };
-    } catch (err) {
-      console.error('[warrantyService] Error calculating warranty price:', err);
-      return { success: false, error: 'Failed to calculate warranty price.' };
-    }
-  }
-);
-
-/**
- * Purchase a warranty at checkout. Creates a WarrantyRegistration record
- * with active status and calculated expiration.
- *
- * @param {Object} data
- * @param {string} data.planId - Selected warranty plan ID.
- * @param {string} data.productId - Product being covered.
- * @param {string} data.productName - Product display name.
- * @param {number} data.productPrice - Product price for warranty calculation.
- * @param {string} data.orderId - Associated order ID.
- * @returns {Promise<{success: boolean, warranty: Object}>}
- */
-export const purchaseWarranty = webMethod(
-  Permissions.SiteMember,
-  async (data) => {
-    try {
-      const { memberId, email: memberEmail } = await requireMemberWithEmail();
-
-      const planId = validateId(data.planId);
-      if (!planId) {
-        return { success: false, error: 'Valid plan ID is required.' };
-      }
-
-      const productId = validateId(data.productId);
-      if (!productId) {
-        return { success: false, error: 'Valid product ID is required.' };
-      }
-
-      const orderId = validateId(data.orderId);
-      if (!orderId) {
-        return { success: false, error: 'Valid order ID is required.' };
-      }
-
-      const productPrice = Number(data.productPrice);
-      if (!productPrice || productPrice <= 0) {
-        return { success: false, error: 'Valid product price is required.' };
-      }
-
-      const productName = sanitize(data.productName || '', 200);
-      const cappedPrice = Math.min(productPrice, MAX_PRODUCT_PRICE);
-
-      const planResult = await wixData.query('WarrantyPlans')
-        .eq('_id', planId)
-        .eq('active', true)
-        .find();
-
-      if (planResult.items.length === 0) {
-        return { success: false, error: 'Warranty plan not found.' };
-      }
-
-      const plan = planResult.items[0];
-      const warrantyPrice = Math.round(cappedPrice * plan.priceMultiplier * 100) / 100;
-
-      const now = new Date();
-      const expiresAt = new Date(now);
-      expiresAt.setFullYear(expiresAt.getFullYear() + plan.durationYears);
-
-      const registration = {
-        memberId,
-        planId,
-        planName: plan.name,
-        productId,
-        productName,
-        orderId,
-        warrantyPrice,
-        status: 'active',
-        purchasedAt: now,
-        expiresAt,
-        registeredAt: null,
-        serialNumber: '',
-        purchaseDate: '',
-      };
-
-      const inserted = await wixData.insert('WarrantyRegistrations', registration);
-
-      // Queue purchase confirmation email — non-fatal
-      await queueEmail('warranty_purchased', memberEmail, {
-        memberId,
-        warrantyId: inserted._id,
-        planName: plan.name,
-        productName,
-        warrantyPrice,
-        expiresAt: expiresAt.toISOString(),
-      });
-
-      return {
-        success: true,
-        warranty: {
-          _id: inserted._id,
-          planName: plan.name,
-          productName,
-          warrantyPrice,
-          status: 'active',
-          purchasedAt: now.toISOString(),
-          expiresAt: expiresAt.toISOString(),
-        },
-      };
-    } catch (err) {
-      console.error('[warrantyService] Error purchasing warranty:', err);
-      return { success: false, error: 'Failed to purchase warranty.' };
-    }
-  }
-);
 
 /**
  * Register a warranty — adds serial number and purchase date after delivery.
