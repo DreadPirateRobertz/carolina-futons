@@ -47,6 +47,40 @@ PUBLIC_VERB_RE = re.compile(
     r"unsubscribe|redeem|claim|generate|update|delete)",
 )
 
+# cf-quba (cf-hpwy detector v3): allowlist for known-intentional
+# Permissions.Anyone webMethods that match the public-verb pattern. Phase B
+# audit (PR #1190) identified three legitimate cases that the SUSPICIOUS
+# heuristic flags as false positives — guest-cart entry points and a
+# customer-facing tracking endpoint. Each entry should pin to <module>.<name>
+# so a same-named method in a different module isn't accidentally allowlisted.
+#
+# Entries are deliberately specific (module + name) and gated on a comment
+# anchor so future additions are deliberate rather than drive-by.
+INTENTIONAL_ANYONE = frozenset({
+    # cartSessionService — guest-cart entry points (cannot require auth by
+    # definition; documented in eventBus.js).
+    "cartSessionService.createSession",
+    "cartSessionService.updateCartItems",
+    # ups-shipping — customer self-service tracking endpoint. Cited author
+    # note + 6 actual internal callers.
+    "ups-shipping.trackShipment",
+})
+
+
+def _module_qualified_name(file_rel: str, name: str) -> str:
+    """Return `<module>.<name>` for INTENTIONAL_ANYONE lookup.
+
+    `file_rel` is the path relative to repo root, e.g.
+    `src/backend/cartSessionService.web.js`. We extract the basename minus
+    the `.web.js` (or `.js`) suffix.
+    """
+    base = file_rel.rsplit("/", 1)[-1]
+    for suffix in (".web.js", ".js"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+    return f"{base}.{name}"
+
 
 def all_source_files() -> list[Path]:
     out: list[Path] = []
@@ -198,11 +232,15 @@ def classify_method(
     if not buckets:
         buckets = ["DEAD"]
 
+    # cf-quba: allowlist filter — gate the SUSPICIOUS classification so
+    # known-intentional Anyone endpoints stop generating noise.
+    qualified = _module_qualified_name(defining_file, name)
     suspicious = (
         info["permission"] == "Anyone"
         and "HTTP-EXPOSED" not in buckets
         and "FRONTEND" not in buckets
         and PUBLIC_VERB_RE.match(name) is not None
+        and qualified not in INTENTIONAL_ANYONE
     )
 
     cfw_high, cfw_low = cfw_references(name, cfw_files)
