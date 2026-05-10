@@ -1,14 +1,24 @@
 # CF Project Progress Report
 **Auto-refreshed every 10 min | Last updated: 2026-05-10 04:45 MT**
 
-## Session 2026-05-10 — Wave 26
+## Session 2026-05-10 — Wave 27
 | Done | Detail |
 |------|--------|
+| ✅ PR #1271 MERGED | Coverage R5 (cf-vty7): +38 tests, +0.21% branches, +0.20% functions. ALL CI GREEN. |
+| 🔄 PR #1261 (cf-xpqf) | Rebased on main (includes #1271). test(22) running. Merge when green. |
+| ⛔ cfw PRs #554 #553 BLOCKED | cfw enforce_admins=true + 1-review requirement — can't approve own PRs. **Morning gate for Stilgar.** PR #554 = /api/health P1 (lint+Vercel ✅, e2e = pre-existing infra). PR #553 = cf-v4py E2E spec. |
+| ✅ miquella → cf-lt2l | PRE-FLIP smoke test execution on Vercel preview (cutover-verification-matrix.md). |
+| ✅ morgott → cf-q8m2 | cf-4x7e Pass 3 chunk A — delete dead methods from SUPERSEDE-scored files. |
 | ✅ PRs #1268 #1270 #1272 #1273 #1274 MERGED | Doc batch: cutover checklist, cron audit, Lighthouse baseline, khqd-cfw deferred note, mobile smoke (10/10 PASS). |
-| ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged → cf-x0ks filed for godfrey. |
-| 🔄 PR #1271 | Coverage R5 +38 tests (+0.20-0.21%). test(22) running. Gates PR #1261 (cf-xpqf). |
-| 🔄 PR #1261 | Still blocked on coverage. Will merge once #1271 lands and #1261 rebases. |
-| ✅ 5 branches merged tonight | 1268+1269+1270+1272+1273+1274+1267 = 7 doc merges. Total night: 15+ PRs. |
+| ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged. |
+
+**⚠️ cfw REVIEW GATE**: `enforce_admins=true` + 1-required-review on cfw main. With single GH account, no crew PR can be approved without a second reviewer account. **All cfw merges require Stilgar approval.** Pending cfw PRs: #554 (P1 /api/health), #553 (cf-v4py), #540 (CF logo—visual gate), #558 #555 #557 #556 #560 #559 (polecat batch).
+
+**Worker Map (05:00 MT):**
+blaidd: cf-ljsy (desktop smoke) | godfrey: cf-x6ph (/api/health schema doc) + cf-3qt.8.31 (UptimeRobot)
+millicent: cf-ra41 (CI concurrency cancel) | miquella: cf-lt2l (PRE-FLIP smoke test)
+morgott: cf-q8m2 (cf-4x7e Pass 3) | radahn: cf-jzsd + cf-oi01 + cf-dbw9 + cf-xpqf.1
+rennala: cf-v4py + cf-7pd6 + cf-ox0h
 
 **Blaidd confirmed**: cf-01z3 (scroll jitter fix) done locally with RAF coalescing + 30px hysteresis deadband. Holds on batch window.
 **Miquella holds 5 branches**: cf-bbo8 / cf-4f6l / cf-2r02 / cf-v8jj / cf-5f9o — all ready for BATCH WINDOW OPEN.
