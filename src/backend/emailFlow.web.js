@@ -20,17 +20,20 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { contacts } from 'wix-crm-backend';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { validateEmail } from 'backend/utils/sanitize';
 import { triggerWelcomeSequence } from 'backend/emailAutomation.web';
 
 /**
  * Queue a welcome-email sequence for a freshly-registered cfw user.
  *
  * cfw fires this from `/signup` after `/api/auth/register` returns
- * `{ok: true}`. The payload is `{type: 'welcome', email}`.
- * No firstName is sent — cfw doesn't have one at signup. The underlying
- * triggerWelcomeSequence handles missing firstName by emitting an empty
- * string into the template.
+ * `{ok: true, redirectTo: string}` (cfw `SignUpForm.tsx`). Payload is
+ * `{type: 'welcome', email}`. No firstName is sent — cfw doesn't have one
+ * at signup. The underlying triggerWelcomeSequence handles missing
+ * firstName by emitting an empty string into the template.
+ *
+ * The welcome sequence currently queues 5 steps (immediate / Day 2 / Day 5
+ * / Day 14 / Day 21 — see SEQUENCES.welcome.steps in emailAutomation.web.js).
  *
  * @function queueWelcomeEmail
  * @param {{type: 'welcome', email: string}} payload
@@ -70,6 +73,10 @@ export const queueWelcomeEmail = webMethod(
       return { success: false, error: 'Failed to resolve contact' };
     }
     if (!contactId) {
+      // Wix CRM returned an envelope without contactId/_id. Log so a future
+      // SDK shape rename surfaces in monitoring instead of routing every
+      // welcome to a 503 with no diagnostic.
+      console.error('[emailFlow] queueWelcomeEmail contact resolution returned empty', { email });
       return { success: false, error: 'Failed to resolve contact' };
     }
 
@@ -88,12 +95,14 @@ export const queueWelcomeEmail = webMethod(
  * may be anonymous.
  *
  * The actual abandoned-cart email sequence is driven by the
- * `triggerAbandonedCartRecovery` cron job, which scans the
- * `Wix Stores → AbandonedCarts` collection that Wix Stores populates
- * automatically once a user begins checkout (where email IS captured).
- * This webMethod is therefore an explicit ACK contract — it lets cfw's
- * /api/email/trigger return 200 without a Velo error, and serves as a
- * future hook point for a session-aware extension.
+ * `triggerAbandonedCartRecovery` cron job, which scans the custom Velo
+ * `AbandonedCarts` CMS collection. That collection is populated by the
+ * `wixEcom_onAbandonedCheckoutCreated` handler in `events.js` from Wix
+ * eCommerce platform events (NOT auto-populated by Wix Stores) — which
+ * fires once a buyer has progressed far enough into checkout for Wix to
+ * capture an email. This webMethod is therefore an explicit ACK contract
+ * — it lets cfw's /api/email/trigger return 200 without a Velo error,
+ * and serves as a future hook point for a session-aware extension.
  *
  * Validates payload shape so a malformed cfw call is caught at the boundary,
  * not silently dropped.

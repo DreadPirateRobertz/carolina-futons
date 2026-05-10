@@ -70,10 +70,28 @@ describe('queueWelcomeEmail', () => {
     expect(vi.mocked(triggerWelcomeSequence)).toHaveBeenCalledWith('contact-existing-77', 'existing@example.com', '');
   });
 
+  it('falls back to result._id when CRM omits contactId (legacy SDK shape)', async () => {
+    // pr-test-analyzer #1: cover the `result?.contactId || result?._id`
+    // fallback. The default mock always returns {contactId:...} so the _id
+    // arm was previously untested.
+    const crm = await import('./__mocks__/wix-crm-backend.js');
+    const spy = vi.spyOn(crm.contacts, 'appendOrCreateContact')
+      .mockResolvedValueOnce({ _id: 'legacy-contact-001' });
+    vi.mocked(triggerWelcomeSequence).mockResolvedValue({ success: true, queued: 5 });
+    try {
+      const res = await queueWelcomeEmail({ type: 'welcome', email: 'legacy@example.com' });
+      expect(res).toEqual({ success: true, queued: 5 });
+      expect(vi.mocked(triggerWelcomeSequence))
+        .toHaveBeenCalledWith('legacy-contact-001', 'legacy@example.com', '');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('returns "Failed to resolve contact" infra error when contact lookup throws', async () => {
     const crm = await import('./__mocks__/wix-crm-backend.js');
-    const real = crm.contacts.appendOrCreateContact;
-    crm.contacts.appendOrCreateContact = async () => { throw new Error('CRM down'); };
+    const spy = vi.spyOn(crm.contacts, 'appendOrCreateContact')
+      .mockRejectedValueOnce(new Error('CRM down'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const res = await queueWelcomeEmail({ type: 'welcome', email: 'good@example.com' });
@@ -81,21 +99,33 @@ describe('queueWelcomeEmail', () => {
       expect(errSpy).toHaveBeenCalled();
       expect(vi.mocked(triggerWelcomeSequence)).not.toHaveBeenCalled();
     } finally {
-      crm.contacts.appendOrCreateContact = real;
+      spy.mockRestore();
       errSpy.mockRestore();
     }
   });
 
-  it('returns "Failed to resolve contact" when CRM yields no contactId', async () => {
+  it('returns "Failed to resolve contact" when CRM yields no contactId AND logs the empty envelope', async () => {
     const crm = await import('./__mocks__/wix-crm-backend.js');
-    const real = crm.contacts.appendOrCreateContact;
-    crm.contacts.appendOrCreateContact = async () => ({ /* no id */ });
+    const spy = vi.spyOn(crm.contacts, 'appendOrCreateContact')
+      .mockResolvedValueOnce({ /* neither contactId nor _id */ });
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
-      const res = await queueWelcomeEmail({ type: 'welcome', email: 'good@example.com' });
+      const res = await queueWelcomeEmail({ type: 'welcome', email: 'empty@example.com' });
       expect(res).toEqual({ success: false, error: 'Failed to resolve contact' });
+      // Without a console.error here a future SDK rename routes everyone to
+      // 503 with no diagnostic — silent-failure-hunter MEDIUM.
+      expect(errSpy).toHaveBeenCalled();
+      // Production logs as `console.error('...empty', { email })`. Inspect
+      // the structured second arg so a future log-shape change is caught.
+      const matchingCall = errSpy.mock.calls.find(
+        (args) => typeof args[0] === 'string' && args[0].includes('returned empty')
+      );
+      expect(matchingCall).toBeDefined();
+      expect(matchingCall[1]).toMatchObject({ email: 'empty@example.com' });
       expect(vi.mocked(triggerWelcomeSequence)).not.toHaveBeenCalled();
     } finally {
-      crm.contacts.appendOrCreateContact = real;
+      spy.mockRestore();
+      errSpy.mockRestore();
     }
   });
 

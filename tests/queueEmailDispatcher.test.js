@@ -85,12 +85,26 @@ describe('post_queueWelcomeEmail — cf-vtx5 dispatcher contract', () => {
     expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'Invalid email' });
   });
 
-  it('503 maps "Failed to resolve contact" infra error', async () => {
+  it('503 maps "Failed to resolve contact" infra error AND forwards body verbatim', async () => {
     vi.mocked(queueWelcomeEmail).mockResolvedValue({ success: false, error: 'Failed to resolve contact' });
     const res = await post_queueWelcomeEmail(makeRequest({
       args: [{ type: 'welcome', email: 'good@example.com' }],
     }));
     expect(res.status).toBe(503);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'Failed to resolve contact' });
+  });
+
+  it('500 + errorId on synchronous throw from wrapped fn', async () => {
+    // pr-test-analyzer #3: cover the synchronous-throw path. With async fn
+    // mocked via mockImplementation, a bare `throw` is treated as a sync
+    // exception inside the await — exercise that the dispatcher's catch
+    // still fires.
+    vi.mocked(queueWelcomeEmail).mockImplementation(() => { throw new Error('sync boom'); });
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await post_queueWelcomeEmail(makeRequest({ args: [{ type: 'welcome', email: 'a@b.com' }] }));
+    expect(res.status).toBe(500);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'server_error' });
+    errSpy.mockRestore();
   });
 
   it('200 + {success:false} for business-logic outcome (no error string)', async () => {
@@ -122,10 +136,18 @@ describe('post_queueWelcomeEmail — cf-vtx5 dispatcher contract', () => {
     consoleErr.mockRestore();
   });
 
-  it('options preflight responds', () => {
+  it('options preflight emits CORS headers for an allowed origin', () => {
+    // pr-test-analyzer #2: assert the actual CORS contract, not just status.
+    // A regression that strips Access-Control-Allow-* headers must fail
+    // loudly — silent CORS breakage breaks every cfw call.
     const res = options_queueWelcomeEmail({ headers: { origin: goodOrigin } });
     expect(res).toBeDefined();
-    expect(res.status).toBeGreaterThanOrEqual(200);
+    expect(res.status).toBe(204);
+    const lowered = Object.fromEntries(
+      Object.entries(res.headers || {}).map(([k, v]) => [k.toLowerCase(), v])
+    );
+    expect(lowered['access-control-allow-origin']).toBe(goodOrigin);
+    expect(String(lowered['access-control-allow-methods'] || '')).toMatch(/POST/i);
   });
 });
 
@@ -162,16 +184,18 @@ describe('post_queueCartRecovery — cf-vtx5 dispatcher contract', () => {
     expect(JSON.parse(res.body).error).toBe('args_must_be_array');
   });
 
-  it('400 maps "Invalid items" soft-fail', async () => {
+  it('400 maps "Invalid items" soft-fail AND forwards body', async () => {
     vi.mocked(queueCartRecovery).mockResolvedValue({ success: false, error: 'Invalid items' });
     const res = await post_queueCartRecovery(makeRequest({ args: [validPayload] }));
     expect(res.status).toBe(400);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'Invalid items' });
   });
 
-  it('400 maps "items is required" soft-fail', async () => {
+  it('400 maps "items is required" soft-fail AND forwards body', async () => {
     vi.mocked(queueCartRecovery).mockResolvedValue({ success: false, error: 'items is required' });
     const res = await post_queueCartRecovery(makeRequest({ args: [{ type: 'cart-recovery' }] }));
     expect(res.status).toBe(400);
+    expect(JSON.parse(res.body)).toMatchObject({ success: false, error: 'items is required' });
   });
 
   it('500 + errorId on unexpected throw', async () => {
@@ -183,9 +207,14 @@ describe('post_queueCartRecovery — cf-vtx5 dispatcher contract', () => {
     consoleErr.mockRestore();
   });
 
-  it('options preflight responds', () => {
+  it('options preflight emits CORS headers for an allowed origin', () => {
     const res = options_queueCartRecovery({ headers: { origin: goodOrigin } });
     expect(res).toBeDefined();
-    expect(res.status).toBeGreaterThanOrEqual(200);
+    expect(res.status).toBe(204);
+    const lowered = Object.fromEntries(
+      Object.entries(res.headers || {}).map(([k, v]) => [k.toLowerCase(), v])
+    );
+    expect(lowered['access-control-allow-origin']).toBe(goodOrigin);
+    expect(String(lowered['access-control-allow-methods'] || '')).toMatch(/POST/i);
   });
 });

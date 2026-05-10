@@ -3862,11 +3862,11 @@ async function _veloSingleMethodDispatch(request, fn, label) {
         return response({ status, body: JSON.stringify(result), headers: JSON_HEADERS });
       }
     }
-    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+    // Guard against a wrapped fn that returns undefined — match _veloDispatch's
+    // serialization shape so callers always get a JSON body.
+    return ok({ body: JSON.stringify(result ?? null), headers: JSON_HEADERS });
   } catch (err) {
-    const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : `qe-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const errorId = _veloDispatchErrorId();
     console.error(`HTTP function error (post_${label}) errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
