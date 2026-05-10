@@ -1,5 +1,17 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:35 MT**
+
+## Session 2026-05-10 — Wave 19
+| Done | Detail |
+|------|--------|
+| ✅ cfutons PR #1258 MERGED | millicent: emailServiceCoverage fix + coverage round-3. Branches 85.01% ✓. MAIN NOW GREEN. No --admin. |
+| ✅ cf-641x scoped | morgott: tablist stays, add dark mode + swipe gesture (~40-65 LOC). No radiogroup switch. Hold for batch window. |
+| ✅ cf-bbo8 → miquella | SEO canonical fix (~6 lines in 2 files). Hold for batch with cf-641x after PR #540 clears. |
+| 📌 cf-yq3h+cf-7tkf | cfw PR #551 merged earlier — 50 dark surfaces + a11y. All 3 beads closed. |
+| 📌 cf-5rmn | cfw PR #550 merged earlier — SEO audit baseline confirmed. cf-bbo8 filed for P1 fix. |
+| ⏳ PR #540 | Stilgar morning visual confirm. Mayor already flagged. Don't double-ping. |
+| ⏳ cf-dbw9 Track 3 | Stilgar dashboard flip (2 settings). |
+| 🔄 cf-3qt.8.31 | godfrey UptimeRobot — no status update yet. |
 
 ## Session 2026-05-10 — Wave 18
 | Done | Detail |
