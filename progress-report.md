@@ -1,5 +1,16 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-09 18:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-09 19:05 MT**
+
+## Session 2026-05-09 — Wave 3 Merges
+| Done | Detail |
+|------|--------|
+| ✅ cf-k5vr CLOSED | PR #1206 merged — IP-axis rate-limit + XFF extraction (millicent). All CI ✅ |
+| ✅ cf-kull CLOSED | PR #1207 merged — stage3-velo parity audit doc+script (morgott). Doc-only, coverage flap --admin |
+| ✅ cf-quba CLOSED | PR #1205 merged — cf-hpwy v3 allowlist (godfrey). All CI ✅ |
+| 🆕 cf-1dvv FILED | P1: back-port options_referralService + post_referralService cfutons → stage3 gap. morgott assigned |
+| ⏳ PR #1202 | cf-fovb (rennala) — needs rebase onto main (vi-domock fix) |
+| ⏳ PR #1201 | cf-r1cl (millicent) — needs rebase onto main (vi-domock fix) |
+| ⏳ PR #515 | cf-1eb5 (blaidd) — bear illustration OPEN, Stilgar visual required |
 
 ## Session 2026-05-09 — Wave 1 Merges
 | Done | Detail |
@@ -29,6 +40,9 @@
 | cf-c6g5 | P0 | STAGING_SITE email infra — 13 triggered templates |
 | cf-3qt.8 | P1 | DNS cutover — Vercel Pro + go/no-go |
 | cf-oi01 | P1 | UPS/Stripe/PayPal creds from Wix Secrets Manager |
+| PR #515 (cf-1eb5) | P1 | VISUAL SIGN-OFF on bears header — preview: carolina-futons-web-git-cf-1eb5-dreadpiraterobertzs-projects.vercel.app |
+| PR #1201 (cf-r1cl) | P1 | Add pin-head-sha to required status checks after merge |
+| cfw-nsk FB redirect | P2 | Still reproducing? Need HAR if yes, close bead if gone |
 
 ---
 
