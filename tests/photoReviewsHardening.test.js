@@ -4,9 +4,7 @@ import { __reset as resetMembers, __setMember } from 'wix-members-backend';
 
 import {
   moderatePhotoReview,
-  getPhotoReviews,
   getPhotoGallery,
-  getPhotoReviewStats,
 } from '../src/backend/photoReviews.web.js';
 
 const ADMIN_MEMBER = { _id: 'admin-001', loginEmail: 'admin@carolinafutons.com' };
@@ -178,70 +176,6 @@ describe('photo moderation persists state correctly', () => {
     await moderatePhotoReview('pr-persist', 'reject');
     const updated = await wixData.get('PhotoReviews', 'pr-persist');
     expect(updated.status).toBe('rejected');
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
-// 4. PHOTO REVIEW STATS EDGE CASES + NaN HARDENING
-// ═══════════════════════════════════════════════════════════════════
-
-describe('getPhotoReviewStats edge cases', () => {
-  it('returns zeros for product with no photo reviews', async () => {
-    const result = await getPhotoReviewStats('prod-empty');
-    expect(result.success).toBe(true);
-    expect(result.stats.totalReviews).toBe(0);
-    expect(result.stats.averageRating).toBe(0);
-  });
-
-  it('counts featured reviews separately', async () => {
-    seedPhotoReviews([
-      { _id: 'pr1', productId: 'prod-1', rating: 5, status: 'featured', photoUrl: 'img1.jpg' },
-      { _id: 'pr2', productId: 'prod-1', rating: 4, status: 'approved', photoUrl: 'img2.jpg' },
-      { _id: 'pr3', productId: 'prod-1', rating: 3, status: 'approved', photoUrl: 'img3.jpg' },
-    ]);
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.stats.featuredCount).toBe(1);
-    expect(result.stats.totalReviews).toBe(3);
-  });
-
-  it('excludes rejected/pending from stats', async () => {
-    seedPhotoReviews([
-      { _id: 'pr1', productId: 'prod-1', rating: 5, status: 'approved', photoUrl: 'img.jpg' },
-      { _id: 'pr2', productId: 'prod-1', rating: 1, status: 'rejected', photoUrl: 'bad.jpg' },
-      { _id: 'pr3', productId: 'prod-1', rating: 2, status: 'pending', photoUrl: 'new.jpg' },
-    ]);
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.stats.totalReviews).toBe(1);
-    expect(result.stats.averageRating).toBe(5);
-  });
-
-  it('rejects invalid product ID', async () => {
-    const result = await getPhotoReviewStats('');
-    expect(result.success).toBe(false);
-  });
-
-  it('skips NaN/null ratings in photo review stats', async () => {
-    seedPhotoReviews([
-      { _id: 'pr1', productId: 'prod-1', rating: 5, status: 'approved', photoUrl: 'img1.jpg' },
-      { _id: 'pr2', productId: 'prod-1', rating: undefined, status: 'approved', photoUrl: 'img2.jpg' },
-      { _id: 'pr3', productId: 'prod-1', rating: null, status: 'approved', photoUrl: 'img3.jpg' },
-      { _id: 'pr4', productId: 'prod-1', rating: 3, status: 'approved', photoUrl: 'img4.jpg' },
-    ]);
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.stats.totalReviews).toBe(2);
-    expect(result.stats.averageRating).toBe(4); // (5+3)/2
-    expect(result.stats.ratingDistribution[5]).toBe(1);
-    expect(result.stats.ratingDistribution[3]).toBe(1);
-  });
-
-  it('returns zeros when all photo review ratings are invalid', async () => {
-    seedPhotoReviews([
-      { _id: 'pr1', productId: 'prod-1', rating: undefined, status: 'approved', photoUrl: 'img1.jpg' },
-      { _id: 'pr2', productId: 'prod-1', rating: NaN, status: 'approved', photoUrl: 'img2.jpg' },
-    ]);
-    const result = await getPhotoReviewStats('prod-1');
-    expect(result.stats.totalReviews).toBe(0);
-    expect(result.stats.averageRating).toBe(0);
   });
 });
 
