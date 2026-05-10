@@ -211,7 +211,7 @@ describe('saveForLater field mapping', () => {
     expect(insertCall[1].price).toBe(499.99);
   });
 
-  it('saves name field for wishlistAlerts compatibility', async () => {
+  it('saves the name field on the wishlist record', async () => {
     await saveForLater(validCartItem);
     const insertCall = mockWixData.insert.mock.calls[0];
     expect(insertCall[1].name).toBe('Eureka Futon Frame');

@@ -1,8 +1,10 @@
 /**
  * @module wishlistService
  * @description Wishlist CRUD webMethods for members.
- * Tracks priceAtAdd so wishlistAlerts can detect when current price drops
- * below the price at which the member added the item.
+ * Tracks priceAtAdd as a permanent record of the price at the time of
+ * wishlist add (the alerting consumer that originally read this field
+ * was retired with cf-4x7e Pass 2 chunk 11; field kept for posterity
+ * and any future re-introduction of price-drop tooling).
  *
  * @requires wix-web-module
  * @requires wix-data
@@ -32,7 +34,7 @@ const WISHLIST_MAX_ITEMS = 100;
 
 /**
  * Add a product to the current member's wishlist.
- * Stores priceAtAdd as the current price for drop-alert baseline.
+ * Stores priceAtAdd as the current price (immutable record of price at add time).
  * No-ops if item is already on wishlist (returns existing item).
  *
  * @param {string} productId
