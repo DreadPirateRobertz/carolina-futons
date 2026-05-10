@@ -1,5 +1,14 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:20 MT**
+
+## Session 2026-05-10 — Wave 21
+| Done | Detail |
+|------|--------|
+| ✅ cf-xze0 DONE | cutover-verification-matrix.md pushed to main (docs/cf-3qt.8/). 184-line smoke test plan: PRE-FLIP/POST-FLIP/rollback/thresholds. Bead closed. |
+| 🔄 cfutons PR #1259 | fix/cf-4x7e-fu1 jobs.config orphan fixes — tests pending. Wait CI. |
+| 🔄 cfutons PR #1260 | cf-3pwy Wix Stores V1/V3 audit doc — tests pending. Wait CI. |
+| ⏳ PR #540 (cfw) | ALL CI GREEN incl. e2e 6s pass. BLOCKED: Stilgar AM visual confirm → batch window. |
+| 📦 Batch queue (7 PRs) | morgott cf-641x, miquella cf-bbo8, jasper cf-ceex, obsidian cf-e55k, onyx cf-nm6p, opal cf-zmsq, quartz cf-mu05. All holding locally. |
 
 ## Session 2026-05-10 — Wave 20
 | Done | Detail |
