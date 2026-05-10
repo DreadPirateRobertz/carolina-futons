@@ -1,5 +1,19 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:10 MT**
+
+## Session 2026-05-10 — Wave 17 (post-compaction)
+| Done | Detail |
+|------|--------|
+| ✅ cfw PR #549 MERGED | cf-rn4j dark mode wave 2 audit (miquella). Doc-only, Vercel+e2e ✅, lint queued → admin-merge. |
+| ✅ cf-rn4j CLOSED | Audit phase complete. |
+| ✅ cf-yq3h FILED→blaidd | Dark mode wave 2 implementation — 11 files, ~46 surfaces. One batched PR. |
+| ✅ cf-9kjw CLOSED | Duplicate of cf-yq3h; contact+getting-it-home covered under wave 2 bead. |
+| ✅ cfutons PR #549 MERGED | cf-7q7a IDOR referral credit fix (HIGH CVSS ~8.1). Pre-existing test failures → admin-merge. |
+| ✅ cf-jo07 lane fix | Reassigned millicent→blaidd. PR #540 ALL CI GREEN. Stilgar visual confirm still pending. |
+| ✅ cf-gnmu → millicent | Set NEXT_PUBLIC_SITE_URL=https://www.carolinafutons.com in Vercel prod before cutover. |
+| 📊 Mayor morning flags | PR #540 visual + cf-dbw9 dashboard flip + WIX_API_KEY verify. |
+| ⏳ PR #540 | cf-jo07 CF blue wordmark — ALL CI GREEN. BLOCKED: Stilgar visual. |
+| ⏳ cf-dbw9 Track 3 | validity_checks + non_provider_patterns — Stilgar dashboard flip needed. |
 
 ## Session 2026-05-10 — Wave 16
 | Done | Detail |
