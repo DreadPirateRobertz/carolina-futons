@@ -112,31 +112,43 @@ describe('referralService — getReferralLink', () => {
 // ── redeemReferralCode ──────────────────────────────────────────────
 
 describe('referralService — redeemReferralCode', () => {
+  // cf-hpb2: signature changed — refereeData arg dropped, identity from currentMember.
+  beforeEach(() => {
+    __setMember({
+      _id: 'member-referee',
+      loginEmail: 'test@example.com',
+      contactDetails: { firstName: 'Test', lastName: 'User' },
+    });
+  });
+
   it('rejects empty code', async () => {
-    const result = await redeemReferralCode('', { email: 'test@example.com' });
+    const result = await redeemReferralCode('');
     expect(result.success).toBe(false);
     expect(result.error).toContain('required');
   });
 
-  it('rejects missing email', async () => {
-    const result = await redeemReferralCode('ABCD1234', { name: 'Test' });
+  it('cf-hpb2: rejects when no SiteMember context', async () => {
+    __setMember(null);
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(false);
-    expect(result.error).toContain('email');
+    expect(result.error.toLowerCase()).toContain('authentication');
   });
 
-  it('rejects invalid email format', async () => {
-    const result = await redeemReferralCode('ABCD1234', { email: 'notanemail' });
+  it('cf-hpb2: rejects member with malformed loginEmail', async () => {
+    __setMember({ _id: 'member-x', loginEmail: 'notanemail' });
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(false);
     expect(result.error).toContain('email');
   });
 
   it('rejects expired/invalid referral code', async () => {
-    const result = await redeemReferralCode('NOTACODE', { email: 'test@example.com' });
+    const result = await redeemReferralCode('NOTACODE');
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid or expired');
   });
 
-  it('prevents self-referral', async () => {
+  it('prevents self-referral (current member is the referrer)', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'self@example.com' });
     __seed('Referrals', [{
       _id: 'ref-1',
       referrerMemberId: 'member-1',
@@ -144,12 +156,13 @@ describe('referralService — redeemReferralCode', () => {
       referralCode: 'SELF1234',
       status: 'pending',
     }]);
-    const result = await redeemReferralCode('SELF1234', { email: 'self@example.com' });
+    const result = await redeemReferralCode('SELF1234');
     expect(result.success).toBe(false);
     expect(result.error).toContain('own referral');
   });
 
   it('prevents self-referral case-insensitive', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'SELF@EXAMPLE.COM' });
     __seed('Referrals', [{
       _id: 'ref-1',
       referrerMemberId: 'member-1',
@@ -157,12 +170,17 @@ describe('referralService — redeemReferralCode', () => {
       referralCode: 'CASE1234',
       status: 'pending',
     }]);
-    const result = await redeemReferralCode('CASE1234', { email: 'SELF@EXAMPLE.COM' });
+    const result = await redeemReferralCode('CASE1234');
     expect(result.success).toBe(false);
     expect(result.error).toContain('own referral');
   });
 
-  it('succeeds with valid code and email', async () => {
+  it('succeeds for an authenticated member with a valid code', async () => {
+    __setMember({
+      _id: 'member-bob',
+      loginEmail: 'bob@example.com',
+      contactDetails: { firstName: 'Bob' },
+    });
     __seed('Referrals', [{
       _id: 'ref-2',
       referrerMemberId: 'member-1',
@@ -171,7 +189,7 @@ describe('referralService — redeemReferralCode', () => {
       referralCode: 'GOOD1234',
       status: 'pending',
     }]);
-    const result = await redeemReferralCode('GOOD1234', { name: 'Bob', email: 'bob@example.com' });
+    const result = await redeemReferralCode('GOOD1234');
     expect(result.success).toBe(true);
     expect(result.referrerName).toBe('Alice');
     expect(result.refereeDiscount).toBe(25);
@@ -179,7 +197,12 @@ describe('referralService — redeemReferralCode', () => {
     expect(result.message).toContain('$25');
   });
 
-  it('updates referral status to signed_up', async () => {
+  it('updates referral status to signed_up with server-resolved referee identity', async () => {
+    __setMember({
+      _id: 'member-charlie',
+      loginEmail: 'charlie@test.com',
+      contactDetails: { firstName: 'Charlie' },
+    });
     __seed('Referrals', [{
       _id: 'ref-3',
       referrerMemberId: 'member-1',
@@ -191,7 +214,7 @@ describe('referralService — redeemReferralCode', () => {
     __onUpdate((collection, item) => {
       if (collection === 'Referrals') updated = item;
     });
-    await redeemReferralCode('UPDT1234', { name: 'Charlie', email: 'charlie@test.com' });
+    await redeemReferralCode('UPDT1234');
     expect(updated.status).toBe('signed_up');
     expect(updated.refereeEmail).toBe('charlie@test.com');
     expect(updated.refereeName).toBe('Charlie');
@@ -205,8 +228,7 @@ describe('referralService — redeemReferralCode', () => {
       referralCode: 'ABCD5678',
       status: 'pending',
     }]);
-    const result = await redeemReferralCode('abcd-5678', { email: 'test@example.com' });
-    expect(result.success).toBe(true);
+    expect((await redeemReferralCode('abcd-5678')).success).toBe(true);
   });
 
   it('handles missing referrerName gracefully', async () => {
@@ -217,7 +239,7 @@ describe('referralService — redeemReferralCode', () => {
       referralCode: 'NONAME12',
       status: 'pending',
     }]);
-    const result = await redeemReferralCode('NONAME12', { email: 'test@example.com' });
+    const result = await redeemReferralCode('NONAME12');
     expect(result.success).toBe(true);
     expect(result.message).toContain('a friend');
   });
