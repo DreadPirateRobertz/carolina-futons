@@ -51,6 +51,9 @@ import { grantSpin } from 'backend/spinRedemptionService.web';
 import { submitCommunityPhoto } from 'backend/communityPhoto.web';
 // cf-bkxh: namespace import for giftRegistry dispatcher.
 import * as _giftRegistryModule from 'backend/giftRegistry.web';
+// cf-hpb2: namespace import for referralService dispatcher (cfw method
+// names → backend exports requires a 4-entry alias / shim table).
+import * as _referralServiceModule from 'backend/referralService.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -3865,3 +3868,40 @@ export async function post_giftRegistry(request) {
   return _veloDispatch(request, _GIFT_REGISTRY_METHODS, 'giftRegistry');
 }
 export function options_giftRegistry(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/referralService/<method> dispatcher ──────────────────────────
+//
+// cf-hpb2 — closes the last cf-vtx5.fu held-list item. cfw's
+// actions/referral.ts uses `r(method) = referralService/${method}` for 4
+// methods whose names don't match backend exports verbatim. Stilgar
+// approved combo (b) + (c) per docs/cf-hpb2-referralservice-comparison.md:
+//
+//   (1) getMyReferralCode  → alias for `getReferralLink`        — pure rename
+//   (2) getMyReferralStats → alias for `getReferralStats`       — pure rename
+//   (3) getReferralByCode  → shim wrapping `getReferralLinkOwnerName`
+//                            and reshaping `{success, referrerName}` into
+//                            `{success, referral: {referrerName}}` for
+//                            cfw's PublicReferral type. Stilgar Q1: keep
+//                            PublicReferral thin — just `{referrerName}`.
+//   (4) claimReferral      → alias for `redeemReferralCode`     — backend
+//                            webMethod refactored separately to drop the
+//                            refereeData arg and resolve email from
+//                            currentMember.getMember() (Stilgar Q2:
+//                            server-resolved identity, not user-supplied).
+
+const _REFERRAL_METHODS = {
+  getMyReferralCode: _referralServiceModule.getReferralLink,
+  getMyReferralStats: _referralServiceModule.getReferralStats,
+  getReferralByCode: async (code) => {
+    const r = await _referralServiceModule.getReferralLinkOwnerName(code);
+    if (!r || r.success === false) {
+      return r || { success: false, error: 'Referral not found' };
+    }
+    return { success: true, referral: { referrerName: r.referrerName } };
+  },
+  claimReferral: _referralServiceModule.redeemReferralCode,
+};
+export async function post_referralService(request) {
+  return _veloDispatch(request, _REFERRAL_METHODS, 'referralService');
+}
+export function options_referralService(request) { return response(corsPreflight(request)); }

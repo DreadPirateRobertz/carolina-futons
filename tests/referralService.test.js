@@ -112,7 +112,15 @@ describe('getReferralLink', () => {
 // ── redeemReferralCode ──────────────────────────────────────────────
 
 describe('redeemReferralCode', () => {
+  // cf-hpb2: redeemReferralCode no longer takes refereeData. Identity is
+  // resolved server-side via currentMember.getMember() — caller can't
+  // spoof the email. Mock the member here for each test.
   beforeEach(() => {
+    __setMember({
+      _id: 'member-002',
+      loginEmail: 'bob@example.com',
+      contactDetails: { firstName: 'Bob', lastName: 'Smith' },
+    });
     __seed('Referrals', [{
       _id: 'ref-001',
       referrerMemberId: 'member-001',
@@ -128,11 +136,7 @@ describe('redeemReferralCode', () => {
   });
 
   it('redeems a valid referral code', async () => {
-    const result = await redeemReferralCode('ABCD1234', {
-      name: 'Bob',
-      email: 'bob@example.com',
-    });
-
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(true);
     expect(result.referrerName).toBe('Alice');
     expect(result.refereeDiscount).toBe(25);
@@ -140,30 +144,28 @@ describe('redeemReferralCode', () => {
     expect(result.message).toContain('$25');
   });
 
-  it('updates referral status to signed_up', async () => {
+  it('updates referral status to signed_up with server-resolved referee identity', async () => {
     let updated = null;
     __onUpdate((col, item) => {
       if (col === 'Referrals') updated = item;
     });
 
-    await redeemReferralCode('ABCD1234', { name: 'Bob', email: 'bob@example.com' });
+    await redeemReferralCode('ABCD1234');
     expect(updated.status).toBe('signed_up');
-    expect(updated.refereeName).toBe('Bob');
+    expect(updated.refereeName).toBe('Bob Smith');
     expect(updated.refereeEmail).toBe('bob@example.com');
   });
 
   it('normalizes code to uppercase', async () => {
-    const result = await redeemReferralCode('abcd1234', { name: 'Bob', email: 'bob@example.com' });
-    expect(result.success).toBe(true);
+    expect((await redeemReferralCode('abcd1234')).success).toBe(true);
   });
 
   it('strips non-alphanumeric characters from code', async () => {
-    const result = await redeemReferralCode('ABCD-1234', { name: 'Bob', email: 'bob@example.com' });
-    expect(result.success).toBe(true);
+    expect((await redeemReferralCode('ABCD-1234')).success).toBe(true);
   });
 
   it('fails for invalid code', async () => {
-    const result = await redeemReferralCode('XXXX9999', { email: 'test@example.com' });
+    const result = await redeemReferralCode('XXXX9999');
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid');
   });
@@ -186,28 +188,27 @@ describe('redeemReferralCode', () => {
     expect(result.success).toBe(false);
   });
 
-  it('prevents self-referral by email', async () => {
-    const result = await redeemReferralCode('ABCD1234', {
-      name: 'Alice',
-      email: 'alice@example.com',
+  it('cf-hpb2: prevents self-referral when current member matches referrer email', async () => {
+    __setMember({
+      _id: 'member-001',
+      loginEmail: 'alice@example.com',
+      contactDetails: { firstName: 'Alice' },
     });
-
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(false);
     expect(result.error).toContain('own referral');
   });
 
-  it('rejects invalid email format', async () => {
-    const result = await redeemReferralCode('ABCD1234', {
-      name: 'Bob',
-      email: 'not-an-email',
-    });
-
+  it('cf-hpb2: returns 401-ish auth-required when no SiteMember context', async () => {
+    __setMember(null);
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(false);
-    expect(result.error).toContain('email');
+    expect(result.error.toLowerCase()).toContain('authentication');
   });
 
-  it('requires email for redemption', async () => {
-    const result = await redeemReferralCode('ABCD1234', { name: 'Bob' });
+  it('cf-hpb2: rejects member with malformed loginEmail', async () => {
+    __setMember({ _id: 'member-007', loginEmail: 'not-an-email' });
+    const result = await redeemReferralCode('ABCD1234');
     expect(result.success).toBe(false);
     expect(result.error).toContain('email');
   });
@@ -224,23 +225,19 @@ describe('redeemReferralCode', () => {
       refereeCredit: 25,
     }]);
 
-    const result = await redeemReferralCode('ANON5678', { name: 'Bob', email: 'bob@example.com' });
+    const result = await redeemReferralCode('ANON5678');
     expect(result.success).toBe(true);
     expect(result.message).toContain('a friend');
   });
 
-  it('sanitizes referee name', async () => {
+  it('cf-hpb2: tolerates missing contactDetails (refereeName falls back to empty)', async () => {
+    __setMember({ _id: 'member-099', loginEmail: 'no-name@example.com' });
     let updated = null;
-    __onUpdate((col, item) => {
-      if (col === 'Referrals') updated = item;
-    });
-
-    await redeemReferralCode('ABCD1234', {
-      name: '<script>alert(1)</script>Bob',
-      email: 'bob@example.com',
-    });
-
-    expect(updated.refereeName).not.toContain('<script>');
+    __onUpdate((col, item) => { if (col === 'Referrals') updated = item; });
+    const result = await redeemReferralCode('ABCD1234');
+    expect(result.success).toBe(true);
+    expect(updated.refereeName).toBe('');
+    expect(updated.refereeEmail).toBe('no-name@example.com');
   });
 });
 

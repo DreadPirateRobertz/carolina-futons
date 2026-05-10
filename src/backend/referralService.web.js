@@ -130,19 +130,29 @@ export const getReferralLink = webMethod(
 
 export const redeemReferralCode = webMethod(
   Permissions.SiteMember,
-  async (code, refereeData = {}) => {
+  async (code) => {
     try {
       const cleanCode = sanitize(code, 20).toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (!cleanCode) {
         return { success: false, error: 'Referral code is required' };
       }
 
-      const { name, email } = refereeData;
-      const cleanEmail = sanitize(email, 254).trim().toLowerCase();
-
+      // cf-hpb2: resolve referee identity from currentMember (auth context),
+      // not request body. User-supplied email lets caller spoof who's
+      // claiming a referral; server-resolved is the security-correct source.
+      // Stilgar's call (Q2 in docs/cf-hpb2-referralservice-comparison.md).
+      const member = await currentMember.getMember();
+      if (!member || !member._id) {
+        return { success: false, error: 'Authentication required' };
+      }
+      const cleanEmail = sanitize(member.loginEmail || '', 254).trim().toLowerCase();
       if (!cleanEmail || !validateEmail(cleanEmail)) {
         return { success: false, error: 'A valid email address is required' };
       }
+      // Best-effort name resolution from member contact details. Falls
+      // back to empty string — Referrals row treats refereeName as optional.
+      const contact = member.contactDetails || {};
+      const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || '';
 
       // Find the referral
       const result = await wixData.query(REFERRALS_COLLECTION)
