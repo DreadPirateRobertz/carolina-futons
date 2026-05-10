@@ -61,9 +61,40 @@ describe('post_trackCustomEvent — success', () => {
     expect(row.eventType).toBe('winback_landing_view');
   });
 
-  it('defaults source to "custom" when params has no source', async () => {
+  // cf-lsat: aliases via EVENT_NAME_MAP must canonicalize on the HTTP path.
+  // Pre-cf-lsat, the wrapper sanitized inline (regex only) and skipped the
+  // alias map — so a cfw caller sending "quiz_start" landed it raw instead
+  // of "quiz_started". Now the wrapper delegates to the webMethod, which
+  // applies EVENT_NAME_MAP.
+  it.each([
+    ['quiz_start', 'quiz_started'],
+    ['quiz_complete', 'quiz_completed'],
+    ['email_captured', 'quiz_lead_captured'],
+    ['swatch_request', 'swatch_requested'],
+    ['spin_wheel', 'spin_played'],
+    ['compare_add', 'compare_started'],
+  ])('canonicalizes alias %s → %s via EVENT_NAME_MAP', async (alias, canonical) => {
+    await post_trackCustomEvent(
+      makeRequest(veloBody(alias, { source: 'test' })),
+    );
+    const [row] = __getInserted('AnalyticsEvents');
+    expect(row.eventType).toBe(canonical);
+  });
+
+  // cf-lsat: source defaults to the event's category from CUSTOM_EVENTS
+  // (e.g. quiz_started → quiz) when params.source is absent. Falls back to
+  // 'custom' only when neither a category mapping nor a params.source exists.
+  it('auto-categorises source from CUSTOM_EVENTS when params has no source', async () => {
     await post_trackCustomEvent(
       makeRequest(veloBody('quiz_started', {})),
+    );
+    const [row] = __getInserted('AnalyticsEvents');
+    expect(row.source).toBe('quiz');
+  });
+
+  it('defaults source to "custom" for events outside CUSTOM_EVENTS taxonomy', async () => {
+    await post_trackCustomEvent(
+      makeRequest(veloBody('one_off_smoke_test', {})),
     );
     const [row] = __getInserted('AnalyticsEvents');
     expect(row.source).toBe('custom');
