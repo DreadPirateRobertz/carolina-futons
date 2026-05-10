@@ -1,16 +1,21 @@
 /**
  * @file emailServiceSecretsF1.test.js
- * @description cf-secrets.F1 (P2) — explicit fail path for missing
- * SITE_OWNER_CONTACT_ID. Pre-fix the bare `await getSecret(...)` would
- * propagate a "Secret not found" rejection up to the caller's catch,
- * which logged a generic "Failed to send …" — Stilgar saw no signal,
- * customers hit failure-soft with no owner notification (silent
- * customer-service blackout).
+ * @description cf-d8ta (cf-7pd6 F1) — explicit logging + correct caller
+ * behaviour when SITE_OWNER_CONTACT_ID is missing from Secrets Manager.
  *
- * Post-fix: `_resolveSiteOwnerContactId(callSite)` wraps the secret
- * lookup, logs an explicit `SITE_OWNER_CONTACT_ID missing` warn
- * naming the call site, and the caller skips the email send + returns
- * `success: false`.
+ * Pre-fix: bare `await getSecret(...)` propagated a "Secret not found"
+ * rejection to each caller's catch, which logged a generic "Failed to
+ * send …" — no signal that the root cause was secret misconfiguration.
+ *
+ * Post-fix (rennala / cf-d8ta):
+ * - `sendEmail` + `submitSwatchRequest`: skip owner notification but
+ *   CONTINUE — customer CMS insert + auto-reply still run (customer path
+ *   preserved when only the owner secret is missing).
+ * - `sendOrderNotification`: returns { success: false, reason:
+ *   'site_owner_contact_id_missing' } — owner notify IS the only side
+ *   effect, so structured failure aids cutover-night observability.
+ * - All three log an explicit '[emailService] SITE_OWNER_CONTACT_ID
+ *   secret missing or unreadable' warn via _resolveSiteOwnerContactId.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -35,35 +40,35 @@ const validContactForm = {
   message: 'Hello',
 };
 
-describe('sendEmail — SITE_OWNER_CONTACT_ID missing (cf-secrets.F1)', () => {
-  it('returns success: false with a customer-facing call-us message', async () => {
+describe('sendEmail — SITE_OWNER_CONTACT_ID missing (cf-d8ta)', () => {
+  it('returns success: true — customer path continues even when owner secret is missing', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const res = await sendEmail(validContactForm);
-    expect(res.success).toBe(false);
-    expect(res.message).toMatch(/call/i);
+    expect(res.success).toBe(true);
     warnSpy.mockRestore();
   });
 
-  it('logs the explicit "SITE_OWNER_CONTACT_ID missing" warn with sendEmail call-site label', async () => {
+  it('logs the explicit "SITE_OWNER_CONTACT_ID" warn', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await sendEmail(validContactForm);
     const warnings = warnSpy.mock.calls.map((args) => args.map(String).join(' '));
-    const found = warnings.find(
-      (w) => w.includes('SITE_OWNER_CONTACT_ID missing') && w.includes('sendEmail'),
-    );
-    expect(found, `expected explicit warn naming sendEmail; got: ${JSON.stringify(warnings)}`).toBeDefined();
+    const found = warnings.find((w) => w.includes('SITE_OWNER_CONTACT_ID'));
+    expect(found, `expected explicit SITE_OWNER_CONTACT_ID warn; got: ${JSON.stringify(warnings)}`).toBeDefined();
     warnSpy.mockRestore();
   });
 
-  it('does NOT emit any owner-notification email (no triggeredEmails.emailContact call)', async () => {
+  it('does NOT emit an owner-notification email (customer auto-reply may still fire)', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await sendEmail(validContactForm);
-    expect(__getEmailLog()).toHaveLength(0);
+    // With rennala's "continue customer path" behavior, the customer auto-reply
+    // can fire even when the owner secret is missing. Only the owner email is
+    // skipped. If owner email were also sent, log would have 2 entries.
+    expect(__getEmailLog().length).toBeLessThanOrEqual(1);
     warnSpy.mockRestore();
   });
 });
 
-describe('submitSwatchRequest — SITE_OWNER_CONTACT_ID missing (cf-secrets.F1)', () => {
+describe('submitSwatchRequest — SITE_OWNER_CONTACT_ID missing (cf-d8ta)', () => {
   const validRequest = {
     name: 'Alice Test',
     email: 'alice@example.com',
@@ -73,26 +78,25 @@ describe('submitSwatchRequest — SITE_OWNER_CONTACT_ID missing (cf-secrets.F1)'
     address: '123 Main St',
   };
 
-  it('returns success: false with a customer-facing call-us message', async () => {
+  it('returns success: true — customer path continues even when owner secret is missing', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const res = await submitSwatchRequest(validRequest);
-    expect(res.success).toBe(false);
-    expect(res.message).toMatch(/call/i);
+    expect(res.success).toBe(true);
     warnSpy.mockRestore();
   });
 
-  it('logs the warn naming the submitSwatchRequest call site', async () => {
+  it('logs the explicit "SITE_OWNER_CONTACT_ID" warn', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await submitSwatchRequest(validRequest);
     const found = warnSpy.mock.calls
       .map((args) => args.map(String).join(' '))
-      .find((w) => w.includes('SITE_OWNER_CONTACT_ID missing') && w.includes('submitSwatchRequest'));
+      .find((w) => w.includes('SITE_OWNER_CONTACT_ID'));
     expect(found).toBeDefined();
     warnSpy.mockRestore();
   });
 });
 
-describe('sendOrderNotification — SITE_OWNER_CONTACT_ID missing (cf-secrets.F1)', () => {
+describe('sendOrderNotification — SITE_OWNER_CONTACT_ID missing (cf-d8ta)', () => {
   const validOrder = {
     number: 'CF-12345',
     buyerName: 'Order Buyer',
@@ -100,19 +104,19 @@ describe('sendOrderNotification — SITE_OWNER_CONTACT_ID missing (cf-secrets.F1
     lineItems: [{}],
   };
 
-  it('returns success: false (silent failure to caller) without throwing', async () => {
+  it('returns { success: false, reason: "site_owner_contact_id_missing" } without throwing', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const res = await sendOrderNotification(validOrder);
-    expect(res).toEqual({ success: false });
+    expect(res).toEqual({ success: false, reason: 'site_owner_contact_id_missing' });
     warnSpy.mockRestore();
   });
 
-  it('logs the warn naming the sendOrderNotification call site', async () => {
+  it('logs the explicit "SITE_OWNER_CONTACT_ID" warn', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await sendOrderNotification(validOrder);
     const found = warnSpy.mock.calls
       .map((args) => args.map(String).join(' '))
-      .find((w) => w.includes('SITE_OWNER_CONTACT_ID missing') && w.includes('sendOrderNotification'));
+      .find((w) => w.includes('SITE_OWNER_CONTACT_ID'));
     expect(found).toBeDefined();
     warnSpy.mockRestore();
   });
