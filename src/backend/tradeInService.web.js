@@ -186,14 +186,18 @@ export const submitTradeInRequest = webMethod(
       // Rate limit: 3 submissions per email per 24h.
       // checkRateLimit reads the count then updates or inserts. The unique index on
       // `key` in TradeInRateLimit prevents duplicate rows but does not make the
-      // read-then-update path atomic. Fail-open: a checkRateLimit throw allows the
-      // submission through so a rate-limit DB outage does not silently block customers.
-      let rl;
-      try {
-        rl = await checkRateLimit(RL_COLLECTION, email, { max: RL_MAX, windowMs: RL_WINDOW_MS });
-      } catch (_) {
-        rl = { allowed: true };
-      }
+      // read-then-update path atomic. Fail-open: a rate-limit DB outage allows
+      // the submission through so customers aren't silently blocked.
+      // cf-xcct: pre-cf-3ldu.F2 the original try/catch achieved fail-open by
+      // catching the wixData throw. Post-#1288 checkRateLimit returns
+      // {allowed: false, reason: 'db_error'} instead of throwing — the catch
+      // never fires and the intentional fail-open silently broke. cf-2enk
+      // failOpenOnDbError option restores the intent at the callee.
+      const rl = await checkRateLimit(RL_COLLECTION, email, {
+        max: RL_MAX,
+        windowMs: RL_WINDOW_MS,
+        failOpenOnDbError: true,
+      });
       if (!rl.allowed) {
         return { success: false, message: 'You have submitted too many trade-in requests. Please try again tomorrow.' };
       }

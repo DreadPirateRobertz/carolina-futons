@@ -70,11 +70,14 @@ describe('deliveryScheduling — error catch paths', () => {
     expect(result).toEqual([]);
   });
 
-  it('bookAppointment returns failure on unexpected error', async () => {
-    // First insert is the rate limit record (fails open), second is the appointment itself
+  it('bookAppointment returns "Failed to book" when rate-limit DB throws (cf-3ldu.F2 + PR #1311)', async () => {
+    // Pre-PR #1288 the rate-limit insert throwing failed open; test asserted
+    // on the outer catch-block message ("Failed to book"). cf-3ldu.F2 changed
+    // checkRateLimit to fail-CLOSED, returning {allowed:false, reason:'db_error'}.
+    // PR #1311 updated bookAppointment to check reason — db_error returns a
+    // distinct "Failed to book" message instead of the rate-limit message.
     vi.spyOn(wixData, 'insert')
-      .mockRejectedValueOnce(new Error('DB down')) // rate limit insert — fails open
-      .mockRejectedValueOnce(new Error('DB down')); // appointment insert — caught by outer try/catch
+      .mockRejectedValueOnce(new Error('DB down')); // rate-limit insert → reason='db_error' → "Failed to book"
     const result = await bookAppointment({
       date: futureWed(),
       timeSlot: '10:00',
