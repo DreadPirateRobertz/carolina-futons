@@ -27,6 +27,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { validateSchema } from 'backend/utils/validateSchema';
+import { resolveTemplateId } from 'backend/emailTemplates.web';
 
 // ── Rate Limiting (CF-rw9g) ──────────────────────────────────────────
 // CMS collection: EmailRateLimit (key, count, windowStart)
@@ -146,7 +147,7 @@ export const sendEmail = webMethod(
       // This is the recipient of all contact form notifications.
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
       await triggeredEmails.emailContact(
-        'contact_form_submission',
+        resolveTemplateId('contact_form_submission'),
         siteOwnerContactId,
         {
           variables: {
@@ -232,11 +233,10 @@ async function _sendCustomerContactAutoReply({ email, name, subject, message }) 
     console.warn('[emailService] customer auto-reply skipped — appendOrCreateContact returned empty', { email });
     return;
   }
-  // cf-hafn / Wix CRM dashboard: 'contact_form_auto_reply' is the
-  // human-readable template name; the dashboard's opaque template ID is
-  // 'VJBOnfD' (set per Stilgar 2026-05-10). triggeredEmails.emailContact
-  // expects the dashboard ID.
-  await triggeredEmails.emailContact('VJBOnfD', customerContactId, {
+  // cf-hafn: dispatch via the Wix dashboard ID resolved from
+  // TEMPLATE_ID_MAP. Keeps the human-readable name visible at the call
+  // site for grep-ability.
+  await triggeredEmails.emailContact(resolveTemplateId('contact_form_auto_reply'), customerContactId, {
     variables: {
       customerName: name,
       subject: subject || '',
@@ -301,7 +301,7 @@ export const submitSwatchRequest = webMethod(
 
       // Notify store owner
       await triggeredEmails.emailContact(
-        'contact_form_submission',
+        resolveTemplateId('contact_form_submission'),
         siteOwnerContactId,
         {
           variables: {
@@ -326,9 +326,9 @@ export const submitSwatchRequest = webMethod(
           .limit(1)
           .find();
         if (contactResult.items.length > 0) {
-          // cf-obsb: Wix dashboard ID for swatch_confirmation.
+          // cf-obsb: dispatch via TEMPLATE_ID_MAP-resolved Wix dashboard ID.
           await triggeredEmails.emailContact(
-            'VJBTzwh',
+            resolveTemplateId('swatch_confirmation'),
             contactResult.items[0]._id,
             {
               variables: {
@@ -438,7 +438,7 @@ export const sendOrderNotification = webMethod(
     try {
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
       await triggeredEmails.emailContact(
-        'new_order_notification',
+        resolveTemplateId('new_order_notification'),
         siteOwnerContactId,
         {
           variables: {
@@ -480,7 +480,7 @@ export const sendOrderConfirmation = webMethod(
       if (!contactId || !email) return { success: false };
 
       await triggeredEmails.emailContact(
-        'order_confirmation',
+        resolveTemplateId('order_confirmation'),
         contactId,
         {
           variables: {
@@ -525,7 +525,7 @@ export const sendShippingNotification = webMethod(
       if (!contactId || !email) return { success: false };
 
       await triggeredEmails.emailContact(
-        'order_shipped',
+        resolveTemplateId('order_shipped'),
         contactId,
         {
           variables: {
@@ -572,7 +572,7 @@ export const sendFreightShippingNotification = webMethod(
       if (!contactId || !email) return { success: false };
 
       await triggeredEmails.emailContact(
-        'freight_shipped',
+        resolveTemplateId('freight_shipped'),
         contactId,
         {
           variables: {
@@ -613,7 +613,7 @@ export const sendDeliveryConfirmation = webMethod(
       if (!contactId || !email) return { success: false };
 
       await triggeredEmails.emailContact(
-        'delivery_confirmation',
+        resolveTemplateId('delivery_confirmation'),
         contactId,
         {
           variables: {

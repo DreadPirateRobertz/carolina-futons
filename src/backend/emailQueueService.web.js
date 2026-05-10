@@ -20,6 +20,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { resolveTemplateId } from 'backend/emailTemplates.web';
 
 export const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
 const RATE_LIMIT_COLLECTION = 'EmailQueueRateLimit';
@@ -254,7 +255,7 @@ export const processQueue = webMethod(Permissions.Admin, async (opts = {}) => {
         ? (typeof item.variables === 'string' ? JSON.parse(item.variables) : item.variables)
         : {};
 
-      await triggeredEmails.emailContact(item.templateId, item.recipientContactId, { variables });
+      await triggeredEmails.emailContact(resolveTemplateId(item.templateId), item.recipientContactId, { variables });
 
       await wixData.update(
         EMAIL_QUEUE_COLLECTION,

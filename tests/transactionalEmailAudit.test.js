@@ -304,24 +304,24 @@ describe('sendOrderConfirmation', () => {
   it('sends to order_confirmation template', async () => {
     await sendOrderConfirmation(ORDER);
     const log = __getEmailLog();
-    expect(log.some(e => e.templateId === 'order_confirmation')).toBe(true);
+    expect(log.some(e => e.templateId === 'VJBTjjZ')).toBe(true);
   });
 
   it('sends to buyer contactId', async () => {
     await sendOrderConfirmation(ORDER);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_confirmation');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTjjZ');
     expect(entry.contactId).toBe('contact-abc');
   });
 
   it('passes orderNumber in variables', async () => {
     await sendOrderConfirmation(ORDER);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_confirmation');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTjjZ');
     expect(entry.options.variables.orderNumber).toBe('12345');
   });
 
   it('passes total in variables', async () => {
     await sendOrderConfirmation(ORDER);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_confirmation');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTjjZ');
     expect(entry.options.variables.total).toBe('$1,299.00');
   });
 
@@ -366,19 +366,19 @@ describe('sendShippingNotification', () => {
 
   it('sends to order_shipped template', async () => {
     await sendShippingNotification(SHIP);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_shipped');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTpK1');
     expect(entry).toBeDefined();
   });
 
   it('passes trackingNumber in variables', async () => {
     await sendShippingNotification(SHIP);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_shipped');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTpK1');
     expect(entry.options.variables.trackingNumber).toBe('UPS123456');
   });
 
   it('passes carrier in variables', async () => {
     await sendShippingNotification(SHIP);
-    const entry = __getEmailLog().find(e => e.templateId === 'order_shipped');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTpK1');
     expect(entry.options.variables.carrier).toBe('UPS');
   });
 
@@ -406,14 +406,14 @@ describe('sendDeliveryConfirmation', () => {
 
   it('sends to delivery_confirmation template', async () => {
     await sendDeliveryConfirmation(ORDER);
-    const entry = __getEmailLog().find(e => e.templateId === 'delivery_confirmation');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTuXp');
     expect(entry).toBeDefined();
     expect(entry.contactId).toBe('contact-abc');
   });
 
   it('passes orderNumber in variables', async () => {
     await sendDeliveryConfirmation(ORDER);
-    const entry = __getEmailLog().find(e => e.templateId === 'delivery_confirmation');
+    const entry = __getEmailLog().find(e => e.templateId === 'VJBTuXp');
     expect(entry.options.variables.orderNumber).toBe('12345');
   });
 
@@ -445,7 +445,7 @@ describe('wixEcom_onFulfillmentCreated — UPS parcel', () => {
     // Allow the async import chain to settle
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    expect(log.some(e => e.templateId === 'order_shipped')).toBe(true);
+    expect(log.some(e => e.templateId === 'VJBTpK1')).toBe(true);
   });
 
   it('does not throw when email is missing from event', () => {
@@ -477,29 +477,29 @@ describe('wixEcom_onFulfillmentCreated — LTL freight routing', () => {
     await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO Logistics')));
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
-    expect(log.every(e => e.templateId !== 'order_shipped')).toBe(true);
+    expect(log.some(e => e.templateId === 'VJBUKCa')).toBe(true);
+    expect(log.every(e => e.templateId !== 'VJBTpK1')).toBe(true);
   });
 
   it('sends freight_shipped template for Estes carrier', async () => {
     await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('Estes Express')));
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
+    expect(log.some(e => e.templateId === 'VJBUKCa')).toBe(true);
   });
 
   it('sends freight_shipped template for WWEX carrier', async () => {
     await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('WWEX Freight')));
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    expect(log.some(e => e.templateId === 'freight_shipped')).toBe(true);
+    expect(log.some(e => e.templateId === 'VJBUKCa')).toBe(true);
   });
 
   it('freight_shipped email includes proNumber variable', async () => {
     await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO')));
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    const freight = log.find(e => e.templateId === 'freight_shipped');
+    const freight = log.find(e => e.templateId === 'VJBUKCa');
     expect(freight?.options?.variables?.proNumber).toBe('987654321');
   });
 
@@ -507,7 +507,7 @@ describe('wixEcom_onFulfillmentCreated — LTL freight routing', () => {
     await Promise.resolve(wixEcom_onFulfillmentCreated(makeLTLEvent('XPO')));
     await new Promise(r => setTimeout(r, 100));
     const log = __getEmailLog();
-    const freight = log.find(e => e.templateId === 'freight_shipped');
+    const freight = log.find(e => e.templateId === 'VJBUKCa');
     expect(freight?.options?.variables?.trackingUrl).toContain('xpo.com');
   });
 

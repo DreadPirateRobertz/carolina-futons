@@ -43,6 +43,7 @@ import { logAuditEvent } from 'backend/utils/auditLog';
 import { logError } from 'backend/utils/errorHandler';
 import { sendOrderConfirmation, sendFreightShippingNotification, sendShippingNotification, sendDeliveryConfirmation } from 'backend/emailService.web';
 import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
+import { resolveTemplateId } from 'backend/emailTemplates.web';
 import { buildFreightTrackingPayload } from 'backend/freightTracking.web';
 import { scheduleSurvey } from 'backend/surveyService.web';
 import { _getReferralLinkForMember } from 'backend/referralService.web';
@@ -1551,8 +1552,11 @@ async function sendQueuedEmail(queueItem) {
     unsubscribeUrl = 'https://www.carolinafutons.com/unsubscribe';
   }
 
+  // Resolve the queue row's human-readable templateId to the Wix CRM
+  // dashboard ID at dispatch time. Keeps EmailQueue rows readable in
+  // the admin while satisfying the dashboard's opaque-ID requirement.
   await triggeredEmails.emailContact(
-    queueItem.templateId,
+    resolveTemplateId(queueItem.templateId),
     contactId,
     { variables: { ...queueItem.variables, unsubscribeUrl } }
   );

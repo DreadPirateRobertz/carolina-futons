@@ -19,6 +19,69 @@ const SITE_URL = 'https://www.carolinafutons.com';
 const SITE_NAME = 'Carolina Futons';
 const SUPPORT_PHONE = '(828) 252-9449';
 
+// ── Wix CRM Dashboard Template-ID Map ──────────────────────────────────
+// Stilgar registered the production templates with opaque IDs different
+// from the human-readable names used in the local TEMPLATE_REGISTRY +
+// SEQUENCES tables. Outgoing triggeredEmails.emailContact() calls must
+// pass the dashboard ID, not the human-readable name. Use
+// resolveTemplateId('<human_name>') at every dispatch boundary so the
+// call site stays grep-friendly.
+//
+// Map sourced from melania 2026-05-10. Extend in lockstep with cf-c6g5
+// template registrations on staging — any human_name not in this map
+// resolves to itself (callers using the literal still work; the dashboard
+// will reject if the template is unregistered, surfacing the gap clearly).
+export const TEMPLATE_ID_MAP = Object.freeze({
+  // Welcome series
+  welcome_series_1: 'VJBSYDf',
+  welcome_series_2: 'VJBSndP',
+  welcome_series_3: 'VJBT0f4',
+  welcome_series_4: 'VJBT8lB',
+  welcome_series_5: 'VJBTFoO',
+  // Cart recovery
+  cart_recovery_1: 'VJBTMzv',
+  cart_recovery_2: 'VJBTRJe',
+  cart_recovery_3: 'VJBTXIu',
+  // Order lifecycle
+  order_confirmation: 'VJBTjjZ',
+  order_shipped: 'VJBTpK1',
+  delivery_confirmation: 'VJBTuXp',
+  freight_shipped: 'VJBUKCa',
+  // Post-purchase
+  post_purchase_1: 'VJBVVig',
+  post_purchase_2: 'VJBVc41',
+  post_purchase_3: 'VJBVi9P',
+  post_purchase_review_reward: 'VJBVq0v',
+  post_purchase_referral: 'VJBVv8f',
+  // Promotional
+  promotional_sale: 'VJBW0Rt',
+  promotional_new_arrival: 'VJBW5IP',
+  promotional_seasonal: 'VJBWBgb',
+  // Re-engagement
+  reengagement_1: 'VJBWIEt',
+  reengagement_2: 'VJBWO0C',
+  reengagement_3: 'VJBWTd7',
+  // Transactional / one-off
+  contact_form_submission: 'VJBU6zD',
+  contact_form_auto_reply: 'VJBOnfD',
+  swatch_confirmation: 'VJBTzwh',
+  new_order_notification: 'VJBUDr1',
+  owner_alert: 'VJBVPLd',
+});
+
+/**
+ * Resolve a human-readable template name to its Wix CRM dashboard ID.
+ * Falls through to the input if the name isn't in TEMPLATE_ID_MAP — that
+ * way unmapped templates still attempt dispatch (Wix surfaces the failure
+ * cleanly) without forcing every dispatch site to add a guard.
+ *
+ * @param {string} name - Human-readable template name (e.g. 'welcome_series_1')
+ * @returns {string} Dashboard ID if mapped, else the input name unchanged
+ */
+export function resolveTemplateId(name) {
+  return TEMPLATE_ID_MAP[name] || name;
+}
+
 // ── Template Registry ───────────────────────────────────────────────
 // Central registry of all email templates with metadata and variable schemas.
 

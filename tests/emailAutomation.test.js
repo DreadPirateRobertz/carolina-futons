@@ -643,7 +643,7 @@ describe('processEmailQueue', () => {
 
     const emails = __getEmailLog();
     expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('welcome_series_1');
+    expect(emails[0].templateId).toBe('VJBSYDf'); // dashboard ID for welcome_series_1
     expect(emails[0].contactId).toBe('contact-1');
   });
 

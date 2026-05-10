@@ -107,7 +107,7 @@ describe('welcome sequence lifecycle', () => {
     // Verify the triggered email was sent
     const emails = __getEmailLog();
     expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('welcome_series_1');
+    expect(emails[0].templateId).toBe('VJBSYDf'); // dashboard ID for welcome_series_1
     expect(emails[0].contactId).toBe('contact-lc1');
     expect(emails[0].options.variables.firstName).toBe('Lori');
     expect(emails[0].options.variables.discountCode).toBe('WELCOME10');
@@ -606,7 +606,7 @@ describe('post-purchase full flow', () => {
 
     const emails = __getEmailLog();
     // order_confirmation sent during onOrderCreated + post_purchase_1 from queue
-    const ppEmail = emails.find(e => e.templateId === 'post_purchase_1');
+    const ppEmail = emails.find(e => e.templateId === 'VJBVVig'); // post_purchase_1
     expect(ppEmail).toBeTruthy();
     expect(ppEmail.options.variables.orderNumber).toBe('ORD-FLOW');
   });

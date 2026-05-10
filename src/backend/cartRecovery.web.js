@@ -19,6 +19,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
 import { findMemberRecord, computeTierInfo } from 'backend/gamificationCore.web';
+import { resolveTemplateId } from 'backend/emailTemplates.web';
 
 /**
  * Event handler: Abandoned checkout created.
@@ -220,7 +221,7 @@ export const sendRecoveryEmail = webMethod(
       // CF-hamh: Enrich with loyalty context (points balance, tier progress)
       const loyalty = await getLoyaltyContext(contactId, cart.cartTotal);
 
-      await triggeredEmails.emailContact('cart_recovery_1', contactId, {
+      await triggeredEmails.emailContact(resolveTemplateId('cart_recovery_1'), contactId, {
         variables: {
           buyerName: cart.buyerName || '',
           cartTotal: String(cart.cartTotal || 0),
