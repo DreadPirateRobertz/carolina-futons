@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 05:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 05:25 MT**
 
 ## Session 2026-05-10 — Wave 27
 | Done | Detail |
@@ -11,6 +11,11 @@
 | ✅ miquella → cf-lt2l | PRE-FLIP smoke test execution on Vercel preview (cutover-verification-matrix.md). |
 | ✅ morgott → cf-q8m2 | cf-4x7e Pass 3 chunk A — delete dead methods from SUPERSEDE-scored files. |
 | ✅ millicent → cf-3qt.8.32 | Vercel Pro upgrade requirements — document what Stilgar needs before DNS flip. |
+| ✅ PR #1276 MERGED | cf-7pd6 secrets audit — all getSecret() call sites + cutover required-set documented. |
+| ✅ PR #1275 MERGED | cf-ad9y doc-link checker script — scripts/check-doc-links.py. |
+| ✅ PR #1278 MERGED | cf-3ldu rate-limit audit — F1(P1) in-memory Map → cf-3ldu.1 filed + assigned rennala. |
+| 🔄 PR #1279 #1280 | cf-z0ht.fu1 + cf-3qt.8.31 — tests running. |
+| ⚠️ cf-3ldu.1 NEW P1 | returnsService.web.js in-memory rate limit — survives cold-start → real security gap. Rennala implementing fix. |
 | ✅ PRs #1268 #1270 #1272 #1273 #1274 MERGED | Doc batch: cutover checklist, cron audit, Lighthouse baseline, khqd-cfw deferred note, mobile smoke (10/10 PASS). |
 | ✅ PR #1269 MERGED | Pre-cutover curl results: 6/7 PASS, /api/health=404 flagged. |
 
