@@ -14,9 +14,13 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('backend/utils/rateLimit', () => ({
-  checkRateLimit: vi.fn(),
-}));
+vi.mock('backend/utils/rateLimit', async (importOriginal) => {
+  // Real extractTrustedClientIp + hashRateLimitKey, mocked checkRateLimit.
+  // Tests assert on the post-trim rate-limit key, so the helper must
+  // execute with the real XFF parsing logic.
+  const actual = await importOriginal();
+  return { ...actual, checkRateLimit: vi.fn() };
+});
 
 import {
   post_submitCommunityPhoto,
@@ -226,22 +230,44 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
     expect(JSON.parse(res.body).success).toBe(false);
   });
 
-  // cf-k5vr: wrapper extracts x-forwarded-for and forwards as the
-  // rate-limit axis. Two clients on the same image host should land in
-  // independent buckets; one client posting to two hosts should share a
-  // bucket.
-  it('cf-k5vr: wrapper extracts leftmost x-forwarded-for as rateLimitKey', async () => {
-    const req = flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.42, 10.0.0.1, 10.0.0.2' });
+  // cf-owrr (was cf-k5vr): wrapper extracts the trusted client IP via
+  // extractTrustedClientIp. The Wix edge appends ONE rightmost entry
+  // (default trustedProxies=1), so the test chain shape is
+  // "<client-supplied entries>..., <wix-edge>".
+  //
+  // The leftmost-trust pattern was the cf-owrr bug: an attacker could
+  // spoof the leftmost XFF entry per request to land in fresh buckets.
+  // The "leftmost spoofed, real client, edge" case below is the
+  // regression pin for the actual fix.
+  it('cf-owrr: wrapper trusts the entry just before the Wix edge — NOT the leftmost spoofed entry', async () => {
+    // Chain: <attacker-spoofed>, <real-client>, <wix-edge>
+    const req = flatReq(VALID_BODY, { 'x-forwarded-for': '1.1.1.1, 203.0.113.42, 10.0.0.1' });
     await post_submitCommunityPhoto(req);
     expect(checkRateLimit).toHaveBeenCalledWith(
       'CommunityPhotoRateLimit',
-      '203.0.113.42',
+      '203.0.113.42', // NOT '1.1.1.1' (would be the leftmost-trust bug)
       expect.anything(),
     );
   });
 
+  it('cf-owrr: rotating leftmost spoof does NOT create fresh buckets', async () => {
+    // Same real-client behind Wix edge; attacker rotates leftmost
+    // entry per request. All 3 calls must land in the same bucket.
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '1.1.1.1, 203.0.113.42, 10.0.0.1' }),
+    );
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '2.2.2.2, 203.0.113.42, 10.0.0.1' }),
+    );
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '9.9.9.9, 203.0.113.42, 10.0.0.1' }),
+    );
+    const keys = vi.mocked(checkRateLimit).mock.calls.map((call) => call[1]);
+    expect(keys).toEqual(['203.0.113.42', '203.0.113.42', '203.0.113.42']);
+  });
+
   it('cf-k5vr: wrapper accepts X-Forwarded-For (canonical capitalization)', async () => {
-    const req = flatReq(VALID_BODY, { 'X-Forwarded-For': '198.51.100.5' });
+    const req = flatReq(VALID_BODY, { 'X-Forwarded-For': '198.51.100.5, 10.0.0.1' });
     await post_submitCommunityPhoto(req);
     expect(checkRateLimit).toHaveBeenCalledWith(
       'CommunityPhotoRateLimit',
@@ -259,8 +285,23 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
     );
   });
 
+  it('cf-owrr: chain shorter than trustedProxies (single edge entry) falls back to host axis', async () => {
+    // A single-entry chain means we only see the Wix edge entry — no
+    // client-supplied entries upstream. Helper returns null → host
+    // fallback fires. Without this fallback, we would rate-limit every
+    // request from the same edge instance into one bucket.
+    await post_submitCommunityPhoto(
+      flatReq(VALID_BODY, { 'x-forwarded-for': '10.0.0.1' }),
+    );
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      'CommunityPhotoRateLimit',
+      'cdn.example.com', // host fallback, NOT '10.0.0.1'
+      expect.anything(),
+    );
+  });
+
   it('cf-k5vr: same client IP across different image hosts shares one bucket', async () => {
-    const xff = { 'x-forwarded-for': '203.0.113.99' };
+    const xff = { 'x-forwarded-for': '203.0.113.99, 10.0.0.1' };
     await post_submitCommunityPhoto(
       flatReq({ ...VALID_BODY, imageUrl: 'https://cdn-a.example.com/p1.jpg' }, xff),
     );
@@ -273,10 +314,10 @@ describe('cf-0h9q · post_submitCommunityPhoto', () => {
 
   it('cf-k5vr: different client IPs on the same image host get independent buckets', async () => {
     await post_submitCommunityPhoto(
-      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.10' }),
+      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.10, 10.0.0.1' }),
     );
     await post_submitCommunityPhoto(
-      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.20' }),
+      flatReq(VALID_BODY, { 'x-forwarded-for': '203.0.113.20, 10.0.0.1' }),
     );
     const keys = vi.mocked(checkRateLimit).mock.calls.map((call) => call[1]);
     expect(keys).toEqual(['203.0.113.10', '203.0.113.20']);
