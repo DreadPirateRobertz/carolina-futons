@@ -23,6 +23,7 @@ import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { corsHeaders, corsPreflight } from 'backend/utils/cors';
+import { verifyRateLimitCollections } from 'backend/utils/rateLimit';
 import { getDeliveryZone as _getDeliveryZone } from 'backend/deliveryZoneService.web';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
@@ -3931,3 +3932,62 @@ export async function post_referralService(request) {
   return _veloDispatch(request, _REFERRAL_METHODS, 'referralService');
 }
 export function options_referralService(request) { return response(corsPreflight(request)); }
+
+// ── cf-3ldu.F2: rate-limit collection-existence probe ────────────────
+//
+// URL: GET /_functions/verifyRateLimitCollections
+// Auth: X-Cron-Secret header matching ALERT_CRON_KEY (timingSafeEqual)
+// Purpose: pre-cutover gate. The shared `checkRateLimit` helper FAILS
+// OPEN on wixData errors — including "Collection does not exist". A
+// missing rate-limit collection silently disables protection on every
+// endpoint that uses it. cf-3qt.8 cutover risk: if staging doesn't
+// mirror production's 46 rate-limit collections, an attacker can
+// exploit the gap before anyone notices (no customer-visible signal).
+//
+// Response body shape:
+//   {
+//     status: 'ok' | 'missing_collections',
+//     total: <int>,
+//     existing: [<collection>, ...],
+//     missing: [{collection, error}, ...],
+//     errored: [{collection, error}, ...],
+//     timestamp: <ISO>
+//   }
+// status === 'missing_collections' iff missing[].length > 0.
+//
+// Ops play: pre-cutover, curl this endpoint with the cron key. If the
+// response includes any missing collections, create them in Wix
+// Dashboard with the standard `key text / count number / windowStart
+// dateTime` schema before flipping DNS.
+export async function get_verifyRateLimitCollections(request) {
+  const HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: HEADERS,
+      });
+    }
+
+    const report = await verifyRateLimitCollections();
+    const status = report.missing.length > 0 ? 'missing_collections' : 'ok';
+    return ok({
+      body: JSON.stringify({
+        status,
+        timestamp: new Date().toISOString(),
+        ...report,
+      }),
+      headers: HEADERS,
+    });
+  } catch (err) {
+    console.error('HTTP function error (verifyRateLimitCollections):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: HEADERS,
+    });
+  }
+}

@@ -156,3 +156,113 @@ export async function checkRateLimit(collection, key, opts = {}) {
     return { allowed: true }; // Fail open — don't block on DB errors
   }
 }
+
+// cf-3ldu.F2 (P2): canonical list of every wixData collection used as a
+// rate-limit bucket in this codebase. Built statically (extracted via
+// grep at audit time, 2026-05-10) — Velo's stateless dispatch means
+// there's no module-load inventory phase to discover this at runtime.
+// Update this list any time a new `checkRateLimit('XYZ', ...)` call
+// lands; the `verifyRateLimitCollections()` probe relies on it to
+// detect missing pre-cutover collections that would otherwise silently
+// fail-open on the helper's catch-all.
+//
+// Includes `ReturnsLookupRateLimit` (cf-3ldu.1 added in PR #1288) and
+// `NewsletterRateLimit` (newsletterService.web.js custom impl, F4).
+export const RATE_LIMIT_COLLECTIONS = Object.freeze([
+  'AbTestEventRateLimit',
+  'AchievementsRateLimit',
+  'ActivityRateLimit',
+  'AnalyticsEventRateLimit',
+  'BackInStockRateLimit',
+  'BadgesPublicRateLimit',
+  'BrowseSessionRateLimit',
+  'BundleAddRateLimit',
+  'BurnRateLimit',
+  'BusEventRateLimit',
+  'ChatMessageRateLimit',
+  'CheckoutTrackingRateLimit',
+  'ComfortTimelineRateLimit',
+  'CommunityPhotoRateLimit',
+  'ComparisonRateLimit',
+  'ContactRateLimits',
+  'CouponValidationRateLimit',
+  'CustomerRoomPhotosRateLimit',
+  'DeliveryReservationRateLimit',
+  'EmailEventRateLimit',
+  'ErrorLogRateLimit',
+  'ExperimentVariantRateLimit',
+  'GiftCardBalanceRateLimit',
+  'LeaderboardPublicRateLimit',
+  'MetricsReportRateLimit',
+  'NewsletterRateLimit',
+  'PriceLockRateLimit',
+  'ProtectionPlanRateLimit',
+  'QARateLimit',
+  'QuizLeadRateLimit',
+  'RealRoomsRateLimit',
+  'RegistryPurchaseRateLimit',
+  'RemindMeRateLimit',
+  'ResubscribeRateLimit',
+  'ReturnsLookupRateLimit',
+  'ReviewRateLimit',
+  'SommelierRateLimit',
+  'SpinWheelRateLimit',
+  'SupportTicketRateLimit',
+  'SwatchRequestRateLimit',
+  'TrackingRateLimit',
+  'UnsubscribeRateLimit',
+  'ViewerCountRateLimit',
+  'ViewerTrackerRateLimit',
+  'VisualSearchExportRateLimit',
+  'WhiteGloveBookingRateLimit',
+]);
+
+/**
+ * Probe every rate-limit collection and report which exist vs which
+ * are missing. Pre-cutover gate (cf-3qt.8): if a rate-limit collection
+ * doesn't exist on the live site, the helper's fail-open catch silently
+ * disables protection on every endpoint that uses it.
+ *
+ * Each collection is queried for one item (`limit(1)`) — cheap, no
+ * mutation. A missing collection rejects with `WD_COLLECTION_NOT_FOUND`
+ * (or substrings like "not found" / "does not exist") which we capture
+ * verbatim in the report.
+ *
+ * @returns {Promise<{
+ *   total: number,
+ *   existing: string[],
+ *   missing: Array<{collection: string, error: string}>,
+ *   errored: Array<{collection: string, error: string}>,
+ * }>}
+ */
+export async function verifyRateLimitCollections() {
+  const existing = [];
+  const missing = [];
+  const errored = [];
+
+  for (const collection of RATE_LIMIT_COLLECTIONS) {
+    try {
+      await wixData.query(collection).limit(1).find();
+      existing.push(collection);
+    } catch (err) {
+      const msg = String(err && (err.message || err)) || '';
+      const lowered = msg.toLowerCase();
+      if (
+        lowered.includes('not found')
+        || lowered.includes('does not exist')
+        || lowered.includes('wd_collection_not_found')
+      ) {
+        missing.push({ collection, error: msg });
+      } else {
+        errored.push({ collection, error: msg });
+      }
+    }
+  }
+
+  return {
+    total: RATE_LIMIT_COLLECTIONS.length,
+    existing,
+    missing,
+    errored,
+  };
+}
