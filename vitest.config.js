@@ -46,10 +46,10 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.js'],
     setupFiles: ['tests/setup.js'],
-    poolOptions: {
-      threads: { isolate: true },
-      forks: { isolate: true },
-    },
+    // cf-0z43: Vitest 4 removed `test.poolOptions.{threads,forks}.isolate` —
+    // isolate is now a single top-level boolean and defaults to true. The
+    // previous block restated the default and emitted DEPRECATED on every
+    // run; deletion is the migration. Behavior unchanged (isolate stays on).
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
