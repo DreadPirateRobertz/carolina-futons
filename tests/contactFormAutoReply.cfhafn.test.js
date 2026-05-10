@@ -26,7 +26,14 @@ import {
 
 import { sendEmail } from '../src/backend/emailService.web.js';
 
-const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
+const flushMicrotasks = async () => {
+  // Drain multiple turns: cf-hafn auto-reply does
+  // await contacts.appendOrCreateContact → await triggeredEmails.emailContact,
+  // and each macrotask boundary may not catch both depending on the runtime.
+  for (let i = 0; i < 5; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+};
 
 beforeEach(() => {
   resetData();
@@ -67,7 +74,7 @@ describe('cf-hafn · sendEmail customer auto-reply', () => {
     const log = __getEmailLog();
 
     const ownerEmail = log.find((e) => e.templateId === 'contact_form_submission');
-    const customerEmail = log.find((e) => e.templateId === 'contact_form_auto_reply');
+    const customerEmail = log.find((e) => e.templateId === 'VJBOnfD');
 
     expect(ownerEmail).toBeDefined();
     expect(ownerEmail.contactId).toBe('owner-contact-123');
@@ -82,7 +89,7 @@ describe('cf-hafn · sendEmail customer auto-reply', () => {
     await sendEmail(validSubmission());
     await flushMicrotasks();
 
-    const customerEmail = __getEmailLog().find((e) => e.templateId === 'contact_form_auto_reply');
+    const customerEmail = __getEmailLog().find((e) => e.templateId === 'VJBOnfD');
     expect(customerEmail.options.variables).toMatchObject({
       customerName: 'Asheville Andy',
       subject: 'Eureka availability',
@@ -100,7 +107,7 @@ describe('cf-hafn · sendEmail customer auto-reply', () => {
     await sendEmail(validSubmission());
     await flushMicrotasks();
 
-    const customerEmail = __getEmailLog().find((e) => e.templateId === 'contact_form_auto_reply');
+    const customerEmail = __getEmailLog().find((e) => e.templateId === 'VJBOnfD');
     // appendOrCreateContact dedupes by email; mock returns the existing _id.
     expect(customerEmail.contactId).toBe('contact-existing-9');
   });
@@ -143,7 +150,7 @@ describe('cf-hafn · auto-reply is non-blocking', () => {
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
-    expect(__getEmailLog().some((e) => e.templateId === 'contact_form_auto_reply')).toBe(false);
+    expect(__getEmailLog().some((e) => e.templateId === 'VJBOnfD')).toBe(false);
     expect(consoleWarn).toHaveBeenCalledWith(
       expect.stringContaining('customer auto-reply skipped'),
       expect.any(Object),

@@ -123,7 +123,7 @@ describe('submitSwatchRequest', () => {
     });
     // Should have 2 emails: owner notification + customer confirmation
     expect(_emailsSent).toHaveLength(2);
-    expect(_emailsSent[1].templateId).toBe('swatch_confirmation');
+    expect(_emailsSent[1].templateId).toBe('VJBTzwh'); // cf-obsb: Wix dashboard ID
     expect(_emailsSent[1].contactId).toBe('customer-contact-id');
   });
 });

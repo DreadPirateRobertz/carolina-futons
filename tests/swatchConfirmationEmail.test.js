@@ -26,7 +26,7 @@ describe('sendSwatchConfirmationEmail', () => {
     expect(result).toEqual({ success: true });
     const emails = __getEmailLog();
     expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('swatch_confirmation');
+    expect(emails[0].templateId).toBe('VJBTzwh'); // cf-obsb: Wix dashboard ID for swatch_confirmation
     expect(emails[0].contactId).toBe('customer-contact-456');
   });
 

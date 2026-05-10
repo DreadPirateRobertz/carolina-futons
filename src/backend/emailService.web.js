@@ -232,7 +232,11 @@ async function _sendCustomerContactAutoReply({ email, name, subject, message }) 
     console.warn('[emailService] customer auto-reply skipped — appendOrCreateContact returned empty', { email });
     return;
   }
-  await triggeredEmails.emailContact('contact_form_auto_reply', customerContactId, {
+  // cf-hafn / Wix CRM dashboard: 'contact_form_auto_reply' is the
+  // human-readable template name; the dashboard's opaque template ID is
+  // 'VJBOnfD' (set per Stilgar 2026-05-10). triggeredEmails.emailContact
+  // expects the dashboard ID.
+  await triggeredEmails.emailContact('VJBOnfD', customerContactId, {
     variables: {
       customerName: name,
       subject: subject || '',
@@ -322,8 +326,9 @@ export const submitSwatchRequest = webMethod(
           .limit(1)
           .find();
         if (contactResult.items.length > 0) {
+          // cf-obsb: Wix dashboard ID for swatch_confirmation.
           await triggeredEmails.emailContact(
-            'swatch_confirmation',
+            'VJBTzwh',
             contactResult.items[0]._id,
             {
               variables: {
@@ -389,8 +394,12 @@ export const sendSwatchConfirmationEmail = webMethod(
         ? `${estimatedDays} business days`
         : '5-7 business days';
 
+      // cf-obsb / Wix CRM dashboard: 'swatch_confirmation' is the
+      // human-readable template name; opaque dashboard template ID is
+      // 'VJBTzwh' (set per Stilgar 2026-05-10). triggeredEmails.emailContact
+      // expects the dashboard ID.
       await triggeredEmails.emailContact(
-        'swatch_confirmation',
+        'VJBTzwh',
         contactId,
         {
           variables: {

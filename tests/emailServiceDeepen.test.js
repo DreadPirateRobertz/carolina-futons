@@ -195,7 +195,7 @@ describe('submitSwatchRequest', () => {
     // Second emailContact call is the confirmation
     expect(mockEmailContact).toHaveBeenCalledTimes(2);
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'swatch_confirmation',
+      'VJBTzwh', // cf-obsb: Wix dashboard ID for swatch_confirmation
       'contact-456',
       expect.objectContaining({
         variables: expect.objectContaining({
@@ -255,7 +255,7 @@ describe('sendSwatchConfirmationEmail', () => {
     });
     expect(res).toEqual({ success: true });
     expect(mockEmailContact).toHaveBeenCalledWith(
-      'swatch_confirmation',
+      'VJBTzwh', // cf-obsb: Wix dashboard ID for swatch_confirmation
       'c-100',
       expect.objectContaining({
         variables: expect.objectContaining({

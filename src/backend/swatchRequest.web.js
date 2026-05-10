@@ -19,6 +19,7 @@ import { contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { triggerSwatchFollowupSequence } from 'backend/emailAutomation.web';
+import { sendSwatchConfirmationEmail } from 'backend/emailService.web';
 import { logError } from 'backend/utils/errorHandler';
 
 // Swatch nurture sequence: confirmation + Day 3 + Day 7 + Day 14
@@ -234,6 +235,23 @@ export const submitSwatchRequest = webMethod(
         }
       } else {
         console.warn('[swatchRequest] Skipping swatch nurture queue — upsertContact returned no contactId for', contact.email);
+      }
+
+      // cf-obsb Path A: send the customer-facing swatch confirmation email
+      // immediately on success. Non-blocking — CMS record is already saved
+      // and the nurture queue is independent, so a confirmation-email
+      // failure must not flip the request to a failure response.
+      if (contactId) {
+        const productNameForEmail = swatchNames[0] || 'fabric swatches';
+        sendSwatchConfirmationEmail({
+          contactId,
+          name: `${contact.firstName} ${contact.lastName}`.trim(),
+          email: contact.email,
+          swatchNames,
+          productName: productNameForEmail,
+        }).catch((emailErr) => {
+          console.warn('[swatchRequest] swatch_confirmation send failed (non-blocking):', emailErr?.message ?? emailErr);
+        });
       }
 
       return { success: true, requestId: inserted._id };
