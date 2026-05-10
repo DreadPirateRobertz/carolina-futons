@@ -1,5 +1,21 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 06:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 03:57 MT**
+
+## Session 2026-05-10 — Wave 28 (post-compaction)
+| Done | Detail |
+|------|--------|
+| ✅ PR #1297 MERGED | cf-8p52 F2: checkRateLimit fail-CLOSED on DB error. errorMonitoring CI failures = pre-existing flakiness (not rennala's code). Admin-merged. |
+| ✅ stage3-velo PR #38 MERGED | cf-ox0h.1: delete 3 HTTP cron handlers that duplicated Wix-scheduler entries. F4 cutover gate CLOSED. |
+| ✅ PRs #1298 #1299 #1300 MERGED | cf-jzux (cutover gate checker script), cf-32u1.F4 (hash deliveryScheduling rate-limit key), cf-namd chunk B (17 dead methods deleted). All errorMonitoring flakiness — confirmed locally. |
+| ⚠️ PR #1301 CONFLICT | cf-qjhf (migrate deliveryScheduling rate-limits) conflicts with #1299. Rennala rebasing. |
+| 🔴 cf-emci.1 FILED | errorMonitoring CI flakiness — fails on EVERY PR (errorMonitoringDeep + Wiring). Assigned millicent (P2). |
+| 📤 DISPATCHED | godfrey→cf-ybsf (health endpoint keyword fix), blaidd→cf-gqdf (DNS TTL verify script), millicent→cf-aqo7 (CI flakiness), rennala→cf-za1o (F3 rate-key fix) |
+
+**Worker Map (03:57 MT):**
+blaidd: cf-gqdf (DNS TTL script) + cf-jo07 (cfw #540 blocked Stilgar) | godfrey: cf-ybsf (health keyword fix)
+millicent: cf-aqo7 (CI flakiness) | miquella: cf-bbo8 (SEO P1)
+morgott: cf-4x7e + cf-641x | radahn: cf-r9r3 (cfw scroll jitter) + cf-3qt.8.35
+rennala: cf-za1o (F3 fix) + PR #1301 rebase pending
 
 ## Session 2026-05-10 — Wave 27
 | Done | Detail |
