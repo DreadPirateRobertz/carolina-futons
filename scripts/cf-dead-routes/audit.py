@@ -64,11 +64,14 @@ INTENTIONAL_ANYONE = frozenset({
     # ups-shipping — customer self-service tracking endpoint. Cited author
     # note + 6 actual internal callers.
     "ups-shipping.trackShipment",
-    # pinterestCatalogSync — internal helper called by syncCatalogBatch in the
-    # same module to compose pin content from a Wix product. Not exposed via
-    # http-functions.js; the public-verb prefix ("generate") and Anyone
-    # permission (inherited from sibling functions) trip the SUSPICIOUS
-    # heuristic. cf-quba.fu1 last false-positive cleanup.
+    # pinterestCatalogSync — declares Permissions.Anyone explicitly and is
+    # called by syncCatalogBatch within the same module to compose pin
+    # content from a Wix product. No http-functions.js wrapper, no cfw
+    # caller — the only consumer is the same-file orchestrator. The
+    # "generate" verb prefix trips SUSPICIOUS; allowlisted because the
+    # function only formats caller-supplied product data into a string
+    # (no DB writes, no privileged reads, no PII), so Wix auto-RPC
+    # exposure is harmless. cf-quba.fu1.
     "pinterestCatalogSync.generatePinContent",
 })
 
