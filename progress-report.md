@@ -1,7 +1,21 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-10 01:58 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-10 02:25 MT**
 
-## Session 2026-05-10 — Wave 8 (02:00–02:30 MT)
+## Session 2026-05-10 — Wave 9 (02:20–02:30 MT)
+| Done | Detail |
+|------|--------|
+| ✅ PR #1225 MERGED | cf-4x7e chunk 5 — bundleBuilder.web.js (morgott). 10 dead deleted, 3 alive kept. 0.04% gap → --admin. |
+| ✅ PR #1226 MERGED | cf-3qt.8 item 1 — Wix CMS snapshot script + runbook (millicent). 0.03% gap → --admin. |
+| ✅ PR #507 MERGED | cf-3lly mobile viewport fix (blaidd). Stilgar approved: "right edge looks good". --admin (flaky newsletter e2e). |
+| ✅ PR #524 MERGED | cf-96m8 footer LivingSky (miquella). Confirmed cycling — 4 phases via useTimeOfDay. Stilgar approved. |
+| ✅ cf-3lly CLOSED | Mobile viewport bead closed. |
+| ✅ cf-96m8 CLOSED | Footer LivingSky bead closed. |
+| 📊 Stilgar DM sent | cfw-5uw compare: PR #495 merged 21:33 MT. Variant wave-2: 34 products done, 3 blocked on photo uploads. |
+| 🔍 cf-1eb5 r5 RE-VERIFIED | Gatekeeper screenshot taken — all 3 bears visible, text bottom-left, coral heading. Sent Vercel URL to Stilgar. |
+| ⏳ PR #515 | cf-1eb5 r5 awaiting Stilgar final visual sign-off to merge. |
+| 🔄 PR #1227 | morgott cf-4x7e chunk 7 (dataService) — test(22) pending. |
+
+## Session 2026-05-10 — Wave 8 (02:00–02:20 MT)
 | Done | Detail |
 |------|--------|
 | ✅ PR #1218 MERGED | cf-hafn — contact_form_auto_reply auto-reply (rennala). Fixed 3 test assertions on re-push. |
@@ -17,9 +31,6 @@
 | 🔍 cf-1eb5 r5 VERIFIED | Melania screenshot-verified all 3 bears visible. Sent to Stilgar for approval. |
 | 🔄 PR #524 REFIX | miquella pushed fix (LivingFooterBg not wired in Footer.tsx). CI running. |
 | 🔄 PR #1218 rennala fix | 3 test assertions scoped to owner email (filter by templateId/contactId). |
-| ⏳ PR #515 | cf-1eb5 r5 awaiting Stilgar visual sign-off. |
-| ⏳ PR #507 | cf-3lly mobile viewport — awaiting Stilgar mobile check (e2e flaky newsletter). |
-| 📋 cfw-ajk status | Sent to Stilgar: EPIC deferred, 11 sub-beads unfiled, docs merged (#484/#489), no implementation yet. |
 
 ## Session 2026-05-10 — Wave 7
 | Done | Detail |
