@@ -1,5 +1,21 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-10 Wave 13–14 (387faae7 — dark mode audit + crew dispatch)
+
+### What worked well
+- **Dark mode root cause investigation**: Rather than just listing symptoms, used Puppeteer `getComputedStyle` to extract the actual dark-mode variable values. Confirmed the exact swap (cf-navy=#7ab0c8, cf-espresso=#f0e4d4). This let blaidd write precise fixes without guessing.
+- **Contrast math before escalating**: Computed ~6:1 for cf-blue on bears dark gradient before sending the wordmark spec to blaidd. The caveat about sky/muzzle areas (~1.4:1 direct) was included so Stilgar knew the specific risk zone.
+- **PR #485 draft recognition**: Noted "Why this is a draft" in the PR description before attempting to merge — correctly skipped it.
+- **Batch dependabot**: Merged #543/#544/#545 in one sequence (3 Vercel deploys vs spreading out = same count but faster).
+
+### What to improve
+- **Worktree checkout confusion**: Tried `git checkout cf-jo07` and got `fatal: already used by worktree`. Should check `git worktree list` first when checking out branches. cf-jo07 was already available at `/Users/hal/gt/cf-jo07`.
+- **Background task exit code 8**: `gh pr checks` returns exit code 8 when any check is non-passing (pending counts). The background task "failed" but the data was valid — should read the output file when the notification says "failed" rather than treating it as an actual error.
+
+### Pattern notes
+- **Dark mode variable map for CFW**: cf-navy=#7ab0c8 (accent), cf-espresso=#f0e4d4 (cream), cf-sand=#1e2a3a (surface), cf-cream=#263545 (card), cf-ink=#e8eef4 (text), cf-cta=#7ab8d0. Use cf-sand for dark bg, cf-ink for light text.
+- **gh pr checks exit code 8**: Non-zero exit when ANY check is not "pass". Read stdout, don't treat as hard failure.
+
 ## Session 2026-05-10 Wave 11 (387faae7 — context-resume after compaction)
 
 ### What worked well
