@@ -282,6 +282,29 @@ def classify_method(
     defining_file = info["file"]
     pat_call = re.compile(rf"\b{re.escape(name)}\s*\(")  # NAME(... call
     pat_import = re.compile(rf"\b{re.escape(name)}\b")  # any reference (for imports)
+    # cf-sq0d.fu1 (v3.1): same-name-collision filter. Detect when a candidate
+    # caller defines its own function / const / let / var with the same name
+    # as the backend webMethod — those are local-symbol collisions, not
+    # backend callers. Two regressions surfaced this:
+    #   chunk 11: src/public/AddToCart.js declares `async function checkBackInStock(...)`
+    #             and was being credited as a caller of the same-named backend method.
+    #   chunk 12: src/public/bundleDiscountExperiment.js declares `export function
+    #             calculateBundleDiscount(...)` and was credited similarly.
+    # The filter only skips a file when it has a local definition AND no
+    # explicit `'backend/<module>'` import string for the defining module —
+    # so a legitimate caller that re-exports a backend symbol under the same
+    # local name (rare but possible) still gets counted.
+    pat_local_def = re.compile(
+        rf"(?:^|\n)\s*(?:export\s+)?(?:async\s+)?(?:function|const|let|var)\s+{re.escape(name)}\b"
+    )
+    defining_module_basename = defining_file.rsplit("/", 1)[-1]
+    for suffix in (".web.js", ".js"):
+        if defining_module_basename.endswith(suffix):
+            defining_module_basename = defining_module_basename[: -len(suffix)]
+            break
+    pat_backend_import_quoted = re.compile(
+        rf"""['"`](?:[\w./-]*?){re.escape(defining_module_basename)}(?:\.web)?['"`]"""
+    )
 
     in_http = bool(
         pat_call.search(http_text) or pat_import.search(http_text)
@@ -320,6 +343,12 @@ def classify_method(
         except OSError:
             continue
         if not pat_import.search(text):
+            continue
+        # cf-sq0d.fu1: skip same-name-collision callers. If the file defines
+        # its own function/const with this name AND has no explicit string
+        # reference to the defining backend module, the name match is local —
+        # not a backend caller.
+        if pat_local_def.search(text) and not pat_backend_import_quoted.search(text):
             continue
         # any reference counts; don't require call form (could be re-export, type ref)
         if rel.startswith("src/public/"):
