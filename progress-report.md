@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 23:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:30 MT**
 
 ## Session 2026-05-15 — Wave 32 (FULL OUTPUT SESSION)
 
@@ -8,7 +8,28 @@
 |----|--------|-------|
 | #1339 | ✅ 23:32 | cf-o5j5 wave32 audit |
 | #1341 | ✅ 23:34 | cf-4tqw observability spec (Phase 1) |
-| #1342 | ✅ 23:41 | cf-zb6j doc alias fix |
+| #1342 | ✅ 23:41 | cf-zb6j doc alias fix (original) |
+| #1335 | ✅ 00:28 | cf-zb6j alias drop (conflict resolved) |
+| #1338 | ✅ 00:20 | cf-lc1c PDP parity audit (G-1/G-2 P1s filed) |
+| #1340 | ✅ 00:21 | cf-4x7e.4+.5 logError + History marker |
+| #1344 | ✅ 00:22 | cf-zn5b member parity audit |
+| #1345 | ✅ 00:23 | cf-9fqc observability GREEN (13 tests) |
+| #1346 | ✅ 00:24 | cf-hpwy v5 detector — DEAD=0 confirmed |
+
+### New P1 beads filed (from cf-zn5b audit)
+| Bead | Title | Assignee |
+|------|-------|---------|
+| cf-fd94 | cf-zn5b.1 — Order history tracking link (G-7) | rennala |
+| cf-dmos | cf-zn5b.2 — Address book page (G-9) | rennala |
+
+### cfw PRs — all 5/5 reviewed this wave
+| PR | 5/5 | Notes |
+|----|-----|-------|
+| #593 | ✅ | searchPosts substring fix — BLOG_SEARCH_CAP=200 |
+| #595 | ✅ | Gift card member section (IDOR guard + maskEmail) |
+| #597 | ✅ | Mini-cart close before navigation |
+| #596 | ✅ | MERGED already (style quiz personalization) |
+| #599 | ✅ | MERGED already (conflict marker fix) |
 
 ### cfw batch queue — Vercel credit reload ~2026-05-17
 | PR | 5/5 | CI | Notes |
