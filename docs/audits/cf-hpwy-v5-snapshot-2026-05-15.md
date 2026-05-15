@@ -63,13 +63,18 @@ backend modules wired via namespace dispatcher: 1
 | GAP-CFW-WANTS | 0 |
 | UNUSED-CAN-DELETE | 0 |
 
-**Headline: DEAD count = 0.** The cf-4x7e wave (231 methods retired, ~-54k LOC across B-3/B-4/B-5/B-5.fu plus parallel crew work) cleared every truly-dead webMethod in scope. v5's allowlist propagation reclassified the 5 false-DEAD entries (cartSessionService.{createSession,updateCartItems}, ups-shipping.trackShipment, pinterestCatalogSync.generatePinContent, emailService.sendSwatchConfirmationEmail) into their correct `HTTP-EXPOSED-INTENTIONAL` bucket.
+**Headline: DEAD count = 0.** (Status hit zero with cf-4x7e.B5.fu / PR #1337; v5 does not change the dead-method tally, only reclassifies the 5 allowlisted-Anyone entries that v4 was incorrectly bucketing as DEAD.) The cf-4x7e wave (231 methods retired, ~-54k LOC across B-3/B-4/B-5/B-5.fu plus parallel crew work) cleared every truly-dead webMethod in scope. v5's allowlist propagation reclassified the 5 false-DEAD entries (cartSessionService.{createSession,updateCartItems}, ups-shipping.trackShipment, pinterestCatalogSync.generatePinContent, emailService.sendSwatchConfirmationEmail) into their correct `HTTP-EXPOSED-INTENTIONAL` bucket.
+
+> **Allowlist removal hazard** (radahn observation): removing any entry from `INTENTIONAL_ANYONE` in `audit.py` flips the corresponding method from `OK-INTENTIONAL-ANYONE` back to `UNUSED-CAN-DELETE` overnight. The allowlist is load-bearing — entries should be removed only when their out-of-tree consumer is also being retired. The frozenset's existing comment-block above each entry pins the consumer rationale; preserve it on edits.
 
 ## Non-webMethod export inventory
 
 149 non-webMethod function exports across `src/backend/*.web.js`. The majority are deliberate test-seam underscores (`_check*RateLimit`, `__resetCache`, `__clearCache`) — these are exposed for tests to drive specific paths but aren't part of the production caller graph.
 
 Operator action: before a whole-file delete, cross-check the non-webMethod inventory for the target file. If any export is consumed outside of the same module's tests or its own webMethod handlers, surgical-drop instead of whole-file.
+
+### Inventory vs row separation
+`collect_non_webmethod_exports()` produces a separate dict from `collect_web_methods()`; the v5 design keeps the two surfaces side-by-side rather than merging them. Rationale: webMethods are the gap-finder unit (HTTP-exposed contract); non-webMethod exports are the survivor-detection unit (call them out so the operator doesn't unintentionally retire them). The `classify_method` row format remains webMethod-keyed; the non-webMethod inventory is consulted at planning time during whole-file delete decisions.
 
 ## Test coverage
 
