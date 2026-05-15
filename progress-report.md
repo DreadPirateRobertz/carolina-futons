@@ -16,7 +16,8 @@
 | #587 | ✅ | ✅ | cfw-wzr CONTRIBUTING |
 | #588 | ✅ | lint✅ e2e🔄 | cf-pdp-g1 qty stepper — lint fix a9393b1 |
 | #589 | ✅ | lint✅ e2e🔄 | cf-gift-g1 recipient meta |
-| #592 | ✅ | lint✅ e2e🔄 | cf-2oku /account a11y — blaidd |
+| #592 | ❌ CLOSED | superseded | cf-2oku broken (dark:text-cf-cream/80 = ~1.1:1 contrast regression) |
+| #594 | ✅ | lint🔄 e2e🔄 | cf-2oku CORRECTED — dark:text-cf-charcoal, 8 tests, ForgotPasswordForm |
 | #1339 | — | **MERGED** ✅ | cf-o5j5 wave32 audit (CF repo) |
 | #1341 | — | **MERGED** ✅ | cf-4tqw observability spec (CF repo) |
 
