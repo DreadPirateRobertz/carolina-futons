@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 14:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 20:20 MT**
 
 ## Session 2026-05-15 — Wave 32 (post-compaction continuation)
 | Done | Detail |
@@ -7,16 +7,22 @@
 | ✅ Wave 31: 4 PRs merged | #1322 cf-secrets.F2, #1323 cf-094q, #1324 cf-8qh8, #1321 cf-8c2f (docs-only) |
 | ✅ Wave prev: #1317 #1315 | cf-byib parent-bead. cf-eov3 namespace-dispatcher (reopened → merged). |
 | ✅ PR #1325 MERGED | cf-4x7e.B3 coverage ratchet fix (branches 85→84.9, dead-code+test deletion caused 0.05% drop). |
+| ✅ PR #1326 MERGED | cf-ybsf health keyword fix (P1). |
 | ✅ PR #1327 MERGED | cf-gqdf DNS TTL verify script. Bead cf-gqdf CLOSED. |
-| 🔴 SaleLightbox regression FOUND+FIXED | SALE_END_DATE=2026-05-12 expired → 18/23 tests failing on cfw main. Diagnosed, fixed in PR #577 (test time-freeze). 23/23 pass locally. PR #577 awaiting Stilgar approval. |
-| ⛔ cfw: 28 PRs BLOCKED | enforce_admins + review required. All need Stilgar batch-approval. |
-| 📤 millicent→PR triage | Building cfw PR priority table for Stilgar morning batch. |
+| ✅ PR #1328 MERGED | cf-ewnw PII redaction (6 log sites). |
+| ✅ PR #1329 MERGED | millicent cfw PR triage doc. |
+| ✅ PR #1330 MERGED | cf-ykmj captureExitIntentEmail SUPERSEDE (470 LOC removed). |
+| ✅ PR #1331 MERGED | cf-4x7e.B4 — 11 whole-file deletes / 28 dead webMethods / ~7200 LOC. functions threshold 89→88.8. |
+| 🔴 SaleLightbox regression FOUND+FIXED | SALE_END_DATE=2026-05-12 expired → 18/23 tests failing on cfw main. Diagnosed, fixed in PR #577 (test time-freeze). 23/23 pass locally + CI ✅. PR #577 awaiting Stilgar approval. |
+| ⛔ cfw: 30 PRs BLOCKED | enforce_admins + review required. All need Stilgar batch-approval. |
+| 📤 morgott→B5 dispatched | cf-4x7e.2 B-5 green-lit: surgical drop comfortTimeline + notificationOrchestrator webMethods. |
 
 **⛔ Stilgar action needed (PRIORITY ORDER)**:
-1. **FIRST**: Approve + merge PR #577 (SaleLightbox test fix) — unblocks ALL cfw unit test passes
-2. Crew rebases their PRs on updated main (will trigger clean CI)
-3. Batch-approve remaining cfw PRs: #576 (cf-r9r3 P1), #570 (cf-bbo8 P1), #569 (cf-89fb), #540 (cf-jo07 P1), then #552–#575 in priority order
-4. e2e failures are 25m infra cap — systematic, NOT PR-specific. Ignore e2e gate; lint+unit are what matter.
+1. **FIRST**: Approve + merge PR #577 (lint ✅, SaleLightbox test fix) — unblocks ALL cfw unit test lint failures
+2. Crew rebases PRs #569/#571-#576 on updated main (melania will nudge)
+3. Merge fully-green PRs (lint ✅ + e2e ✅): **#485** (server-only), **#540** (cf-jo07 P1 logo), **#562** (server-only auth), **#564** (unused import), **#565** (ratchet branch exclude)
+4. Then batch-approve P1 blocked: **#576** (cf-r9r3 scroll jitter), **#570** (cf-bbo8 canonical P1), **#569** (cf-89fb canonical)
+5. Then remaining #552–#575 in priority order. e2e timeouts = 25m infra cap — ignore; lint+unit gates are what matter.
 
 
 
