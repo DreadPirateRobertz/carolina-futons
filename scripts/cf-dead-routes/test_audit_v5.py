@@ -186,6 +186,171 @@ def test_classify_fs_path_consumer_other_unspecified():
     assert kind == "FS-PATH-OTHER"
 
 
+# ── Constant-pin: lock each trap symbol into INTENTIONAL_ANYONE ────────
+# miquella test-analyzer CR: a future refactor that removes an allowlist
+# entry silently re-introduces the trap. Pin each by name.
+
+
+def test_allowlist_pins_cartSessionService_createSession():
+    audit = _import_audit()
+    assert "cartSessionService.createSession" in audit.INTENTIONAL_ANYONE
+
+
+def test_allowlist_pins_cartSessionService_updateCartItems():
+    audit = _import_audit()
+    assert "cartSessionService.updateCartItems" in audit.INTENTIONAL_ANYONE
+
+
+def test_allowlist_pins_ups_shipping_trackShipment():
+    audit = _import_audit()
+    assert "ups-shipping.trackShipment" in audit.INTENTIONAL_ANYONE
+
+
+def test_allowlist_pins_pinterestCatalogSync_generatePinContent():
+    audit = _import_audit()
+    assert "pinterestCatalogSync.generatePinContent" in audit.INTENTIONAL_ANYONE
+
+
+def test_allowlist_pins_emailService_sendSwatchConfirmationEmail():
+    audit = _import_audit()
+    assert "emailService.sendSwatchConfirmationEmail" in audit.INTENTIONAL_ANYONE
+
+
+# ── Tightened allowlist gate (CR finding 2) ────────────────────────────
+
+
+def test_admin_permission_with_allowlist_entry_is_NOT_intentional():
+    """If a method is allowlisted but its permission is Admin (not Anyone),
+    the allowlist semantic doesn't apply — the entry exists for the
+    Permissions.Anyone case. miquella code-reviewer + silent-failure-hunter
+    flagged that the gate was name-only. v5 now requires BOTH permission ==
+    'Anyone' AND allowlist membership."""
+    audit = _import_audit()
+    info = {
+        "file": "src/backend/cartSessionService.web.js",
+        "permission": "Admin",  # hardened away from Anyone
+        "line": 42,
+    }
+    row = audit.classify_method(
+        name="createSession",  # still allowlisted by name
+        info=info,
+        files=[],
+        cfw_files=[],
+        http_text="",
+        events_text="",
+        fs_path_refs={},
+        dispatcher_modules={},
+    )
+    # The allowlist should NOT apply — gate requires permission==Anyone.
+    assert "HTTP-EXPOSED-INTENTIONAL" not in row["bucket"]
+    assert row["gap_verdict"] != "OK-INTENTIONAL-ANYONE"
+
+
+# ── Combinatorial precedence (CR test-analyzer + code-reviewer) ────────
+
+
+def test_allowlist_does_not_short_circuit_dispatcher_signal():
+    """An allowlisted-Anyone method that's ALSO reachable via a namespace
+    dispatcher should still surface OK-WIRED-VIA-DISPATCHER (the real
+    in-tree signal), not flatten to OK-INTENTIONAL-ANYONE.
+
+    silent-failure-hunter Finding 2: the allowlist short-circuit was
+    masking caller-graph signal. v5 now makes OK-INTENTIONAL-ANYONE a
+    fallback verdict only when the row would otherwise be UNUSED-CAN-DELETE."""
+    audit = _import_audit()
+    info = {
+        "file": "src/backend/cartSessionService.web.js",
+        "permission": "Anyone",
+        "line": 42,
+    }
+    # Simulate a dispatcher mapping that hits cartSessionService.
+    row = audit.classify_method(
+        name="createSession",
+        info=info,
+        files=[],
+        cfw_files=[],
+        http_text="",
+        events_text="",
+        fs_path_refs={},
+        dispatcher_modules={"cartSessionService": "cartSessionServiceModule"},
+    )
+    # Bucket carries BOTH classifications.
+    assert "HTTP-EXPOSED-INTENTIONAL" in row["bucket"]
+    # Gap-verdict surfaces the dispatcher signal, NOT OK-INTENTIONAL-ANYONE.
+    assert row["gap_verdict"] == "OK-WIRED-VIA-DISPATCHER"
+
+
+def test_allowlist_does_not_short_circuit_cfw_high_signal():
+    """If an allowlisted method has a cfw_high reference but no in-tree
+    HTTP wrapper, the row should surface GAP-CFW-WANTS, not silently
+    flatten to OK-INTENTIONAL-ANYONE. The cfw caller is a real signal."""
+    audit = _import_audit()
+    # Build a synthetic cfw file that references the method via /_functions/<name>
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        cfw_dir = Path(td) / "src"
+        cfw_dir.mkdir()
+        (cfw_dir / "cart-fetch.ts").write_text(
+            "fetch('/_functions/createSession', { method: 'POST' });"
+        )
+        # Repoint CFW_SRC for the test.
+        audit.CFW_SRC = cfw_dir
+        info = {
+            "file": "src/backend/cartSessionService.web.js",
+            "permission": "Anyone",
+            "line": 42,
+        }
+        row = audit.classify_method(
+            name="createSession",
+            info=info,
+            files=[],
+            cfw_files=audit.collect_cfw_files(),
+            http_text="",  # no HTTP wrapper
+            events_text="",
+            fs_path_refs={},
+            dispatcher_modules={},
+        )
+    # Bucket still carries HTTP-EXPOSED-INTENTIONAL.
+    assert "HTTP-EXPOSED-INTENTIONAL" in row["bucket"]
+    # But gap-verdict surfaces the cfw signal, NOT a silent OK.
+    assert row["gap_verdict"] == "GAP-CFW-WANTS"
+
+
+# ── Main() integration smoke (CR finding 1) ────────────────────────────
+
+
+def test_main_emits_non_webmethod_inventory_to_stderr(tmp_path, capsys):
+    """The whole point of collect_non_webmethod_exports is that operators
+    SEE it via the production tool. miquella code-reviewer caught that v1
+    of the PR defined the helper but never wired it into main(). v5 now
+    invokes it from main() and prints the count to stderr."""
+    audit = _import_audit()
+
+    # Build a minimal fixture repo
+    src = tmp_path / "src" / "backend"
+    src.mkdir(parents=True)
+    (src / "sample.web.js").write_text(
+        "import { Permissions, webMethod } from 'wix-web-module';\n"
+        "export async function helperA() {}\n"
+        "export const wmB = webMethod(Permissions.Admin, async () => ({}));\n"
+    )
+    (tmp_path / "src" / "backend" / "http-functions.js").write_text("")
+    (tmp_path / "src" / "backend" / "events.js").write_text("")
+
+    # Point audit at the fixture
+    import os as _os
+    _os.environ["CFUTONS_ROOT"] = str(tmp_path)
+    Path("/tmp/cf-dead-routes").mkdir(exist_ok=True)
+    audit = _import_audit()  # reload with new ROOT
+
+    rc = audit.main()
+    assert rc == 0
+    captured = capsys.readouterr()
+    # Stderr must announce the inventory + count
+    assert "Non-webMethod function exports in src/backend" in captured.err
+    assert "1" in captured.err  # the helperA count
+
+
 def test_bucket_reflects_fs_path_sub_classification(tmp_path):
     """When a defining file has both test-import and data-source consumers,
     the row should expose both sub-classifications so the operator can decide
