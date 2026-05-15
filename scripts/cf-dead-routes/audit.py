@@ -73,6 +73,14 @@ INTENTIONAL_ANYONE = frozenset({
     # (no DB writes, no privileged reads, no PII), so Wix auto-RPC
     # exposure is harmless. cf-quba.fu1.
     "pinterestCatalogSync.generatePinContent",
+    # emailService.sendSwatchConfirmationEmail — Permissions.Anyone
+    # because the customer-facing swatchRequest.submitSwatchRequest
+    # (also Anyone, rate-limited) calls it directly to dispatch the
+    # swatch confirmation email. Live internal caller at
+    # swatchRequest.web.js:258. The "send" verb prefix trips SUSPICIOUS;
+    # allowlisted because the function only consumes a sanitized
+    # payload from the same-rig swatch flow. cf-0sdo (cf-ykmj #2).
+    "emailService.sendSwatchConfirmationEmail",
 })
 
 
