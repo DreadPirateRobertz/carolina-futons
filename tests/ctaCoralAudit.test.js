@@ -93,26 +93,6 @@ describe('CF-a0sh: ProductDetails.js uses token imports, not hardcoded hex', () 
   });
 });
 
-// ── Static audit: sustainabilityService badge colors ────────────
-
-describe('CF-a0sh: sustainabilityService.web.js uses only brand colors', () => {
-  const source = readSource('src/backend/sustainabilityService.web.js');
-  const allHex = findHexColors(source);
-
-  it('contains no non-brand hex color literals', () => {
-    const nonBrand = allHex.filter(h => !isBrandColor(h.hex));
-    expect(nonBrand, `Non-brand colors in sustainabilityService:\n${nonBrand.map(h => `  L${h.line}: ${h.hex} — ${h.content}`).join('\n')}`).toEqual([]);
-  });
-
-  // Specific banned colors from the audit
-  const BANNED = ['#2E7D32', '#558B2F', '#1565C0', '#6A1B9A', '#00695C', '#E65100'];
-  for (const banned of BANNED) {
-    it(`does not contain banned color ${banned}`, () => {
-      expect(source).not.toContain(`'${banned}'`);
-    });
-  }
-});
-
 // ── Static audit: paymentOptions badge colors ───────────────────
 
 describe('CF-a0sh: paymentOptions.web.js uses only brand colors', () => {

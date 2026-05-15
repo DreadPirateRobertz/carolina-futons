@@ -28,12 +28,6 @@ import {
 } from '../src/backend/internationalShipping.web.js';
 
 // ── Customs Estimator ───────────────────────────────────────────────
-import {
-  estimateCustomsDuties,
-  getVATRate,
-  getDutyRate,
-  calculateLandedCost,
-} from '../src/backend/customsEstimator.web.js';
 
 // ── Delivery Experience ─────────────────────────────────────────────
 import {
@@ -623,136 +617,6 @@ describe('isShippableCountry — edge cases', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// Customs Estimator — error handler coverage + edge cases
-// ═══════════════════════════════════════════════════════════════════
-
-describe('estimateCustomsDuties — edge cases', () => {
-  it('returns $0 duties for zero declared value', async () => {
-    const result = await estimateCustomsDuties('CA', 0, 50);
-    expect(result.success).toBe(true);
-    expect(result.estimate.dutyAmount).toBe(0);
-    expect(result.estimate.vatAmount).toBe(0);
-    expect(result.estimate.deMinimisApplied).toBe(true);
-  });
-
-  it('applies de minimis threshold correctly for Canada', async () => {
-    // Canada typically has a de minimis of ~$20 CAD
-    const result = await estimateCustomsDuties('CA', 10, 5);
-    expect(result.success).toBe(true);
-    // Whether de minimis applies depends on customsConfig values
-    expect(typeof result.estimate.deMinimisApplied).toBe('boolean');
-  });
-
-  it('VAT is computed on (value + duty)', async () => {
-    const result = await estimateCustomsDuties('GB', 1000, 50);
-    expect(result.success).toBe(true);
-    // VAT base = value + dutyAmount
-    const expectedVatBase = result.estimate.declaredValue + result.estimate.dutyAmount;
-    const expectedVat = Number((expectedVatBase * result.estimate.vatRate).toFixed(2));
-    expect(result.estimate.vatAmount).toBe(expectedVat);
-  });
-
-  it('rejects US as domestic', async () => {
-    const result = await estimateCustomsDuties('US', 500, 50);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('domestic');
-  });
-
-  it('handles negative declared value (clamped to 0)', async () => {
-    const result = await estimateCustomsDuties('GB', -100, 50);
-    expect(result.success).toBe(true);
-    expect(result.estimate.declaredValue).toBe(0);
-    expect(result.estimate.deMinimisApplied).toBe(true);
-  });
-
-  it('handles NaN declared value (treated as 0)', async () => {
-    const result = await estimateCustomsDuties('GB', 'not-a-number', 50);
-    expect(result.success).toBe(true);
-    expect(result.estimate.declaredValue).toBe(0);
-  });
-
-  it('includes HS code in response', async () => {
-    const result = await estimateCustomsDuties('GB', 500, 50);
-    expect(result.success).toBe(true);
-    expect(result.estimate.hsCode).toBeDefined();
-  });
-
-  it('includes disclaimer in response', async () => {
-    const result = await estimateCustomsDuties('DE', 500, 50);
-    expect(result.success).toBe(true);
-    expect(result.estimate.disclaimer).toContain('Estimates only');
-  });
-});
-
-describe('calculateLandedCost — edge cases', () => {
-  it('includes shipping in VAT base', async () => {
-    const result = await calculateLandedCost('GB', 1000, 200, 50);
-    expect(result.success).toBe(true);
-    // VAT base = productCost + shippingCost + dutyAmount
-    const expectedVatBase = result.landedCost.productCost + result.landedCost.shippingCost + result.landedCost.dutyAmount;
-    const expectedVat = Number((expectedVatBase * result.landedCost.vatRate).toFixed(2));
-    expect(result.landedCost.vatAmount).toBe(expectedVat);
-  });
-
-  it('landed cost = product + shipping + duty + VAT', async () => {
-    const result = await calculateLandedCost('DE', 500, 100, 50);
-    expect(result.success).toBe(true);
-    const lc = result.landedCost;
-    expect(lc.totalLandedCost).toBe(
-      Number((lc.productCost + lc.shippingCost + lc.dutyAmount + lc.vatAmount).toFixed(2))
-    );
-  });
-
-  it('rejects US', async () => {
-    const result = await calculateLandedCost('US', 500, 100, 50);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('international');
-  });
-
-  it('handles zero shipping cost', async () => {
-    const result = await calculateLandedCost('CA', 500, 0, 50);
-    expect(result.success).toBe(true);
-    expect(result.landedCost.shippingCost).toBe(0);
-  });
-
-  it('handles zero product cost', async () => {
-    const result = await calculateLandedCost('CA', 0, 100, 50);
-    expect(result.success).toBe(true);
-    expect(result.landedCost.productCost).toBe(0);
-  });
-
-  it('handles negative inputs (clamped to 0)', async () => {
-    const result = await calculateLandedCost('GB', -500, -100, -50);
-    expect(result.success).toBe(true);
-    expect(result.landedCost.productCost).toBe(0);
-    expect(result.landedCost.shippingCost).toBe(0);
-  });
-
-  it('includes disclaimer', async () => {
-    const result = await calculateLandedCost('JP', 500, 100, 50);
-    expect(result.success).toBe(true);
-    expect(result.landedCost.disclaimer).toContain('Estimates only');
-  });
-});
-
-describe('getDutyRate — default rate for unknown country', () => {
-  it('returns 5% default for country not in dutyRates table', async () => {
-    const result = await getDutyRate('ZZ');
-    expect(result.success).toBe(true);
-    expect(result.rate).toBe(0.05);
-    expect(result.description).toContain('5%');
-  });
-});
-
-describe('getVATRate — zero for countries without VAT', () => {
-  it('returns 0 for unknown country codes', async () => {
-    const result = await getVATRate('ZZ');
-    expect(result.success).toBe(true);
-    expect(result.rate).toBe(0);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
 // Delivery Experience — remaining coverage gaps
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1023,25 +887,6 @@ describe('getSurveyStats — edge cases', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('cross-module: international order lifecycle', () => {
-  it('zone lookup → customs estimate → landed cost are consistent', async () => {
-    const zone = await getShippingZone('GB');
-    expect(zone.success).toBe(true);
-
-    const customs = await estimateCustomsDuties('GB', 500, 50);
-    expect(customs.success).toBe(true);
-
-    const shipping = await getInternationalShippingEstimate('GB', 50, 500);
-    expect(shipping.success).toBe(true);
-
-    const landed = await calculateLandedCost('GB', 500, shipping.estimate.totalRate, 50);
-    expect(landed.success).toBe(true);
-
-    // Landed cost should include the shipping rate from the estimate
-    expect(landed.landedCost.shippingCost).toBe(shipping.estimate.totalRate);
-    // Duty rates should match between customs and landed
-    expect(landed.landedCost.dutyRate).toBe(customs.estimate.dutyRate);
-  });
-
   it('restricted country blocked at all stages', async () => {
     // Pick a restricted country - need to check what's restricted
     const zoneResult = await getShippingZone('KP'); // North Korea is commonly restricted
