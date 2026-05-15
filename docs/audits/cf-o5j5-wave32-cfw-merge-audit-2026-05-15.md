@@ -5,6 +5,8 @@
 **Scope:** 26 PRs merged to `DreadPirateRobertz/carolina-futons-web:main` during the 2026-05-15 wave32 batch (per `progress-report.md` commit `87b420f6`).
 **Dimensions audited:** (a) JSDoc/block-doc on new exports, (b) test coverage on new surface, (c) CI evidence at merge.
 
+**Reachability convention:** PRs are included in scope only if their merge commit is reachable from `origin/main` (i.e. they actually shipped to production). PRs marked `MERGED` in GitHub that merged into intermediate stacked branches but were not carried forward to `main` are out of scope — verified via `git merge-base --is-ancestor <mergeCommit> origin/main`. Notable exclusion: PR #559 (`seo(cfw-3ma): broaden twitterFromOpenGraph to 6 more pages`) — merged into the `crew/quartz/cfw-z32` stacked branch but `cfw-z32`'s subsequent squash-merge into `main` as PR #557 was cut from a pre-#559 state of cfw-z32, so #559's diff did not land in `main`. Grep-verified: `twitterFromOpenGraph` does not appear in any of the 6 files #559 touched on current `main` HEAD.
+
 Per cfw convention (`docs/TESTING-GUIDE.md`): "Running the full suite is non-negotiable for any code PR." JSDoc/TSDoc requirements are not formalized — TypeScript types serve as the contract; new exports should at minimum have a block comment explaining intent. CI gate = lint + typecheck + Vitest + Playwright (where applicable).
 
 ---
@@ -37,7 +39,7 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **New tests:** 3 new `it()` blocks across `Header.scrollShrink.test.tsx`, `Header.test.tsx`, `HomePage.test.tsx`
 - **JSDoc:** N/A (no new exports; existing JSX modifications)
 - **CI:** lint + typecheck + Vitest + Playwright green at merge
-- **Verdict:** PASS. Logo restoration is primarily visual; vitest verifies header structure unchanged, visual-regression is the appropriate gate (covered by browser-check on the original PR per the wave32 report).
+- *(Verdict in heading.)* Logo restoration is primarily visual; vitest verifies header structure unchanged, visual-regression is the appropriate gate (covered by browser-check on the original PR per the wave32 report).
 
 ### #554 — `feat(cf-x6ph): /api/health liveness endpoint + monitoring runbook` ✅ PASS
 
@@ -46,7 +48,7 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **JSDoc:** Block comment above `dynamic` export explains the schema contract + the deliberate-minimalism rationale (what it does NOT prove). Good.
 - **New tests:** 8 `it()` blocks in `api-health-route.test.ts` (1 describe block) covering schema shape, status code, force-dynamic disposition, and version field source-of-truth.
 - **CI:** green at merge
-- **Verdict:** PASS.
+- *(Verdict in heading.)*
 
 ### #556 — `seo(cfw-x84): per-page openGraph blocks on 10 non-admin pages` ⚠️ GAP
 
@@ -54,9 +56,10 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **New exports:** none (metadata block extension only)
 - **JSDoc:** N/A
 - **New tests:** **zero** `it()` blocks added.
-- **Existing test coverage:** `src/__tests__/og-metadata.test.ts` has 26 `it()` blocks BUT none of them assert against any of the 10 pages this PR touched (verified by grep of page paths within the test file).
+- **Existing test coverage:** `src/__tests__/og-metadata.test.ts` has 26 `it()` blocks but none assert against the 10 pages from #556 — evidenced by `grep -E "community-gallery|/contact|/faq|/press|/privacy|/referral|/signup|/terms" src/__tests__/og-metadata.test.ts` returning **zero** matches. The existing tests cover layout-level metadata + shop/PLP/PDP per-page metadata, not the static-page surface this PR added.
 - **CI:** green at merge (no new tests means no chance of test failure, but ALSO no chance of regression detection).
-- **Verdict:** **GAP** — 10 new metadata blocks ship with zero locked-in contract tests. Future edits to any of those 10 pages can silently regress OG title/description/image without a failing test. Filed as **cf-o5j5.fu1** (P3).
+- **In-flight gap-closer:** PR #584 (`feat(cf-ceex): per-page OG image + description sweep (13 pages)`) is OPEN against main and modifies `og-metadata.test.ts` alongside 9 page files — partially overlaps with #556's surface. If #584 lands first, cf-o5j5.fu1 scope should be re-checked for residual coverage gaps.
+- **Verdict:** **GAP** — 10 new metadata blocks ship with zero locked-in contract tests. Future edits can silently regress OG title/description/image. Filed as **cf-o5j5.fu1** (P2 — signup + referral/share/[code] are conversion-critical surfaces; viral-loop and account-creation pages, not back-office docs).
 
 ### #557 — `seo(cfw-z32): twitterFromOpenGraph helper + apply to PDP/PLP/shop/blog` ✅ PASS
 
@@ -65,7 +68,7 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **JSDoc:** Block comment above export explains the OG-mirror rationale + reference to cf-5rmn audit §P2 #3 + `card: "summary"` opt-in semantics. Good.
 - **New tests:** 6 `it()` blocks in `src/lib/seo/__tests__/twitter-from-og.test.ts` (1 describe) covering happy path, default card, opt-in card override, image array handling, missing-field tolerance.
 - **CI:** green at merge
-- **Verdict:** PASS.
+- *(Verdict in heading.)*
 
 ### #566 — `fix(cfw-xnd): wire EmailCapturePopup submit to subscribeToNewsletter` ✅ PASS
 
@@ -74,16 +77,16 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **JSDoc:** N/A
 - **New tests:** 6 `it()` blocks added to `EmailCapturePopup.test.tsx` covering submit happy path, validation, error surface, success state, idempotency-after-mount, and disabled-state-during-submit.
 - **CI:** green at merge
-- **Verdict:** PASS.
+- *(Verdict in heading.)*
 
 ### #567 — `feat(cfw-coc): hash subscriber email + redact cross-rig payload values from server logs` ✅ PASS
 
 - **Surface:** new `src/lib/log/hash-pii.ts` + integrates into `src/app/api/cross-rig/route.ts` + `src/app/newsletter/actions.ts`
 - **New exports:** `hashPii(value)`, `hashEmail(email)`
 - **JSDoc:** Full `/** */` JSDoc on both exports — explains HMAC-SHA256 salt requirement, `<unsalted>` fallback with warn-once semantics (refuses-silently-attacks rainbow-table concern), stability-across-deploys for rate-limit correlation, lowercase normalization. Exemplary.
-- **New tests:** 10 `it()` blocks across 3 files (`hash-pii.test.ts`, `api-cross-rig.test.ts`, `newsletter-actions.test.ts`) — covers salt presence/absence, stability, normalization, end-to-end redaction in two consumer paths.
+- **New tests:** 10 `it()` blocks net-added across 3 files (`hash-pii.test.ts`, `api-cross-rig.test.ts`, `newsletter-actions.test.ts`) — covers salt presence/absence, stability, normalization, end-to-end redaction in two consumer paths. *(Count is net additions per the PR diff; current file totals on `main` may include subsequent edits.)*
 - **CI:** green at merge
-- **Verdict:** PASS. This is the gold-standard reference for the wave on doc+test discipline.
+- *(Verdict in heading.)* This is the gold-standard reference for the wave on doc+test discipline.
 
 ### #576 — `fix(cf-r9r3): scroll jitter + initial-white-flash on Header` ✅ PASS
 
@@ -92,21 +95,23 @@ The housekeeping PR #552 only removes `.runtime/` agent state from `main` and up
 - **JSDoc:** N/A
 - **New tests:** 8 `it()` blocks added to `Header.scrollShrink.test.tsx` covering scroll-up/down thresholds, no-flash-on-mount, rAF throttling boundary, and reduced-motion no-op.
 - **CI:** green at merge + 5-agent visual-check ✅ per the wave32 report
-- **Verdict:** PASS.
+- *(Verdict in heading.)*
 
 ---
 
 ## Findings summary
 
-| PR | JSDoc | Tests | CI | Verdict |
-|---|---|---|---|---|
-| #540 | n/a | ✅ 3 it() | ✅ | PASS |
-| #554 | ✅ block-doc | ✅ 8 it() | ✅ | PASS |
-| #556 | n/a | ⚠️ **0 it()** for 10 pages | ✅ | **GAP** |
-| #557 | ✅ block-doc | ✅ 6 it() | ✅ | PASS |
-| #566 | n/a | ✅ 6 it() | ✅ | PASS |
-| #567 | ✅ /** JSDoc */ | ✅ 10 it() | ✅ | PASS |
-| #576 | n/a | ✅ 8 it() | ✅ | PASS |
+| PR | merge_commit | JSDoc | Tests | CI | Verdict |
+|---|---|---|---|---|---|
+| #540 | (cfw main, 2026-05-15T20:30:49Z) | n/a | ✅ 3 it() | ✅ | PASS |
+| #554 | (cfw main, 2026-05-15T20:35:53Z) | ✅ block-doc | ✅ 8 it() | ✅ | PASS |
+| #556 | (cfw main, 2026-05-15T20:35:07Z) | n/a | ⚠️ **0 it()** for 10 pages | ✅ | **GAP** |
+| #557 | (cfw main, 2026-05-15T20:33:53Z) | ✅ block-doc | ✅ 6 it() | ✅ | PASS |
+| #566 | (cfw main, 2026-05-15T20:34:10Z) | n/a | ✅ 6 it() | ✅ | PASS |
+| #567 | (cfw main, 2026-05-15T20:35:58Z) | ✅ /** JSDoc */ | ✅ 10 it() net | ✅ | PASS |
+| #576 | (cfw main, 2026-05-15T21:37:13Z) | n/a | ✅ 8 it() | ✅ | PASS |
+
+*(Future wave-audits should record the exact merge_commit SHA per PR for time-stable verification. Timestamps captured above; SHA lookups can be retrofitted via `gh pr view <N> --json mergeCommit`.)*
 
 **1 gap of 7 substantive PRs (14%) → wave32 is in solid shape.**
 
