@@ -1,5 +1,49 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 20:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 23:45 MT**
+
+## Session 2026-05-15 — Wave 32 (FULL OUTPUT SESSION)
+
+### CF repo merges (no Vercel cost)
+| PR | Merged | Notes |
+|----|--------|-------|
+| #1339 | ✅ 23:32 | cf-o5j5 wave32 audit |
+| #1341 | ✅ 23:34 | cf-4tqw observability spec (Phase 1) |
+| #1342 | ✅ 23:41 | cf-zb6j doc alias fix |
+
+### cfw batch queue — Vercel credit reload ~2026-05-17
+| PR | 5/5 | CI | Notes |
+|----|-----|----|-------|
+| #579 | ✅ | ✅ | CompareBar |
+| #580 | ✅ | ✅ | CI guard |
+| #582 | ✅ | ✅ | twitter:card |
+| #583 | ✅ | ✅ | aria-live mount-fire fix |
+| #584 | ✅ | ✅ | OG sweep 3-bug fix |
+| #585 | ✅ | ✅ | coverage ratchet |
+| #586 | ✅ | ✅ | CONTRIBUTING + TDD standards |
+| #587 | ✅ | ✅ | cfw-wzr CONTRIBUTING |
+| #588 | ✅ | lint✅ e2e🔄 | cf-pdp-g1 qty stepper (lint fix a9393b1) |
+| #589 | ✅ | lint✅ e2e🔄 | cf-gift-g1 recipient meta |
+| #594 | ✅ | lint🔄 e2e🔄 | cf-2oku CORRECTED — dark:text-cf-charcoal (CRITICAL fix) |
+| #598 | ✅ | lint🔄 e2e🔄 | cf-snil cart coupon entry P1 |
+| #592 | ❌ | CLOSED | cf-2oku broken version (dark:text-cf-cream/80 regression) |
+
+### In-review (CF repo, will merge on CI green)
+| PR | Reviews | Notes |
+|----|---------|-------|
+| #1343 | ✅ MERGED 23:42 | cf-9fqc observability TDD red phase — millicent |
+
+### Fixes shipped this session
+- PR #583: CartTrigger aria-live mount-fire fix (commits 2aa36d5, f3ac1d7)
+- PR #584: OG sweep 3 fixes — guides coverImage, design-a-room 160-char, /compare canonical
+- PR #588: QuantityStepper useEffect→update-during-render (lint fix a9393b1)
+- PR #592 CLOSED: dark:text-cf-cream/80 CRITICAL regression caught by 5-agent review
+- PR #594: Corrected cf-2oku with dark:text-cf-charcoal + ForgotPasswordForm + 8 tests
+
+### Consolidated 6-week roadmap → mayor ✅
+7 crew roadmaps synthesized. Pre-cutover P1 blockers grid + Stilgar gates table sent.
+
+### Stilgar gates (blocking cutover P1s)
+- DNS TTL: 3600 → 60s | UptimeRobot ⚠️ PAID plan required (free=5min poll, need <2min TTD) | Sentry production | Staging backend publish | FAQ CMS data (Brenda)
 
 ## Session 2026-05-15 — Wave 32 (MERGE WAVE COMPLETE)
 | Done | Detail |

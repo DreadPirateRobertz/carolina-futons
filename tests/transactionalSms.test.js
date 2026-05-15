@@ -1,13 +1,11 @@
 /**
  * @file transactionalSms.test.js
- * @description Tests for CF-an2c transactional SMS — order shipped + delivery confirmed.
+ * @description Tests for CF-an2c transactional SMS — order shipped path.
  *
  * Covers:
  *  - buildTrackingUrl: URL construction
  *  - handleOrderFulfilled: opt-in gate, tracking URL injection, SMS fired
- *  - handleDeliveryConfirmed: opt-in gate, cooldown gate, SMS fired
  *  - sendOrderShippedSMS: message format, Twilio call, SMSLog insert
- *  - sendDeliveryConfirmedSMS: message format, Twilio call, cooldown, SMSLog insert
  */
 
 import { describe, it, expect } from 'vitest';
@@ -17,12 +15,8 @@ import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
   buildTrackingUrl,
   handleOrderFulfilled,
-  handleDeliveryConfirmed,
 } from '../src/backend/notificationOrchestrator.web.js';
-import {
-  sendOrderShippedSMS,
-  sendDeliveryConfirmedSMS,
-} from '../src/backend/smsService.web.js';
+import { sendOrderShippedSMS } from '../src/backend/smsService.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -211,111 +205,6 @@ describe('sendOrderShippedSMS', () => {
   });
 });
 
-// ── sendDeliveryConfirmedSMS ──────────────────────────────────────────────────
-
-describe('sendDeliveryConfirmedSMS', () => {
-  it('sends delivery confirmed SMS to opted-in member', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    mockTwilioSuccess('SM_DEL');
-
-    const result = await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.success).toBe(true);
-  });
-
-  it('message contains "delivered" and support number', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-
-    let sentBody = '';
-    __setHandler((_url, opts) => {
-      const body = opts.body || '';
-      const match = body.match(/Body=([^&]+)/);
-      sentBody = match ? decodeURIComponent(match[1]) : '';
-      return { ok: true, status: 200, async json() { return { sid: 'SM_D2' }; } };
-    });
-
-    await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(sentBody).toContain('delivered');
-    expect(sentBody).toContain('(828) 252-9449');
-  });
-
-  it('returns reason=no_preferences for member without SMS prefs', async () => {
-    seedTwilioSecrets();
-    mockTwilioSuccess();
-
-    const result = await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('no_preferences');
-  });
-
-  it('returns reason=sms_disabled when member opted out globally', async () => {
-    seedPrefs({ smsEnabled: false });
-    seedTwilioSecrets();
-
-    const result = await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('sms_disabled');
-  });
-
-  it('respects cooldown — does not send twice for same order', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    // Seed a recent delivery_confirmed log for this member + order
-    __seed('SMSLog', [{
-      _id: 'log-1',
-      memberId: MEMBER_ID,
-      messageType: 'delivery_confirmed',
-      productId: ORDER_NUM, // cooldown uses productId field for non-product types
-      sentAt: new Date(Date.now() - 1000), // 1 second ago
-    }]);
-    mockTwilioSuccess();
-
-    const result = await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('cooldown');
-  });
-
-  it('sends again after cooldown period has elapsed', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    // Seed a log entry older than 24h
-    __seed('SMSLog', [{
-      _id: 'log-old',
-      memberId: MEMBER_ID,
-      messageType: 'delivery_confirmed',
-      productId: ORDER_NUM,
-      sentAt: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25 hours ago
-    }]);
-    mockTwilioSuccess('SM_DEL_AGAIN');
-
-    const result = await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.success).toBe(true);
-  });
-
-  it('inserts SMSLog record on success', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    mockTwilioSuccess('SM_DEL_LOG');
-
-    let logInserted = null;
-    __onInsert((collection, item) => {
-      if (collection === 'SMSLog') logInserted = item;
-    });
-
-    await sendDeliveryConfirmedSMS({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(logInserted).not.toBeNull();
-    expect(logInserted.messageType).toBe('delivery_confirmed');
-    expect(logInserted.memberId).toBe(MEMBER_ID);
-  });
-
-  it('returns reason=invalid_input when memberId is missing', async () => {
-    const result = await sendDeliveryConfirmedSMS({ orderNumber: ORDER_NUM });
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('invalid_input');
-  });
-});
-
 // ── handleOrderFulfilled ──────────────────────────────────────────────────────
 
 describe('handleOrderFulfilled', () => {
@@ -385,35 +274,3 @@ describe('handleOrderFulfilled', () => {
   });
 });
 
-// ── handleDeliveryConfirmed ───────────────────────────────────────────────────
-
-describe('handleDeliveryConfirmed', () => {
-  it('fires delivery confirmed SMS for opted-in member', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    mockTwilioSuccess('SM_HDC');
-
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(true);
-  });
-
-  it('returns sent=false for member with SMS disabled', async () => {
-    seedPrefs({ smsEnabled: false });
-    seedTwilioSecrets();
-
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(false);
-  });
-
-  it('returns sent=false with reason=missing_params when memberId absent', async () => {
-    const result = await handleDeliveryConfirmed({ orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('returns sent=false with reason=missing_params when orderNumber absent', async () => {
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-});

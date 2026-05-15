@@ -7,25 +7,26 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock smsService dynamic import
 const mockSendOrderShippedSMS = vi.fn();
-const mockSendDeliveryConfirmedSMS = vi.fn();
 
 vi.mock('backend/smsService.web', () => ({
   sendOrderShippedSMS: (...args) => mockSendOrderShippedSMS(...args),
-  sendDeliveryConfirmedSMS: (...args) => mockSendDeliveryConfirmedSMS(...args),
+}));
+
+// cf-4x7e.4: structured logger — we assert it's called with the right context
+// string instead of relying on `console.error` line-grep.
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: vi.fn(),
 }));
 
 import {
   buildTrackingUrl,
   handleOrderFulfilled,
-  handleDeliveryConfirmed,
-  triggerOrderShippedSMS,
-  triggerDeliveryConfirmedSMS,
 } from '../src/backend/notificationOrchestrator.web.js';
+import { logError } from 'backend/utils/errorHandler';
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockSendOrderShippedSMS.mockResolvedValue({ success: true });
-  mockSendDeliveryConfirmedSMS.mockResolvedValue({ success: true });
 });
 
 // ── buildTrackingUrl ────────────────────────────────────────────────
@@ -99,7 +100,12 @@ describe('handleOrderFulfilled', () => {
     expect(result.reason).toBe('missing_params');
   });
 
-  it('handles smsService failure gracefully', async () => {
+  // cf-4x7e.4: a send-time failure (Twilio down, network error, etc.) now
+  // reports `reason: 'send_error'` so operators can distinguish it from
+  // module-load failures (`smsService_unavailable`) and missing-params
+  // (`missing_params`) without grepping logs. logError is called with a
+  // context string that names the surface AND the failure stage.
+  it('handles smsService send failure with reason=send_error + logError', async () => {
     mockSendOrderShippedSMS.mockRejectedValue(new Error('Twilio down'));
 
     const result = await handleOrderFulfilled({
@@ -108,7 +114,11 @@ describe('handleOrderFulfilled', () => {
     });
 
     expect(result.sent).toBe(false);
-    expect(result.reason).toBe('error');
+    expect(result.reason).toBe('send_error');
+    expect(logError).toHaveBeenCalledWith(
+      'notificationOrchestrator.handleOrderFulfilled:send',
+      expect.any(Error),
+    );
   });
 
   it('passes through opt-out reason from smsService', async () => {
@@ -121,64 +131,19 @@ describe('handleOrderFulfilled', () => {
 
     expect(result.sent).toBe(false);
     expect(result.reason).toBe('sms_disabled');
+    // Opt-out is a normal `{success:false}` envelope, not an error — logError
+    // must not fire on the happy-path negative.
+    expect(logError).not.toHaveBeenCalled();
+  });
+
+  // cf-4x7e.4: no console.error left behind. Catches a regression where
+  // someone copies the old pattern back in.
+  it('does not call console.error on any path', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSendOrderShippedSMS.mockRejectedValue(new Error('Twilio down'));
+    await handleOrderFulfilled({ memberId: 'mem-1', orderNumber: 'ORD-001' });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 
-// ── handleDeliveryConfirmed ─────────────────────────────────────────
-
-describe('handleDeliveryConfirmed', () => {
-  it('sends delivery confirmed SMS', async () => {
-    const result = await handleDeliveryConfirmed({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-
-    expect(result.sent).toBe(true);
-    expect(mockSendDeliveryConfirmedSMS).toHaveBeenCalledWith({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-  });
-
-  it('returns missing_params without memberId', async () => {
-    const result = await handleDeliveryConfirmed({ orderNumber: 'ORD-001' });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('returns missing_params without orderNumber', async () => {
-    const result = await handleDeliveryConfirmed({ memberId: 'mem-1' });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('handles smsService failure gracefully', async () => {
-    mockSendDeliveryConfirmedSMS.mockRejectedValue(new Error('Network error'));
-
-    const result = await handleDeliveryConfirmed({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('error');
-  });
-});
-
-// ── Admin endpoints ─────────────────────────────────────────────────
-
-describe('triggerOrderShippedSMS', () => {
-  it('delegates to handleOrderFulfilled', async () => {
-    const result = await triggerOrderShippedSMS('mem-1', 'ORD-001', '1Z123');
-    expect(result.sent).toBe(true);
-    expect(mockSendOrderShippedSMS).toHaveBeenCalled();
-  });
-});
-
-describe('triggerDeliveryConfirmedSMS', () => {
-  it('delegates to handleDeliveryConfirmed', async () => {
-    const result = await triggerDeliveryConfirmedSMS('mem-1', 'ORD-001');
-    expect(result.sent).toBe(true);
-    expect(mockSendDeliveryConfirmedSMS).toHaveBeenCalled();
-  });
-});

@@ -42,6 +42,25 @@ WM_RE = re.compile(
     re.MULTILINE,
 )
 
+# cf-5dto (v5): Non-webMethod function exports.
+# Matches `export [async] function NAME(...)`. The trap that motivated this:
+# cf-4x7e.B5 (PR #1333) initially planned to whole-file-delete
+# comfortTimeline.web.js — all 4 webMethods were correctly DEAD, but the
+# file also exported a non-webMethod `async function createTimeline(...)`
+# that purchaseFlowSmoke.test.js dynamically imports. The v4 detector only
+# sees webMethods, so this surface was invisible. v5 reports it as a
+# separate inventory so the operator decides surgical-drop vs whole-file
+# rather than discovering the survivor after the revert.
+#
+# We deliberately limit to function declarations (callable surface). Value
+# const exports (`export const FOO = 5`) are out of scope — those have
+# different deletion semantics and we'd rather not pollute the report
+# with constants whose consumers are everywhere.
+NON_WM_FN_RE = re.compile(
+    r"^export\s+(async\s+)?function\s+(\w+)\s*\(",
+    re.MULTILINE,
+)
+
 PUBLIC_VERB_RE = re.compile(
     r"^(submit|create|track|register|capture|send|notify|subscribe|"
     r"unsubscribe|redeem|claim|generate|update|delete)",
@@ -128,6 +147,40 @@ def strip_js_comments(text: str) -> str:
     return _LINE_COMMENT_RE.sub(lambda m: m.group(1), text)
 
 
+def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str, dict]:
+    """cf-5dto (v5): Inventory non-webMethod function exports in backend .web.js.
+
+    Returns a dict keyed by export name → {file, line, kind} where kind is
+    'async function' or 'function'. Matches `export [async] function NAME(...)`
+    only — value const exports are out of scope (see NON_WM_FN_RE comment).
+
+    `backend_root` overrides the module-level BACKEND for tests; falls back
+    to the production path when None.
+    """
+    root = backend_root if backend_root is not None else BACKEND
+    out: dict[str, dict] = {}
+    for fp in root.rglob("*.web.js"):
+        try:
+            text = fp.read_text(errors="ignore")
+        except OSError:
+            continue
+        text = strip_js_comments(text)
+        for m in NON_WM_FN_RE.finditer(text):
+            is_async = m.group(1) is not None
+            name = m.group(2)
+            line = text[: m.start()].count("\n") + 1
+            try:
+                file_str = str(fp.relative_to(ROOT))
+            except ValueError:
+                file_str = str(fp)
+            out[name] = {
+                "file": file_str,
+                "line": line,
+                "kind": "async function" if is_async else "function",
+            }
+    return out
+
+
 def collect_web_methods() -> dict[str, dict]:
     methods: dict[str, dict] = {}
     for fp in BACKEND.rglob("*.web.js"):
@@ -190,6 +243,33 @@ def _module_basename(file_rel: str) -> str:
         if base.endswith(suffix):
             return base[: -len(suffix)]
     return base
+
+
+# cf-5dto (v5): Sub-classify filesystem-path consumers so the operator can
+# distinguish file-as-test-target from file-as-data-source. The B-4 trap:
+# loadCatalogMaster.web.js was read by BOTH validate-catalog.js (script,
+# parses VALID_CATEGORIES from the file body — file-as-data-source) AND
+# validateCatalog.test.js (test). Treating them uniformly as
+# FILESYSTEM-PATH-REFERENCED hides the asymmetry — a test-import-only
+# consumer is migrate-then-delete; a data-source consumer requires
+# refactoring the tooling FIRST.
+_FS_PATH_TEST_RE = re.compile(r"^tests/.*\.(test|spec)\.[jt]s$")
+_FS_PATH_SCRIPT_RE = re.compile(r"^scripts/.*\.(js|ts|mjs|cjs|py|sh)$")
+
+
+def classify_fs_path_consumer(rel_path: str) -> str:
+    """Classify a fs-path consumer path into a v5 sub-bucket.
+
+    Returns:
+      FS-PATH-TEST-IMPORT  — `tests/*.test.{js,ts}` consumer (test-target)
+      FS-PATH-DATA-SOURCE  — `scripts/*.{js,ts,py,sh,...}` consumer (tooling)
+      FS-PATH-OTHER        — any other path (operator inspects manually)
+    """
+    if _FS_PATH_TEST_RE.match(rel_path):
+        return "FS-PATH-TEST-IMPORT"
+    if _FS_PATH_SCRIPT_RE.match(rel_path):
+        return "FS-PATH-DATA-SOURCE"
+    return "FS-PATH-OTHER"
 
 
 def collect_filesystem_path_refs(files: list[Path]) -> dict[str, list[str]]:
@@ -531,10 +611,28 @@ def classify_method(
         module_basename = _module_basename(defining_file)
         fs_path_consumers = list(fs_path_refs.get(module_basename, []))
     in_fs_path = bool(fs_path_consumers)
+    # cf-5dto (v5): sub-classify each consumer so the operator sees whether
+    # the file is held by tests (migrate-then-delete) vs tooling
+    # (refactor-tooling-first). Sorted+deduped for stable output.
+    fs_path_consumer_kinds = sorted({
+        classify_fs_path_consumer(c) for c in fs_path_consumers
+    })
+
+    # cf-5dto (v5): INTENTIONAL_ANYONE allowlist propagation. A method on
+    # the allowlist is kept-by-design (out-of-tree consumer like cfutons_mobile
+    # is invisible to the in-tree scan). v4 only gated the SUSPICIOUS flag on
+    # the allowlist; v5 also adds an explicit bucket so the row doesn't fall
+    # through to DEAD just because no in-tree caller exists. The B-4 trap:
+    # cartSessionService.createSession/updateCartItems bucketed DEAD despite
+    # the allowlist + the mobile-rig caller.
+    qualified_early = _module_qualified_name(defining_file, name)
+    is_intentional_anyone = qualified_early in INTENTIONAL_ANYONE
 
     buckets: list[str] = []
     if in_http:
         buckets.append("HTTP-EXPOSED")
+    if is_intentional_anyone:
+        buckets.append("HTTP-EXPOSED-INTENTIONAL")
     if in_events:
         buckets.append("EVENT-WIRED")
     if in_public or in_pages:
@@ -553,13 +651,13 @@ def classify_method(
 
     # cf-quba: allowlist filter — gate the SUSPICIOUS classification so
     # known-intentional Anyone endpoints stop generating noise.
-    qualified = _module_qualified_name(defining_file, name)
     suspicious = (
         info["permission"] == "Anyone"
         and "HTTP-EXPOSED" not in buckets
+        and "HTTP-EXPOSED-INTENTIONAL" not in buckets
         and "FRONTEND" not in buckets
         and PUBLIC_VERB_RE.match(name) is not None
-        and qualified not in INTENTIONAL_ANYONE
+        and not is_intentional_anyone
     )
 
     cfw_high, cfw_low = cfw_references(name, cfw_files)
@@ -580,7 +678,14 @@ def classify_method(
             dispatcher_alias = dispatcher_modules[module_basename]
 
     # Gap-finder verdict (cf-hpwy core deliverable)
-    if in_dispatcher and not has_cfw_high:
+    if is_intentional_anyone:
+        # cf-5dto (v5): allowlisted-Anyone endpoints are kept-by-design.
+        # Out-of-tree consumers (mobile rig, third-party calls into
+        # /_functions/<name>) aren't visible to the in-tree scan; the
+        # allowlist is the operator's declaration that the surface is
+        # intentional. Don't surface as a cleanup candidate.
+        gap_verdict = "OK-INTENTIONAL-ANYONE"
+    elif in_dispatcher and not has_cfw_high:
         # v4: dispatcher route is the WIRED path even without a direct cfw URL.
         # Distinct verdict (OK-WIRED-VIA-DISPATCHER) so the operator can see
         # the dispatch path is active and the method is alive.
@@ -615,6 +720,8 @@ def classify_method(
         "in_same_file": in_same_file,
         "in_filesystem_path": in_fs_path,
         "filesystem_path_consumers": fs_path_consumers[:6],
+        # cf-5dto (v5): sub-classification of each fs-path consumer.
+        "fs_path_consumer_kinds": fs_path_consumer_kinds,
         "in_dispatcher": in_dispatcher,
         "dispatcher_alias": dispatcher_alias,
         "sample_callers": sample_callers,
