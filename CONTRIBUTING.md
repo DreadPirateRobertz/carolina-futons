@@ -1,3 +1,9 @@
+**Canonical process doc:** [DreadPirateRobertz/gastown/CONTRIBUTING.md](https://github.com/DreadPirateRobertz/gastown/blob/main/CONTRIBUTING.md)
+
+This file covers cfutons (Wix Velo) specifics layered on top of those fundamentals.
+
+---
+
 # Contributing to Carolina Futons
 
 This project uses **Wix Studio + Velo (JavaScript)**. All backend logic lives in `src/backend/` as Wix web modules; UI widgets live in `src/public/`. Tests run via Vitest.
