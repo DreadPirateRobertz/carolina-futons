@@ -30,7 +30,7 @@
 ### In-review (CF repo, will merge on CI green)
 | PR | Reviews | Notes |
 |----|---------|-------|
-| #1343 | 🔄 5-agent dispatched | cf-9fqc observability TDD red phase — millicent |
+| #1343 | ✅ MERGED 23:42 | cf-9fqc observability TDD red phase — millicent |
 
 ### Fixes shipped this session
 - PR #583: CartTrigger aria-live mount-fire fix (commits 2aa36d5, f3ac1d7)
