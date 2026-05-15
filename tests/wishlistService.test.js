@@ -20,7 +20,6 @@ import {
   getWishlist,
   getWishlistByMemberId,
   isOnWishlist,
-  updateWishlistStock,
   _WISHLIST_MAX_ITEMS,
 } from '../src/backend/wishlistService.web.js';
 
@@ -310,61 +309,6 @@ describe('isOnWishlist', () => {
     __setMember(makeMember());
     const result = await isOnWishlist('');
     expect(result.onWishlist).toBe(false);
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════
-// updateWishlistStock
-// ═══════════════════════════════════════════════════════════════════
-
-describe('updateWishlistStock', () => {
-  it('updates inStock to true for all items with productId', async () => {
-    __seed('Wishlist', [
-      makeWishlistItem({ _id: 'wl-1', memberId: 'member-1', inStock: false }),
-      makeWishlistItem({ _id: 'wl-2', memberId: 'member-2', inStock: false }),
-    ]);
-    const result = await updateWishlistStock('prod-1', true);
-    expect(result.success).toBe(true);
-    expect(result.updatedCount).toBe(2);
-  });
-
-  it('updates inStock to false for all items with productId', async () => {
-    __seed('Wishlist', [
-      makeWishlistItem({ _id: 'wl-1', memberId: 'member-1', inStock: true }),
-    ]);
-    const result = await updateWishlistStock('prod-1', false);
-    expect(result.success).toBe(true);
-    expect(result.updatedCount).toBe(1);
-  });
-
-  it('does not update items where inStock is already the target value', async () => {
-    __seed('Wishlist', [
-      makeWishlistItem({ _id: 'wl-1', inStock: true }),
-    ]);
-    let updateCount = 0;
-    __onUpdate(() => { updateCount++; });
-    await updateWishlistStock('prod-1', true);
-    expect(updateCount).toBe(0);
-  });
-
-  it('returns updatedCount:0 when no matching items', async () => {
-    const result = await updateWishlistStock('prod-99', true);
-    expect(result.success).toBe(true);
-    expect(result.updatedCount).toBe(0);
-  });
-
-  it('returns success:false for empty productId', async () => {
-    const result = await updateWishlistStock('', true);
-    expect(result.success).toBe(false);
-  });
-
-  it('only updates items for the specified productId', async () => {
-    __seed('Wishlist', [
-      makeWishlistItem({ _id: 'wl-1', productId: 'prod-1', inStock: false }),
-      makeWishlistItem({ _id: 'wl-2', productId: 'prod-2', inStock: false }),
-    ]);
-    const result = await updateWishlistStock('prod-1', true);
-    expect(result.updatedCount).toBe(1);
   });
 });
 

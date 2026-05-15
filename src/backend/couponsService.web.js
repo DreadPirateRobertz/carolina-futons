@@ -277,7 +277,7 @@ export const createTierUpgradeCoupon = webMethod(
  * @returns {Promise<Object>}
  *   On success: `{ success: true, code: string, discountPercent: number, expiresAt: string }`.
  *   On failure: `{ success: false, message: string }`.
- * @permission Admin — called internally by sendRecoveryEmail; not intended for direct client use
+ * @permission Admin — admin-internal; not intended for direct client use
  */
 export const generateRecoveryCoupon = webMethod(
   Permissions.Admin,

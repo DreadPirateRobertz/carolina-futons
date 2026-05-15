@@ -243,42 +243,6 @@ export const isOnWishlist = webMethod(
 
 // ── updateWishlistStock ───────────────────────────────────────────
 
-/**
- * Update inStock status for all wishlist items with a given productId.
- * Called by inventory event handlers when stock status changes.
- * Admin-only — not exposed to members.
- *
- * @param {string} productId
- * @param {boolean} inStock
- * @returns {Promise<{success: boolean, updatedCount: number}>}
- */
-export const updateWishlistStock = webMethod(
-  Permissions.Admin,
-  async (productId, inStock) => {
-    try {
-      const cleanProductId = sanitize(productId, 50);
-      if (!cleanProductId) return { success: false, updatedCount: 0 };
-
-      const result = await wixData.query('Wishlist')
-        .eq('productId', cleanProductId)
-        .find();
-
-      let updatedCount = 0;
-      for (const item of result.items) {
-        if (item.inStock !== !!inStock) {
-          await wixData.update('Wishlist', { ...item, inStock: !!inStock });
-          updatedCount++;
-        }
-      }
-
-      return { success: true, updatedCount };
-    } catch (err) {
-      console.error('[wishlistService] updateWishlistStock error:', err);
-      return { success: false, updatedCount: 0 };
-    }
-  }
-);
-
 // ── Internal helpers ──────────────────────────────────────────────
 
 function _mapItem(item) {
