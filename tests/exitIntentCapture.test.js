@@ -274,11 +274,11 @@ describe('submitExitCapture', () => {
 
   beforeEach(() => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' });
-    // captureExitIntentEmail mock retained for the legacy "non-blocking on
-    // queue failure" assertion below — even though submitExitCapture no
-    // longer calls it (cf-3l0d Option B: subscribeToNewsletter handles
-    // welcome internally), the mock surface lets us pin that submitExit
-    // does NOT depend on it.
+    // captureExitIntentEmail was retired in cf-ykmj / cf-4x7e — the
+    // export no longer exists. We retain a mock stub here only because
+    // the regression-pin test below asserts submitExitCapture doesn't
+    // try to call it (catching any future re-introduction of the
+    // redundant explicit-queue path).
     mockQueueWelcome = vi.fn().mockResolvedValue({ success: true, queued: 3 });
 
     // Mock the dynamic backend imports
@@ -311,11 +311,12 @@ describe('submitExitCapture', () => {
     expect(mockSubscribe).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
   });
 
-  // cf-3l0d Option B: submitExitCapture no longer calls captureExitIntentEmail
-  // — subscribeToNewsletter is the single source of truth for the welcome
-  // series (it auto-resolves a contactId and queues internally). This test
-  // pins that the redundant explicit call is gone, preventing accidental
-  // re-introduction.
+  // cf-3l0d Option B + cf-ykmj/cf-4x7e SUPERSEDE: captureExitIntentEmail
+  // is gone (the export was retired). subscribeToNewsletter is the single
+  // source of truth for the welcome series (it auto-resolves a contactId
+  // and queues internally). This test pins that submitExitCapture only
+  // routes through subscribe — preventing re-introduction of a parallel
+  // explicit-queue path.
   it('does NOT call captureExitIntentEmail (welcome auto-trigger lives in subscribeToNewsletter)', async () => {
     await submitExitCapture('user@test.com');
     expect(mockQueueWelcome).not.toHaveBeenCalled();
@@ -352,11 +353,13 @@ describe('submitExitCapture', () => {
   });
 
   it('still succeeds even if a downstream queue call would have failed (non-blocking guarantee)', async () => {
-    // cf-3l0d Option B: the welcome trigger runs inside subscribeToNewsletter
-    // and is non-blocking there. submitExitCapture itself only awaits the
-    // subscribe call — a hypothetical queue failure does not surface here.
-    // Pinning the contract: a rejected captureExitIntentEmail mock must not
-    // break submitExitCapture, since submitExitCapture no longer touches it.
+    // cf-3l0d Option B + cf-ykmj/cf-4x7e SUPERSEDE: the welcome trigger
+    // runs inside subscribeToNewsletter and is non-blocking there.
+    // submitExitCapture itself only awaits subscribe — a hypothetical
+    // queue failure does not surface here. Pinning the contract: a
+    // rejected captureExitIntentEmail mock must not break submitExit,
+    // since submitExit never touches captureExitIntentEmail
+    // (and the latter export is gone post-cf-ykmj).
     mockQueueWelcome.mockRejectedValue(new Error('EmailQueue insert failed'));
     const result = await submitExitCapture('user@test.com');
     expect(result.success).toBe(true);
