@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 22:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 23:40 MT**
 
 ## Session 2026-05-15 — Wave 32 (BATCH QUEUE FULLY LOADED)
 
@@ -14,9 +14,11 @@
 | #585 | ✅ | ✅ | coverage ratchet |
 | #586 | ✅ | ✅ | CONTRIBUTING + TDD standards |
 | #587 | ✅ | ✅ | cfw-wzr CONTRIBUTING |
-| #588 | ✅ | 🔄 | cf-pdp-g1 qty stepper (lint fix a9393b1 pushed, CI running) |
-| #589 | ✅ | 🔄 | cf-gift-g1 recipient meta |
-| #1339 | ✅ | ✅ | cf-o5j5 wave32 audit (CF repo, independent) |
+| #588 | ✅ | lint✅ e2e🔄 | cf-pdp-g1 qty stepper — lint fix a9393b1 |
+| #589 | ✅ | lint✅ e2e🔄 | cf-gift-g1 recipient meta |
+| #592 | ✅ | lint✅ e2e🔄 | cf-2oku /account a11y — blaidd |
+| #1339 | — | **MERGED** ✅ | cf-o5j5 wave32 audit (CF repo) |
+| #1341 | — | **MERGED** ✅ | cf-4tqw observability spec (CF repo) |
 
 ### Fixes shipped this session
 - PR #583: CartTrigger aria-live mount-fire fix (commits 2aa36d5, f3ac1d7)
@@ -27,7 +29,7 @@
 7 crew roadmaps synthesized. Pre-cutover P1 blockers grid + Stilgar gates table sent.
 
 ### Stilgar gates (blocking cutover P1s)
-- DNS TTL: 3600 → 60s | UptimeRobot API key | Sentry production | Staging backend publish | FAQ CMS data (Brenda)
+- DNS TTL: 3600 → 60s | UptimeRobot ⚠️ PAID plan required (free=5min poll, need <2min TTD) | Sentry production | Staging backend publish | FAQ CMS data (Brenda)
 
 ## Session 2026-05-15 — Wave 32 (MERGE WAVE COMPLETE)
 | Done | Detail |
