@@ -18,8 +18,6 @@ import {
   buildTrackingUrl,
   handleOrderFulfilled,
   handleDeliveryConfirmed,
-  triggerOrderShippedSMS,
-  triggerDeliveryConfirmedSMS,
 } from '../src/backend/notificationOrchestrator.web.js';
 
 beforeEach(() => {
@@ -165,20 +163,3 @@ describe('handleDeliveryConfirmed', () => {
   });
 });
 
-// ── Admin endpoints ─────────────────────────────────────────────────
-
-describe('triggerOrderShippedSMS', () => {
-  it('delegates to handleOrderFulfilled', async () => {
-    const result = await triggerOrderShippedSMS('mem-1', 'ORD-001', '1Z123');
-    expect(result.sent).toBe(true);
-    expect(mockSendOrderShippedSMS).toHaveBeenCalled();
-  });
-});
-
-describe('triggerDeliveryConfirmedSMS', () => {
-  it('delegates to handleDeliveryConfirmed', async () => {
-    const result = await triggerDeliveryConfirmedSMS('mem-1', 'ORD-001');
-    expect(result.sent).toBe(true);
-    expect(mockSendDeliveryConfirmedSMS).toHaveBeenCalled();
-  });
-});

@@ -5,7 +5,10 @@
  *
  * Wiring:
  *  - wixEcom_onOrderFulfilled → handleOrderFulfilled → sendOrderShippedSMS
- *  - UPS delivered status (polled or webhook) → handleDeliveryConfirmed → sendDeliveryConfirmedSMS
+ *    (live: dispatched from src/backend/events.js via dynamic import)
+ *  - UPS delivered status → handleDeliveryConfirmed → sendDeliveryConfirmedSMS
+ *    (NOT yet wired: handler is in place but no poller / webhook calls it today.
+ *     cf-4x7e.3 tracks whether to retire the handler or land the trigger.)
  *
  * Opt-in gate: SMS only fires if the member has SMS enabled and phone on record.
  * The gate is enforced inside smsService.checkPreferences — callers here do not
@@ -15,11 +18,9 @@
  * are pending Stilgar. The integration will go live once secrets are added to
  * Wix Secrets Manager.
  *
- * @requires wix-web-module
  * @requires backend/smsService.web
  * @requires backend/ups-shipping.web
  */
-import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
 
 const UPS_TRACKING_BASE = 'https://www.ups.com/track?tracknum=';
@@ -89,32 +90,3 @@ export async function handleDeliveryConfirmed({ memberId, orderNumber } = {}) {
   }
 }
 
-/**
- * Admin-callable endpoint to manually trigger an order-shipped SMS.
- * Useful for retries or admin tooling.
- *
- * @function triggerOrderShippedSMS
- * @param {string} memberId
- * @param {string} orderNumber
- * @param {string} [trackingNumber]
- * @returns {Promise<{sent: boolean, reason?: string}>}
- */
-export const triggerOrderShippedSMS = webMethod(
-  Permissions.Admin,
-  (memberId, orderNumber, trackingNumber) =>
-    handleOrderFulfilled({ memberId, orderNumber, trackingNumber })
-);
-
-/**
- * Admin-callable endpoint to manually trigger a delivery-confirmed SMS.
- *
- * @function triggerDeliveryConfirmedSMS
- * @param {string} memberId
- * @param {string} orderNumber
- * @returns {Promise<{sent: boolean, reason?: string}>}
- */
-export const triggerDeliveryConfirmedSMS = webMethod(
-  Permissions.Admin,
-  (memberId, orderNumber) =>
-    handleDeliveryConfirmed({ memberId, orderNumber })
-);
