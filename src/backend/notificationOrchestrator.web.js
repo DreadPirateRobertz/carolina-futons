@@ -5,7 +5,10 @@
  *
  * Wiring:
  *  - wixEcom_onOrderFulfilled → handleOrderFulfilled → sendOrderShippedSMS
- *  - UPS delivered status (polled or webhook) → handleDeliveryConfirmed → sendDeliveryConfirmedSMS
+ *    (live: dispatched from src/backend/events.js via dynamic import)
+ *  - UPS delivered status → handleDeliveryConfirmed → sendDeliveryConfirmedSMS
+ *    (NOT yet wired: handler is in place but no poller / webhook calls it today.
+ *     cf-4x7e.3 tracks whether to retire the handler or land the trigger.)
  *
  * Opt-in gate: SMS only fires if the member has SMS enabled and phone on record.
  * The gate is enforced inside smsService.checkPreferences — callers here do not

@@ -11,11 +11,15 @@
  * @setup
  * Create CMS collection `ComfortTimelines`:
  *   orderId (Text, indexed), memberId (Text, indexed), productId (Text),
- *   productName (Text), deliveredAt (DateTime), status (Text: active|complete|cancelled),
- *   currentDay (Number), lastCheckIn (DateTime),
- *   comfortLogs (Text/JSON: [{day, rating, notes, loggedAt}]),
- *   milestonesCompleted (Text/JSON: [day numbers]),
- *   crossSellTriggered (Boolean), supportEscalated (Boolean)
+ *   productName (Text), deliveredAt (DateTime), status (Text: active|complete|cancelled)
+ *
+ *   The following columns are still seeded by `createTimeline` (so they exist on
+ *   every row) but post-cf-4x7e.B5 they have no readers — reserved for re-instatement
+ *   of the milestone/comfort-log flow:
+ *     currentDay (Number), lastCheckIn (DateTime),
+ *     comfortLogs (Text/JSON: [{day, rating, notes, loggedAt}]),
+ *     milestonesCompleted (Text/JSON: [day numbers]),
+ *     crossSellTriggered (Boolean), supportEscalated (Boolean)
  */
 
 import wixData from 'wix-data';
@@ -36,7 +40,9 @@ const COLLECTION = 'ComfortTimelines';
  * @param {string} params.productName - Product display name
  * @returns {Promise<{success: boolean, timelineId?: string, error?: string}>}
  */
-// idor-ok: internal backend helper — called from wixEcom_onOrderCreated event handler only
+// NOT currently wired into events.js — preserved for re-instatement when the
+// post-purchase email sequence lands. Only callers today are the purchase-flow
+// smoke test (Step 9) and this module's unit tests.
 export async function createTimeline({ orderId, memberId, productId, productName }) {
   try {
     if (!orderId || !memberId || !productId) {
