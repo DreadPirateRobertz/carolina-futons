@@ -10,19 +10,43 @@ KEY="${UPTIMEROBOT_API_KEY:?UPTIMEROBOT_API_KEY is required — see monitoring-s
 ALERT="${UPTIMEROBOT_ALERT_CONTACT_ID:-}"  # optional; omit to use account default
 INTERVAL=300  # 300s = 5min (free tier minimum); change to 60 for Pro
 
-# Monitors to create: "Friendly Name|URL"
+# Monitors to create: "Friendly Name|URL|MonitorType[|KeywordType|KeywordValue]"
+# MonitorType: 1 = HTTP(S) up/down (alert on non-2xx + timeout)
+#              2 = Keyword (alert on keyword presence/absence)
+# KeywordType (only used when MonitorType=2):
+#              1 = "exists" — alert when keyword NOT found in response body
+#              2 = "not exists" — alert when keyword IS found
+#
+# /api/health (cf-x6ph + cf-x0ks + cf-ybsf): the endpoint returns the
+# JSON envelope `{"status":"ok","uptime":N,"commit":"sha","ts":"..."}`.
+# UptimeRobot keyword `"status":"ok"` (the quoted-colon-quoted substring)
+# is a stable marker that only appears in a healthy response — the bare
+# word `ok` false-positives on any HTML / 404 page that happens to
+# contain it. Aligned per cf-ybsf.
 declare -a MONITORS=(
-  "CF Home|https://carolinafutons.com/"
-  "CF Futon Frames PLP|https://carolinafutons.com/shop/futon-frames"
-  "CF Products (Kingston)|https://carolinafutons.com/products/kingston-futon-frame"
-  "CF Contact|https://carolinafutons.com/contact"
+  "CF Home|https://carolinafutons.com/|1"
+  "CF Futon Frames PLP|https://carolinafutons.com/shop/futon-frames|1"
+  "CF Products (Kingston)|https://carolinafutons.com/products/kingston-futon-frame|1"
+  "CF Contact|https://carolinafutons.com/contact|1"
+  'CF API Health|https://carolinafutons.com/api/health|2|1|"status":"ok"'
 )
 
 create_monitor() {
   local name="$1"
   local url="$2"
+  local monitor_type="${3:-1}"
+  local keyword_type="${4:-}"
+  local keyword_value="${5:-}"
 
-  local data="api_key=${KEY}&friendly_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${name}'))")&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${url}'))")&type=1&interval=${INTERVAL}&format=json"
+  local data="api_key=${KEY}&friendly_name=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${name}'))")&url=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${url}'))")&type=${monitor_type}&interval=${INTERVAL}&format=json"
+  if [[ "${monitor_type}" == "2" ]]; then
+    if [[ -z "$keyword_type" || -z "$keyword_value" ]]; then
+      echo "  ✗ Failed:  ${name} — keyword monitor requires keyword_type + keyword_value"
+      return 1
+    fi
+    data+="&keyword_type=${keyword_type}"
+    data+="&keyword_value=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" "${keyword_value}")"
+  fi
   if [[ -n "$ALERT" ]]; then
     data+="&alert_contacts=${ALERT}"
   fi
@@ -51,9 +75,9 @@ echo "Interval: ${INTERVAL}s | Alert contact: ${ALERT:-account default}"
 echo ""
 
 for entry in "${MONITORS[@]}"; do
-  IFS='|' read -r name url <<< "$entry"
+  IFS='|' read -r name url monitor_type keyword_type keyword_value <<< "$entry"
   echo "Creating: ${name}"
-  create_monitor "$name" "$url"
+  create_monitor "$name" "$url" "$monitor_type" "$keyword_type" "$keyword_value"
 done
 
 echo ""

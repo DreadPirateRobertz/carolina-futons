@@ -24,7 +24,7 @@ To activate monitoring (cf-3qt.8.31 acceptance):
    ```
    **Never commit secrets.env.**
 4. **Stilgar OR godfrey:** Dashboard → **My Settings → Alert Contacts** → confirm `carolinafutons@gmail.com` is verified (it auto-creates from the signup email; the contact ID is the integer in the row's edit URL).
-5. **godfrey:** ETA <10 min from key delivery — runs `bash scripts/setup-monitors.sh`, verifies 4 monitors live, fires the mis-config alert test (§4 of `carolina-futons-web/docs/monitoring-runbook.md`), commits this doc with `Status: LIVE` + monitor IDs to main.
+5. **godfrey:** ETA <10 min from key delivery — runs `bash scripts/setup-monitors.sh`, verifies 5 monitors live (4 HTTP up/down + 1 `/api/health` keyword on `"status":"ok"` per cf-ybsf), fires the mis-config alert test (§4 of `carolina-futons-web/docs/monitoring-runbook.md`), commits this doc with `Status: LIVE` + monitor IDs to main.
 
 The setup script is ready (`scripts/setup-monitors.sh`) and gated on `UPTIMEROBOT_API_KEY:?` so it errors loudly if the key is missing.
 
@@ -44,14 +44,15 @@ UptimeRobot free tier supports **5-minute** check intervals, not 1-minute. 1-min
 
 ## Monitors Configured
 
-| # | Name | URL | Type |
-|---|------|-----|------|
-| 1 | CF Home | https://carolinafutons.com/ | HTTP(S) |
-| 2 | CF Futon Frames PLP | https://carolinafutons.com/shop/futon-frames | HTTP(S) |
-| 3 | CF Products (spot check) | https://carolinafutons.com/products/kingston-futon-frame | HTTP(S) |
-| 4 | CF Contact | https://carolinafutons.com/contact | HTTP(S) |
+| # | Name | URL | Type | Keyword check |
+|---|------|-----|------|---|
+| 1 | CF Home | https://carolinafutons.com/ | HTTP(S) | — |
+| 2 | CF Futon Frames PLP | https://carolinafutons.com/shop/futon-frames | HTTP(S) | — |
+| 3 | CF Products (spot check) | https://carolinafutons.com/products/kingston-futon-frame | HTTP(S) | — |
+| 4 | CF Contact | https://carolinafutons.com/contact | HTTP(S) | — |
+| 5 | CF API Health | https://carolinafutons.com/api/health | **Keyword** | `"status":"ok"` exists |
 
-All monitors: expect HTTP 200, alert on non-2xx or timeout >30s.
+Monitors 1-4 expect HTTP 200, alert on non-2xx or timeout >30s. Monitor 5 also verifies the response body contains `"status":"ok"` (the quoted-colon-quoted substring is a stable marker that only appears in a healthy JSON response from `/api/health` per cf-x6ph + cf-x0ks; the bare word `ok` would false-positive on any HTML page that contains it — cf-ybsf alignment).
 
 ---
 
