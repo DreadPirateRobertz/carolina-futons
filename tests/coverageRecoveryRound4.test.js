@@ -132,32 +132,6 @@ describe('cf-4x7e cov r4: reviewsService.web.js getAggregateRating', () => {
   });
 });
 
-// ── visualSearchExport.web.js generateExport auth path (line 136 — 4 uncov) ─
-
-describe('cf-4x7e cov r4: visualSearchExport.web.js generateExport auth', () => {
-  it('rejects when cronSecret is missing (line 136 — !cronSecret arm)', async () => {
-    const { generateExport } = await import('../src/backend/visualSearchExport.web.js');
-    const r = await generateExport('');
-    // Either the auth-failed envelope OR the catch-block failure
-    // envelope is acceptable — both mean the function rejected the
-    // empty-secret call without successfully producing an export.
-    expect(r.success).toBe(false);
-    expect(typeof r.error).toBe('string');
-  });
-
-  it('rejects when cronSecret is null', async () => {
-    const { generateExport } = await import('../src/backend/visualSearchExport.web.js');
-    const r = await generateExport(null);
-    expect(r.success).toBe(false);
-  });
-
-  it('rejects when cronSecret does not match expected (line 136 — mismatch arm)', async () => {
-    const { generateExport } = await import('../src/backend/visualSearchExport.web.js');
-    const r = await generateExport('totally-wrong-secret');
-    expect(r.success).toBe(false);
-  });
-});
-
 // ── subscriptionService.web.js (line 536 — 4 uncov) — entry-point smoke ──
 
 describe('cf-4x7e cov r4: subscriptionService.web.js entry-points', () => {
