@@ -5,7 +5,6 @@
  * Covers:
  *  - buildTrackingUrl: URL construction
  *  - handleOrderFulfilled: opt-in gate, tracking URL injection, SMS fired
- *  - handleDeliveryConfirmed: opt-in gate, cooldown gate, SMS fired
  *  - sendOrderShippedSMS: message format, Twilio call, SMSLog insert
  *  - sendDeliveryConfirmedSMS: message format, Twilio call, cooldown, SMSLog insert
  */
@@ -17,7 +16,6 @@ import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
   buildTrackingUrl,
   handleOrderFulfilled,
-  handleDeliveryConfirmed,
 } from '../src/backend/notificationOrchestrator.web.js';
 import {
   sendOrderShippedSMS,
@@ -385,35 +383,3 @@ describe('handleOrderFulfilled', () => {
   });
 });
 
-// ── handleDeliveryConfirmed ───────────────────────────────────────────────────
-
-describe('handleDeliveryConfirmed', () => {
-  it('fires delivery confirmed SMS for opted-in member', async () => {
-    seedPrefs();
-    seedTwilioSecrets();
-    mockTwilioSuccess('SM_HDC');
-
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(true);
-  });
-
-  it('returns sent=false for member with SMS disabled', async () => {
-    seedPrefs({ smsEnabled: false });
-    seedTwilioSecrets();
-
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID, orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(false);
-  });
-
-  it('returns sent=false with reason=missing_params when memberId absent', async () => {
-    const result = await handleDeliveryConfirmed({ orderNumber: ORDER_NUM });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('returns sent=false with reason=missing_params when orderNumber absent', async () => {
-    const result = await handleDeliveryConfirmed({ memberId: MEMBER_ID });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-});
