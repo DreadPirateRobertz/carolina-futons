@@ -3,7 +3,7 @@
 **Bead:** cf-4tqw (Phase 1 — spec)
 **Author:** millicent (cfutons/crew, CI/devops lane)
 **Roadmap context:** Week 1-2 of the 6-week observability + email + security plan (Stilgar directive 2026-05-15)
-**Metric target:** Time-to-detect (TTD) for production outages — < 5 min for 5xx spikes, < 2 min for full outage
+**Metric target:** Time-to-detect (TTD) for production outages — see § "TTD targets (revised post-review)" below for the tier-aware breakdown. Headline: **< 5 min for 5xx-rate spikes** via Sentry (no polling limit); full-outage TTD bounded by the UptimeRobot tier we provision (5 min on FREE, 1 min on PAID — Phase 2 reviewer feedback)
 
 ## Purpose
 
@@ -219,6 +219,36 @@ The script reads from APIs every run. No local state, no cache file (operator ca
 | `SENTRY_AUTH_TOKEN` | env var | **Stilgar provisioning** | 🔴 blocked (cf-3qt.8.34 go/no-go gate item) |
 
 When Phase 2 ships, **both Sentry + UptimeRobot tokens MUST also be set as GitHub Actions secrets** if the dashboard is wired into a cron workflow.
+
+## TTD targets (revised post-review)
+
+PR #1341 reviewer flagged a constraint that requires re-tuning the original metric target. Documenting here as the source of truth:
+
+**UptimeRobot polling intervals by tier:**
+
+| Tier | Poll interval | Effective floor on full-outage TTD |
+|---|---|---|
+| FREE | 5 min | ≥ 5 min (one poll cycle + alert dispatch) |
+| Solo / Team (paid) | 1 min | ≥ 1 min (same) |
+| Enterprise | 30 s | ≥ 30 s |
+
+The original target ("< 2 min for full outage") **is unreachable on FREE tier**. Two ways forward:
+
+1. **Stilgar provisions the PAID plan** when delivering the API key → 1-min UptimeRobot polling → full-outage TTD < 2 min achievable. Recommended for cutover-night + the 30-day stability window.
+2. **Stilgar stays on FREE** → full-outage TTD floor is **5 min** → Sentry (no polling limit; event-driven) becomes the < 1-min signal for 5xx-rate spikes. 5xx spikes are usually the leading-indicator before full-outage anyway, so this is workable but reduces the safety margin.
+
+**Revised metric target by signal type:**
+
+| Signal | Source | Target TTD |
+|---|---|---|
+| 5xx error-rate spike (≥ 5/min sustained 30s) | Sentry event stream | **< 1 min** (event-driven, no polling) |
+| `/api/health` non-200 | UptimeRobot poll | **< UptimeRobot tier interval** + alert dispatch |
+| Production deploy rolled back | Vercel `/v6/deployments` `state=ERROR` | next dashboard pull (operator-paced) |
+| Customer report | inbox / support channel | unbounded (canary metric — should always lag the others) |
+
+**Dashboard role in the TTD picture**: the dashboard itself is a **pull-snapshot** tool — not the alerting layer. UptimeRobot + Sentry handle the push alerts; the dashboard is what the on-call agent runs to consolidate state after the page fires.
+
+**Action on Stilgar (Phase 2 prereq):** confirm which UptimeRobot tier we're provisioning so the dashboard cell thresholds (and these TTD targets) match real polling cadence.
 
 ## Cron cadence (Phase 2 follow-on, not this PR)
 
