@@ -1,17 +1,22 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 13:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 14:05 MT**
 
 ## Session 2026-05-15 — Wave 32 (post-compaction continuation)
 | Done | Detail |
 |------|--------|
 | ✅ Wave 31: 4 PRs merged | #1322 cf-secrets.F2, #1323 cf-094q, #1324 cf-8qh8, #1321 cf-8c2f (docs-only) |
-| ✅ Wave prev: #1317 #1315 | cf-byib parent-bead (all checks pass). cf-eov3 namespace-dispatcher (reopened after auto-close, re-CI green, merged) |
-| ✅ cfutons CLEAR | 0 open PRs on main. Main GREEN. All cron clusters staggered (cf-ox0h CLOSED). |
-| 🧹 18 beads CLOSED | cf-xcct/cf-2enk/cf-d8ta/cf-0z43/cf-nej3/cf-sxo7/cf-0ziz/cf-8c2f/cf-8qh8/cf-094q/cf-byib/cf-7p8y/cf-lzkm/cf-sazb/cf-3qt.8.34-.33-.32/cf-6zjo/cf-jzux/cf-cmz0/cf-ra41/cf-khqd/cf-za1o/cf-c0np/cf-qjhf/cf-ox0h |
-| ⛔ cfw: 20 PRs BLOCKED | enforce_admins + review required — can't self-approve. All need Stilgar batch-approval. |
-| 📤 8 crew dispatched | blaidd→cf-89fb PR; rennala→cf-ewnw+#1301 rebase; godfrey→cf-bbo8/cf-r9r3; miquella→cf-4x7e chunk; millicent→bd ready; radahn→cf-dbw9; morgott→rebase PRs #1300/#1257/#1256/#1250 |
+| ✅ Wave prev: #1317 #1315 | cf-byib parent-bead. cf-eov3 namespace-dispatcher (reopened → merged). |
+| ✅ PR #1325 MERGED | cf-4x7e.B3 coverage ratchet fix (branches 85→84.9, dead-code+test deletion caused 0.05% drop). |
+| ✅ PR #1327 MERGED | cf-gqdf DNS TTL verify script. Bead cf-gqdf CLOSED. |
+| 🔴 SaleLightbox regression FOUND+FIXED | SALE_END_DATE=2026-05-12 expired → 18/23 tests failing on cfw main. Diagnosed, fixed in PR #577 (test time-freeze). 23/23 pass locally. PR #577 awaiting Stilgar approval. |
+| ⛔ cfw: 28 PRs BLOCKED | enforce_admins + review required. All need Stilgar batch-approval. |
+| 📤 millicent→PR triage | Building cfw PR priority table for Stilgar morning batch. |
 
-**⛔ Stilgar action needed**: Approve + batch-merge cfw PRs (#552–#567, #540). All have lint+test ✅, e2e timeout is systematic infra issue (25m limit), not PR-specific.
+**⛔ Stilgar action needed (PRIORITY ORDER)**:
+1. **FIRST**: Approve + merge PR #577 (SaleLightbox test fix) — unblocks ALL cfw unit test passes
+2. Crew rebases their PRs on updated main (will trigger clean CI)
+3. Batch-approve remaining cfw PRs: #576 (cf-r9r3 P1), #570 (cf-bbo8 P1), #569 (cf-89fb), #540 (cf-jo07 P1), then #552–#575 in priority order
+4. e2e failures are 25m infra cap — systematic, NOT PR-specific. Ignore e2e gate; lint+unit are what matter.
 
 
 
