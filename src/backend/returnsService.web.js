@@ -27,7 +27,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateId, validateEmail, redactEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
@@ -372,7 +372,7 @@ export const lookupReturn = webMethod(
 
       // Rate limit by email to prevent order enumeration
       if (!(await _checkRateLimit(cleanEmail))) {
-        console.warn('[returnsService] Rate limit exceeded for lookupReturn:', cleanEmail);
+        console.warn('[returnsService] Rate limit exceeded for lookupReturn:', redactEmail(cleanEmail));
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
 
@@ -442,7 +442,7 @@ export const submitGuestReturn = webMethod(
 
       // Rate limit by email to prevent order enumeration
       if (!(await _checkRateLimit(cleanEmail))) {
-        console.warn('[returnsService] Rate limit exceeded for submitGuestReturn:', cleanEmail);
+        console.warn('[returnsService] Rate limit exceeded for submitGuestReturn:', redactEmail(cleanEmail));
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
 

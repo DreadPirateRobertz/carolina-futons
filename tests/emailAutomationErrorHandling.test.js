@@ -17,6 +17,13 @@ vi.mock('backend/utils/sanitize', () => ({
   validateEmail: (e) => /^[^@]+@[^@]+\.[^@]+$/.test(e),
   validateId: (id) => !!id,
   validateSlug: (s) => !!s,
+  // cf-ewnw: log-side PII redaction helper.
+  redactEmail: (email) => {
+    if (typeof email !== 'string' || !email) return '<redacted>';
+    const at = email.indexOf('@');
+    if (at < 0) return '<redacted>';
+    return `${email.slice(0, 2)}***${email.slice(at)}`;
+  },
 }));
 
 const __secrets = {};
@@ -96,7 +103,10 @@ describe('triggerRestockNotifications — per-subscriber error handling', () => 
     vi.restoreAllMocks();
   });
 
-  it('logs per-subscriber failures with subscriber context', async () => {
+  it('logs per-subscriber failures with redacted subscriber context', async () => {
+    // cf-ewnw: warn line now redacts the subscriber email via
+    // sanitize.redactEmail to "lo***@test.com" so monitoring/syslog
+    // doesn't capture raw PII. Plaintext must NOT appear.
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     __onInsert((col) => {
       if (col === 'EmailQueue') throw new Error('Queue write failed');
@@ -108,7 +118,8 @@ describe('triggerRestockNotifications — per-subscriber error handling', () => 
 
     expect(warnSpy).toHaveBeenCalled();
     const warnArgs = warnSpy.mock.calls[0].join(' ');
-    expect(warnArgs).toContain('log@test.com');
+    expect(warnArgs).toContain('lo***@test.com');
+    expect(warnArgs).not.toContain('log@test.com');
     warnSpy.mockRestore();
   });
 

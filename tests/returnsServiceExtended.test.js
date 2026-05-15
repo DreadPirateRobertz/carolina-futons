@@ -77,6 +77,14 @@ vi.mock('backend/utils/sanitize', () => ({
     if (typeof email !== 'string') return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   },
+  // cf-ewnw: log-side PII redaction helper. Tests don't assert on the
+  // redacted output shape — they just need the call to not throw.
+  redactEmail: (email) => {
+    if (typeof email !== 'string' || !email) return '<redacted>';
+    const at = email.indexOf('@');
+    if (at < 0) return '<redacted>';
+    return `${email.slice(0, 2)}***${email.slice(at)}`;
+  },
 }));
 
 // Mock UPS shipping

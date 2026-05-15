@@ -21,6 +21,13 @@ vi.mock('backend/emailAutomation.web', () => ({
 
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
+  // cf-ewnw: log-side PII redaction helper.
+  redactEmail: (email) => {
+    if (typeof email !== 'string' || !email) return '<redacted>';
+    const at = email.indexOf('@');
+    if (at < 0) return '<redacted>';
+    return `${email.slice(0, 2)}***${email.slice(at)}`;
+  },
 }));
 
 const mockRecordChallengeProgress = vi.fn().mockResolvedValue({ success: true });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitize, validateEmail, validateId, validateSlug } from '../src/backend/utils/sanitize.js';
+import { sanitize, validateEmail, validateId, validateSlug, redactEmail } from '../src/backend/utils/sanitize.js';
 
 // ── sanitize ────────────────────────────────────────────────────────
 
@@ -152,5 +152,40 @@ describe('validateSlug', () => {
   it('returns empty string for non-string input', () => {
     expect(validateSlug(null)).toBe('');
     expect(validateSlug(undefined)).toBe('');
+  });
+});
+
+// ── redactEmail (cf-ewnw) ──────────────────────────────────────────
+
+describe('redactEmail', () => {
+  it('redacts a typical email to first 2 chars + domain', () => {
+    expect(redactEmail('joe@example.com')).toBe('jo***@example.com');
+  });
+
+  it('preserves subdomain in the redacted output', () => {
+    expect(redactEmail('alice@mail.subdomain.example')).toBe('al***@mail.subdomain.example');
+  });
+
+  it('masks single-char local parts', () => {
+    expect(redactEmail('a@example.com')).toBe('*@example.com');
+  });
+
+  it('masks two-char local parts', () => {
+    expect(redactEmail('ab@example.com')).toBe('*@example.com');
+  });
+
+  it('returns "<redacted>" for non-string input', () => {
+    expect(redactEmail(null)).toBe('<redacted>');
+    expect(redactEmail(undefined)).toBe('<redacted>');
+    expect(redactEmail(123)).toBe('<redacted>');
+    expect(redactEmail({})).toBe('<redacted>');
+  });
+
+  it('returns "<redacted>" for empty string', () => {
+    expect(redactEmail('')).toBe('<redacted>');
+  });
+
+  it('returns "<redacted>" for input without @', () => {
+    expect(redactEmail('not-an-email')).toBe('<redacted>');
   });
 });

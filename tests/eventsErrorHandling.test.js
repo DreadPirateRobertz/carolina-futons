@@ -12,6 +12,13 @@ vi.mock('backend/emailAutomation.web', () => ({
 
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
+  // cf-ewnw: log-side PII redaction helper.
+  redactEmail: (email) => {
+    if (typeof email !== 'string' || !email) return '<redacted>';
+    const at = email.indexOf('@');
+    if (at < 0) return '<redacted>';
+    return `${email.slice(0, 2)}***${email.slice(at)}`;
+  },
 }));
 
 import {
@@ -28,7 +35,10 @@ beforeEach(() => {
 // ── Structured Error Logging ─────────────────────────────────────────
 
 describe('wixEcom_onAbandonedCheckoutCreated — structured error logging', () => {
-  it('logs checkoutId and buyerEmail on insert failure', async () => {
+  it('logs checkoutId and redacted buyerEmail on insert failure', async () => {
+    // cf-ewnw: the log line previously emitted plaintext buyerEmail.
+    // It now redacts via the sanitize.redactEmail helper to "al***@test.com"
+    // so monitoring/syslog systems don't capture raw PII.
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __seed('AbandonedCarts', []);
     __onInsert(() => { throw new Error('DB insert failed'); });
@@ -43,7 +53,9 @@ describe('wixEcom_onAbandonedCheckoutCreated — structured error logging', () =
     expect(consoleSpy).toHaveBeenCalled();
     const logArgs = consoleSpy.mock.calls[0].join(' ');
     expect(logArgs).toContain('checkout-log-1');
-    expect(logArgs).toContain('alice@test.com');
+    // Redacted form is present; plaintext is not.
+    expect(logArgs).toContain('al***@test.com');
+    expect(logArgs).not.toContain('alice@test.com');
     consoleSpy.mockRestore();
   });
 
