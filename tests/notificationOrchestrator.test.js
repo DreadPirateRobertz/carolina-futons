@@ -7,23 +7,19 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock smsService dynamic import
 const mockSendOrderShippedSMS = vi.fn();
-const mockSendDeliveryConfirmedSMS = vi.fn();
 
 vi.mock('backend/smsService.web', () => ({
   sendOrderShippedSMS: (...args) => mockSendOrderShippedSMS(...args),
-  sendDeliveryConfirmedSMS: (...args) => mockSendDeliveryConfirmedSMS(...args),
 }));
 
 import {
   buildTrackingUrl,
   handleOrderFulfilled,
-  handleDeliveryConfirmed,
 } from '../src/backend/notificationOrchestrator.web.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockSendOrderShippedSMS.mockResolvedValue({ success: true });
-  mockSendDeliveryConfirmedSMS.mockResolvedValue({ success: true });
 });
 
 // ── buildTrackingUrl ────────────────────────────────────────────────
@@ -119,47 +115,6 @@ describe('handleOrderFulfilled', () => {
 
     expect(result.sent).toBe(false);
     expect(result.reason).toBe('sms_disabled');
-  });
-});
-
-// ── handleDeliveryConfirmed ─────────────────────────────────────────
-
-describe('handleDeliveryConfirmed', () => {
-  it('sends delivery confirmed SMS', async () => {
-    const result = await handleDeliveryConfirmed({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-
-    expect(result.sent).toBe(true);
-    expect(mockSendDeliveryConfirmedSMS).toHaveBeenCalledWith({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-  });
-
-  it('returns missing_params without memberId', async () => {
-    const result = await handleDeliveryConfirmed({ orderNumber: 'ORD-001' });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('returns missing_params without orderNumber', async () => {
-    const result = await handleDeliveryConfirmed({ memberId: 'mem-1' });
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('missing_params');
-  });
-
-  it('handles smsService failure gracefully', async () => {
-    mockSendDeliveryConfirmedSMS.mockRejectedValue(new Error('Network error'));
-
-    const result = await handleDeliveryConfirmed({
-      memberId: 'mem-1',
-      orderNumber: 'ORD-001',
-    });
-
-    expect(result.sent).toBe(false);
-    expect(result.reason).toBe('error');
   });
 });
 

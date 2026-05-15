@@ -6,9 +6,6 @@
  * Wiring:
  *  - wixEcom_onOrderFulfilled → handleOrderFulfilled → sendOrderShippedSMS
  *    (live: dispatched from src/backend/events.js via dynamic import)
- *  - UPS delivered status → handleDeliveryConfirmed → sendDeliveryConfirmedSMS
- *    (NOT yet wired: handler is in place but no poller / webhook calls it today.
- *     cf-4x7e.3 tracks whether to retire the handler or land the trigger.)
  *
  * Opt-in gate: SMS only fires if the member has SMS enabled and phone on record.
  * The gate is enforced inside smsService.checkPreferences — callers here do not
@@ -19,7 +16,6 @@
  * Wix Secrets Manager.
  *
  * @requires backend/smsService.web
- * @requires backend/ups-shipping.web
  */
 import { sanitize } from 'backend/utils/sanitize';
 
@@ -62,30 +58,6 @@ export async function handleOrderFulfilled({ memberId, orderNumber, trackingNumb
     return { sent: result.success, reason: result.reason };
   } catch (err) {
     console.error('[notificationOrchestrator] handleOrderFulfilled error:', err);
-    return { sent: false, reason: 'error' };
-  }
-}
-
-/**
- * Handle UPS delivery confirmed event.
- * Sends a "delivery confirmed" SMS to the member.
- *
- * @param {Object} params
- * @param {string} params.memberId - Wix member ID.
- * @param {string} params.orderNumber - Order number.
- * @returns {Promise<{sent: boolean, reason?: string}>}
- */
-export async function handleDeliveryConfirmed({ memberId, orderNumber } = {}) {
-  if (!memberId || !orderNumber) {
-    return { sent: false, reason: 'missing_params' };
-  }
-
-  try {
-    const { sendDeliveryConfirmedSMS } = await import('backend/smsService.web');
-    const result = await sendDeliveryConfirmedSMS({ memberId, orderNumber });
-    return { sent: result.success, reason: result.reason };
-  } catch (err) {
-    console.error('[notificationOrchestrator] handleDeliveryConfirmed error:', err);
     return { sent: false, reason: 'error' };
   }
 }
