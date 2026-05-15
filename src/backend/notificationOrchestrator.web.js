@@ -7,6 +7,13 @@
  *  - wixEcom_onOrderFulfilled → handleOrderFulfilled → sendOrderShippedSMS
  *    (live: dispatched from src/backend/events.js via dynamic import)
  *
+ * History:
+ *  - cf-4x7e.B5.fu (#1337) retired the delivery-confirmed SMS surface
+ *    (handleDeliveryConfirmed + sendDeliveryConfirmedSMS) as orphan-by-
+ *    association after the UPS-delivered trigger never landed. Re-author
+ *    handler + caller together if/when delivery-confirmation SMS becomes
+ *    a requirement again — avoid re-creating the orphan-handler shape.
+ *
  * Opt-in gate: SMS only fires if the member has SMS enabled and phone on record.
  * The gate is enforced inside smsService.checkPreferences — callers here do not
  * need to re-check it.
