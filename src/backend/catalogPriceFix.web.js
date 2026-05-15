@@ -10,6 +10,32 @@
  *
  * CF-azrt: Native Wix gallery price audit
  *
+ * ## ⚠ V1↔V3 sync caveats (cf-3pwy F1 / cf-8c2f)
+ *
+ * This module writes via the Wix Stores **V1** SDK (`wix-stores-backend` →
+ * `products.updateProductFields`). The Next.js front-end (`carolina-futons-web`)
+ * reads through the **V3** SDK (`@wix/auto_sdk_stores_products` → `actualPriceRange`,
+ * `compareAtPriceRange`, `priceData`). Wix synchronizes V1 writes to V3 reads
+ * internally, but two specific gaps apply when this migration runs:
+ *
+ *   1. **price=0 surfaces differently across SDKs.** V1 `price=0` is a number;
+ *      native Wix Pro Gallery shows "Price unavailable". V3 `actualPriceRange`
+ *      may surface as `Out of stock` rather than as `$0.00` display, depending
+ *      on the storefront component. Verified safe in cfutons Velo widgets;
+ *      **NOT verified post-cutover in cfw V3 widgets.** Re-spot-check after
+ *      DNS flip if any call-for-price products still have price=$1 to migrate.
+ *
+ *   2. **Per-variant prices stay frozen.** `products.updateProductFields(id, {price: 0})`
+ *      writes only the parent product price. Variants inherit pricing unless
+ *      they have their own override. If any call-for-price product has variant-level
+ *      prices set in V1, those overrides will continue to surface in V3 reads.
+ *      As of audit date (2026-05-10) no call-for-price product in the catalog
+ *      has variant-level price overrides, but verify before re-running.
+ *
+ * **Pre-cutover guidance**: do not schedule this migration in the cf-3qt.8 cutover
+ * window. Run it well before or well after — never in the same hour as the DNS flip,
+ * to avoid amplifying any V1↔V3 sync lag during the transition.
+ *
  * @requires wix-web-module
  * @requires wix-stores-backend
  */
@@ -73,6 +99,9 @@ export const fixCallForPricePlaceholders = webMethod(
         }
 
         try {
+          // cf-3pwy F1 / cf-8c2f: V1 write — see module-level caveats. The
+          // V1↔V3 sync should propagate `price=0` to the Headless reader,
+          // but per-variant overrides will NOT update from this call.
           await products.updateProductFields(product._id, { price: 0 });
           updated.push(`Updated: ${label} → price=0`);
         } catch (err) {
