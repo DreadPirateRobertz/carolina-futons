@@ -21,7 +21,7 @@
  *    resolved (boolean)
  */
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, redactEmail } from 'backend/utils/sanitize';
 
 // ── CWF ISR Revalidate Helper ─────────────────────────────────────────
 
@@ -118,7 +118,7 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
       recoveryEmailSent: false,
     });
   } catch (err) {
-    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId || 'unknown'}, email: ${buyerEmail || 'unknown'}, error:`, err);
+    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId || 'unknown'}, email: ${redactEmail(buyerEmail)}, error:`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutCreated',
       checkoutId: checkoutId || 'unknown',

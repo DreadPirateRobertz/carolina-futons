@@ -36,7 +36,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
-import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug, redactEmail } from 'backend/utils/sanitize';
 import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
@@ -510,7 +510,7 @@ export const triggerWelcomeSeries = webMethod(
       // with "No contact ID for recipient" (cf-icww F1).
       const cleanContactId = await _resolveContactIdInternal(cleanEmail, cleanName);
       if (!cleanContactId) {
-        console.warn('[emailAutomation] triggerWelcomeSeries skipped — resolveContactId returned null for', cleanEmail);
+        console.warn('[emailAutomation] triggerWelcomeSeries skipped — resolveContactId returned null for', redactEmail(cleanEmail));
         return { success: false, queued: 0 };
       }
 
@@ -1501,7 +1501,7 @@ export const triggerRestockNotifications = webMethod(
           notified++;
         } catch (subErr) {
           failed++;
-          console.warn(`[emailAutomation] Failed to notify subscriber ${sub.email || 'unknown'} for product ${productId}:`, subErr.message);
+          console.warn(`[emailAutomation] Failed to notify subscriber ${redactEmail(sub.email)} for product ${productId}:`, subErr.message);
         }
       }
 

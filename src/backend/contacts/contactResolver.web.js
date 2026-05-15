@@ -30,7 +30,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { contacts } from 'wix-crm-backend';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, redactEmail } from 'backend/utils/sanitize';
 
 /**
  * Resolve (or create) a Wix CRM contact for an email address.
@@ -108,7 +108,7 @@ export async function _resolveContactIdInternal(email, firstName) {
   // resolution covers both.
   const contactId = result?.contactId || result?.contact?._id || result?._id;
   if (!contactId) {
-    console.warn('[contactResolver] appendOrCreateContact returned no contactId for', cleanEmail);
+    console.warn('[contactResolver] appendOrCreateContact returned no contactId for', redactEmail(cleanEmail));
     return null;
   }
   return contactId;

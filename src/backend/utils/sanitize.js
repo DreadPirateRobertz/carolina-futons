@@ -150,3 +150,24 @@ export function validateSlug(slug) {
   const cleaned = slug.trim().toLowerCase().slice(0, 100);
   return /^[a-z0-9-]+$/.test(cleaned) ? cleaned : '';
 }
+
+/**
+ * Redact an email for safe logging — preserves first 2 chars of the local
+ * part + domain so triage can correlate roughly without exposing the full
+ * address. Returns "<redacted>" for non-string / malformed input.
+ *
+ * cf-ewnw: paired with cf-sec1 hashed-keys-at-rest. Logs and rate-limit
+ * buckets should both avoid plaintext PII.
+ *
+ * @param {unknown} email - The email value to redact.
+ * @returns {string} e.g. "jo***@example.com"; "<redacted>" for invalid input.
+ */
+export function redactEmail(email) {
+  if (typeof email !== 'string' || !email) return '<redacted>';
+  const at = email.indexOf('@');
+  if (at < 0) return '<redacted>';
+  const local = email.slice(0, at);
+  const domain = email.slice(at);
+  if (local.length <= 2) return `*${domain}`;
+  return `${local.slice(0, 2)}***${domain}`;
+}
