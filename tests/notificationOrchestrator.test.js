@@ -12,10 +12,17 @@ vi.mock('backend/smsService.web', () => ({
   sendOrderShippedSMS: (...args) => mockSendOrderShippedSMS(...args),
 }));
 
+// cf-4x7e.4: structured logger — we assert it's called with the right context
+// string instead of relying on `console.error` line-grep.
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: vi.fn(),
+}));
+
 import {
   buildTrackingUrl,
   handleOrderFulfilled,
 } from '../src/backend/notificationOrchestrator.web.js';
+import { logError } from 'backend/utils/errorHandler';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -93,7 +100,12 @@ describe('handleOrderFulfilled', () => {
     expect(result.reason).toBe('missing_params');
   });
 
-  it('handles smsService failure gracefully', async () => {
+  // cf-4x7e.4: a send-time failure (Twilio down, network error, etc.) now
+  // reports `reason: 'send_error'` so operators can distinguish it from
+  // module-load failures (`smsService_unavailable`) and missing-params
+  // (`missing_params`) without grepping logs. logError is called with a
+  // context string that names the surface AND the failure stage.
+  it('handles smsService send failure with reason=send_error + logError', async () => {
     mockSendOrderShippedSMS.mockRejectedValue(new Error('Twilio down'));
 
     const result = await handleOrderFulfilled({
@@ -102,7 +114,11 @@ describe('handleOrderFulfilled', () => {
     });
 
     expect(result.sent).toBe(false);
-    expect(result.reason).toBe('error');
+    expect(result.reason).toBe('send_error');
+    expect(logError).toHaveBeenCalledWith(
+      'notificationOrchestrator.handleOrderFulfilled:send',
+      expect.any(Error),
+    );
   });
 
   it('passes through opt-out reason from smsService', async () => {
@@ -115,6 +131,19 @@ describe('handleOrderFulfilled', () => {
 
     expect(result.sent).toBe(false);
     expect(result.reason).toBe('sms_disabled');
+    // Opt-out is a normal `{success:false}` envelope, not an error — logError
+    // must not fire on the happy-path negative.
+    expect(logError).not.toHaveBeenCalled();
+  });
+
+  // cf-4x7e.4: no console.error left behind. Catches a regression where
+  // someone copies the old pattern back in.
+  it('does not call console.error on any path', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSendOrderShippedSMS.mockRejectedValue(new Error('Twilio down'));
+    await handleOrderFulfilled({ memberId: 'mem-1', orderNumber: 'ORD-001' });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 
