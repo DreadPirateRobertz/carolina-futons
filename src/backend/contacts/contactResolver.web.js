@@ -15,8 +15,8 @@
  * for recipient" and the welcome / swatch email never delivered.
  *
  * Permission: Anyone — the helper accepts an arbitrary email and returns a
- * contactId. Callers (subscribeToNewsletter, captureExitIntentEmail,
- * submitSwatchRequest, sendEmail/_sendCustomerContactAutoReply) are already
+ * contactId. Callers (subscribeToNewsletter, submitSwatchRequest,
+ * sendEmail/_sendCustomerContactAutoReply) are already
  * Permissions.Anyone webMethods that rate-limit and validate the email
  * upstream. The helper itself is purely a CRM upsert — no PII beyond what
  * the caller already has.

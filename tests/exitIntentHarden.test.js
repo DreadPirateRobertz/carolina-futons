@@ -200,7 +200,6 @@ describe('submitExitCapture — email without @ is rejected', () => {
     globalThis.sessionStorage.clear();
     vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
-      captureExitIntentEmail: vi.fn().mockResolvedValue({ success: true }),
     }));
   });
 
@@ -253,7 +252,6 @@ describe('submitExitCapture — discountCode from newsletter', () => {
     globalThis.sessionStorage.clear();
     vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
-      captureExitIntentEmail: vi.fn().mockResolvedValue({ success: true }),
     }));
   });
 

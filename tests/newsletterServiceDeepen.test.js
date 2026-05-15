@@ -47,7 +47,6 @@ vi.mock('wix-members-backend', () => ({
 import { __seed, __reset, __onInsert } from './__mocks__/wix-data.js';
 import {
   subscribeToNewsletter,
-  captureExitIntentEmail,
   syncToESP,
   unsubscribeFromESP,
   getESPStatus,
@@ -152,114 +151,7 @@ describe('subscribeToNewsletter', () => {
   });
 });
 
-// ── captureExitIntentEmail ─────────────────────────────────────────
-
-describe('captureExitIntentEmail', () => {
-  it('queues 3 welcome steps and returns discount code', async () => {
-    const inserts = [];
-    __onInsert((col, item) => inserts.push({ col, item }));
-
-    const res = await captureExitIntentEmail('visitor@test.com');
-
-    expect(res).toEqual({ success: true, discountCode: 'WELCOME10', queued: 3 });
-    const queued = inserts.filter(i => i.col === 'EmailQueue');
-    expect(queued).toHaveLength(3);
-    expect(queued[0].item.sequenceStep).toBe(1);
-    expect(queued[1].item.sequenceStep).toBe(2);
-    expect(queued[2].item.sequenceStep).toBe(3);
-  });
-
-  it('step scheduling: 0h, 72h, 168h offsets from now', async () => {
-    const inserts = [];
-    __onInsert((col, item) => inserts.push({ col, item }));
-
-    const before = Date.now();
-    await captureExitIntentEmail('timing@test.com');
-    const after = Date.now();
-
-    const queued = inserts.filter(i => i.col === 'EmailQueue');
-    const t1 = queued[0].item.scheduledFor.getTime();
-    const t2 = queued[1].item.scheduledFor.getTime();
-    const t3 = queued[2].item.scheduledFor.getTime();
-
-    // Step 1 is immediate (within test execution window)
-    expect(t1).toBeGreaterThanOrEqual(before);
-    expect(t1).toBeLessThanOrEqual(after);
-
-    // Step 2 is 72 hours later
-    const h72 = 72 * 60 * 60 * 1000;
-    expect(t2 - t1).toBe(h72);
-
-    // Step 3 is 168 hours later
-    const h168 = 168 * 60 * 60 * 1000;
-    expect(t3 - t1).toBe(h168);
-  });
-
-  it('dedup: already-queued email returns queued: 0', async () => {
-    __seed('EmailQueue', [{
-      _id: 'eq1',
-      recipientEmail: 'already@test.com',
-      sequenceType: 'welcome',
-      sequenceStep: 1,
-    }]);
-
-    const res = await captureExitIntentEmail('already@test.com');
-    expect(res).toEqual({ success: true, discountCode: 'WELCOME10', queued: 0 });
-  });
-
-  it('deduplicates against EmailQueue, not NewsletterSubscribers', async () => {
-    // Email exists in NewsletterSubscribers but NOT in EmailQueue
-    __seed('NewsletterSubscribers', [{ _id: 's1', email: 'sub@test.com' }]);
-    const inserts = [];
-    __onInsert((col, item) => inserts.push({ col, item }));
-
-    const res = await captureExitIntentEmail('sub@test.com');
-    expect(res.queued).toBe(3);
-    expect(inserts.filter(i => i.col === 'EmailQueue')).toHaveLength(3);
-  });
-
-  it('queued items have correct template IDs', async () => {
-    const inserts = [];
-    __onInsert((col, item) => inserts.push({ col, item }));
-
-    await captureExitIntentEmail('tmpl@test.com');
-
-    const queued = inserts.filter(i => i.col === 'EmailQueue');
-    expect(queued[0].item.templateId).toBe('welcome_series_1');
-    expect(queued[1].item.templateId).toBe('welcome_series_2');
-    expect(queued[2].item.templateId).toBe('welcome_series_3');
-  });
-
-  it('queued items carry WELCOME10 discount in variables', async () => {
-    const inserts = [];
-    __onInsert((col, item) => inserts.push({ col, item }));
-
-    await captureExitIntentEmail('vars@test.com');
-
-    const queued = inserts.filter(i => i.col === 'EmailQueue');
-    for (const q of queued) {
-      expect(q.item.variables.discountCode).toBe('WELCOME10');
-    }
-  });
-
-  it('rejects invalid email', async () => {
-    const res = await captureExitIntentEmail('bad');
-    expect(res.success).toBe(false);
-    expect(res.message).toBe('Invalid email format');
-  });
-
-  it('rejects null email', async () => {
-    const res = await captureExitIntentEmail(null);
-    expect(res.success).toBe(false);
-    expect(res.message).toBe('Email is required');
-  });
-
-  it('rejects empty string email', async () => {
-    const res = await captureExitIntentEmail('  ');
-    expect(res.success).toBe(false);
-    expect(res.message).toBe('Email is required');
-  });
-});
+// ──  ─────────────────────────────────────────
 
 // ── unsubscribeFromESP ─────────────────────────────────────────────
 

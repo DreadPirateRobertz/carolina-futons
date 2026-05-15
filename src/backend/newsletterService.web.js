@@ -403,94 +403,10 @@ async function _triggerWelcomeFlowInternal(email, source = '') {
   }
 }
 
-/**
- * Capture an exit-intent email and queue the welcome series into EmailQueue.
- * Deduplicates — skips queueing if the email is already a subscriber.
- *
- * @function captureExitIntentEmail
- * @param {string} email - Visitor email from exit-intent popup
- * @returns {Promise<{success: boolean, discountCode?: string, queued?: number}>}
- * @permission Anyone — captures from anonymous visitors.
- */
-export const captureExitIntentEmail = webMethod(
-  Permissions.Anyone,
-  async (email, options = {}) => {
-    try {
-      if (!email || typeof email !== 'string' || !email.trim()) {
-        return { success: false, message: 'Email is required' };
-      }
-
-      // Honeypot — silent success for bots
-      if (options && options.honeypot) {
-        return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
-      }
-
-      const cleaned = sanitize(email, 254).toLowerCase().trim();
-      if (!validateEmail(cleaned)) {
-        return { success: false, message: 'Invalid email format' };
-      }
-
-      // Dedup against EmailQueue (not NewsletterSubscribers, since subscribeToNewsletter
-      // inserts there first in the submitExitCapture flow).
-      // Checked before rate limit so repeat submissions from already-queued emails
-      // don't consume rate limit quota.
-      const alreadyQueued = await wixData.query('EmailQueue')
-        .eq('recipientEmail', cleaned)
-        .eq('sequenceType', 'welcome')
-        .eq('sequenceStep', 1)
-        .find();
-
-      if (alreadyQueued.items.length > 0) {
-        return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
-      }
-
-      // Rate limit: max 3 submissions per email per hour
-      // NOTE: do NOT forward `options` here — callers can inject { now: 0 } to bypass (CF-xz8y)
-      const rateCheck = await _checkRateLimit(cleaned);
-      if (!rateCheck.allowed) {
-        return { success: false, message: 'Too many requests. Please try again later.' };
-      }
-
-      // cf-trm0: resolve contactId once before queueing the welcome
-      // series. Stage3-velo's exitIntentCapture.js still calls this entry
-      // point (cfutons routes through subscribeToNewsletter → resolveContactId
-      // post-cf-3l0d, but stage3 hasn't caught up yet). Helper returns null
-      // on validation/CRM upstream failure — surface as the same caller-
-      // facing failure shape so the popup can retry/show error.
-      const exitContactId = await _resolveContactIdInternal(cleaned);
-      if (!exitContactId) {
-        console.error('[newsletterService] captureExitIntentEmail: resolveContactId returned null for', cleaned);
-        return { success: false, message: 'Failed to resolve CRM contact for welcome email' };
-      }
-
-      // Queue all 3 welcome series steps into EmailQueue
-      const now = new Date();
-      for (const step of WELCOME_STEPS) {
-        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
-        await wixData.insert('EmailQueue', {
-          templateId: step.templateId,
-          recipientEmail: cleaned,
-          recipientContactId: exitContactId,
-          variables: {
-            discountCode: DISCOUNT_CODE,
-            email: cleaned,
-          },
-          sequenceType: 'welcome',
-          sequenceStep: step.step,
-          status: 'pending',
-          scheduledFor,
-          sentAt: null,
-          attempt: 0,
-          lastError: '',
-          createdAt: now,
-        });
-      }
-
-      logAuditEvent('EmailQueue', 'exit_intent_capture', cleaned, { queued: WELCOME_STEPS.length });
-      return { success: true, discountCode: DISCOUNT_CODE, queued: WELCOME_STEPS.length };
-    } catch (err) {
-      console.error('Exit intent email capture error:', err);
-      return { success: false, message: 'Capture failed. Please try again.' };
-    }
-  }
-);
+// cf-ykmj / cf-4x7e: captureExitIntentEmail SUPERSEDED.
+// Removed 2026-05-15. The exit-intent path now flows entirely through
+// subscribeToNewsletter() — which auto-queues the welcome series via
+// triggerWelcomeSequence() — per src/public/exitIntentCapture.js
+// submitExitCapture() (cf-3l0d Option B). The previously-broken
+// captureExitIntentEmail entrypoint (F1: empty contactId) was already
+// dead at runtime; this commit removes the orphan code + JSDoc.
