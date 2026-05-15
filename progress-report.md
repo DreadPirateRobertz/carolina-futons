@@ -1,5 +1,33 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 20:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 22:30 MT**
+
+## Session 2026-05-15 — Wave 32 (BATCH QUEUE FULLY LOADED)
+
+### Batch merge queue — waiting for Vercel credit reload (~2026-05-17)
+| PR | 5/5 | CI | Notes |
+|----|-----|----|-------|
+| #579 | ✅ | ✅ | CompareBar |
+| #580 | ✅ | ✅ | CI guard |
+| #582 | ✅ | ✅ | twitter:card |
+| #583 | ✅ | ✅ | aria-live mount-fire fix |
+| #584 | ✅ | ✅ | OG sweep 3-bug fix |
+| #585 | ✅ | ✅ | coverage ratchet |
+| #586 | ✅ | ✅ | CONTRIBUTING + TDD standards |
+| #587 | ✅ | ✅ | cfw-wzr CONTRIBUTING |
+| #588 | ✅ | 🔄 | cf-pdp-g1 qty stepper (lint fix a9393b1 pushed, CI running) |
+| #589 | ✅ | 🔄 | cf-gift-g1 recipient meta |
+| #1339 | ✅ | ✅ | cf-o5j5 wave32 audit (CF repo, independent) |
+
+### Fixes shipped this session
+- PR #583: CartTrigger aria-live mount-fire fix (commits 2aa36d5, f3ac1d7)
+- PR #584: OG sweep 3 surgical fixes (commit 8c466f2) — guides coverImage, design-a-room 160-char, /compare canonical
+- PR #588: QuantityStepper `useEffect setState` → update-during-render (lint fix a9393b1)
+
+### Consolidated 6-week roadmap → mayor ✅
+7 crew roadmaps synthesized. Pre-cutover P1 blockers grid + Stilgar gates table sent.
+
+### Stilgar gates (blocking cutover P1s)
+- DNS TTL: 3600 → 60s | UptimeRobot API key | Sentry production | Staging backend publish | FAQ CMS data (Brenda)
 
 ## Session 2026-05-15 — Wave 32 (MERGE WAVE COMPLETE)
 | Done | Detail |
