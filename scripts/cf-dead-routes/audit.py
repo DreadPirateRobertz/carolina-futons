@@ -350,6 +350,57 @@ def cfw_references(name: str, cfw_files: list[Path]) -> tuple[list[str], list[st
     return high, low
 
 
+# cf-eov3 (cf-hpwy v4): module-namespace dispatcher detection.
+#
+# When http-functions.js wires a sub-path dispatcher like:
+#
+#   import * as wishlistServiceModule from 'backend/wishlistService.web';
+#   export async function post_wishlistService(request) {
+#     const method = request.path[0];
+#     if (!ALLOWLIST.has(method)) return notFound(...);
+#     await wishlistServiceModule[method](...args);
+#   }
+#
+# every export of `wishlistService.web.js` is HTTP-reachable via the
+# dispatcher (cfw calls `/_functions/wishlistService/<method>` and the
+# dispatcher forwards). The v3 detector caught this for ALLOWLIST sets
+# whose entries are visible string literals (their `\bNAME\b` matches
+# the backend export name), but a future dispatcher that derives the
+# allowlist from `Object.keys(module)` or an external constants file
+# would slip past the name-grep. v4 closes that gap by treating the
+# dispatch call site itself as the signal and crediting every export
+# of the imported module as wrapped — independent of how the
+# allowlist is expressed.
+NAMESPACE_IMPORT_RE = re.compile(
+    r"""^\s*import\s+\*\s+as\s+(\w+)\s+from\s+['"]backend/([\w./-]+?)(?:\.web)?['"]""",
+    re.MULTILINE,
+)
+
+
+def collect_namespace_dispatchers(http_text: str) -> set[str]:
+    """Return the set of backend module basenames that are HTTP-wrapped via
+    a `import * as <ns> from 'backend/<module>.web'` + `<ns>[<expr>](...)`
+    dispatcher pattern.
+
+    The detector is conservative: a namespace import alone isn't enough —
+    we also require a dispatch site (`<ns>[…]` syntax) to confirm the
+    namespace is actually used to forward calls. A namespace that's only
+    used for dot-notation field access (`<ns>.knownMethod`) does NOT count
+    as a dispatcher; those individual methods are already caught by the
+    name-grep that drives `in_http`.
+    """
+    wrapped: set[str] = set()
+    for match in NAMESPACE_IMPORT_RE.finditer(http_text):
+        ns_var, module_path = match.group(1), match.group(2)
+        # Bracket dispatch: <ns>[<expr>] — the load-bearing pattern.
+        bracket_pat = re.compile(rf"\b{re.escape(ns_var)}\s*\[", re.MULTILINE)
+        if not bracket_pat.search(http_text):
+            continue
+        module_basename = module_path.rsplit("/", 1)[-1]
+        wrapped.add(module_basename)
+    return wrapped
+
+
 def classify_method(
     name: str,
     info: dict,
@@ -391,6 +442,16 @@ def classify_method(
     in_http = bool(
         pat_call.search(http_text) or pat_import.search(http_text)
     )
+    # cf-eov3 (v4): credit methods reachable via a module-namespace
+    # dispatcher even if their name doesn't appear literally in
+    # http-functions.js. The defining module's basename matching the
+    # dispatcher set means cfw can reach the method via
+    # `/_functions/<dispatcher>/<this method>`.
+    in_http_via_dispatcher = bool(
+        dispatcher_modules and defining_module_basename in dispatcher_modules
+    )
+    if in_http_via_dispatcher:
+        in_http = True
     in_events = bool(
         pat_import.search(events_text)
     )
@@ -474,6 +535,11 @@ def classify_method(
         buckets.append("INTERNAL")
     if in_fs_path:
         buckets.append("FILESYSTEM-PATH-REFERENCED")
+    # cf-eov3 (v4): tag dispatcher-wrapped methods so the operator sees
+    # WHY a method is HTTP-EXPOSED even though its name doesn't appear in
+    # http-functions.js literally.
+    if in_http_via_dispatcher:
+        buckets.append("DISPATCHER-WRAPPED")
     if not buckets:
         buckets = ["DEAD"]
 
@@ -533,6 +599,7 @@ def classify_method(
         "suspicious": suspicious,
         "gap_verdict": gap_verdict,
         "in_http": in_http,
+        "in_http_via_dispatcher": in_http_via_dispatcher,
         "in_events": in_events,
         "in_public": in_public,
         "in_pages": in_pages,
@@ -587,10 +654,15 @@ def main() -> int:
         file=sys.stderr,
     )
 
-    # cf-0ziz (v4): detect module-namespace dispatchers in http-functions.js.
-    # Modules dispatched as `<alias>[<key>](...)` have ALL their exports
-    # implicitly wired even without a direct cfw URL match per export name.
+    # cf-0ziz + cf-eov3 (v4): detect module-namespace dispatchers. Run both
+    # strategies and merge: cf-0ziz catches explicit-allowlist dispatchers
+    # (with alias info), cf-eov3 catches runtime-derived allowlists
+    # (Object.keys, external constants). Union both into dispatcher_modules.
     dispatcher_modules = collect_dispatcher_modules(http_text)
+    eov3_dispatchers = collect_namespace_dispatchers(http_text)
+    for mod in eov3_dispatchers:
+        if mod not in dispatcher_modules:
+            dispatcher_modules[mod] = '<namespace>'
     print(
         f"backend modules wired via namespace dispatcher: {len(dispatcher_modules)}",
         file=sys.stderr,
