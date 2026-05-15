@@ -1,7 +1,7 @@
 /**
  * @file unsubscribe.http.test.js
  * @description Tests for POST /_functions/unsubscribe JSON API endpoint and
- * the account-preferences webMethods in unsubscribeService.web.js.
+ * (unsubscribeService.web.js webMethods retired in cf-4x7e.B4)
  *
  * GET /_functions/unsubscribe is covered by tests/unsubscribeEndpoint.test.js.
  * cf-r9tf
@@ -148,8 +148,6 @@ describe('options_unsubscribe', () => {
 
 // ── Account preferences webMethods ───────────────────────────────────────────
 
-import { getEmailOptOutStatus, resubscribeContact } from '../src/backend/unsubscribeService.web.js';
-
 const OPTED_OUT_EMAIL = 'optout@example.com';
 const SUBSCRIBED_EMAIL = 'active@example.com';
 
@@ -161,51 +159,3 @@ function seedUnsubscribes() {
   __seed('ResubscribeRateLimit', []);
 }
 
-describe('getEmailOptOutStatus', () => {
-  beforeEach(seedUnsubscribes);
-
-  it('returns optedOut:true when all-sequence opt-out exists', async () => {
-    const res = await getEmailOptOutStatus(OPTED_OUT_EMAIL);
-    expect(res).toMatchObject({ success: true, optedOut: true });
-  });
-
-  it('returns optedOut:false for email with no opt-out record', async () => {
-    const res = await getEmailOptOutStatus(SUBSCRIBED_EMAIL);
-    expect(res).toMatchObject({ success: true, optedOut: false });
-  });
-
-  it('returns optedOut:false when only a sequence-specific opt-out exists', async () => {
-    resetData();
-    __seed('Unsubscribes', [
-      { _id: 'u2', email: SUBSCRIBED_EMAIL, sequenceType: 'welcome', unsubscribedAt: new Date() },
-    ]);
-    const res = await getEmailOptOutStatus(SUBSCRIBED_EMAIL);
-    expect(res).toMatchObject({ success: true, optedOut: false });
-  });
-
-  it('returns success:false for invalid email format', async () => {
-    const res = await getEmailOptOutStatus('not-an-email');
-    expect(res).toMatchObject({ success: false, optedOut: false });
-  });
-});
-
-describe('resubscribeContact', () => {
-  beforeEach(seedUnsubscribes);
-
-  it('removes all opt-out records for the email', async () => {
-    const res = await resubscribeContact(OPTED_OUT_EMAIL);
-    expect(res).toMatchObject({ success: true });
-    const remaining = __getInserted('Unsubscribes');
-    expect(remaining.some(r => r.email === OPTED_OUT_EMAIL)).toBe(false);
-  });
-
-  it('returns success:true even when no opt-out records exist', async () => {
-    const res = await resubscribeContact(SUBSCRIBED_EMAIL);
-    expect(res).toMatchObject({ success: true });
-  });
-
-  it('returns success:false for invalid email', async () => {
-    const res = await resubscribeContact('bad-email@@');
-    expect(res).toMatchObject({ success: false });
-  });
-});
