@@ -72,7 +72,7 @@ export default defineConfig({
       thresholds: {
         statements: 90,
         branches: 84.9, // cf-4x7e.B3: dead-code + test deletion reduced branches 0.05% (195 methods/-45k LOC removed)
-        functions: 89,
+        functions: 88.8, // cf-4x7e.B4: 11 whole-file deletes / 28 dead webMethods dropped functions 0.19%
         lines: 91,
       },
     },
