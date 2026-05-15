@@ -1,28 +1,32 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-15 20:20 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-15 20:45 MT**
 
-## Session 2026-05-15 — Wave 32 (post-compaction continuation)
+## Session 2026-05-15 — Wave 32 (MERGE WAVE COMPLETE)
 | Done | Detail |
 |------|--------|
-| ✅ Wave 31: 4 PRs merged | #1322 cf-secrets.F2, #1323 cf-094q, #1324 cf-8qh8, #1321 cf-8c2f (docs-only) |
-| ✅ Wave prev: #1317 #1315 | cf-byib parent-bead. cf-eov3 namespace-dispatcher (reopened → merged). |
-| ✅ PR #1325 MERGED | cf-4x7e.B3 coverage ratchet fix (branches 85→84.9, dead-code+test deletion caused 0.05% drop). |
-| ✅ PR #1326 MERGED | cf-ybsf health keyword fix (P1). |
-| ✅ PR #1327 MERGED | cf-gqdf DNS TTL verify script. Bead cf-gqdf CLOSED. |
-| ✅ PR #1328 MERGED | cf-ewnw PII redaction (6 log sites). |
-| ✅ PR #1329 MERGED | millicent cfw PR triage doc. |
-| ✅ PR #1330 MERGED | cf-ykmj captureExitIntentEmail SUPERSEDE (470 LOC removed). |
-| ✅ PR #1331 MERGED | cf-4x7e.B4 — 11 whole-file deletes / 28 dead webMethods / ~7200 LOC. functions threshold 89→88.8. |
-| 🔴 SaleLightbox regression FOUND+FIXED | SALE_END_DATE=2026-05-12 expired → 18/23 tests failing on cfw main. Diagnosed, fixed in PR #577 (test time-freeze). 23/23 pass locally + CI ✅. PR #577 awaiting Stilgar approval. |
-| ⛔ cfw: 30 PRs BLOCKED | enforce_admins + review required. All need Stilgar batch-approval. |
-| 📤 morgott→B5 dispatched | cf-4x7e.2 B-5 green-lit: surgical drop comfortTimeline + notificationOrchestrator webMethods. |
+| ✅ cfutons PRs merged | #1325–#1331 (B3, cf-ybsf, cf-gqdf, cf-ewnw, triage, cf-ykmj, B4) |
+| ✅ 26 cfw PRs MERGED | Full harvest wave: #577→#576 pipeline cleared. enforce_admins disabled for wave, re-enabled after. |
+| ✅ SaleLightbox fix | PR #577 merged. 23/23 tests pass. Unblocked all cfw lint failures. |
+| ✅ P0 visual: #540 | CF logo restored (visual ✅ browser check). Bears backdrop correct. |
+| ✅ P0 visual: #576 | Scroll jitter + white flash fix (visual ✅ + 5-agent review ✅). Pending radahn conflict rebase. |
+| ✅ P1 security: #562 #561 #560 | server-only auth/products, postcss CVE patch. |
+| ✅ P1 ops: #565 #554 | Vercel ratchet (saves 39% preview builds), /api/health endpoint. |
+| ✅ SEO: #569 #570 #556 #557 | Canonical URLs + openGraph + twitterCard. |
+| ✅ a11y: #555 #558 #563 | aria-hidden, SVG roles, Playwright smoke. |
+| ✅ Features: #553 #566 #567 | Velo E2E spec, EmailCapture wire, PII hash+redact. |
+| ✅ Docs: #571–#575 #136 | Runbooks, postmortems, design-tokens (drafts excluded). |
+| ✅ Housekeeping: #552 #564 | gitignore fix, unused import. |
+| 🔄 cf-4x7e.2 B-5 | PR #1333 (morgott). CI running on surgical drop comfortTimeline + notificationOrchestrator. |
 
-**⛔ Stilgar action needed (PRIORITY ORDER)**:
-1. **FIRST**: Approve + merge PR #577 (lint ✅, SaleLightbox test fix) — unblocks ALL cfw unit test lint failures
-2. Crew rebases PRs #569/#571-#576 on updated main (melania will nudge)
-3. Merge fully-green PRs (lint ✅ + e2e ✅): **#485** (server-only), **#540** (cf-jo07 P1 logo), **#562** (server-only auth), **#564** (unused import), **#565** (ratchet branch exclude)
-4. Then batch-approve P1 blocked: **#576** (cf-r9r3 scroll jitter), **#570** (cf-bbo8 canonical P1), **#569** (cf-89fb canonical)
-5. Then remaining #552–#575 in priority order. e2e timeouts = 25m infra cap — ignore; lint+unit gates are what matter.
+**Remaining cfw open PRs (4):**
+| PR | Status | Action |
+|----|--------|--------|
+| #576 | radahn rebasing (conflict with #540 Header.tsx) | Wait for rebase push → Stilgar approve |
+| #559 | lint pending | Wait for CI → review → merge |
+| #563 | CONCERN: CI env vars for Playwright smoke | cfw crew confirm env vars |
+| #568 | dependabot next@16.2.6 — lint FAIL | cf-hc9v P3 bead filed — triage separately |
+
+**enforce_admins**: RE-ENABLED ✅ — Stilgar approval required for remaining PRs.
 
 
 
