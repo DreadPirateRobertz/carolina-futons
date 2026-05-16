@@ -14,6 +14,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { getTodayET } from 'backend/utils/dateUtils';
+import { logError } from 'backend/utils/errorHandler';
 
 const CHATBOT_SESSIONS = 'ChatbotSessions';
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -250,7 +251,7 @@ export const chatWithAssistant = webMethod(
         await wixData.insert(CHATBOT_SESSIONS, updatedRecord);
       }
     } catch (err) {
-      console.error('[gamificationChatbot] CMS write failed:', err);
+      logError('[gamificationChatbot] CMS write failed', err);
       // Non-fatal — fall through and return reply
     }
 

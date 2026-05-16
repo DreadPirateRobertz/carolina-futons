@@ -27,6 +27,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Wix CRM Dashboard Template-ID Map ──────────────────────────────────
 // Stilgar registered the production templates with opaque IDs different
@@ -415,7 +416,7 @@ export const queuePromotionalEmail = webMethod(
 
       return { success: true, queued, skipped };
     } catch (err) {
-      console.error('[emailTemplates] Error queuing promotional email:', err);
+      logError('[emailTemplates] queuePromotionalEmail failed', err);
       return { success: false, queued: 0, skipped: 0 };
     }
   }

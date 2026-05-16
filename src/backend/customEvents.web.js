@@ -13,6 +13,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Canonical Event Taxonomy ────────────────────────────────────────
 // GA4 custom event names. All lowercase, underscore-separated.
@@ -142,7 +143,7 @@ export const trackCustomEvent = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[customEvents] trackCustomEvent error:', err);
+      logError('[customEvents] trackCustomEvent failed', err);
       return { success: false };
     }
   }
