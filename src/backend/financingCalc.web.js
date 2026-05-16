@@ -13,6 +13,7 @@
  * Embed on product page via $w('#financingWidget') or page code import.
  */
 import { Permissions, webMethod } from 'wix-web-module';
+import { logError } from 'backend/utils/errorHandler';
 
 // ─── Configuration ──────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ export const getFinancingWidget = webMethod(
         widgetData: buildWidgetData(p, terms, afterpay),
       };
     } catch (err) {
-      console.error('getFinancingWidget error:', err);
+      logError('financingCalc.getFinancingWidget', err);
       return { success: false, error: 'Unable to calculate financing options' };
     }
   }
@@ -116,7 +117,7 @@ export const calculateForTerm = webMethod(
         description: plan.description,
       };
     } catch (err) {
-      console.error('calculateForTerm error:', err);
+      logError('financingCalc.calculateForTerm', err);
       return { success: false, error: 'Unable to calculate payment' };
     }
   }
@@ -139,7 +140,7 @@ export const getAfterpayBreakdown = webMethod(
       const info = calculateAfterpay(p);
       return { success: true, ...info };
     } catch (err) {
-      console.error('getAfterpayBreakdown error:', err);
+      logError('financingCalc.getAfterpayBreakdown', err);
       return { success: false, error: 'Unable to calculate Afterpay breakdown' };
     }
   }
@@ -177,7 +178,7 @@ export const getCartFinancing = webMethod(
         thresholdMessage,
       };
     } catch (err) {
-      console.error('getCartFinancing error:', err);
+      logError('financingCalc.getCartFinancing', err);
       return { success: false, error: 'Unable to calculate cart financing' };
     }
   }
