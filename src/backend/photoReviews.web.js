@@ -171,7 +171,7 @@ export const moderatePhotoReview = webMethod(
       const allowed = PHOTO_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
-        logError(`photoReviews:moderatePhotoReview-blockedTransition review=${cleanId} from=${currentStatus} to=${newStatus} by=${memberId}`, null);
+        logError(`photoReviews:moderateReview-blockedTransition review=${cleanId} from=${currentStatus} to=${newStatus} by=${memberId}`, null);
         return {
           success: false,
           error: `Cannot ${cleanAction} a review with status '${currentStatus}'.`,
@@ -186,7 +186,7 @@ export const moderatePhotoReview = webMethod(
       await wixData.update('PhotoReviews', existing);
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      logError('photoReviews:moderatePhotoReview', err);
+      logError('photoReviews:moderateReview', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }

@@ -192,8 +192,8 @@ const FILES = {
     tags: [
       'photoReviews:submitPhotoReview-gamificationEvent',
       'photoReviews:submitPhotoReview',
-      'photoReviews:moderatePhotoReview-blockedTransition',
-      'photoReviews:moderatePhotoReview',
+      'photoReviews:moderateReview-blockedTransition',
+      'photoReviews:moderateReview',
       'photoReviews:getPhotoGallery',
     ],
   },
