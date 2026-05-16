@@ -19,7 +19,18 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from categorize import categorize, summary_histogram, deep_audit_candidates
+from categorize import (
+    categorize,
+    summary_histogram,
+    deep_audit_candidates,
+    substantive_subhistogram,
+    is_high_value_audit_target,
+)
+
+# cf-6amf.1 (cf-6amf.fu1): prefix display order — feat first (highest
+# audit value), then fix/refactor/perf, then chore/test/style, then docs
+# and "other" trailing. Stable across runs so wave-over-wave diffs read.
+_SUB_BUCKET_ORDER = ("feat", "fix", "refactor", "perf", "chore", "test", "style", "docs", "other")
 
 
 def render(prs: list[dict]) -> str:
@@ -35,6 +46,17 @@ def render(prs: list[dict]) -> str:
         lines.append(f"| {cat} | {histogram[cat]} |")
     lines.append(f"| **Total** | **{len(prs)}** |")
     lines.append("")
+
+    # cf-6amf.1: substantive sub-bucket by conventional-commit prefix.
+    sub = substantive_subhistogram(prs)
+    if histogram["substantive"] > 0:
+        lines.append("### Substantive sub-bucket (by commit prefix)\n")
+        lines.append("| Prefix | Count |")
+        lines.append("|---|---:|")
+        for prefix in _SUB_BUCKET_ORDER:
+            if sub[prefix] > 0:
+                lines.append(f"| {prefix} | {sub[prefix]} |")
+        lines.append("")
 
     # Per-PR table
     lines.append("## All PRs (categorized)\n")
@@ -59,8 +81,15 @@ def render(prs: list[dict]) -> str:
             diff = f"+{pr.get('additions', 0)}/-{pr.get('deletions', 0)}"
             sha = (pr.get("mergeCommit") or {}).get("oid", "")[:8]
             sha_note = f" (merge `{sha}`)" if sha else ""
-            lines.append(f"- **#{pr['number']}** {diff}{sha_note}: {pr.get('title', '')}")
+            # cf-6amf.1 + radahn obs#3: surface high-value targets so reviewers
+            # can prioritize feat+(wix|stripe|api-route) PRs for the spy-assertion
+            # dimension check.
+            priority = " 🎯" if is_high_value_audit_target(pr) else ""
+            lines.append(f"- **#{pr['number']}**{priority} {diff}{sha_note}: {pr.get('title', '')}")
         lines.append("")
+        if any(is_high_value_audit_target(pr) for pr in candidates):
+            lines.append("> 🎯 = priority-1 deep audit (radahn obs#3): `feat:` PR touching `src/lib/wix`, `src/lib/stripe`, or `src/api/*/route.ts` — likely introduces a new external-SDK callsite that needs a spy assertion in tests.")
+            lines.append("")
         lines.append("### Audit dimensions per candidate")
         lines.append("")
         lines.append("1. **JSDoc/block-doc on new exports** — for each `export const NAME = ...` or `export [async] function NAME(...)`, is there a comment explaining intent?")

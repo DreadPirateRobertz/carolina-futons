@@ -168,3 +168,170 @@ def test_summary_histogram_counts_each_category():
         "housekeeping": 1,
         "substantive": 2,
     }
+
+
+# ── cf-6amf.1: substantive sub-classification by commit prefix ─────
+
+
+def _pr_titled(number, title, files, additions=200, deletions=10):
+    return {
+        "number": number,
+        "title": title,
+        "additions": additions,
+        "deletions": deletions,
+        "files": [{"path": p} for p in files],
+    }
+
+
+def test_commit_prefix_feat_with_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("feat(cf-9fqc): observability dashboard GREEN") == "feat"
+
+
+def test_commit_prefix_fix_no_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("fix: align UptimeRobot keyword to /api/health") == "fix"
+
+
+def test_commit_prefix_chore_with_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("chore(cf-4x7e.B5): surgical drop dead modules") == "chore"
+
+
+def test_commit_prefix_recognizes_refactor_test_perf_docs_style():
+    cat = _import_cat()
+    assert cat.commit_prefix("refactor(foo): extract helper") == "refactor"
+    assert cat.commit_prefix("test(cf-5dto.2): combinatorial tests") == "test"
+    assert cat.commit_prefix("perf(cf-gsca): React.cache wrap") == "perf"
+    assert cat.commit_prefix("docs(cf-zn5b): parity audit") == "docs"
+    assert cat.commit_prefix("style: prettier sweep") == "style"
+
+
+def test_commit_prefix_breaking_change_marker():
+    """`feat!: ...` and `feat(scope)!: ...` are conventional-commits BREAKING markers."""
+    cat = _import_cat()
+    assert cat.commit_prefix("feat!: drop legacy API") == "feat"
+    assert cat.commit_prefix("feat(api)!: drop legacy v1") == "feat"
+
+
+def test_commit_prefix_unknown_returns_other():
+    cat = _import_cat()
+    assert cat.commit_prefix("WIP: in-progress thing") == "other"
+    assert cat.commit_prefix("Merge branch 'main'") == "other"
+    assert cat.commit_prefix("just a sentence with no prefix") == "other"
+    assert cat.commit_prefix("") == "other"
+
+
+def test_commit_prefix_is_case_insensitive_on_prefix_token():
+    """GitHub UI doesn't lowercase titles — accept FEAT/Fix gracefully."""
+    cat = _import_cat()
+    assert cat.commit_prefix("Fix(scope): something") == "fix"
+    assert cat.commit_prefix("FEAT: big thing") == "feat"
+
+
+def test_substantive_subhistogram_only_counts_substantive_prs():
+    """Sub-classification applies ONLY to the substantive bucket.
+    A docs-only PR with a `feat:` prefix is still pure-docs and should be excluded."""
+    cat = _import_cat()
+    prs = [
+        # substantive
+        _pr_titled(1, "feat(cf-9fqc): obs dashboard", ["src/lib/foo.ts"], additions=300),
+        _pr_titled(2, "feat(cf-54st): track-order page", ["src/app/track-order/page.tsx"], additions=200),
+        _pr_titled(3, "fix(cf-ewnw): redact emails", ["src/backend/util.js"], additions=80),
+        _pr_titled(4, "chore(cf-4x7e): retire dead modules", ["src/backend/x.web.js"], additions=2, deletions=8054),
+        _pr_titled(5, "test(cf-5dto.2): precedence tests", ["scripts/x.py", "scripts/y.py"], additions=167),
+        _pr_titled(6, "refactor: extract helper", ["src/lib/foo.ts"], additions=90),
+        _pr_titled(7, "WIP: experimental thing", ["src/lib/bar.ts"], additions=200),  # other
+        # not substantive (excluded entirely)
+        _pr_titled(8, "feat(cf-zn5b): parity audit", ["docs/audit.md"], additions=111),  # pure-docs
+        _pr_titled(9, "test(cf-x): only tests", ["tests/x.test.js"], additions=60),       # test-only
+    ]
+    h = cat.substantive_subhistogram(prs)
+    assert h == {
+        "feat": 2,
+        "fix": 1,
+        "refactor": 1,
+        "chore": 1,
+        "test": 1,
+        "perf": 0,
+        "docs": 0,
+        "style": 0,
+        "other": 1,
+    }
+
+
+def test_substantive_subhistogram_keys_stable_with_all_zeros():
+    """Empty PR list still returns the full key set for stable table rendering."""
+    cat = _import_cat()
+    h = cat.substantive_subhistogram([])
+    assert set(h.keys()) == {"feat", "fix", "refactor", "chore", "test", "perf", "docs", "style", "other"}
+    assert all(v == 0 for v in h.values())
+
+
+# ── cf-6amf.1 + radahn obs#3: high-value audit target flag ─────────
+
+
+def test_high_value_audit_target_feat_touching_wix_lib():
+    cat = _import_cat()
+    pr = _pr_titled(
+        1, "feat(cf-gsca): wrap getCollectionBySlug",
+        ["src/lib/wix/products.ts", "src/__tests__/get-collection-by-slug-cache.test.ts"],
+        additions=120,
+    )
+    assert cat.is_high_value_audit_target(pr) is True
+
+
+def test_high_value_audit_target_feat_touching_api_route():
+    cat = _import_cat()
+    pr = _pr_titled(
+        2, "feat(cf-54st.1): post_lookupOrder HTTP wrapper",
+        ["src/api/track-order/route.ts"],
+        additions=179,
+    )
+    assert cat.is_high_value_audit_target(pr) is True
+
+
+def test_high_value_audit_target_feat_touching_stripe_lib():
+    cat = _import_cat()
+    pr = _pr_titled(
+        3, "feat(payments): stripe webhook handler",
+        ["src/lib/stripe/webhook.ts"],
+        additions=140,
+    )
+    assert cat.is_high_value_audit_target(pr) is True
+
+
+def test_high_value_audit_target_false_for_feat_outside_sdk_paths():
+    cat = _import_cat()
+    pr = _pr_titled(
+        4, "feat(ui): new button component",
+        ["src/components/ui/Button.tsx"],
+        additions=80,
+    )
+    assert cat.is_high_value_audit_target(pr) is False
+
+
+def test_high_value_audit_target_false_for_non_feat_prefix_in_sdk_paths():
+    """`chore` retiring dead Wix modules isn't a spy-assertion candidate
+    (no new external SDK callsite); fix/refactor are also out per the
+    bead — feat is the surface-introducing prefix."""
+    cat = _import_cat()
+    pr = _pr_titled(
+        5, "chore(cf-4x7e): retire dead wix module",
+        ["src/lib/wix/dead-module.ts"],
+        additions=0, deletions=400,
+    )
+    assert cat.is_high_value_audit_target(pr) is False
+
+
+def test_high_value_audit_target_false_for_non_substantive_pr():
+    """A 5-LOC fix to src/lib/wix is trivial → not a deep-audit target,
+    even though it touches a flagged path."""
+    cat = _import_cat()
+    pr = _pr_titled(
+        6, "feat(cf-x): tiny wix tweak",
+        ["src/lib/wix/products.ts"],
+        additions=3, deletions=2,
+    )
+    # Trivial PR (≤12 LOC), so it shouldn't surface as a deep-audit target.
+    assert cat.is_high_value_audit_target(pr) is False

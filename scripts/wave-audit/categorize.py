@@ -124,6 +124,90 @@ def deep_audit_candidates(prs: list[dict]) -> list[dict]:
     return [pr for pr in prs if categorize(pr) == "substantive"]
 
 
+# cf-6amf.1 (cf-6amf.fu1): sub-classify the substantive bucket by
+# conventional-commit prefix so deep-audit can prioritize feat-touching-
+# external-SDK PRs ahead of chore/refactor. Pilot wave (2026-05-15) had a
+# 71% substantive ratio; a flat sub-bucket of 24 PRs is too coarse to
+# guide attention.
+
+# Conventional-commit prefix tokens we recognize. Anything else maps to
+# "other" (e.g. WIP, Merge, free-form titles). The trailing `(scope)`,
+# optional `!` for breaking change, and `:` are all stripped before the
+# prefix token is read.
+_CONVENTIONAL_PREFIXES = frozenset({
+    "feat", "fix", "refactor", "chore", "test", "perf", "docs", "style",
+})
+
+# Match `prefix`, `prefix(scope)`, `prefix!`, or `prefix(scope)!` followed
+# by `:` at the start of the title. Case-insensitive on the prefix token.
+_COMMIT_PREFIX_RE = re.compile(
+    r"^([A-Za-z]+)(?:\([^)]*\))?!?:\s",
+)
+
+# Paths whose new feat-prefixed PRs likely introduce external-SDK call
+# sites — flagged for the radahn dimension-#4 spy-assertion check.
+_HIGH_VALUE_PATH_RE = re.compile(
+    r"^(?:"
+    r"src/lib/wix(?:/|$)"
+    r"|src/lib/stripe(?:/|$)"
+    r"|src/api/[^/]+/route\.ts$"
+    r")"
+)
+
+
+def commit_prefix(title: str) -> str:
+    """Extract the conventional-commit prefix from a PR title.
+
+    Returns the lowercased prefix token (feat/fix/refactor/chore/test/perf/
+    docs/style) when the title matches `prefix(...)?!?: ...`. Returns
+    "other" for unrecognized prefixes, freeform titles, merge commits,
+    and empty strings.
+    """
+    if not title:
+        return "other"
+    m = _COMMIT_PREFIX_RE.match(title)
+    if not m:
+        return "other"
+    token = m.group(1).lower()
+    return token if token in _CONVENTIONAL_PREFIXES else "other"
+
+
+def substantive_subhistogram(prs: list[dict]) -> dict[str, int]:
+    """Return a dict with substantive-bucket counts keyed by commit prefix.
+
+    Only PRs that categorize as "substantive" are counted; pure-docs/test-
+    only/trivial/housekeeping PRs are excluded entirely (even if their
+    title carries a conventional-commit prefix). The full key set always
+    appears so downstream tables render with stable columns.
+    """
+    out = {p: 0 for p in _CONVENTIONAL_PREFIXES}
+    out["other"] = 0
+    for pr in prs:
+        if categorize(pr) != "substantive":
+            continue
+        out[commit_prefix(pr.get("title", ""))] += 1
+    return out
+
+
+def is_high_value_audit_target(pr: dict) -> bool:
+    """True when a substantive PR carries `feat:` AND touches a path that
+    typically introduces an external-SDK call site (src/lib/wix, src/lib/
+    stripe, src/api/<name>/route.ts).
+
+    These are the deep-audit candidates that most likely need a spy-
+    assertion per radahn obs#3 — a missing spy on a new Wix/Stripe
+    callsite is the kind of gap cf-o5j5/cf-6amf was designed to surface.
+    """
+    if categorize(pr) != "substantive":
+        return False
+    if commit_prefix(pr.get("title", "")) != "feat":
+        return False
+    return any(
+        _HIGH_VALUE_PATH_RE.match(f["path"])
+        for f in pr.get("files", [])
+    )
+
+
 def summary_histogram(prs: list[dict]) -> dict[str, int]:
     """Return a dict with counts per category. Keys appear even for zero
     counts so downstream consumers can format a stable table."""
