@@ -76,7 +76,7 @@ export const getMyLoyaltyAccount = webMethod(
         accountId: account._id,
       };
     } catch (err) {
-      console.error('Error getting loyalty account:', err);
+      logError('[loyaltyService] getMyLoyaltyAccount failed', err);
       return { points: 0, tier: 'Bronze', nextTier: 'Silver', progress: 0, pointsToNext: 500 };
     }
   }
@@ -106,7 +106,7 @@ export const getAvailableRewards = webMethod(
           type: r.type || 'discount',
         }));
     } catch (err) {
-      console.error('Error getting rewards:', err);
+      logError('[loyaltyService] getAvailableRewards failed', err);
       return [];
     }
   }
@@ -158,7 +158,7 @@ export const redeemReward = webMethod(
         message: `Redeemed: ${reward.name}`,
       };
     } catch (err) {
-      console.error('Error redeeming reward:', err);
+      logError('[loyaltyService] redeemReward failed', err);
       return { success: false, message: 'Failed to redeem reward' };
     }
   }
@@ -292,7 +292,7 @@ export const getLeaderboard = webMethod(
 
       return { entries };
     } catch (err) {
-      console.error('Error getting leaderboard:', err);
+      logError('[loyaltyService] getLeaderboard failed', err);
       return { entries: [] };
     }
   }
@@ -585,7 +585,7 @@ export async function checkStreakAchievements(memberId, currentStreakDays) {
     const earned = new Set(existing.items.map(r => r.milestone));
     return reached.filter(m => !earned.has(m));
   } catch (err) {
-    console.error('Error checking streak achievements:', err);
+    logError('[loyaltyService] _checkStreakAchievements failed', err);
     return [];
   }
 }
@@ -619,7 +619,7 @@ export async function insertStreakAchievement(memberId, milestone, streakDays) {
     }, { suppressAuth: true });
   } catch (err) {
     if (isDuplicateKeyError(err)) return; // concurrent insert — already recorded
-    console.error('Error inserting streak achievement:', err);
+    logError('[loyaltyService] _insertStreakAchievement failed', err);
     throw err;
   }
 }
@@ -656,7 +656,7 @@ export const getMyAchievements = webMethod(
       return { achievements };
     } catch (err) {
       // Fail-open: return empty list rather than surface errors to the client
-      console.error('Error getting achievements:', err);
+      logError('[loyaltyService] getMyAchievements failed', err);
       return defaults;
     }
   }
