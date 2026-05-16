@@ -57,10 +57,13 @@ jobs:
 
       - name: Run audit.py
         if: steps.skip.outputs.skip != 'true'
+        # millicent micro-obs#1 (PR #1357): tee audit.py stderr to a log so
+        # degraded-mode signals (e.g. "N files skipped due to parse errors")
+        # don't get silently dropped. Parity with dead-code-guard.yml.
         run: |
           set -euo pipefail
           mkdir -p /tmp/cf-dead-routes
-          python3 scripts/cf-dead-routes/audit.py 2>/dev/null
+          python3 scripts/cf-dead-routes/audit.py 2>&1 | tee /tmp/cf-dead-routes/audit-stderr.log
 
       - name: Decide ratchet
         if: steps.skip.outputs.skip != 'true'

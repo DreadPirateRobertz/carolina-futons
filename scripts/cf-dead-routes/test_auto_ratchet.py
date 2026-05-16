@@ -36,14 +36,19 @@ def _write_baseline(path: Path, dead: int, ucd: int) -> None:
     }, indent=2))
 
 
-def _write_results(path: Path, dead: int, ucd: int) -> None:
-    """Mirror audit.py's results.json structure: list of row dicts."""
+def _write_results(path: Path, dead: int, extra_ucd: int) -> None:
+    """Mirror audit.py's results.json structure: list of row dicts.
+
+    `dead` controls the DEAD-bucket rows (each also carries the
+    UNUSED-CAN-DELETE verdict per audit.py's verdict chain).
+    `extra_ucd` adds rows with UNUSED-CAN-DELETE verdict but a non-DEAD
+    bucket (INTERNAL stand-in) — these are independent UCD rows beyond
+    the DEAD-bucket ones. Result: live_counts returns dead=N, ucd=N+M.
+    """
     rows = []
     for i in range(dead):
         rows.append({"bucket": ["DEAD"], "gap_verdict": "UNUSED-CAN-DELETE"})
-    for i in range(ucd):
-        # UNUSED-CAN-DELETE in gap_verdict with a non-DEAD bucket → still
-        # counts against the second metric. Use INTERNAL bucket as a stand-in.
+    for i in range(extra_ucd):
         rows.append({"bucket": ["INTERNAL"], "gap_verdict": "UNUSED-CAN-DELETE"})
     path.write_text(json.dumps(rows))
 
@@ -54,7 +59,7 @@ def _write_results(path: Path, dead: int, ucd: int) -> None:
 def test_count_dead_from_results_zero(tmp_path):
     ar = _import_ar()
     results = tmp_path / "r.json"
-    _write_results(results, dead=0, ucd=0)
+    _write_results(results, dead=0, extra_ucd=0)
     counts = ar.live_counts(results)
     assert counts == {"dead": 0, "unused_can_delete": 0}
 
@@ -62,10 +67,11 @@ def test_count_dead_from_results_zero(tmp_path):
 def test_count_dead_nonzero(tmp_path):
     ar = _import_ar()
     results = tmp_path / "r.json"
-    _write_results(results, dead=3, ucd=5)
+    _write_results(results, dead=3, extra_ucd=5)
     counts = ar.live_counts(results)
-    # All DEAD bucket rows also have UNUSED-CAN-DELETE gap_verdict in our
-    # fixture, plus 5 more rows with UNUSED-CAN-DELETE → total 8.
+    # All DEAD bucket rows also carry the UNUSED-CAN-DELETE gap_verdict
+    # per audit.py's verdict chain (the cf-5dto/cf-5dto.fu1 ordering),
+    # plus 5 extra non-DEAD UCD rows → total 8.
     assert counts["dead"] == 3
     assert counts["unused_can_delete"] == 8
 
