@@ -12,6 +12,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const SITE_NAME = 'Carolina Futons';
@@ -125,7 +126,7 @@ export const validateCatalogProduct = webMethod(
         sanitizedName: name,
       };
     } catch (err) {
-      console.error('[pinterestCatalogSync] validateCatalogProduct error:', err);
+      logError('[pinterestCatalogSync] validateCatalogProduct error:', err);
       return { success: false, error: 'Validation failed.', valid: false, issues: [], warnings: [] };
     }
   }
@@ -191,7 +192,7 @@ export const auditCatalog = webMethod(
         issues,
       };
     } catch (err) {
-      console.error('[pinterestCatalogSync] auditCatalog error:', err);
+      logError('[pinterestCatalogSync] auditCatalog error:', err);
       return {
         success: false,
         error: 'Catalog audit failed.',
@@ -235,7 +236,7 @@ export const getCatalogSyncStatus = webMethod(
         issues: audit.issues,
       };
     } catch (err) {
-      console.error('[pinterestCatalogSync] getCatalogSyncStatus error:', err);
+      logError('[pinterestCatalogSync] getCatalogSyncStatus error:', err);
       return {
         success: false,
         error: 'Failed to get catalog sync status.',
@@ -285,7 +286,7 @@ export const mapProductToBoard = webMethod(
       // Default board
       return { success: true, board: 'Futon Living Rooms' };
     } catch (err) {
-      console.error('[pinterestCatalogSync] mapProductToBoard error:', err);
+      logError('[pinterestCatalogSync] mapProductToBoard error:', err);
       return { success: false, error: 'Board mapping failed.', board: null };
     }
   }
@@ -365,7 +366,7 @@ export const generatePinContent = webMethod(
         link,
       };
     } catch (err) {
-      console.error('[pinterestCatalogSync] generatePinContent error:', err);
+      logError('[pinterestCatalogSync] generatePinContent error:', err);
       return { success: false, error: 'Pin content generation failed.', title: '', description: '', hashtags: [], link: '' };
     }
   }
@@ -466,7 +467,7 @@ export const syncCatalogBatch = webMethod(
         });
         processed++;
       } catch (err) {
-        console.error('[pinterestCatalogSync] syncCatalogBatch product error:', err);
+        logError('[pinterestCatalogSync] syncCatalogBatch product error:', err);
         failed++;
         errors.push({
           productId: product?._id || 'unknown',

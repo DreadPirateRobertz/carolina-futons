@@ -22,6 +22,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Plan Definitions ────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ export const checkMembershipStatus = webMethod(
         startDate: membership.startDate,
       };
     } catch (err) {
-      console.error('[premiumMembership] checkMembershipStatus error:', err);
+      logError('[premiumMembership] checkMembershipStatus error:', err);
       return { success: false, error: 'Failed to check membership status' };
     }
   }
@@ -177,7 +178,7 @@ export const getMemberBenefits = webMethod(
         earlyAccess: true,
       };
     } catch (err) {
-      console.error('[premiumMembership] getMemberBenefits error:', err);
+      logError('[premiumMembership] getMemberBenefits error:', err);
       return { success: false, error: 'Failed to get benefits' };
     }
   }
@@ -240,7 +241,7 @@ export const activateMembership = webMethod(
         endDate,
       };
     } catch (err) {
-      console.error('[premiumMembership] activateMembership error:', err);
+      logError('[premiumMembership] activateMembership error:', err);
       return { success: false, error: 'Failed to activate membership' };
     }
   }
@@ -282,7 +283,7 @@ export const cancelMembership = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[premiumMembership] cancelMembership error:', err);
+      logError('[premiumMembership] cancelMembership error:', err);
       return { success: false, error: 'Failed to cancel membership' };
     }
   }
@@ -331,7 +332,7 @@ export const applyMemberDiscount = webMethod(
         finalTotal,
       };
     } catch (err) {
-      console.error('[premiumMembership] applyMemberDiscount error:', err);
+      logError('[premiumMembership] applyMemberDiscount error:', err);
       return { success: false, error: 'Failed to apply discount' };
     }
   }
@@ -395,7 +396,7 @@ export const getPremiumUpsellData = webMethod(
         benefits: PLANS[0].benefits, // same benefits for all plans
       };
     } catch (err) {
-      console.error('[premiumMembership] getPremiumUpsellData error:', err);
+      logError('[premiumMembership] getPremiumUpsellData error:', err);
       return null;
     }
   }

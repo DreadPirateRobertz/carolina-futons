@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const SITE_NAME = 'Carolina Futons';
@@ -92,7 +93,7 @@ export const getProductPinData = webMethod(
 
       return { success: true, meta };
     } catch (err) {
-      console.error('[pinterestRichPins] Error generating product pin data:', err);
+      logError('[pinterestRichPins] Error generating product pin data:', err);
       return { success: false, error: 'Failed to generate product pin data.', meta: null };
     }
   }
@@ -154,7 +155,7 @@ export const getGuidePinData = webMethod(
 
       return { success: true, meta };
     } catch (err) {
-      console.error('[pinterestRichPins] Error generating guide pin data:', err);
+      logError('[pinterestRichPins] Error generating guide pin data:', err);
       return { success: false, error: 'Failed to generate guide pin data.', meta: null };
     }
   }
@@ -192,7 +193,7 @@ export const getPinterestMetaTags = webMethod(
         tagString: tags.join('\n'),
       };
     } catch (err) {
-      console.error('[pinterestRichPins] Error generating meta tags:', err);
+      logError('[pinterestRichPins] Error generating meta tags:', err);
       return { success: false, error: 'Failed to generate meta tags.', tags: [], tagString: '' };
     }
   }
@@ -275,7 +276,7 @@ export const validatePinMarkup = webMethod(
         errors,
       };
     } catch (err) {
-      console.error('[pinterestRichPins] Error validating pin markup:', err);
+      logError('[pinterestRichPins] Error validating pin markup:', err);
       return { success: false, error: 'Failed to validate markup.', valid: false, errors: [] };
     }
   }

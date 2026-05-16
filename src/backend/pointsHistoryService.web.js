@@ -16,6 +16,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'PointsTransactions';
 
@@ -61,7 +62,7 @@ export const getRecentPointsHistory = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[pointsHistoryService] getRecentPointsHistory failed:', err);
+      logError('[pointsHistoryService] getRecentPointsHistory failed:', err);
       return { error: 'Unable to fetch points history' };
     }
   }

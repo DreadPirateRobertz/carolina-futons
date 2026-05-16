@@ -21,6 +21,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'PriceAlerts';
 
@@ -85,7 +86,7 @@ export const subscribe = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[priceAlertService] subscribe error:', err);
+      logError('[priceAlertService] subscribe error:', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -126,7 +127,7 @@ export const unsubscribe = webMethod(
       await wixData.update(COLLECTION, { ...record, active: false });
       return { success: true };
     } catch (err) {
-      console.error('[priceAlertService] unsubscribe error:', err);
+      logError('[priceAlertService] unsubscribe error:', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -160,7 +161,7 @@ export const getSubscribers = webMethod(
 
       return { success: true, subscribers, count: subscribers.length };
     } catch (err) {
-      console.error('[priceAlertService] getSubscribers error:', err);
+      logError('[priceAlertService] getSubscribers error:', err);
       return { success: false, error: 'internal_error' };
     }
   }
