@@ -39,6 +39,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { logError } from 'backend/utils/errorHandler';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -118,7 +119,7 @@ export const submitPhotoReview = webMethod(
 
       return { success: true, id: inserted._id };
     } catch (err) {
-      console.error('[photoReviews] Error submitting photo review:', err);
+      logError('photoReviews:submitPhotoReview', err);
       return { success: false, error: 'Failed to submit photo review.' };
     }
   }
@@ -185,7 +186,7 @@ export const moderatePhotoReview = webMethod(
       await wixData.update('PhotoReviews', existing);
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      console.error('[photoReviews] Error moderating review:', err);
+      logError('photoReviews:moderatePhotoReview', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
@@ -230,7 +231,7 @@ export const getPhotoGallery = webMethod(
 
       return { success: true, photos };
     } catch (err) {
-      console.error('[photoReviews] Error getting photo gallery:', err);
+      logError('photoReviews:getPhotoGallery', err);
       return { success: false, error: 'Failed to load gallery.', photos: [] };
     }
   }
