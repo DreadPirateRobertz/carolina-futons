@@ -119,7 +119,7 @@ export const submitPhotoReview = webMethod(
 
       return { success: true, id: inserted._id };
     } catch (err) {
-      logError('photoReviews:submitPhotoReview', err);
+      logError('photoReviews.submitPhotoReview', err);
       return { success: false, error: 'Failed to submit photo review.' };
     }
   }
@@ -186,7 +186,7 @@ export const moderatePhotoReview = webMethod(
       await wixData.update('PhotoReviews', existing);
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      logError('photoReviews:moderatePhotoReview', err);
+      logError('photoReviews.moderatePhotoReview', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
@@ -231,7 +231,7 @@ export const getPhotoGallery = webMethod(
 
       return { success: true, photos };
     } catch (err) {
-      logError('photoReviews:getPhotoGallery', err);
+      logError('photoReviews.getPhotoGallery', err);
       return { success: false, error: 'Failed to load gallery.', photos: [] };
     }
   }
