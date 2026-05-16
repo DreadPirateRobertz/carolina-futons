@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:15 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:28 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -22,8 +22,8 @@
 | cfutons #1381 | cfutons | docs(cf-czdw): Sentry ISR alert runbook ✅ (admin-merged 04:55 MT) |
 | cfw #707 | cfw | docs(cf-czdw): Sentry ISR alert spec — cfw side ✅ (admin-merged 05:07 MT) |
 | cfw #709 | cfw | docs(cf-h345.2): Sentry alert filter spec (blaidd) ✅ (admin-merged 05:13 MT) |
-| cfw #708 | cfw | fix(cf-no2d): cart e2e fixture short-circuit — 5-crew reviewed, e2e pending |
-| cfw #710 | cfw | test(cf-h345.4): PDP ISR cache-hit stub — 5-crew reviewed, CI pending |
+| cfw #708 | cfw | fix(cf-no2d): cart e2e fixture short-circuit ✅ (admin-merged 05:28 MT, e2e=cancelled) |
+| cfw #710 | cfw | test(cf-h345.4): PDP ISR cache-hit stub — 5-crew reviewed, e2e pending |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)

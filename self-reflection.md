@@ -952,3 +952,23 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - When a squash-merge branch was rebased onto a file that had just received new content (from another squash), the second squash's conflict resolution often drops the new content. The symptom is: tests import a function that doesn't exist in main. Diagnosis: `git show <squash-commit> -- <file> | grep "^-"` reveals what was deleted. Fix: restore the deleted block + commit to main before any downstream rebases.
 - Cross-rig illustration assets: the cfutons web illustration system (illustrations.js, contactIllustrations.js, MountainSkyline.js etc.) is already much further along than expected. Always check src/public/ before scoping illustration work from scratch.
 - Illustration consultation flow: solicit input via nudge with 10-min timeout, build proposal in parallel (don't wait synchronously), fold any replies into the final doc before submission.
+
+## Session 2026-05-16 (Merge drain + staleness tooling extension)
+
+### What worked well
+- Stale scanner extended to BLOCKED beads (not just in_progress): `● cf-` grep pattern correctly targets only status-blocked entries (not priority markers). 0 stale beads on sweep.
+- bd comments add (not bd comment) — correct syntax found via --help; decision brief posted to cf-0klm.
+- Closing duplicate beads (cf-h345.2, cf-h345.3) before they accumulated noise.
+- Batch-merging cfw PRs (#707, #709 together; waiting for #708, #710 together).
+- Correct enforce_admins bypass pattern applied cleanly to cfutons; cfw doesn't need it.
+
+### Gaps
+- Wrong timestamps in progress report: was writing "17:xx MT" (UTC as if local time) instead of actual "05:xx MT". Fixed mid-session but bad data went to git for a few commits.
+- Prematurely closed cf-h345.2 (blaidd's bead) thinking it was a duplicate of cf-czdw (morgott's). They were different doc files. The PR (#709) had already shipped so no harm done, but the bead closure was hasty.
+- e2e tests on cfw PRs taking 25+ minutes — should account for this in batch-merge timing. Don't trigger multiple PR branches simultaneously if e2e slots are limited.
+- pm-workflow.md timestamps (from earlier session) used the wrong MT times throughout.
+
+### Pattern notes
+- bd comments vs bd comment: always `bd comments add <bead-id> "message"` not `bd comment`.
+- Date -u to verify actual UTC, then convert to MT (MDT=UTC-6 in May, MST=UTC-7 in Nov-Mar).
+- When merging two specs on the same topic from different crew: note the discrepancy in the 5-crew review and flag for Stilgar consolidation, don't block the merge.
