@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:30 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:25 MT**
 
 ## Session 2026-05-15 — Wave 32 (FULL OUTPUT SESSION)
 
@@ -51,19 +51,33 @@
 ### Wave 32b cfw PRs — reviewed 2026-05-16 00:30 MT (all 5/5 APPROVE)
 | PR | 5/5 | Notes |
 |----|-----|-------|
-| #599 | ✅ | cf-eqaj compare-change-error (19 tests, self-heal on parse-error) |
-| #601 | ✅ | cf-lmwq a11y wave 2 — PLPControls + ProductCard focus-visible |
-| #602 | ✅ | cf-f9o1 customTextFields defense + addItemAction Sentry |
-| #603 | ✅ | cfw-0nt guest returns API POST /api/returns/submit |
-| #604 | ✅ | cf-94l search pagination (build on #597) |
-| #605 | ✅ | cf-978m a11y wave 3 — PLPPagination + GiftCardPicker + PhotoSubmitForm |
-| #606 | ✅ | cfw-9to /returns/start + StartReturnForm |
-| #607 | ✅ | coverage ratchet (+3 statements/branches/functions, +4 lines) |
-| #609 | ✅ | cf-8ys6 sibling cart Sentry — merge after #602 |
-| #610 | ✅ | cfw-lgc OrderWarrantyCta on /order-confirmation |
-| #612 | ✅ | cfw-di0 /refund-policy → permanentRedirect(/returns) |
-| #608 | ❌ | CLOSED — duplicate of #609 |
-| #611 | ⚠️ | DUPLICATE of #609 — close before merge |
+| #599 | ✅ MERGED | cf-eqaj compare-change-error (19 tests, self-heal on parse-error) |
+| #601 | ✅ MERGED | cf-lmwq a11y wave 2 — PLPControls + ProductCard focus-visible |
+| #602 | ✅ MERGED | cf-f9o1 customTextFields defense + addItemAction Sentry |
+| #603 | ✅ MERGED | cfw-0nt guest returns API POST /api/returns/submit |
+| #604 | ✅ MERGED | cf-94l search pagination |
+| #605 | ✅ MERGED | cf-978m a11y wave 3 — PLPPagination + GiftCardPicker + PhotoSubmitForm |
+| #606 | ✅ CLOSED | cfw-9to (rebased as #624) |
+| #607 | ✅ MERGED | coverage ratchet |
+| #608 | ❌ CLOSED | duplicate of #609 |
+| #609 | ✅ MERGED | cf-8ys6 sibling cart Sentry |
+| #610 | ✅ OPEN | cfw-lgc OrderWarrantyCta — 5/5 APPROVE, ready to merge |
+| #611 | ❌ CLOSED | duplicate of #609 |
+| #612 | ✅ OPEN | cfw-di0 /refund-policy → permanentRedirect(/returns) — 5/5 APPROVE |
+| #613 | ✅ CLOSED | a11y(cf-uoe) role=status — closed |
+| #615 | ✅ OPEN | cf-fd94 G-7 P1 Track order link — 5/5 APPROVE (+ PM) |
+| #616 | ✅ OPEN | cf-puqx syncCartSession Sentry — 9 APPROVE |
+| #617 | ✅ OPEN | cfw-kg3 /faq filter+search — 6 APPROVE |
+| #618 | ✅ OPEN | CI coverage ratchet — 6 APPROVE |
+| #620 | ✅ OPEN | cf-369 CompareBar COMPARE_MIN gate — 12 APPROVE |
+| #621 | ✅ OPEN | cfw-r0i /shipping LocalBusiness JSON-LD — 12 APPROVE |
+| #622 | ✅ OPEN | cf-0t9 /compare/popular-futons indexable landing — 12 APPROVE |
+| #623 | ✅ MERGED | cf-fd94 track order (alternate) |
+| #624 | ✅ MERGED | cfw-9to /returns/start (rebased #606) |
+| #625 | ✅ OPEN | cf-33a QuickView on /search rows — 12 APPROVE |
+| #626 | ✅ OPEN | cf-5qv7 CartDrawer coupon discount display — 7 APPROVE |
+| #627 | ✅ OPEN | cf-puqx wave 2 Sentry visitor-client — 15 APPROVE |
+| #628 | ✅ MERGED | cf-94l /search pagination + tab count |
 
 CF repo #1346 ✅ MERGED: cf-hpwy v5 detector (morgott) — DEAD=0 confirmed, 3 FP blind spots closed
 
