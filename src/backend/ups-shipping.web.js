@@ -33,6 +33,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import { brand, business, shippingConfig } from 'public/sharedTokens.js';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Configuration ───────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ async function getUPSToken() {
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('UPS OAuth error:', error);
+    logError('[ups-shipping] getOAuthToken failed', error);
     throw new Error('Failed to authenticate with UPS');
   }
 
@@ -172,7 +173,7 @@ async function getBaseUrl() {
   let sandbox = false;
   try {
     sandbox = (await getSecret('UPS_SANDBOX')) === 'true';
-  } catch (e) { console.error('[ups-shipping] Failed to retrieve UPS_SANDBOX setting:', e.message); }
+  } catch (e) { logError('[ups-shipping] UPS_SANDBOX-secret-read failed', e); }
   return sandbox
     ? 'https://wwwcie.ups.com/api'
     : 'https://onlinetools.ups.com/api';
@@ -298,7 +299,7 @@ export const getUPSRates = webMethod(
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('UPS Rate API error:', response.status, errorText);
+        logError('[ups-shipping] getShippingRates UPS-Rate-API non-2xx', new Error(`status=${response.status} body=${errorText}`));
         return getUPSFallbackRates(destinationAddress.postalCode);
       }
 
@@ -324,7 +325,7 @@ export const getUPSRates = webMethod(
       }).sort((a, b) => a.cost - b.cost);
 
     } catch (err) {
-      console.error('Error getting UPS rates:', err);
+      logError('[ups-shipping] getShippingRates failed', err);
       return getUPSFallbackRates(destinationAddress?.postalCode);
     }
   }
@@ -497,7 +498,7 @@ export const createShipment = webMethod(
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('UPS Shipment API error:', response.status, errorText);
+        logError('[ups-shipping] createShipment UPS-Shipment-API non-2xx', new Error(`status=${response.status} body=${errorText}`));
         throw new Error(`UPS shipment creation failed: ${response.status}`);
       }
 
@@ -533,7 +534,7 @@ export const createShipment = webMethod(
         billingWeight: shipmentResult.BillingWeight?.Weight,
       };
     } catch (err) {
-      console.error('Error creating UPS shipment:', err);
+      logError('[ups-shipping] createShipment failed', err);
       return {
         success: false,
         error: 'Unable to create shipment. Please try again or contact support.',
@@ -579,7 +580,7 @@ export const trackShipment = webMethod(
       );
 
       if (!response.ok) {
-        console.error('UPS Tracking API error:', response.status);
+        logError('[ups-shipping] trackShipment UPS-Tracking-API non-2xx', new Error(`status=${response.status}`));
         return {
           success: false,
           error: 'Unable to retrieve tracking information',
@@ -619,7 +620,7 @@ export const trackShipment = webMethod(
         })),
       };
     } catch (err) {
-      console.error('Error tracking UPS shipment:', err);
+      logError('[ups-shipping] trackShipment failed', err);
       return {
         success: false,
         error: 'Unable to retrieve tracking information',
@@ -677,7 +678,7 @@ export const validateAddress = webMethod(
       });
 
       if (!response.ok) {
-        console.error('UPS address validation API returned', response.status);
+        logError('[ups-shipping] validateAddress UPS-AddressValidation-API non-2xx', new Error(`status=${response.status}`));
         return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
       }
 
@@ -704,7 +705,7 @@ export const validateAddress = webMethod(
 
       return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
     } catch (err) {
-      console.error('Address validation error:', err);
+      logError('[ups-shipping] validateAddress failed', err);
       return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
     }
   }
