@@ -22,6 +22,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { colors } from 'public/sharedTokens.js';
+import { logError } from 'backend/utils/errorHandler';
 
 // Afterpay configuration
 const AFTERPAY_CONFIG = {
@@ -68,7 +69,7 @@ export const getPaymentOptions = webMethod(
 
       return { success: true, price: numPrice, ...options };
     } catch (err) {
-      console.error('getPaymentOptions error:', err);
+      logError('paymentOptions:getPaymentOptions', err);
       return { success: false, error: 'Unable to calculate payment options' };
     }
   }
@@ -88,7 +89,7 @@ export const getAfterpayMessage = webMethod(
       const info = getAfterpayInfo(numPrice);
       return { success: true, ...info };
     } catch (err) {
-      console.error('getAfterpayMessage error:', err);
+      logError('paymentOptions:getAfterpayMessage', err);
       return { success: false, error: 'Unable to calculate Afterpay message' };
     }
   }
@@ -143,7 +144,7 @@ export const getBatchPaymentBadges = webMethod(
 
       return { success: true, badges };
     } catch (err) {
-      console.error('getBatchPaymentBadges error:', err);
+      logError('paymentOptions:getBatchPaymentBadges', err);
       return { success: false, error: 'Unable to calculate payment badges' };
     }
   }
@@ -202,7 +203,7 @@ export const getCheckoutPaymentSummary = webMethod(
 
       return { success: true, summary };
     } catch (err) {
-      console.error('getCheckoutPaymentSummary error:', err);
+      logError('paymentOptions:getCheckoutPaymentSummary', err);
       return { success: false, error: 'Unable to calculate payment summary' };
     }
   }
@@ -267,7 +268,7 @@ export const getInstallmentCalculation = webMethod(
         tierLabel: tier.label,
       };
     } catch (err) {
-      console.error('getInstallmentCalculation error:', err);
+      logError('paymentOptions:getInstallmentCalculation', err);
       return { success: false, error: 'Unable to calculate installments' };
     }
   }
