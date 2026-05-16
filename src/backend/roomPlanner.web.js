@@ -27,6 +27,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -106,7 +107,7 @@ export const createRoomLayout = webMethod(
       const inserted = await wixData.insert('RoomLayouts', record);
       return { success: true, id: inserted._id, shareId };
     } catch (err) {
-      console.error('[roomPlanner] Error creating room layout:', err);
+      logError('roomPlanner:createRoomLayout', err);
       return { success: false, error: 'Failed to create layout.' };
     }
   }
@@ -193,7 +194,7 @@ export const addProductToLayout = webMethod(
         dimensions: { width: actualWidth, depth: actualHeight, label: dims.label },
       };
     } catch (err) {
-      console.error('[roomPlanner] Error adding product to layout:', err);
+      logError('roomPlanner:addProductToLayout', err);
       return { success: false, error: 'Failed to update layout.' };
     }
   }
@@ -255,7 +256,7 @@ export const getLayoutPreview = webMethod(
         },
       };
     } catch (err) {
-      console.error('[roomPlanner] Error getting layout preview:', err);
+      logError('roomPlanner:getLayoutPreview', err);
       return { success: false, error: 'Failed to load layout.', layout: null };
     }
   }
@@ -294,7 +295,7 @@ export const shareLayout = webMethod(
 
       return { success: true, shareUrl };
     } catch (err) {
-      console.error('[roomPlanner] Error sharing layout:', err);
+      logError('roomPlanner:shareLayout', err);
       return { success: false, error: 'Failed to update sharing.' };
     }
   }
@@ -335,7 +336,7 @@ export const saveLayout = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[roomPlanner] Error saving layout:', err);
+      logError('roomPlanner:saveLayout', err);
       return { success: false, error: 'Failed to save layout.' };
     }
   }
@@ -361,7 +362,7 @@ export const getProductDimensions = webMethod(
 
       return { success: true, products };
     } catch (err) {
-      console.error('[roomPlanner] Error getting product dimensions:', err);
+      logError('roomPlanner:getProductDimensions', err);
       return { success: false, error: 'Failed to load dimensions.', products: [] };
     }
   }
