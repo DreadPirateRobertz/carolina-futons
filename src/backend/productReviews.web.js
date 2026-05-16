@@ -13,6 +13,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const REVIEWS_COLLECTION = 'Reviews';
 const PHOTO_REVIEWS_COLLECTION = 'PhotoReviews';
@@ -104,7 +105,7 @@ export const getReviewSummary = webMethod(
         recommendRate,
       };
     } catch (err) {
-      console.error('[productReviews] getReviewSummary error:', err);
+      logError('[productReviews] getReviewSummary failed', err);
       return {
         averageRating: 0, totalReviews: 0, totalPhotos: 0,
         breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, recommendRate: 0,
@@ -223,7 +224,7 @@ export const getUnifiedReviews = webMethod(
         hasMore: safeOffset + safeLimit < total,
       };
     } catch (err) {
-      console.error('[productReviews] getUnifiedReviews error:', err);
+      logError('[productReviews] getUnifiedReviews failed', err);
       return { reviews: [], total: 0, hasMore: false };
     }
   }
@@ -290,7 +291,7 @@ export const getReviewHighlights = webMethod(
         reviewCount: summary.totalReviews,
       };
     } catch (err) {
-      console.error('[productReviews] getReviewHighlights error:', err);
+      logError('[productReviews] getReviewHighlights failed', err);
       return { topReview: null, topPhoto: null, averageRating: 0, reviewCount: 0 };
     }
   }
@@ -360,7 +361,7 @@ export const getBatchReviewSummaries = webMethod(
 
       return summaries;
     } catch (err) {
-      console.error('[productReviews] getBatchReviewSummaries error:', err);
+      logError('[productReviews] getBatchReviewSummaries failed', err);
       return {};
     }
   }
@@ -434,7 +435,7 @@ export const getModerationQueue = webMethod(
         total: combined.length,
       };
     } catch (err) {
-      console.error('[productReviews] getModerationQueue error:', err);
+      logError('[productReviews] getModerationQueue failed', err);
       return { reviews: [], total: 0 };
     }
   }

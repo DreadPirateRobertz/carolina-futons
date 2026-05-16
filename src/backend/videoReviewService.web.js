@@ -38,6 +38,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, isWixMediaUrl } from 'backend/utils/sanitize';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
+import { logError } from 'backend/utils/errorHandler';
 
 /** @public — consumed by Dallas mobile SDK */
 export const VIDEO_REVIEWS_COLLECTION = 'VideoReviews';
@@ -112,7 +113,7 @@ export const submitVideoReview = webMethod(
 
       return { success: true, reviewId: record._id };
     } catch (err) {
-      console.error('[videoReviewService] submitVideoReview error:', err);
+      logError('[videoReviewService] submitVideoReview failed', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -160,7 +161,7 @@ export const getVideoReviews = webMethod(
 
       return { success: true, reviews, totalCount: result.totalCount ?? reviews.length };
     } catch (err) {
-      console.error('[videoReviewService] getVideoReviews error:', err);
+      logError('[videoReviewService] getVideoReviews failed', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
@@ -209,7 +210,7 @@ export const moderateVideoReview = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[videoReviewService] moderateVideoReview error:', err);
+      logError('[videoReviewService] moderateVideoReview failed', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -250,7 +251,7 @@ export const getProductVideoReviews = webMethod(
 
       return { success: true, reviews };
     } catch (err) {
-      console.error('[videoReviewService] getProductVideoReviews error:', err);
+      logError('[videoReviewService] getProductVideoReviews failed', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
@@ -279,7 +280,7 @@ export const getVideoReviewCount = webMethod(
 
       return { success: true, count };
     } catch (err) {
-      console.error('[videoReviewService] getVideoReviewCount error:', err);
+      logError('[videoReviewService] getVideoReviewCount failed', err);
       return { success: false, count: 0, error: 'internal_error' };
     }
   }
