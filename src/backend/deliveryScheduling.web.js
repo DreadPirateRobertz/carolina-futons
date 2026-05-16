@@ -34,6 +34,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit, hashRateLimitKey } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 import { validateSchema } from 'backend/utils/validateSchema';
 import { sendDeliveryBookingConfirmationSms } from 'backend/deliveryNotifications.web';
 
@@ -137,7 +138,7 @@ export const getAvailableDeliveryWindows = webMethod(
 
       return slots;
     } catch (err) {
-      console.error('Error getting delivery windows:', err);
+      logError('[deliveryScheduling] getAvailableDeliveryWindows failed', err);
       return [];
     }
   }
@@ -245,7 +246,7 @@ export const reserveDeliveryWindow = webMethod(
         },
       };
     } catch (err) {
-      console.error('Error reserving delivery window:', err);
+      logError('[deliveryScheduling] reserveDeliveryWindow failed', err);
       return { success: false, message: 'Failed to reserve delivery window' };
     }
   }
@@ -298,7 +299,7 @@ export const getAvailableDeliverySlots = webMethod(
 
       return slots;
     } catch (err) {
-      console.error('Error getting delivery slots:', err);
+      logError('[deliveryScheduling] getAvailableDeliverySlots failed', err);
       return [];
     }
   }
@@ -408,12 +409,12 @@ export const scheduleDelivery = webMethod(
           orderId,
           date,
           timeWindow,
-        }).catch(err => console.error('[deliveryScheduling] SMS confirmation fire failed:', err?.message));
+        }).catch(err => logError('[deliveryScheduling] scheduleDelivery SMS-confirmation fire failed', err));
       }
 
       return { success: true, scheduleId: schedule._id };
     } catch (err) {
-      console.error('Error scheduling delivery:', err);
+      logError('[deliveryScheduling] scheduleDelivery failed', err);
       return { success: false, message: 'Failed to schedule delivery' };
     }
   }
@@ -451,7 +452,7 @@ export const getMyDeliverySchedule = webMethod(
         status: s.status,
       }));
     } catch (err) {
-      console.error('Error getting delivery schedule:', err);
+      logError('[deliveryScheduling] getMyDeliverySchedule failed', err);
       return [];
     }
   }
@@ -579,7 +580,7 @@ export const getAvailableAppointmentSlots = webMethod(
 
       return slots;
     } catch (err) {
-      console.error('Error getting appointment slots:', err);
+      logError('[deliveryScheduling] getAvailableAppointmentSlots failed', err);
       return [];
     }
   }
@@ -709,7 +710,7 @@ export const bookAppointment = webMethod(
         },
       };
     } catch (err) {
-      console.error('Error booking appointment:', err);
+      logError('[deliveryScheduling] bookAppointment failed', err);
       return { success: false, message: 'Failed to book appointment' };
     }
   }
@@ -762,7 +763,7 @@ export const cancelAppointment = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('Error cancelling appointment:', err);
+      logError('[deliveryScheduling] cancelAppointment failed', err);
       return { success: false, message: 'Failed to cancel appointment' };
     }
   }
@@ -804,7 +805,7 @@ export const getUpcomingAppointments = webMethod(
         notes: a.notes,
       }));
     } catch (err) {
-      console.error('Error getting upcoming appointments:', err);
+      logError('[deliveryScheduling] getUpcomingAppointments failed', err);
       return [];
     }
   }
