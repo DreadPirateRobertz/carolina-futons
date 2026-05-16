@@ -43,6 +43,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, isWixMediaUrl } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const SESSION_COLLECTION = 'StyleConsultantSessions';
 
@@ -482,7 +483,7 @@ export const getStyleConsultation = webMethod(
     try {
       session = await lookupSession(cleanKey);
     } catch (err) {
-      console.error('[styleConsultant] Session lookup failed:', err?.message ?? err);
+      logError('styleConsultant:sessionLookup', err);
       return { success: false, error: 'Session lookup failed. Please try again.', errorCode: 'AI_ERROR' };
     }
 
@@ -498,7 +499,7 @@ export const getStyleConsultation = webMethod(
       styleTags = aiResult.styleTags;
       explanation = aiResult.explanation;
     } catch (err) {
-      console.error('[styleConsultant] Claude API call failed:', err?.message ?? err);
+      logError('styleConsultant:claudeApi', err);
       return { success: false, error: 'Style analysis unavailable. Please try again later.', errorCode: 'AI_ERROR' };
     }
 
@@ -507,7 +508,7 @@ export const getStyleConsultation = webMethod(
     try {
       recommendations = await getProductRecommendations(styleTags);
     } catch (err) {
-      console.error('[styleConsultant] Product matching failed:', err?.message ?? err);
+      logError('styleConsultant:productMatching', err);
       return { success: false, error: 'Could not fetch recommendations. Please try again.', errorCode: 'AI_ERROR' };
     }
 
@@ -515,7 +516,7 @@ export const getStyleConsultation = webMethod(
     try {
       await upsertSession(session, cleanKey, updatedCounts, textInput, photoUrl, recommendations);
     } catch (err) {
-      console.error('[styleConsultant] Session upsert failed:', err?.message ?? err);
+      logError('styleConsultant:sessionUpsert', err);
     }
 
     if (recommendations.length === 0) {
