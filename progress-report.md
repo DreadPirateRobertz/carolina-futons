@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:05 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:35 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -16,11 +16,14 @@
 | cfutons #1375 | cfutons | fix(cf-g79m): emailAutomation logError tag normalization ×6 ✅ |
 | cfutons #1376 | cfutons | chore(cf-b8n8): allowlist 5 non-bead cf-* tokens ✅ |
 | cfutons #1377 | cfutons | feat(cf-4hys): pre-dispatch staleness checker (TDD ×10) ✅ |
+| cfutons #1378 | cfutons | docs(cf-v4py): fixture-OFF E2E specs (rennala static deliverable) ✅ |
+| cfutons #1379 | cfutons | feat(cf-sufo): stale scanner → BLOCKED + cfw repo ✅ |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
 - cfutons #1369, #1370 (duplicates/superseded)
-- cf-8r7v, cf-v6zo, cf-47nm, cf-ajvr, cf-b8n8, cf-g79m, cf-4hys beads CLOSED
+- cf-8r7v, cf-v6zo, cf-47nm, cf-ajvr, cf-b8n8, cf-g79m, cf-4hys, cf-v4py, cf-0oj5, cf-sufo beads CLOSED
+- cf-z901 (P2) filed: triggerTransactionalEmail missing endpoint — PM/mayor decision needed
 
 ### PRs still in flight
 | PR | Repo | Status |
