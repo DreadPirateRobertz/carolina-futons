@@ -122,7 +122,7 @@ export const getRelatedProducts = webMethod(
         })),
       };
     } catch (err) {
-      logError('guideSeoService:getRelatedProducts', err);
+      logError('[guideSeoService] getRelatedProducts', err);
       return { success: false, products: [] };
     }
   }
@@ -203,7 +203,7 @@ export const getGuidePageSeoData = webMethod(
         relatedGuides: guidesResult.success ? guidesResult.guides : [],
       };
     } catch (err) {
-      logError('guideSeoService:getGuidePageSeoData', err);
+      logError('[guideSeoService] getGuidePageSeoData', err);
       return { success: false, howToSchema: null, relatedProducts: [], relatedGuides: [] };
     }
   }
