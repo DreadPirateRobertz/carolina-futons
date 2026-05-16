@@ -13,6 +13,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
 import { CLUSTERS, PILLAR_CONTENT, GUIDES_URL, SITE_URL } from 'backend/utils/topicClusterData';
+import { logError } from 'backend/utils/errorHandler';
 const PUBLISHER_NAME = 'Carolina Futons';
 
 // ── Topic Cluster Definitions ─────────────────────────────────────────
@@ -58,7 +59,7 @@ export const getTopicCluster = webMethod(
         },
       };
     } catch (err) {
-      console.error('[topicClusters] Error getting topic cluster:', err);
+      logError('[topicClusters] Error getting topic cluster', err);
       return { success: false, error: 'Failed to load topic cluster.', cluster: null };
     }
   }
@@ -145,7 +146,7 @@ export const getTopicClusterPage = webMethod(
         },
       };
     } catch (err) {
-      console.error('[topicClusters] Error loading cluster page:', pillarSlug, err.name, err.message, err);
+      logError(`[topicClusters] Error loading cluster page ${pillarSlug}`, err);
       return { success: false, error: 'Failed to load cluster page.', page: null };
     }
   }
@@ -201,7 +202,7 @@ export const getClusterForPost = webMethod(
 
       return { success: true, cluster: null };
     } catch (err) {
-      console.error('[topicClusters] Error resolving cluster for post:', err);
+      logError('[topicClusters] Error resolving cluster for post', err);
       return { success: false, error: 'Failed to resolve cluster.', cluster: null };
     }
   }
@@ -332,7 +333,7 @@ export const getSchemaMarkup = webMethod(
 
       return { success: true, schemas };
     } catch (err) {
-      console.error('[topicClusters] Error generating schema markup:', err);
+      logError('[topicClusters] Error generating schema markup', err);
       return { success: false, error: 'Failed to generate schemas.', schemas: {} };
     }
   }
@@ -463,7 +464,7 @@ export const getSEOScore = webMethod(
         checks,
       };
     } catch (err) {
-      console.error('[topicClusters] Error calculating SEO score:', err);
+      logError('[topicClusters] Error calculating SEO score', err);
       return { success: false, error: 'Failed to calculate SEO score.', score: 0, maxScore: 0, checks: [] };
     }
   }
@@ -532,7 +533,7 @@ export const getSitemapData = webMethod(
         },
       };
     } catch (err) {
-      console.error('[topicClusters] Error generating sitemap data:', err);
+      logError('[topicClusters] Error generating sitemap data', err);
       return { success: false, error: 'Failed to generate sitemap.', entries: [], stats: null };
     }
   }
