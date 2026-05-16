@@ -6,6 +6,14 @@ name: dead-code-regression-guard
 # per cf-69fi acceptance). Week-2+ flips to --strict via a follow-up bead.
 
 on:
+  # Path-filter rationale (millicent micro-flag 2 / cf-69fi PR #1354 review):
+  # the v5 detector only finds dead webMethods in src/backend/, with callers
+  # in src/public/, src/pages/, or the detector's own scripts. Filtering to
+  # these paths skips doc-only / test-only / cfw-only PRs that can't
+  # introduce a dead-code regression. Lighter on CI minutes; broader scope
+  # would be defensible if the false-skip rate ever materializes, but the
+  # current detector coverage means new dead code MUST touch one of these
+  # paths. Re-evaluate when the detector's input surface broadens.
   pull_request:
     branches: [main]
     paths:
