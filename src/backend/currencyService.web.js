@@ -69,7 +69,7 @@ export const getExchangeRates = webMethod(
 
       return { success: true, rates };
     } catch (err) {
-      console.error('getExchangeRates error:', err);
+      logError('currencyService:getexchangeratesError', err);
       return { success: true, rates: { ...FALLBACK_RATES }, fallback: true };
     }
   }
@@ -121,7 +121,7 @@ export const convertPrice = webMethod(
 
       return { success: true, convertedAmount: rounded, currency: to };
     } catch (err) {
-      console.error('convertPrice error:', err);
+      logError('currencyService:convertpriceError', err);
       return { success: false, error: 'Currency conversion failed' };
     }
   }
@@ -154,7 +154,7 @@ export const formatLocalizedPrice = webMethod(
 
       return { success: true, formatted };
     } catch (err) {
-      console.error('formatLocalizedPrice error:', err);
+      logError('currencyService:formatlocalizedpriceError', err);
       return { success: false, error: 'Price formatting failed' };
     }
   }
@@ -175,7 +175,7 @@ export const getSupportedCurrencies = webMethod(
       }));
       return { success: true, currencies };
     } catch (err) {
-      console.error('getSupportedCurrencies error:', err);
+      logError('currencyService:getsupportedcurrenciesError', err);
       return { success: false, error: 'Failed to get supported currencies' };
     }
   }
