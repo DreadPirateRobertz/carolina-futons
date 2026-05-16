@@ -252,7 +252,7 @@ export const submitPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      logError('[priceMatchService] submitPriceMatchRequest failed', err);
+      logError('priceMatchService:submitRequest', err);
       return { success: false, message: 'Failed to submit price match request' };
     }
   }
@@ -292,7 +292,7 @@ export const getMyPriceMatches = webMethod(
         })),
       };
     } catch (err) {
-      logError('[priceMatchService] getMyPriceMatches failed', err);
+      logError('priceMatchService:listPriceMatches', err);
       return { requests: [] };
     }
   }
@@ -337,7 +337,7 @@ export const getPriceMatchById = webMethod(
         },
       };
     } catch (err) {
-      logError('[priceMatchService] getPriceMatchById failed', err);
+      logError('priceMatchService:getPriceMatch', err);
       return { success: false, message: 'Failed to fetch price match request' };
     }
   }
@@ -395,7 +395,7 @@ export const reviewPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      logError('[priceMatchService] reviewPriceMatchRequest failed', err);
+      logError('priceMatchService:reviewRequest', err);
       return { success: false, message: 'Failed to review price match request' };
     }
   }
@@ -445,7 +445,7 @@ export const getPriceMatchStats = webMethod(
 
       return { stats };
     } catch (err) {
-      logError('[priceMatchService] getPriceMatchStats failed', err);
+      logError('priceMatchService:getStats', err);
       return {
         stats: {
           total: 0,
