@@ -100,7 +100,7 @@ cf-69fi.fu3 eligibility pr=<N> single-file=<bool> downward=<bool> tests=<bool> a
 4. **Audit trail:** can a forensic reviewer reconstruct what was auto-merged + why? Partially — the PR description includes the live counts + the eligibility-check log line; the bot identity is in commit author. **But** the `audit-stderr.log` + `results.json` artifacts that motivated the ratchet are retained only **14 days** per the cf-69fi `dead-code-guard.yml` setting. After that, an incident post-mortem looking back at a 3-week-old auto-merged ratchet finds the snapshot gone. **(millicent concern #3.)** Two mitigations to pick between:
    - **Option α:** bump artifact retention to **90 days** specifically for auto-ratchet artifacts (workflow conditional).
    - **Option β:** inline the **full bucket tally** (verbatim audit.py stderr) into the auto-ratchet PR description, so the snapshot survives in git history regardless of artifact retention.
-   Option β has the better forensic property (git history is forever) but bloats PR bodies. Option α is cheaper but bounded. The implementation PR should pick one; mayor's preference welcomed.
+   Option β has the better forensic property (git history is forever) but bloats PR bodies. Option α is cheaper but bounded. **godfrey CR preference (PR #1360):** Option β — git history is permanent, PR body bloat is bounded (bucket tally is ~30 lines), wave-audit ritual consumption easier inline since auditors don't need to fetch separately-stored artifacts. Default implementation: Option β unless mayor overrides.
 
 ### Alternatives
 
