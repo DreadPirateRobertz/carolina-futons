@@ -168,3 +168,214 @@ def test_summary_histogram_counts_each_category():
         "housekeeping": 1,
         "substantive": 2,
     }
+
+
+# ── cf-6amf.1 (cf-6amf.fu1): substantive sub-classification ─────────────────
+
+
+def _pr_with_title(number, title, files, additions=200, deletions=20):
+    """Variant of _pr that lets the test pin a specific commit-prefix title."""
+    return {
+        "number": number,
+        "title": title,
+        "additions": additions,
+        "deletions": deletions,
+        "files": [{"path": p} for p in files],
+    }
+
+
+# ── commit_prefix ──────────────────────────────────────────────────
+
+
+def test_commit_prefix_feat_no_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("feat: add gallery") == "feat"
+
+
+def test_commit_prefix_feat_with_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("feat(cf-g640): warranty gate") == "feat"
+
+
+def test_commit_prefix_fix_with_scope():
+    cat = _import_cat()
+    assert cat.commit_prefix("fix(cf-8xw2): Promise.allSettled migration") == "fix"
+
+
+def test_commit_prefix_refactor():
+    cat = _import_cat()
+    assert cat.commit_prefix("refactor(plp): extract helper") == "refactor"
+
+
+def test_commit_prefix_chore():
+    cat = _import_cat()
+    assert cat.commit_prefix("chore(cf-4x7e.B5): drop dead webMethods") == "chore"
+
+
+def test_commit_prefix_test():
+    cat = _import_cat()
+    assert cat.commit_prefix("test(cf-o5j5.1): OG snapshot backfill") == "test"
+
+
+def test_commit_prefix_perf():
+    cat = _import_cat()
+    assert cat.commit_prefix("perf(cf-gsca): wrap with React cache") == "perf"
+
+
+def test_commit_prefix_docs_prefix():
+    cat = _import_cat()
+    assert cat.commit_prefix("docs(audits): wave-audit-2026-05-15") == "docs"
+
+
+def test_commit_prefix_style():
+    cat = _import_cat()
+    assert cat.commit_prefix("style: prettier sweep") == "style"
+
+
+def test_commit_prefix_case_insensitive():
+    cat = _import_cat()
+    # Conventional commits are lowercase but real titles drift.
+    assert cat.commit_prefix("FEAT: shout case") == "feat"
+
+
+def test_commit_prefix_unrecognized_returns_other():
+    cat = _import_cat()
+    # cf-x: doesn't open with a recognized prefix.
+    assert cat.commit_prefix("cf-x: some adhoc work") == "other"
+
+
+def test_commit_prefix_empty_returns_other():
+    cat = _import_cat()
+    assert cat.commit_prefix("") == "other"
+    assert cat.commit_prefix(None) == "other"
+
+
+def test_commit_prefix_whitespace_only_returns_other():
+    cat = _import_cat()
+    assert cat.commit_prefix("   \t  ") == "other"
+
+
+# ── deep_audit_priority ────────────────────────────────────────────
+
+
+def test_deep_audit_priority_feat_touching_sdk_is_p1():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        1, "feat(cf-foo): new checkout flow", ["src/lib/wix/cart.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p1"
+
+
+def test_deep_audit_priority_feat_touching_stripe_route_is_p1():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        2, "feat: stripe webhook", ["src/api/stripe/route.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p1"
+
+
+def test_deep_audit_priority_feat_not_touching_sdk_is_p2():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        3, "feat(plp): hero polish", ["src/components/site/Header.tsx"],
+    )
+    assert cat.deep_audit_priority(pr) == "p2"
+
+
+def test_deep_audit_priority_fix_is_p2_regardless_of_sdk():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        4, "fix(cf-x): null guard", ["src/lib/wix/orders.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p2"
+
+
+def test_deep_audit_priority_refactor_is_p3():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        5, "refactor: extract helper", ["src/lib/wix/products.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+def test_deep_audit_priority_chore_is_p3():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        6, "chore(cf-4x7e): drop dead webMethod", ["src/lib/wix/foo.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+def test_deep_audit_priority_other_is_p3():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        7, "unclassified weirdness", ["src/lib/wix/products.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+# ── substantive_subclassify ────────────────────────────────────────
+
+
+def test_substantive_subclassify_skips_non_substantive():
+    cat = _import_cat()
+    prs = [
+        _pr_with_title(1, "docs(audit): wave note", ["docs/x.md"]),  # pure-docs
+        _pr_with_title(2, "feat: meaningful", ["src/lib/foo.ts"]),  # substantive
+        _pr_with_title(3, "fix: small one-liner", ["src/lib/foo.ts"], additions=3, deletions=1),  # trivial
+    ]
+    h = cat.substantive_subclassify(prs)
+    assert h["feat"] == 1
+    assert h["fix"] == 0
+    assert h["docs"] == 0
+
+
+def test_substantive_subclassify_categorizes_all_prefixes():
+    cat = _import_cat()
+    prs = [
+        _pr_with_title(1, "feat: a", ["src/lib/a.ts"]),
+        _pr_with_title(2, "fix: b", ["src/lib/b.ts"]),
+        _pr_with_title(3, "refactor: c", ["src/lib/c.ts"]),
+        _pr_with_title(4, "chore: d", ["src/lib/d.ts"]),
+        _pr_with_title(5, "perf: e", ["src/lib/e.ts"]),
+        _pr_with_title(6, "weird title", ["src/lib/f.ts"]),
+    ]
+    h = cat.substantive_subclassify(prs)
+    assert h["feat"] == 1
+    assert h["fix"] == 1
+    assert h["refactor"] == 1
+    assert h["chore"] == 1
+    assert h["perf"] == 1
+    assert h["other"] == 1
+
+
+def test_substantive_subclassify_stable_keys_when_empty():
+    cat = _import_cat()
+    h = cat.substantive_subclassify([])
+    # Keys appear even at zero so downstream consumers can format a stable table.
+    for k in ("feat", "fix", "refactor", "chore", "test", "perf", "docs", "style", "other"):
+        assert h[k] == 0
+
+
+# ── deep_audit_priority_histogram ──────────────────────────────────
+
+
+def test_deep_audit_priority_histogram_full_mix():
+    cat = _import_cat()
+    prs = [
+        _pr_with_title(1, "feat: a", ["src/lib/wix/cart.ts"]),  # p1
+        _pr_with_title(2, "feat: b", ["src/api/track/route.ts"]),  # p1
+        _pr_with_title(3, "feat: c", ["src/components/x.tsx"]),  # p2
+        _pr_with_title(4, "fix: d", ["src/lib/wix/orders.ts"]),  # p2
+        _pr_with_title(5, "refactor: e", ["src/lib/wix/cart.ts"]),  # p3
+        _pr_with_title(6, "chore: f", ["src/lib/wix/products.ts"]),  # p3
+        _pr_with_title(7, "doc-only", ["docs/x.md"]),  # skipped (pure-docs)
+    ]
+    h = cat.deep_audit_priority_histogram(prs)
+    assert h == {"p1": 2, "p2": 2, "p3": 2}
+
+
+def test_deep_audit_priority_histogram_empty():
+    cat = _import_cat()
+    h = cat.deep_audit_priority_histogram([])
+    assert h == {"p1": 0, "p2": 0, "p3": 0}
