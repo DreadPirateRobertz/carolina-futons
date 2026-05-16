@@ -76,6 +76,22 @@ The 5-agent CR mandate (Stilgar 2026-05-15) has a **human-eyes-on-merge** implic
 
 Auto-merge removes that final click. The proposal argues the merge is safe-by-construction for the narrow ratchet case, but the mayor (and the audit trail going forward) should decide whether the safety argument is strong enough to compress the human gate to zero.
 
+### Phase-flip approach (per radahn obs#1)
+
+Mirror the cf-69fi.fu1 strict-flip pattern: ship in a soft mode first (auto-merge eligibility computed + logged, but the actual `gh pr merge --auto` call is gated behind a feature flag default-off). Observe for 14 days. Flip to actual auto-merge only if the eligibility check fires 0 false-positives during the soft window.
+
+If mayor picks Option A (5-criteria gate), recommend layering Option B (time-gated, PR must be open ≥6 hours) as belt-and-suspenders for the first 14-day flip window before going to pure Option A.
+
+### Canonical log-line format (per radahn obs#2)
+
+Every eligibility decision emits a single grep-able line to GitHub Actions stdout:
+
+```
+cf-69fi.fu3 eligibility pr=<N> single-file=<bool> downward=<bool> tests=<bool> approvals=<count> request-changes=<count> verdict=<eligible|ineligible:<reason>>
+```
+
+`grep cf-69fi.fu3 eligibility` across the workflow logs reconstructs the audit trail without parsing JSON.
+
 ### Failure modes to discuss
 
 1. **Reviewer drift:** could 5 reviewers approve a non-ratchet PR by mistake? (Mitigation: criterion #2 re-runs `decide_ratchet` on the actual tree.)
@@ -89,6 +105,10 @@ Auto-merge removes that final click. The proposal argues the merge is safe-by-co
 - **Label-based:** require a `auto-merge-ratchet` label set by the bot at PR creation; auto-merge only fires if label is present. Adds a check + a recoverable bailout (operator can remove label to block).
 - **Time-gated:** require PR to be open ≥ N hours before auto-merge fires. Lets the wave-audit ritual surface anything weird.
 - **Mayor-approval:** require an explicit "auto-merge approved" label set by mayor herself. Maximally conservative.
+
+### Rollback (per radahn obs#5)
+
+If auto-merge produces a wrong merge: the wave-audit ritual (cf-6amf, `scripts/wave-audit/wave-audit.sh`) catches the regression in the next-day audit — the mechanical safety net. Manual recovery: `git revert` the offending merge commit, re-open the ratchet PR with the corrected baseline, file `cf-69fi.fu3.fu1` post-mortem documenting the failure mode.
 
 ## Recommendation
 
