@@ -57,8 +57,15 @@ def _tokenize(text: str) -> set[str]:
 
 
 def _pr_contains_bead_id(pr_title: str, bead_id: str) -> bool:
-    """Case-insensitive substring check for the bead ID in the PR title."""
-    return bead_id.lower() in pr_title.lower()
+    """Case-insensitive word-boundary check for the bead ID in the PR title.
+
+    Word boundary prevents false positives where a longer bead-ID prefix
+    is mistakenly matched (e.g. searching for `cf-q8m2` would otherwise
+    substring-match `cf-q8m2x` if such a bead existed). Per radahn
+    obs#1 on PR #1377.
+    """
+    pattern = rf"\b{re.escape(bead_id)}\b"
+    return bool(re.search(pattern, pr_title, re.IGNORECASE))
 
 
 def should_warn(bead: dict, recent_prs: list[dict]) -> dict | None:

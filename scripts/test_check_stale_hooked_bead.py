@@ -73,6 +73,19 @@ def test_case_insensitive_bead_id_match():
     assert result["match_kind"] == "bead-id-direct"
 
 
+def test_bead_id_match_uses_word_boundary_not_substring():
+    """radahn obs#1 on PR #1377: substring match would falsely flag
+    `cf-q8m2x` (longer-prefix bead) when searching for `cf-q8m2`. Use
+    \\b word-boundary so the match requires the bead-ID as a standalone
+    token."""
+    chk = _import_checker()
+    bead = {"id": "cf-q8m2", "title": "x"}
+    # A PR title that contains a LONGER bead-id starting with cf-q8m2
+    # must NOT match cf-q8m2 (would be a false positive).
+    prs = [_pr(99, "fix(cf-q8m2x): unrelated longer-prefix bead")]
+    assert chk.should_warn(bead, prs) is None
+
+
 # ── Keyword-match shape (medium confidence) ───────────────────────
 
 
