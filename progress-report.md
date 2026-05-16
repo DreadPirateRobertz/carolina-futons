@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 07:45 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -34,12 +34,13 @@
 | cfw #713 | cfw | perf(cf-lrty): LivingHero SVG-light ✅ (merged 06:11 MT, e2e=cancelled 25m16s) |
 | cfutons #1385 | cfutons | fix(cf-44qt sibling): subscriptionService logError×10 ✅ (merged 06:11 MT, all CI green) |
 | cfutons #1386 | cfutons | fix(cf-44qt sibling): smsService logError×14 ✅ (merged 06:16 MT, all CI green) |
-| cfw #714 | cfw | feat(cf-0klm): ISR unlock Option A — lint FAILING, rennala on fix |
-| cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
 | cfutons #1387 | cfutons | fix(cf-44qt sibling): emailService.web.js logError×10 ✅ (merged 06:24 MT) |
 | cfutons #1388 | cfutons | fix(cf-44qt sibling): deliveryScheduling.web.js logError×10 ✅ (merged 06:49 MT) |
 | cf-7y6f | cfw | perf(cf-sd80.fu2): HomeCategoryGridV9 image-priority — filed, assigned blaidd |
-| cfw #714 | cfw | feat(cf-0klm): BLOCKED 40+ min — rennala/godfrey not responding; escalated to mayor |
+| cfw #714 (cfw) | cfw | feat(cf-0klm): ISR unlock ✅ MERGED 07:31 MT — useSyncExternalStore + useState lazy-init + ConsentClientBoot. 4 CI runs (2×lint, 1×typecheck, 1×all-green). Melania pushed fix directly (crew at bypass-prompt). Bead closed. |
+| cfutons #1389–#1391 | cfutons | fix(cf-44qt wave): 3 more logError files ✅ (merged pre-compaction) |
+| cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
+| cf-c736 | cfw | feat: generateStaticParams + dynamicParams=false /products/[slug] — dispatched to blaidd (unblocked by cf-0klm) |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
