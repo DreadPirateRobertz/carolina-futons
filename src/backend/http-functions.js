@@ -10,6 +10,7 @@ import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationS
 import { sendEmail } from 'backend/emailService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics, unsubscribeContact, triggerWelcomeSeries } from 'backend/emailAutomation.web';
+import { lookupOrder } from 'backend/orderTracking.web';
 import { scanAndTriggerWinback, runReviewRequestEmails } from 'backend/marketingSequences.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { sendWeeklyBlogDigest } from 'backend/blogDigestService.web';
@@ -3786,6 +3787,59 @@ export async function post_queueCartRecovery(request) {
   });
 }
 export function options_queueCartRecovery(request) { return response(corsPreflight(request)); }
+
+// ── /_functions/lookupOrder (cf-54st / cf-fd94.fu1) ──────────────────────────
+//
+// cfw's /track-order page posts {args:[orderNumber, email]} (callVelo shape).
+// The order-tracking lookup is also a guest-flow surface, so accept the
+// raw payload shape as well: {orderNumber, email}. Returns the existing
+// orderTracking.web.js webMethod response verbatim — Wix does NOT auto-route
+// webMethods to HTTP endpoints (cf-vtx5 audit), so without this wrapper the
+// /track-order page hits 404 even though lookupOrder is defined.
+
+export async function post_lookupOrder(request) {
+  const JSON_HEADERS = corsHeaders(request, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  let body;
+  try {
+    body = await request.body.json();
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'invalid_json' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  const payload = (Array.isArray(body?.args) && body.args.length > 0) ? body.args : null;
+  const orderNumber = payload
+    ? (typeof payload[0] === 'string' ? payload[0] : '')
+    : (typeof body?.orderNumber === 'string' ? body.orderNumber : '');
+  const email = payload
+    ? (typeof payload[1] === 'string' ? payload[1] : '')
+    : (typeof body?.email === 'string' ? body.email : '');
+  if (!orderNumber) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'orderNumber is required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  if (!email) {
+    return badRequest({
+      body: JSON.stringify({ success: false, error: 'email is required' }),
+      headers: JSON_HEADERS,
+    });
+  }
+  try {
+    const result = await lookupOrder(orderNumber, email);
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    const errorId = _veloDispatchErrorId();
+    console.error(`HTTP function error (post_lookupOrder) errorId=${errorId}:`, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'server_error', errorId }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+export function options_lookupOrder(request) { return response(corsPreflight(request)); }
 
 // ── /_functions/submitCommunityPhoto ─────────────────────────────────────────
 //
