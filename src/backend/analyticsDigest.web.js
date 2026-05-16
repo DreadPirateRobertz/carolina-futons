@@ -12,6 +12,7 @@ import { logAuditEvent } from 'backend/utils/auditLog';
 import { CUSTOM_EVENTS } from 'backend/customEvents.web';
 import { ANALYTICS_EVENTS_COLLECTION } from 'backend/utils/analyticsEvents';
 import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
+import { logError } from 'backend/utils/errorHandler';
 
 const ORDERS_COLLECTION = 'Stores/Orders';
 const TOP_PRODUCTS_LIMIT = 5;
@@ -121,7 +122,7 @@ export const generateWeeklyDigest = webMethod(
 
       return { success: true, digest };
     } catch (err) {
-      console.error('[analyticsDigest] Error generating digest:', err);
+      logError('[analyticsDigest] generateWeeklyDigest failed', err);
       return { success: false, error: 'Failed to generate analytics digest' };
     }
   }
@@ -165,7 +166,7 @@ export const sendWeeklyDigestEmail = webMethod(
       // resolve so processQueue doesn't reject the row at dispatch time.
       const digestContactId = await _resolveContactIdInternal(recipient);
       if (!digestContactId) {
-        console.error('[analyticsDigest] sendWeeklyDigestEmail: resolveContactId returned null for', recipient);
+        logError('[analyticsDigest] sendWeeklyDigestEmail: resolveContactId returned null', new Error(String(recipient)));
         return { success: false, error: 'Failed to resolve CRM contact for digest email' };
       }
 
@@ -188,7 +189,7 @@ export const sendWeeklyDigestEmail = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[analyticsDigest] sendWeeklyDigestEmail error:', err);
+      logError('[analyticsDigest] sendWeeklyDigestEmail failed', err);
       return { success: false, error: 'Failed to send digest email' };
     }
   }
@@ -247,7 +248,7 @@ export async function fetchOrderMetrics(since) {
 
     return { orderCount, totalRevenue: Math.round(totalRevenue * 100) / 100, avgOrderValue, topProducts };
   } catch (err) {
-    console.error('[analyticsDigest] fetchOrderMetrics error:', err);
+    logError('[analyticsDigest] fetchOrderMetrics failed', err);
     return { orderCount: 0, totalRevenue: 0, avgOrderValue: 0, topProducts: [] };
   }
 }

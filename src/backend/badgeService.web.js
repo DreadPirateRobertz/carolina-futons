@@ -27,6 +27,7 @@ import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { colors } from 'public/sharedTokens.js';
 import { _WHITE_GLOVE_CATEGORIES } from 'backend/deliveryOptions.web';
+import { logError } from 'backend/utils/errorHandler';
 
 const BADGES_COLLECTION = 'ProductBadges';
 const LOW_STOCK_THRESHOLD = 5;
@@ -151,7 +152,7 @@ export const getProductBadges = webMethod(
 
       return { success: true, badge, source };
     } catch (err) {
-      console.error('getProductBadges error:', err);
+      logError('[badgeService] getProductBadges failed', err);
       return { success: false, error: 'Unable to fetch product badges' };
     }
   }
@@ -218,7 +219,7 @@ export const getBatchProductBadges = webMethod(
 
       return { success: true, badges };
     } catch (err) {
-      console.error('getBatchProductBadges error:', err);
+      logError('[badgeService] getBatchProductBadges failed', err);
       return { success: false, error: 'Unable to fetch product badges' };
     }
   }
@@ -259,7 +260,7 @@ export const getWhiteGloveBadge = webMethod(
         },
       };
     } catch (err) {
-      console.error('getWhiteGloveBadge error:', err);
+      logError('[badgeService] getWhiteGloveBadge failed', err);
       return { success: false, error: 'Unable to determine white glove eligibility' };
     }
   }

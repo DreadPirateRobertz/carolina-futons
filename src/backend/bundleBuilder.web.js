@@ -32,6 +32,7 @@ import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { colors } from 'public/sharedTokens';
+import { logError } from 'backend/utils/errorHandler';
 
 // Tier definitions for upselling — used by calculateBundlePrice via getTierForPrice.
 const TIERS = {
@@ -102,7 +103,7 @@ export const calculateBundlePrice = webMethod(
         tier: tier.label,
       };
     } catch (err) {
-      console.error('Error calculating bundle price:', err);
+      logError('[bundleBuilder] calculateBundlePrice failed', err);
       return { basePrice: 0, bundlePrice: 0, savings: 0, discountPercent: 0, tier: '' };
     }
   }
@@ -139,7 +140,7 @@ export const getBundlePageProducts = webMethod(
 
       return { success: true, products };
     } catch (e) {
-      console.error('[bundleBuilder] getBundlePageProducts failed:', e);
+      logError('[bundleBuilder] getBundlePageProducts failed', e);
       return { success: false, error: 'Failed to load products', products: [] };
     }
   }
@@ -182,7 +183,7 @@ export const addBundleToCart = webMethod(
       await ecomCart.addToCurrentCart({ lineItems });
       return { success: true };
     } catch (e) {
-      console.error('[bundleBuilder] addBundleToCart failed:', e);
+      logError('[bundleBuilder] addBundleToCart failed', e);
       return { success: false, error: 'Failed to add bundle to cart' };
     }
   }

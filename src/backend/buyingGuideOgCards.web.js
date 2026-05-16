@@ -20,6 +20,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { getBuyingGuide, getBuyingGuideSlugs } from 'backend/buyingGuides.web';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Design constants ──────────────────────────────────────────────────��───────
 
@@ -275,7 +276,7 @@ export const getOgCardSpec = webMethod(
         },
       };
     } catch (err) {
-      console.error('[buyingGuideOgCards] getOgCardSpec error:', err);
+      logError('[buyingGuideOgCards] getOgCardSpec failed', err);
       return { success: false, error: 'Failed to generate OG card spec.' };
     }
   }
@@ -308,7 +309,7 @@ export const getAllOgCardSpecs = webMethod(
 
       return { success: true, specs };
     } catch (err) {
-      console.error('[buyingGuideOgCards] getAllOgCardSpecs error:', err);
+      logError('[buyingGuideOgCards] getAllOgCardSpecs failed', err);
       return { success: false, error: 'Failed to generate OG card specs.' };
     }
   }
