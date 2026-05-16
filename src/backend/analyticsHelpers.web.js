@@ -75,7 +75,7 @@ export const trackProductView = webMethod(
       }
     } catch (err) {
       // Analytics tracking is non-critical — log but don't throw
-      logError('analyticsHelpers.trackProductView', err);
+      logError('analyticsHelpers.trackProductView failed', err);
     }
   }
 );
@@ -108,7 +108,7 @@ export const trackAddToCart = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      logError('analyticsHelpers.trackAddToCart', err);
+      logError('analyticsHelpers.trackAddToCart failed', err);
     }
   }
 );
