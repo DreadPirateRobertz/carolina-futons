@@ -48,6 +48,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ export const validatePromoCode = webMethod(
         },
       };
     } catch (err) {
-      console.error('[promotionsEngine] Error validating promo code:', err);
+      logError('[promotionsEngine] validatePromoCode failed', err);
       return { success: false, error: 'Failed to validate promo code' };
     }
   }
@@ -259,7 +260,7 @@ export const applyPromoCode = webMethod(
         code: promo.code,
       };
     } catch (err) {
-      console.error('[promotionsEngine] Error applying promo code:', err);
+      logError('[promotionsEngine] applyPromoCode failed', err);
       return { success: false, error: 'Failed to apply promo code' };
     }
   }
@@ -298,7 +299,7 @@ export const getActiveFlashSales = webMethod(
 
       return { success: true, sales };
     } catch (err) {
-      console.error('[promotionsEngine] Error fetching flash sales:', err);
+      logError('[promotionsEngine] getActiveFlashSales failed', err);
       return { success: true, sales: [] };
     }
   }
@@ -335,7 +336,7 @@ export const getActiveBOGODeals = webMethod(
 
       return { success: true, deals };
     } catch (err) {
-      console.error('[promotionsEngine] Error fetching BOGO deals:', err);
+      logError('[promotionsEngine] getActiveBOGODeals failed', err);
       return { success: true, deals: [] };
     }
   }
@@ -412,7 +413,7 @@ export const calculateBOGOSavings = webMethod(
         appliedDeals,
       };
     } catch (err) {
-      console.error('[promotionsEngine] Error calculating BOGO savings:', err);
+      logError('[promotionsEngine] calculateBOGOSavings failed', err);
       return { success: true, totalSavings: 0, appliedDeals: [] };
     }
   }
@@ -466,7 +467,7 @@ export const createFlashSale = webMethod(
 
       return { success: true, sale };
     } catch (err) {
-      console.error('[promotionsEngine] Error creating flash sale:', err);
+      logError('[promotionsEngine] createFlashSale failed', err);
       return { success: false, error: 'Failed to create flash sale' };
     }
   }
@@ -545,7 +546,7 @@ export const createPromoCode = webMethod(
 
       return { success: true, promo };
     } catch (err) {
-      console.error('[promotionsEngine] Error creating promo code:', err);
+      logError('[promotionsEngine] createPromoCode failed', err);
       return { success: false, error: 'Failed to create promo code' };
     }
   }
@@ -567,7 +568,7 @@ async function incrementUsage(code) {
       await wixData.update('PromoCodes', promo);
     }
   } catch (err) {
-    console.error('[promotionsEngine] Error incrementing usage:', err);
+    logError('[promotionsEngine] incrementUsage failed', err);
   }
 }
 
