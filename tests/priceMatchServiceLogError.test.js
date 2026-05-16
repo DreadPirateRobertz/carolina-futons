@@ -15,11 +15,11 @@ const SRC = fs.readFileSync(
 );
 
 const EXPECTED_TAGS = [
-  'priceMatchService:submitRequest',
-  'priceMatchService:listPriceMatches',
-  'priceMatchService:getPriceMatch',
-  'priceMatchService:reviewRequest',
-  'priceMatchService:getStats',
+  'priceMatchService:submitPriceMatchRequest',
+  'priceMatchService:getMyPriceMatches',
+  'priceMatchService:getPriceMatchById',
+  'priceMatchService:reviewPriceMatchRequest',
+  'priceMatchService:getPriceMatchStats',
 ];
 
 describe('cf-44qt — priceMatchService.web.js console.error → logError migration', () => {
