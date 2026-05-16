@@ -97,6 +97,19 @@ These PRs warrant per-file JSDoc + TDD + CI verification per the cf-o5j5 methodo
 
 This is the **first live run of the cf-6amf wave-audit ritual** (PR #1352, merged earlier in this same window). Auditing the 24-PR substantive bucket exhaustively would itself be a multi-hour task; instead this pilot spot-checks a representative slice + captures lessons-learned about the tooling.
 
+## Reproducer
+
+```bash
+# From any cfutons checkout:
+scripts/wave-audit/wave-audit.sh 2026-05-15 2026-05-16
+
+# Cross-rig (override target repo):
+WAVE_AUDIT_REPO=DreadPirateRobertz/carolina-futons-web \
+  scripts/wave-audit/wave-audit.sh 2026-05-15 2026-05-16
+```
+
+The script consumes `gh pr list` + applies the reachability filter via `git merge-base --is-ancestor`. Output is markdown to stdout — redirect to a draft doc, then add deep-audit verdicts manually before committing.
+
 ## Spot-check sample (4 of 24 substantive)
 
 ### #1326 — `fix(cf-ybsf): align UptimeRobot keyword to /api/health JSON envelope (P1)`
