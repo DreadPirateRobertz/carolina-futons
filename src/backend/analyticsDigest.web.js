@@ -122,7 +122,7 @@ export const generateWeeklyDigest = webMethod(
 
       return { success: true, digest };
     } catch (err) {
-      logError('analyticsDigest:generateWeeklyDigest', err);
+      logError('[analyticsDigest] generateWeeklyDigest', err);
       return { success: false, error: 'Failed to generate analytics digest' };
     }
   }
@@ -166,7 +166,7 @@ export const sendWeeklyDigestEmail = webMethod(
       // resolve so processQueue doesn't reject the row at dispatch time.
       const digestContactId = await _resolveContactIdInternal(recipient);
       if (!digestContactId) {
-        logError(`analyticsDigest:sendWeeklyDigestEmail:resolveContactId-null recipient=${recipient}`, new Error('resolveContactId returned null'));
+        logError(`[analyticsDigest] sendWeeklyDigestEmail resolveContactId-null recipient=${recipient}`, new Error('resolveContactId returned null'));
         return { success: false, error: 'Failed to resolve CRM contact for digest email' };
       }
 
@@ -189,7 +189,7 @@ export const sendWeeklyDigestEmail = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('analyticsDigest:sendWeeklyDigestEmail', err);
+      logError('[analyticsDigest] sendWeeklyDigestEmail', err);
       return { success: false, error: 'Failed to send digest email' };
     }
   }
@@ -248,7 +248,7 @@ export async function fetchOrderMetrics(since) {
 
     return { orderCount, totalRevenue: Math.round(totalRevenue * 100) / 100, avgOrderValue, topProducts };
   } catch (err) {
-    logError('analyticsDigest:fetchOrderMetrics', err);
+    logError('[analyticsDigest] fetchOrderMetrics', err);
     return { orderCount: 0, totalRevenue: 0, avgOrderValue: 0, topProducts: [] };
   }
 }
