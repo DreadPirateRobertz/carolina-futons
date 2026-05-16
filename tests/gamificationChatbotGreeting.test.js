@@ -30,12 +30,17 @@ beforeEach(() => {
 describe('getChatGreeting — feature flag', () => {
   it('returns { enabled: false } when GAMIFICATION_CHATBOT_ENABLED secret is absent', async () => {
     // No secrets seeded — getSecret throws
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // cf-0xkm: console.warn migrated to canonical logError, which the real
+    // errorHandler routes to console.error with `[<tag>]` prefix.
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { getChatGreeting } = await vi.importActual('../src/backend/gamificationChatbot.web.js');
     const result = await getChatGreeting();
     expect(result).toEqual({ enabled: false });
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('getChatGreeting'), expect.anything());
-    warnSpy.mockRestore();
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringContaining('getChatGreeting'),
+      expect.anything(),
+    );
+    errSpy.mockRestore();
   });
 
   it('returns { enabled: false } when flag is "false"', async () => {

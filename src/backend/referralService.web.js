@@ -645,7 +645,7 @@ export async function _processReferralOnOrderCreated(memberId, orderNumber, isFi
           resultObj.pointsAwarded = BONUS_POINTS.REFERRAL_COMPLETE;
         }
       } catch (loyaltyErr) {
-        console.warn('_processReferralOnOrderCreated: earnPoints failed (non-fatal)', loyaltyErr.message);
+        logError('referralService:processReferralOnOrderCreated-earnPointsFailed', loyaltyErr);
       }
     }
 

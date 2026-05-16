@@ -292,7 +292,7 @@ export const voteForPhoto = webMethod(
           const errMsg = dupErr?.message || '';
           if (errMsg.includes('duplicate') || errMsg.includes('unique')) {
             // Unique constraint violation — vote already counted by concurrent request
-            console.warn('[ugcService] duplicate vote insert (concurrent), treating as voted', errMsg);
+            logError(`ugcService:vote-duplicateInsert msg=${errMsg}`, null);
             return { success: true, voted: true, voteCount: photo.voteCount || 0 };
           }
           throw dupErr;
