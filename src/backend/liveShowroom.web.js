@@ -37,6 +37,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const CAMERAS_COLLECTION = 'ShowroomCameras';
 const RESERVATIONS_COLLECTION = 'ShowroomReservations';
@@ -81,7 +82,7 @@ export const getShowroomStatus = webMethod(
         isLive,
       };
     } catch (err) {
-      console.error('[liveShowroom] getShowroomStatus failed:', err?.message);
+      logError('liveShowroom.getShowroomStatus', err);
       return { onDisplay: false, camera: null, isLive: false };
     }
   }
@@ -123,7 +124,7 @@ export const getLiveDisplayProducts = webMethod(
 
       return { productIds: [...productIds], cameras };
     } catch (err) {
-      console.error('[liveShowroom] getLiveDisplayProducts failed:', err?.message);
+      logError('liveShowroom.getLiveDisplayProducts', err);
       return { productIds: [], cameras: [] };
     }
   }
@@ -200,7 +201,7 @@ export const reserveShowroomPiece = webMethod(
         },
       };
     } catch (err) {
-      console.error('[liveShowroom] reserveShowroomPiece failed:', err?.message);
+      logError('liveShowroom.reserveShowroomPiece', err);
       return { success: false, reservation: null, error: err?.message || 'Reservation failed' };
     }
   }
@@ -270,7 +271,7 @@ export const cameraHeartbeat = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[liveShowroom] cameraHeartbeat failed:', err?.message);
+      logError('liveShowroom.cameraHeartbeat', err);
       return { success: false };
     }
   }

@@ -23,6 +23,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { trackShipment } from 'backend/ups-shipping.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Status display mapping ──────────────────────────────────────────
 
@@ -169,7 +170,7 @@ export const lookupOrder = webMethod(
         notificationsEnabled,
       };
     } catch (err) {
-      console.error('lookupOrder error:', err);
+      logError('orderTracking.lookupOrder', err);
       return { success: false, error: 'Unable to retrieve order information. Please try again.' };
     }
   }
@@ -243,7 +244,7 @@ export const subscribeToNotifications = webMethod(
       logAuditEvent('TrackingNotifications', 'subscribe', cleanEmail, { orderNumber: cleanOrderNumber });
       return { success: true, alreadySubscribed: false };
     } catch (err) {
-      console.error('subscribeToNotifications error:', err);
+      logError('orderTracking.subscribeToNotifications', err);
       return { success: false, error: 'Unable to subscribe. Please try again.' };
     }
   }
@@ -281,7 +282,7 @@ export const unsubscribeFromNotifications = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('unsubscribeFromNotifications error:', err);
+      logError('orderTracking.unsubscribeFromNotifications', err);
       return { success: false, error: 'Unable to unsubscribe. Please try again.' };
     }
   }
@@ -333,7 +334,7 @@ export const getTrackingTimeline = webMethod(
         timeline,
       };
     } catch (err) {
-      console.error('getTrackingTimeline error:', err);
+      logError('orderTracking.getTrackingTimeline', err);
       return { success: false, error: 'Unable to retrieve tracking information' };
     }
   }
