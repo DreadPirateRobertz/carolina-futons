@@ -36,14 +36,29 @@ import { sanitize } from 'backend/utils/sanitize';
 
 // ── Configuration ───────────────────────────────────────────────────
 
-const ORIGIN_ADDRESS = {
-  Name: brand.name,
-  AddressLine: [business.address.street],
-  City: business.address.city,
-  StateProvinceCode: business.address.state,
-  PostalCode: business.address.zip,
-  CountryCode: 'US',
-};
+// cf-t8k1.fu1: lazy-init ORIGIN_ADDRESS. Previously this was a top-level
+// `const ORIGIN_ADDRESS = { Name: brand.name, ... }` which read
+// brand.name + business.address.* at MODULE-IMPORT time. If a test
+// mocked public/sharedTokens with a partial shape (missing `brand` or
+// `business`), the destructure threw TypeError during import and
+// blocked the entire test file's collection before any test ran (see
+// PR #1363 / cf-t8k1). Deferring computation into a getter decouples
+// module-init from mock shape — tests that don't exercise UPS rate /
+// label / tracking surfaces don't need to mock the brand.
+let _originAddressCache = null;
+export function getOriginAddress() {
+  if (_originAddressCache === null) {
+    _originAddressCache = {
+      Name: brand.name,
+      AddressLine: [business.address.street],
+      City: business.address.city,
+      StateProvinceCode: business.address.state,
+      PostalCode: business.address.zip,
+      CountryCode: 'US',
+    };
+  }
+  return _originAddressCache;
+}
 
 // UPS Service Codes
 const UPS_SERVICES = {
@@ -68,8 +83,16 @@ const PACKAGE_DEFAULTS = {
   'default': { length: 48, width: 30, height: 12, weight: 50 },
 };
 
-// Free shipping threshold
-const FREE_SHIPPING_THRESHOLD = shippingConfig.freeThreshold;
+// cf-t8k1.fu1: lazy-init FREE_SHIPPING_THRESHOLD. Same rationale as
+// getOriginAddress — defer the shippingConfig.freeThreshold read so
+// a partial sharedTokens mock doesn't crash module import.
+let _freeShippingThresholdCache = null;
+export function getFreeShippingThreshold() {
+  if (_freeShippingThresholdCache === null) {
+    _freeShippingThresholdCache = shippingConfig.freeThreshold;
+  }
+  return _freeShippingThresholdCache;
+}
 
 // ── OAuth 2.0 Token Management ──────────────────────────────────────
 
@@ -183,7 +206,7 @@ export const getUPSRates = webMethod(
       }
 
       // Check for free shipping eligibility
-      if (orderSubtotal >= FREE_SHIPPING_THRESHOLD) {
+      if (orderSubtotal >= getFreeShippingThreshold()) {
         return [{
           code: 'free-ground',
           title: 'FREE UPS Ground Shipping',
@@ -228,7 +251,7 @@ export const getUPSRates = webMethod(
             Shipper: {
               Name: 'Carolina Futons',
               ShipperNumber: accountNumber,
-              Address: ORIGIN_ADDRESS,
+              Address: getOriginAddress(),
             },
             ShipTo: {
               Name: destinationAddress.name || 'Customer',
@@ -242,7 +265,7 @@ export const getUPSRates = webMethod(
             },
             ShipFrom: {
               Name: 'Carolina Futons',
-              Address: ORIGIN_ADDRESS,
+              Address: getOriginAddress(),
             },
             Package: upsPackages,
           },
@@ -365,14 +388,14 @@ export const createShipment = webMethod(
               AttentionName: 'Brenda Deal',
               ShipperNumber: accountNumber,
               Phone: { Number: business.phoneDigits },
-              Address: ORIGIN_ADDRESS,
+              Address: getOriginAddress(),
             },
             ShipTo: orderData.returnLabel
               ? {
                 Name: brand.name,
                 AttentionName: `Returns Dept (RMA)`,
                 Phone: { Number: business.phoneDigits },
-                Address: ORIGIN_ADDRESS,
+                Address: getOriginAddress(),
               }
               : {
                 Name: orderData.recipientName,
@@ -403,7 +426,7 @@ export const createShipment = webMethod(
                 Name: brand.name,
                 AttentionName: 'Brenda Deal',
                 Phone: { Number: business.phoneDigits },
-                Address: ORIGIN_ADDRESS,
+                Address: getOriginAddress(),
               },
             PaymentInformation: {
               ShipmentCharge: [{
