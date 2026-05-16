@@ -20,6 +20,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, generateUUIDFilename } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 export const GALLERY_ROOM_TYPES = ['living-room', 'bedroom', 'studio', 'office', 'dorm'];
 const GALLERY_PAGE_SIZE = 12;
@@ -224,7 +225,7 @@ export const getGalleryPhotos = webMethod(
         page: safePage,
       };
     } catch (err) {
-      console.error('[communityGalleryService] Error loading gallery photos:', err.message);
+      logError('[communityGalleryService] getGalleryPhotos failed', err);
       return { success: false, error: 'Failed to load gallery photos.', photos: [], hasMore: false, total: 0 };
     }
   }

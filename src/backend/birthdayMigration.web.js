@@ -14,6 +14,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { _parseBirthdayMonthDay } from 'backend/events';
+import { logError } from 'backend/utils/errorHandler';
 
 const MEMBERS_COLLECTION = 'Members/PrivateMembersData';
 const PAGE_SIZE = 100;
@@ -78,7 +79,7 @@ export const backfillBirthdayFields = webMethod(
           });
           updated++;
         } catch (err) {
-          console.error('[birthdayMigration] Failed to update member', member._id, ':', err?.message ?? err);
+          logError('[birthdayMigration] Failed to update member', err);
           errors++;
         }
       }

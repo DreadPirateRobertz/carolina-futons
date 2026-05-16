@@ -23,6 +23,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { validateSchema } from 'backend/utils/validateSchema';
+import { logError } from 'backend/utils/errorHandler';
 
 // Rate limiting for submitContactForm — prevents contact form spam flood.
 // CMS collection `ContactRateLimits`: key (Text), count (Number), windowStart (DateTime).
@@ -116,7 +117,7 @@ export const submitContactForm = webMethod(
       logAuditEvent('ContactSubmissions', 'submit', email, { source });
       return { success: true };
     } catch (err) {
-      console.error('Error submitting contact form:', err);
+      logError('[contactSubmissions] submitContactForm failed', err);
       return { success: false };
     }
   }

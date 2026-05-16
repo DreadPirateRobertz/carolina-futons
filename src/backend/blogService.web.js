@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { posts as blogPosts } from 'wix-blog-backend';
 import { getAllBlogPosts } from 'backend/blogContent';
+import { logError } from 'backend/utils/errorHandler';
 
 const DEFAULT_PER_PAGE = 9;
 const FALLBACK_AUTHOR = 'Carolina Futons Team';
@@ -73,7 +74,7 @@ export const getPublishedBlogPosts = webMethod(
         hasPrevPage: safePage > 1,
       };
     } catch (err) {
-      console.error('[blogService] getPublishedBlogPosts failed:', err?.message);
+      logError('[blogService] getPublishedBlogPosts failed', err);
       return {
         posts: [],
         total: 0,
@@ -108,7 +109,7 @@ export const getRecentPosts = webMethod(
       });
       return (response.posts ?? []).map(normalizePost);
     } catch (err) {
-      console.error('[blogService] getRecentPosts failed:', err?.message);
+      logError('[blogService] getRecentPosts failed', err);
       return [];
     }
   }
@@ -137,7 +138,7 @@ export const getCategories = webMethod(
       }
       return [...seen].sort();
     } catch (err) {
-      console.error('[blogService] getCategories failed:', err?.message);
+      logError('[blogService] getCategories failed', err);
       return [];
     }
   }

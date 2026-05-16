@@ -17,6 +17,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Get assembly guide for a product by SKU.
@@ -52,7 +53,7 @@ export const getAssemblyGuide = webMethod(
         category: guide.category || '',
       };
     } catch (err) {
-      console.error('Error getting assembly guide:', err);
+      logError('[assemblyGuides] getAssemblyGuide failed', err);
       return null;
     }
   }
@@ -101,7 +102,7 @@ export const getCareTips = webMethod(
 
       return tips[cleanCategory] || getDefaultCareTips();
     } catch (err) {
-      console.error('Error getting care tips:', err);
+      logError('[assemblyGuides] getCareTips failed', err);
       return getDefaultCareTips();
     }
   }
@@ -133,7 +134,7 @@ export const listAssemblyGuides = webMethod(
         hasVideo: !!g.videoUrl,
       }));
     } catch (err) {
-      console.error('Error listing assembly guides:', err);
+      logError('[assemblyGuides] listAssemblyGuides failed', err);
       return [];
     }
   }
