@@ -299,6 +299,18 @@ def test_classify_fs_path_consumer_other_still_fallthrough():
     assert audit.classify_fs_path_consumer("docs/example.md") == "FS-PATH-OTHER"
 
 
+def test_classify_fs_path_consumer_test_dir_but_no_test_infix():
+    """Path lives in tests/ but the filename has no .test or .spec infix —
+    must NOT match TEST-IMPORT. Locks the _FS_PATH_TEST_RE contract against
+    accidentally classifying test-helper modules (tests/helpers.ts,
+    tests/setup.js, tests/__mocks__/wix-data.js) as TEST-IMPORT.
+    radahn observation 1 on PR #1349."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("tests/helpers.ts") == "FS-PATH-OTHER"
+    assert audit.classify_fs_path_consumer("tests/setup.js") == "FS-PATH-OTHER"
+    assert audit.classify_fs_path_consumer("tests/__mocks__/wix-data.js") == "FS-PATH-OTHER"
+
+
 # ── Constant-pin: lock each trap symbol into INTENTIONAL_ANYONE ────────
 # miquella test-analyzer CR: a future refactor that removes an allowlist
 # entry silently re-introduces the trap. Pin each by name.
