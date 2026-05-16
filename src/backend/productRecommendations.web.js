@@ -16,6 +16,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const RECENTLY_VIEWED_COLLECTION = 'RecentlyViewed';
 /** Call-for-price products use $0 or $1.00 placeholder prices. Exclude from recommendations.
@@ -70,7 +71,7 @@ export const getRelatedProducts = webMethod(
         ribbon: item.ribbon,
       }));
     } catch (err) {
-      console.error('Error fetching related products:', err);
+      logError('[productRecommendations] getRelatedProducts failed', err);
       return [];
     }
   }
@@ -184,7 +185,7 @@ export const getCompletionSuggestions = webMethod(
 
       return suggestions;
     } catch (err) {
-      console.error('Error fetching completion suggestions:', err);
+      logError('[productRecommendations] getCompletionSuggestions failed', err);
       return [];
     }
   }
@@ -214,7 +215,7 @@ export const getSameCollection = webMethod(
 
       return results.items.map(formatProduct);
     } catch (err) {
-      console.error('Error fetching same collection:', err);
+      logError('[productRecommendations] getSameCollection failed', err);
       return [];
     }
   }
@@ -249,7 +250,7 @@ export const getFeaturedProducts = webMethod(
 
       return results.items.map(formatProduct);
     } catch (err) {
-      console.error('Error fetching featured products:', err);
+      logError('[productRecommendations] getFeaturedProducts failed', err);
       return [];
     }
   }
@@ -281,7 +282,7 @@ export const getSaleProducts = webMethod(
           return discountB - discountA;
         });
     } catch (err) {
-      console.error('Error fetching sale products:', err);
+      logError('[productRecommendations] getSaleProducts failed', err);
       return [];
     }
   }
@@ -358,7 +359,7 @@ export const getBundleSuggestion = webMethod(
         savings: discount,
       };
     } catch (err) {
-      console.error('Error fetching bundle suggestion:', err);
+      logError('[productRecommendations] getBundleSuggestion failed', err);
       return null;
     }
   }
@@ -401,7 +402,7 @@ export const getRecentlyViewed = webMethod(
 
       return { success: true, products: ordered };
     } catch (err) {
-      console.error('[productRecommendations] getRecentlyViewed error:', err);
+      logError('[productRecommendations] getRecentlyViewed failed', err);
       return { success: false, products: [] };
     }
   }
@@ -456,7 +457,7 @@ export const getSimilarProducts = webMethod(
         products: results.items.map(formatProduct),
       };
     } catch (err) {
-      console.error('[productRecommendations] getSimilarProducts error:', err);
+      logError('[productRecommendations] getSimilarProducts failed', err);
       return { success: false, products: [] };
     }
   }
@@ -546,7 +547,7 @@ export const getCustomersAlsoBought = webMethod(
 
       return { success: true, products: ordered };
     } catch (err) {
-      console.error('[productRecommendations] getCustomersAlsoBought error:', err);
+      logError('[productRecommendations] getCustomersAlsoBought failed', err);
       return { success: false, products: [] };
     }
   }
@@ -586,7 +587,7 @@ export const getBatchCurrentPrices = webMethod(
       }
       return { success: true, prices };
     } catch (err) {
-      console.error('[productRecommendations] getBatchCurrentPrices error:', err?.message);
+      logError('[productRecommendations] getBatchCurrentPrices failed', err);
       return { success: false, prices: {} };
     }
   }
@@ -685,7 +686,7 @@ export const getRecommendations = webMethod(
 
       return { success: true, products: ranked.slice(0, safeLimit) };
     } catch (err) {
-      console.error('[productRecommendations] getRecommendations error:', err);
+      logError('[productRecommendations] getRecommendations failed', err);
       return { success: false, products: [] };
     }
   }
@@ -722,7 +723,7 @@ export const getFreightComplementProducts = webMethod(
 
       return { success: true, products: results.items.map(formatProduct) };
     } catch (err) {
-      console.error('[productRecommendations] getFreightComplementProducts error:', err);
+      logError('[productRecommendations] getFreightComplementProducts failed', err);
       return { success: false, products: [] };
     }
   }
@@ -879,7 +880,7 @@ export const getProductRecommendations = webMethod(
 
       return { success: true, products: categoryProducts, source: 'category' };
     } catch (err) {
-      console.error('[productRecommendations] getProductRecommendations error:', err);
+      logError('[productRecommendations] getProductRecommendations failed', err);
       return { success: false, products: [], source: 'category' };
     }
   }
