@@ -55,6 +55,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 
 async function requireMember() {
@@ -107,7 +108,7 @@ export const getProductGuides = webMethod(
 
       return { success: true, guides };
     } catch (err) {
-      console.error('[postPurchaseCare] Error getting product guides:', err);
+      logError('postPurchaseCare:getProductGuides', err);
       return { success: false, error: 'Failed to load care guides.', guides: [] };
     }
   }
@@ -172,7 +173,7 @@ export const deliverGuidesForOrder = webMethod(
 
       return { success: true, guidesByCategory };
     } catch (err) {
-      console.error('[postPurchaseCare] Error delivering guides for order:', err);
+      logError('postPurchaseCare:deliverGuidesForOrder', err);
       return { success: false, error: 'Failed to load order guides.', guidesByCategory: {} };
     }
   }
@@ -238,7 +239,7 @@ export const getUpsellRecommendations = webMethod(
         recommendations: filtered.map(formatRecommendation),
       };
     } catch (err) {
-      console.error('[postPurchaseCare] Error getting upsell recommendations:', err);
+      logError('postPurchaseCare:getUpsellRecommendations', err);
       return { success: false, error: 'Failed to load recommendations.', recommendations: [] };
     }
   }
@@ -285,7 +286,7 @@ export const trackGuideEngagement = webMethod(
       await wixData.insert('GuideEngagement', record);
       return { success: true };
     } catch (err) {
-      console.error('[postPurchaseCare] Error tracking guide engagement:', err);
+      logError('postPurchaseCare:trackGuideEngagement', err);
       return { success: false, error: 'Failed to track engagement.' };
     }
   }
@@ -332,7 +333,7 @@ export const logUpsellConversion = webMethod(
       await wixData.insert('UpsellConversions', record);
       return { success: true };
     } catch (err) {
-      console.error('[postPurchaseCare] Error logging upsell conversion:', err);
+      logError('postPurchaseCare:logUpsellConversion', err);
       return { success: false, error: 'Failed to log conversion.' };
     }
   }
@@ -373,7 +374,7 @@ export const getReviewSolicitationData = webMethod(
 
       return { success: true, reviewUrl, customerName: cleanName, products: productList };
     } catch (err) {
-      console.error('[postPurchaseCare] Error getting review solicitation data:', err);
+      logError('postPurchaseCare:getReviewSolicitationData', err);
       return { success: false, error: 'Failed to load review data.', reviewUrl: '', customerName: '', products: [] };
     }
   }
