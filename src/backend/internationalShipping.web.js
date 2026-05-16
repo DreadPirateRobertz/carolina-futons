@@ -5,6 +5,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import { internationalShippingConfig, business } from 'public/sharedTokens.js';
 
 const { zones, restrictedCountries, freeInternationalThreshold } = internationalShippingConfig;
@@ -52,7 +53,11 @@ export const getShippingZone = webMethod(
       // Not in any named zone — falls to "other"
       return { success: true, zone: 'other', zoneName: zones.other.name };
     } catch (err) {
-      console.error('getShippingZone error:', err);
+      // cf-44qt: Sentry-tag the misconfig/runtime throw so the
+      // missing-config window (cf-r6q7 lazy-init makes this reachable
+      // at runtime) is visible in triage instead of a silent caller-
+      // side error string.
+      logError('getShippingZone', err);
       return { success: false, error: 'Failed to determine shipping zone' };
     }
   }
@@ -75,7 +80,8 @@ export const isShippableCountry = webMethod(
       const shippable = !restrictedCountries.includes(code);
       return { success: true, shippable };
     } catch (err) {
-      console.error('isShippableCountry error:', err);
+      // cf-44qt: see getShippingZone for rationale.
+      logError('isShippableCountry', err);
       return { success: false, error: 'Failed to check shipping eligibility' };
     }
   }
@@ -149,7 +155,8 @@ export const getInternationalShippingEstimate = webMethod(
         },
       };
     } catch (err) {
-      console.error('getInternationalShippingEstimate error:', err);
+      // cf-44qt: see getShippingZone for rationale.
+      logError('getInternationalShippingEstimate', err);
       return { success: false, error: 'Failed to estimate international shipping' };
     }
   }
@@ -220,21 +227,20 @@ export const getInternationalShippingRates = webMethod(
 
       return { success: true, rates, estimated: true };
     } catch (err) {
-      console.error('getInternationalShippingRates error:', err);
-
-      // Fallback rates
+      // cf-44qt: the pre-cf-44qt catch fabricated a $199.99 flat rate
+      // with success=true. Post-r6q7 (lazy-init) made the missing-
+      // config throw reachable at runtime, so this catch was silently
+      // charging customers a fabricated rate any time the config was
+      // mis-deployed. Return an explicit failure with a machine-
+      // readable code; /checkout caller is responsible for graceful
+      // fallback (skip the rate option / show a 'contact us' note).
+      // Sentry breadcrumb names the source so misconfigs surface in
+      // triage.
+      logError('getInternationalShippingRates', err);
       return {
-        success: true,
-        rates: [
-          {
-            code: 'intl-flat-standard',
-            title: 'International Shipping (Estimated)',
-            cost: 199.99,
-            currency: 'USD',
-            estimatedDays: '14-28',
-          },
-        ],
-        estimated: true,
+        success: false,
+        error: 'Failed to calculate international shipping rates',
+        code: 'INTERNATIONAL_RATE_ERROR',
       };
     }
   }
