@@ -99,6 +99,8 @@ The script grep's the last 50 merged PRs for direct bead-ID matches or strong (â
 
 **Where it fires:** PM workflow before any dispatch call. The PM should look at the warning, run `gh pr view <pr-number>` to verify, then either close the bead (if confirmed-shipped) or proceed with dispatch (if the warning was a false positive).
 
+**Cross-repo:** set `STALENESS_REPO=DreadPirateRobertz/carolina-futons-web` (or stage3-velo) to scan a different repo when a bead's work may have shipped in a sibling rig.
+
 **Pure-function tests:** `scripts/test_check_stale_hooked_bead.py` pins the decision contract (direct-bead-id-match wins, â‰¥2 distinctive keyword overlap warns, stopword-only overlap doesn't warn, empty-PR-list returns None, multi-match tie-break on highest PR number).
 
 ## 10. Refs

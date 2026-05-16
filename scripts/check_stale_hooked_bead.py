@@ -8,6 +8,13 @@ collision shape that fired 7+ times in the 2026-05-16 session
 Usage from PM workflow:
   $ python3 scripts/check_stale_hooked_bead.py cf-q8m2
 
+Optional environment:
+  STALENESS_REPO   Override the gh repo to scan (default:
+                   DreadPirateRobertz/carolina-futons). Useful for
+                   cross-repo staleness checks when a bead's work
+                   shipped in carolina-futons-web or
+                   carolina-futons-stage3-velo.
+
 It runs `bd show <id>` + `gh pr list --state merged --limit 50`, then
 prints a warning if the bead's title shares a direct ID match or 2+
 distinctive keywords with a recent merged PR. Exit code 0 if clean, 1
@@ -130,7 +137,10 @@ def should_warn(bead: dict, recent_prs: list[dict]) -> dict | None:
 
 def _fetch_bead(bead_id: str) -> dict:
     """Run `bd show <id>` and parse the title + id. Falls back to id-only
-    if `bd show` fails (defensive — the checker should still work)."""
+    if `bd show` fails (defensive — the checker should still work, but
+    emits a degraded-mode stderr warning so the operator knows the
+    keyword-overlap scan ran without title context). Per godfrey obs
+    on PR #1377."""
     bead = {"id": bead_id, "title": ""}
     env = {
         **os.environ,
@@ -142,7 +152,12 @@ def _fetch_bead(bead_id: str) -> dict:
         out = subprocess.run(
             ["bd", "show", bead_id], capture_output=True, text=True, env=env, timeout=10
         ).stdout
-    except (subprocess.SubprocessError, FileNotFoundError):
+    except (subprocess.SubprocessError, FileNotFoundError) as err:
+        print(
+            f"⚠ bd show {bead_id} failed ({err}); keyword-overlap scan disabled, "
+            f"only direct-ID match available.",
+            file=sys.stderr,
+        )
         return bead
     # First non-status line typically has the title after the bead-ID + status box.
     # Example: "○ cf-q8m2 · Dead-code Pass 3 chunk A — SUPERSEDE [● P3 · HOOKED]"
@@ -151,11 +166,19 @@ def _fetch_bead(bead_id: str) -> dict:
         if m:
             bead["title"] = m.group(1).strip()
             break
+    if not bead["title"]:
+        print(
+            f"⚠ bd show {bead_id} returned output without parseable title; "
+            f"keyword-overlap scan disabled.",
+            file=sys.stderr,
+        )
     return bead
 
 
 def _fetch_recent_prs(repo: str, limit: int = 50) -> list[dict]:
-    """Run `gh pr list --state merged` and parse number+title."""
+    """Run `gh pr list --state merged` and parse number+title. Falls back
+    to empty list on subprocess / JSON error with a degraded-mode stderr
+    warning. Per godfrey obs on PR #1377."""
     try:
         out = subprocess.run(
             [
@@ -164,11 +187,20 @@ def _fetch_recent_prs(repo: str, limit: int = 50) -> list[dict]:
             ],
             capture_output=True, text=True, timeout=30,
         ).stdout
-    except (subprocess.SubprocessError, FileNotFoundError):
+    except (subprocess.SubprocessError, FileNotFoundError) as err:
+        print(
+            f"⚠ gh pr list failed ({err}); staleness check ran with empty PR set.",
+            file=sys.stderr,
+        )
         return []
     try:
         return json.loads(out)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as err:
+        print(
+            f"⚠ gh pr list returned non-JSON output ({err}); staleness check "
+            f"ran with empty PR set.",
+            file=sys.stderr,
+        )
         return []
 
 
