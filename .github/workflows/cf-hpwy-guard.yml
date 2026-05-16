@@ -1,0 +1,58 @@
+# cf-69fi (cf-roadmap.5): dead-code regression guard.
+#
+# Runs cf-hpwy v5 (scripts/cf-dead-routes/audit.py) on every PR + computes
+# the gated-verdict deltas vs scripts/cf-dead-routes/baseline.json.
+#
+# Week-1 (current): soft-fail mode — emits a markdown report as a PR
+# annotation, exit 0 even on regression so merges stay unblocked while
+# the team finishes the cf-roadmap.2 long-tail cleanup.
+#
+# Week-2+: flip --mode=soft → --mode=hard in this file (one-line edit)
+# to turn the gate into a merge blocker. cf-roadmap.5 acceptance covers
+# the soft→hard transition trigger.
+#
+# Baseline updates: a maintainer runs
+#   `python3 scripts/cf-dead-routes/check_baseline.py --update-baseline`
+# after a cleanup PR and commits scripts/cf-dead-routes/baseline.json.
+# Mirrors the vitest coverage-ratchet convention (cf-4x7e.B3/B4/B5).
+#
+# Security: this workflow does not interpolate any untrusted PR/issue
+# input into run: commands. The PR annotation step reads a file produced
+# by the trusted python script, never user-supplied text.
+
+name: cf-hpwy dead-code guard
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write  # for the markdown annotation comment
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Run cf-hpwy v5 audit
+        run: python3 scripts/cf-dead-routes/audit.py
+
+      - name: Compare gated counts against baseline (soft-fail)
+        run: |
+          set -o pipefail
+          python3 scripts/cf-dead-routes/check_baseline.py --mode=soft \
+            | tee /tmp/cf-69fi-report.md
+
+      - name: Annotate PR with the report
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: cf-69fi-dead-code-guard
+          path: /tmp/cf-69fi-report.md
