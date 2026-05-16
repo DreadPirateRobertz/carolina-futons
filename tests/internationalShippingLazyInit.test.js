@@ -1,108 +1,67 @@
 /**
- * @file internationalShippingLazyInit.test.js
- * @description Tests for cf-r6q7 (cf-t8k1.fu2) — lazy-init of the
- * internationalShippingConfig destructure in
- * `src/backend/internationalShipping.web.js`. Mirrors the cf-t8k1.fu1
- * test surface on ups-shipping (PR #1364) per the convention
- * morgott + radahn calibrated.
+ * cf-r6q7 (cf-t8k1.fu2) — Pins the lazy-init contract for
+ * internationalShipping.web.js with an EMPTY public/sharedTokens mock.
  *
- * Pre-fix, the module destructured `{ zones, restrictedCountries,
- * freeInternationalThreshold }` at top-level — any test that mocked
- * `public/sharedTokens` with a partial shape (missing
- * `internationalShippingConfig`) blocked the entire file's test
- * collection with TypeError during import. Post-fix, the getters
- * defer the deref until first call.
+ * Mirrors PR fu1's split-file structure exactly (cf-t8k1.fu1):
+ * companion file tests/internationalShippingLazyInitPopulated.test.js
+ * pins the populated-mock contracts. Split because the CF-fgsw
+ * noDoMockInTestBody invariant forbids per-test mock-shape swaps via
+ * `vi.doMock` — each test file declares its mock shape once at top level.
+ *
+ * The local invariant pinned here: module imports cleanly with a
+ * TRULY EMPTY sharedTokens mock (named exports resolve to undefined).
+ * Getter calls then throw synchronously, surfacing the misconfig at
+ * first use rather than at module-import time. Pre-fix this module
+ * destructured `const { zones, restrictedCountries, freeInternationalThreshold } =
+ * internationalShippingConfig` at top-level, which blocked the entire
+ * test file's collection with TypeError during import.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
-// EMPTY sharedTokens mock — this is the load-bearing test setup. If
-// the module-init still destructures at import-time, this mock shape
-// would crash the file collection.
-vi.mock('public/sharedTokens.js', () => ({
-  internationalShippingConfig: {},
-  business: {},
-  colors: {},
+// EMPTY mock — named imports resolve to undefined. Pre-fix this would
+// have crashed module import; post-fix import succeeds and only the
+// getter calls would surface the missing-config TypeError.
+vi.mock('public/sharedTokens.js', () => ({}));
+
+// Stub remaining transitive imports so the module-load path runs to
+// completion under this minimal mock surface.
+vi.mock('backend/utils/sanitize', () => ({ sanitize: (s) => s }));
+vi.mock('wix-web-module', () => ({
+  Permissions: { Admin: 'Admin', SiteMember: 'SiteMember', Anyone: 'Anyone' },
+  webMethod: (_perm, fn) => fn,
 }));
 
-// Sentinel — exercised by the "throws clearly" test.
-const COMPLETE_MOCK = {
-  internationalShippingConfig: {
-    zones: {
-      na: { name: 'North America', countries: ['CA', 'MX'], baseRate: 25, perPoundRate: 2 },
-      other: { name: 'Other', countries: [], baseRate: 50, perPoundRate: 5 },
-    },
-    restrictedCountries: ['CU', 'IR', 'KP'],
-    freeInternationalThreshold: 1500,
-  },
-  business: { address: {} },
-  colors: {},
-};
-
-describe('cf-r6q7 lazy-init internationalShipping.web.js', () => {
-  beforeEach(() => {
-    // Reset module cache so each test gets a fresh _zonesCache /
-    // _restrictedCountriesCache / _freeInternationalThresholdCache.
-    vi.resetModules();
-  });
-
+describe('cf-r6q7 — internationalShipping lazy-init contract (empty mock)', () => {
   it('imports cleanly with EMPTY public/sharedTokens mock (no module-init deref)', async () => {
-    // Pre-fix this would have thrown TypeError during import because
-    // `const { zones, ... } = internationalShippingConfig` ran at
-    // top level. Post-fix, the module imports fine and only the
-    // getter calls would surface the partial-mock problem.
-    await expect(import('../src/backend/internationalShipping.web.js')).resolves.toBeTruthy();
+    // Pre-fix: TypeError during import — top-level destructure on
+    // undefined `internationalShippingConfig` crashes module load and
+    // blocks any test in the file from running.
+    //
+    // Post-fix: import succeeds; named exports are present.
+    const mod = await import('../src/backend/internationalShipping.web.js');
+    expect(mod).toBeDefined();
+    expect(typeof mod.getInternationalZones).toBe('function');
+    expect(typeof mod.getRestrictedCountries).toBe('function');
+    expect(typeof mod.getFreeInternationalThreshold).toBe('function');
   });
 
-  it('getInternationalZones returns undefined when sharedTokens fields are missing', async () => {
-    // With the empty mock, `internationalShippingConfig` IS defined
-    // (= {}) but `.zones` is undefined. The getter caches and returns
-    // undefined — distinct from the cf-t8k1.fu1 ups-shipping case
-    // where `brand.name` throws because `brand` itself is undefined.
-    // The downstream consumer (e.g. `Object.entries(zones)`) is what
-    // throws at use-site, NOT the getter — fail loud at first use, not
-    // silent. Tests at the consumer level catch this; the getter's
-    // role is to defer the deref past module-init, no more.
+  it('getInternationalZones throws clearly when sharedTokens is empty', async () => {
+    // Mirrors fu1's `getOriginAddress throws clearly` test — the
+    // getter call surfaces the missing-config TypeError at use-site,
+    // NOT silently into `undefined`. With the empty mock above,
+    // `internationalShippingConfig` is undefined, so `.zones` throws.
     const mod = await import('../src/backend/internationalShipping.web.js');
-    const zones = mod.getInternationalZones();
-    expect(zones).toBeUndefined();
+    expect(() => mod.getInternationalZones()).toThrow();
   });
 
-  it('getInternationalZones returns the zones map when mock is complete', async () => {
-    vi.doMock('public/sharedTokens.js', () => COMPLETE_MOCK);
+  it('getRestrictedCountries throws clearly when sharedTokens is empty', async () => {
     const mod = await import('../src/backend/internationalShipping.web.js');
-    const zones = mod.getInternationalZones();
-    expect(zones).toBeDefined();
-    expect(zones.na).toBeDefined();
-    expect(zones.na.countries).toContain('CA');
+    expect(() => mod.getRestrictedCountries()).toThrow();
   });
 
-  it('getRestrictedCountries returns the restricted list', async () => {
-    vi.doMock('public/sharedTokens.js', () => COMPLETE_MOCK);
+  it('getFreeInternationalThreshold throws clearly when sharedTokens is empty', async () => {
     const mod = await import('../src/backend/internationalShipping.web.js');
-    expect(mod.getRestrictedCountries()).toEqual(['CU', 'IR', 'KP']);
-  });
-
-  it('getFreeInternationalThreshold returns the configured threshold', async () => {
-    vi.doMock('public/sharedTokens.js', () => COMPLETE_MOCK);
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    expect(mod.getFreeInternationalThreshold()).toBe(1500);
-  });
-
-  it('getInternationalZones is memoized — repeat calls return identical reference', async () => {
-    vi.doMock('public/sharedTokens.js', () => COMPLETE_MOCK);
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    const first = mod.getInternationalZones();
-    const second = mod.getInternationalZones();
-    // Identity equality is the singleton contract — future refactor
-    // that rebuilds on every call would fail this assertion.
-    expect(first).toBe(second);
-  });
-
-  it('getRestrictedCountries + getFreeInternationalThreshold are independently memoized', async () => {
-    vi.doMock('public/sharedTokens.js', () => COMPLETE_MOCK);
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    expect(mod.getRestrictedCountries()).toBe(mod.getRestrictedCountries());
-    expect(mod.getFreeInternationalThreshold()).toBe(mod.getFreeInternationalThreshold());
+    expect(() => mod.getFreeInternationalThreshold()).toThrow();
   });
 });

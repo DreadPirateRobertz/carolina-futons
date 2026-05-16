@@ -17,14 +17,18 @@ import { internationalShippingConfig, business } from 'public/sharedTokens.js';
 // Any test that mocked public/sharedTokens with a partial shape
 // (missing internationalShippingConfig) blocked the entire test
 // file's collection with TypeError during import — same class as the
-// cf-t8k1 trap on ups-shipping (PR #1363 tactical + #1364 root-cause
-// pair). Deferring computation into per-field getters decouples
-// module-init from mock shape; tests that don't exercise international
-// shipping skip the mock entirely.
+// cf-t8k1 trap on ups-shipping. Deferring computation into per-field
+// getters decouples module-init from mock shape; tests that don't
+// exercise international shipping can skip the mock entirely.
+//
+// Failure semantics: a getter call surfaces a missing-config TypeError
+// at first use (synchronous throw via deref on undefined parent), NOT
+// silently as undefined. This mirrors the cf-t8k1.fu1 fail-loud
+// contract — fail at the boundary, not as silent fallback.
 //
 // Memoization is module-scoped (process-lifetime static, never
-// changes per request). The unexported `_*Cache` vars prevent test
-// pollution between cases.
+// changes per request). `vi.resetModules()` resets the cache between
+// test cases when the consumer suite needs fresh state.
 
 let _zonesCache = null;
 let _restrictedCountriesCache = null;
@@ -33,8 +37,12 @@ let _freeInternationalThresholdCache = null;
 /**
  * Lazy accessor for the international shipping zones map.
  * Reads `internationalShippingConfig.zones` on first call + memoizes.
+ * Throws TypeError if `internationalShippingConfig` is undefined
+ * (misconfigured sharedTokens) — fail-loud at use-site rather than
+ * silent at module-init.
  *
  * @returns {Object} Zone map keyed by zone name (e.g. `na`, `eu`, `other`).
+ * @throws {TypeError} When sharedTokens does not export `internationalShippingConfig`.
  */
 export function getInternationalZones() {
   if (_zonesCache === null) {
@@ -45,9 +53,12 @@ export function getInternationalZones() {
 
 /**
  * Lazy accessor for the restricted-countries list (ISO 3166-1 alpha-2).
- * Reads `internationalShippingConfig.restrictedCountries` on first call + memoizes.
+ * Reads `internationalShippingConfig.restrictedCountries` on first
+ * call + memoizes. Throws TypeError under the same conditions as
+ * `getInternationalZones`.
  *
  * @returns {string[]} Array of restricted-country codes.
+ * @throws {TypeError} When sharedTokens does not export `internationalShippingConfig`.
  */
 export function getRestrictedCountries() {
   if (_restrictedCountriesCache === null) {
@@ -59,9 +70,11 @@ export function getRestrictedCountries() {
 /**
  * Lazy accessor for the free-international-shipping threshold.
  * Reads `internationalShippingConfig.freeInternationalThreshold` on
- * first call + memoizes.
+ * first call + memoizes. Throws TypeError under the same conditions
+ * as `getInternationalZones`.
  *
  * @returns {number} The subtotal threshold above which international shipping is free.
+ * @throws {TypeError} When sharedTokens does not export `internationalShippingConfig`.
  */
 export function getFreeInternationalThreshold() {
   if (_freeInternationalThresholdCache === null) {
