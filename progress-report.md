@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 07:55 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 08:10 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -41,7 +41,12 @@
 | cfutons #1389–#1391 | cfutons | fix(cf-44qt wave): 3 more logError files ✅ (merged pre-compaction) |
 | cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
 | cf-c736 | cfw | feat: generateStaticParams + dynamicParams=false /products/[slug] — dispatched to blaidd (unblocked by cf-0klm) |
-| cfutons #1392 | cfutons | fix(cf-44qt sibling): warrantyService logError×7 ✅ MERGED 07:39 MT — all CI green, 77/77 tests |
+| cfutons #1392 | cfutons | fix(cf-44qt sibling): warrantyService logError×7 ✅ MERGED 07:39 MT |
+| cfutons #1393 | cfutons | fix(cf-44qt sibling): promotionsEngine logError×8 ✅ MERGED 07:51 MT (13th) |
+| cfw #715 | cfw | perf(cf-c736): generateStaticParams + dynamicParams=false ✅ MERGED 08:00 MT — ISR trio complete |
+| cfutons #1394 | cfutons | fix(cf-44qt sibling): mediaGallery logError×8 ✅ MERGED 08:02 MT (14th) |
+| cfutons #1395 | cfutons | fix(cf-44qt sibling): ugcService logError×? ✅ MERGED 08:07 MT (15th) |
+| cf-44qt convoy | cfutons | 3-way convoy ACTIVE: morgott (lead), blaidd+godfrey (batches dispatched). 151 .web.js files remain. |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
