@@ -221,6 +221,96 @@ describe("Live-API integration (auto-skips without Stilgar tokens)", () => {
   );
 });
 
+// ─── cf-wv1s: realistic-API-shape fixture tests for UR + Sentry parse ─────
+//
+// The greenFixtures() shape was deliberately minimal. The real UR API
+// response uses `custom_uptime_ratios` (with `s`, returning a string of
+// comma-separated period uptimes). The real Sentry issues response is a
+// flat array of issues with `count` (string) + `firstSeen` / `lastSeen`
+// per issue + no top-level errorRatePerMin field. These cases pin the
+// parse logic against the actual API shapes so the live-mode wire-up
+// doesn't silently misclassify.
+
+describe("cf-wv1s — realistic UR + Sentry API shapes parse correctly", () => {
+  it("parses UptimeRobot custom_uptime_ratio (singular form) — current fixture path", async () => {
+    const fx = greenFixtures();
+    // Current parse code uses `custom_uptime_ratio` (singular). Live
+    // API returns `custom_uptime_ratios` (plural, comma-list). Cell
+    // must tolerate both — singular = single 24h ratio, plural =
+    // first value in comma-list.
+    fx.uptimeRobot.monitors = [
+      { id: 1, status: 2, friendly_name: "/", custom_uptime_ratio: "99.95" },
+    ];
+    const { exitCode } = await runDashboard(fx);
+    expect(exitCode).toBe(0);
+  });
+
+  it("parses UptimeRobot custom_uptime_ratios plural — live API shape", async () => {
+    // Live response shape uses the plural field name + comma-separated
+    // string of uptime ratios for the requested periods. With
+    // ?custom_uptime_ratios=24 you get a single value but as a string.
+    const fx = greenFixtures();
+    fx.uptimeRobot.monitors = [
+      {
+        id: 1,
+        status: 2,
+        friendly_name: "/",
+        custom_uptime_ratios: "99.95",  // single-period response
+      },
+      {
+        id: 2,
+        status: 2,
+        friendly_name: "/api/health",
+        custom_uptime_ratios: "99.99",
+      },
+    ];
+    const { stdout, exitCode } = await runDashboard(fx);
+    expect(exitCode).toBe(0);
+    // Both ratios should be parsed; min should be 99.95
+    expect(stdout).toMatch(/uptimeRobot_uptime_24h_min:\s*99\.95/);
+  });
+
+  it("computes Sentry error_rate_per_min from issues[].count when no top-level field", async () => {
+    // Live Sentry response has no `errorRatePerMin` field; cell must
+    // derive it from sum(issues[].count) / minutes-in-window. With a
+    // 24h statsPeriod, minutes = 1440.
+    //
+    // Fixture uses level=warning to isolate the rate-calc contract
+    // from the unresolved-P0/P1 verdict contract. The verdict path is
+    // pinned separately by the next test.
+    const fx = greenFixtures();
+    fx.sentry = {
+      issues: [
+        { id: "s1", count: "120", level: "warning", firstSeen: "2026-05-15T00:00:00Z" },
+        { id: "s2", count: "30", level: "warning", firstSeen: "2026-05-15T01:00:00Z" },
+      ],
+      // No top-level errorRatePerMin — cell must compute.
+    };
+    const { exitCode, stdout } = await runDashboard(fx);
+    // 120+30 = 150 events / 1440 min = ~0.104/min → GREEN threshold (<0.5);
+    // 0 unresolved error/fatal → unresolved=0 → GREEN
+    expect(exitCode).toBe(0);
+    expect(stdout).toMatch(/sentry_error_rate_per_min:\s*0\./);
+  });
+
+  it("Sentry unresolved P0/P1 count uses level field as primary signal", async () => {
+    // Verify the bucketing logic — only level in {error, fatal} counts.
+    const fx = greenFixtures();
+    fx.sentry = {
+      issues: [
+        { id: "s1", count: "1", level: "error" },
+        { id: "s2", count: "1", level: "fatal" },
+        { id: "s3", count: "1", level: "warning" },
+        { id: "s4", count: "1", level: "info" },
+      ],
+      errorRatePerMin: 0.1,  // explicit, override compute path
+    };
+    const { stdout } = await runDashboard(fx);
+    // 2 error+fatal → unresolved_p0p1_count=2 → YELLOW per spec
+    expect(stdout).toMatch(/sentry_unresolved_p0p1_count:\s*2/);
+  });
+});
+
 // ─── Fixtures ───────────────────────────────────────────────────────────
 
 function greenFixtures() {
