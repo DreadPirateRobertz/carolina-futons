@@ -16,6 +16,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Conversion Funnel ───────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ export const getConversionFunnel = webMethod(
         period: `${days} days`,
       };
     } catch (err) {
-      console.error('[analyticsDashboard] Error building conversion funnel:', err);
+      logError('[analyticsDashboard] Error building conversion funnel', err);
       return {
         stages: [],
         conversionRates: { viewToCart: 0, cartToPurchase: 0, viewToPurchase: 0 },
@@ -105,7 +106,7 @@ export const getTopConverters = webMethod(
         .sort((a, b) => b.conversionRate - a.conversionRate)
         .slice(0, limit);
     } catch (err) {
-      console.error('[analyticsDashboard] Error fetching top converters:', err);
+      logError('[analyticsDashboard] Error fetching top converters', err);
       return [];
     }
   }
@@ -146,7 +147,7 @@ export const getCategoryPerformance = webMethod(
         }))
         .sort((a, b) => b.views - a.views);
     } catch (err) {
-      console.error('[analyticsDashboard] Error fetching category performance:', err);
+      logError('[analyticsDashboard] Error fetching category performance', err);
       return [];
     }
   }
@@ -196,7 +197,7 @@ export const getEmailFunnelMetrics = webMethod(
         period: `${days} days`,
       };
     } catch (err) {
-      console.error('[analyticsDashboard] Error fetching email metrics:', err);
+      logError('[analyticsDashboard] Error fetching email metrics', err);
       return { metrics: {}, totalEmails: 0, period: `${days} days` };
     }
   }
@@ -255,7 +256,7 @@ export const getRevenueAttribution = webMethod(
         totalAttributedRevenue: round(totalAttributedRevenue),
       };
     } catch (err) {
-      console.error('[analyticsDashboard] Error fetching revenue attribution:', err);
+      logError('[analyticsDashboard] Error fetching revenue attribution', err);
       return { topProducts: [], totalAttributedRevenue: 0 };
     }
   }
@@ -333,7 +334,7 @@ export const getNpsDashboardSection = webMethod(
       const agg = _aggregateNpsItems(result.items);
       return { ...agg, periodDays: lookback };
     } catch (err) {
-      console.error('[analyticsDashboard] Error fetching NPS data:', err);
+      logError('[analyticsDashboard] Error fetching NPS data', err);
       return {
         npsScore: null,
         count: 0,
@@ -390,7 +391,7 @@ export const getDashboardSummary = webMethod(
         period: `${days} days`,
       };
     } catch (err) {
-      console.error('[analyticsDashboard] Error building dashboard summary:', err);
+      logError('[analyticsDashboard] Error building dashboard summary', err);
       return {
         funnel: { viewToCart: 0, cartToPurchase: 0, viewToPurchase: 0 },
         totalViews: 0,
