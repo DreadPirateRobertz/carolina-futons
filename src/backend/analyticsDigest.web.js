@@ -166,7 +166,7 @@ export const sendWeeklyDigestEmail = webMethod(
       // resolve so processQueue doesn't reject the row at dispatch time.
       const digestContactId = await _resolveContactIdInternal(recipient);
       if (!digestContactId) {
-        logError(`analyticsDigest:sendWeeklyDigestEmail:resolveContactId-null recipient=${recipient}`, new Error('resolveContactId returned null'));
+        logError('analyticsDigest:sendWeeklyDigestEmail', new Error('resolveContactId returned null'));
         return { success: false, error: 'Failed to resolve CRM contact for digest email' };
       }
 
