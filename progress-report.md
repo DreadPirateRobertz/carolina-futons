@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 02:57 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 03:08 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -22,7 +22,8 @@
 ### PRs still in flight
 | PR | Repo | Status |
 |----|------|--------|
-| cfutons #1373 | cfutons | cf-uydr emailAutomation logError×19 — test fix pushed, CI re-running (test22 pending) |
+| cfutons #1373 | cfutons | cf-uydr emailAutomation logError×19 — MERGED ✅ |
+| cfutons #1374 | cfutons | cf-qyjw d3-color Dependabot HIGH override — MERGED ✅ |
 
 ### Merged this cadence (02:55 MT)
 - cfw #702 (cf-mu05 lazy-load priority pins) ✅
@@ -39,6 +40,10 @@
 - cfutons #1368 ✅ (SHIP, confidence 95)
 - cfw #699 ✅ (SHIP, confidence 93)
 - cfw #700 ✅ (SHIP, confidence 97)
+- cfw #702 ✅ (SHIP — lazy-load pins audit)
+- cfw #703 ✅ (SHIP — newsletter PII P1)
+- cfutons #1373 ✅ (SHIP — emailAutomation logError)
+- cfutons #1374 ✅ (SHIP — d3-color Dependabot)
 
 ### Blocked / gated
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
