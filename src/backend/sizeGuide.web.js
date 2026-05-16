@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const CM_PER_INCH = 2.54;
 const TIGHT_FIT_THRESHOLD = 2; // inches — warn when clearance < 2"
@@ -72,7 +73,7 @@ export const getProductDimensions = webMethod(
         mattressSize: dims.mattressSize ?? null,
       };
     } catch (err) {
-      console.error('Error fetching product dimensions:', err);
+      logError('sizeGuide:getProductDimensions', err);
       return null;
     }
   }
@@ -185,7 +186,7 @@ export const checkRoomFit = webMethod(
         checks,
       };
     } catch (err) {
-      console.error('Error checking room fit:', err);
+      logError('sizeGuide:checkRoomFit', err);
       return { success: false, error: 'Failed to check room fit' };
     }
   }
@@ -241,7 +242,7 @@ export const getDimensionsByCategory = webMethod(
         };
       });
     } catch (err) {
-      console.error('Error fetching category dimensions:', err);
+      logError('sizeGuide:getDimensionsByCategory', err);
       return [];
     }
   }
@@ -351,7 +352,7 @@ export const getComparisonTable = webMethod(
         products: entries,
       };
     } catch (err) {
-      console.error('Error building comparison table:', err);
+      logError('sizeGuide:getComparisonTable', err);
       return { success: false, error: 'Failed to build comparison table' };
     }
   }
