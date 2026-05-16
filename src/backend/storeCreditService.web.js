@@ -21,6 +21,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ export const issueStoreCredit = webMethod(
         expirationDate: expirationDate.toISOString(),
       };
     } catch (err) {
-      console.error('[storeCreditService] Error issuing store credit:', err);
+      logError('storeCreditService:issueStoreCredit', err);
       return { success: false, message: 'Failed to issue store credit.' };
     }
   }
@@ -167,7 +168,7 @@ export const getMyStoreCredit = webMethod(
         credits: activeCredits,
       };
     } catch (err) {
-      console.error('[storeCreditService] Error getting store credit:', err);
+      logError('storeCreditService:getMyStoreCredit', err);
       return { success: false, message: 'Failed to retrieve store credit.' };
     }
   }
@@ -259,7 +260,7 @@ export const applyStoreCredit = webMethod(
         creditsUsed,
       };
     } catch (err) {
-      console.error('[storeCreditService] Error applying store credit:', err);
+      logError('storeCreditService:applyStoreCredit', err);
       return { success: false, message: 'Failed to apply store credit.' };
     }
   }
@@ -313,7 +314,7 @@ export const getStoreCreditHistory = webMethod(
 
       return { success: true, credits };
     } catch (err) {
-      console.error('[storeCreditService] Error getting credit history:', err);
+      logError('storeCreditService:getStoreCreditHistory', err);
       return { success: false, message: 'Failed to retrieve credit history.' };
     }
   }
@@ -442,7 +443,7 @@ export const giftStoreCredit = webMethod(
         newCreditId: newCredit._id,
       };
     } catch (err) {
-      console.error('[storeCreditService] Error gifting store credit:', err);
+      logError('storeCreditService:giftStoreCredit', err);
       return { success: false, message: 'Failed to gift store credit.' };
     }
   }
@@ -501,7 +502,7 @@ export const getExpiringCredits = webMethod(
         expiringTotal,
       };
     } catch (err) {
-      console.error('[storeCreditService] Error getting expiring credits:', err);
+      logError('storeCreditService:getExpiringCredits', err);
       return { success: false, message: 'Failed to retrieve expiring credits.' };
     }
   }
