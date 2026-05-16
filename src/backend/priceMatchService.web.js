@@ -33,6 +33,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'PriceMatches';
 const MAX_NOTES_LEN = 2000;
@@ -251,7 +252,7 @@ export const submitPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      console.error('Error submitting price match request:', err);
+      logError('priceMatchService:submitPriceMatchRequest', err);
       return { success: false, message: 'Failed to submit price match request' };
     }
   }
@@ -291,7 +292,7 @@ export const getMyPriceMatches = webMethod(
         })),
       };
     } catch (err) {
-      console.error('Error fetching price matches:', err);
+      logError('priceMatchService:getMyPriceMatches', err);
       return { requests: [] };
     }
   }
@@ -336,7 +337,7 @@ export const getPriceMatchById = webMethod(
         },
       };
     } catch (err) {
-      console.error('Error fetching price match:', err);
+      logError('priceMatchService:getPriceMatchById', err);
       return { success: false, message: 'Failed to fetch price match request' };
     }
   }
@@ -394,7 +395,7 @@ export const reviewPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      console.error('Error reviewing price match request:', err);
+      logError('priceMatchService:reviewPriceMatchRequest', err);
       return { success: false, message: 'Failed to review price match request' };
     }
   }
@@ -444,7 +445,7 @@ export const getPriceMatchStats = webMethod(
 
       return { stats };
     } catch (err) {
-      console.error('Error fetching price match stats:', err);
+      logError('priceMatchService:getPriceMatchStats', err);
       return {
         stats: {
           total: 0,
