@@ -5,7 +5,11 @@
  * validation, and API parameter correctness.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 import { generateRecoveryCoupon } from '../src/backend/couponsService.web.js';
+import { logError } from 'backend/utils/errorHandler';
 import { coupons } from './__mocks__/wix-marketing-backend.js';
 import wixData, { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
 
@@ -13,6 +17,7 @@ beforeEach(() => {
   __reset();
   coupons.createCoupon.mockClear();
   coupons.createCoupon.mockResolvedValue({ code: 'RECOVER-ABCDEF', _id: 'coupon-mock-1' });
+  vi.mocked(logError).mockClear();
 });
 
 // ── Happy path ──────────────────────────────────────────────────────────────
@@ -243,16 +248,12 @@ describe('generateRecoveryCoupon — error handling', () => {
   });
 
   it('logs error with cartId on createCoupon failure', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     coupons.createCoupon.mockRejectedValueOnce(new Error('timeout'));
     await generateRecoveryCoupon({ cartId: 'cart-err-123', email: 'buyer@example.com' });
-    expect(errorSpy).toHaveBeenCalledWith(
+    expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('[couponsService]'),
-      expect.anything(),
-      expect.anything(),
-      expect.anything(),
+      expect.any(Error),
     );
-    errorSpy.mockRestore();
   });
 });
 
