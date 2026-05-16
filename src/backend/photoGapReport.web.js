@@ -12,6 +12,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const DEFAULT_THRESHOLD = 3.0;
 const CATALOG_COLLECTION = 'Products';
@@ -59,7 +60,7 @@ export const generatePhotoGapReport = webMethod(
 
       return { success: true, report };
     } catch (err) {
-      console.error('[photoGapReport] Error generating report:', err);
+      logError('photoGapReport:generateReport', err);
       return { success: false, error: 'Failed to generate photo gap report' };
     }
   }

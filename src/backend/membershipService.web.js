@@ -59,7 +59,7 @@ async function getActiveOrder() {
       o.status === 'ACTIVE' && CF_PLUS_SLUG_SET.has(o.planSlug)
     ) || null;
   } catch (err) {
-    logError('membershipService:getOrders', err);
+    logError('membershipService:fetchOrders', err);
     return null;
   }
 }

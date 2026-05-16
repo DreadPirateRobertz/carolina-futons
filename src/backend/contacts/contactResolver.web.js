@@ -100,7 +100,7 @@ export async function _resolveContactIdInternal(email, firstName) {
     // CRM upstream failure — caller decides whether to retry. Logged with
     // the email so support can correlate; never log full PII beyond what
     // the caller already has access to (the email).
-    logError(`[contactResolver] appendOrCreateContact ${cleanEmail}`, err);
+    logError(`contactResolver:appendOrCreateContact email=${redactEmail(cleanEmail)}`, err);
     return null;
   }
 
@@ -109,7 +109,7 @@ export async function _resolveContactIdInternal(email, firstName) {
   // resolution covers both.
   const contactId = result?.contactId || result?.contact?._id || result?._id;
   if (!contactId) {
-    console.warn('[contactResolver] appendOrCreateContact returned no contactId for', redactEmail(cleanEmail));
+    logError(`contactResolver:appendOrCreateContact-noContactId email=${redactEmail(cleanEmail)}`, null);
     return null;
   }
   return contactId;

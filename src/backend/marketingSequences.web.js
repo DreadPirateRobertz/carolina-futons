@@ -27,17 +27,9 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { enqueueEmail } from 'backend/emailQueueService.web';
-import { logError as _logErrorCanonical } from 'backend/utils/errorHandler';
+import { logError } from 'backend/utils/errorHandler';
 
 export const EMAIL_SEQUENCES_COLLECTION = 'EmailSequences';
-
-// cf-44qt: thin wrapper that prefixes [marketingSequences] to keep
-// the existing 1-arg + msg call sites unchanged. Underlying call now
-// routes through the canonical logError so Sentry/logging see a
-// uniform shape across the backend.
-function logError(msg, err) {
-  _logErrorCanonical(`[marketingSequences] ${msg}`, err);
-}
 
 // ── Internal: load active steps for a sequence type ──────────────────────────
 
@@ -102,7 +94,7 @@ export const triggerWelcomeSequence = webMethod(Permissions.Admin, async (params
     });
     return { success: true, enqueued };
   } catch (err) {
-    logError('triggerWelcomeSequence failed', err);
+    logError('marketingSequences:triggerWelcomeSequence', err);
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 });
@@ -141,7 +133,7 @@ export const triggerCartAbandonSequence = webMethod(Permissions.Admin, async (pa
     );
     return { success: true, enqueued };
   } catch (err) {
-    logError('triggerCartAbandonSequence failed', err);
+    logError('marketingSequences:triggerCartAbandonSequence', err);
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 });
@@ -175,7 +167,7 @@ export const triggerReviewRequestSequence = webMethod(Permissions.Admin, async (
     });
     return { success: true, enqueued };
   } catch (err) {
-    logError('triggerReviewRequestSequence failed', err);
+    logError('marketingSequences:triggerReviewRequestSequence', err);
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 });
@@ -246,7 +238,7 @@ export const runReviewRequestEmails = webMethod(Permissions.Admin, async () => {
 
     return { success: true, ordersScanned: orders.length, triggered, skipped, failed };
   } catch (err) {
-    logError('runReviewRequestEmails failed', err);
+    logError('marketingSequences:runReviewRequestEmails', err);
     return { success: false, ordersScanned: 0, triggered: 0, skipped: 0, failed: 0 };
   }
 });
@@ -278,7 +270,7 @@ export const triggerWinbackSequence = webMethod(Permissions.Admin, async (params
     });
     return { success: true, enqueued };
   } catch (err) {
-    logError('triggerWinbackSequence failed', err);
+    logError('marketingSequences:triggerWinbackSequence', err);
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 });
@@ -333,7 +325,7 @@ export const scanAndTriggerWinback = webMethod(Permissions.Admin, async () => {
 
     return { success: true, scanned, triggered };
   } catch (err) {
-    logError('scanAndTriggerWinback failed', err);
+    logError('marketingSequences:scanAndTriggerWinback', err);
     return { success: false, scanned: 0, triggered: 0, error: err?.message ?? 'unknown error' };
   }
 });

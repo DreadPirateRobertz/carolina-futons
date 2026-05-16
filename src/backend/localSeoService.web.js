@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateSlug } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import {
   LOCAL_PAGES,
   SITE_URL,
@@ -118,7 +119,7 @@ export const getLocalPage = webMethod(
       try {
         featuredProducts = await _fetchProductsByCity(cityData, 4);
       } catch (e) {
-        console.warn('[localSeoService] Failed to fetch featured products for page:', cleanSlug, e.message, e);
+        logError(`localSeoService:fetchFeaturedProductsForPage slug=${cleanSlug}`, e);
       }
 
       return {
@@ -167,7 +168,7 @@ export const getLocalPage = webMethod(
         },
       };
     } catch (err) {
-      console.error('[localSeoService] Error loading local page:', slug, err.name, err.message, err);
+      logError(`localSeoService:loadLocalPage slug=${slug}`, err);
       return { success: false, error: 'Failed to load local page.', page: null };
     }
   }
@@ -282,7 +283,7 @@ export const getFeaturedProductsForCity = webMethod(
       const products = await _fetchProductsByCity(cityData, limit);
       return { success: true, products };
     } catch (err) {
-      console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);
+      logError(`localSeoService:loadFeaturedProducts slug=${slug}`, err);
       return { success: false, error: 'Failed to load featured products.', products: [] };
     }
   }
@@ -331,7 +332,7 @@ export const getRelatedCityLinks = webMethod(
 
       return { success: true, links };
     } catch (err) {
-      console.error('[localSeoService] Error loading related city links:', slug, err.name, err.message, err);
+      logError(`localSeoService:loadRelatedCityLinks slug=${slug}`, err);
       return { success: false, error: 'Failed to load related city links.', links: [] };
     }
   }
@@ -359,7 +360,7 @@ export const getAllLocalSlugs = webMethod(
       const allSlugs = [...new Set([...staticSlugs, ...cmsSlugs])];
       return { success: true, slugs: allSlugs };
     } catch (err) {
-      console.error('[localSeoService] Error getting local slugs:', err.name, err.message, err);
+      logError('localSeoService:getLocalSlugs', err);
       return { success: false, slugs: [] };
     }
   }
