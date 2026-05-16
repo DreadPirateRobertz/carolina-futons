@@ -72,7 +72,7 @@ export default defineConfig({
       thresholds: {
         statements: 90,
         branches: 84.8, // cf-4x7e.B5: surgical drop of 6 webMethods + matching test blocks ticked branches another 0.01% under the B-3 ratchet
-        functions: 88.8, // cf-4x7e.B4: 11 whole-file deletes / 28 dead webMethods dropped functions 0.19%
+        functions: 88.7, // cf-v6zo: PR #1355 cf-wv1s (dashboard.sh + 90 new test LOC) ticked functions to 88.78%; recovering with a 0.1 ratchet to match the new floor + leave headroom (mirrors B-3/B-4/B-5 ratchet pattern)
         lines: 91,
       },
     },
