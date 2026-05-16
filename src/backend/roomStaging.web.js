@@ -26,6 +26,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import { mediaManager } from 'wix-media-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const MAX_IMAGE_SIZE_MB = 10;
 const STAGING_CACHE_COLLECTION = 'RoomStagingCache';
@@ -140,7 +141,7 @@ export const generateStagedRoom = webMethod(
 
       if (!response.ok) {
         const errText = await response.text().catch(() => '');
-        console.error('[roomStaging] AI API error:', response.status, errText.slice(0, 200));
+        logError(`roomStaging:generateStagedRoom-aiApi status=${response.status}`, new Error(errText.slice(0, 200)));
         return { success: false, stagedImageUrl: '', error: `AI generation failed (${response.status})` };
       }
 
@@ -175,7 +176,7 @@ export const generateStagedRoom = webMethod(
 
       return { success: true, stagedImageUrl, prompt };
     } catch (err) {
-      console.error('[roomStaging] generateStagedRoom failed:', err?.message);
+      logError('roomStaging:generateStagedRoom', err);
       return { success: false, stagedImageUrl: '', error: err?.message || 'Unknown error' };
     }
   }
