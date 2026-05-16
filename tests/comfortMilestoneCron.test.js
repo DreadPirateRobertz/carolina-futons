@@ -5,8 +5,8 @@
  * cf-4x7e.B5 / PR #1333).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __seed } from './__mocks__/wix-data.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { __seed, __setQueryError } from './__mocks__/wix-data.js';
 
 import { processComfortMilestones } from '../src/backend/comfortMilestoneCron.web.js';
 
@@ -158,17 +158,54 @@ describe('processComfortMilestones — multiple timelines', () => {
   });
 });
 
-describe('processComfortMilestones — error handling', () => {
-  it('returns success:false on a query failure without throwing', async () => {
-    // Module-namespace mocked wix-data — force a query error by passing
-    // null into the seeded collection (existing mock semantic) doesn't
-    // throw, so instead test that the broader contract holds when no
-    // rows seed at all.
+describe('processComfortMilestones — empty collection happy path', () => {
+  it('returns success:true with zero results when no timelines are seeded', async () => {
     __seed('ComfortTimelines', []);
     const result = await processComfortMilestones();
     expect(result.success).toBe(true);
     expect(result.timelinesScanned).toBe(0);
     expect(result.milestonesFound).toBe(0);
     expect(result.results).toEqual([]);
+  });
+});
+
+// pr-test-analyzer finding from 5-lens review: the prior describe was
+// mis-labeled "error handling" while seeding `[]` — that's actually the
+// empty-collection happy path. The wix-data mock exposes
+// `__setQueryError(collection, error)` to force the real try/catch
+// path; this describe exercises it.
+describe('processComfortMilestones — error handling', () => {
+  afterEach(() => {
+    __setQueryError('ComfortTimelines', null);
+  });
+
+  it('returns success:false on a Wix query failure (does not throw)', async () => {
+    __setQueryError('ComfortTimelines', new Error('Wix data unavailable'));
+    const result = await processComfortMilestones();
+    expect(result.success).toBe(false);
+    expect(result.timelinesScanned).toBe(0);
+    expect(result.milestonesFound).toBe(0);
+    expect(result.results).toEqual([]);
+  });
+});
+
+// pr-test-analyzer finding: clock-skew negative-daysSince edge case.
+// A deliveredAt timestamp newer than `now` (clock skew between
+// the Wix database server and the cron runner, or an admin manually
+// editing a row) shouldn't crash and shouldn't fire the Day 1 window
+// — daysSince would be -1 / -0 / 0, all outside Day 1's [0, 2] window
+// except the boundary day-0 case which IS Day 1's minDays (legitimate
+// same-day delivery).
+describe('processComfortMilestones — clock-skew edge cases', () => {
+  it('fires Day 1 for an exactly-now deliveredAt (daysSince=0 is inside the Day 1 window)', async () => {
+    seedTimeline({ deliveredAt: new Date(NOW_MS) });
+    const result = await processComfortMilestones();
+    expect(result.results[0]?.milestone).toBe('day_1');
+  });
+
+  it('does NOT fire any milestone for a deliveredAt in the future (negative daysSince)', async () => {
+    seedTimeline({ deliveredAt: new Date(NOW_MS + 5 * 24 * 60 * 60 * 1000) });
+    const result = await processComfortMilestones();
+    expect(result.milestonesFound).toBe(0);
   });
 });
