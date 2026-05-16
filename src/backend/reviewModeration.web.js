@@ -156,7 +156,7 @@ export const getModerationQueue = webMethod(
 
       return { success: true, reviews, total: result.totalCount };
     } catch (err) {
-      logError('[reviewModeration] getModerationQueue failed', err);
+      logError('reviewModeration:getModerationQueue', err);
       return { success: false, reviews: [], total: 0 };
     }
   }
@@ -206,7 +206,7 @@ export const bulkModerate = webMethod(
             failed++;
           }
         } catch (e) {
-          logError(`[reviewModeration] bulkModerate item-${id} failed`, e);
+          logError(`reviewModeration:bulkModerate-itemError id=${id}`, e);
           failed++;
         }
       }
@@ -217,7 +217,7 @@ export const bulkModerate = webMethod(
 
       return { success: true, processed, failed };
     } catch (err) {
-      logError('[reviewModeration] bulkModerate failed', err);
+      logError('reviewModeration:bulkModerate', err);
       return { success: false, processed: 0, failed: 0, error: 'Bulk moderation failed' };
     }
   }
@@ -257,7 +257,7 @@ export const autoRejectSpam = webMethod(
 
       return { success: true, scanned: result.items.length, rejected };
     } catch (err) {
-      logError('[reviewModeration] autoRejectSpam failed', err);
+      logError('reviewModeration:autoRejectSpam', err);
       return { success: false, scanned: 0, rejected: 0 };
     }
   }
@@ -283,7 +283,7 @@ export const getModerationStats = webMethod(
         stats: { pending, approved, rejected, flagged, total: pending + approved + rejected },
       };
     } catch (err) {
-      logError('[reviewModeration] getModerationStats failed', err);
+      logError('reviewModeration:getModerationStats', err);
       return { success: false, stats: null };
     }
   }
@@ -386,7 +386,7 @@ export async function ingestStampedReview(payload) {
 
     return { success: true, reviewId: saved._id, status };
   } catch (err) {
-    logError('[reviewModeration] ingestStampedReview failed', err);
+    logError('reviewModeration:ingestStampedReview', err);
     return { success: false };
   }
 }
@@ -425,7 +425,7 @@ export const autoApproveEligible = webMethod(
 
       return { success: true, scanned: result.items.length, approved };
     } catch (err) {
-      logError('[reviewModeration] autoApproveEligible failed', err);
+      logError('reviewModeration:autoApproveEligible', err);
       return { success: false, scanned: 0, approved: 0 };
     }
   }
