@@ -78,7 +78,7 @@ export const listExperiments = webMethod(
 
       return { success: true, tests, total: result.totalCount };
     } catch (err) {
-      console.error('[abTestDashboard] listExperiments error:', err);
+      logError('[abTestDashboard] listExperiments failed', err);
       return { success: false, tests: [], total: 0 };
     }
   }
@@ -148,7 +148,7 @@ export const getExperimentDetail = webMethod(
         },
       };
     } catch (err) {
-      console.error('[abTestDashboard] getExperimentDetail error:', err);
+      logError('[abTestDashboard] getExperimentDetail failed', err);
       return { success: false, experiment: null };
     }
   }
@@ -197,7 +197,7 @@ export const getDashboardSummary = webMethod(
         },
       };
     } catch (err) {
-      console.error('[abTestDashboard] getDashboardSummary error:', err);
+      logError('[abTestDashboard] getDashboardSummary failed', err);
       return { success: false, summary: null };
     }
   }

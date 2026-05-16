@@ -382,8 +382,8 @@ describe('getWhiteGloveBadge', () => {
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/white glove/i);
     expect(errorSpy).toHaveBeenCalledWith(
-      'getWhiteGloveBadge error:',
-      expect.any(Error),
+      expect.stringContaining('[badgeService]'),
+      expect.any(String),
     );
   });
 });
