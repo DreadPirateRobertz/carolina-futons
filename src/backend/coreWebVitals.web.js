@@ -34,6 +34,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const METRICS_COLLECTION = 'PerformanceMetrics';
 const VALID_DEVICE_TYPES = ['mobile', 'tablet', 'desktop'];
@@ -111,7 +112,7 @@ export const reportMetrics = webMethod(
 
       return { success: true, violations };
     } catch (err) {
-      console.error('[coreWebVitals] reportMetrics error:', err);
+      logError('[coreWebVitals] reportMetrics failed', err);
       return { success: false, error: 'Failed to report metrics' };
     }
   }

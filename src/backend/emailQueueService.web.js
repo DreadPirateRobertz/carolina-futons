@@ -21,6 +21,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { resolveTemplateId } from 'backend/emailTemplates.web';
+import { logError } from 'backend/utils/errorHandler';
 
 export const EMAIL_QUEUE_COLLECTION = 'EmailQueue';
 const RATE_LIMIT_COLLECTION = 'EmailQueueRateLimit';
@@ -28,10 +29,6 @@ export const MAX_RETRIES = 3;
 
 const SEND_WINDOW_START = 9;  // 9am ET
 const SEND_WINDOW_END = 20;   // 8pm ET
-
-function logError(msg, err) {
-  console.error(`[emailQueueService] ${msg}`, err?.message ?? err ?? '');
-}
 
 // ── Send window helpers ───────────────────────────────────────────────────────
 
@@ -177,7 +174,7 @@ export async function enqueueEmail(params) {
     await wixData.insert(EMAIL_QUEUE_COLLECTION, record, { suppressAuth: true });
     return { success: true };
   } catch (err) {
-    logError(`enqueueEmail failed for ${recipientEmail}/${sequenceType}/${sequenceStep}`, err);
+    logError(`[emailQueueService] enqueueEmail failed for ${recipientEmail}/${sequenceType}/${sequenceStep}`, err);
     return { success: false, error: err?.message ?? 'unknown error' };
   }
 }
@@ -212,7 +209,7 @@ export const processQueue = webMethod(Permissions.Admin, async (opts = {}) => {
       .find({ suppressAuth: true });
     items = result.items;
   } catch (err) {
-    logError('processQueue query failed', err);
+    logError('[emailQueueService] processQueue query failed', err);
     return { sent, skipped, rescheduled, rateLimited, failed };
   }
 
@@ -233,7 +230,7 @@ export const processQueue = webMethod(Permissions.Admin, async (opts = {}) => {
         );
         rescheduled++;
       } catch (err) {
-        logError(`reschedule failed for ${item._id}`, err);
+        logError(`[emailQueueService] reschedule failed for ${item._id}`, err);
       }
       continue;
     }
@@ -278,7 +275,7 @@ export const processQueue = webMethod(Permissions.Admin, async (opts = {}) => {
           { suppressAuth: true }
         );
       } catch (updateErr) {
-        logError(`update after send failure for ${item._id}`, updateErr);
+        logError(`[emailQueueService] update after send failure for ${item._id}`, updateErr);
       }
       if (isExhausted) {
         failed++;
@@ -319,13 +316,13 @@ export async function cancelQueuedEmails(recipientEmail, sequenceType) {
         );
         cancelled++;
       } catch (err) {
-        logError(`cancel update failed for ${item._id}`, err);
+        logError(`[emailQueueService] cancel update failed for ${item._id}`, err);
       }
     }
 
     return { cancelled };
   } catch (err) {
-    logError(`cancelQueuedEmails query failed for ${recipientEmail}/${sequenceType}`, err);
+    logError(`[emailQueueService] cancelQueuedEmails query failed for ${recipientEmail}/${sequenceType}`, err);
     return { cancelled: 0 };
   }
 }
