@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Get all comfort levels with personality descriptions and illustrations.
@@ -36,7 +37,7 @@ export const getComfortLevels = webMethod(
         illustrationAlt: item.illustrationAlt,
       }));
     } catch (err) {
-      console.error('Error fetching comfort levels:', err);
+      logError('comfortService:getComfortLevels', err);
       return [];
     }
   }
@@ -83,7 +84,7 @@ export const getProductComfort = webMethod(
         illustrationAlt: item.illustrationAlt,
       };
     } catch (err) {
-      console.error('Error fetching product comfort:', err);
+      logError('comfortService:getProductComfort', err);
       return null;
     }
   }
@@ -122,7 +123,7 @@ export const getComfortProducts = webMethod(
 
       return mappings.items.map(m => m.productId);
     } catch (err) {
-      console.error('Error fetching comfort products:', err);
+      logError('comfortService:getComfortProducts', err);
       return [];
     }
   }
