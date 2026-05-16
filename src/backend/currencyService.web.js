@@ -9,6 +9,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import { supportedCurrencies, defaultCurrency } from 'public/sharedTokens.js';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 let _cachedRates = null;
