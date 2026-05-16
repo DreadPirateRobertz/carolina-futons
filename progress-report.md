@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:27 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:36 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -25,8 +25,11 @@
 | cfw #708 | cfw | fix(cf-no2d): cart e2e fixture short-circuit ✅ (admin-merged 05:28 MT, e2e=cancelled) |
 | cfutons #1382 | cfutons | fix(cf-44qt sibling): abTesting logError×5 ✅ (admin-merged 05:20 MT) |
 | cfutons #1383 | cfutons | fix(cf-44qt sibling): notificationService logError×9 ✅ (admin-merged 05:26 MT) |
-| cfw #710 | cfw | test(cf-h345.4): PDP ISR cache-hit stub — lint ✅, e2e pending |
-| cfw #711 | cfw | docs(cf-h345.t3): next/image design+stubs — 5-crew reviewed, CI pending |
+| cfw #710 | cfw | test(cf-h345.4): PDP ISR cache-hit stub ✅ (merged 05:31 MT, e2e=cancelled) |
+| cfw #712 | cfw | docs(cleanup): dedupe Sentry ISR runbook ✅ (merged 05:31 MT) |
+| cfutons #1379 | cfutons | feat(cf-sufo): stale scanner BLOCKED+cfw ✅ (already merged) |
+| cfutons #1360 | cfutons | docs(cf-69fi.fu3): auto-merge design — 5-crew reviewed, HOLD for mayor |
+| cfw #711 | cfw | docs(cf-h345.t3): next/image design+stubs — lint ✅ Vercel ✅, e2e in_progress (~20min) |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
