@@ -15,6 +15,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'ProductReviews';
 
@@ -155,7 +156,7 @@ export const getModerationQueue = webMethod(
 
       return { success: true, reviews, total: result.totalCount };
     } catch (err) {
-      console.error('[reviewModeration] getModerationQueue error:', err);
+      logError('[reviewModeration] getModerationQueue failed', err);
       return { success: false, reviews: [], total: 0 };
     }
   }
@@ -205,7 +206,7 @@ export const bulkModerate = webMethod(
             failed++;
           }
         } catch (e) {
-          console.error("[reviewModeration] bulkModerate item error:", id, e);
+          logError(`[reviewModeration] bulkModerate item-${id} failed`, e);
           failed++;
         }
       }
@@ -216,7 +217,7 @@ export const bulkModerate = webMethod(
 
       return { success: true, processed, failed };
     } catch (err) {
-      console.error('[reviewModeration] bulkModerate error:', err);
+      logError('[reviewModeration] bulkModerate failed', err);
       return { success: false, processed: 0, failed: 0, error: 'Bulk moderation failed' };
     }
   }
@@ -256,7 +257,7 @@ export const autoRejectSpam = webMethod(
 
       return { success: true, scanned: result.items.length, rejected };
     } catch (err) {
-      console.error('[reviewModeration] autoRejectSpam error:', err);
+      logError('[reviewModeration] autoRejectSpam failed', err);
       return { success: false, scanned: 0, rejected: 0 };
     }
   }
@@ -282,7 +283,7 @@ export const getModerationStats = webMethod(
         stats: { pending, approved, rejected, flagged, total: pending + approved + rejected },
       };
     } catch (err) {
-      console.error('[reviewModeration] getModerationStats error:', err);
+      logError('[reviewModeration] getModerationStats failed', err);
       return { success: false, stats: null };
     }
   }
@@ -385,7 +386,7 @@ export async function ingestStampedReview(payload) {
 
     return { success: true, reviewId: saved._id, status };
   } catch (err) {
-    console.error('[reviewModeration] ingestStampedReview error:', err);
+    logError('[reviewModeration] ingestStampedReview failed', err);
     return { success: false };
   }
 }
@@ -424,7 +425,7 @@ export const autoApproveEligible = webMethod(
 
       return { success: true, scanned: result.items.length, approved };
     } catch (err) {
-      console.error('[reviewModeration] autoApproveEligible error:', err);
+      logError('[reviewModeration] autoApproveEligible failed', err);
       return { success: false, scanned: 0, approved: 0 };
     }
   }
