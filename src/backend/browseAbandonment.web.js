@@ -19,6 +19,7 @@ import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const HIGH_INTENT_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
 const RECOVERY_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
@@ -114,7 +115,7 @@ export const trackBrowseSession = webMethod(
 
       return { success: true, isHighIntent };
     } catch (err) {
-      console.error('[browseAbandonment] Error tracking session:', err);
+      logError('browseAbandonment:trackSession', err);
       return { success: false, error: 'Failed to track session' };
     }
   }
@@ -198,7 +199,7 @@ export const captureRemindMeRequest = webMethod(
       logAuditEvent('BrowseSessions', 'remind_me', cleanEmail, { sessionId: cleanSessionId });
       return { success: true };
     } catch (err) {
-      console.error('[browseAbandonment] Error capturing remind-me:', err);
+      logError('browseAbandonment:captureRemindMe', err);
       return { success: false, error: 'Failed to capture email' };
     }
   }
@@ -286,7 +287,7 @@ export const triggerBrowseRecovery = webMethod(
 
       return { success: true, triggered, skipped };
     } catch (err) {
-      console.error('[browseAbandonment] Error triggering recovery:', err);
+      logError('browseAbandonment:triggerRecovery', err);
       return { success: false, error: 'Failed to trigger recovery' };
     }
   }
@@ -357,7 +358,7 @@ export const getBrowseAbandonmentStats = webMethod(
         recoveryRate: recoverySent > 0 ? Math.round((recoveryConverted / recoverySent) * 100) : 0,
       };
     } catch (err) {
-      console.error('[browseAbandonment] Error fetching stats:', err);
+      logError('browseAbandonment:getStats', err);
       return { success: false, error: 'Failed to fetch stats' };
     }
   }
@@ -422,7 +423,7 @@ export const exportAbandonmentInsights = webMethod(
 
       return { success: true, insights };
     } catch (err) {
-      console.error('[browseAbandonment] Error exporting insights:', err);
+      logError('browseAbandonment:exportInsights', err);
       return { success: false, error: 'Failed to export insights' };
     }
   }
@@ -470,7 +471,7 @@ export const markSessionConverted = webMethod(
       }
       return false;
     } catch (err) {
-      console.error('[browseAbandonment] Error marking converted:', err);
+      logError('browseAbandonment:markConverted', err);
       return false;
     }
   }
