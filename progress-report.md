@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 03:52 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:05 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -27,7 +27,7 @@
 |----|------|--------|
 | cfutons #1373 | cfutons | cf-uydr emailAutomation logError×19 — MERGED ✅ |
 | cfutons #1374 | cfutons | cf-qyjw d3-color Dependabot HIGH override — MERGED ✅ |
-| cfw #704 | cfw | cf-0oj5 PDP ISR fix (LCP) — lint✅ Vercel✅ e2e pending |
+| cfw #704 | cfw | cf-0oj5 PDP ISR fix (LCP) — MERGED ✅ (e2e cancelled=Stilgar) |
 
 ### Merged this cadence (02:55 MT)
 - cfw #702 (cf-mu05 lazy-load priority pins) ✅
@@ -62,7 +62,7 @@
 ### Blocked / gated
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
 - cfutons #1360 (auto-merge design proposal): mayor-discussion gated, not merging
-- cfw #704: awaiting e2e run completion (lint+Vercel ✅, merge imminent)
+- cfw #704: MERGED ✅ — cf-0oj5 bead closed. Lighthouse verification on next Vercel deploy.
 
 ---
 
