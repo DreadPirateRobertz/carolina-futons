@@ -119,7 +119,7 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
       recoveryEmailSent: false,
     });
   } catch (err) {
-    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId || 'unknown'}, email: ${redactEmail(buyerEmail)}, error:`, err);
+    logError(`events:wixEcom_onCartAbandoned-dropped checkoutId=${checkoutId || 'unknown'} email=${redactEmail(buyerEmail)}`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutCreated',
       checkoutId: checkoutId || 'unknown',
@@ -154,7 +154,7 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
       status: 'recovered',
     });
   } catch (err) {
-    console.error(`[events] FAILED to mark cart recovered — checkoutId: ${checkoutId || 'unknown'}, error:`, err);
+    logError(`events:markCartRecovered checkoutId=${checkoutId || 'unknown'}`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutRecovered',
       checkoutId: checkoutId || 'unknown',
@@ -196,7 +196,7 @@ export async function wixMembers_onMemberCreated(event) {
     const { triggerWelcomeSequence } = await import('backend/emailAutomation.web');
     await triggerWelcomeSequence(contactId, email, firstName);
   } catch (err) {
-    console.error('[events] Error triggering welcome sequence:', err);
+    logError('events:welcomeSequence', err);
   }
 
   // CF-9swp: Seed welcome points (endowed progress) for new members
@@ -204,7 +204,7 @@ export async function wixMembers_onMemberCreated(event) {
     const { seedWelcomePoints } = await import('backend/gamificationEventReceiver.web');
     await seedWelcomePoints(contactId);
   } catch (err) {
-    console.error('[events] Error seeding welcome points:', err);
+    logError('events:seedWelcomePoints', err);
   }
 }
 
@@ -249,14 +249,14 @@ export async function wixEcom_onOrderCreated(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'confirmed');
   } catch (err) {
-    console.error('[events] Order status webhook (confirmed) failed:', err);
+    logError('events:orderStatusWebhook-confirmed', err);
   }
 
   try {
     const { triggerPostPurchaseSequence } = await import('backend/emailAutomation.web');
     await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems, { memberId });
   } catch (err) {
-    console.error('[events] Error triggering post-purchase sequence:', err);
+    logError('events:postPurchaseSequence', err);
   }
 
   if (memberId) {
@@ -275,7 +275,7 @@ export async function wixEcom_onOrderCreated(event) {
           const { checkAndTriggerTierMilestone } = await import('backend/emailAutomation.web');
           await checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal);
         } catch (err) {
-          console.error('[events] Error checking tier milestone:', err);
+          logError('events:tierMilestoneCheck', err);
         }
       }
 
@@ -288,7 +288,7 @@ export async function wixEcom_onOrderCreated(event) {
         await recordChallengeProgress({ memberId, challengeId: challenge.challengeId });
       }
     } catch (err) {
-      console.error('[events] Error recording gamification on order:', err);
+      logError('events:gamificationOnOrder', err);
     }
 
     // cf-bu2: complete any pending referral attribution for web checkouts
@@ -296,7 +296,7 @@ export async function wixEcom_onOrderCreated(event) {
       const { _processReferralOnOrderCreated } = await import('backend/referralService.web');
       await _processReferralOnOrderCreated(memberId, orderNumber);
     } catch (err) {
-      console.error('[events] Error processing referral on order:', err);
+      logError('events:referralOnOrder', err);
     }
   }
 
@@ -306,7 +306,7 @@ export async function wixEcom_onOrderCreated(event) {
       const { checkSwatchAttribution } = await import('backend/swatchAttribution.web');
       await checkSwatchAttribution(email, orderNumber, Number(total));
     } catch (err) {
-      console.error('[events] Error checking swatch attribution:', err);
+      logError('events:swatchAttributionCheck', err);
     }
   }
 
@@ -316,11 +316,11 @@ export async function wixEcom_onOrderCreated(event) {
     if (orderContainsSwatchKit(order.lineItems || [])) {
       const result = await recordSwatchKitPurchase(orderNumber, memberId, email, []);
       if (!result?.success && !result?.alreadyIssued) {
-        console.error('[events] Swatch kit credit issuance failed silently:', result?.error, { orderNumber });
+        logError(`events:swatchKitCredit-silentFailure orderNumber=${orderNumber}`, new Error(String(result?.error || 'unknown')));
       }
     }
   } catch (err) {
-    console.error('[events] Swatch kit credit issuance failed:', err);
+    logError('events:swatchKitCreditIssuance', err);
   }
 }
 
@@ -343,7 +343,7 @@ export async function wixEcom_onOrderApproved(event) {
     const { receiveGamificationEvent } = await import('backend/gamificationEventReceiver.web');
     await receiveGamificationEvent('gamification_order_complete', { orderTotal }, memberId);
   } catch (err) {
-    console.error('[events] wixEcom_onOrderApproved: gamification earn failed', err);
+    logError('events:wixEcom_onOrderApproved-gamificationEarn', err);
   }
 }
 
@@ -365,7 +365,7 @@ export async function wixEcom_onOrderFulfilled(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'shipped');
   } catch (err) {
-    console.error('[events] Order status webhook (shipped) failed:', err);
+    logError('events:orderStatusWebhook-shipped', err);
   }
 
   if (!memberId) return;
@@ -374,7 +374,7 @@ export async function wixEcom_onOrderFulfilled(event) {
     const { handleOrderFulfilled } = await import('backend/notificationOrchestrator.web');
     await handleOrderFulfilled({ memberId, orderNumber, trackingNumber });
   } catch (err) {
-    console.error('[events] Error handling order fulfilled SMS:', err);
+    logError('events:onOrderFulfilled-sms', err);
   }
 }
 
@@ -393,7 +393,7 @@ export async function wixEcom_onFulfillmentCreated(event) {
     const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
     handleFulfillmentShippingNotification(event);
   } catch (err) {
-    console.error('[events] Error handling fulfillment created:', err);
+    logError('events:onFulfillmentCreated', err);
   }
 }
 
@@ -414,7 +414,7 @@ export async function wixEcom_onFulfillmentUpdated(event) {
     const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
     handleFulfillmentShippingNotification(event);
   } catch (err) {
-    console.error('[events] Error handling fulfillment updated:', err);
+    logError('events:onFulfillmentUpdated', err);
   }
 }
 
@@ -431,7 +431,7 @@ export async function wixEcom_onOrderDelivered(event) {
     const { handleOrderDelivered } = await import('backend/emailAutomation.web');
     handleOrderDelivered(event);
   } catch (err) {
-    console.error('[events] Error handling order delivered:', err);
+    logError('events:onOrderDelivered', err);
   }
 }
 
@@ -449,7 +449,7 @@ export async function wixEcom_onOrderCanceled(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'cancelled');
   } catch (err) {
-    console.error('[events] Order status webhook (cancelled) failed:', err);
+    logError('events:orderStatusWebhook-cancelled', err);
   }
 
   if (!email) return;
@@ -458,7 +458,7 @@ export async function wixEcom_onOrderCanceled(event) {
     const { cancelSequenceForOrder } = await import('backend/emailAutomation.web');
     await cancelSequenceForOrder(email, orderNumber);
   } catch (err) {
-    console.error('[events] Error cancelling care sequence:', err);
+    logError('events:cancelCareSequence', err);
   }
 }
 
@@ -490,7 +490,7 @@ export async function wixStores_onProductCreated(event) {
       imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
     });
   } catch (err) {
-    console.error('[events] Content orchestration failed for new product:', err);
+    logError('events:contentOrchestration-newProduct', err);
     await logFailedEvent({
       handler: 'wixStores_onProductCreated',
       productId,
@@ -537,7 +537,7 @@ export async function wixStores_onProductUpdated(event) {
       newPrice,
     });
   } catch (err) {
-    console.error('[events] Content orchestration failed for price drop:', err);
+    logError('events:contentOrchestration-priceDrop', err);
     await logFailedEvent({
       handler: 'wixStores_onProductUpdated',
       productId,
@@ -581,7 +581,7 @@ export async function wixStores_onInventoryVariantUpdated(event) {
 
     // Check for soft failure (returned { success: false } without throwing)
     if (result && !result.success) {
-      console.error(`[events] Restock notifications returned failure — productId: ${productId}, error: ${result.error || 'unknown'}`);
+      logError(`events:restockNotifications-resultFailure productId=${productId}`, new Error(String(result.error || 'unknown')));
       await logFailedEvent({
         handler: 'wixStores_onInventoryVariantUpdated',
         productId: productId || 'unknown',
@@ -604,10 +604,10 @@ export async function wixStores_onInventoryVariantUpdated(event) {
         });
       }
     } catch (orchErr) {
-      console.error('[events] Content orchestration failed for restock:', orchErr);
+      logError('events:contentOrchestration-restock', orchErr);
     }
   } catch (err) {
-    console.error(`[events] FAILED restock notifications — productId: ${productId || 'unknown'}, error:`, err);
+    logError(`events:restockNotifications productId=${productId || 'unknown'}`, err);
     await logFailedEvent({
       handler: 'wixStores_onInventoryVariantUpdated',
       productId: productId || 'unknown',
@@ -661,7 +661,7 @@ export async function wixMembers_onMemberUpdated(event) {
       birthday_day: parsed.day,
     });
   } catch (err) {
-    console.error(`[events] Failed to sync birthday fields for member ${memberId}:`, err?.message ?? err);
+    logError(`events:syncBirthdayFields member=${memberId}`, err);
     await logFailedEvent({
       handler: 'wixMembers_onMemberUpdated',
       error: err.message,
