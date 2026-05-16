@@ -57,7 +57,6 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { logError } from 'backend/utils/errorHandler';
 import { sanitize, validateId } from 'backend/utils/sanitize';
-import { logError } from 'backend/utils/errorHandler';
 
 async function requireMember() {
   const member = await currentMember.getMember();
