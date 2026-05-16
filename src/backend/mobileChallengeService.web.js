@@ -15,6 +15,7 @@
  */
 
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 export const MOBILE_CHALLENGE_TYPES = {
   AR_DISCOVERY: 'ar_discovery',
@@ -117,18 +118,25 @@ export async function completeMobileChallenge(memberId, challengeType, params = 
           memberId,
         );
       } catch (err) {
-        console.error(
-          `[mobileChallengeService] synthetic ${syntheticEventName} dispatch failed for member ${memberId}, completion ${insertedRow._id}:`,
-          err,
+        // cf-tok3: route through logError but preserve cf-m3tj's verbose
+        // log message (syntheticEventName + memberId + completionId) so
+        // backfill jobs can still grep for orphaned completions. Wrapping
+        // keeps both the structured context tag AND the legacy message
+        // shape that observers / tests rely on.
+        const wrapped = new Error(
+          `synthetic ${syntheticEventName} dispatch failed for member ${memberId}, completion ${insertedRow._id}: ${err?.message || err}`,
         );
-        // Non-blocking — see comment above. Logged with completionId so a
-        // backfill job can find orphaned completions.
+        wrapped.cause = err;
+        logError(
+          'mobileChallengeService.completeMobileChallenge.syntheticEvent',
+          wrapped,
+        );
       }
     }
 
     return { success: true, alreadyAwarded: false, pointsAwarded };
   } catch (err) {
-    console.error('[mobileChallengeService] completeMobileChallenge error:', err);
+    logError('mobileChallengeService.completeMobileChallenge', err);
     return { success: false, error: err.message };
   }
 }
@@ -156,7 +164,7 @@ export async function getMobileChallengeProgress(memberId) {
 
     return { success: true, counts };
   } catch (err) {
-    console.error('[mobileChallengeService] getMobileChallengeProgress error:', err);
+    logError('mobileChallengeService.getMobileChallengeProgress', err);
     return { success: false, counts: {}, error: err.message };
   }
 }
