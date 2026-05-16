@@ -1,6 +1,6 @@
 /**
  * cf-t8k1.fu1 — Pins the lazy-init contract for ups-shipping.web.js
- * module-init reads.
+ * with an EMPTY public/sharedTokens mock.
  *
  * Pre-fix shape: top-level `const ORIGIN_ADDRESS = { Name: brand.name, ... }`
  * threw TypeError during module import if the public/sharedTokens mock
@@ -12,15 +12,17 @@
  * EMPTY object can still IMPORT the module — only test-bodies that call
  * the rate/label/tracking functions need a fully-shaped mock.
  *
- * Three contracts pinned below:
- *  1. Module imports cleanly with EMPTY public/sharedTokens mock
- *  2. Getter returns the right shape when sharedTokens IS mocked
- *  3. Getter is memoized — second call doesn't re-deref sharedTokens
+ * This file pins the empty-mock contract via TOP-LEVEL vi.mock (per
+ * noDoMockInTestBody invariant, CF-fgsw). The companion file
+ * tests/upsShippingLazyInitPopulated.test.js pins the getter-shape +
+ * memoization contracts with a populated mock — split into two files
+ * because the per-describe mock-shape swap that would otherwise require
+ * vi.doMock is precisely what the invariant forbids.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
-// Deliberately empty mock — pre-fix this would throw on import below.
+// EMPTY mock — pre-fix this would have thrown on import below.
 vi.mock('public/sharedTokens', () => ({}));
 
 // Stub the rest of ups-shipping's import dependencies so the import path
@@ -33,7 +35,7 @@ vi.mock('wix-web-module', () => ({
   webMethod: (_perm, fn) => fn,
 }));
 
-describe('cf-t8k1.fu1 — ups-shipping lazy-init contract', () => {
+describe('cf-t8k1.fu1 — ups-shipping lazy-init contract (empty mock)', () => {
   it('imports cleanly with EMPTY public/sharedTokens mock (no module-init deref)', async () => {
     // Before cf-t8k1.fu1: this import throws TypeError ("Cannot read
     // properties of undefined (reading 'name')") because `brand.name`
@@ -57,54 +59,5 @@ describe('cf-t8k1.fu1 — ups-shipping lazy-init contract', () => {
     // at module-init blocking unrelated tests.
     const mod = await import('../src/backend/ups-shipping.web.js');
     expect(() => mod.getOriginAddress()).toThrow();
-  });
-});
-
-describe('cf-t8k1.fu1 — ups-shipping lazy-init with proper mock', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    // vi.doMock here (not top-level vi.mock) is required because the lazy-init
-    // contract test in the prior describe block needs the EMPTY mock active
-    // during its module-import, and this describe block needs a populated mock
-    // after vi.resetModules(). Standard vi.mock() can't be swapped at runtime.
-    vi.doMock('public/sharedTokens', () => ({ // vi-domock-legacy
-      brand: { name: 'Test Co' },
-      business: {
-        phoneDigits: '5550000000',
-        address: { street: '1 Way', city: 'TestCity', state: 'TS', zip: '12345' },
-      },
-      shippingConfig: { freeThreshold: 750 },
-    }));
-    // Re-stub the other dependencies since vi.resetModules cleared them
-    vi.doMock('wix-secrets-backend', () => ({ getSecret: vi.fn() })); // vi-domock-legacy
-    vi.doMock('wix-fetch', () => ({ fetch: vi.fn() })); // vi-domock-legacy
-    vi.doMock('backend/utils/sanitize', () => ({ sanitize: (s) => s })); // vi-domock-legacy
-    vi.doMock('wix-web-module', () => ({ // vi-domock-legacy
-      Permissions: { Admin: 'Admin', SiteMember: 'SiteMember', Anyone: 'Anyone' },
-      webMethod: (_perm, fn) => fn,
-    }));
-  });
-
-  it('getOriginAddress returns the brand + business address shape', async () => {
-    const mod = await import('../src/backend/ups-shipping.web.js');
-    const origin = mod.getOriginAddress();
-    expect(origin.Name).toBe('Test Co');
-    expect(origin.AddressLine).toEqual(['1 Way']);
-    expect(origin.City).toBe('TestCity');
-    expect(origin.StateProvinceCode).toBe('TS');
-    expect(origin.PostalCode).toBe('12345');
-    expect(origin.CountryCode).toBe('US');
-  });
-
-  it('getFreeShippingThreshold returns shippingConfig.freeThreshold', async () => {
-    const mod = await import('../src/backend/ups-shipping.web.js');
-    expect(mod.getFreeShippingThreshold()).toBe(750);
-  });
-
-  it('getOriginAddress is memoized — repeat calls return identical object', async () => {
-    const mod = await import('../src/backend/ups-shipping.web.js');
-    const a = mod.getOriginAddress();
-    const b = mod.getOriginAddress();
-    expect(a).toBe(b); // Same reference, not a fresh object each call.
   });
 });
