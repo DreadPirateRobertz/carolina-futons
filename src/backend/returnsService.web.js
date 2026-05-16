@@ -29,6 +29,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail, redactEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
@@ -121,7 +122,7 @@ export const getReturnEligibleOrders = webMethod(
 
       return { orders };
     } catch (err) {
-      console.error('[returnsService] getReturnEligibleOrders error:', err);
+      logError('[returnsService] getReturnEligibleOrders failed', err);
       return { orders: [], error: 'Unable to load orders.' };
     }
   }
@@ -234,7 +235,7 @@ export const submitReturnRequest = webMethod(
       await wixData.insert(COLLECTION, record);
       return { success: true, rmaNumber };
     } catch (err) {
-      console.error('[returnsService] submitReturnRequest error:', err);
+      logError('[returnsService] submitReturnRequest failed', err);
       return { success: false, error: 'Unable to submit return request. Please try again.' };
     }
   }
@@ -262,7 +263,7 @@ export const getMyReturns = webMethod(
         returns: result.items.map(formatReturn),
       };
     } catch (err) {
-      console.error('[returnsService] getMyReturns error:', err);
+      logError('[returnsService] getMyReturns failed', err);
       return { returns: [] };
     }
   }
@@ -293,7 +294,7 @@ export const getReturnByRma = webMethod(
 
       return { returnRequest: formatReturn(result.items[0]) };
     } catch (err) {
-      console.error('[returnsService] getReturnByRma error:', err);
+      logError('[returnsService] getReturnByRma failed', err);
       return { returnRequest: null };
     }
   }
@@ -340,7 +341,7 @@ export const updateReturnStatus = webMethod(
       await wixData.update(COLLECTION, record);
       return { success: true };
     } catch (err) {
-      console.error('[returnsService] updateReturnStatus error:', err);
+      logError('[returnsService] updateReturnStatus failed', err);
       return { success: false };
     }
   }
@@ -408,7 +409,7 @@ export const lookupReturn = webMethod(
         order: formatOrderForReturn(order),
       };
     } catch (err) {
-      console.error('[returnsService] lookupReturn error:', err);
+      logError('[returnsService] lookupReturn failed', err);
       return { success: false, error: 'Unable to look up return status. Please try again.' };
     }
   }
@@ -539,7 +540,7 @@ export const submitGuestReturn = webMethod(
       logAuditEvent('Returns', 'submit_return', record.email, { rmaNumber, orderId: record.orderId });
       return { success: true, rmaNumber };
     } catch (err) {
-      console.error('[returnsService] submitGuestReturn error:', err);
+      logError('[returnsService] submitGuestReturn failed', err);
       return { success: false, error: 'Unable to submit return request. Please try again.' };
     }
   }
@@ -615,7 +616,7 @@ export const generateReturnLabel = webMethod(
         labelBase64: shipmentResult.labels?.[0]?.labelBase64 || '',
       };
     } catch (err) {
-      console.error('[returnsService] generateReturnLabel error:', err);
+      logError('[returnsService] generateReturnLabel failed', err);
       return { success: false, error: 'Unable to generate return label.' };
     }
   }
@@ -667,7 +668,7 @@ export const getMyReturnLabel = webMethod(
         rmaNumber: record.rmaNumber,
       };
     } catch (err) {
-      console.error('[returnsService] getMyReturnLabel error:', err);
+      logError('[returnsService] getMyReturnLabel failed', err);
       return { success: false, error: 'Unable to retrieve return label.' };
     }
   }
@@ -722,7 +723,7 @@ export const trackReturnShipment = webMethod(
         } : null,
       };
     } catch (err) {
-      console.error('[returnsService] trackReturnShipment error:', err);
+      logError('[returnsService] trackReturnShipment failed', err);
       return { success: false, error: 'Unable to track return shipment.' };
     }
   }
@@ -761,7 +762,7 @@ export const getAdminReturns = webMethod(
         total: result.totalCount,
       };
     } catch (err) {
-      console.error('[returnsService] getAdminReturns error:', err);
+      logError('[returnsService] getAdminReturns failed', err);
       return { success: false, returns: [], total: 0 };
     }
   }
@@ -793,7 +794,7 @@ export const getReturnStats = webMethod(
         stats: { ...counts, total },
       };
     } catch (err) {
-      console.error('[returnsService] getReturnStats error:', err);
+      logError('[returnsService] getReturnStats failed', err);
       return { success: false, stats: {} };
     }
   }
@@ -844,7 +845,7 @@ export const processRefund = webMethod(
       await wixData.update(COLLECTION, record);
       return { success: true };
     } catch (err) {
-      console.error('[returnsService] processRefund error:', err);
+      logError('[returnsService] processRefund failed', err);
       return { success: false, error: 'Unable to process refund.' };
     }
   }
