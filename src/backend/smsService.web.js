@@ -28,6 +28,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import wixData from 'wix-data';
 import { sanitize, validatePhone, formatPhoneE164 } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SMS_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SITE_URL = 'https://www.carolinafutons.com';
@@ -66,14 +67,14 @@ async function sendViaTwilio(to, body) {
 
     if (!response.ok) {
       const err = await response.json();
-      console.error('[smsService] Twilio error:', err);
+      logError('[smsService] twilioRequest failed', err);
       return { success: false };
     }
 
     const data = await response.json();
     return { success: true, sid: data.sid };
   } catch (err) {
-    console.error('[smsService] Error sending SMS:', err);
+    logError('[smsService] sendSMS failed', err);
     return { success: false };
   }
 }
@@ -146,7 +147,7 @@ async function logSMS(logData) {
       sentAt: new Date(),
     });
   } catch (err) {
-    console.error('[smsService] Error logging SMS:', err);
+    logError('[smsService] logSMS failed', err);
   }
 }
 
@@ -187,7 +188,7 @@ export const sendOrderConfirmationSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendOrderConfirmationSMS:', err);
+      logError('[smsService] sendOrderConfirmationSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -236,7 +237,7 @@ export const sendShippingUpdateSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendShippingUpdateSMS:', err);
+      logError('[smsService] sendShippingUpdateSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -283,7 +284,7 @@ export const sendDeliveryReminderSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendDeliveryReminderSMS:', err);
+      logError('[smsService] sendDeliveryReminderSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -331,7 +332,7 @@ export const sendBackInStockSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendBackInStockSMS:', err);
+      logError('[smsService] sendBackInStockSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -388,7 +389,7 @@ export const updateSMSPreferences = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in updateSMSPreferences:', err);
+      logError('[smsService] updateSMSPreferences failed', err);
       return { success: false, error: 'Failed to update preferences' };
     }
   }
@@ -437,7 +438,7 @@ export const sendOrderShippedSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendOrderShippedSMS:', err);
+      logError('[smsService] sendOrderShippedSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -488,7 +489,7 @@ export const getSMSPreferences = webMethod(
         },
       };
     } catch (err) {
-      console.error('[smsService] Error in getSMSPreferences:', err);
+      logError('[smsService] getSMSPreferences failed', err);
       return { success: false };
     }
   }
@@ -553,7 +554,7 @@ export const sendWhiteGloveConfirmationSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendWhiteGloveConfirmationSMS:', err);
+      logError('[smsService] sendWhiteGloveConfirmationSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -599,7 +600,7 @@ export const sendWhiteGloveReminderSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendWhiteGloveReminderSMS:', err);
+      logError('[smsService] sendWhiteGloveReminderSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -641,7 +642,7 @@ export const sendWhiteGloveDayOfSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendWhiteGloveDayOfSMS:', err);
+      logError('[smsService] sendWhiteGloveDayOfSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
@@ -687,7 +688,7 @@ export const sendChallengeAlertSMS = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[smsService] Error in sendChallengeAlertSMS:', err);
+      logError('[smsService] sendChallengeAlertSMS failed', err);
       return { success: false, reason: 'error' };
     }
   }
