@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-16 (387faae7 — merge drain + ISR unlock dispatch)
+
+### What worked well
+- **Mayor communication clarity**: When mayor said "without the spec one-liners I CANNOT rule," recognized I had sent vague summaries instead of the actual decision content. Immediately sent crisp A/B/C one-liners. Mayor confirmed in 3 acks — classic sign the prior messages were insufficient, not the rulings.
+- **Parallel batch on watchdog**: Alert + dispatch + review all sent in same turn when WATCHDOG fired. No sequential thrash.
+- **Duplicate bead detection**: Filed cf-lrty, then immediately checked in_progress list and found cf-sd80.1 already existed with identical scope. Closed cf-lrty fast. Similar pattern: blaidd later self-resolved (closed cf-sd80.1, reopened cf-lrty) — fast convergence because I caught it early.
+- **e2e cancel pattern discipline**: Never merged when e2e was "pending" — always waited for conclusion=cancelled or conclusion=success. #711 ran 47min before cancel (longest yet); didn't prematurely merge.
+
+### What to improve
+- **First nudge should contain the spec**: When asking mayor for a gate ruling, include the actual option specs IN the first nudge — not just "options A/B/C." Mayor had to ask twice. The policy is: one nudge, full content, clear PM recommendation. If it's too long for a nudge, use file reference.
+- **cf-0klm looping**: Sent 3+ nudges on cf-0klm without completing the spec ask. Mayor received 3 acks from me. Root cause: first nudge lacked concrete one-liners; I escalated but not with the decision content. Fix: draft the decision content FIRST, then send.
+- **until-loop inverted condition**: Wrote `until grep -qE "pending"` which exits WHEN it finds pending (wrong). Should be a while loop or `until ! grep -qE "pending"`. Wasted ~2 minutes of silent "waiting."
+
+### Pattern notes
+- **e2e cancel time window**: PRs with code changes trigger full Playwright e2e (~25-50 min). Stilgar cancels at 25min when active, but can run up to 47min if AFK. Docs-only PRs: e2e finishes in 4 seconds (content-skip path).
+- **Mayor ruling: send spec, not status**: "cf-0klm awaiting mayor A/B/C" is a status. "Option A: move cookies() from layout.tsx, same-day rennala" is a spec. Mayor needs the spec to rule. Always send the spec.
+- **Stale-bead scanner false positives**: Parent bead IDs appear in child PR titles (e.g. cf-h345.4 title contains "cf-h345" and "cf-0klm"). Scanner correctly flags these as "stale" but they're dependencies, not shipped work. Verify before closing.
+
 ## Session 2026-05-10 Wave 13–14 (387faae7 — dark mode audit + crew dispatch)
 
 ### What worked well

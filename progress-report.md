@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:07 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:10 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -30,6 +30,8 @@
 | cfutons #1379 | cfutons | feat(cf-sufo): stale scanner BLOCKED+cfw ✅ (already merged) |
 | cfutons #1360 | cfutons | docs(cf-69fi.fu3): auto-merge design — 5-crew reviewed, HOLD for mayor |
 | cfw #711 | cfw | docs(cf-h345.t3): next/image design+stubs ✅ (merged 05:43 MT, e2e=cancelled 25m15s) |
+| cfutons #1384 | cfutons | fix(cf-44qt sibling): giftCards logError×9 ✅ (merged 05:50 MT, all CI green) |
+| cfw #713 | cfw | perf(cf-lrty): LivingHero SVG-light — 5-crew APPROVED, e2e pending (~19min) |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
