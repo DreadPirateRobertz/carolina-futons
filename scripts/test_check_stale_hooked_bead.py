@@ -182,3 +182,102 @@ def test_empty_bead_title_falls_back_to_id_only():
     result = chk.should_warn(bead, prs)
     assert result is not None
     assert result["match_kind"] == "bead-id-direct"
+
+
+# ── cf-sufo: cross-repo scanning ──────────────────────────────────
+
+
+def test_fetch_recent_prs_from_multiple_repos_concatenates():
+    """cf-sufo: blaidd's extended sweep found stale beads shipped to
+    carolina-futons-web (cf-os1r, cf-gsca, cf-o1wv) that the cfutons-only
+    scan missed. The Python tool must scan BOTH repos and concatenate
+    the PR list so should_warn() sees every candidate."""
+    import subprocess as _sp_mod
+    chk = _import_checker()
+
+    real_run = _sp_mod.run
+
+    def fake_run(cmd, **kwargs):
+        repo_idx = cmd.index("--repo") + 1
+        repo = cmd[repo_idx]
+        if repo.endswith("/carolina-futons"):
+            stdout = '[{"number": 100, "title": "fix(cf-aaa): cfutons fix"}]'
+        elif repo.endswith("/carolina-futons-web"):
+            stdout = '[{"number": 700, "title": "fix(cf-os1r): cfw priority fix"}]'
+        else:
+            stdout = "[]"
+
+        class _R:
+            pass
+        r = _R()
+        r.stdout = stdout
+        return r
+
+    _sp_mod.run = fake_run
+    try:
+        prs = chk._fetch_recent_prs_multi(
+            ["DreadPirateRobertz/carolina-futons", "DreadPirateRobertz/carolina-futons-web"],
+            limit=50,
+        )
+    finally:
+        _sp_mod.run = real_run
+
+    assert len(prs) == 2
+    numbers = sorted(p["number"] for p in prs)
+    assert numbers == [100, 700]
+    titles = " ".join(p["title"] for p in prs)
+    assert "cfutons fix" in titles
+    assert "cfw priority fix" in titles
+
+
+def test_fetch_recent_prs_multi_empty_repo_list_returns_empty():
+    """Defensive: passing no repos returns an empty list (not an error)."""
+    chk = _import_checker()
+    assert chk._fetch_recent_prs_multi([], limit=50) == []
+
+
+def test_fetch_recent_prs_multi_tolerates_one_repo_failure():
+    """If gh fails on one repo, the other repo's PRs still come back.
+    Single-repo failure should NOT zero out the whole scan."""
+    import subprocess as _sp_mod
+    chk = _import_checker()
+
+    real_run = _sp_mod.run
+
+    def fake_run(cmd, **kwargs):
+        repo_idx = cmd.index("--repo") + 1
+        repo = cmd[repo_idx]
+        if repo.endswith("/carolina-futons-web"):
+            raise _sp_mod.SubprocessError("simulated gh failure")
+
+        class _R:
+            pass
+        r = _R()
+        r.stdout = '[{"number": 1, "title": "fix(cf-x): test"}]'
+        return r
+
+    _sp_mod.run = fake_run
+    try:
+        prs = chk._fetch_recent_prs_multi(
+            ["DreadPirateRobertz/carolina-futons", "DreadPirateRobertz/carolina-futons-web"],
+            limit=50,
+        )
+    finally:
+        _sp_mod.run = real_run
+
+    # cfutons returns 1 PR; cfw fails → 1 PR total, not zero.
+    assert len(prs) == 1
+    assert prs[0]["number"] == 1
+
+
+def test_default_repos_includes_both_cfutons_and_cfw():
+    """The DEFAULT_REPOS constant must include both repos per cf-sufo
+    acceptance ('Fetches merged PRs from both cfutons + cfw repos')."""
+    chk = _import_checker()
+    repos = chk.DEFAULT_REPOS
+    assert any("carolina-futons" in r and "-web" not in r for r in repos), (
+        "DEFAULT_REPOS must include the main cfutons repo"
+    )
+    assert any("carolina-futons-web" in r for r in repos), (
+        "DEFAULT_REPOS must include carolina-futons-web (cf-sufo)"
+    )
