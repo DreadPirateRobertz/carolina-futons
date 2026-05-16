@@ -693,7 +693,7 @@ export const getBuyingGuide = webMethod(
           }));
         }
       } catch (e) {
-        logError('[buyingGuides] getBuyingGuide related-products fetch failed', e);
+        logError('buyingGuides:getBuyingGuide-relatedProducts', e);
       }
 
       return {
@@ -705,7 +705,7 @@ export const getBuyingGuide = webMethod(
         },
       };
     } catch (err) {
-      logError('[buyingGuides] getBuyingGuide', err);
+      logError('buyingGuides:getBuyingGuide', err);
       return { success: false, error: 'Unable to load buying guide' };
     }
   }
@@ -750,7 +750,7 @@ export const getAllBuyingGuides = webMethod(
         }),
       };
     } catch (err) {
-      logError('[buyingGuides] getAllBuyingGuides', err);
+      logError('buyingGuides:getAllBuyingGuides', err);
       return { success: false, error: 'Unable to load buying guides' };
     }
   }
@@ -831,7 +831,7 @@ export const getBuyingGuideSchema = webMethod(
 
       return { success: true, articleSchema, faqSchema };
     } catch (err) {
-      logError('[buyingGuides] getBuyingGuideSchema', err);
+      logError('buyingGuides:getBuyingGuideSchema', err);
       return { success: false, error: 'Unable to generate schema' };
     }
   }
@@ -865,7 +865,7 @@ export const getGuideComparisonTable = webMethod(
         table: guide.comparisonTable,
       };
     } catch (err) {
-      logError('[buyingGuides] getGuideComparisonTable', err);
+      logError('buyingGuides:getGuideComparisonTable', err);
       return { success: false, error: 'Unable to load comparison table' };
     }
   }
@@ -897,7 +897,7 @@ export const getGuideFaqs = webMethod(
         faqs: guide.faqs,
       };
     } catch (err) {
-      logError('[buyingGuides] getGuideFaqs', err);
+      logError('buyingGuides:getGuideFaqs', err);
       return { success: false, error: 'Unable to load FAQs' };
     }
   }
@@ -939,7 +939,7 @@ export const getSocialShareLinks = webMethod(
         },
       };
     } catch (err) {
-      logError('[buyingGuides] getSocialShareLinks', err);
+      logError('buyingGuides:getSocialShareLinks', err);
       return { success: false, error: 'Unable to generate share links' };
     }
   }

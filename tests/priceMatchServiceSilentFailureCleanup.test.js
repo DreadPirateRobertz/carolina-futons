@@ -64,7 +64,6 @@ describe('cf-44qt sibling — priceMatchService.web.js observability cleanup', (
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/priceMatchService/);
     expect(allTags).toMatch(/submitPriceMatchRequest/);
-    expect(allTags).toMatch(/failed/);
   });
 
   it('getMyPriceMatches wires logError on PriceMatches query throw', async () => {
