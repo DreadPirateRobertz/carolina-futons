@@ -189,7 +189,7 @@ def _fetch_recent_prs(repo: str, limit: int = 50) -> list[dict]:
         ).stdout
     except (subprocess.SubprocessError, FileNotFoundError) as err:
         print(
-            f"⚠ gh pr list failed ({err}); staleness check ran with empty PR set.",
+            f"⚠ gh pr list failed for {repo} ({err}); skipping this repo.",
             file=sys.stderr,
         )
         return []
@@ -197,11 +197,31 @@ def _fetch_recent_prs(repo: str, limit: int = 50) -> list[dict]:
         return json.loads(out)
     except json.JSONDecodeError as err:
         print(
-            f"⚠ gh pr list returned non-JSON output ({err}); staleness check "
-            f"ran with empty PR set.",
+            f"⚠ gh pr list returned non-JSON for {repo} ({err}); skipping.",
             file=sys.stderr,
         )
         return []
+
+
+# cf-sufo: blaidd's extended sweep caught 4 stale-blocked beads shipped
+# to carolina-futons-web (cf-os1r, cf-gsca, cf-o1wv, cf-6amf.1) that the
+# cfutons-only scan missed. Scan BOTH repos by default so cfw-shipped
+# work surfaces in the dispatch-staleness check.
+DEFAULT_REPOS: tuple[str, ...] = (
+    "DreadPirateRobertz/carolina-futons",
+    "DreadPirateRobertz/carolina-futons-web",
+)
+
+
+def _fetch_recent_prs_multi(repos: list[str], limit: int = 50) -> list[dict]:
+    """Fetch merged PRs from N repos and concatenate the result.
+    Per-repo failures (gh outage, repo doesn't exist) are tolerated —
+    return the union of successful scans rather than failing the whole
+    check. Single-repo failures emit a stderr warning via _fetch_recent_prs."""
+    result: list[dict] = []
+    for repo in repos:
+        result.extend(_fetch_recent_prs(repo, limit=limit))
+    return result
 
 
 def main() -> int:
@@ -210,7 +230,11 @@ def main() -> int:
         return 2
     bead_id = sys.argv[1]
     bead = _fetch_bead(bead_id)
-    prs = _fetch_recent_prs(os.environ.get("STALENESS_REPO", "DreadPirateRobertz/carolina-futons"))
+    # cf-sufo: default to dual-repo scan (cfutons + cfw). STALENESS_REPO
+    # env var still works as a single-repo override for forensic runs.
+    override = os.environ.get("STALENESS_REPO")
+    repos = [override] if override else list(DEFAULT_REPOS)
+    prs = _fetch_recent_prs_multi(repos)
     warn = should_warn(bead, prs)
     if warn is None:
         print(f"OK — no recent merged PR appears to ship {bead_id}'s work.")
