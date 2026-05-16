@@ -21,6 +21,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const GIFT_CARD_AMOUNTS = [25, 50, 100, 150, 200, 500];
 const EXPIRATION_DAYS = 365;
@@ -83,7 +84,7 @@ export const purchaseGiftCard = webMethod(
         recipientName: sanitize(data.recipientName || '', 200),
         message: sanitize(data.message || '', 500),
         expirationDate: expirationDate.toISOString(),
-      }).catch(err => console.error('Gift card email delivery failed:', err));
+      }).catch(err => logError('[giftCards] purchaseGiftCard email-delivery failed', err));
 
       return {
         success: true,
@@ -93,7 +94,7 @@ export const purchaseGiftCard = webMethod(
         expirationDate: expirationDate.toISOString(),
       };
     } catch (err) {
-      console.error('Error purchasing gift card:', err);
+      logError('[giftCards] purchaseGiftCard failed', err);
       return { success: false, message: 'Failed to create gift card' };
     }
   }
@@ -145,7 +146,7 @@ export const checkBalance = webMethod(
         initialAmount: card.initialAmount,
       };
     } catch (err) {
-      console.error('Error checking gift card balance:', err);
+      logError('[giftCards] checkBalance failed', err);
       return { found: false };
     }
   }
@@ -224,7 +225,7 @@ export const redeemGiftCard = webMethod(
         remainingBalance: newBalance,
       };
     } catch (err) {
-      console.error('Error redeeming gift card:', err);
+      logError('[giftCards] redeemGiftCard failed', err);
       return { success: false, message: 'Failed to redeem gift card' };
     }
   }
@@ -293,7 +294,7 @@ async function sendGiftCardEmails(data) {
     );
     purchaserSent = true;
   } catch (err) {
-    console.error('Error sending purchaser gift card email:', err);
+    logError('[giftCards] sendPurchaserEmail failed', err);
   }
 
   // Send recipient notification — independent of purchaser
@@ -317,7 +318,7 @@ async function sendGiftCardEmails(data) {
     );
     recipientSent = true;
   } catch (err) {
-    console.error('Error sending recipient gift card email:', err);
+    logError('[giftCards] sendRecipientEmail failed', err);
   }
 
   return { success: purchaserSent || recipientSent, purchaserSent, recipientSent };
@@ -361,7 +362,7 @@ export const getMyPurchasedCards = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[giftCards] getMyPurchasedCards error:', err);
+      logError('[giftCards] getMyPurchasedCards failed', err);
       return { success: false, reason: 'fetch_failed' };
     }
   }
@@ -399,7 +400,7 @@ export const getMyReceivedCards = webMethod(
         cards: result.items.map(card => sanitizeCardForFrontend(card)),
       };
     } catch (err) {
-      console.error('[giftCards] getMyReceivedCards error:', err);
+      logError('[giftCards] getMyReceivedCards failed', err);
       return { success: false, reason: 'fetch_failed' };
     }
   }
@@ -441,7 +442,7 @@ export const getMyGiftCards = webMethod(
         received: receivedResult.items.map(sanitizeCardForFrontend),
       };
     } catch (err) {
-      console.error('Error fetching gift cards:', err);
+      logError('[giftCards] listAllGiftCards failed', err);
       return { success: false, message: 'Failed to fetch gift cards' };
     }
   }
