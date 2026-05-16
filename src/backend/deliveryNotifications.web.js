@@ -30,6 +30,7 @@ import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import wixData from 'wix-data';
 import { sanitize, validatePhone, formatPhoneE164 } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'DeliverySchedule';
 const PHONE = '(828) 252-9449';
@@ -62,14 +63,14 @@ async function sendViaTwilio(to, body) {
 
     if (!response.ok) {
       const err = await response.json();
-      console.error('[deliveryNotifications] Twilio error:', err);
+      logError('[deliveryNotifications] Twilio error', err);
       return { success: false };
     }
 
     const data = await response.json();
     return { success: true, sid: data.sid };
   } catch (err) {
-    console.error('[deliveryNotifications] sendViaTwilio failed:', err?.message);
+    logError('[deliveryNotifications] sendViaTwilio failed', err);
     return { success: false };
   }
 }
@@ -83,7 +84,7 @@ async function logSms(logData) {
   try {
     await wixData.insert('SMSLog', { ...logData, sentAt: new Date() }, { suppressAuth: true });
   } catch (err) {
-    console.error('[deliveryNotifications] logSms failed:', err?.message);
+    logError('[deliveryNotifications] logSms failed', err);
   }
 }
 
@@ -140,7 +141,7 @@ export async function sendDeliveryBookingConfirmationSms({ scheduleId, customerP
 
     return { success: true };
   } catch (err) {
-    console.error('[deliveryNotifications] sendDeliveryBookingConfirmationSms failed:', err?.message);
+    logError('[deliveryNotifications] sendDeliveryBookingConfirmationSms failed', err);
     return { success: false, reason: 'error' };
   }
 }
@@ -209,7 +210,7 @@ export const processDelivery48hReminders = webMethod(
 
       return { sent, failed };
     } catch (err) {
-      console.error('[deliveryNotifications] processDelivery48hReminders failed:', err?.message);
+      logError('[deliveryNotifications] processDelivery48hReminders failed', err);
       return { sent: 0, failed: 0 };
     }
   }
@@ -276,7 +277,7 @@ export const processDeliveryDayOfReminders = webMethod(
 
       return { sent, failed };
     } catch (err) {
-      console.error('[deliveryNotifications] processDeliveryDayOfReminders failed:', err?.message);
+      logError('[deliveryNotifications] processDeliveryDayOfReminders failed', err);
       return { sent: 0, failed: 0 };
     }
   }
