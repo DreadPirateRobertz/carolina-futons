@@ -1,5 +1,26 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:50 MT**
+
+## WAVE 32 COMPLETE — Both Queues Clear (00:50 MT)
+
+### Final merge count
+- **cfw repo**: ~60 PRs merged (#579–#638, with rebase chains)
+- **CF repo**: 14 PRs merged (#1335–#1350)
+- **cfw #635** (cf-54st /track-order P1 G-7): fully wired end-to-end ✅
+- **CF #1349** (morgott recovery — a720c6d CR-fold): on main ✅
+- **DEAD=0** confirmed (cf-hpwy v5 detector result stands)
+
+### Queue status
+- cfw: **CLEAR** (only drafts #485/#136 remain — both holds)
+- CF: **CLEAR**
+- enforce_admins: **ENABLED** on both repos
+
+### Next milestones
+- Godfrey cf-pdp-g2+g3 trilogy push → ~2026-05-18
+- Miquella cf-7pk0 stack → when cf-ukc6 batch window opens (~2026-05-17)
+- Stilgar gates → DNS TTL, UptimeRobot, Sentry, staging publish (blocking cutover)
+
+---
 
 ## Session 2026-05-15 — Wave 32 (FULL OUTPUT SESSION)
 
