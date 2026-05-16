@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 07:45 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 07:55 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -41,6 +41,7 @@
 | cfutons #1389–#1391 | cfutons | fix(cf-44qt wave): 3 more logError files ✅ (merged pre-compaction) |
 | cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
 | cf-c736 | cfw | feat: generateStaticParams + dynamicParams=false /products/[slug] — dispatched to blaidd (unblocked by cf-0klm) |
+| cfutons #1392 | cfutons | fix(cf-44qt sibling): warrantyService logError×7 ✅ MERGED 07:39 MT — all CI green, 77/77 tests |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
