@@ -30,7 +30,7 @@ vi.mock('wix-data', () => ({
   },
 }));
 
-import { logError } from '../src/backend/utils/errorHandler.js';
+import { logError } from 'backend/utils/errorHandler';
 import wixData from 'wix-data';
 
 beforeEach(() => {
@@ -126,7 +126,7 @@ describe('cf-44qt sibling — analyticsDashboard.web.js console.error → logErr
   it('getEmailMetrics tags logError with the canonical email-metrics label on failure', async () => {
     mockWixDataReject();
     const mod = await import('../src/backend/analyticsDashboard.web.js');
-    const result = await mod.getEmailMetrics({});
+    const result = await mod.getEmailFunnelMetrics({});
     if (result?.success === false) {
       const labels = vi.mocked(logError).mock.calls.map((c) => c[0]);
       expect(labels).toContain('[analyticsDashboard] Error fetching email metrics');
@@ -150,7 +150,7 @@ describe('cf-44qt sibling — analyticsDashboard.web.js console.error → logErr
   it('getNPSData tags logError with the canonical NPS-data label on failure', async () => {
     mockWixDataReject();
     const mod = await import('../src/backend/analyticsDashboard.web.js');
-    const result = await mod.getNPSData({});
+    const result = await mod.getNpsDashboardSection({});
     if (result?.success === false) {
       const labels = vi.mocked(logError).mock.calls.map((c) => c[0]);
       expect(labels).toContain('[analyticsDashboard] Error fetching NPS data');
