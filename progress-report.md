@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 03:08 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 03:52 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -13,17 +13,21 @@
 | cfw #651 | cfw | a11y(cf-if28): member surfaces + search status wave 5 |
 | cfw #694, #696, #697, #698 | cfw | LCP/SEO/SiteContent/about-tests |
 | cfw #700 | cfw | feat(cf-ajvr): /account/my-subscriptions → /dashboard redirect |
+| cfutons #1375 | cfutons | fix(cf-g79m): emailAutomation logError tag normalization ×6 ✅ |
+| cfutons #1376 | cfutons | chore(cf-b8n8): allowlist 5 non-bead cf-* tokens ✅ |
+| cfutons #1377 | cfutons | feat(cf-4hys): pre-dispatch staleness checker (TDD ×10) ✅ |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
 - cfutons #1369, #1370 (duplicates/superseded)
-- cf-8r7v, cf-v6zo, cf-47nm, cf-ajvr beads CLOSED
+- cf-8r7v, cf-v6zo, cf-47nm, cf-ajvr, cf-b8n8, cf-g79m, cf-4hys beads CLOSED
 
 ### PRs still in flight
 | PR | Repo | Status |
 |----|------|--------|
 | cfutons #1373 | cfutons | cf-uydr emailAutomation logError×19 — MERGED ✅ |
 | cfutons #1374 | cfutons | cf-qyjw d3-color Dependabot HIGH override — MERGED ✅ |
+| cfw #704 | cfw | cf-0oj5 PDP ISR fix (LCP) — lint✅ Vercel✅ e2e pending |
 
 ### Merged this cadence (02:55 MT)
 - cfw #702 (cf-mu05 lazy-load priority pins) ✅
@@ -44,10 +48,21 @@
 - cfw #703 ✅ (SHIP — newsletter PII P1)
 - cfutons #1373 ✅ (SHIP — emailAutomation logError)
 - cfutons #1374 ✅ (SHIP — d3-color Dependabot)
+- cfutons #1375 ✅ (SHIP — logError tag normalization, confidence 91)
+- cfutons #1376 ✅ (SHIP — allowlist 5 tokens, confidence 93)
+- cfutons #1377 ✅ (SHIP — cf-4hys staleness checker, confidence 91.5)
+- cfw #704 ✅ (SHIP — cf-0oj5 PDP ISR, rennala approved)
+
+### Shipped PM tooling this cadence
+- `scripts/check-stale-beads.sh` — session-level stale-bead scanner (cfutons main)
+- `scripts/check_stale_hooked_bead.py` + 10 TDD tests — per-bead decision predicate (via PR #1377)
+- `docs/audits/CONVENTIONS.md §9` — ritual integrated into wave-audit playbook
+- `crew/melania/pm-workflow.md` — PM workflow doc: admin-merge, staleness check, e2e pattern
 
 ### Blocked / gated
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
 - cfutons #1360 (auto-merge design proposal): mayor-discussion gated, not merging
+- cfw #704: awaiting e2e run completion (lint+Vercel ✅, merge imminent)
 
 ---
 
