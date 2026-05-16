@@ -69,7 +69,7 @@ export const getReviewSummary = webMethod(
       // Skip null/NaN ratings — they propagate as NaN through Math.round/min/max and corrupt sums and breakdowns
       const validRatings = allRatings.filter(r => r != null && !isNaN(Number(r)));
       if (validRatings.length < allRatings.length) {
-        console.warn(`[productReviews] Skipped ${allRatings.length - validRatings.length} reviews with invalid ratings for product ${pid}`);
+        logError(`productReviews:getReviewSummary-invalidRatings skipped=${allRatings.length - validRatings.length} product=${pid}`, null);
       }
 
       if (validRatings.length === 0) {

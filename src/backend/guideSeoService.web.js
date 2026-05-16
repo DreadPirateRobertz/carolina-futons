@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const PUBLISHER = {
@@ -121,7 +122,7 @@ export const getRelatedProducts = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[guideSeoService] getRelatedProducts error:', err);
+      logError('guideSeoService:getRelatedProducts', err);
       return { success: false, products: [] };
     }
   }
@@ -202,7 +203,7 @@ export const getGuidePageSeoData = webMethod(
         relatedGuides: guidesResult.success ? guidesResult.guides : [],
       };
     } catch (err) {
-      console.error('[guideSeoService] getGuidePageSeoData error:', err);
+      logError('guideSeoService:getGuidePageSeoData', err);
       return { success: false, howToSchema: null, relatedProducts: [], relatedGuides: [] };
     }
   }
