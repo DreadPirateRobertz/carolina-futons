@@ -61,6 +61,24 @@ NON_WM_FN_RE = re.compile(
     re.MULTILINE,
 )
 
+# cf-5dto.fu1: arrow + function-expression export shapes that the original
+# v5 regex missed. `export const FOO = async (x) => {...}` is the modern
+# refactor target — if anyone moves a webMethod-adjacent helper from
+# `export async function` to `export const = async () =>`, the inventory
+# must still catch it. Three separate patterns keep the kind labels
+# accurate without backtracking.
+#
+# `export const NAME = [async] (args) =>` — arrow function
+NON_WM_ARROW_RE = re.compile(
+    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?\([^)]*\)\s*=>",
+    re.MULTILINE,
+)
+# `export const NAME = [async] function` — function expression assigned to const
+NON_WM_FN_EXPR_RE = re.compile(
+    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?function\b",
+    re.MULTILINE,
+)
+
 PUBLIC_VERB_RE = re.compile(
     r"^(submit|create|track|register|capture|send|notify|subscribe|"
     r"unsubscribe|redeem|claim|generate|update|delete)",
@@ -159,25 +177,64 @@ def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str,
     """
     root = backend_root if backend_root is not None else BACKEND
     out: dict[str, dict] = {}
+    skipped: list[tuple[str, str]] = []
     for fp in root.rglob("*.web.js"):
         try:
             text = fp.read_text(errors="ignore")
-        except OSError:
+        except OSError as err:
+            # cf-5dto silent-failure-hunter CR: don't silently drop the file.
+            # If we skip without logging, an operator running audit.py sees
+            # 'no non-webMethod exports here' and walks back into the B-5
+            # trap. Surface every skip + count them at the call site.
+            try:
+                skipped.append((str(fp.relative_to(ROOT)), str(err)))
+            except ValueError:
+                skipped.append((str(fp), str(err)))
             continue
         text = strip_js_comments(text)
+        try:
+            file_str = str(fp.relative_to(ROOT))
+        except ValueError:
+            file_str = str(fp)
+
+        def _record(name: str, line: int, kind: str) -> None:
+            # Function-declaration takes priority over later const-rebindings
+            # (same module rebinding a function-declared name is rare and
+            # the declaration is the load-bearing entry).
+            if name not in out:
+                out[name] = {"file": file_str, "line": line, "kind": kind}
+
         for m in NON_WM_FN_RE.finditer(text):
             is_async = m.group(1) is not None
             name = m.group(2)
             line = text[: m.start()].count("\n") + 1
-            try:
-                file_str = str(fp.relative_to(ROOT))
-            except ValueError:
-                file_str = str(fp)
-            out[name] = {
-                "file": file_str,
-                "line": line,
-                "kind": "async function" if is_async else "function",
-            }
+            _record(name, line, "async function" if is_async else "function")
+        # cf-5dto.fu1: arrow shape — modern refactor target
+        for m in NON_WM_ARROW_RE.finditer(text):
+            name = m.group(1)
+            is_async = m.group(2) is not None
+            line = text[: m.start()].count("\n") + 1
+            _record(name, line, "async arrow" if is_async else "arrow")
+        # cf-5dto.fu1: function-expression assigned to const
+        for m in NON_WM_FN_EXPR_RE.finditer(text):
+            name = m.group(1)
+            is_async = m.group(2) is not None
+            line = text[: m.start()].count("\n") + 1
+            _record(
+                name,
+                line,
+                "async function expression" if is_async else "function expression",
+            )
+    if skipped:
+        # Surface via stderr — operator + CI both see the failure mode.
+        print(
+            f"⚠ collect_non_webmethod_exports: skipped {len(skipped)} file(s) due to read errors:",
+            file=sys.stderr,
+        )
+        for path, err in skipped[:10]:
+            print(f"  {path}: {err}", file=sys.stderr)
+        if len(skipped) > 10:
+            print(f"  ... and {len(skipped) - 10} more", file=sys.stderr)
     return out
 
 
@@ -253,7 +310,14 @@ def _module_basename(file_rel: str) -> str:
 # FILESYSTEM-PATH-REFERENCED hides the asymmetry — a test-import-only
 # consumer is migrate-then-delete; a data-source consumer requires
 # refactoring the tooling FIRST.
-_FS_PATH_TEST_RE = re.compile(r"^tests/.*\.(test|spec)\.[jt]s$")
+# cf-5dto.fu1: broadened test-path regex. Matches any path with a `tests/`
+# or `__tests__/` directory segment + a test-file-extension at the leaf.
+# Covers: top-level tests/, cfw-style src/__tests__/, monorepo
+# packages/<x>/__tests__/, packages/<x>/tests/. Extensions cover
+# js/ts/tsx/jsx/mjs/cjs.
+_FS_PATH_TEST_RE = re.compile(
+    r"(?:^|/)(?:tests|__tests__)/.*\.(?:test|spec)\.(?:tsx?|jsx?|mjs|cjs)$"
+)
 _FS_PATH_SCRIPT_RE = re.compile(r"^scripts/.*\.(js|ts|mjs|cjs|py|sh)$")
 
 
@@ -265,7 +329,12 @@ def classify_fs_path_consumer(rel_path: str) -> str:
       FS-PATH-DATA-SOURCE  — `scripts/*.{js,ts,py,sh,...}` consumer (tooling)
       FS-PATH-OTHER        — any other path (operator inspects manually)
     """
-    if _FS_PATH_TEST_RE.match(rel_path):
+    # cf-5dto.fu1: search (not match) so the `(?:^|/)tests|__tests__/`
+    # pattern matches embedded test directories (cfw-style src/__tests__/,
+    # monorepo packages/<x>/__tests__/). Script paths stay top-level-only
+    # via .match — `scripts/` directories nested under packages/ aren't
+    # the tooling-data-source convention.
+    if _FS_PATH_TEST_RE.search(rel_path):
         return "FS-PATH-TEST-IMPORT"
     if _FS_PATH_SCRIPT_RE.match(rel_path):
         return "FS-PATH-DATA-SOURCE"
@@ -625,8 +694,20 @@ def classify_method(
     # through to DEAD just because no in-tree caller exists. The B-4 trap:
     # cartSessionService.createSession/updateCartItems bucketed DEAD despite
     # the allowlist + the mobile-rig caller.
+    #
+    # CR-tightening (miquella + code-reviewer + silent-failure-hunter):
+    # gate on BOTH `permission == 'Anyone'` AND allowlist membership. The
+    # allowlist's semantic is "this Anyone-permission endpoint has an
+    # out-of-tree consumer." If a method is later hardened to Admin, the
+    # allowlist entry becomes inapplicable — without the permission check
+    # we'd silently keep the OK-INTENTIONAL-ANYONE classification and mask
+    # the WRAPPED-NO-CONSUMER / GAP-CFW-WANTS signal that the hardening
+    # may have introduced.
     qualified_early = _module_qualified_name(defining_file, name)
-    is_intentional_anyone = qualified_early in INTENTIONAL_ANYONE
+    is_intentional_anyone = (
+        info["permission"] == "Anyone"
+        and qualified_early in INTENTIONAL_ANYONE
+    )
 
     buckets: list[str] = []
     if in_http:
@@ -677,15 +758,15 @@ def classify_method(
             in_dispatcher = True
             dispatcher_alias = dispatcher_modules[module_basename]
 
-    # Gap-finder verdict (cf-hpwy core deliverable)
-    if is_intentional_anyone:
-        # cf-5dto (v5): allowlisted-Anyone endpoints are kept-by-design.
-        # Out-of-tree consumers (mobile rig, third-party calls into
-        # /_functions/<name>) aren't visible to the in-tree scan; the
-        # allowlist is the operator's declaration that the surface is
-        # intentional. Don't surface as a cleanup candidate.
-        gap_verdict = "OK-INTENTIONAL-ANYONE"
-    elif in_dispatcher and not has_cfw_high:
+    # Gap-finder verdict (cf-hpwy core deliverable).
+    # cf-5dto silent-failure-hunter CR: the allowlist must NOT short-circuit
+    # the caller-graph determinations. An allowlisted-Anyone method WITH
+    # callers (cfw_high, dispatcher, frontend) should keep its OK-WIRED /
+    # OK-WIRED-VIA-DISPATCHER / GAP-CFW-WANTS verdict — those signals are
+    # load-bearing. OK-INTENTIONAL-ANYONE only fires as a fallback when
+    # the row would otherwise be UNUSED-CAN-DELETE — i.e., the out-of-tree
+    # consumer is the ONLY thing keeping the method alive.
+    if in_dispatcher and not has_cfw_high:
         # v4: dispatcher route is the WIRED path even without a direct cfw URL.
         # Distinct verdict (OK-WIRED-VIA-DISPATCHER) so the operator can see
         # the dispatch path is active and the method is alive.
@@ -698,6 +779,12 @@ def classify_method(
         gap_verdict = "WRAPPED-NO-CONSUMER"
     elif buckets == ["DEAD"] and not has_cfw_any:
         gap_verdict = "UNUSED-CAN-DELETE"
+    elif is_intentional_anyone and buckets == ["HTTP-EXPOSED-INTENTIONAL"]:
+        # cf-5dto fallback: the only thing keeping this method alive is the
+        # allowlist (no callers anywhere). Surface as OK-INTENTIONAL-ANYONE
+        # so the operator sees the out-of-tree-consumer reasoning instead of
+        # UNUSED-CAN-DELETE.
+        gap_verdict = "OK-INTENTIONAL-ANYONE"
     elif has_cfw_low:
         gap_verdict = "MAYBE-CFW-NAME-COLLISION"  # bare-word match only
     else:
@@ -793,7 +880,27 @@ def main() -> int:
         for name, info in methods.items()
     ]
 
+    # cf-5dto (v5): inventory non-webMethod function exports. The whole point
+    # of this enhancement is that operators see this list BEFORE planning a
+    # whole-file delete; defining the helper without wiring it into main()
+    # would make this PR's headline claim (149 surfaced) load-bearing on a
+    # one-off invocation rather than the production tool. CR by miquella's
+    # code-reviewer sub-agent caught this.
+    non_wm_exports = collect_non_webmethod_exports()
+    print(
+        f"\nNon-webMethod function exports in src/backend: {len(non_wm_exports)}",
+        file=sys.stderr,
+    )
+    print(
+        "  (operator action: cross-check before any whole-file delete; "
+        "underscore-prefix exports are typically test seams)",
+        file=sys.stderr,
+    )
+
     Path("/tmp/cf-dead-routes/results.json").write_text(json.dumps(rows, indent=2))
+    Path("/tmp/cf-dead-routes/non_webmethod_exports.json").write_text(
+        json.dumps(non_wm_exports, indent=2)
+    )
 
     # Single-bucket tally
     primary = Counter()
