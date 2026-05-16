@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // Z-score for 95% confidence (p < 0.05, two-tailed)
 const Z_95 = 1.96;
@@ -87,7 +88,7 @@ export const getVariant = webMethod(
 
       return { success: true, variant: { id: variant.id, name: variant.name }, testActive: true };
     } catch (err) {
-      console.error('[AbTesting] Error getting variant:', err);
+      logError('abTesting.getVariant', err);
       return { success: false, error: 'Unable to get variant' };
     }
   }
@@ -135,8 +136,10 @@ export const trackEvent = webMethod(
 
       return { success: true };
     } catch (err) {
-      // Silent — tracking failures should not affect user experience
-      console.error('[AbTesting] Event tracking error:', err?.message);
+      // Tracking failures must not break the user flow; the catch is intentional.
+      // logError still fires so operators see the rate (silently dropping
+      // analytics is the textbook fabricated-success anti-pattern).
+      logError('abTesting.trackEvent', err);
       return { success: false };
     }
   }
@@ -230,7 +233,7 @@ export const getTestResults = webMethod(
         },
       };
     } catch (err) {
-      console.error('[AbTesting] Error getting results:', err);
+      logError('abTesting.getTestResults', err);
       return { success: false, error: 'Unable to get test results' };
     }
   }
@@ -274,7 +277,7 @@ export const concludeTest = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[AbTesting] Error concluding test:', err);
+      logError('abTesting.concludeTest', err);
       return { success: false, error: 'Unable to conclude test' };
     }
   }
@@ -331,7 +334,7 @@ export const createTest = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[AbTesting] Error creating test:', err);
+      logError('abTesting.createTest', err);
       return { success: false, error: 'Unable to create test' };
     }
   }
