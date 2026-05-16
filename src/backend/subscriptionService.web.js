@@ -19,6 +19,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'Subscriptions';
 
@@ -194,7 +195,7 @@ export const createSubscription = webMethod(
 
       return { success: true, subscription };
     } catch (err) {
-      console.error('Error creating subscription:', err);
+      logError('[subscriptionService] createSubscription failed', err);
       return { success: false, message: 'Failed to create subscription' };
     }
   }
@@ -223,7 +224,7 @@ export const getMySubscriptions = webMethod(
 
       return { success: true, subscriptions: result.items };
     } catch (err) {
-      console.error('Error getting subscriptions:', err);
+      logError('[subscriptionService] getSubscriptions failed', err);
       return { success: false, message: 'Failed to load subscriptions', subscriptions: [] };
     }
   }
@@ -253,7 +254,7 @@ export const getSubscriptionDetails = webMethod(
 
       return { success: true, subscription: sub };
     } catch (err) {
-      console.error('Error getting subscription details:', err);
+      logError('[subscriptionService] getSubscriptionDetails failed', err);
       return { success: false, message: 'Failed to load subscription' };
     }
   }
@@ -296,7 +297,7 @@ export const updateFrequency = webMethod(
 
       return { success: true, subscription: updated };
     } catch (err) {
-      console.error('Error updating frequency:', err);
+      logError('[subscriptionService] updateFrequency failed', err);
       return { success: false, message: 'Failed to update frequency' };
     }
   }
@@ -337,7 +338,7 @@ export const pauseSubscription = webMethod(
 
       return { success: true, subscription: updated };
     } catch (err) {
-      console.error('Error pausing subscription:', err);
+      logError('[subscriptionService] pauseSubscription failed', err);
       return { success: false, message: 'Failed to pause subscription' };
     }
   }
@@ -376,7 +377,7 @@ export const resumeSubscription = webMethod(
 
       return { success: true, subscription: updated };
     } catch (err) {
-      console.error('Error resuming subscription:', err);
+      logError('[subscriptionService] resumeSubscription failed', err);
       return { success: false, message: 'Failed to resume subscription' };
     }
   }
@@ -421,7 +422,7 @@ export const skipNextDelivery = webMethod(
 
       return { success: true, subscription: updated };
     } catch (err) {
-      console.error('Error skipping delivery:', err);
+      logError('[subscriptionService] skipDelivery failed', err);
       return { success: false, message: 'Failed to skip delivery' };
     }
   }
@@ -461,7 +462,7 @@ export const cancelSubscription = webMethod(
 
       return { success: true, subscription: updated };
     } catch (err) {
-      console.error('Error cancelling subscription:', err);
+      logError('[subscriptionService] cancelSubscription failed', err);
       return { success: false, message: 'Failed to cancel subscription' };
     }
   }
@@ -499,7 +500,7 @@ export const getSubscriberDiscount = webMethod(
 
       return { success: true, discount, activeCount };
     } catch (err) {
-      console.error('Error getting subscriber discount:', err);
+      logError('[subscriptionService] getSubscriberDiscount failed', err);
       return { success: false, message: 'Failed to get discount', discount: 0, activeCount: 0 };
     }
   }
@@ -542,7 +543,7 @@ export const isProductSubscribable = webMethod(
 
       return { subscribable: eligible, discount: eligible ? BASE_DISCOUNT : 0 };
     } catch (err) {
-      console.error('Error checking subscription eligibility:', err);
+      logError('[subscriptionService] checkSubscriptionEligibility failed', err);
       return { subscribable: false, discount: 0 };
     }
   }
