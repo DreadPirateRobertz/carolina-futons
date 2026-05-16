@@ -25,6 +25,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
+
+// cf-n4wy: emailService auto-reply skip-on-empty-contactId migrated to logError
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   sendEmail,
   sendOrderConfirmation,
@@ -107,13 +111,12 @@ describe('sendOrderConfirmation — branch coverage', () => {
   });
 
   it('returns success: false on triggeredEmails throw (covers catch + logs)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     __failNextEmail();
     const res = await sendOrderConfirmation(baseOrder);
     expect(res).toEqual({ success: false });
-    // catch path must log — guards against regression to fully-silent swallow.
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    // catch path must log via canonical logError — guards against regression to fully-silent swallow.
+    expect(logError).toHaveBeenCalled();
   });
 });
 
@@ -177,12 +180,12 @@ describe('sendShippingNotification — branch coverage', () => {
   });
 
   it('returns success: false on triggeredEmails throw (catch logs)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     __failNextEmail();
     const res = await sendShippingNotification(baseShip);
     expect(res).toEqual({ success: false });
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
+    
   });
 });
 
@@ -250,12 +253,11 @@ describe('sendFreightShippingNotification — branch coverage', () => {
   });
 
   it('returns success: false on triggeredEmails throw (catch logs)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     __failNextEmail();
     const res = await sendFreightShippingNotification(baseFreight);
     expect(res).toEqual({ success: false });
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
   });
 });
 
@@ -308,12 +310,11 @@ describe('sendDeliveryConfirmation — branch coverage', () => {
   });
 
   it('returns success: false on triggeredEmails throw (catch logs)', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     __failNextEmail();
     const res = await sendDeliveryConfirmation(baseDelivery);
     expect(res).toEqual({ success: false });
-    expect(errSpy).toHaveBeenCalled();
-    errSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
   });
 });
 
@@ -333,12 +334,7 @@ describe('_sendCustomerContactAutoReply — auto-reply branch coverage', () => {
     const crm = await import('./__mocks__/wix-crm-backend.js');
     const real = crm.contacts.appendOrCreateContact;
     crm.contacts.appendOrCreateContact = async () => ({ /* no contactId */ });
-
-    const warn = console.warn;
-    // Capture full args (don't join) so we can inspect the structured
-    // payload object passed as the second argument.
-    const warnCalls = [];
-    console.warn = (...args) => warnCalls.push(args);
+    vi.mocked(logError).mockClear();
     try {
       const res = await sendEmail({
         name: 'Test',
@@ -357,18 +353,15 @@ describe('_sendCustomerContactAutoReply — auto-reply branch coverage', () => {
       // template was sent, NOT contact_form_auto_reply.
       const replyEmails = log.filter(e => e.templateId === 'contact_form_auto_reply');
       expect(replyEmails).toHaveLength(0);
-      const skipCall = warnCalls.find(args =>
-        typeof args[0] === 'string' && args[0].includes('customer auto-reply skipped')
+      // cf-n4wy: canonical logError tag replaces the previous console.warn
+      // assertion. The tag itself encodes the skip-on-empty-contactId signal;
+      // PII (email) is no longer logged here per the namespace standardization.
+      expect(logError).toHaveBeenCalledWith(
+        'emailService:sendCustomerContactAutoReply-skippedEmptyContactId',
+        null,
       );
-      expect(skipCall).toBeDefined();
-      // The warn payload must include the customer email — that's the only
-      // breadcrumb tying the skipped log line back to a specific submission.
-      // Production format: console.warn('...skipped...', { email })
-      const payload = skipCall[1];
-      expect(payload).toMatchObject({ email: 'noreply-skip@example.com' });
     } finally {
       crm.contacts.appendOrCreateContact = real;
-      console.warn = warn;
     }
   });
 });

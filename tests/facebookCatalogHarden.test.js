@@ -11,6 +11,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
 import { __seed, __reset, __setQueryError } from './__mocks__/wix-data.js';
 
+// cf-n4wy: facebookCatalog migrated console.warn (validation-failures alert) →
+// canonical logError. Mock so this harden test asserts the canonical tag.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 // ═══════════════════════════════════════════════════════════════════════
 // refreshFacebookCatalog — "all products fail" (product count = 0 processed)
 // ═══════════════════════════════════════════════════════════════════════
@@ -24,9 +29,7 @@ describe('refreshFacebookCatalog — all products fail validation (product count
 
   beforeEach(() => {
     __reset();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
   });
 
   afterEach(() => {
@@ -48,7 +51,7 @@ describe('refreshFacebookCatalog — all products fail validation (product count
     expect(result.success).toBe(false);
   });
 
-  it('error alert fires (console.warn) when all products fail and processed = 0', async () => {
+  it('error alert fires via canonical logError tag when all products fail and processed = 0', async () => {
     __seed('Stores/Products', [
       { _id: 'bad-1', name: '', price: null, slug: '' },
       { _id: 'bad-2', name: '', price: null, slug: '' },
@@ -56,13 +59,13 @@ describe('refreshFacebookCatalog — all products fail validation (product count
 
     await refreshFacebookCatalog();
 
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('[facebookCatalog]'),
-      expect.stringContaining('failed'),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('facebookCatalog:refreshFacebookCatalog-failures'),
+      null,
     );
   });
 
-  it('error alert message includes the failure count', async () => {
+  it('error alert tag includes the failure count', async () => {
     __seed('Stores/Products', [
       { _id: 'bad-1', name: '', price: null, slug: '' },
       { _id: 'bad-2', name: '', price: null, slug: '' },
@@ -71,9 +74,13 @@ describe('refreshFacebookCatalog — all products fail validation (product count
 
     await refreshFacebookCatalog();
 
-    const warnCall = console.warn.mock.calls[0];
-    // Second arg is the message string that includes the count
-    expect(warnCall[1]).toMatch(/3 product/);
+    // Find the -failures tag emitted by refreshFacebookCatalog; its body
+    // carries the failure count in the message text.
+    const failureCall = vi.mocked(logError).mock.calls.find(
+      (call) => typeof call[0] === 'string' && call[0].includes('-failures'),
+    );
+    expect(failureCall).toBeTruthy();
+    expect(failureCall[0]).toMatch(/3 product/);
   });
 
   it('safeNotify swallows notifyOwner errors — result is still returned', async () => {

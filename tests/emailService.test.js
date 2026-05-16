@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert } from './__mocks__/wix-data.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
+
+// cf-n4wy: emailService migrated console.warn (SITE_OWNER_CONTACT_ID) → canonical logError
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   sendEmail,
   submitSwatchRequest,
@@ -446,7 +450,7 @@ describe('sendOrderNotification', () => {
   // observability can distinguish missing-secret from other failures.
   it('returns structured failure when SITE_OWNER_CONTACT_ID secret is missing', async () => {
     __resetSecrets(); // clear all secrets including the beforeEach default
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     const result = await sendOrderNotification({
       number: '10043',
       buyerName: 'No Owner',
@@ -455,13 +459,15 @@ describe('sendOrderNotification', () => {
     });
     expect(result.success).toBe(false);
     expect(result.reason).toBe('site_owner_contact_id_missing');
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/SITE_OWNER_CONTACT_ID/),
-      expect.anything(),
+    // cf-n4wy: canonical logError tag (matches either -secretEmpty or -secretUnreadable)
+    const ownerSecretTagCall = vi.mocked(logError).mock.calls.find(
+      (call) =>
+        typeof call[0] === 'string' &&
+        call[0].includes('emailService:resolveSiteOwnerContactId'),
     );
+    expect(ownerSecretTagCall).toBeTruthy();
     // No email should have been queued — owner notify is the only side effect.
     const emails = __getEmailLog();
     expect(emails).toHaveLength(0);
-    warnSpy.mockRestore();
   });
 });

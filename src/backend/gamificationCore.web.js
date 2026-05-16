@@ -758,7 +758,7 @@ export const getActiveChallenges = webMethod(
       // through (stale session, misconfiguration). Surface it as a distinct
       // error instead of returning "no challenges" — that's silent-failure
       // masquerade. See cf-1y7 (cf-2ag cascade).
-      console.warn('[gamificationCore] getActiveChallenges: no memberId on session (cf-1y7)');
+      logError('gamificationCore:getActiveChallenges-noMemberId', null);
       return { challenges: [], error: 'auth_required' };
     }
 
@@ -1089,7 +1089,7 @@ export const getStreakData = webMethod(
       // Velo SiteMember gate leak — distinguishable from "authed but no streak
       // yet" (which also returns zeros, but without the error field).
       // See cf-1y7 (cf-2ag cascade).
-      console.warn('[gamificationCore] getStreakData: no memberId on session (cf-1y7)');
+      logError('gamificationCore:getStreakData-noMemberId', null);
       return { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
     }
     const record = await findMemberRecord(memberId);
@@ -1208,7 +1208,7 @@ export const getMemberTier = webMethod(
       // Velo SiteMember gate leak — return the baseline Trail Blazer shape
       // but signal the auth anomaly so widgets can gate tier benefits display.
       // See cf-1y7 (cf-2ag cascade).
-      console.warn('[gamificationCore] getMemberTier: no memberId on session (cf-1y7)');
+      logError('gamificationCore:getMemberTier-noMemberId', null);
       return { ...computeTierInfo(0), error: 'auth_required' };
     }
     const record = await findMemberRecord(memberId);
@@ -1248,13 +1248,13 @@ export const getActivityFeed = webMethod(
       // Velo SiteMember gate leak. Array return preserved for consumer compat;
       // observability lives in the warn so Wix runtime logs surface the leak.
       // See cf-1y7 (cf-2ag cascade).
-      console.warn('[gamificationCore] getActivityFeed: no member on session (auth_required) (cf-1y7)');
+      logError('gamificationCore:getActivityFeed-authRequired', null);
       return [];
     }
     if (caller._id !== memberId) {
       // Cross-member read attempt. Keep defense-in-depth (empty array) but
       // warn distinctly so the two failure modes are separable in logs.
-      console.warn('[gamificationCore] getActivityFeed: caller/memberId mismatch (forbidden) (cf-1y7)');
+      logError('gamificationCore:getActivityFeed-forbidden', null);
       return [];
     }
 
