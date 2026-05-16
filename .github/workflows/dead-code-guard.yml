@@ -38,6 +38,11 @@ jobs:
   guard:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # cf-69fi.fu1: PR title is the only untrusted input we read. Surface it
+    # via env (not direct interpolation in shell) per the GH Actions
+    # injection-safety guide. skip_guard_check.py reads $PR_TITLE.
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title || '' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -46,7 +51,16 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Skip-guard check (cf-69fi.fu1)
+        # If the PR title contains `[skip-deadcode-guard]`, short-circuit
+        # the gate with an audit-trail annotation. Emergency-hotfix escape
+        # hatch; 5-agent CR mandate still applies per mayor's 2026-05-15
+        # standing order — bypass must be justified in PR body.
+        id: skip
+        run: python3 scripts/cf-dead-routes/skip_guard_check.py
+
       - name: Run cf-hpwy v5 detector (audit.py)
+        if: steps.skip.outputs.skip != 'true'
         # Produces /tmp/cf-dead-routes/results.json — the contract input
         # for check-regression.py. Stderr carries the human-readable
         # bucket tally; we tee it into the job log for visibility.
@@ -56,14 +70,16 @@ jobs:
 
       - name: Check regression vs baseline (soft-fail mode, Week-1)
         # cf-69fi Week-1: annotate PR via ::warning::, do NOT block merges.
-        # The Week-2+ follow-up bead flips this to --strict.
+        # The Week-2 flip plan (docs/audits/cf-69fi-strict-flip-plan.md)
+        # describes the gating-criteria for moving to --strict.
+        if: steps.skip.outputs.skip != 'true'
         run: |
           python3 scripts/cf-dead-routes/check-regression.py \
             --results /tmp/cf-dead-routes/results.json \
             --baseline scripts/cf-dead-routes/baseline.json
 
       - name: Upload audit results as PR artifact
-        if: always()
+        if: steps.skip.outputs.skip != 'true' && always()
         uses: actions/upload-artifact@v7
         with:
           name: cf-dead-routes-audit
