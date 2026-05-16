@@ -93,8 +93,8 @@ describe('getComfortLevels (deepen)', () => {
     const levels = await getComfortLevels();
     expect(levels).toEqual([]);
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching comfort levels:',
-      expect.any(Error),
+      expect.stringContaining('comfortService'),
+      expect.any(String),
     );
     consoleSpy.mockRestore();
   });
@@ -162,8 +162,8 @@ describe('getProductComfort (deepen)', () => {
     const comfort = await getProductComfort('prod-1');
     expect(comfort).toBeNull();
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching product comfort:',
-      expect.any(Error),
+      expect.stringContaining('comfortService'),
+      expect.any(String),
     );
     consoleSpy.mockRestore();
   });
@@ -250,8 +250,8 @@ describe('getComfortProducts (deepen)', () => {
     const ids = await getComfortProducts('plush');
     expect(ids).toEqual([]);
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching comfort products:',
-      expect.any(Error),
+      expect.stringContaining('comfortService'),
+      expect.any(String),
     );
     consoleSpy.mockRestore();
   });
