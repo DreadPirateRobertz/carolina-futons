@@ -17,6 +17,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -148,7 +149,7 @@ export const processContentSchedule = webMethod(
         } catch (actionErr) {
           item.status = 'failed';
           item.error = 'Processing error';
-          console.error(`[contentScheduler] Action failed for ${item._id}:`, actionErr);
+          logError(`contentScheduler:actionFailed item=${item._id}`, actionErr);
         }
 
         item.processedAt = now;
@@ -159,7 +160,7 @@ export const processContentSchedule = webMethod(
 
       return { success: true, processed, failed, skipped };
     } catch (err) {
-      console.error('[contentScheduler] Error processing schedule:', err);
+      logError('contentScheduler:processSchedule', err);
       return { success: false, error: 'Failed to process schedule.', processed: 0, failed: 0, skipped: 0 };
     }
   }
@@ -191,7 +192,7 @@ export const getScheduleQueue = webMethod(
 
       return { success: true, items: result.items };
     } catch (err) {
-      console.error('[contentScheduler] Error getting queue:', err);
+      logError('contentScheduler:getQueue', err);
       return { success: false, error: err.message || 'Failed to get queue.', items: [] };
     }
   }
@@ -228,7 +229,7 @@ export const cancelScheduledItem = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[contentScheduler] Error cancelling item:', err);
+      logError('contentScheduler:cancelItem', err);
       return { success: false, error: err.message || 'Failed to cancel item.' };
     }
   }
@@ -260,7 +261,7 @@ export const getScheduleStats = webMethod(
 
       return { success: true, stats };
     } catch (err) {
-      console.error('[contentScheduler] Error getting stats:', err);
+      logError('contentScheduler:getStats', err);
       return { success: false, error: err.message || 'Failed to get stats.', stats: {} };
     }
   }
