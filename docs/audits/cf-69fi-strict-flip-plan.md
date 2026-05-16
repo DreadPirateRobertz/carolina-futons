@@ -55,6 +55,8 @@ When `--strict` is on, an emergency hotfix may need to ship even if the dead-cod
 
 The marker is case-insensitive and whitespace-tolerant inside the brackets, but the brackets themselves are mandatory (explicit opt-in; not triggered by casual "skip" or "deadcode" mentions). The workflow short-circuits with a `::warning::` annotation including the PR title verbatim, so the bypass is auditable.
 
+**Scope:** marker is read from the PR **title only**, not the PR body. The title is grep-able from the GitHub Actions UI + log; body content would require extra workflow plumbing and offers no audit-visibility win. Put the justification in the PR body, the kill-switch marker in the title.
+
 This is **not a free pass.** The 5-agent CR mandate still applies (mayor's 2026-05-15 standing order). The bypass must be justified in the PR body. Reviewers should refuse `[skip-deadcode-guard]` PRs that don't articulate the emergency.
 
 ### When the kill switch is appropriate
