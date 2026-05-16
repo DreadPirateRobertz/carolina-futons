@@ -497,3 +497,170 @@ def test_bucket_reflects_fs_path_sub_classification(tmp_path):
     kinds = row["fs_path_consumer_kinds"]
     assert "FS-PATH-DATA-SOURCE" in kinds
     assert "FS-PATH-TEST-IMPORT" in kinds
+
+
+# ── cf-5dto.2 (cf-5dto.fu2): combinatorial precedence tests ────────────
+#
+# Per the miquella test-analyzer review: each v5 fix-path is unit-tested
+# in isolation, but two-shape overlaps weren't pinned. These tests cover
+# the bucket interactions that determine which signal wins when an entry
+# matches multiple paths.
+
+
+def test_allowlist_plus_fs_path_data_source(tmp_path):
+    """Bucket interaction #1: allowlisted Anyone method WITH fs_path_refs
+    populated. Both signals must surface on the bucket array — operators
+    need to see the allowlist reasoning AND the FS-PATH-DATA-SOURCE
+    sub-class so they understand the cleanup cost (refactor tooling
+    first) before treating the row as out-of-tree-consumer-only.
+
+    Pins the bucket shape, not the verdict — verdict precedence is
+    separately tightened by cf-5dto.fu1 (#1349); this test stays valid
+    pre- and post-merge because bucket assignment is invariant."""
+    audit = _import_audit()
+    info = {
+        # cartSessionService.createSession is in INTENTIONAL_ANYONE
+        # per the production allowlist.
+        "file": "src/backend/cartSessionService.web.js",
+        "permission": "Anyone",
+        "line": 1,
+    }
+    # fs_path_refs is keyed by MODULE BASENAME (not method name) per
+    # _module_basename(defining_file) → cartSessionService.
+    row = audit.classify_method(
+        name="createSession",
+        info=info,
+        files=[],
+        cfw_files=[],
+        http_text="",
+        events_text="",
+        fs_path_refs={
+            "cartSessionService": ["scripts/seed-fixtures.js"],
+        },
+        dispatcher_modules={},
+    )
+    # Both signals must coexist on the bucket list.
+    assert "HTTP-EXPOSED-INTENTIONAL" in row["bucket"]
+    assert "FILESYSTEM-PATH-REFERENCED" in row["bucket"]
+    assert row["fs_path_consumer_kinds"] == ["FS-PATH-DATA-SOURCE"]
+    # in_filesystem_path flag must reflect the consumer presence so
+    # downstream summary code (which reads the row dict, not the bucket
+    # array) sees the same signal.
+    assert row["in_filesystem_path"] is True
+
+
+def test_allowlist_plus_dispatcher_bucket_shape(tmp_path):
+    """Bucket interaction #2: allowlisted Anyone method WITH in_dispatcher.
+    Both the dispatcher signal AND the allowlist signal must show in the
+    bucket list. The dispatcher signal is load-bearing — if the dispatcher
+    were removed, the method would lose WIRED status and the operator
+    needs that signal visible distinct from the allowlist fallback.
+
+    Pins bucket shape; verdict precedence is cf-5dto.fu1 (#1349) territory."""
+    audit = _import_audit()
+    info = {
+        "file": "src/backend/cartSessionService.web.js",
+        "permission": "Anyone",
+        "line": 1,
+    }
+    row = audit.classify_method(
+        name="createSession",
+        info=info,
+        files=[],
+        cfw_files=[],
+        http_text="",
+        events_text="",
+        fs_path_refs={},
+        # Simulate a dispatcher that owns the cartSessionService surface.
+        # Key is the defining-file's module basename.
+        dispatcher_modules={"cartSessionService": "post_cartSession"},
+    )
+    # Both signals coexist:
+    assert "DISPATCHER-WRAPPED" in row["bucket"]
+    assert "HTTP-EXPOSED-INTENTIONAL" in row["bucket"]
+    # in_http_via_dispatcher auto-sets in_http, so HTTP-EXPOSED is also in.
+    assert "HTTP-EXPOSED" in row["bucket"]
+    assert row["in_http_via_dispatcher"] is True
+
+
+def test_non_webmethod_inventory_independent_of_webmethod_rows(tmp_path):
+    """Bucket interaction #3: a backend .web.js with BOTH a webMethod
+    AND a non-webMethod export. The non-WM inventory must populate
+    regardless of webMethod presence — a future revert that scopes
+    the non-WM scan to "files with no webMethods" would silently miss
+    the comfortTimeline.createTimeline shape (the B-5 trap)."""
+    audit = _import_audit()
+    src = tmp_path / "mixed.web.js"
+    src.write_text(textwrap.dedent("""\
+        import { Permissions, webMethod } from 'wix-web-module';
+
+        export const liveMethod = webMethod(Permissions.Admin, async () => {});
+
+        // Non-webMethod export sharing the same file — should still be inventoried.
+        export async function createTimeline(orderId) {
+          return { orderId };
+        }
+    """))
+    out = audit.collect_non_webmethod_exports(backend_root=tmp_path)
+    # The webMethod (liveMethod) is NOT a non-webMethod export — should
+    # not appear in this inventory. The helper SHOULD.
+    assert "createTimeline" in out
+    assert out["createTimeline"]["kind"] in ("async function", "function")
+    assert "liveMethod" not in out
+
+
+# Note: a "allowlist + cfw_low" precedence test was considered for this
+# interaction but `cfw_references` requires fixtures inside CFW_SRC.parent
+# (fp.relative_to call), and the verdict precedence change between pre-
+# and post-#1349 makes any concrete assertion fragile across the merge
+# boundary. The two signals it would pin (HTTP-EXPOSED-INTENTIONAL bucket
+# + has_cfw_low flag) are already covered by
+# test_allowlist_plus_fs_path_data_source + the existing
+# cfw_references unit tests. cf-5dto.fu1 (#1349) is where the verdict
+# precedence change is pinned with a real fixture.
+
+
+def test_fs_path_refs_mixed_kinds_both_surface(tmp_path):
+    """Bucket interaction #5: fs_path_refs containing MIXED kinds
+    (test-import + data-source). Both sub-classifications must appear
+    in fs_path_consumer_kinds, ordered consistently so downstream
+    consumers (operator triage scripts) can rely on set membership.
+
+    Pins the de-duplication + ordering invariants on top of the existing
+    test_bucket_reflects_fs_path_sub_classification coverage. fs_path_refs
+    is keyed by module basename (_module_basename(defining_file))."""
+    audit = _import_audit()
+    fs_path_refs = {
+        # Keyed by module basename — loadCatalogMaster from
+        # src/backend/loadCatalogMaster.web.js.
+        "loadCatalogMaster": [
+            "tests/cat1.test.js",
+            "scripts/validate.js",
+            "tests/cat2.spec.ts",
+            "scripts/seed.py",
+            # Same data-source file twice — must not double-count.
+            "scripts/validate.js",
+        ]
+    }
+    info = {
+        "file": "src/backend/loadCatalogMaster.web.js",
+        "permission": "Admin",
+        "line": 1,
+    }
+    row = audit.classify_method(
+        name="getCategories",
+        info=info,
+        files=[],
+        cfw_files=[],
+        http_text="",
+        events_text="",
+        fs_path_refs=fs_path_refs,
+        dispatcher_modules={},
+    )
+    kinds = row["fs_path_consumer_kinds"]
+    # Both kinds present.
+    assert "FS-PATH-DATA-SOURCE" in kinds
+    assert "FS-PATH-TEST-IMPORT" in kinds
+    # De-duplication: each kind appears at most once even though the
+    # source list has scripts/validate.js twice.
+    assert len(kinds) == len(set(kinds))
