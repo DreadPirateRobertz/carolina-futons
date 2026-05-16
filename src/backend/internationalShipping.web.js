@@ -5,9 +5,46 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
-import { internationalShippingConfig, business } from 'public/sharedTokens.js';
+import { internationalShippingConfig } from 'public/sharedTokens.js';
 
-const { zones, restrictedCountries, freeInternationalThreshold } = internationalShippingConfig;
+// cf-t8k1.fu2: lazy-init internationalShippingConfig destructure. The
+// pre-fix shape was `const { zones, restrictedCountries,
+// freeInternationalThreshold } = internationalShippingConfig;` at
+// MODULE-INIT time. If a test mocked public/sharedTokens with a partial
+// shape (missing `internationalShippingConfig`), the destructure threw
+// TypeError during import and blocked the entire test file's
+// collection before any test ran. Same class of bug as cf-t8k1.fu1
+// in ups-shipping; deferring the deref into a getter decouples
+// module-init from mock shape.
+let _zonesCache = null;
+let _restrictedCountriesCache = null;
+let _freeInternationalThresholdCache = null;
+
+export function getInternationalZones() {
+  if (_zonesCache === null) _zonesCache = internationalShippingConfig.zones;
+  return _zonesCache;
+}
+
+export function getRestrictedCountries() {
+  if (_restrictedCountriesCache === null) {
+    _restrictedCountriesCache = internationalShippingConfig.restrictedCountries;
+  }
+  return _restrictedCountriesCache;
+}
+
+export function getFreeInternationalThreshold() {
+  if (_freeInternationalThresholdCache === null) {
+    _freeInternationalThresholdCache = internationalShippingConfig.freeInternationalThreshold;
+  }
+  return _freeInternationalThresholdCache;
+}
+
+/** @internal Reset caches — for testing only. Mirror of currencyService precedent. */
+export function __resetCacheForTests() {
+  _zonesCache = null;
+  _restrictedCountriesCache = null;
+  _freeInternationalThresholdCache = null;
+}
 
 /**
  * Validate and normalize a 2-letter ISO country code.
@@ -30,6 +67,11 @@ export const getShippingZone = webMethod(
   Permissions.Anyone,
   async (countryCode) => {
     try {
+      // cf-t8k1.fu2: resolve config at call time, not module-init. Same
+      // identifier names preserved so the body diff stays minimal.
+      const zones = getInternationalZones();
+      const restrictedCountries = getRestrictedCountries();
+
       const code = normalizeCountryCode(countryCode);
       if (!code) {
         return { success: false, error: 'Invalid country code' };
@@ -67,6 +109,8 @@ export const isShippableCountry = webMethod(
   Permissions.Anyone,
   async (countryCode) => {
     try {
+      const restrictedCountries = getRestrictedCountries();
+
       const code = normalizeCountryCode(countryCode);
       if (!code) {
         return { success: false, error: 'Invalid country code' };
@@ -92,6 +136,10 @@ export const getInternationalShippingEstimate = webMethod(
   Permissions.Anyone,
   async (countryCode, totalWeightLbs, orderSubtotal) => {
     try {
+      const zones = getInternationalZones();
+      const restrictedCountries = getRestrictedCountries();
+      const freeInternationalThreshold = getFreeInternationalThreshold();
+
       const code = normalizeCountryCode(countryCode);
       if (!code) {
         return { success: false, error: 'Invalid country code' };
@@ -167,6 +215,10 @@ export const getInternationalShippingRates = webMethod(
   Permissions.Anyone,
   async (destination, packages, orderSubtotal) => {
     try {
+      const zones = getInternationalZones();
+      const restrictedCountries = getRestrictedCountries();
+      const freeInternationalThreshold = getFreeInternationalThreshold();
+
       const country = normalizeCountryCode(destination?.country);
       if (!country) {
         return { success: false, error: 'Invalid destination country' };
