@@ -1,0 +1,119 @@
+name: Dead-Code Baseline Ratchet
+
+# cf-69fi.fu2: when a push to main lands, re-run audit.py to compute live
+# dead-code counts. If the live counts are STRICTLY below the checked-in
+# baseline on at least one axis (and no axis rose), open a PR ratcheting
+# baseline.json down with a generated explanation. Never raises baseline;
+# never auto-merges — 5-agent CR per mayor's mandate still applies.
+#
+# Mirrors .github/workflows/coverage-ratchet.yml (the vitest analog).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# cf-69fi base pattern: don't pile up ratchet jobs.
+concurrency:
+  group: dead-code-baseline-ratchet
+  cancel-in-progress: false
+
+jobs:
+  ratchet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Pass the head-commit message through env to avoid the shell-injection
+    # pattern that the GH Actions security guide flags. Used only for the
+    # loop-break check (skip the bot's own commits).
+    env:
+      HEAD_COMMIT_MSG: ${{ github.event.head_commit.message || '' }}
+
+    steps:
+      - name: Skip if this is the bot's own ratchet commit
+        id: skip
+        run: |
+          set -euo pipefail
+          # cf-69fi.fu2 commit messages start with this prefix — if we see
+          # it, bail to prevent recursive bot-PRs.
+          if [ "${HEAD_COMMIT_MSG#chore(ci): ratchet dead-code baseline}" != "$HEAD_COMMIT_MSG" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.skip.outputs.skip != 'true'
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        if: steps.skip.outputs.skip != 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Run audit.py
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/cf-dead-routes
+          python3 scripts/cf-dead-routes/audit.py 2>/dev/null
+
+      - name: Decide ratchet
+        if: steps.skip.outputs.skip != 'true'
+        id: decide
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json, os, sys
+          sys.path.insert(0, "scripts/cf-dead-routes")
+          from auto_ratchet import live_counts, decide_ratchet, write_baseline
+          from pathlib import Path
+
+          results = Path("/tmp/cf-dead-routes/results.json")
+          baseline = Path("scripts/cf-dead-routes/baseline.json")
+
+          live = live_counts(results)
+          decision = decide_ratchet(baseline=baseline, live=live)
+
+          gh_output = Path(os.environ["GITHUB_OUTPUT"])
+          if decision is None:
+              with gh_output.open("a") as f:
+                  f.write("ratchet=false\n")
+              print(f"No ratchet needed: live={live}")
+          else:
+              # Persist new baseline + the PR body for the next step.
+              write_baseline(baseline, decision["new_baseline"])
+              Path("/tmp/cf-dead-routes/pr-body.md").write_text(decision["pr_body"])
+              new = decision["new_baseline"]
+              with gh_output.open("a") as f:
+                  f.write("ratchet=true\n")
+                  f.write(f"new_dead={new['dead']}\n")
+                  f.write(f"new_ucd={new['unused_can_delete']}\n")
+              print(f"Ratcheting: live={live} → new baseline={new}")
+          PY
+
+      - name: Open ratchet PR
+        if: steps.skip.outputs.skip != 'true' && steps.decide.outputs.ratchet == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_DEAD: ${{ steps.decide.outputs.new_dead }}
+          NEW_UCD: ${{ steps.decide.outputs.new_ucd }}
+        run: |
+          set -euo pipefail
+          BRANCH="chore/ratchet-dead-code-baseline-$(date -u +%Y%m%d-%H%M%S)"
+          git config user.name "cf-69fi.fu2 auto-ratchet bot"
+          git config user.email "noreply@anthropic.com"
+          git checkout -b "$BRANCH"
+          git add scripts/cf-dead-routes/baseline.json
+          git commit -m "chore(ci): ratchet dead-code baseline (dead=$NEW_DEAD, unused_can_delete=$NEW_UCD)"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore(cf-69fi.fu2): ratchet dead-code baseline (dead=$NEW_DEAD, ucd=$NEW_UCD)" \
+            --body-file /tmp/cf-dead-routes/pr-body.md \
+            --label "ci-ratchet,cf-69fi"
