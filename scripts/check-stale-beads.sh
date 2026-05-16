@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# check-stale-beads.sh — cf-4hys
+# check-stale-beads.sh — cf-4hys / cf-sufo
 #
-# Scans IN_PROGRESS beads against recent merged PRs to surface beads that
-# were shipped but never closed. Prints a STALE/CLEAN verdict per bead.
+# Scans IN_PROGRESS + BLOCKED beads against recent merged PRs to surface beads
+# that were shipped but never closed. Prints a STALE/CLEAN verdict per bead.
 #
 # Usage:
 #   ./scripts/check-stale-beads.sh [--limit N] [--repo OWNER/REPO]
@@ -10,10 +10,10 @@
 # Options:
 #   --limit N         How many recent merged PRs to scan per repo (default: 50)
 #   --repo OWNER/REPO Additional GitHub repo to scan (repeatable; cfutons main
-#                     repo is always included)
+#                     repo and carolina-futons-web are always included)
 #
 # Exit codes:
-#   0  All in-progress beads are clean
+#   0  All in-progress/blocked beads are clean
 #   1  One or more beads appear stale (merged PR title match found)
 #   2  Dependency missing (bd, gh, python3)
 
@@ -22,6 +22,7 @@ set -euo pipefail
 LIMIT=50
 EXTRA_REPOS=()
 MAIN_REPO="DreadPirateRobertz/carolina-futons"
+CFW_REPO="DreadPirateRobertz/carolina-futons-web"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -54,7 +55,7 @@ for p in json.load(sys.stdin):
 " || true
 }
 
-ALL_REPOS=("$MAIN_REPO" "${EXTRA_REPOS[@]}")
+ALL_REPOS=("$MAIN_REPO" "$CFW_REPO" "${EXTRA_REPOS[@]}")
 MERGED_PRS=""
 for repo in "${ALL_REPOS[@]}"; do
   MERGED_PRS+=$(fetch_merged "$repo")$'\n'
@@ -64,24 +65,27 @@ if [[ -z "${MERGED_PRS// }" ]]; then
   echo "WARNING: No merged PRs returned — check gh auth" >&2
 fi
 
-# Pull all in-progress beads: lines containing ◐ from bd list --all
+# Pull in-progress (◐) AND blocked (● cf-) beads from bd list --all.
+# ◐ only appears as the in_progress status indicator.
+# ● appears as both the blocked status indicator (before a cf- bead ID) AND as
+# the priority separator (before Pn). Match "● cf-" to target only status-blocked.
 REPO_ROOT=$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || pwd)
-IN_PROGRESS=$(cd "$REPO_ROOT" && bd list --all 2>/dev/null | grep '◐' || true)
+CANDIDATES=$(cd "$REPO_ROOT" && bd list --all 2>/dev/null | grep -E '◐|● cf-' || true)
 
-if [[ -z "$IN_PROGRESS" ]]; then
-  echo "No in-progress beads found."
+if [[ -z "$CANDIDATES" ]]; then
+  echo "No in-progress or blocked beads found."
   exit 0
 fi
 
 STALE_COUNT=0
 TOTAL=0
 
-echo "=== Stale-bead audit (last $LIMIT merged PRs) ==="
+echo "=== Stale-bead audit (last $LIMIT merged PRs, in_progress + blocked) ==="
 echo ""
 
 while IFS= read -r line; do
-  # bd list format: "[tree-chars] ◐ cf-xxx.yyy ● Pn Title text"
-  # Extract bead ID: first cf-<alnum+dots> token after ◐
+  # bd list format: "[tree-chars] ◐/● cf-xxx.yyy ● Pn Title text"
+  # Extract bead ID: first cf-<alnum+dots> token
   BEAD_ID=$(echo "$line" | grep -oE 'cf-[a-z0-9]+(\.[a-z0-9]+)*' | head -1 || true)
   [[ -z "$BEAD_ID" ]] && continue
 
@@ -107,10 +111,10 @@ while IFS= read -r line; do
   else
     printf "  clean  %-20s %s\n" "$BEAD_ID" "$BEAD_TITLE"
   fi
-done <<< "$IN_PROGRESS"
+done <<< "$CANDIDATES"
 
 echo ""
-echo "=== Summary: $STALE_COUNT stale / $TOTAL in-progress ==="
+echo "=== Summary: $STALE_COUNT stale / $TOTAL candidates (in_progress + blocked) ==="
 
 if [[ $STALE_COUNT -gt 0 ]]; then
   echo ""
