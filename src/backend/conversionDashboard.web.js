@@ -15,6 +15,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const ANALYTICS_COLLECTION = 'ProductAnalytics';
 const EVENTS_COLLECTION = 'AnalyticsEvents';
@@ -100,7 +101,7 @@ export const getConversionFunnel = webMethod(
         },
       };
     } catch (err) {
-      console.error('[conversionDashboard] getConversionFunnel error:', err);
+      logError('[conversionDashboard] getConversionFunnel error:', err);
       return { success: false, funnel: null };
     }
   }
@@ -156,7 +157,7 @@ export const getDailyConversionTrend = webMethod(
 
       return { success: true, trend };
     } catch (err) {
-      console.error('[conversionDashboard] getDailyConversionTrend error:', err);
+      logError('[conversionDashboard] getDailyConversionTrend error:', err);
       return { success: false, trend: [] };
     }
   }
@@ -211,7 +212,7 @@ export const getCategoryConversion = webMethod(
 
       return { success: true, categories };
     } catch (err) {
-      console.error('[conversionDashboard] getCategoryConversion error:', err);
+      logError('[conversionDashboard] getCategoryConversion error:', err);
       return { success: false, categories: [] };
     }
   }
@@ -250,7 +251,7 @@ export const getDashboardSummary = webMethod(
         },
       };
     } catch (err) {
-      console.error('[conversionDashboard] getDashboardSummary error:', err);
+      logError('[conversionDashboard] getDashboardSummary error:', err);
       return { success: false, summary: null };
     }
   }

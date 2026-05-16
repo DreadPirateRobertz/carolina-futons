@@ -36,6 +36,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -232,7 +233,7 @@ export const getDeliveryStatus = webMethod(
         },
       };
     } catch (err) {
-      console.error('[deliveryExperience] Error getting delivery status:', err);
+      logError('[deliveryExperience] Error getting delivery status:', err);
       return { success: false, error: 'Failed to load delivery status.' };
     }
   }
@@ -284,7 +285,7 @@ export const updateDeliveryMilestone = webMethod(
       await wixData.update('DeliveryTracking', delivery);
       return { success: true };
     } catch (err) {
-      console.error('[deliveryExperience] Error updating milestone:', err);
+      logError('[deliveryExperience] Error updating milestone:', err);
       return { success: false, error: 'Failed to update delivery milestone.' };
     }
   }
@@ -418,7 +419,7 @@ export const submitDeliverySurvey = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[deliveryExperience] Error submitting survey:', err);
+      logError('[deliveryExperience] Error submitting survey:', err);
       return { success: false, error: 'Failed to submit survey.' };
     }
   }
@@ -467,7 +468,7 @@ export const getSurveyStats = webMethod(
         },
       };
     } catch (err) {
-      console.error('[deliveryExperience] Error getting survey stats:', err);
+      logError('[deliveryExperience] Error getting survey stats:', err);
       return { success: false, error: 'Failed to get survey stats.' };
     }
   }
