@@ -53,7 +53,7 @@ export const getExchangeRates = webMethod(
       );
 
       if (!response.ok) {
-        console.error('Exchange rate API error:', response.status);
+        logError('currencyService:exchangeRateApiNon200', new Error(`Exchange rate API returned status ${response.status}`));
         return { success: true, rates: { ...FALLBACK_RATES }, fallback: true };
       }
 
