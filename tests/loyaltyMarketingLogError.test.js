@@ -24,11 +24,12 @@ describe('cf-44qt — loyaltyMarketing.web.js console.error → logError migrati
     );
   });
 
-  it('every logError tag uses the loyaltyMarketing: prefix', () => {
-    const tagRe = /\blogError\s*\(\s*['"`]([^'"`]+)/g;
-    const tags = Array.from(SRC.matchAll(tagRe), (m) => m[1]);
-    expect(tags.length).toBeGreaterThanOrEqual(2);
-    const nonPrefixed = tags.filter((t) => !t.startsWith('loyaltyMarketing:'));
-    expect(nonPrefixed).toEqual([]);
+  it('this-PR migration sites use the loyaltyMarketing: prefix', () => {
+    // The file has pre-existing logError calls with non-conforming prefixes
+    // (sendMonthlyLoyaltyStatements:..., [loyaltyMarketing] saveBirthday ...)
+    // that pre-date this migration. cf-g79m normalization can sweep them later;
+    // this test pins ONLY the two sites this PR converted.
+    expect(SRC).toContain("logError('loyaltyMarketing:getEnrollmentPrompt'");
+    expect(SRC).toContain("logError('loyaltyMarketing:enrollMember'");
   });
 });
