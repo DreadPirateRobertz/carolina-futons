@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:10 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:18 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -31,7 +31,11 @@
 | cfutons #1360 | cfutons | docs(cf-69fi.fu3): auto-merge design — 5-crew reviewed, HOLD for mayor |
 | cfw #711 | cfw | docs(cf-h345.t3): next/image design+stubs ✅ (merged 05:43 MT, e2e=cancelled 25m15s) |
 | cfutons #1384 | cfutons | fix(cf-44qt sibling): giftCards logError×9 ✅ (merged 05:50 MT, all CI green) |
-| cfw #713 | cfw | perf(cf-lrty): LivingHero SVG-light — 5-crew APPROVED, e2e pending (~19min) |
+| cfw #713 | cfw | perf(cf-lrty): LivingHero SVG-light ✅ (merged 06:11 MT, e2e=cancelled 25m16s) |
+| cfutons #1385 | cfutons | fix(cf-44qt sibling): subscriptionService logError×10 ✅ (merged 06:11 MT, all CI green) |
+| cfutons #1386 | cfutons | fix(cf-44qt sibling): smsService logError×14 ✅ (merged 06:16 MT, all CI green) |
+| cfw #714 | cfw | feat(cf-0klm): ISR unlock Option A — lint FAILING, rennala on fix |
+| cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)

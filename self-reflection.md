@@ -17,6 +17,8 @@
 - **e2e cancel time window**: PRs with code changes trigger full Playwright e2e (~25-50 min). Stilgar cancels at 25min when active, but can run up to 47min if AFK. Docs-only PRs: e2e finishes in 4 seconds (content-skip path).
 - **Mayor ruling: send spec, not status**: "cf-0klm awaiting mayor A/B/C" is a status. "Option A: move cookies() from layout.tsx, same-day rennala" is a spec. Mayor needs the spec to rule. Always send the spec.
 - **Stale-bead scanner false positives**: Parent bead IDs appear in child PR titles (e.g. cf-h345.4 title contains "cf-h345" and "cf-0klm"). Scanner correctly flags these as "stale" but they're dependencies, not shipped work. Verify before closing.
+- **Lint failure diagnosis pattern**: When lint-typecheck-test fails early (< 2min), use `gh api repos/<owner>/<repo>/actions/jobs/<job-id>/logs` to extract the ESLint error — even while the overall run is still in progress (e2e pending). Much faster than waiting for run completion. grep for `error|ESLint|eslint|\\.tsx|\\.ts` to isolate relevant lines.
+- **useState lazy initializer over setState-in-effect**: ESLint `no-sync-setState-in-effect` rule flags `setState(fn())` inside `useEffect`. Clean fix: move the read into `useState(() => fn())` lazy initializer, which runs client-side on mount (SSR-safe via `typeof document === 'undefined'` guard). Removes the setState-in-effect entirely.
 
 ## Session 2026-05-10 Wave 13–14 (387faae7 — dark mode audit + crew dispatch)
 
