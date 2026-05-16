@@ -310,12 +310,12 @@ export function handleOrderDelivered(event) {
     email,
     firstName,
     orderNumber: String(orderNumber),
-  }).catch(err => logError('handleOrderDelivered:confirmation', err));
+  }).catch(err => logError('emailAutomation:handleOrderDelivered:confirmation', err));
 
   // CF-nkau: Queue post-purchase care sequence starting from delivery date
   // Day 3: care guide, Day 7: review request, Day 30: cross-sell recommendations
   triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
-    .catch(err => logError('handleOrderDelivered:postPurchaseCare', err));
+    .catch(err => logError('emailAutomation:handleOrderDelivered:postPurchaseCare', err));
 
   // CF-qy79 review-reward prompt removed alongside triggerReviewRewardPrompt
   // (cf-namd Pass 3 chunk B — webMethod was unreachable; the post-purchase
@@ -328,7 +328,7 @@ export function handleOrderDelivered(event) {
     orderId: order._id || String(orderNumber),
     email,
     deliveredAt: new Date(),
-  }).catch(err => logError('handleOrderDelivered:survey', err));
+  }).catch(err => logError('emailAutomation:handleOrderDelivered:survey', err));
 }
 
 /**
@@ -753,7 +753,7 @@ export const triggerConsultationFollowup = webMethod(
 
       return { success: true, queued: 1 };
     } catch (err) {
-      logError('triggerConsultationFollowup', err);
+      logError('emailAutomation:triggerConsultationFollowup', err);
       return { success: false, queued: 0 };
     }
   }
@@ -839,7 +839,7 @@ export const triggerSwatchFollowupSequence = webMethod(
 
       return { success: true, queued };
     } catch (err) {
-      logError('triggerSwatchFollowupSequence', err);
+      logError('emailAutomation:triggerSwatchFollowupSequence', err);
       return { success: false, queued: 0 };
     }
   }
@@ -1822,7 +1822,7 @@ export async function checkAndTriggerTierMilestone(memberId, email, firstName, n
           sentAt: now,
         });
       } catch (err) {
-        logError(`checkAndTriggerTierMilestone:${milestone.milestoneKey}`, err);
+        logError(`emailAutomation:checkAndTriggerTierMilestone:${milestone.milestoneKey}`, err);
       }
     }
   }
