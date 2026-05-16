@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── addShareToken ─────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ export const addShareToken = webMethod(
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error('[wishlistShare] getMember error:', err);
+      logError('wishlistShare.addShareToken.getMember', err);
       return { error: 'auth_failed' };
     }
 
@@ -92,7 +93,7 @@ export const addShareToken = webMethod(
         createdAt: now,
       });
     } catch (err) {
-      console.error('[wishlistShare] insert error:', err);
+      logError('wishlistShare.addShareToken.insert', err);
       return { error: 'db_failed' };
     }
 
@@ -152,7 +153,7 @@ export const resolveShareToken = webMethod(
           addedDate: i.addedDate || null,
         }));
       } catch (itemErr) {
-        console.error('[wishlistShare] Failed to fetch wishlist items:', itemErr);
+        logError('wishlistShare.resolveShareToken.fetchItems', itemErr);
         // Return valid with empty items rather than failing the whole request
       }
 
@@ -163,7 +164,7 @@ export const resolveShareToken = webMethod(
         items,
       };
     } catch (err) {
-      console.error('[wishlistShare] resolveShareToken error:', err);
+      logError('wishlistShare.resolveShareToken', err);
       return { valid: false, reason: 'not_found' };
     }
   }
