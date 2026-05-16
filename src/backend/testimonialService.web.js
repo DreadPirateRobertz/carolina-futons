@@ -19,6 +19,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -77,7 +78,7 @@ export const submitTestimonial = webMethod(
       const inserted = await wixData.insert('Testimonials', record);
       return { success: true, id: inserted._id };
     } catch (err) {
-      console.error('[testimonialService] Error submitting testimonial:', err);
+      logError('[testimonialService] submitTestimonial failed', err);
       return { success: false, error: 'Failed to submit testimonial.' };
     }
   }
@@ -114,7 +115,7 @@ export const getFeaturedTestimonials = webMethod(
       const rotated = rotateSelection(pool, safeLimit);
       return { items: rotated, success: true };
     } catch (err) {
-      console.error('[testimonialService] Error getting featured testimonials:', err);
+      logError('[testimonialService] getFeaturedTestimonials failed', err);
       return { items: [], success: false, error: 'Failed to load featured testimonials.' };
     }
   }
@@ -169,7 +170,7 @@ export const getTestimonialsByCategory = webMethod(
       const result = await query.find();
       return { items: result.items, success: true };
     } catch (err) {
-      console.error('[testimonialService] Error getting testimonials by category:', err);
+      logError('[testimonialService] getTestimonialsByCategory failed', err);
       return { items: [], success: false };
     }
   }
@@ -193,7 +194,7 @@ export const getMyTestimonials = webMethod(
 
       return { items: result.items, success: true };
     } catch (err) {
-      console.error('[testimonialService] Error getting my testimonials:', err);
+      logError('[testimonialService] getMyTestimonials failed', err);
       return { items: [], success: false };
     }
   }
@@ -248,7 +249,7 @@ export const getTestimonialSchema = webMethod(
 
       return JSON.stringify(schema);
     } catch (err) {
-      console.error('[testimonialService] Error building schema:', err);
+      logError('[testimonialService] getTestimonialSchema failed', err);
       return '';
     }
   }
@@ -305,7 +306,7 @@ export const updateTestimonialStatus = webMethod(
       await wixData.update('Testimonials', update);
       return { success: true };
     } catch (err) {
-      console.error('[testimonialService] Error updating status:', err);
+      logError('[testimonialService] updateTestimonialStatus failed', err);
       return { success: false, error: 'Failed to update testimonial status.' };
     }
   }
@@ -329,7 +330,7 @@ export const getPendingTestimonials = webMethod(
 
       return { items: result.items, success: true };
     } catch (err) {
-      console.error('[testimonialService] Error getting pending testimonials:', err);
+      logError('[testimonialService] getPendingTestimonials failed', err);
       return { items: [], success: false };
     }
   }
