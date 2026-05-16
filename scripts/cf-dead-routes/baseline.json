@@ -1,0 +1,11 @@
+{
+  "dead": 1,
+  "unused_can_delete": 0,
+  "version": 1,
+  "_meta": {
+    "generated_at": "2026-05-16",
+    "by": "cf-69fi (millicent)",
+    "context": "Initial soft-fail baseline. Current DEAD=1 is wmB in src/backend/sample.web.js — an audit-test fixture, not production dead code. Ratchet this to 0 when the fixture is moved out of src/backend/ or excluded from audit.py's scan path.",
+    "ratchet_pattern": "Mirror of vitest coverage-ratchet (cf-4x7e.B3/B4/B5). When live counts drop below baseline, ratchet the baseline down in the same PR that cleared the offender. Never ratchet UP — that's the regression the guard exists to catch."
+  }
+}

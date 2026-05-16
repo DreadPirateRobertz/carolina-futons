@@ -1,0 +1,65 @@
+name: dead-code-regression-guard
+
+# cf-69fi: run scripts/cf-dead-routes/audit.py on every PR + main push,
+# compare against the checked-in baseline (scripts/cf-dead-routes/baseline.json),
+# annotate the PR if counts rose, but DO NOT block merges yet (Week-1 soft-fail
+# per cf-69fi acceptance). Week-2+ flips to --strict via a follow-up bead.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/backend/**'
+      - 'src/public/**'
+      - 'src/pages/**'
+      - 'scripts/cf-dead-routes/**'
+      - '.github/workflows/dead-code-guard.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# cf-khqd / cf-ra41: cancel stale runs on the same branch.
+concurrency:
+  group: dead-code-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Run cf-hpwy v5 detector (audit.py)
+        # Produces /tmp/cf-dead-routes/results.json — the contract input
+        # for check-regression.py. Stderr carries the human-readable
+        # bucket tally; we tee it into the job log for visibility.
+        run: |
+          mkdir -p /tmp/cf-dead-routes
+          python3 scripts/cf-dead-routes/audit.py 2>&1 | tee /tmp/cf-dead-routes/audit-stderr.log
+
+      - name: Check regression vs baseline (soft-fail mode, Week-1)
+        # cf-69fi Week-1: annotate PR via ::warning::, do NOT block merges.
+        # The Week-2+ follow-up bead flips this to --strict.
+        run: |
+          python3 scripts/cf-dead-routes/check-regression.py \
+            --results /tmp/cf-dead-routes/results.json \
+            --baseline scripts/cf-dead-routes/baseline.json
+
+      - name: Upload audit results as PR artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cf-dead-routes-audit
+          path: |
+            /tmp/cf-dead-routes/results.json
+            /tmp/cf-dead-routes/audit-stderr.log
+          retention-days: 14
