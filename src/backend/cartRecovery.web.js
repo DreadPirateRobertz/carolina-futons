@@ -18,6 +18,7 @@ import wixData from 'wix-data';
 import { triggeredEmails } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
+import { logError } from 'backend/utils/errorHandler';
 import { findMemberRecord, computeTierInfo } from 'backend/gamificationCore.web';
 import { resolveTemplateId } from 'backend/emailTemplates.web';
 
@@ -45,7 +46,7 @@ export function wixEcom_onAbandonedCheckoutCreated(event) {
     abandonedAt: new Date().toISOString(),
     status: 'abandoned',
     recoveryEmailSent: false,
-  }).catch(err => console.error('Error recording abandoned cart:', err));
+  }).catch(err => logError('[cartRecovery] recordAbandonedCart insert failed', err));
 }
 
 /**
@@ -58,7 +59,7 @@ export function wixEcom_onAbandonedCheckoutRecovered(event) {
   const checkout = event.entity || event;
 
   markCartRecovered(checkout._id || '')
-    .catch(err => console.error('Error marking cart recovered:', err));
+    .catch(err => logError('[cartRecovery] markCartRecovered update failed', err));
 }
 
 /**
@@ -95,7 +96,7 @@ export const getAbandonedCartStats = webMethod(
 
       return { totalAbandoned: total, totalRecovered: recovered, recoveryRate, recentCarts };
     } catch (err) {
-      console.error('Error getting cart stats:', err);
+      logError('[cartRecovery] getAbandonedCartStats failed', err);
       return { totalAbandoned: 0, totalRecovered: 0, recoveryRate: 0, recentCarts: [] };
     }
   }
@@ -130,7 +131,7 @@ export const getRecoverableCarts = webMethod(
         abandonedAt: c.abandonedAt,
       }));
     } catch (err) {
-      console.error('Error getting recoverable carts:', err);
+      logError('[cartRecovery] getRecoverableCarts failed', err);
       return [];
     }
   }
@@ -161,7 +162,7 @@ export const markRecoveryEmailSent = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('Error marking recovery email sent:', err);
+      logError('[cartRecovery] markRecoveryEmailSent failed', err);
       return { success: false };
     }
   }
@@ -359,7 +360,7 @@ export const exposeCartAbandonPayload = webMethod(
         member_push_enabled: memberPushEnabled,
       };
     } catch (err) {
-      console.error('[cartRecovery] exposeCartAbandonPayload error:', err);
+      logError('[cartRecovery] exposeCartAbandonPayload failed', err);
       return { success: false, cart_items: [], total_price: 0, cart_id: '', member_push_enabled: false };
     }
   }
