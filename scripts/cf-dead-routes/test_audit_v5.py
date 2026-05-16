@@ -186,6 +186,119 @@ def test_classify_fs_path_consumer_other_unspecified():
     assert kind == "FS-PATH-OTHER"
 
 
+# ── cf-5dto.fu1: arrow + function-expression export shapes ───────────
+
+
+def test_collect_non_webmethod_exports_finds_arrow_async_const(tmp_path):
+    """`export const FOO = async (x) => {...}` — modern arrow-async-const.
+    If anyone refactors a webMethod-adjacent helper to this shape, v5
+    must still see it. miquella silent-failure-hunter Finding 4 motivated
+    this broadening."""
+    audit = _import_audit()
+    backend = tmp_path / "src" / "backend"
+    backend.mkdir(parents=True)
+    (backend / "arrow.web.js").write_text(textwrap.dedent("""
+        export const fetchUserData = async (id) => {
+          return { id, ok: true };
+        };
+    """))
+    out = audit.collect_non_webmethod_exports(backend)
+    assert "fetchUserData" in out
+    assert out["fetchUserData"]["kind"] == "async arrow"
+
+
+def test_collect_non_webmethod_exports_finds_arrow_sync_const(tmp_path):
+    """`export const FOO = (x) => {...}` — sync arrow-const."""
+    audit = _import_audit()
+    backend = tmp_path / "src" / "backend"
+    backend.mkdir(parents=True)
+    (backend / "sync.web.js").write_text(textwrap.dedent("""
+        export const formatPrice = (cents) => `$${(cents/100).toFixed(2)}`;
+    """))
+    out = audit.collect_non_webmethod_exports(backend)
+    assert "formatPrice" in out
+    assert out["formatPrice"]["kind"] == "arrow"
+
+
+def test_collect_non_webmethod_exports_finds_function_expression_const(tmp_path):
+    """`export const FOO = function(x) {...}` and async variant."""
+    audit = _import_audit()
+    backend = tmp_path / "src" / "backend"
+    backend.mkdir(parents=True)
+    (backend / "fnexpr.web.js").write_text(textwrap.dedent("""
+        export const calculate = function(x, y) {
+          return x + y;
+        };
+        export const asyncCalc = async function(x) {
+          return await x;
+        };
+    """))
+    out = audit.collect_non_webmethod_exports(backend)
+    assert "calculate" in out
+    assert out["calculate"]["kind"] == "function expression"
+    assert "asyncCalc" in out
+    assert out["asyncCalc"]["kind"] == "async function expression"
+
+
+def test_collect_non_webmethod_exports_does_not_match_value_const_or_call(tmp_path):
+    """Negative-case pin: must NOT match value-const or function-call-result.
+    Guards against the broadened regex accidentally swallowing constants."""
+    audit = _import_audit()
+    backend = tmp_path / "src" / "backend"
+    backend.mkdir(parents=True)
+    (backend / "values.web.js").write_text(textwrap.dedent("""
+        export const CONFIG = { maxRetries: 3, timeout: 5000 };
+        export const COUNT = computeCount();
+        export const ITEMS = [1, 2, 3];
+        export const result = something.method();
+        export const klass = SomeClass;
+    """))
+    out = audit.collect_non_webmethod_exports(backend)
+    assert "CONFIG" not in out
+    assert "COUNT" not in out
+    assert "ITEMS" not in out
+    assert "result" not in out
+    assert "klass" not in out
+
+
+# ── cf-5dto.fu1: FS-path test-import path broadening ─────────────────
+
+
+def test_classify_fs_path_consumer_cfw_style_underscore_tests():
+    """cfw uses `src/__tests__/foo.test.tsx` — classify as TEST-IMPORT."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("src/__tests__/Header.test.tsx") == "FS-PATH-TEST-IMPORT"
+
+
+def test_classify_fs_path_consumer_test_tsx_extension():
+    """`.tsx` test files (cfw-style React component tests)."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("tests/Component.test.tsx") == "FS-PATH-TEST-IMPORT"
+    assert audit.classify_fs_path_consumer("tests/Component.spec.tsx") == "FS-PATH-TEST-IMPORT"
+
+
+def test_classify_fs_path_consumer_mjs_cjs_test_files():
+    """Modern Node test runners may emit `.mjs` / `.cjs`."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("tests/foo.test.mjs") == "FS-PATH-TEST-IMPORT"
+    assert audit.classify_fs_path_consumer("tests/foo.test.cjs") == "FS-PATH-TEST-IMPORT"
+
+
+def test_classify_fs_path_consumer_nested_test_roots():
+    """Monorepo / nested packages — match `__tests__/` anywhere OR
+    `tests/` under a package root."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("packages/foo/__tests__/bar.test.ts") == "FS-PATH-TEST-IMPORT"
+    assert audit.classify_fs_path_consumer("packages/foo/tests/bar.test.js") == "FS-PATH-TEST-IMPORT"
+
+
+def test_classify_fs_path_consumer_other_still_fallthrough():
+    """Negative-case pin: non-test, non-script paths still OTHER."""
+    audit = _import_audit()
+    assert audit.classify_fs_path_consumer("src/components/Foo.tsx") == "FS-PATH-OTHER"
+    assert audit.classify_fs_path_consumer("docs/example.md") == "FS-PATH-OTHER"
+
+
 # ── Constant-pin: lock each trap symbol into INTENTIONAL_ANYONE ────────
 # miquella test-analyzer CR: a future refactor that removes an allowlist
 # entry silently re-introduces the trap. Pin each by name.

@@ -61,6 +61,24 @@ NON_WM_FN_RE = re.compile(
     re.MULTILINE,
 )
 
+# cf-5dto.fu1: arrow + function-expression export shapes that the original
+# v5 regex missed. `export const FOO = async (x) => {...}` is the modern
+# refactor target — if anyone moves a webMethod-adjacent helper from
+# `export async function` to `export const = async () =>`, the inventory
+# must still catch it. Three separate patterns keep the kind labels
+# accurate without backtracking.
+#
+# `export const NAME = [async] (args) =>` — arrow function
+NON_WM_ARROW_RE = re.compile(
+    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?\([^)]*\)\s*=>",
+    re.MULTILINE,
+)
+# `export const NAME = [async] function` — function expression assigned to const
+NON_WM_FN_EXPR_RE = re.compile(
+    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?function\b",
+    re.MULTILINE,
+)
+
 PUBLIC_VERB_RE = re.compile(
     r"^(submit|create|track|register|capture|send|notify|subscribe|"
     r"unsubscribe|redeem|claim|generate|update|delete)",
@@ -174,19 +192,39 @@ def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str,
                 skipped.append((str(fp), str(err)))
             continue
         text = strip_js_comments(text)
+        try:
+            file_str = str(fp.relative_to(ROOT))
+        except ValueError:
+            file_str = str(fp)
+
+        def _record(name: str, line: int, kind: str) -> None:
+            # Function-declaration takes priority over later const-rebindings
+            # (same module rebinding a function-declared name is rare and
+            # the declaration is the load-bearing entry).
+            if name not in out:
+                out[name] = {"file": file_str, "line": line, "kind": kind}
+
         for m in NON_WM_FN_RE.finditer(text):
             is_async = m.group(1) is not None
             name = m.group(2)
             line = text[: m.start()].count("\n") + 1
-            try:
-                file_str = str(fp.relative_to(ROOT))
-            except ValueError:
-                file_str = str(fp)
-            out[name] = {
-                "file": file_str,
-                "line": line,
-                "kind": "async function" if is_async else "function",
-            }
+            _record(name, line, "async function" if is_async else "function")
+        # cf-5dto.fu1: arrow shape — modern refactor target
+        for m in NON_WM_ARROW_RE.finditer(text):
+            name = m.group(1)
+            is_async = m.group(2) is not None
+            line = text[: m.start()].count("\n") + 1
+            _record(name, line, "async arrow" if is_async else "arrow")
+        # cf-5dto.fu1: function-expression assigned to const
+        for m in NON_WM_FN_EXPR_RE.finditer(text):
+            name = m.group(1)
+            is_async = m.group(2) is not None
+            line = text[: m.start()].count("\n") + 1
+            _record(
+                name,
+                line,
+                "async function expression" if is_async else "function expression",
+            )
     if skipped:
         # Surface via stderr — operator + CI both see the failure mode.
         print(
@@ -272,7 +310,14 @@ def _module_basename(file_rel: str) -> str:
 # FILESYSTEM-PATH-REFERENCED hides the asymmetry — a test-import-only
 # consumer is migrate-then-delete; a data-source consumer requires
 # refactoring the tooling FIRST.
-_FS_PATH_TEST_RE = re.compile(r"^tests/.*\.(test|spec)\.[jt]s$")
+# cf-5dto.fu1: broadened test-path regex. Matches any path with a `tests/`
+# or `__tests__/` directory segment + a test-file-extension at the leaf.
+# Covers: top-level tests/, cfw-style src/__tests__/, monorepo
+# packages/<x>/__tests__/, packages/<x>/tests/. Extensions cover
+# js/ts/tsx/jsx/mjs/cjs.
+_FS_PATH_TEST_RE = re.compile(
+    r"(?:^|/)(?:tests|__tests__)/.*\.(?:test|spec)\.(?:tsx?|jsx?|mjs|cjs)$"
+)
 _FS_PATH_SCRIPT_RE = re.compile(r"^scripts/.*\.(js|ts|mjs|cjs|py|sh)$")
 
 
@@ -284,7 +329,12 @@ def classify_fs_path_consumer(rel_path: str) -> str:
       FS-PATH-DATA-SOURCE  — `scripts/*.{js,ts,py,sh,...}` consumer (tooling)
       FS-PATH-OTHER        — any other path (operator inspects manually)
     """
-    if _FS_PATH_TEST_RE.match(rel_path):
+    # cf-5dto.fu1: search (not match) so the `(?:^|/)tests|__tests__/`
+    # pattern matches embedded test directories (cfw-style src/__tests__/,
+    # monorepo packages/<x>/__tests__/). Script paths stay top-level-only
+    # via .match — `scripts/` directories nested under packages/ aren't
+    # the tooling-data-source convention.
+    if _FS_PATH_TEST_RE.search(rel_path):
         return "FS-PATH-TEST-IMPORT"
     if _FS_PATH_SCRIPT_RE.match(rel_path):
         return "FS-PATH-DATA-SOURCE"
