@@ -60,7 +60,7 @@ describe('analyticsDigest.fetchOrderMetrics', () => {
 
     expect(result).toEqual({ orderCount: 0, totalRevenue: 0, avgOrderValue: 0, topProducts: [] });
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('[analyticsDigest]'),
+      expect.stringContaining('analyticsDigest:'),
       expect.any(Error),
     );
   });
