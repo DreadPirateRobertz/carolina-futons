@@ -246,10 +246,10 @@ describe('generateRecoveryCoupon — error handling', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     coupons.createCoupon.mockRejectedValueOnce(new Error('timeout'));
     await generateRecoveryCoupon({ cartId: 'cart-err-123', email: 'buyer@example.com' });
+    // cf-44qt-coupons PR #1413: console.error now routes through logError
+    // which delegates to console.error with a 2-arg shape: ([context], message).
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('[couponsService]'),
-      expect.anything(),
-      expect.anything(),
       expect.anything(),
     );
     errorSpy.mockRestore();
