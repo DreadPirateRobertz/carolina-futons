@@ -24,6 +24,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { _resolveContactIdInternal } from 'backend/contacts/contactResolver.web';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const DISCOUNT_CODE = 'WELCOME10';
 const KLAVIYO_API_BASE = 'https://a.klaviyo.com/api';
@@ -155,7 +156,7 @@ async function _syncToESPInternal(email, source) {
 
     return { synced: true };
   } catch (err) {
-    console.error('ESP sync error:', err);
+    logError('[newsletterService] ESP sync', err);
     return { synced: false, reason: 'sync_failed' };
   }
 }
@@ -256,7 +257,7 @@ export const unsubscribeFromESP = webMethod(
 
       return { unsubscribed: true };
     } catch (err) {
-      console.error('ESP unsubscribe error:', err);
+      logError('[newsletterService] ESP unsubscribe', err);
       return { unsubscribed: false, reason: 'unsubscribe_failed' };
     }
   }
@@ -358,7 +359,7 @@ export const subscribeToNewsletter = webMethod(
       logAuditEvent('NewsletterSubscribers', 'subscribe', cleaned, { source });
       return { success: true, discountCode: DISCOUNT_CODE };
     } catch (err) {
-      console.error('Newsletter subscription error:', err);
+      logError('[newsletterService] subscribe', err);
       return { success: false, message: 'Subscription failed. Please try again.' };
     }
   }
