@@ -20,6 +20,7 @@ import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
 import { findMemberRecord, computeTierInfo } from 'backend/gamificationCore.web';
 import { resolveTemplateId } from 'backend/emailTemplates.web';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Event handler: Abandoned checkout created.
