@@ -175,7 +175,7 @@ export function wixMembers_onMemberCreated(event) {
   if (!email) return;
 
   return triggerWelcomeSequence(contactId, email, firstName)
-    .catch(err => console.error('Error triggering welcome sequence:', err));
+    .catch(err => logError('emailAutomation:welcomeSequence-trigger', err));
 }
 
 /**
@@ -205,12 +205,12 @@ export function wixEcom_onOrderCreated(event) {
     orderNumber: String(orderNumber),
     total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
     itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-  }).catch(err => console.error('Error sending order confirmation:', err));
+  }).catch(err => logError('emailAutomation:orderConfirmation-send', err));
 
   // CF-fzsd: Queue post-purchase care sequence at order creation so slug
   // extraction from lineItems is available (Day 7 review URL uses product slug).
   return triggerPostPurchaseSequence(contactId, email, firstName, String(orderNumber), total, lineItems)
-    .catch(err => console.error('[CF-fzsd] Error queuing post-purchase sequence on order created:', err));
+    .catch(err => logError('emailAutomation:postPurchase-queue-onOrderCreated', err));
 }
 
 /**
@@ -261,7 +261,7 @@ export function handleFulfillmentShippingNotification(event) {
       proNumber: payload.proNumber,
       trackingUrl: payload.trackingUrl || '',
       carrier: payload.displayCarrier,
-    }).catch(err => console.error('Error sending fulfillment notification:', err));
+    }).catch(err => logError('emailAutomation:shippingNotification-send-freight', err));
   } else {
     sendShippingNotification({
       contactId,
@@ -271,7 +271,7 @@ export function handleFulfillmentShippingNotification(event) {
       trackingNumber: tracking.trackingNumber || '',
       trackingUrl: tracking.trackingLink || '',
       carrier: tracking.shippingProvider || '',
-    }).catch(err => console.error('Error sending fulfillment notification:', err));
+    }).catch(err => logError('emailAutomation:shippingNotification-send-parcel', err));
   }
 }
 
@@ -351,7 +351,7 @@ export function wixEcom_onOrderCanceled(event) {
   if (!email) return;
 
   cancelSequenceForOrder(email, orderNumber)
-    .catch(err => console.error('Error cancelling care sequence:', err));
+    .catch(err => logError('emailAutomation:careSequence-cancel', err));
 }
 
 // ── Public Web Methods ────────────────────────────────────────────────
@@ -455,7 +455,7 @@ export const triggerWelcomeSequence = webMethod(
 
       return { success: true, queued };
     } catch (err) {
-      console.error('Error queuing welcome sequence:', err);
+      logError('emailAutomation:triggerWelcomeSequence-queue', err);
       return { success: false, queued: 0 };
     }
   }
@@ -543,7 +543,7 @@ export const triggerWelcomeSeries = webMethod(
 
       return { success: true, queued };
     } catch (err) {
-      console.error('Error queuing welcome series:', err);
+      logError('emailAutomation:triggerWelcomeSeries-queue', err);
       return { success: false, queued: 0 };
     }
   }
@@ -655,7 +655,7 @@ export const triggerPostPurchaseSequence = webMethod(
                 variables.referralCode = refData.referralCode;
               }
             } catch (refErr) {
-              console.error('[emailAutomation] Referral link generation failed (non-blocking):', refErr);
+              logError('emailAutomation:referralLink-nonblocking', refErr);
             }
           }
           // Sentinel defaults — template should handle gracefully
@@ -677,7 +677,7 @@ export const triggerPostPurchaseSequence = webMethod(
 
       return { success: true, queued };
     } catch (err) {
-      console.error('Error queuing post-purchase sequence:', err);
+      logError('emailAutomation:triggerPostPurchaseSequence-queue', err);
       return { success: false, queued: 0 };
     }
   }
@@ -944,8 +944,10 @@ export const triggerAbandonedCartRecovery = webMethod(
                 discountAvailable = true;
               }
             } catch (e) {
-              console.error('[emailAutomation] createCartRecoveryCoupon failed for cart', cart.checkoutId,
-                '— email:', cartEmail, '— step 3 will send without discount. Error:', e.message);
+              logError(
+                `emailAutomation:cartRecoveryCoupon-create cart=${cart.checkoutId} email=${redactEmail(cartEmail)} step3WillSendWithoutDiscount`,
+                e,
+              );
             }
           }
 
@@ -1001,7 +1003,7 @@ export const triggerAbandonedCartRecovery = webMethod(
 
       return { success: true, cartsProcessed };
     } catch (err) {
-      console.error('Error processing cart recovery:', err);
+      logError('emailAutomation:triggerAbandonedCartRecovery', err);
       return { success: false, cartsProcessed: 0 };
     }
   }
@@ -1118,7 +1120,7 @@ export const triggerReengagement = webMethod(
 
       return { success: true, contacted };
     } catch (err) {
-      console.error('Error processing reengagement:', err);
+      logError('emailAutomation:triggerReengagement', err);
       return { success: false, contacted: 0 };
     }
   }
@@ -1228,7 +1230,7 @@ export const processEmailQueue = webMethod(
 
       return { sent, failed, cancelled, deferred };
     } catch (err) {
-      console.error('Error processing email queue:', err);
+      logError('emailAutomation:processEmailQueue', err);
       return { sent: 0, failed: 0, cancelled: 0, deferred: 0 };
     }
   }
@@ -1284,7 +1286,7 @@ export const unsubscribeContact = webMethod(
       logAuditEvent('Unsubscribes', 'unsubscribe', cleanEmail, { sequenceType: cleanType });
       return { success: true };
     } catch (err) {
-      console.error('Error processing unsubscribe:', err);
+      logError('emailAutomation:unsubscribeContact', err);
       return { success: false };
     }
   }
@@ -1326,7 +1328,7 @@ export const recordEmailEvent = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('Error recording email event:', err);
+      logError('emailAutomation:recordEmailEvent', err);
       return { success: false };
     }
   }
@@ -1507,7 +1509,7 @@ export const triggerRestockNotifications = webMethod(
 
       return { success: true, notified, failed };
     } catch (err) {
-      console.error('[emailAutomation] Error triggering restock notifications:', err);
+      logError('emailAutomation:triggerRestockNotifications', err);
       return { success: false, notified: 0, failed: 0, error: err.message };
     }
   }
@@ -1570,7 +1572,7 @@ export const getAbTestResults = webMethod(
         })),
       };
     } catch (err) {
-      console.error('[emailAutomation] Error getting A/B test results:', err);
+      logError('emailAutomation:getAbTestResults', err);
       return { tests: [], error: err.message };
     }
   }
@@ -1722,7 +1724,7 @@ export const getCampaignAnalytics = webMethod(
         abTestSummary,
       };
     } catch (err) {
-      console.error('[emailAutomation] Error fetching campaign analytics:', err);
+      logError('emailAutomation:getCampaignAnalytics', err);
       return {
         success: false,
         error: err.message,
