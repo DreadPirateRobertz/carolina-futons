@@ -41,3 +41,28 @@ cf-dead
 cf-current
 cf-cutover
 cf-cya
+
+# ── Roadmap / workstream area names (not beads) ──────────────────
+# Roadmap is the cf-3qt epic's published-to-stakeholders presentation
+# layer; .3/.4/.5 etc. are roadmap sections (cleanup, observability,
+# notification, etc.) referenced in CONVENTIONS + go-live runbooks,
+# distinct from any bead's sub-ID.
+cf-roadmap
+cf-roadmap.3
+cf-roadmap.4
+
+# ── Security / secrets workstream area name (not a bead) ─────────
+# `cf-secrets` is the operational vocabulary for the
+# cutover-night secrets-management workstream (referenced in
+# CONVENTIONS + wave-audit pilot). Individual operational tasks
+# get their own real beads (e.g. cf-secrets.F1, cf-secrets.F2 if
+# present in bd; the bare `cf-secrets` is the umbrella term).
+cf-secrets
+
+# ── Historical stale aliases preserved in doc text ────────────────
+# `cf-fp19` was a stale alias dropped from cf-094q's triage title by
+# PR #1335 (docs(cf-zb6j)). The wave-audit pilot doc quotes that PR
+# title verbatim as part of its categorization table — preserving
+# the historical record is intentional. Allowlist the alias here
+# rather than editing audit-doc PR-title quotations.
+cf-fp19
