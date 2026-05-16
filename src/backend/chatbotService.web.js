@@ -121,7 +121,7 @@ export async function _fetchProductCatalog() {
       slug: p.slug || '',
     }));
   } catch (err) {
-    console.warn('[chatbotService] product catalog fetch failed — chatbot will respond without product context:', err?.message);
+    logError('chatbotService:fetchProductCatalog-failed', err);
     return [];
   }
 }
@@ -157,7 +157,7 @@ export const sendMessage = webMethod(
       flagEnabled = flag === 'true';
       apiKey = key;
     } catch (err) {
-      console.warn('[chatbotService] secrets fetch failed:', err?.message);
+      logError('chatbotService:fetchSecrets-failed', err);
       flagEnabled = false;
     }
     if (!flagEnabled) return { enabled: false };
@@ -207,7 +207,7 @@ export const sendMessage = webMethod(
         statsRecord = statsRes.items[0] || null;
       } catch (err) {
         // Fail open — don't block visitors on DB errors
-        console.warn('[chatbotService] daily stats query failed, allowing session:', err?.message);
+        logError('chatbotService:dailyStatsQueryFailed', err);
       }
 
       if ((statsRecord?.sessionCount ?? 0) >= MAX_SESSIONS_PER_DAY) {
@@ -225,7 +225,7 @@ export const sendMessage = webMethod(
           await wixData.insert(DAILY_STATS, { date: todayUTC, sessionCount: 1 });
         }
       } catch (err) {
-        console.warn('[chatbotService] daily stats write failed:', err?.message);
+        logError('chatbotService:dailyStatsWriteFailed', err);
       }
 
       sessionRecord = {

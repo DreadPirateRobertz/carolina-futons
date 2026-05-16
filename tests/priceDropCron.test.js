@@ -39,6 +39,9 @@ import {
   __failNextEmail,
 } from 'wix-crm-backend';
 
+// cf-xknq: priceDropCron migrated console.error → canonical logError
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 import {
   detectPriceDrops,
   queuePriceDropNotifications,
@@ -48,6 +51,7 @@ import {
   _PRICE_DROP_NOTIFICATIONS_COLLECTION,
   _emailPriceAlertSubscribers,
 } from '../src/backend/priceDropCron.web.js';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -481,13 +485,15 @@ describe('detectPriceDrops — error resilience', () => {
     expect(result.dropsDetected).toBe(0);
   });
 
-  it('logs an error message on failure', async () => {
+  it('logs an error via canonical logError on failure', async () => {
+    vi.mocked(logError).mockClear();
     __setQueryError('Stores/Products', new Error('boom'));
 
     await detectPriceDrops();
+    // cf-xknq: canonical logError tag replaces the previous console.error
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('[priceDropCron] detectPriceDrops failed'),
-      expect.any(Error)
+      'priceDropCron:detectPriceDrops',
+      expect.any(Error),
     );
   });
 });
