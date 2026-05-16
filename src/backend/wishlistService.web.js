@@ -27,6 +27,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const WISHLIST_MAX_ITEMS = 100;
 
@@ -92,7 +93,7 @@ export const addToWishlist = webMethod(
       const inserted = await wixData.insert('Wishlist', record);
       return { success: true, item: _mapItem(inserted) };
     } catch (err) {
-      console.error('[wishlistService] addToWishlist error:', err);
+      logError('[wishlistService] addToWishlist failed', err);
       return { success: false, error: 'Failed to add to wishlist.' };
     }
   }
@@ -128,7 +129,7 @@ export const removeFromWishlist = webMethod(
       await wixData.remove('Wishlist', existing.items[0]._id);
       return { success: true };
     } catch (err) {
-      console.error('[wishlistService] removeFromWishlist error:', err);
+      logError('[wishlistService] removeFromWishlist failed', err);
       return { success: false, error: 'Failed to remove from wishlist.' };
     }
   }
@@ -160,7 +161,7 @@ export const getWishlist = webMethod(
         total: result.totalCount,
       };
     } catch (err) {
-      console.error('[wishlistService] getWishlist error:', err);
+      logError('[wishlistService] getWishlist failed', err);
       return { success: false, items: [], total: 0 };
     }
   }
@@ -204,7 +205,7 @@ export const getWishlistByMemberId = webMethod(
         total: result.totalCount,
       };
     } catch (err) {
-      console.error('[wishlistService] getWishlistByMemberId error:', err);
+      logError('[wishlistService] getWishlistByMemberId failed', err);
       return { success: false, error: 'server_error', items: [], total: 0 };
     }
   }
@@ -235,7 +236,7 @@ export const isOnWishlist = webMethod(
 
       return { success: true, onWishlist: result.items.length > 0 };
     } catch (err) {
-      console.error('[wishlistService] isOnWishlist error:', err);
+      logError('[wishlistService] isOnWishlist failed', err);
       return { success: false, onWishlist: false };
     }
   }
