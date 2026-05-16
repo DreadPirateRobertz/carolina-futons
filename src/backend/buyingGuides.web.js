@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const PUBLISHER = { name: 'Carolina Futons', logo: `${SITE_URL}/logo.png` };
@@ -692,7 +693,7 @@ export const getBuyingGuide = webMethod(
           }));
         }
       } catch (e) {
-        console.error('getBuyingGuide: related products fetch failed:', e);
+        logError('buyingGuides:getBuyingGuide-relatedProducts', e);
       }
 
       return {
@@ -704,7 +705,7 @@ export const getBuyingGuide = webMethod(
         },
       };
     } catch (err) {
-      console.error('getBuyingGuide error:', err);
+      logError('buyingGuides:getBuyingGuide', err);
       return { success: false, error: 'Unable to load buying guide' };
     }
   }
@@ -749,7 +750,7 @@ export const getAllBuyingGuides = webMethod(
         }),
       };
     } catch (err) {
-      console.error('getAllBuyingGuides error:', err);
+      logError('buyingGuides:getAllBuyingGuides', err);
       return { success: false, error: 'Unable to load buying guides' };
     }
   }
@@ -830,7 +831,7 @@ export const getBuyingGuideSchema = webMethod(
 
       return { success: true, articleSchema, faqSchema };
     } catch (err) {
-      console.error('getBuyingGuideSchema error:', err);
+      logError('buyingGuides:getBuyingGuideSchema', err);
       return { success: false, error: 'Unable to generate schema' };
     }
   }
@@ -864,7 +865,7 @@ export const getGuideComparisonTable = webMethod(
         table: guide.comparisonTable,
       };
     } catch (err) {
-      console.error('getGuideComparisonTable error:', err);
+      logError('buyingGuides:getGuideComparisonTable', err);
       return { success: false, error: 'Unable to load comparison table' };
     }
   }
@@ -896,7 +897,7 @@ export const getGuideFaqs = webMethod(
         faqs: guide.faqs,
       };
     } catch (err) {
-      console.error('getGuideFaqs error:', err);
+      logError('buyingGuides:getGuideFaqs', err);
       return { success: false, error: 'Unable to load FAQs' };
     }
   }
@@ -938,7 +939,7 @@ export const getSocialShareLinks = webMethod(
         },
       };
     } catch (err) {
-      console.error('getSocialShareLinks error:', err);
+      logError('buyingGuides:getSocialShareLinks', err);
       return { success: false, error: 'Unable to generate share links' };
     }
   }
