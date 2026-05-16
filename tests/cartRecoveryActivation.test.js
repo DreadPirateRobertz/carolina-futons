@@ -20,6 +20,7 @@ vi.mock('backend/utils/sanitize', () => ({
     return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLen);
   },
   validateEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+  redactEmail: (str) => str,
 }));
 
 // Intercept createCartRecoveryCoupon so we control its output
@@ -217,17 +218,15 @@ describe('triggerAbandonedCartRecovery — coupon failure fallback', () => {
   });
 
   it('logs an error when createCartRecoveryCoupon throws', async () => {
+    // logError emits console.error('[context]', message) — 2 args.
+    // The context tag encodes cart id; message is the thrown error string.
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockCreateCoupon.mockRejectedValueOnce(new Error('network timeout'));
     seedAbandonedCart({ buyerEmail: 'test@example.com', checkoutId: 'co-test' });
     await triggerAbandonedCartRecovery();
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[emailAutomation]'),
-      expect.stringContaining('co-test'),
-      expect.anything(),
-      expect.stringContaining('test@example.com'),
-      expect.anything(),
-      expect.anything()
+      expect.stringContaining('[emailAutomation:cartRecoveryCoupon-create cart=co-test'),
+      expect.stringContaining('network timeout'),
     );
     errorSpy.mockRestore();
   });
