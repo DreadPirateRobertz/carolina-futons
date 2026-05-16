@@ -122,7 +122,7 @@ export const getAggregateRating = webMethod(
     let validCount = 0;
     for (const r of reviews) {
       if (r.rating == null || isNaN(Number(r.rating))) {
-        console.warn(`[reviewsService] Skipping review ${r._id}: invalid rating (${r.rating})`);
+        logError(`reviewsService:getAggregateRating-skipInvalidRating review=${r._id} rating=${r.rating}`, null);
         continue;
       }
       const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating))));
@@ -221,14 +221,14 @@ export const submitReview = webMethod(
         'gamification_submit_review',
         { has_photo: photos.length > 0 },
         memberId,
-      ).catch(err => console.warn('[reviewsService] gamification event failed:', err));
+      ).catch(err => logError('reviewsService:submitReview-gamificationEvent', err));
 
       // CF-fzsd: record email conversion when review came from a review-request email
       const emailQueueId = data.emailQueueId ? sanitize(data.emailQueueId, 50) : '';
       if (emailQueueId) {
         recordEmailEvent({ emailQueueId, eventType: 'conversion' })
-          .then(res => { if (!res?.success) console.warn('[reviewsService] email conversion not recorded for queue', emailQueueId); })
-          .catch(err => console.warn('[reviewsService] email conversion record failed:', err));
+          .then(res => { if (!res?.success) logError(`reviewsService:submitReview-emailConversionNotRecorded queue=${emailQueueId}`, null); })
+          .catch(err => logError('reviewsService:submitReview-emailConversionRecord', err));
       }
 
       return { success: true, reviewId: saved._id };
@@ -375,7 +375,7 @@ export const moderateReview = webMethod(
       const allowed = REVIEW_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
-        console.warn(`[reviewsService] Blocked transition: ${rid} ${currentStatus} → ${newStatus}`);
+        logError(`reviewsService:moderateReview-blockedTransition review=${rid} from=${currentStatus} to=${newStatus}`, null);
         return {
           success: false,
           error: `Cannot ${action} a review with status '${currentStatus}'.`,
@@ -431,7 +431,7 @@ export const getCategoryReviewSummaries = webMethod(
         const pid = review.productId;
         if (!summaries[pid]) continue;
         if (review.rating == null || isNaN(Number(review.rating))) {
-          console.warn(`[reviewsService] Skipping review ${review._id}: invalid rating (${review.rating})`);
+          logError(`reviewsService:getCategoryReviewSummaries-skipInvalidRating review=${review._id} rating=${review.rating}`, null);
           continue;
         }
         const raw = Number(review.rating);
