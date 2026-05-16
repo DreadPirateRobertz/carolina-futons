@@ -21,6 +21,7 @@ import { realtime } from 'wix-realtime-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 const SESSIONS_COLLECTION = 'PlannerSessions';
 const ITEMS_COLLECTION = 'PlannerItems';
@@ -95,7 +96,7 @@ export const createSession = webMethod(
 
       return { success: true, sessionId: session._id, shareToken };
     } catch (err) {
-      console.error('[collaborativePlanner] createSession error:', err);
+      logError('[collaborativePlanner] createSession failed', err);
       return { success: false, sessionId: null, shareToken: null };
     }
   }
@@ -163,7 +164,7 @@ export const joinSession = webMethod(
 
       return { success: true, session: formatSession(session) };
     } catch (err) {
-      console.error('[collaborativePlanner] joinSession error:', err);
+      logError('[collaborativePlanner] joinSession failed', err);
       return { success: false, session: null, error: 'Failed to join session' };
     }
   }
@@ -197,7 +198,7 @@ export const getSessionState = webMethod(
         items: items.items.map(formatItem),
       };
     } catch (err) {
-      console.error('[collaborativePlanner] getSessionState error:', err);
+      logError('[collaborativePlanner] getSessionState failed', err);
       return { success: false, session: null, items: [] };
     }
   }
@@ -280,7 +281,7 @@ export const placeItem = webMethod(
 
       return { success: true, itemId: item._id };
     } catch (err) {
-      console.error('[collaborativePlanner] placeItem error:', err);
+      logError('[collaborativePlanner] placeItem failed', err);
       return { success: false, itemId: null, error: 'Failed to place item' };
     }
   }
@@ -331,7 +332,7 @@ export const moveItem = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[collaborativePlanner] moveItem error:', err);
+      logError('[collaborativePlanner] moveItem failed', err);
       return { success: false, error: 'Failed to move item' };
     }
   }
@@ -383,7 +384,7 @@ export const removeItem = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[collaborativePlanner] removeItem error:', err);
+      logError('[collaborativePlanner] removeItem failed', err);
       return { success: false, error: 'Failed to remove item' };
     }
   }
@@ -421,7 +422,7 @@ export const getSessionCart = webMethod(
 
       return { success: true, items, total };
     } catch (err) {
-      console.error('[collaborativePlanner] getSessionCart error:', err);
+      logError('[collaborativePlanner] getSessionCart failed', err);
       return { success: false, items: [], total: 0 };
     }
   }
