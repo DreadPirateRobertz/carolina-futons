@@ -27,6 +27,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
 import { validateId, validateSlug } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'ProductBundle';
 
@@ -41,7 +42,7 @@ function parseProducts(raw) {
   if (Array.isArray(raw)) return raw;
   if (typeof raw === 'string') {
     try { return JSON.parse(raw); } catch (e) {
-      console.error('[bundleDeals] parseProducts: malformed JSON in products field:', e.message);
+      logError('[bundleDeals] parseProducts: malformed JSON in products field', e);
       return [];
     }
   }
@@ -84,7 +85,7 @@ export const listBundles = webMethod(
         .find();
       return { success: true, bundles: result.items.map(formatBundle) };
     } catch (err) {
-      console.error('[bundleDeals] listBundles error:', err.message);
+      logError('[bundleDeals] listBundles failed', err);
       return { success: false, bundles: [] };
     }
   }
@@ -118,7 +119,7 @@ export const getBundleBySlug = webMethod(
 
       return { success: true, bundle: formatBundle(result.items[0]) };
     } catch (err) {
-      console.error('[bundleDeals] getBundleBySlug error:', slug, err.message);
+      logError('[bundleDeals] getBundleBySlug failed', err);
       return { success: false, bundle: null, error: 'Failed to fetch bundle.' };
     }
   }
@@ -213,7 +214,7 @@ export const addBundleToCart = webMethod(
         couponApplied,
       };
     } catch (err) {
-      console.error('[bundleDeals] addBundleToCart error:', slug, err.message);
+      logError('[bundleDeals] addBundleToCart failed', err);
       return { success: false, error: 'Failed to add bundle to cart.' };
     }
   }

@@ -120,7 +120,7 @@ export async function _getTrailProgressForMember(memberId) {
 
     return { success: true, trails };
   } catch (err) {
-    console.error('[challengeService] Error getting trail progress:', err);
+    logError('[challengeService] getTrailProgressForMember failed', err);
     return { success: false, trails: [], error: 'Failed to load trail progress.' };
   }
 }
@@ -299,7 +299,7 @@ export const getChallengeOfTheWeek = webMethod(Permissions.Anyone, async () => {
       },
     };
   } catch (err) {
-    console.error('[challengeService] getChallengeOfTheWeek error:', err);
+    logError('[challengeService] getChallengeOfTheWeek failed', err);
     return { success: false, error: 'Failed to load challenge of the week.' };
   }
 });
