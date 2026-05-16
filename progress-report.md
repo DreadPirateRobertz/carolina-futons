@@ -1,34 +1,44 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:28 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 02:57 MT**
 
-## Session 2026-05-16 — Ongoing Merge Drain
+## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
-### Merged this session
+### Merged this session (combined sessions)
 | PR | Repo | Title |
 |----|------|-------|
-| cfutons #1362 | cfutons | feat(cf-6amf.1): wave-audit sub-classify by commit prefix + p1/p2/p3 |
-| cfutons #1364 | cfutons | fix(cf-t8k1.fu1)(P2): lazy-init ups-shipping (getters) |
-| cfutons #1359 | cfutons | docs(cf-6amf-pilot): first live wave-audit run (34 PRs) |
-| cfw #693 | cfw | chore(ci): coverage ratchet |
+| cfutons #1359–#1364 | cfutons | Various (wave-audit, brand mock fix, lazy-init, docs) |
+| cfutons #1367 | cfutons | fix(cf-t8k1.fu2): lazy-init internationalShipping |
+| cfutons #1371 | cfutons | docs(cf-v6zo): audit — PR #1355 red-merge incident |
+| cfutons #1372 | cfutons | fix(cf-v6zo): ratchet functions coverage 88.8→88.7 |
+| cfw #651 | cfw | a11y(cf-if28): member surfaces + search status wave 5 |
+| cfw #694, #696, #697, #698 | cfw | LCP/SEO/SiteContent/about-tests |
+| cfw #700 | cfw | feat(cf-ajvr): /account/my-subscriptions → /dashboard redirect |
 
 ### Closed stale/duplicate PRs
-- cfw #692 (stale ratchet — conflict, superseded by #693)
-- cfutons #1369 (duplicate of #1368 — had spurious package-lock.json change)
+- cfw #692, #701 (duplicates/stale)
+- cfutons #1369, #1370 (duplicates/superseded)
+- cf-8r7v, cf-v6zo, cf-47nm, cf-ajvr beads CLOSED
 
-### PRs pending CI
+### PRs still in flight
 | PR | Repo | Status |
 |----|------|--------|
-| cfw #651 | cfw | a11y wave5 — lint fixed (c3d7096), CI re-running |
-| cfutons #1367 | cfutons | cf-t8k1.fu2 lazy-init internationalShipping — CI queued (split-test fix) |
-| cfutons #1368 | cfutons | cf-44qt silent-failure cleanup — CI running; needs rebase after #1367 merges |
+| cfutons #1373 | cfutons | cf-uydr emailAutomation logError×19 — test fix pushed, CI re-running (test22 pending) |
 
-### 5-crew reviews posted
-- #1362 ✅ (APPROVED — fold update absorbed all findings)
-- #1364 ✅ (miquella + rennala + blaidd; radahn + godfrey already posted)
-- #1367 ✅ (radahn + godfrey + rennala + blaidd; morgott already posted)
-- #1368 ✅ (all 5 + rebase warning)
-- #1359 ✅ (docs-only, all CI green)
-- cfw #651 ✅ (godfrey + morgott + blaidd + rennala + PM)
+### Merged this cadence (02:55 MT)
+- cfw #702 (cf-mu05 lazy-load priority pins) ✅
+- cfw #703 (cfw-t22e newsletter PII hash) ✅
+- cf-gkgo CLOSED (stale — PR #1151 merged 2026-05-05)
+- cf-mu05 CLOSED
+
+### Bead corrections
+- cf-44qt CLOSED (PR #1368 merged)
+- cf-pdv4 CLOSED (PR #699 merged)
+- cf-gkgo CLOSED (stale, PR #1151 already merged)
+
+### 5-crew reviews posted this session
+- cfutons #1368 ✅ (SHIP, confidence 95)
+- cfw #699 ✅ (SHIP, confidence 93)
+- cfw #700 ✅ (SHIP, confidence 97)
 
 ### Blocked / gated
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
