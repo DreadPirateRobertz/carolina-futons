@@ -1,6 +1,6 @@
 /**
  * cf-t8k1.fu2 — Pins the lazy-init contract for internationalShipping.web.js
- * module-init reads.
+ * with an EMPTY public/sharedTokens mock.
  *
  * Pre-fix shape (mirror of cf-t8k1 in ups-shipping):
  *   `const { zones, restrictedCountries, freeInternationalThreshold } =
@@ -11,23 +11,22 @@
  * ran — same class of bug as cf-t8k1 (PR #1363 / cf-t8k1.fu1 PR #1364).
  *
  * Post-fix shape: each former destructured name is computed lazily on
- * first use via a getter (`getInternationalZones`,
- * `getRestrictedCountries`, `getFreeInternationalThreshold`). A test
- * file that mocks public/sharedTokens with EMPTY object can still
- * IMPORT the module — only test-bodies that call the zone/rate
- * functions need a fully-shaped mock.
+ * first use via a getter. A test file that mocks public/sharedTokens
+ * with EMPTY object can still IMPORT the module — only test-bodies
+ * that call the zone/rate functions need a fully-shaped mock.
  *
- * Three contracts pinned below:
- *  1. Module imports cleanly with EMPTY public/sharedTokens mock
- *  2. Getters return the right shape when sharedTokens IS mocked
- *  3. Getters are memoized — second call doesn't re-deref sharedTokens
- *  4. __resetCacheForTests clears all three caches (mirrors
- *     currencyService.web.js precedent)
+ * This file pins the EMPTY-mock contract via TOP-LEVEL vi.mock (per
+ * noDoMockInTestBody invariant, CF-fgsw). The companion file
+ * tests/internationalShippingLazyInitPopulated.test.js pins the
+ * getter-shape + memoization + cache-reset contracts with a populated
+ * mock — split into two files because the per-describe mock-shape
+ * swap that would otherwise require vi.doMock is precisely what the
+ * invariant forbids.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
-// Deliberately empty mock — pre-fix this would throw on import below.
+// EMPTY mock — pre-fix this would have thrown on import below.
 vi.mock('public/sharedTokens.js', () => ({}));
 
 // Stub the rest of internationalShipping's import dependencies so the
@@ -38,7 +37,7 @@ vi.mock('wix-web-module', () => ({
   webMethod: (_perm, fn) => fn,
 }));
 
-describe('cf-t8k1.fu2 — internationalShipping lazy-init contract', () => {
+describe('cf-t8k1.fu2 — internationalShipping lazy-init contract (empty mock)', () => {
   it('imports cleanly with EMPTY public/sharedTokens mock (no module-init deref)', async () => {
     // Before cf-t8k1.fu2: this import throws TypeError ("Cannot
     // destructure property 'zones' of undefined") because the
@@ -64,69 +63,5 @@ describe('cf-t8k1.fu2 — internationalShipping lazy-init contract', () => {
     const mod = await import('../src/backend/internationalShipping.web.js');
     mod.__resetCacheForTests();
     expect(() => mod.getInternationalZones()).toThrow();
-  });
-});
-
-describe('cf-t8k1.fu2 — internationalShipping lazy-init with proper mock', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    vi.doMock('public/sharedTokens.js', () => ({
-      internationalShippingConfig: {
-        zones: {
-          americas: { name: 'Americas', countries: ['CA', 'MX'], baseRate: 50, perPoundRate: 2, estimatedDays: '5-7' },
-          europe: { name: 'Europe', countries: ['GB', 'DE'], baseRate: 100, perPoundRate: 4, estimatedDays: '7-14' },
-          other: { name: 'Other', countries: [], baseRate: 200, perPoundRate: 6, estimatedDays: '14-21' },
-        },
-        restrictedCountries: ['KP', 'IR'],
-        freeInternationalThreshold: 2500,
-      },
-    }));
-    // Re-stub the other dependencies since vi.resetModules cleared them.
-    vi.doMock('backend/utils/sanitize', () => ({ sanitize: (s) => s }));
-    vi.doMock('wix-web-module', () => ({
-      Permissions: { Admin: 'Admin', SiteMember: 'SiteMember', Anyone: 'Anyone' },
-      webMethod: (_perm, fn) => fn,
-    }));
-  });
-
-  it('getInternationalZones returns the zone map', async () => {
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    const zones = mod.getInternationalZones();
-    expect(zones.americas.name).toBe('Americas');
-    expect(zones.americas.countries).toEqual(['CA', 'MX']);
-    expect(zones.europe.baseRate).toBe(100);
-    expect(zones.other.estimatedDays).toBe('14-21');
-  });
-
-  it('getRestrictedCountries returns the restricted-country list', async () => {
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    expect(mod.getRestrictedCountries()).toEqual(['KP', 'IR']);
-  });
-
-  it('getFreeInternationalThreshold returns the threshold value', async () => {
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    expect(mod.getFreeInternationalThreshold()).toBe(2500);
-  });
-
-  it('getInternationalZones is memoized — repeat calls return identical reference', async () => {
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    const a = mod.getInternationalZones();
-    const b = mod.getInternationalZones();
-    expect(a).toBe(b);
-  });
-
-  it('__resetCacheForTests clears all three caches', async () => {
-    const mod = await import('../src/backend/internationalShipping.web.js');
-    const before = mod.getInternationalZones();
-    mod.__resetCacheForTests();
-    const after = mod.getInternationalZones();
-    // After reset, the getter re-derefs sharedTokens — the returned
-    // value is structurally equal but the cached reference is fresh.
-    // (Whether it's a fresh object reference depends on how Wix's
-    // sharedTokens module stores its config object. The contract
-    // pinned here is that __resetCacheForTests CLEARS the cache, not
-    // that it returns a different object — equivalent values are
-    // still correct.)
-    expect(after).toEqual(before);
   });
 });
