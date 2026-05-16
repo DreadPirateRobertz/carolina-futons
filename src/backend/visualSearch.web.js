@@ -12,6 +12,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const VISION_API_BASE = 'https://vision.googleapis.com/v1/images:annotate';
 const MAX_RESULTS = 20;
@@ -266,7 +267,7 @@ export const analyzeRoomPhoto = webMethod(
         labelCount: labels.length,
       };
     } catch (err) {
-      console.error('[visualSearch] analyzeRoomPhoto error:', err?.message ?? err);
+      logError('[visualSearch] analyzeRoomPhoto failed', err);
       const reason = err?.message?.startsWith('vision_') ? err.message : 'analysis_failed';
       return { success: false, tags: [], products: [], error: reason };
     }
