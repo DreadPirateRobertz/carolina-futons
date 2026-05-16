@@ -85,9 +85,28 @@ Every wave-audit run produces:
 
 Once the ritual has run 2-3 weeks consistently, propose to mayor as a standing process. Each wave-audit doc lands as its own PR (5-agent CR per mayor's 2026-05-15 mandate); the wave-audit script + this conventions doc are infrastructure that travels with the ritual.
 
-## 9. Refs
+## 9. Pre-dispatch staleness check (cf-4hys)
+
+**Before dispatching crew to an OPEN/HOOKED bead, run:**
+
+```bash
+python3 scripts/check_stale_hooked_bead.py <bead-id>
+```
+
+The script grep's the last 50 merged PRs for direct bead-ID matches or strong (≥2 distinctive) keyword overlap with the bead's title. Exit 0 = clean (safe to dispatch), exit 1 = warning (likely already shipped — investigate before dispatching).
+
+**Why:** the 2026-05-16 session saw 7+ dispatch collisions where work had already shipped under a different bead-ID (cf-q8m2 shipped via cf-4x7e.A / PR #1285, cf-8r7v shipped via cf-gift-g1 / PR #589, cf-b8n8 shipped via check-doc-bead-refs.py, etc.). `bd show` reports HOOKED state but doesn't cross-reference recent merges — a bead can stay HOOKED indefinitely if the crew member shipped under a sibling bead-id and never ran `bd close` on the original.
+
+**Where it fires:** PM workflow before any dispatch call. The PM should look at the warning, run `gh pr view <pr-number>` to verify, then either close the bead (if confirmed-shipped) or proceed with dispatch (if the warning was a false positive).
+
+**Cross-repo:** set `STALENESS_REPO=DreadPirateRobertz/carolina-futons-web` (or stage3-velo) to scan a different repo when a bead's work may have shipped in a sibling rig.
+
+**Pure-function tests:** `scripts/test_check_stale_hooked_bead.py` pins the decision contract (direct-bead-id-match wins, ≥2 distinctive keyword overlap warns, stopword-only overlap doesn't warn, empty-PR-list returns None, multi-match tie-break on highest PR number).
+
+## 10. Refs
 
 - Source pattern PR: #1339 (cf-o5j5 wave32 cfw audit)
 - Source PR with reachability lesson: #1346 (cf-5dto v5) + #1349 (cf-5dto.fu1 missed-merge recovery)
 - Roadmap mail: cfutons/morgott → cfutons/melania 2026-05-15 cf-roadmap proposal
 - Spy-assertion dimension: cfutons/morgott ↔ cfutons/radahn mail thread on cf-o5j5 #566 follow-up
+- Staleness-check origin: 7+ dispatch collisions in 2026-05-16 session → cf-4hys process bead
