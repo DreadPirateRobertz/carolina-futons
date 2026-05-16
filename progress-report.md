@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:25 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 17:00 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -18,6 +18,9 @@
 | cfutons #1377 | cfutons | feat(cf-4hys): pre-dispatch staleness checker (TDD ×10) ✅ |
 | cfutons #1378 | cfutons | docs(cf-v4py): fixture-OFF E2E specs (rennala static deliverable) ✅ |
 | cfutons #1379 | cfutons | feat(cf-sufo): stale scanner → BLOCKED + cfw repo ✅ |
+| cfutons #1381 | cfutons | docs(cf-czdw): Sentry ISR alert runbook ✅ (admin-merged 16:55 MT) |
+| cfw #707 | cfw | docs(cf-czdw): Sentry ISR alert spec — cfw side ✅ (5-crew reviewed, batch pending) |
+| cfw #708 | cfw | fix(cf-no2d): cart e2e fixture short-circuit ✅ (5-crew reviewed, CI pending) |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
