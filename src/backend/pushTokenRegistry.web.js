@@ -12,6 +12,7 @@
  */
 
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 export const PUSH_TOKENS_COLLECTION = 'PushTokens';
 const VALID_PLATFORMS = ['ios', 'android', 'web'];
@@ -38,7 +39,7 @@ export async function registerToken(memberId, token, platform) {
     );
     return { success: true };
   } catch (err) {
-    console.error('[pushTokenRegistry] registerToken error:', err);
+    logError('pushTokenRegistry:registerToken', err);
     return { success: false, error: err.message };
   }
 }
@@ -59,7 +60,7 @@ export async function getActiveTokensForMember(memberId) {
       .find({ suppressAuth: true });
     return result.items;
   } catch (err) {
-    console.error('[pushTokenRegistry] getActiveTokensForMember error:', err);
+    logError('pushTokenRegistry:getActiveTokensForMember', err);
     return [];
   }
 }
@@ -85,7 +86,7 @@ export async function deactivateToken(memberId, token) {
     await wixData.update(PUSH_TOKENS_COLLECTION, item, { suppressAuth: true });
     return { success: true };
   } catch (err) {
-    console.error('[pushTokenRegistry] deactivateToken error:', err);
+    logError('pushTokenRegistry:deactivateToken', err);
     return { success: false, error: err.message };
   }
 }
