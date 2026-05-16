@@ -38,6 +38,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSubscribers } from 'backend/priceAlertService.web';
+import { logError } from 'backend/utils/errorHandler';
 
 const PRICE_HISTORY_COLLECTION = 'ProductPriceHistory';
 const PRICE_DROP_QUEUE_COLLECTION = 'PriceDropQueue';
@@ -111,7 +112,7 @@ export const detectPriceDrops = webMethod(
         emailsQueued,
       };
     } catch (err) {
-      console.error('[priceDropCron] detectPriceDrops failed:', err?.message);
+      logError('[priceDropCron] detectPriceDrops failed', err);
       return { success: false, productsScanned: 0, dropsDetected: 0, notificationsSent: 0, emailsQueued: 0 };
     }
   }
@@ -139,7 +140,7 @@ export const queuePriceDropNotifications = webMethod(
       const sent = await notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop);
       return { success: true, notificationsSent: sent };
     } catch (err) {
-      console.error('[priceDropCron] queuePriceDropNotifications failed:', err?.message);
+      logError('[priceDropCron] queuePriceDropNotifications failed', err);
       return { success: false, notificationsSent: 0 };
     }
   }
@@ -282,7 +283,7 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
       );
       sent++;
     } catch (err) {
-      console.error('[priceDropCron] Failed to notify member:', wishItem.memberId, err?.message);
+      logError(`[priceDropCron] queuePriceDropNotifications per-member notify failed for ${wishItem.memberId}`, err);
     }
   }
 
@@ -355,7 +356,7 @@ async function emailPriceAlertSubscribers(productId, productName, productSlug, o
       );
       sent++;
     } catch (emailErr) {
-      console.error('[priceDropCron] Failed to send email to member:', sub.memberId, emailErr?.message);
+      logError(`[priceDropCron] sendPriceDropEmail per-subscriber failed for ${sub.memberId}`, emailErr);
     }
   }
 
