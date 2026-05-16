@@ -78,7 +78,7 @@ Every wave-audit run produces:
 ## 7. Tooling
 
 - **Run:** `scripts/wave-audit/wave-audit.sh <since-date> [<until-date>]`
-- **Cross-repo:** set `WAVE_AUDIT_REPO=DreadPirateRobertz/carolina-futons-web` (or any other gh-accessible repo) — defaults to the cfutons monorepo
+- **Cross-repo:** set `WAVE_AUDIT_REPO=DreadPirateRobertz/carolina-futons-web` (or any other gh-accessible repo). When `WAVE_AUDIT_REPO` differs from the local clone the script lives in, **also set `WAVE_AUDIT_REPO_ROOT=/path/to/local/clone`** (cf-6amf.fu1) — without it the reachability `git merge-base` runs against the wrong object DB and silently false-excludes every PR. The script hard-fails with a remediation hint if the cross-repo case is detected without `WAVE_AUDIT_REPO_ROOT`.
 - **Output:** markdown to stdout — redirect to `docs/audits/cf-<bead>-<window>-WIP.md` and curate manually before committing
 
 ## 8. Process integration

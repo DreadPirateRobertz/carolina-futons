@@ -18,6 +18,13 @@
 # rationale. cf-5dto v5 reachability rule (`git merge-base --is-ancestor`)
 # applies — only PRs whose merge commit is reachable from origin/main are
 # counted; stacked-PR squash-merge gaps surface in the "Excluded" section.
+#
+# Cross-repo (cf-6amf.fu1): when WAVE_AUDIT_REPO points to a different repo
+# than the local clone hosting this script, set WAVE_AUDIT_REPO_ROOT to a
+# local clone of that repo so the reachability `git merge-base` runs in the
+# correct repo. Without this, a cross-repo run silently false-excludes 100%
+# of PRs (the merge SHAs aren't present in the script-hosting repo's
+# object DB).
 
 set -euo pipefail
 
@@ -33,6 +40,25 @@ REPO="${WAVE_AUDIT_REPO:-DreadPirateRobertz/carolina-futons}"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
+
+# Resolve the local clone we should run reachability checks against.
+# Default: REPO_ROOT (the cfutons monorepo containing this script).
+# Override: WAVE_AUDIT_REPO_ROOT (for cross-repo runs against cfw etc.).
+# Detection: compare the local repo's gh `nameWithOwner` against $REPO.
+# If they differ and no override was given, hard-fail rather than emit a
+# false 0/100 reachable count.
+LOCAL_NWO="$(cd "$REPO_ROOT" && gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "")"
+if [[ -n "${WAVE_AUDIT_REPO_ROOT:-}" ]]; then
+  REACHABILITY_ROOT="$WAVE_AUDIT_REPO_ROOT"
+elif [[ -n "$LOCAL_NWO" && "$LOCAL_NWO" != "$REPO" ]]; then
+  echo "ERROR: cross-repo run detected (WAVE_AUDIT_REPO=$REPO, local=$LOCAL_NWO)" >&2
+  echo "       but WAVE_AUDIT_REPO_ROOT is unset. Without a local clone of" >&2
+  echo "       $REPO, the reachability check would false-exclude every PR." >&2
+  echo "       Fix: WAVE_AUDIT_REPO_ROOT=/path/to/local/clone $0 $*" >&2
+  exit 2
+else
+  REACHABILITY_ROOT="$REPO_ROOT"
+fi
 
 # 1. Fetch the wave from gh.
 WAVE_JSON="$(mktemp)"
@@ -64,7 +90,7 @@ EXCLUDED_JSON="$(mktemp)"
 trap 'rm -f "$WAVE_JSON" "$REACHED_JSON" "$EXCLUDED_JSON"' EXIT
 
 (
-  cd "$REPO_ROOT"
+  cd "$REACHABILITY_ROOT"
   git fetch origin main --quiet 2>/dev/null || true
   jq -c '.[]' "$WAVE_JSON" | while read -r row; do
     SHA="$(echo "$row" | jq -r '.mergeCommit.oid // empty')"
