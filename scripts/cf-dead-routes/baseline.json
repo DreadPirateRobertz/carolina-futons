@@ -1,11 +1,11 @@
 {
-  "dead": 1,
+  "dead": 0,
   "unused_can_delete": 0,
   "version": 1,
   "_meta": {
     "generated_at": "2026-05-16",
-    "by": "cf-69fi (millicent)",
-    "context": "Initial soft-fail baseline. Current DEAD=1 is wmB in src/backend/sample.web.js — an audit-test fixture, not production dead code. Ratchet this to 0 when the fixture is moved out of src/backend/ or excluded from audit.py's scan path.",
-    "ratchet_pattern": "Mirror of vitest coverage-ratchet (cf-4x7e.B3/B4/B5). When live counts drop below baseline, ratchet the baseline down in the same PR that cleared the offender. Never ratchet UP — that's the regression the guard exists to catch."
+    "by": "cf-69fi (millicent + morgott rebase)",
+    "context": "Live baseline post-cf-4x7e wave + cf-5dto v5 detector merge. Verified via fresh audit.py run: DEAD bucket = 0, UNUSED-CAN-DELETE verdict = 0. The cf-4x7e cleanup wave (231 webMethods retired, ~-54k LOC) cleared every truly-dead webMethod; v5 detector reclassified the 5 false-DEAD allowlisted-Anyone entries into their correct HTTP-EXPOSED-INTENTIONAL bucket. (millicent's draft baseline used a test-fixture dead=1; that fixture lives in tmp_path during pytest runs, not in production src/backend — so the live baseline is correctly 0.)",
+    "ratchet_pattern": "Mirror of vitest coverage-ratchet (cf-4x7e.B3/B4/B5/B5.fu). When live counts drop below baseline, ratchet the baseline down in the same PR that cleared the offender. Never ratchet UP — that's the regression the guard exists to catch. Week-1 soft-fail mode warns; Week-2+ strict mode fails the build."
   }
 }
