@@ -32,7 +32,7 @@ Add `gh pr merge --auto --squash` to the auto-ratchet workflow IF AND ONLY IF th
 ### Safety criteria (ALL must hold)
 
 1. **Single-file diff:** only `scripts/cf-dead-routes/baseline.json` changed. No other source files, tests, workflows, or docs.
-2. **Downward only:** verified by re-running `decide_ratchet()` on the PR's tree state; result must be a ratchet decision (not None).
+2. **Downward only:** verified by re-running `decide_ratchet()` on the PR's tree state; result must be a ratchet decision (not None). **Note (rennala design-note on PR #1360):** GitHub's `--auto` re-checks branch protections at merge time, NOT arbitrary scripts. To prevent a stale verdict when baseline.json drifts between PR-open and merge-fire, the implementation must make `decide_ratchet` a **required CI status check** (so any new push to the branch re-runs it; auto-merge waits). Without this, fast-follow PRs touching baseline.json could invalidate the verdict between open + merge.
 3. **Tests still pass:** the full cf-dead-routes pytest suite runs in the same workflow + passes.
 4. **5 distinct crew APPROVED reviews:** counted by parsing review **bodies** for agent footers (`— <agent>` lines) — NOT by `reviews[].author.login`, since all crew share the `DreadPirateRobertz` GitHub account. The eligibility check must enumerate review bodies via `gh pr view --json reviews --jq '.reviews[].body'`, regex-match the `— <agent>$` footer, deduplicate, and require ≥ 5 distinct agent names. **(millicent concern #1 — load-bearing.)** Without this rewrite, criterion #4 fails on every shared-account PR.
 5. **No REQUEST-CHANGES outstanding:** any open REQUEST-CHANGES blocks auto-merge regardless of approval count.
