@@ -14,6 +14,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ─── Cache Layer ─────────────────────────────────────────────────
 // Shared TTL cache for facets, search results, and autocomplete.
@@ -285,7 +286,7 @@ export const searchProducts = webMethod(
         facets,
       };
     } catch (err) {
-      console.error('Error in searchProducts:', err);
+      logError('searchService.searchProducts', err);
       return { products: [], total: 0, facets: {} };
     }
   }
@@ -307,7 +308,7 @@ export const getFilterValues = webMethod(
       const cleanCategory = category ? validateSlug(category) : '';
       return await buildFacets(cleanCategory);
     } catch (err) {
-      console.error('Error in getFilterValues:', err);
+      logError('searchService.getFilterValues', err);
       return {
         priceRanges: [],
         materials: [],
@@ -620,7 +621,7 @@ export const fullTextSearch = webMethod(
       setCachedSearch(cacheKey, result);
       return result;
     } catch (err) {
-      console.error('Error in fullTextSearch:', err);
+      logError('searchService.fullTextSearch', err);
       return { products: [], total: 0, query: '', facets: {} };
     }
   }
@@ -705,7 +706,7 @@ export const getAutocompleteSuggestions = webMethod(
       _cache[cacheKey] = { data: result, timestamp: Date.now() };
       return result;
     } catch (err) {
-      console.error('Error in getAutocompleteSuggestions:', err);
+      logError('searchService.getAutocompleteSuggestions', err);
       return { suggestions: [] };
     }
   }
@@ -727,7 +728,7 @@ export const getPopularSearches = webMethod(
       const safeLimit = Math.min(Math.max(1, Number(limit) || 8), 20);
       return { queries: getTopQueries(safeLimit) };
     } catch (err) {
-      console.error('Error in getPopularSearches:', err);
+      logError('searchService.getPopularSearches', err);
       return { queries: [] };
     }
   }
@@ -751,7 +752,7 @@ export const recordSearchQuery = webMethod(
       recordQuery(cleanQuery);
       return { success: true };
     } catch (err) {
-      console.error('Error in recordSearchQuery:', err);
+      logError('searchService.recordSearchQuery', err);
       return { success: false };
     }
   }
