@@ -24,6 +24,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { products } from 'wix-stores-backend';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const THRESHOLDS_COLLECTION = 'InventoryThresholds';
 const ALERTS_COLLECTION = 'LowStockAlerts';
@@ -218,7 +219,7 @@ export async function syncInventoryFromStore() {
               if (result.alertCreated) alertsCreated++;
             } catch (err) {
               errors++;
-              console.error(`[inventorySync] Failed to sync product ${product._id}:`, err?.message ?? err);
+              logError('[inventorySync] syncProducts product failed', err);
             }
           }),
         );
@@ -240,7 +241,7 @@ export async function syncInventoryFromStore() {
     console.log(`[inventorySync] Sync complete: ${synced} products, ${alertsCreated} alerts, ${errors} errors`);
     return { success: true, synced, alertsCreated, errors };
   } catch (err) {
-    console.error('[inventorySync] Sync failed:', err?.message ?? err);
+    logError('[inventorySync] syncProducts failed', err);
     return { success: false, synced, alertsCreated, errors };
   }
 }
