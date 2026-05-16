@@ -26,6 +26,7 @@ import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 import { validateSchema } from 'backend/utils/validateSchema';
 import { resolveTemplateId } from 'backend/emailTemplates.web';
 
@@ -235,7 +236,7 @@ export const sendEmail = webMethod(
       logAuditEvent('ContactSubmissions', 'send_email', cleanEmail, { subject: cleanSubject });
       return { success: true };
     } catch (err) {
-      console.error('Error sending contact email:', err);
+      logError('[emailService] sendEmail failed', err);
       return { success: false, message: 'Failed to send message. Please try calling us at (828) 252-9449.' };
     }
   }
@@ -387,13 +388,13 @@ export const submitSwatchRequest = webMethod(
           );
         }
       } catch (confirmErr) {
-        console.error('Swatch confirmation email failed (non-blocking):', confirmErr);
+        logError('[emailService] submitSwatchRequest confirmation-email non-blocking', confirmErr);
       }
 
       logAuditEvent('ContactSubmissions', 'swatch_request', cleanEmail, { product: cleanProductName });
       return { success: true };
     } catch (err) {
-      console.error('Error submitting swatch request:', err);
+      logError('[emailService] submitSwatchRequest failed', err);
       return { success: false, message: 'Failed to submit swatch request. Please try calling us at (828) 252-9449.' };
     }
   }
@@ -459,7 +460,7 @@ export const sendSwatchConfirmationEmail = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('Error sending swatch confirmation email:', err);
+      logError('[emailService] sendSwatchConfirmationEmail failed', err);
       return { success: false, message: 'Failed to send confirmation email.' };
     }
   }
@@ -504,7 +505,7 @@ export const sendOrderNotification = webMethod(
       );
       return { success: true };
     } catch (err) {
-      console.error('Error sending order notification:', err);
+      logError('[emailService] sendOrderNotification failed', err);
       return { success: false };
     }
   }
@@ -548,7 +549,7 @@ export const sendOrderConfirmation = webMethod(
       );
       return { success: true };
     } catch (err) {
-      console.error('[emailService] Error sending order confirmation:', err);
+      logError('[emailService] sendOrderConfirmation failed', err);
       return { success: false };
     }
   }
@@ -594,7 +595,7 @@ export const sendShippingNotification = webMethod(
       );
       return { success: true };
     } catch (err) {
-      console.error('[emailService] Error sending shipping notification:', err);
+      logError('[emailService] sendShippingNotification failed', err);
       return { success: false };
     }
   }
@@ -640,7 +641,7 @@ export const sendFreightShippingNotification = webMethod(
       );
       return { success: true };
     } catch (err) {
-      console.error('[emailService] Error sending freight shipping notification:', err);
+      logError('[emailService] sendFreightShippingNotification failed', err);
       return { success: false };
     }
   }
@@ -678,7 +679,7 @@ export const sendDeliveryConfirmation = webMethod(
       );
       return { success: true };
     } catch (err) {
-      console.error('[emailService] Error sending delivery confirmation:', err);
+      logError('[emailService] sendDeliveryConfirmation failed', err);
       return { success: false };
     }
   }
@@ -737,7 +738,7 @@ export const sendABEmail = webMethod(
 
       return { sent: true, variant: effectiveVariant };
     } catch (err) {
-      console.error('[emailService] sendABEmail error:', err);
+      logError('[emailService] sendABEmail failed', err);
       return { sent: false, reason: 'send_failed' };
     }
   }
