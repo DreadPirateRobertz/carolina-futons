@@ -63,7 +63,11 @@ describe('cf-t8k1.fu1 — ups-shipping lazy-init contract', () => {
 describe('cf-t8k1.fu1 — ups-shipping lazy-init with proper mock', () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.doMock('public/sharedTokens', () => ({
+    // vi.doMock here (not top-level vi.mock) is required because the lazy-init
+    // contract test in the prior describe block needs the EMPTY mock active
+    // during its module-import, and this describe block needs a populated mock
+    // after vi.resetModules(). Standard vi.mock() can't be swapped at runtime.
+    vi.doMock('public/sharedTokens', () => ({ // vi-domock-legacy
       brand: { name: 'Test Co' },
       business: {
         phoneDigits: '5550000000',
@@ -72,10 +76,10 @@ describe('cf-t8k1.fu1 — ups-shipping lazy-init with proper mock', () => {
       shippingConfig: { freeThreshold: 750 },
     }));
     // Re-stub the other dependencies since vi.resetModules cleared them
-    vi.doMock('wix-secrets-backend', () => ({ getSecret: vi.fn() }));
-    vi.doMock('wix-fetch', () => ({ fetch: vi.fn() }));
-    vi.doMock('backend/utils/sanitize', () => ({ sanitize: (s) => s }));
-    vi.doMock('wix-web-module', () => ({
+    vi.doMock('wix-secrets-backend', () => ({ getSecret: vi.fn() })); // vi-domock-legacy
+    vi.doMock('wix-fetch', () => ({ fetch: vi.fn() })); // vi-domock-legacy
+    vi.doMock('backend/utils/sanitize', () => ({ sanitize: (s) => s })); // vi-domock-legacy
+    vi.doMock('wix-web-module', () => ({ // vi-domock-legacy
       Permissions: { Admin: 'Admin', SiteMember: 'SiteMember', Anyone: 'Anyone' },
       webMethod: (_perm, fn) => fn,
     }));
