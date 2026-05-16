@@ -32,8 +32,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { logError } from 'backend/utils/errorHandler';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'PriceMatches';
 const MAX_NOTES_LEN = 2000;
@@ -252,7 +252,7 @@ export const submitPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      logError('priceMatchService:submitRequest', err);
+      logError('[priceMatchService] submitPriceMatchRequest failed', err);
       return { success: false, message: 'Failed to submit price match request' };
     }
   }
@@ -292,7 +292,7 @@ export const getMyPriceMatches = webMethod(
         })),
       };
     } catch (err) {
-      logError('priceMatchService:listPriceMatches', err);
+      logError('[priceMatchService] getMyPriceMatches failed', err);
       return { requests: [] };
     }
   }
@@ -337,7 +337,7 @@ export const getPriceMatchById = webMethod(
         },
       };
     } catch (err) {
-      logError('priceMatchService:getPriceMatch', err);
+      logError('[priceMatchService] getPriceMatchById failed', err);
       return { success: false, message: 'Failed to fetch price match request' };
     }
   }
@@ -395,7 +395,7 @@ export const reviewPriceMatchRequest = webMethod(
         },
       };
     } catch (err) {
-      logError('priceMatchService:reviewRequest', err);
+      logError('[priceMatchService] reviewPriceMatchRequest failed', err);
       return { success: false, message: 'Failed to review price match request' };
     }
   }
@@ -445,7 +445,7 @@ export const getPriceMatchStats = webMethod(
 
       return { stats };
     } catch (err) {
-      logError('priceMatchService:getStats', err);
+      logError('[priceMatchService] getPriceMatchStats failed', err);
       return {
         stats: {
           total: 0,
