@@ -7,7 +7,40 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
 import { internationalShippingConfig, business } from 'public/sharedTokens.js';
 
-const { zones, restrictedCountries, freeInternationalThreshold } = internationalShippingConfig;
+// cf-r6q7 (cf-t8k1.fu2): lazy-init the internationalShippingConfig
+// destructure. Previously this was a top-level
+//   `const { zones, restrictedCountries, freeInternationalThreshold } = internationalShippingConfig;`
+// which threw TypeError during module import if a test mocked
+// public/sharedTokens with a partial shape (missing
+// internationalShippingConfig). Mirrors the cf-t8k1.fu1 fix that
+// PR #1364 shipped for ups-shipping.web.js. Deferring computation
+// into getters decouples module-init from mock shape — tests that
+// don't exercise zone / restriction / threshold surfaces don't need
+// to mock internationalShippingConfig.
+let _zonesCache = null;
+let _restrictedCountriesCache = null;
+let _freeInternationalThresholdCache = null;
+
+export function getInternationalZones() {
+  if (_zonesCache === null) {
+    _zonesCache = internationalShippingConfig.zones;
+  }
+  return _zonesCache;
+}
+
+export function getRestrictedCountries() {
+  if (_restrictedCountriesCache === null) {
+    _restrictedCountriesCache = internationalShippingConfig.restrictedCountries;
+  }
+  return _restrictedCountriesCache;
+}
+
+export function getFreeInternationalThreshold() {
+  if (_freeInternationalThresholdCache === null) {
+    _freeInternationalThresholdCache = internationalShippingConfig.freeInternationalThreshold;
+  }
+  return _freeInternationalThresholdCache;
+}
 
 /**
  * Validate and normalize a 2-letter ISO country code.
@@ -39,18 +72,18 @@ export const getShippingZone = webMethod(
         return { success: false, error: 'US is a domestic destination — use standard shipping' };
       }
 
-      if (restrictedCountries.includes(code)) {
+      if (getRestrictedCountries().includes(code)) {
         return { success: false, error: `Cannot ship to restricted country: ${code}` };
       }
 
-      for (const [zoneName, zoneConfig] of Object.entries(zones)) {
+      for (const [zoneName, zoneConfig] of Object.entries(getInternationalZones())) {
         if (zoneConfig.countries.includes(code)) {
           return { success: true, zone: zoneName, zoneName: zoneConfig.name };
         }
       }
 
       // Not in any named zone — falls to "other"
-      return { success: true, zone: 'other', zoneName: zones.other.name };
+      return { success: true, zone: 'other', zoneName: getInternationalZones().other.name };
     } catch (err) {
       console.error('getShippingZone error:', err);
       return { success: false, error: 'Failed to determine shipping zone' };
@@ -72,7 +105,7 @@ export const isShippableCountry = webMethod(
         return { success: false, error: 'Invalid country code' };
       }
 
-      const shippable = !restrictedCountries.includes(code);
+      const shippable = !getRestrictedCountries().includes(code);
       return { success: true, shippable };
     } catch (err) {
       console.error('isShippableCountry error:', err);
@@ -101,7 +134,7 @@ export const getInternationalShippingEstimate = webMethod(
         return { success: false, error: 'Use domestic shipping for US destinations' };
       }
 
-      if (restrictedCountries.includes(code)) {
+      if (getRestrictedCountries().includes(code)) {
         return { success: false, error: `Cannot ship to restricted country: ${code}` };
       }
 
@@ -109,8 +142,8 @@ export const getInternationalShippingEstimate = webMethod(
       const subtotal = Math.max(0, Number(orderSubtotal) || 0);
 
       // Determine zone
-      let zoneConfig = zones.other;
-      for (const [, config] of Object.entries(zones)) {
+      let zoneConfig = getInternationalZones().other;
+      for (const [, config] of Object.entries(getInternationalZones())) {
         if (config.countries.includes(code)) {
           zoneConfig = config;
           break;
@@ -118,7 +151,7 @@ export const getInternationalShippingEstimate = webMethod(
       }
 
       // Check free shipping threshold
-      if (subtotal >= freeInternationalThreshold) {
+      if (subtotal >= getFreeInternationalThreshold()) {
         return {
           success: true,
           estimate: {
@@ -172,7 +205,7 @@ export const getInternationalShippingRates = webMethod(
         return { success: false, error: 'Invalid destination country' };
       }
 
-      if (restrictedCountries.includes(country)) {
+      if (getRestrictedCountries().includes(country)) {
         return { success: false, error: `Cannot ship to restricted country: ${country}` };
       }
 
@@ -181,9 +214,9 @@ export const getInternationalShippingRates = webMethod(
       const totalWeight = pkgs.reduce((sum, p) => sum + (Number(p?.weight) || 0), 0);
 
       // Determine zone
-      let zoneConfig = zones.other;
+      let zoneConfig = getInternationalZones().other;
       let zoneName = 'other';
-      for (const [name, config] of Object.entries(zones)) {
+      for (const [name, config] of Object.entries(getInternationalZones())) {
         if (config.countries.includes(country)) {
           zoneConfig = config;
           zoneName = name;
@@ -192,7 +225,7 @@ export const getInternationalShippingRates = webMethod(
       }
 
       // Free shipping check
-      const freeShipping = subtotal >= freeInternationalThreshold;
+      const freeShipping = subtotal >= getFreeInternationalThreshold();
 
       // Build zone-based estimated rates
       const weightCharge = Math.max(0, totalWeight) * zoneConfig.perPoundRate;
