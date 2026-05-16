@@ -20,6 +20,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
+import { logError } from 'backend/utils/errorHandler';
 
 const STAMPED_API_BASE = 'https://stamped.io/api/v2';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -103,7 +104,7 @@ export const getStampedRating = webMethod(
       _aggregateCache.set(productId, { data: result, ts: Date.now() });
       return result;
     } catch (err) {
-      console.error('[stampedIo] getStampedRating failed:', err?.message);
+      logError('stampedIoService:getStampedRating', err);
       return { average: 0, total: 0, distribution: {} };
     }
   }
@@ -154,7 +155,7 @@ export const getStampedReviews = webMethod(
         page: Number(data.page) || 1,
       };
     } catch (err) {
-      console.error('[stampedIo] getStampedReviews failed:', err?.message);
+      logError('stampedIoService:getStampedReviews', err);
       return { reviews: [], total: 0, page: 1 };
     }
   }
@@ -226,7 +227,7 @@ export const getStampedWidgetConfig = webMethod(
       const { apiKey, storeHash } = await getCredentials();
       return { storeHash, apiKey };
     } catch (err) {
-      console.error('[stampedIo] getStampedWidgetConfig failed:', err?.message);
+      logError('stampedIoService:getStampedWidgetConfig', err);
       return { storeHash: '', apiKey: '' };
     }
   }
