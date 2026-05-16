@@ -58,6 +58,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const VALID_ISSUE_TYPES = ['structural', 'fabric', 'mechanism', 'accidental', 'stain', 'other'];
 const MIN_DESCRIPTION_LENGTH = 10;
@@ -102,7 +103,7 @@ async function queueEmail(templateId, recipientEmail, variables) {
       createdAt: new Date(),
     });
   } catch (err) {
-    console.error(`[warrantyService] Email queue insert failed (${templateId}):`, err);
+    logError(`[warrantyService] queueEmail-${templateId} insert failed`, err);
   }
 }
 
@@ -174,7 +175,7 @@ export const registerWarranty = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[warrantyService] Error registering warranty:', err);
+      logError('[warrantyService] registerWarranty failed', err);
       return { success: false, error: 'Failed to register warranty.' };
     }
   }
@@ -224,7 +225,7 @@ export const getMyWarranties = webMethod(
 
       return { success: true, warranties };
     } catch (err) {
-      console.error('[warrantyService] Error getting warranties:', err);
+      logError('[warrantyService] getMyWarranties failed', err);
       return { success: false, error: 'Failed to load warranties.', warranties: [] };
     }
   }
@@ -299,7 +300,7 @@ export const getWarrantyDetails = webMethod(
         },
       };
     } catch (err) {
-      console.error('[warrantyService] Error getting warranty details:', err);
+      logError('[warrantyService] getWarrantyDetails failed', err);
       return { success: false, error: 'Failed to load warranty details.' };
     }
   }
@@ -387,7 +388,7 @@ export const submitClaim = webMethod(
         },
       };
     } catch (err) {
-      console.error('[warrantyService] Error submitting claim:', err);
+      logError('[warrantyService] submitClaim failed', err);
       return { success: false, error: 'Failed to submit warranty claim.' };
     }
   }
@@ -437,7 +438,7 @@ export const getClaimStatus = webMethod(
         },
       };
     } catch (err) {
-      console.error('[warrantyService] Error getting claim status:', err);
+      logError('[warrantyService] getClaimStatus failed', err);
       return { success: false, error: 'Failed to load claim status.' };
     }
   }
@@ -473,7 +474,7 @@ export const getMyClaims = webMethod(
 
       return { success: true, claims };
     } catch (err) {
-      console.error('[warrantyService] Error getting claims:', err);
+      logError('[warrantyService] getMyClaims failed', err);
       return { success: false, error: 'Failed to load claims.', claims: [] };
     }
   }
