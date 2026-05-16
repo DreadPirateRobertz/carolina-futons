@@ -13,6 +13,7 @@ import { coupons } from 'wix-marketing-backend';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Create a welcome coupon for a new member (10% off first order).
@@ -64,7 +65,7 @@ export const createWelcomeCoupon = webMethod(
           active: true,
         });
       } catch (insertErr) {
-        console.error('[couponsService] MemberCoupons insert failed for welcome coupon:', cleanEmail, ':', insertErr.message);
+        logError(`[couponsService] createWelcomeCoupon MemberCoupons-insert failed email=${cleanEmail}`, insertErr);
       }
 
       return {
@@ -74,7 +75,7 @@ export const createWelcomeCoupon = webMethod(
         expiresIn: '30 days',
       };
     } catch (err) {
-      console.error('Error creating welcome coupon:', err);
+      logError('[couponsService] createWelcomeCoupon failed', err);
       return { success: false, message: 'Failed to create coupon' };
     }
   }
@@ -124,7 +125,7 @@ export const getActiveCoupons = webMethod(
         active: c.active,
       }));
     } catch (err) {
-      console.error('Error getting coupons:', err);
+      logError('[couponsService] getActiveCoupons failed', err);
       return [];
     }
   }
@@ -193,7 +194,7 @@ export const createBirthdayCoupon = webMethod(
         expiresIn: '7 days',
       };
     } catch (err) {
-      console.error('Error creating birthday coupon:', err);
+      logError('[couponsService] createBirthdayCoupon failed', err);
       return { success: false, message: 'Failed to create coupon' };
     }
   }
@@ -259,7 +260,7 @@ export const createTierUpgradeCoupon = webMethod(
         expiresIn: '14 days',
       };
     } catch (err) {
-      console.error('Error creating tier upgrade coupon:', err);
+      logError('[couponsService] createTierUpgradeCoupon failed', err);
       return { success: false, message: 'Failed to create coupon' };
     }
   }
@@ -367,7 +368,7 @@ export const generateRecoveryCoupon = webMethod(
         expiresAt: expiresAtISO,
       };
     } catch (err) {
-      console.error('[couponsService] generateRecoveryCoupon failed for cartId:', cartId, '— error:', err.message);
+      logError(`[couponsService] generateRecoveryCoupon failed cartId=${cartId}`, err);
       return { success: false, message: 'Failed to generate recovery coupon' };
     }
   }
@@ -434,7 +435,7 @@ export const createCartRecoveryCoupon = webMethod(
         expiresIn: '48 hours',
       };
     } catch (err) {
-      console.error('Error creating cart recovery coupon:', err);
+      logError('[couponsService] createCartRecoveryCoupon failed', err);
       return { success: false, message: 'Failed to create coupon' };
     }
   }
