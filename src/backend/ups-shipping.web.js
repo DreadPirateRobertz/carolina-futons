@@ -94,6 +94,19 @@ export function getFreeShippingThreshold() {
   return _freeShippingThresholdCache;
 }
 
+/**
+ * @internal cf-t8k1.fu1 — reset the lazy-init caches between tests.
+ *
+ * Mirrors the precedent set by miquella's cf-t8k1.fu2 PR #1367
+ * (internationalShipping `__resetCacheForTests`). Lets a single test file
+ * exercise both the empty-mock + populated-mock contracts without
+ * vi.resetModules ceremony. Production callers should never need this.
+ */
+export function __resetCacheForTests() {
+  _originAddressCache = null;
+  _freeShippingThresholdCache = null;
+}
+
 // ── OAuth 2.0 Token Management ──────────────────────────────────────
 
 let cachedToken = null;
