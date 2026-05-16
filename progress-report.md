@@ -1,5 +1,40 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 00:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:28 MT**
+
+## Session 2026-05-16 — Ongoing Merge Drain
+
+### Merged this session
+| PR | Repo | Title |
+|----|------|-------|
+| cfutons #1362 | cfutons | feat(cf-6amf.1): wave-audit sub-classify by commit prefix + p1/p2/p3 |
+| cfutons #1364 | cfutons | fix(cf-t8k1.fu1)(P2): lazy-init ups-shipping (getters) |
+| cfutons #1359 | cfutons | docs(cf-6amf-pilot): first live wave-audit run (34 PRs) |
+| cfw #693 | cfw | chore(ci): coverage ratchet |
+
+### Closed stale/duplicate PRs
+- cfw #692 (stale ratchet — conflict, superseded by #693)
+- cfutons #1369 (duplicate of #1368 — had spurious package-lock.json change)
+
+### PRs pending CI
+| PR | Repo | Status |
+|----|------|--------|
+| cfw #651 | cfw | a11y wave5 — lint fixed (c3d7096), CI re-running |
+| cfutons #1367 | cfutons | cf-t8k1.fu2 lazy-init internationalShipping — CI queued (split-test fix) |
+| cfutons #1368 | cfutons | cf-44qt silent-failure cleanup — CI running; needs rebase after #1367 merges |
+
+### 5-crew reviews posted
+- #1362 ✅ (APPROVED — fold update absorbed all findings)
+- #1364 ✅ (miquella + rennala + blaidd; radahn + godfrey already posted)
+- #1367 ✅ (radahn + godfrey + rennala + blaidd; morgott already posted)
+- #1368 ✅ (all 5 + rebase warning)
+- #1359 ✅ (docs-only, all CI green)
+- cfw #651 ✅ (godfrey + morgott + blaidd + rennala + PM)
+
+### Blocked / gated
+- cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
+- cfutons #1360 (auto-merge design proposal): mayor-discussion gated, not merging
+
+---
 
 ## WAVE 32 COMPLETE — Both Queues Clear (00:50 MT)
 
