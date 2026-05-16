@@ -48,6 +48,25 @@
 | #598 | ✅ | lint🔄 e2e🔄 | cf-snil cart coupon entry P1 |
 | #592 | ❌ | CLOSED | cf-2oku broken version (dark:text-cf-cream/80 regression) |
 
+### Wave 32b cfw PRs — reviewed 2026-05-16 00:30 MT (all 5/5 APPROVE)
+| PR | 5/5 | Notes |
+|----|-----|-------|
+| #599 | ✅ | cf-eqaj compare-change-error (19 tests, self-heal on parse-error) |
+| #601 | ✅ | cf-lmwq a11y wave 2 — PLPControls + ProductCard focus-visible |
+| #602 | ✅ | cf-f9o1 customTextFields defense + addItemAction Sentry |
+| #603 | ✅ | cfw-0nt guest returns API POST /api/returns/submit |
+| #604 | ✅ | cf-94l search pagination (build on #597) |
+| #605 | ✅ | cf-978m a11y wave 3 — PLPPagination + GiftCardPicker + PhotoSubmitForm |
+| #606 | ✅ | cfw-9to /returns/start + StartReturnForm |
+| #607 | ✅ | coverage ratchet (+3 statements/branches/functions, +4 lines) |
+| #609 | ✅ | cf-8ys6 sibling cart Sentry — merge after #602 |
+| #610 | ✅ | cfw-lgc OrderWarrantyCta on /order-confirmation |
+| #612 | ✅ | cfw-di0 /refund-policy → permanentRedirect(/returns) |
+| #608 | ❌ | CLOSED — duplicate of #609 |
+| #611 | ⚠️ | DUPLICATE of #609 — close before merge |
+
+CF repo #1346 ✅ MERGED: cf-hpwy v5 detector (morgott) — DEAD=0 confirmed, 3 FP blind spots closed
+
 ### In-review (CF repo, will merge on CI green)
 | PR | Reviews | Notes |
 |----|---------|-------|
