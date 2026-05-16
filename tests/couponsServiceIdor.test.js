@@ -255,10 +255,10 @@ describe('MemberCoupons insert failure is non-blocking', () => {
 
     expect(result.success).toBe(true);
     expect(result.code).toBe('TEST-ABCDEF');
+    // cf-44qt sibling: console.error now routes through logError which
+    // delegates to console.error with a bracketed [context] + message shape.
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('MemberCoupons insert failed'),
-      expect.anything(),
-      expect.stringContaining(':'),
+      expect.stringContaining('[couponsService] createWelcomeCoupon MemberCoupons-insert failed'),
       expect.stringContaining('DB down'),
     );
     errorSpy.mockRestore();
