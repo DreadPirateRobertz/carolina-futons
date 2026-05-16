@@ -34,7 +34,7 @@ Add `gh pr merge --auto --squash` to the auto-ratchet workflow IF AND ONLY IF th
 1. **Single-file diff:** only `scripts/cf-dead-routes/baseline.json` changed. No other source files, tests, workflows, or docs.
 2. **Downward only:** verified by re-running `decide_ratchet()` on the PR's tree state; result must be a ratchet decision (not None).
 3. **Tests still pass:** the full cf-dead-routes pytest suite runs in the same workflow + passes.
-4. **5 distinct crew APPROVED reviews:** queried via `gh pr view --json reviewRequests,reviews` — count distinct authors with APPROVED state.
+4. **5 distinct crew APPROVED reviews:** counted by parsing review **bodies** for agent footers (`— <agent>` lines) — NOT by `reviews[].author.login`, since all crew share the `DreadPirateRobertz` GitHub account. The eligibility check must enumerate review bodies via `gh pr view --json reviews --jq '.reviews[].body'`, regex-match the `— <agent>$` footer, deduplicate, and require ≥ 5 distinct agent names. **(millicent concern #1 — load-bearing.)** Without this rewrite, criterion #4 fails on every shared-account PR.
 5. **No REQUEST-CHANGES outstanding:** any open REQUEST-CHANGES blocks auto-merge regardless of approval count.
 
 If any criterion fails, the workflow stops at "open PR" — no auto-merge.
@@ -96,8 +96,11 @@ cf-69fi.fu3 eligibility pr=<N> single-file=<bool> downward=<bool> tests=<bool> a
 
 1. **Reviewer drift:** could 5 reviewers approve a non-ratchet PR by mistake? (Mitigation: criterion #2 re-runs `decide_ratchet` on the actual tree.)
 2. **Test-fixture pollution:** could the test suite false-pass? (Mitigation: criterion #3 runs the FULL suite, not a subset.)
-3. **Race conditions:** what if a regression lands on main between PR open + auto-merge? (Mitigation: GitHub's `--auto` flag re-checks branch protections at merge time.)
-4. **Audit trail:** can a forensic reviewer reconstruct what was auto-merged + why? (Yes — the PR description includes the live counts + the eligibility-check log line; the bot identity is in commit author.)
+3. **Race conditions:** what if a regression lands on main between PR open + auto-merge? GitHub's `--auto` flag re-checks branch protections at merge time, but this assumes `required_status_checks.strict=true` is configured in cfutons branch-protection rules. **(millicent concern #2.)** The implementation PR must verify this setting via `gh api repos/.../branches/main/protection` and refuse to enable auto-merge if `strict` is false — otherwise `--auto` could fire before required checks turn green on the latest SHA.
+4. **Audit trail:** can a forensic reviewer reconstruct what was auto-merged + why? Partially — the PR description includes the live counts + the eligibility-check log line; the bot identity is in commit author. **But** the `audit-stderr.log` + `results.json` artifacts that motivated the ratchet are retained only **14 days** per the cf-69fi `dead-code-guard.yml` setting. After that, an incident post-mortem looking back at a 3-week-old auto-merged ratchet finds the snapshot gone. **(millicent concern #3.)** Two mitigations to pick between:
+   - **Option α:** bump artifact retention to **90 days** specifically for auto-ratchet artifacts (workflow conditional).
+   - **Option β:** inline the **full bucket tally** (verbatim audit.py stderr) into the auto-ratchet PR description, so the snapshot survives in git history regardless of artifact retention.
+   Option β has the better forensic property (git history is forever) but bloats PR bodies. Option α is cheaper but bounded. The implementation PR should pick one; mayor's preference welcomed.
 
 ### Alternatives
 
