@@ -182,7 +182,7 @@ export const triggerManualOrchestration = webMethod(
       if (options.dryRun) response.dryRun = true;
       return response;
     } catch (err) {
-      logError('contentOrchestrator:triggerManualOrchestration', err);
+      logError('[contentOrchestrator] triggerManualOrchestration failed', err);
       return { success: false, error: err.message || 'Orchestration failed.', scheduled: [] };
     }
   }
@@ -213,7 +213,7 @@ export const triggerEventOrchestration = webMethod(
 
       return { success: true, scheduled: result.scheduled, skipped: result.skipped };
     } catch (err) {
-      logError('contentOrchestrator:triggerEventOrchestration', err);
+      logError('[contentOrchestrator] triggerEventOrchestration failed', err);
       return { success: false, error: err.message || 'Event orchestration failed.', scheduled: [] };
     }
   }
@@ -244,7 +244,7 @@ export const previewOrchestration = webMethod(
 
       return { success: true, planned, wouldSkip: result.skipped };
     } catch (err) {
-      logError('contentOrchestrator:previewOrchestration', err);
+      logError('[contentOrchestrator] previewOrchestration failed', err);
       return { success: false, error: err.message || 'Preview failed.', planned: [] };
     }
   }
@@ -287,7 +287,7 @@ export const getOrchestrationDashboard = webMethod(
         stats,
       };
     } catch (err) {
-      logError('contentOrchestrator:getOrchestrationDashboard', err);
+      logError('[contentOrchestrator] getOrchestrationDashboard failed', err);
       return { success: false, error: err.message || 'Dashboard failed.', pending: [], config: {}, stats: {} };
     }
   }
@@ -310,7 +310,7 @@ export const getOrchestrationHistory = webMethod(
         .find();
       return { success: true, events: result.items };
     } catch (err) {
-      logError('contentOrchestrator:getOrchestrationHistory', err);
+      logError('[contentOrchestrator] getOrchestrationHistory failed', err);
       return { success: false, error: err.message || 'Failed to get history.', events: [] };
     }
   }
@@ -328,7 +328,7 @@ export const getOrchestrationConfig = webMethod(
       const config = await getConfig();
       return { success: true, config };
     } catch (err) {
-      logError('contentOrchestrator:getOrchestrationConfig', err);
+      logError('[contentOrchestrator] getOrchestrationConfig failed', err);
       return { success: false, error: err.message || 'Failed to get config.', config: {} };
     }
   }
@@ -368,7 +368,7 @@ export const updateOrchestrationConfig = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('contentOrchestrator:updateOrchestrationConfig', err);
+      logError('[contentOrchestrator] updateOrchestrationConfig failed', err);
       return { success: false, error: err.message || 'Failed to update config.' };
     }
   }
