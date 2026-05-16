@@ -65,9 +65,11 @@ describe('moderatePhoto — error catch block', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Failed to moderate photo.');
+    // cf-44qt sibling migration: logError wraps the context in another bracket
+    // pair when delegating to console.error — assert the new module-prefix shape.
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[ugcService] Error moderating photo:',
-      expect.any(Error)
+      expect.stringContaining('[ugcService] moderatePhoto failed'),
+      expect.any(String),
     );
   });
 
@@ -84,8 +86,8 @@ describe('moderatePhoto — error catch block', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe('Failed to moderate photo.');
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[ugcService] Error moderating photo:',
-      expect.any(Error)
+      expect.stringContaining('[ugcService] moderatePhoto failed'),
+      expect.any(String),
     );
   });
 });
@@ -160,8 +162,8 @@ describe('getUGCStats — error catch block', () => {
     expect(result.error).toBe('Failed to load stats.');
     expect(result.stats).toEqual({ total: 0, featured: 0, byRoomType: {} });
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[ugcService] Error getting UGC stats:',
-      expect.any(Error)
+      expect.stringContaining('[ugcService] getUGCStats failed'),
+      expect.any(String),
     );
   });
 });

@@ -40,6 +40,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const VALID_ROOM_TYPES = ['living-room', 'bedroom', 'office', 'dorm', 'porch'];
 const VALID_MODERATION_ACTIONS = ['approve', 'reject', 'feature'];
@@ -123,7 +124,7 @@ export const submitUGCPhoto = webMethod(
       const inserted = await wixData.insert('UGCPhotos', record);
       return { success: true, data: inserted };
     } catch (err) {
-      console.error('[ugcService] Error submitting UGC photo:', err);
+      logError('[ugcService] submitUGCPhoto failed', err);
       return { success: false, error: 'Failed to submit photo.' };
     }
   }
@@ -174,7 +175,7 @@ export const getApprovedPhotos = webMethod(
         totalCount: result.totalCount,
       };
     } catch (err) {
-      console.error('[ugcService] Error getting approved photos:', err);
+      logError('[ugcService] getApprovedPhotos failed', err);
       return { success: false, error: 'Failed to load photos.', photos: [], totalCount: 0 };
     }
   }
@@ -231,7 +232,7 @@ export const getBeforeAfterPairs = webMethod(
 
       return { success: true, pairs };
     } catch (err) {
-      console.error('[ugcService] Error getting before/after pairs:', err);
+      logError('[ugcService] getBeforeAfterPairs failed', err);
       return { success: false, error: 'Failed to load before/after pairs.', pairs: [] };
     }
   }
@@ -304,7 +305,7 @@ export const voteForPhoto = webMethod(
 
       return { success: true, voted, voteCount };
     } catch (err) {
-      console.error('[ugcService] Error voting for photo:', err);
+      logError('[ugcService] voteForPhoto failed', err);
       return { success: false, error: 'Failed to process vote.' };
     }
   }
@@ -346,7 +347,7 @@ export const reportPhoto = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[ugcService] Error reporting photo:', err);
+      logError('[ugcService] reportPhoto failed', err);
       return { success: false, error: 'Failed to report photo.' };
     }
   }
@@ -398,7 +399,7 @@ export const moderatePhoto = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[ugcService] Error moderating photo:', err);
+      logError('[ugcService] moderatePhoto failed', err);
       return { success: false, error: 'Failed to moderate photo.' };
     }
   }
@@ -444,7 +445,7 @@ export const getProductUGCPhotos = webMethod(
         totalCount: result.totalCount,
       };
     } catch (err) {
-      console.error('[ugcService] Error getting product UGC photos:', err);
+      logError('[ugcService] getProductUGCPhotos failed', err);
       return { success: false, error: 'Failed to load photos.', photos: [], totalCount: 0 };
     }
   }
@@ -487,7 +488,7 @@ export const getUGCStats = webMethod(
         stats: { total, featured, byRoomType },
       };
     } catch (err) {
-      console.error('[ugcService] Error getting UGC stats:', err);
+      logError('[ugcService] getUGCStats failed', err);
       return {
         success: false,
         error: 'Failed to load stats.',
