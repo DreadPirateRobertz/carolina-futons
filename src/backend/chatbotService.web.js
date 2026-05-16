@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import {
   buildSystemPrompt,
   buildCatalogSummary,
@@ -100,7 +101,7 @@ export async function _callClaude(messages, systemPrompt, apiKey) {
   if (!response.ok) {
     let errBody = '';
     try { errBody = await response.text(); } catch (_) { /* ignore */ }
-    console.error(`[chatbotService] Claude API error ${response.status}:`, errBody);
+    logError(`[chatbotService] Claude API error ${response.status}`, new Error(errBody || String(response.status)));
     return null;
   }
   return response.json();
@@ -161,7 +162,7 @@ export const sendMessage = webMethod(
     }
     if (!flagEnabled) return { enabled: false };
     if (!apiKey) {
-      console.error('[chatbotService] ANTHROPIC_API_KEY is missing or empty');
+      logError('[chatbotService] ANTHROPIC_API_KEY is missing or empty', new Error('missing key'));
       return { error: 'assistant_unavailable' };
     }
 
@@ -182,7 +183,7 @@ export const sendMessage = webMethod(
         .find();
       sessionRecord = res.items[0] || null;
     } catch (err) {
-      console.error('[chatbotService] session query failed:', err?.message);
+      logError('[chatbotService] session query failed', err);
       return { error: 'assistant_unavailable' };
     }
 
@@ -256,7 +257,7 @@ export const sendMessage = webMethod(
     try {
       claudeData = await _callClaude(messagesToSend, systemPrompt, apiKey);
     } catch (err) {
-      console.error('[chatbotService] Claude call threw unexpectedly:', err?.message);
+      logError('[chatbotService] Claude call threw unexpectedly', err);
       return { error: 'assistant_unavailable' };
     }
     if (!claudeData) return { error: 'assistant_unavailable' };
@@ -283,7 +284,7 @@ export const sendMessage = webMethod(
         await wixData.insert(CHAT_SESSIONS, updatedRecord);
       }
     } catch (err) {
-      console.error('[chatbotService] session write failed:', err?.message);
+      logError('[chatbotService] session write failed', err);
     }
 
     // 12. Product suggestions based on user query

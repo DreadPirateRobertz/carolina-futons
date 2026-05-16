@@ -10,6 +10,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Facet metadata cache ────────────────────────────────────────────
 // Caches available filter values per category to avoid re-querying on every
@@ -218,7 +219,7 @@ export const searchProducts = webMethod(
         hasMore: result.totalCount > skip + safeLimit,
       };
     } catch (err) {
-      console.error('searchProducts error:', err);
+      logError('[categorySearch] searchProducts failed', err);
       return { items: [], totalCount: 0, hasMore: false };
     }
   }
@@ -287,7 +288,7 @@ export const getFilteredProductCount = webMethod(
       const count = await query.count();
       return { count };
     } catch (err) {
-      console.error('getFilteredProductCount error:', err);
+      logError('[categorySearch] getFilteredProductCount failed', err);
       return { count: 0 };
     }
   }
@@ -395,7 +396,7 @@ export const getFacetMetadata = webMethod(
       setCachedFacets(cacheKey, facets);
       return facets;
     } catch (err) {
-      console.error('getFacetMetadata error:', err);
+      logError('[categorySearch] getFacetMetadata failed', err);
       return {
         totalProducts: 0,
         priceRange: { min: 0, max: 0 },
@@ -496,7 +497,7 @@ export const suggestFilterRelaxation = webMethod(
 
       return { suggestions };
     } catch (err) {
-      console.error('suggestFilterRelaxation error:', err);
+      logError('[categorySearch] suggestFilterRelaxation failed', err);
       return { suggestions: [] };
     }
   }

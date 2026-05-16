@@ -20,6 +20,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ──────────────────────────────────────────────────────
 
@@ -269,7 +270,7 @@ export const trackCheckoutStep = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[checkoutOptimization] Error tracking checkout step:', err);
+      logError('[checkoutOptimization] trackCheckoutStep failed', err);
       return { success: false, error: 'Failed to track checkout step.' };
     }
   }
@@ -311,7 +312,7 @@ export const getAbandonmentRate = webMethod(
         },
       };
     } catch (err) {
-      console.error('[checkoutOptimization] Error getting abandonment rate:', err);
+      logError('[checkoutOptimization] getAbandonmentRate failed', err);
       return { success: false, error: 'Failed to calculate abandonment rate.' };
     }
   }
