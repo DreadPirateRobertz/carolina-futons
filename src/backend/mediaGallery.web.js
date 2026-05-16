@@ -33,6 +33,7 @@ import wixData from 'wix-data';
 import { mediaManager } from 'wix-media-backend';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const MEDIA_SYNC_COLLECTION = 'MediaSync';
 const PRODUCTS_COLLECTION = 'Stores/Products';
@@ -204,7 +205,7 @@ export const getProductMedia = webMethod(
         lastSynced: null,
       };
     } catch (err) {
-      console.error('getProductMedia error:', err);
+      logError('[mediaGallery] getProductMedia failed', err);
       return { success: false, error: 'Unable to fetch product media' };
     }
   }
@@ -269,7 +270,7 @@ export const getBatchProductThumbnails = webMethod(
 
       return { success: true, thumbnails };
     } catch (err) {
-      console.error('getBatchProductThumbnails error:', err);
+      logError('[mediaGallery] getBatchProductThumbnails failed', err);
       return { success: false, error: 'Unable to fetch thumbnails' };
     }
   }
@@ -329,7 +330,7 @@ export const listMediaFolder = webMethod(
         totalCount: files.length,
       };
     } catch (err) {
-      console.error('listMediaFolder error:', err);
+      logError('[mediaGallery] listMediaFolder failed', err);
       return { success: false, error: 'Failed to list media folder' };
     }
   }
@@ -359,7 +360,7 @@ export const listMediaFolders = webMethod(
 
       return { success: true, folders };
     } catch (err) {
-      console.error('listMediaFolders error:', err);
+      logError('[mediaGallery] listMediaFolders failed', err);
       return { success: false, error: 'Failed to list media folders' };
     }
   }
@@ -441,7 +442,7 @@ export const syncProductMedia = webMethod(
         lastSynced: now,
       };
     } catch (err) {
-      console.error('syncProductMedia error:', err);
+      logError('[mediaGallery] syncProductMedia failed', err);
       return { success: false, error: 'Failed to sync product media' };
     }
   }
@@ -515,7 +516,7 @@ export const batchSyncMedia = webMethod(
 
       return { success: true, synced, totalProducts: products.items.length };
     } catch (err) {
-      console.error('batchSyncMedia error:', err);
+      logError('[mediaGallery] batchSyncMedia failed', err);
       return { success: false, error: 'Failed to batch sync media' };
     }
   }
@@ -561,7 +562,7 @@ export const getImageUrl = webMethod(
         originalUrl: cleanUrl,
       };
     } catch (err) {
-      console.error('getImageUrl error:', err);
+      logError('[mediaGallery] getImageUrl failed', err);
       return { success: false, error: 'Unable to process image URL' };
     }
   }
@@ -605,7 +606,7 @@ export const getMediaStats = webMethod(
         },
       };
     } catch (err) {
-      console.error('getMediaStats error:', err);
+      logError('[mediaGallery] getMediaStats failed', err);
       return { success: false, error: 'Failed to load media stats' };
     }
   }
