@@ -39,8 +39,8 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validatePhone } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
-import { logError } from 'backend/utils/errorHandler';
 import { validateSchema } from 'backend/utils/validateSchema';
+import { logError } from 'backend/utils/errorHandler';
 import {
   sendWhiteGloveConfirmationSMS,
   sendWhiteGloveReminderSMS,
@@ -149,7 +149,7 @@ export const getWhiteGloveSlots = webMethod(Permissions.Anyone, async (_orderId)
 
     return { success: true, slots };
   } catch (err) {
-    logError('[whiteGloveScheduling] getWhiteGloveSlots failed', err);
+    logError('whiteGloveScheduling:getWhiteGloveSlots', err);
     return { success: false, slots: [], error: 'Could not load available slots.' };
   }
 });
@@ -276,7 +276,7 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
         windowLabel: DELIVERY_WINDOWS[windowKey].label,
         address: sanitize(data.address || '', 200),
         appointmentId: appointment._id,
-      }).catch(err => logError('[whiteGloveScheduling] bookWhiteGloveDelivery SMS-confirmation failed', err));
+      }).catch(err => logError('whiteGloveScheduling:bookWhiteGloveDelivery-smsConfirmation', err));
     }
 
     return {
@@ -289,7 +289,7 @@ export const bookWhiteGloveDelivery = webMethod(Permissions.SiteMember, async (d
       },
     };
   } catch (err) {
-    logError('[whiteGloveScheduling] bookWhiteGloveDelivery failed', err);
+    logError('whiteGloveScheduling:bookWhiteGloveDelivery', err);
     return { success: false, error: 'Failed to book appointment' };
   }
 });
@@ -332,7 +332,7 @@ export const getMyWhiteGloveAppointment = webMethod(Permissions.SiteMember, asyn
       },
     };
   } catch (err) {
-    logError('[whiteGloveScheduling] getMyWhiteGloveAppointment failed', err);
+    logError('whiteGloveScheduling:getMyWhiteGloveAppointment', err);
     return { success: false, error: 'Could not load appointment' };
   }
 });
@@ -412,7 +412,7 @@ export const rescheduleWhiteGlove = webMethod(Permissions.SiteMember, async (app
       },
     };
   } catch (err) {
-    logError('[whiteGloveScheduling] rescheduleWhiteGlove failed', err);
+    logError('whiteGloveScheduling:rescheduleWhiteGlove', err);
     return { success: false, error: 'Failed to reschedule appointment' };
   }
 });
@@ -451,7 +451,7 @@ export const blockDeliveryDate = webMethod(Permissions.Admin, async (date, reaso
     logAuditEvent('BlockedDeliveryDates', 'block', dateStr, { reason });
     return { success: true, data: { blockedDate: dateStr } };
   } catch (err) {
-    logError('[whiteGloveScheduling] blockDeliveryDate failed', err);
+    logError('whiteGloveScheduling:blockDeliveryDate', err);
     return { success: false, error: 'Failed to block date' };
   }
 });
@@ -481,7 +481,7 @@ export const unblockDeliveryDate = webMethod(Permissions.Admin, async (date) => 
     logAuditEvent('BlockedDeliveryDates', 'unblock', dateStr, {});
     return { success: true };
   } catch (err) {
-    logError('[whiteGloveScheduling] unblockDeliveryDate failed', err);
+    logError('whiteGloveScheduling:unblockDeliveryDate', err);
     return { success: false, error: 'Failed to unblock date' };
   }
 });
@@ -510,7 +510,7 @@ export const getBlockedDates = webMethod(Permissions.Admin, async () => {
       })),
     };
   } catch (err) {
-    logError('[whiteGloveScheduling] getBlockedDates failed', err);
+    logError('whiteGloveScheduling:getBlockedDates', err);
     return { success: false, data: [], error: 'Could not load blocked dates' };
   }
 });
@@ -556,7 +556,7 @@ export const getAdminCalendar = webMethod(Permissions.Admin, async (startDate, e
       })),
     };
   } catch (err) {
-    logError('[whiteGloveScheduling] getAdminCalendar failed', err);
+    logError('whiteGloveScheduling:getAdminCalendar', err);
     return { success: false, data: [], error: 'Could not load calendar' };
   }
 });
@@ -633,13 +633,13 @@ export const runWhiteGlove48hReminders = webMethod(
           sent++;
         } else {
           skipped++;
-          logError(`[whiteGloveScheduling] runWhiteGlove48hReminders SMS-send failed appt=${appt._id}`, new Error(String(smsResult.reason || 'unknown')));
+          logError(`whiteGloveScheduling:runWhiteGlove48hReminders-smsPerAppt appt=${appt._id} reason=${smsResult.reason}`, null);
         }
       }
 
       return { success: true, sent, skipped };
     } catch (err) {
-      logError('[whiteGloveScheduling] runWhiteGlove48hReminders failed', err);
+      logError('whiteGloveScheduling:runWhiteGlove48hReminders', err);
       return { success: false, sent: 0, skipped: 0 };
     }
   }
@@ -683,13 +683,13 @@ export const runWhiteGloveDayOfReminders = webMethod(
           sent++;
         } else {
           skipped++;
-          logError(`[whiteGloveScheduling] runWhiteGloveDayOfReminders SMS-send failed appt=${appt._id}`, new Error(String(smsResult.reason || 'unknown')));
+          logError(`whiteGloveScheduling:runWhiteGloveDayOfReminders-smsPerAppt appt=${appt._id} reason=${smsResult.reason}`, null);
         }
       }
 
       return { success: true, sent, skipped };
     } catch (err) {
-      logError('[whiteGloveScheduling] runWhiteGloveDayOfReminders failed', err);
+      logError('whiteGloveScheduling:runWhiteGloveDayOfReminders', err);
       return { success: false, sent: 0, skipped: 0 };
     }
   }
