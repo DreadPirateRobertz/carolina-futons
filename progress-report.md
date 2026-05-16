@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:35 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:50 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -65,7 +65,14 @@
 ### Blocked / gated
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
 - cfutons #1360 (auto-merge design proposal): mayor-discussion gated, not merging
-- cfw #704: MERGED ✅ — cf-0oj5 bead closed. Lighthouse verification on next Vercel deploy.
+- cfw #704: MERGED ✅ — cf-0oj5 closed. BUT: godfrey verified ISR not working (layout cookies() opt-out). cf-0klm (P2) escalated to mayor for A/B/C decision.
+
+### New escalation — cf-0klm (P2) ISR blocker
+- layout.tsx + ConsentMode.tsx both call cookies() → entire route tree opts out of ISR
+- Godfrey spike complete: static "all denied" default → client gtag('consent','update') post-hydration
+- Mayor decision pending: (A) consent extraction now, (B) next/image only, (C) defer post-cutover
+- Rennala on standby for Option A implementation; morgott investigating Track 3 (generateStaticParams)
+- blaidd shipping cf-h345.t1 (Sentry revalidateReason tag, 5-line fix)
 
 ---
 
