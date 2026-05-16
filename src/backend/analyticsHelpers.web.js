@@ -20,6 +20,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Track a product page view for analytics and "popular products" features.
@@ -74,7 +75,7 @@ export const trackProductView = webMethod(
       }
     } catch (err) {
       // Analytics tracking is non-critical — log but don't throw
-      console.error('Analytics tracking error:', err);
+      logError('[analyticsHelpers] trackProductView failed', err);
     }
   }
 );
@@ -107,7 +108,7 @@ export const trackAddToCart = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      console.error('Cart tracking error:', err);
+      logError('[analyticsHelpers] trackAddToCart failed', err);
     }
   }
 );
@@ -143,7 +144,7 @@ export const trackSocialShare = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      console.error('Social share tracking error:', err);
+      logError('[analyticsHelpers] trackSocialShare failed', err);
     }
   }
 );
@@ -198,7 +199,7 @@ export const getMostViewedProducts = webMethod(
         })
         .filter(Boolean);
     } catch (err) {
-      console.error('Error fetching most viewed:', err);
+      logError('[analyticsHelpers] getMostViewedProducts failed', err);
       return [];
     }
   }
@@ -253,7 +254,7 @@ export const getTrendingProducts = webMethod(
         })
         .filter(Boolean);
     } catch (err) {
-      console.error('Error fetching trending:', err);
+      logError('[analyticsHelpers] getTrendingProducts failed', err);
       return [];
     }
   }
@@ -451,7 +452,7 @@ export const trackPurchase = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      console.error('Purchase tracking error:', err);
+      logError('[analyticsHelpers] trackPurchase failed', err);
     }
   }
 );
