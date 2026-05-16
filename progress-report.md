@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 04:50 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 05:25 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -66,6 +66,11 @@
 - cf-tm1e (hooked bead): /referral parity audit — blocked on Stilgar visual check
 - cfutons #1360 (auto-merge design proposal): mayor-discussion gated, not merging
 - cfw #704: MERGED ✅ — cf-0oj5 closed. BUT: godfrey verified ISR not working (layout cookies() opt-out). cf-0klm (P2) escalated to mayor for A/B/C decision.
+- cfw #706: MERGED ✅ — cf-h345.t1 Sentry revalidateReason tag (blaidd, 11 LOC + 5 tests)
+- cfw #705: cf-0klm design doc — fully green, 5-crew reviewed, MAYOR-GATED (do not merge until Option A signal)
+- cf-c736 (P3) filed: generateStaticParams feasible but blocked on cf-0klm
+- cf-z901 CLOSED: triggerTransactionalEmail = webhook-driven spec bug (godfrey confirmed)
+- Crew: blaidd + morgott back on bd ready; rennala standby for cf-0klm Option A
 
 ### New escalation — cf-0klm (P2) ISR blocker
 - layout.tsx + ConsentMode.tsx both call cookies() → entire route tree opts out of ISR
