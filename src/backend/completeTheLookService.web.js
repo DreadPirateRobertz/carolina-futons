@@ -9,6 +9,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateId, isWixMediaUrl } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'CompleteTheLook';
 const MAX_ITEMS = 12;
@@ -50,7 +51,7 @@ export const getCompleteTheLook = webMethod(
         roomItems: normalizeItems(look.roomItems),
       };
     } catch (err) {
-      console.error('[completeTheLookService] getCompleteTheLook failed', err);
+      logError('[completeTheLookService] getCompleteTheLook', err);
       return null;
     }
   }
@@ -79,7 +80,7 @@ export const createLook = webMethod(
       }, { suppressAuth: true });
       return { success: true, look };
     } catch (err) {
-      console.error('[completeTheLookService] createLook failed', err);
+      logError('[completeTheLookService] createLook', err);
       return { success: false, error: 'insert-failed' };
     }
   }
@@ -115,7 +116,7 @@ export const updateLook = webMethod(
       }, { suppressAuth: true });
       return { success: true, look };
     } catch (err) {
-      console.error('[completeTheLookService] updateLook failed', err);
+      logError('[completeTheLookService] updateLook', err);
       return { success: false, error: 'update-failed' };
     }
   }

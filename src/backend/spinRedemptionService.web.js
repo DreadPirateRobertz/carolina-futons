@@ -15,6 +15,7 @@
  */
 
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 export const SPIN_GRANTS_COLLECTION = 'SpinGrants';
 const SPIN_EXPIRY_DAYS = 30;
@@ -44,7 +45,7 @@ export async function grantSpin(memberId) {
     );
     return { success: true, spinId: item._id };
   } catch (err) {
-    console.error('[spinRedemptionService] grantSpin error:', err);
+    logError('[spinRedemptionService] grantSpin', err);
     return { success: false, error: err.message };
   }
 }
@@ -66,7 +67,7 @@ export async function getPendingSpins(memberId) {
       .find({ suppressAuth: true });
     return result.items;
   } catch (err) {
-    console.error('[spinRedemptionService] getPendingSpins error:', err);
+    logError('[spinRedemptionService] getPendingSpins', err);
     return [];
   }
 }
@@ -96,7 +97,7 @@ export async function redeemSpin(memberId, spinId, { reward, rewardValue }) {
     );
     return { success: true };
   } catch (err) {
-    console.error('[spinRedemptionService] redeemSpin error:', err);
+    logError('[spinRedemptionService] redeemSpin', err);
     return { success: false, error: err.message };
   }
 }
