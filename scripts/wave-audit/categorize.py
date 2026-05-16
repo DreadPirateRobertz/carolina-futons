@@ -162,8 +162,15 @@ _COMMIT_PREFIX_RE = re.compile(
 # radahn dim-#4 trigger for spy-assertion priority. A `feat()` PR
 # touching any of these is flagged priority-1 in the deep-audit
 # queue. Keep narrow: external SDKs only, not internal helpers.
+#
+# code-reviewer cf-6amf.1 5-lens fix: trailing `/` boundary on the
+# `lib/<sdk>/` prefixes so `src/lib/wixHelpers.ts` /
+# `src/lib/wix-utils/foo.ts` / `src/lib/wixinternal/x.ts` do NOT
+# false-positive — only the actual SDK dirs match. The `api/.+/route`
+# pattern with `.+` (was `[^/]+`) admits nested routes like
+# `src/api/checkout/session/route.ts`.
 _SDK_CALLSITE_RE = re.compile(
-    r"^src/(?:lib/wix|lib/stripe|lib/twilio|api/[^/]+/route\.(?:ts|tsx))"
+    r"^src/(?:lib/(?:wix|stripe|twilio)/|api/.+/route\.(?:ts|tsx)$)"
 )
 
 
@@ -197,12 +204,24 @@ def deep_audit_priority(pr: dict) -> str:
     ``"p3"`` — ``refactor(...)`` / ``chore(...)`` / ``perf(...)`` /
         anything else. Narrower surface, can be batched.
 
-    Only meaningful for substantive PRs; calling on a non-substantive
-    PR returns ``"p3"`` (the safest disposition).
+    **Substantive-only**: the function gates on
+    ``categorize(pr) == "substantive"`` and returns ``"p3"`` for any
+    PR that doesn't reach the substantive bucket (pure-docs /
+    test-only / trivial / housekeeping). Prior to cf-6amf.1 5-lens
+    fix #2 the function classified raw prefix → p1/p2/p3 regardless
+    of category, so a ``feat:``-prefixed docs-only PR would land at
+    p2 — masking that the audit shouldn't even run on it. Callers
+    via ``deep_audit_priority_histogram`` were unaffected because
+    that helper already pre-filters substantive; this tightening
+    closes the gap for direct callers.
 
     :param pr: The PR record (mirrors ``gh pr list --json files,...`` shape).
     :returns: Priority tier as a lowercase string.
     """
+    # cf-6amf.1 5-lens fix #2 (comment-analyzer): gate on category so
+    # the docstring claim "non-substantive returns p3" matches impl.
+    if categorize(pr) != "substantive":
+        return "p3"
     prefix = commit_prefix(pr.get("title"))
     file_paths = [f["path"] for f in pr.get("files", [])]
     if prefix == "feat" and any(_SDK_CALLSITE_RE.match(p) for p in file_paths):

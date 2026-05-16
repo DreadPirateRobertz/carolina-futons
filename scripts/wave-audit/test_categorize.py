@@ -379,3 +379,166 @@ def test_deep_audit_priority_histogram_empty():
     cat = _import_cat()
     h = cat.deep_audit_priority_histogram([])
     assert h == {"p1": 0, "p2": 0, "p3": 0}
+
+
+# ── cf-6amf.1 5-lens fold: word-boundary + SDK-path + category gate ────────
+
+
+def test_commit_prefix_rejects_word_boundary_drift_feature():
+    cat = _import_cat()
+    # `feature:` is NOT a conventional-commit prefix — must reject.
+    assert cat.commit_prefix("feature: misuse") == "other"
+
+
+def test_commit_prefix_rejects_word_boundary_drift_fixed():
+    cat = _import_cat()
+    assert cat.commit_prefix("fixed: past tense") == "other"
+
+
+def test_commit_prefix_rejects_word_boundary_drift_testing():
+    cat = _import_cat()
+    assert cat.commit_prefix("testing: gerund") == "other"
+
+
+def test_commit_prefix_rejects_word_boundary_drift_perfect():
+    cat = _import_cat()
+    assert cat.commit_prefix("perfect: prose") == "other"
+
+
+def test_commit_prefix_rejects_word_boundary_drift_styles():
+    cat = _import_cat()
+    assert cat.commit_prefix("styles: plural") == "other"
+
+
+def test_commit_prefix_rejects_word_boundary_drift_choreography():
+    cat = _import_cat()
+    assert cat.commit_prefix("choreography: noun") == "other"
+
+
+def test_sdk_callsite_re_rejects_wixHelpers():
+    cat = _import_cat()
+    # `wixHelpers.ts` is an internal helper, NOT the wix SDK call site.
+    pr = _pr_with_title(
+        1, "feat: a", ["src/lib/wixHelpers.ts"],
+    )
+    # Must NOT classify as p1 — internal helper isn't the SDK boundary.
+    assert cat.deep_audit_priority(pr) == "p2"
+
+
+def test_sdk_callsite_re_rejects_wix_utils():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        1, "feat: b", ["src/lib/wix-utils/foo.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p2"
+
+
+def test_sdk_callsite_re_rejects_wixinternal():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        1, "feat: c", ["src/lib/wixinternal/x.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p2"
+
+
+def test_sdk_callsite_re_accepts_lib_wix_subpath():
+    cat = _import_cat()
+    # The actual SDK call site lives under `src/lib/wix/` (trailing /).
+    pr = _pr_with_title(
+        1, "feat: d", ["src/lib/wix/cart.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p1"
+
+
+def test_sdk_callsite_re_accepts_nested_api_route():
+    cat = _import_cat()
+    # Nested API routes (e.g. /api/checkout/session/route.ts) MUST match.
+    pr = _pr_with_title(
+        1, "feat: e", ["src/api/checkout/session/route.ts"],
+    )
+    assert cat.deep_audit_priority(pr) == "p1"
+
+
+# ── cf-6amf.1 5-lens fold: deep_audit_priority is substantive-only ─────────
+
+
+def test_deep_audit_priority_returns_p3_for_pure_docs_pr():
+    cat = _import_cat()
+    # A `feat:`-prefixed docs-only PR is still pure-docs by category.
+    # Prior to the fold this returned p2 (raw prefix), contradicting
+    # the docstring. After the fold it returns p3.
+    pr = _pr_with_title(
+        1, "feat: docs only", ["docs/x.md"],
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+def test_deep_audit_priority_returns_p3_for_test_only_pr():
+    cat = _import_cat()
+    pr = _pr_with_title(
+        1, "feat: test-only", ["tests/x.test.js"],
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+def test_deep_audit_priority_returns_p3_for_trivial_pr():
+    cat = _import_cat()
+    # Tiny code-touching PR is trivial, not substantive.
+    pr = _pr_with_title(
+        1, "feat: trivial", ["src/lib/foo.ts"], additions=3, deletions=1,
+    )
+    assert cat.deep_audit_priority(pr) == "p3"
+
+
+# ── cf-6amf.1 5-lens fold: wave_audit.render integration smoke ─────────────
+
+
+def test_wave_audit_render_includes_sub_histogram_when_substantive_present():
+    # Import the renderer the same way wave-audit.sh does.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "wave_audit_module", HERE / "wave_audit.py",
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    prs = [
+        _pr_with_title(1, "feat(cf-x): SDK callsite", ["src/lib/wix/cart.ts"]),
+        _pr_with_title(2, "fix(cf-y): inner", ["src/lib/foo.ts"]),
+        _pr_with_title(3, "chore(cf-z): clean", ["src/lib/foo.ts"]),
+    ]
+    rendered = mod.render(prs)
+
+    # New sub-histogram section appears
+    assert "Substantive sub-histogram" in rendered
+    # New priority panel appears with the 3-tier table
+    assert "Deep-audit priority" in rendered
+    assert "**p1**" in rendered
+    assert "**p2**" in rendered
+    assert "**p3**" in rendered
+    # Per-row tier annotation appears (`[p1]`, `[p2]`, `[p3]`)
+    assert "[`p1`]" in rendered
+    assert "[`p2`]" in rendered
+    assert "[`p3`]" in rendered
+
+
+def test_wave_audit_render_omits_sub_histogram_when_no_substantive():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "wave_audit_module", HERE / "wave_audit.py",
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    prs = [
+        _pr_with_title(1, "docs: only", ["docs/x.md"]),
+        _pr_with_title(2, "test: only", ["tests/y.test.js"]),
+    ]
+    rendered = mod.render(prs)
+
+    # No substantive ⇒ the empty-state message instead of the new
+    # sub-histogram/priority tables.
+    assert "_No substantive PRs in this window" in rendered
+    assert "Substantive sub-histogram" not in rendered
