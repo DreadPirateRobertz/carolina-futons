@@ -1,5 +1,5 @@
 # CF Project Progress Report
-**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:18 MT**
+**Auto-refreshed every 10 min | Last updated: 2026-05-16 06:50 MT**
 
 ## Session 2026-05-16 — Ongoing Merge Drain (continued)
 
@@ -36,6 +36,10 @@
 | cfutons #1386 | cfutons | fix(cf-44qt sibling): smsService logError×14 ✅ (merged 06:16 MT, all CI green) |
 | cfw #714 | cfw | feat(cf-0klm): ISR unlock Option A — lint FAILING, rennala on fix |
 | cf-2zul | — | events.js logError 2-PR split — filed, assigned morgott |
+| cfutons #1387 | cfutons | fix(cf-44qt sibling): emailService.web.js logError×10 ✅ (merged 06:24 MT) |
+| cfutons #1388 | cfutons | fix(cf-44qt sibling): deliveryScheduling.web.js logError×10 ✅ (merged 06:49 MT) |
+| cf-7y6f | cfw | perf(cf-sd80.fu2): HomeCategoryGridV9 image-priority — filed, assigned blaidd |
+| cfw #714 | cfw | feat(cf-0klm): BLOCKED 40+ min — rennala/godfrey not responding; escalated to mayor |
 
 ### Closed stale/duplicate PRs
 - cfw #692, #701 (duplicates/stale)
