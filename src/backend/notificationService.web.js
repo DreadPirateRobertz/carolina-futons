@@ -80,7 +80,7 @@ export const recordPriceSnapshots = webMethod(
 
       return { recorded };
     } catch (err) {
-      console.error('[notificationService] Error recording price snapshots:', err);
+      logError('[notificationService] recordPriceSnapshots failed', err);
       return { recorded: 0, error: 'Failed to record price snapshots' };
     }
   }
@@ -158,7 +158,7 @@ export const checkWishlistAlerts = webMethod(
 
       return { priceDropAlerts, backInStockAlerts };
     } catch (err) {
-      console.error('[notificationService] Error checking wishlist alerts:', err);
+      logError('[notificationService] checkWishlistAlerts failed', err);
       return { priceDropAlerts: 0, backInStockAlerts: 0, error: 'Failed to check alerts' };
     }
   }
@@ -230,11 +230,11 @@ async function notifyWishlistMembers(product, alertType, alertData) {
           sent++;
         }
       } catch (memberErr) {
-        console.error(`[notificationService] Error notifying member ${entry.memberId}:`, memberErr);
+        logError(`[notificationService] notifyWishlistMembers member-${entry.memberId} failed`, memberErr);
       }
     }
   } catch (err) {
-    console.error('[notificationService] Error in notifyWishlistMembers:', err);
+    logError('[notificationService] notifyWishlistMembers failed', err);
   }
 
   return sent;
@@ -294,7 +294,7 @@ async function sendAlert(memberId, product, alertType, alertData) {
 
     return true;
   } catch (err) {
-    console.error(`[notificationService] Error sending ${alertType} alert:`, err);
+    logError(`[notificationService] sendAlert-${alertType} failed`, err);
     return false;
   }
 }
@@ -327,7 +327,7 @@ export const toggleProductAlerts = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[notificationService] Error toggling product alerts:', err);
+      logError('[notificationService] toggleProductAlerts failed', err);
       return { success: false };
     }
   }
@@ -403,7 +403,7 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
     } catch (err) {
-      console.error('[notificationService] writeNotification dedup check failed:', err);
+      logError('[notificationService] writeNotification milestone-dedup failed', err);
     }
   }
 
@@ -418,7 +418,7 @@ async function writeNotification(memberId, type, message, extra = {}) {
         .find({ suppressAuth: true });
       if (existing.items.length > 0) return;
     } catch (err) {
-      console.error('[notificationService] writeNotification dedup check failed:', err);
+      logError('[notificationService] writeNotification streak-dedup failed', err);
     }
   }
 
@@ -429,7 +429,7 @@ async function writeNotification(memberId, type, message, extra = {}) {
     const queued = await enqueueNotification({ userId: memberId, type, payload: { memberId, type, message, extra } });
     queuedId = queued._id;
   } catch (err) {
-    console.error('[notificationService] writeNotification enqueue failed:', err);
+    logError('[notificationService] writeNotification enqueue failed', err);
     // If we cannot queue, fall through to best-effort direct insert
   }
 
