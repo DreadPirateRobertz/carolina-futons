@@ -17,14 +17,18 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 import { validateId } from 'backend/utils/sanitize';
+import { logError as _logErrorCanonical } from 'backend/utils/errorHandler';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 
 const STYLING_CALL_BOOKING_URL = 'https://calendly.com/carolinafutons-brenda/styling-call';
 
+// cf-44qt: thin wrapper that prefixes [rewardEngine] to keep the
+// existing (msg, err) call-site signature unchanged. Routes through
+// the canonical logError so Sentry/logging see a uniform shape.
 function logError(msg, err) {
-  console.error(`[rewardEngine] ${msg}`, err?.message ?? err ?? '');
+  _logErrorCanonical(`[rewardEngine] ${msg}`, err);
 }
 
 /**

@@ -13,6 +13,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateSlug } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Get the currently active promotion, if any.
@@ -79,7 +80,7 @@ export const getActivePromotion = webMethod(
         products,
       };
     } catch (err) {
-      console.error('Error fetching active promotion:', err);
+      logError('[promotions] getActivePromotion', err);
       return null;
     }
   }
@@ -134,7 +135,7 @@ export const getFlashSales = webMethod(
         ctaText: promo.ctaText,
       }));
     } catch (err) {
-      console.error('Error fetching flash sales:', err);
+      logError('[promotions] getFlashSales', err);
       return [];
     }
   }
