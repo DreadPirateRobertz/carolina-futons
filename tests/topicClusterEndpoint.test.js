@@ -39,7 +39,12 @@ vi.mock('backend/seoHelpers.web', () => ({
 vi.mock('wix-data', () => ({
   default: { query: vi.fn(() => ({ find: vi.fn(() => Promise.resolve({ items: [], totalCount: 0 })) })) },
 }));
-vi.mock('public/sharedTokens', () => ({ colors: {} }));
+vi.mock('public/sharedTokens', () => ({
+  colors: {},
+  brand: { name: 'Carolina Futons' },
+  business: { phoneDigits: '0000000000', address: { street: '1 Test St', city: 'Test', state: 'TS', zip: '00000' } },
+  shippingConfig: { freeThreshold: 0 },
+}));
 vi.mock('backend/facebookCatalog.web', () => ({
   getEnhancedCatalogFields: vi.fn(), exportCustomerAudienceData: vi.fn(),
 }));
