@@ -12,7 +12,19 @@ vi.mock('backend/utils/sanitize', () => ({
     return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLen);
   },
   validateEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+  redactEmail: (email) => {
+    if (typeof email !== 'string' || !email) return '<redacted>';
+    const at = email.indexOf('@');
+    if (at < 0) return '<redacted>';
+    const local = email.slice(0, at);
+    const domain = email.slice(at);
+    if (local.length <= 2) return `*${domain}`;
+    return `${local.slice(0, 2)}***${domain}`;
+  },
 }));
+
+// cf-n3ii: emailAutomation migrated console.warn → canonical logError.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 
 import { __seed, __reset as __resetData, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
@@ -26,6 +38,7 @@ import {
   _checkSendWindow,
   _SEND_WINDOW,
 } from '../src/backend/emailAutomation.web.js';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 beforeEach(() => {
   __resetData();
@@ -529,7 +542,7 @@ describe('cancelSequenceForOrder — missing orderNumber guard', () => {
       },
     ]);
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
 
     // Simulate order cancelled event with missing orderNumber
     await wixEcom_onOrderCanceled({ entity: { buyerInfo: { email: 'buyer@test.com' }, number: '' } });
@@ -541,11 +554,11 @@ describe('cancelSequenceForOrder — missing orderNumber guard', () => {
     const cancellations = updates.filter(u => u.item.status === 'cancelled');
     expect(cancellations).toHaveLength(0);
 
-    // Should have warned
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('cancelSequenceForOrder called without orderNumber')
+    // cf-n3ii: should have logged via canonical logError tag
+    expect(logError).toHaveBeenCalledWith(
+      'emailAutomation:cancelSequenceForOrder-missingOrderNumber',
+      null,
     );
-    warnSpy.mockRestore();
   });
 
   it('cancels only the matching order when orderNumber is provided', async () => {
