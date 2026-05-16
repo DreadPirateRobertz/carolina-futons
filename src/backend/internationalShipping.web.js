@@ -5,7 +5,8 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { sanitize } from 'backend/utils/sanitize';
-import { internationalShippingConfig } from 'public/sharedTokens.js';
+import { logError } from 'backend/utils/errorHandler';
+import { internationalShippingConfig, business } from 'public/sharedTokens.js';
 
 // cf-t8k1.fu2: lazy-init internationalShippingConfig destructure. The
 // pre-fix shape was `const { zones, restrictedCountries,
@@ -94,7 +95,7 @@ export const getShippingZone = webMethod(
       // Not in any named zone — falls to "other"
       return { success: true, zone: 'other', zoneName: zones.other.name };
     } catch (err) {
-      console.error('getShippingZone error:', err);
+      logError('internationalShipping:getShippingZone', err);
       return { success: false, error: 'Failed to determine shipping zone' };
     }
   }
@@ -119,7 +120,7 @@ export const isShippableCountry = webMethod(
       const shippable = !restrictedCountries.includes(code);
       return { success: true, shippable };
     } catch (err) {
-      console.error('isShippableCountry error:', err);
+      logError('internationalShipping:isShippableCountry', err);
       return { success: false, error: 'Failed to check shipping eligibility' };
     }
   }
@@ -197,7 +198,7 @@ export const getInternationalShippingEstimate = webMethod(
         },
       };
     } catch (err) {
-      console.error('getInternationalShippingEstimate error:', err);
+      logError('internationalShipping:getInternationalShippingEstimate', err);
       return { success: false, error: 'Failed to estimate international shipping' };
     }
   }
@@ -272,21 +273,17 @@ export const getInternationalShippingRates = webMethod(
 
       return { success: true, rates, estimated: true };
     } catch (err) {
-      console.error('getInternationalShippingRates error:', err);
-
-      // Fallback rates
+      // cf-44qt: previously this catch returned `success: true` with a
+      // fabricated $199.99 rate, which silently shipped a guessed
+      // price to /checkout on ANY misconfig — and the error went only
+      // to `console.error` (no Sentry). Now: structured failure +
+      // logError so the caller decides whether to surface fallback
+      // pricing, and Sentry traces the root cause.
+      logError('internationalShipping:getInternationalShippingRates', err);
       return {
-        success: true,
-        rates: [
-          {
-            code: 'intl-flat-standard',
-            title: 'International Shipping (Estimated)',
-            cost: 199.99,
-            currency: 'USD',
-            estimatedDays: '14-28',
-          },
-        ],
-        estimated: true,
+        success: false,
+        error: 'Failed to calculate international shipping rates',
+        code: 'INTERNATIONAL_RATE_ERROR',
       };
     }
   }
