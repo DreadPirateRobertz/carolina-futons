@@ -157,12 +157,33 @@ def cell_uptime_robot():
     if MODE == "fixtures":
         data = load_fixture("uptimeRobot")
     else:
-        if not os.environ.get("UPTIMEROBOT_API_KEY"):
+        key = os.environ.get("UPTIMEROBOT_API_KEY")
+        if not key:
             return _unreachable("uptimeRobot", "UPTIMEROBOT_API_KEY not set")
-        # Live impl deferred to follow-up commit once Stilgar provisions
-        # the key. The skipIf-gated live integration test will exercise
-        # the live path when the key lands.
-        return _unreachable("uptimeRobot", "live mode pending Stilgar API key + tier decision")
+        # cf-wv1s: live API wire-up. Pre-positioned so the cell goes
+        # green automatically the moment Stilgar provisions the key.
+        # The skipIf-gated integration test in dashboard.test.js
+        # exercises this path with real creds.
+        #
+        # UptimeRobot v2 is a POST-with-form-body API. urllib's default
+        # is GET, so we hand-build the form-encoded body.
+        from urllib.parse import urlencode
+        url = "https://api.uptimerobot.com/v2/getMonitors"
+        body = urlencode({
+            "api_key": key,
+            "format": "json",
+            "custom_uptime_ratios": "24",  # 24-hour ratio per monitor
+        }).encode()
+        req = urllib.request.Request(
+            url, data=body,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode())
+        except (urllib.error.URLError, urllib.error.HTTPError,
+                TimeoutError, ValueError):
+            return _unreachable("uptimeRobot", "live API call failed")
 
     if data is None:
         return _unreachable("uptimeRobot", "no fixture or live response")
@@ -170,7 +191,18 @@ def cell_uptime_robot():
     if not monitors:
         return _unreachable("uptimeRobot", "no monitors configured")
     active = [m for m in monitors if m.get("status") == 2]
-    uptimes = [float(m.get("custom_uptime_ratio", 0)) for m in monitors]
+    # cf-wv1s: live API returns `custom_uptime_ratios` (plural, comma-
+    # separated string of period uptimes). Fixture tests use
+    # `custom_uptime_ratio` (singular). Tolerate both — first parsable
+    # value wins.
+    uptimes = []
+    for m in monitors:
+        raw = m.get("custom_uptime_ratios") or m.get("custom_uptime_ratio") or "0"
+        first = str(raw).split(",")[0]
+        try:
+            uptimes.append(float(first))
+        except (ValueError, TypeError):
+            uptimes.append(0.0)
     min_uptime = min(uptimes) if uptimes else 0
     if min_uptime >= 99.9 and len(active) == len(monitors):
         status = GREEN
@@ -192,16 +224,49 @@ def cell_sentry():
     if MODE == "fixtures":
         data = load_fixture("sentry")
     else:
-        if not os.environ.get("SENTRY_AUTH_TOKEN"):
+        token = os.environ.get("SENTRY_AUTH_TOKEN")
+        if not token:
             return _unreachable("sentry", "SENTRY_AUTH_TOKEN not set")
-        # Live impl deferred to follow-up commit (gated on Stilgar
-        # Sentry production connection). Live test it.skipIf-gated.
-        return _unreachable("sentry", "live mode pending Stilgar Sentry connection")
+        # cf-wv1s: live API wire-up. SENTRY_ORG and SENTRY_PROJECT_SLUG
+        # come from env (Stilgar provisions alongside the token); we
+        # fall back to a sentinel if absent so the cell renders ❔
+        # instead of querying a bogus URL.
+        org = os.environ.get("SENTRY_ORG")
+        project = os.environ.get("SENTRY_PROJECT_SLUG")
+        if not org or not project:
+            return _unreachable(
+                "sentry",
+                "SENTRY_ORG and SENTRY_PROJECT_SLUG must be set alongside SENTRY_AUTH_TOKEN",
+            )
+        url = (
+            f"https://sentry.io/api/0/projects/{org}/{project}/issues/"
+            "?statsPeriod=24h&query=is:unresolved%20level:error&limit=20"
+        )
+        data_raw = _http_get(url, {"Authorization": f"Bearer {token}"})
+        if data_raw is None:
+            return _unreachable("sentry", "live API call failed")
+        # Sentry returns a flat array of issues, not the {issues, errorRatePerMin}
+        # shape the fixtures use. Normalize to the fixture shape so the rest of
+        # the cell logic works unchanged.
+        data = {"issues": data_raw if isinstance(data_raw, list) else []}
 
     if data is None:
         return _unreachable("sentry", "no fixture or live response")
-    rate = data.get("errorRatePerMin", 0)
     issues = data.get("issues", []) or []
+    # cf-wv1s: derive error_rate_per_min from issues[].count when no
+    # top-level field is present (the live API doesn't supply one).
+    # statsPeriod=24h → 24 * 60 = 1440 minutes.
+    if "errorRatePerMin" in data:
+        rate = data["errorRatePerMin"]
+    else:
+        total_events = 0
+        for i in issues:
+            c = i.get("count", 0)
+            try:
+                total_events += int(c)
+            except (ValueError, TypeError):
+                pass
+        rate = round(total_events / 1440.0, 4) if total_events else 0
     unresolved = sum(1 for i in issues if (i.get("level") in ("error", "fatal")))
     if rate < 0.5 and unresolved == 0:
         status = GREEN
