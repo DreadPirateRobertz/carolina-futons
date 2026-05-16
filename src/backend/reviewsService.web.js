@@ -28,6 +28,7 @@ import { currentMember } from 'wix-members-backend';
 import { mediaManager } from 'wix-media-backend';
 import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
 import { recordEmailEvent } from 'backend/emailAutomation.web'; // CF-fzsd: conversion tracking
 
@@ -232,7 +233,7 @@ export const submitReview = webMethod(
 
       return { success: true, reviewId: saved._id };
     } catch (err) {
-      console.error('[reviewsService] Submit error:', err);
+      logError('[reviewsService] submitReview failed', err);
       return { success: false, error: 'Unable to submit review. Please try again.' };
     }
   }
@@ -259,7 +260,7 @@ export const markHelpful = webMethod(
       await wixData.update(COLLECTION, review);
       return { success: true, helpful: review.helpful };
     } catch (err) {
-      console.error('[reviewsService] markHelpful error:', err);
+      logError('[reviewsService] markHelpful failed', err);
       return { success: false };
     }
   }
@@ -304,7 +305,7 @@ export const flagReview = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[reviewsService] flagReview error:', err);
+      logError('[reviewsService] flagReview failed', err);
       return { success: false, error: 'Failed to flag review' };
     }
   }
@@ -333,7 +334,7 @@ export const getPendingReviews = webMethod(
         total: result.totalCount,
       };
     } catch (err) {
-      console.error('[reviewsService] getPendingReviews error:', err);
+      logError('[reviewsService] getPendingReviews failed', err);
       return { success: false, reviews: [], total: 0 };
     }
   }
@@ -389,7 +390,7 @@ export const moderateReview = webMethod(
       logAuditEvent(COLLECTION, `moderate_${action}`, rid, { previousStatus, newStatus });
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      console.error('[reviewsService] moderateReview error:', err);
+      logError('[reviewsService] moderateReview failed', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
@@ -447,7 +448,7 @@ export const getCategoryReviewSummaries = webMethod(
 
       return summaries;
     } catch (err) {
-      console.error('[reviewsService] getCategoryReviewSummaries error:', err);
+      logError('[reviewsService] getCategoryReviewSummaries failed', err);
       return {};
     }
   }
@@ -475,7 +476,7 @@ async function checkVerifiedPurchase(memberId, productId) {
     }
     return false;
   } catch (err) {
-    console.error('[reviewsService] Verified purchase check error:', err);
+    logError('[reviewsService] verifiedPurchaseCheck failed', err);
     return false;
   }
 }
@@ -572,7 +573,7 @@ export const submitVideoReview = webMethod(
 
       return { success: true, reviewId: inserted._id };
     } catch (err) {
-      console.error('[reviewsService] submitVideoReview error:', err);
+      logError('[reviewsService] submitVideoReview failed', err);
       return { success: false, error: 'Failed to submit video review.' };
     }
   }
@@ -614,7 +615,7 @@ export const getVideoReviews = webMethod(
 
       return { success: true, reviews, totalCount: result.totalCount };
     } catch (err) {
-      console.error('[reviewsService] getVideoReviews error:', err);
+      logError('[reviewsService] getVideoReviews failed', err);
       return { success: false, error: 'Failed to load video reviews.', reviews: [] };
     }
   }
@@ -653,13 +654,13 @@ export const moderateVideoReview = webMethod(
         try {
           await receiveGamificationEvent('video_review_approved', { memberId: review.memberId });
         } catch (e) {
-          console.error('[reviewsService] moderateVideoReview gamification trigger failed:', e?.message);
+          logError('[reviewsService] moderateVideoReview gamification-trigger failed', e);
         }
       }
 
       return { success: true };
     } catch (err) {
-      console.error('[reviewsService] moderateVideoReview error:', err);
+      logError('[reviewsService] moderateVideoReview failed', err);
       return { success: false, error: 'Failed to moderate video review.' };
     }
   }
@@ -743,7 +744,7 @@ export const getFeaturedReviews = webMethod(
 
       return { success: true, reviews };
     } catch (err) {
-      console.error('[reviewsService] getFeaturedReviews error:', err);
+      logError('[reviewsService] getFeaturedReviews failed', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
