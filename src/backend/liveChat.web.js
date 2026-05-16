@@ -172,7 +172,7 @@ export const getOfficeHoursStatus = webMethod(
         nextOpen: getNextOpenTime(officeHours, now),
       };
     } catch (err) {
-      logError('[liveChat] getOfficeHoursStatus failed', err);
+      logError('liveChat:getOfficeHoursStatus', err);
       return {
         isOnline: false,
         message: 'Leave a message and we\'ll get back to you soon!',
@@ -219,7 +219,7 @@ export const getCannedResponses = webMethod(
         responses: DEFAULT_CANNED_RESPONSES,
       };
     } catch (err) {
-      logError('[liveChat] getCannedResponses failed', err);
+      logError('liveChat:getCannedResponses', err);
       return { success: true, responses: DEFAULT_CANNED_RESPONSES };
     }
   }
@@ -272,7 +272,7 @@ export const matchCannedResponse = webMethod(
 
       return { matched: false };
     } catch (err) {
-      logError('[liveChat] matchCannedResponse failed', err);
+      logError('liveChat:matchCannedResponse', err);
       return { matched: false };
     }
   }
@@ -340,7 +340,7 @@ export const createSupportTicket = webMethod(
         message: 'Your message has been received! We\'ll get back to you soon.',
       };
     } catch (err) {
-      logError('[liveChat] createSupportTicket failed', err);
+      logError('liveChat:createSupportTicket', err);
       return { success: false, error: 'Unable to submit message. Please try again.' };
     }
   }
@@ -400,23 +400,26 @@ export const getChatContext = webMethod(
             // Member lookup failed — continue without user info
           }
 
-          // Get recent orders for context — errors bubble to outer catch
-          const orders = await wixData.query('Stores/Orders')
-            .eq('buyerInfo.memberId', cleanId)
-            .descending('_createdDate')
-            .limit(3)
-            .find();
+          try {
+            const orders = await wixData.query('Stores/Orders')
+              .eq('buyerInfo.memberId', cleanId)
+              .descending('_createdDate')
+              .limit(3)
+              .find();
 
-          context.recentOrders = orders.items.map(o => ({
-            number: o.number,
-            date: o._createdDate,
-            status: o.fulfillmentStatus || 'PROCESSING',
-          }));
+            context.recentOrders = orders.items.map(o => ({
+              number: o.number,
+              date: o._createdDate,
+              status: o.fulfillmentStatus || 'PROCESSING',
+            }));
+          } catch (e) {
+            logError('liveChat:getChatContext-ordersFailed', e);
+          }
         }
 
       return { success: true, context };
     } catch (err) {
-      logError('[liveChat] getChatContext failed', err);
+      logError('liveChat:getChatContext', err);
       return { success: true, context: { page: '', userName: '', userEmail: '', isLoggedIn: false, recentOrders: [] } };
     }
   }

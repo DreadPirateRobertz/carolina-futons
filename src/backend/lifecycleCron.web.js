@@ -114,7 +114,7 @@ export const scanLifecycleMilestones = webMethod(
         results,
       };
     } catch (err) {
-      logError('[lifecycleCron] scanLifecycleMilestones', err);
+      logError('lifecycleCron:scanLifecycleMilestones', err);
       return { success: false, ordersScanned: 0, milestonesFound: 0, results: [] };
     }
   }
@@ -198,14 +198,14 @@ export const runDailyChallengeReminders = webMethod(
             await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
           }
         } catch (pushErr) {
-          logError(`[lifecycleCron] challengeReminderPush ${record.memberId}`, pushErr);
+          logError(`lifecycleCron:runDailyChallengeReminders-pushFailed member=${record.memberId}`, pushErr);
         }
       };
 
       const { sent, failed } = await sendBatchReminders('daily', sendFn);
       return { success: true, sent, failed };
     } catch (err) {
-      logError('[lifecycleCron] runDailyChallengeReminders', err);
+      logError('lifecycleCron:runDailyChallengeReminders', err);
       return { success: false, sent: 0, failed: 0 };
     }
   }

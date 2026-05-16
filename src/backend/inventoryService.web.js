@@ -39,6 +39,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 const LOW_STOCK_URGENCY_THRESHOLD = 5;
@@ -92,7 +93,7 @@ export const getStockStatus = webMethod(
 
       return { status, variants, preOrder: anyPreOrder };
     } catch (err) {
-      console.error('Error getting stock status:', err);
+      logError('inventoryService:getStockStatus', err);
       return { status: 'in_stock', variants: [], preOrder: false };
     }
   }
@@ -143,7 +144,7 @@ export const signUpBackInStock = webMethod(
       logAuditEvent('BackInStockSignups', 'submit', cleanEmail, { productId: cleanProductId });
       return { success: true };
     } catch (err) {
-      console.error('Error signing up for back-in-stock:', err);
+      logError('inventoryService:signUpBackInStock', err);
       return { success: false, error: 'Failed to sign up' };
     }
   }
@@ -191,7 +192,7 @@ export const getInventoryUrgency = webMethod(
 
       return { level: 'none', count: totalQty, message: '' };
     } catch (err) {
-      console.error('[inventoryService] Error getting inventory urgency:', err);
+      logError('inventoryService:getInventoryUrgency', err);
       return { level: 'none', count: 0, message: '' };
     }
   }

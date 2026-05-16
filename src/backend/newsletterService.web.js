@@ -353,7 +353,7 @@ export const subscribeToNewsletter = webMethod(
       // double-queue on repeat subscribes). Non-blocking — a welcome-trigger
       // failure does not fail the subscribe call.
       _triggerWelcomeFlowInternal(cleaned, source).catch((err) => {
-        console.warn('[newsletterService] welcome auto-trigger failed (non-blocking):', err?.message ?? err);
+        logError('newsletterService:welcomeAutoTrigger-nonblocking', err);
       });
 
       logAuditEvent('NewsletterSubscribers', 'subscribe', cleaned, { source });
@@ -389,7 +389,7 @@ async function _triggerWelcomeFlowInternal(email, source = '') {
     const { resolveContactId } = await import('backend/contacts/contactResolver.web');
     const contactId = await resolveContactId(email, '');
     if (!contactId) {
-      console.warn('[newsletterService] welcome auto-trigger skipped — resolveContactId returned empty', { email, source });
+      logError(`newsletterService:welcomeAutoTrigger-skippedEmptyContactId source=${source}`, null);
       return;
     }
     const { triggerWelcomeSequence } = await import('backend/emailAutomation.web');

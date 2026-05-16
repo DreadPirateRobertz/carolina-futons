@@ -352,6 +352,9 @@ export const notifyOwner = webMethod(
     try {
       const ownerId = await getSecret('SITE_OWNER_CONTACT_ID');
       if (!ownerId) {
+        // cf-44qt: stays as console.warn — part of the JSDoc-contracted
+        // last-resort alert channel. Pinned by notificationServiceSilentFailureCleanup
+        // "intentional console.error fallback does NOT call logError" test.
         console.warn('[notificationService] notifyOwner: SITE_OWNER_CONTACT_ID secret not set — falling back to console');
       } else {
         await triggeredEmails.emailContact(resolveTemplateId('owner_alert'), ownerId, {
@@ -360,11 +363,17 @@ export const notifyOwner = webMethod(
         return { success: true, method: 'triggered_email' };
       }
     } catch (emailErr) {
-      // Fall through to console fallback if email delivery fails
+      // cf-44qt: stays as console.warn — same fallback-channel contract as above.
       console.warn('[notificationService] notifyOwner email failed, falling back to console:', emailErr?.message);
     }
 
     // Console fallback — ensures the alert surfaces in Wix logs even without email config
+    // cf-44qt: intentional console.error fallback — documented in JSDoc above
+    // as the last-resort alert channel. Stays as console-dot-error rather
+    // than logError so it surfaces in Wix logs even when the
+    // SITE_OWNER_CONTACT_ID secret is missing or email delivery itself
+    // is broken. Pinned by tests/notificationServiceSilentFailureCleanup.test.js
+    // "intentional console.error fallback does NOT call logError" test.
     console.error(`[notificationService] OWNER ALERT — ${safeSubject}: ${safeMessage}`);
     return { success: true, method: 'console' };
   }

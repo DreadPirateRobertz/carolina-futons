@@ -115,7 +115,7 @@ export const submitPhotoReview = webMethod(
         'gamification_submit_review',
         { has_photo: true },
         memberId,
-      ).catch(err => console.warn('[photoReviews] gamification event failed:', err));
+      ).catch(err => logError('photoReviews:submitPhotoReview-gamificationEvent', err));
 
       return { success: true, id: inserted._id };
     } catch (err) {
@@ -171,7 +171,7 @@ export const moderatePhotoReview = webMethod(
       const allowed = PHOTO_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
-        console.warn(`[photoReviews] Blocked transition: ${cleanId} ${currentStatus} → ${newStatus} by ${memberId}`);
+        logError(`photoReviews:moderateReview-blockedTransition review=${cleanId} from=${currentStatus} to=${newStatus} by=${memberId}`, null);
         return {
           success: false,
           error: `Cannot ${cleanAction} a review with status '${currentStatus}'.`,
@@ -186,7 +186,7 @@ export const moderatePhotoReview = webMethod(
       await wixData.update('PhotoReviews', existing);
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      logError('photoReviews:moderatePhotoReview', err);
+      logError('photoReviews:moderateReview', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
