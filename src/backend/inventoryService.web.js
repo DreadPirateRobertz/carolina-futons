@@ -93,7 +93,7 @@ export const getStockStatus = webMethod(
 
       return { status, variants, preOrder: anyPreOrder };
     } catch (err) {
-      logError('inventoryService:getStockStatus', err);
+      logError('[inventoryService] getStockStatus failed', err);
       return { status: 'in_stock', variants: [], preOrder: false };
     }
   }
@@ -144,7 +144,7 @@ export const signUpBackInStock = webMethod(
       logAuditEvent('BackInStockSignups', 'submit', cleanEmail, { productId: cleanProductId });
       return { success: true };
     } catch (err) {
-      logError('inventoryService:signUpBackInStock', err);
+      logError('[inventoryService] signUpForBackInStock failed', err);
       return { success: false, error: 'Failed to sign up' };
     }
   }
@@ -192,7 +192,7 @@ export const getInventoryUrgency = webMethod(
 
       return { level: 'none', count: totalQty, message: '' };
     } catch (err) {
-      logError('inventoryService:getInventoryUrgency', err);
+      logError('[inventoryService] Error getting inventory urgency:', err);
       return { level: 'none', count: 0, message: '' };
     }
   }

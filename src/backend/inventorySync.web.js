@@ -219,7 +219,7 @@ export async function syncInventoryFromStore() {
               if (result.alertCreated) alertsCreated++;
             } catch (err) {
               errors++;
-              logError(`inventorySync:syncProduct product=${product._id}`, err);
+              logError('[inventorySync] syncProducts product failed', err);
             }
           }),
         );
@@ -238,10 +238,10 @@ export async function syncInventoryFromStore() {
       }
     }
 
-    logError(`inventorySync:syncComplete-info synced=${synced} alerts=${alertsCreated} errors=${errors}`, null);
+    console.log(`[inventorySync] Sync complete: ${synced} products, ${alertsCreated} alerts, ${errors} errors`);
     return { success: true, synced, alertsCreated, errors };
   } catch (err) {
-    logError('inventorySync:syncFailed', err);
+    logError('[inventorySync] syncProducts failed', err);
     return { success: false, synced, alertsCreated, errors };
   }
 }
