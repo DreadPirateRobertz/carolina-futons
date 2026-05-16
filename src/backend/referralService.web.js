@@ -36,6 +36,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 import { randomBytes } from 'crypto';
 import { accounts } from 'wix-loyalty.v2';
 import { receiveGamificationEvent } from 'backend/gamificationEventReceiver.web';
@@ -120,7 +121,7 @@ export const getReferralLink = webMethod(
         alreadyExists: false,
       };
     } catch (err) {
-      console.error('getReferralLink error:', err);
+      logError('[referralService] getReferralLink failed', err);
       return { success: false, error: 'Unable to generate referral link' };
     }
   }
@@ -185,7 +186,7 @@ export const redeemReferralCode = webMethod(
         message: `You've been referred by ${referral.referrerName || 'a friend'}! You'll receive a $${REFEREE_CREDIT_AMOUNT} credit on your first purchase.`,
       };
     } catch (err) {
-      console.error('redeemReferralCode error:', err);
+      logError('[referralService] redeemReferralCode failed', err);
       return { success: false, error: 'Unable to redeem referral code' };
     }
   }
@@ -299,7 +300,7 @@ export const completeReferral = webMethod(
         refereeCredit: REFEREE_CREDIT_AMOUNT,
       };
     } catch (err) {
-      console.error('completeReferral error:', err);
+      logError('[referralService] completeReferral failed', err);
       return { success: false, error: 'Unable to process referral credit' };
     }
   }
@@ -336,7 +337,7 @@ export const getMyReferrals = webMethod(
         totalCount: referrals.totalCount,
       };
     } catch (err) {
-      console.error('getMyReferrals error:', err);
+      logError('[referralService] getMyReferrals failed', err);
       return { success: false, error: 'Unable to load referrals' };
     }
   }
@@ -372,7 +373,7 @@ export const getMyCredits = webMethod(
         })),
       };
     } catch (err) {
-      console.error('getMyCredits error:', err);
+      logError('[referralService] getMyCredits failed', err);
       return { success: false, error: 'Unable to load credits' };
     }
   }
@@ -431,7 +432,7 @@ export const applyCredit = webMethod(
         message: `$${claimed.amount} credit applied to your order!`,
       };
     } catch (err) {
-      console.error('applyCredit error:', err);
+      logError('[referralService] applyCredit failed', err);
       return { success: false, error: 'Unable to apply credit' };
     }
   }
@@ -483,7 +484,7 @@ export const getReferralStats = webMethod(
         },
       };
     } catch (err) {
-      console.error('getReferralStats error:', err);
+      logError('[referralService] getReferralStats failed', err);
       return { success: false, error: 'Unable to load stats' };
     }
   }
@@ -516,7 +517,7 @@ export const getReferralLinkOwnerName = webMethod(
       const referrerName = result.items[0].referrerName || '';
       return { success: true, referrerName };
     } catch (err) {
-      console.error('getReferralLinkOwnerName error:', err);
+      logError('[referralService] getReferralLinkOwnerName failed', err);
       return { success: false };
     }
   }
@@ -556,7 +557,7 @@ export async function _getReferralLinkForMember(memberId) {
 
     return { referralCode: code, referralUrl: `https://www.carolinafutons.com/referral?ref=${code}` };
   } catch (err) {
-    console.error('_getReferralLinkForMember error:', err);
+    logError('[referralService] _getReferralLinkForMember failed', err);
     return null;
   }
 }
@@ -650,7 +651,7 @@ export async function _processReferralOnOrderCreated(memberId, orderNumber, isFi
 
     return resultObj;
   } catch (err) {
-    console.error('_processReferralOnOrderCreated error:', err);
+    logError('[referralService] _processReferralOnOrderCreated failed', err);
     return { skipped: true };
   }
 }
@@ -679,7 +680,7 @@ export const getPostPurchaseRewardSummary = webMethod(
 
       return { pointsEarned, referralUrl, referralCode, referralBonusPoints };
     } catch (err) {
-      console.error('getPostPurchaseRewardSummary error:', err);
+      logError('[referralService] getPostPurchaseRewardSummary failed', err);
       return null;
     }
   }
