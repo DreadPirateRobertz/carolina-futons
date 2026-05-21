@@ -1,29 +1,22 @@
-# PM Update — cfutons (melania) — 2026-05-21 ~09:00 MT
+# PM Update — cfutons (melania) — 2026-05-21 ~09:10 MT
 
-## All cfw-66o + cfw-sej work COMPLETE ✓ (14 PRs merged)
+## All cfw-66o + cfw-sej work COMPLETE ✓ (15 PRs merged incl. #922)
 
 ## Current Crew
 
 | Crew | Bead | Status | Type |
 |------|------|--------|------|
-| morgott | cfw-svi | OPEN | P1 feature: LivingHero motion bump (scaleY 3%→6%, firefly drift, star twinkle) |
+| morgott | cfw-svi + cfw-i0v | OPEN | P1: LivingHero motion bump; P3: contact test gaps |
 | rennala | cfw-hjp | OPEN | P2 docs: brenda-admin-guide §4/§5/§6 |
 | godfrey | cfw-ujp | OPEN | P2 test: 5-agent review /api/revalidate/route.ts |
-| radahn | cfw-x0s | IN_PROGRESS | P2 review: 5-agent on PR #922 + cfw-hjp PR |
-| blaidd | cfw-36d | OPEN | P2 e2e: CategoryPills ?sub= (needs LOW_CTX restart) |
-| miquella | cf-q0kr + cf-47dm | IN_PROGRESS | P3 fixes: og-metadata.test.ts afterEach + empty-string guard |
-| millicent | cfw-ikl | OPEN | P1 feature: contact form sizeOfInterest dropdown |
+| radahn | cfw-x0s | IN_PROGRESS | P2 review: waiting for rennala cfw-hjp PR |
+| blaidd | cfw-36d | OPEN | P2 e2e: CategoryPills (needs LOW_CTX restart) |
+| miquella | cfw-k10 | OPEN | P2 feature: PDP Sticky Add-to-Cart bar (reassigned from stalled polecat) |
+| millicent | cfw-ikl | IN_PROGRESS | P1 feature: contact form sizeOfInterest dropdown |
 
-## Open PRs
-- #922 (cfw-4ul): contact getSiteContent tests — CI queued, radahn reviewing
+## PR #922 (cfw-4ul)
+- MERGED ✓ — 5-agent reviewed (radahn), 2 medium gaps filed as cfw-i0v (P3, morgott)
+- Gaps: contact.eyebrow fallback + contact.appointment.body-suffix CMS-override assertions
 
-## Reassigned from stalled polecats
-- cfw-ikl → millicent (polecat/rust couldn't touch carolina-futons-web)
-- cfw-svi → morgott (polecat/shiny couldn't touch carolina-futons-web)
-
-## Closed This Round
-- cfw-4ul: PR #922 open ✓
-- cfw-79g: duplicate (HomePage.test.tsx already has value-props) ✓
-- cfw-8j2: webhook pre-exists at /api/revalidate/route.ts ✓
-- cfw-dp2: duplicate of cfw-eer ✓
-- cfw-ki3: duplicate (cfw-dv5-pills.test.tsx already complete) ✓
+## Recently Closed
+- miquella cf-q0kr + cf-47dm: og-metadata E469 afterEach + empty-string guard ✓ (PR #921)
