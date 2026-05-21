@@ -27,10 +27,10 @@ describe('cf-tok3 photoReviews — console.error → logError migration', () => 
     );
   });
 
-  it('all 3 webMethods route through photoReviews.* context tags', async () => {
+  it('all 3 webMethods route through photoReviews:* context tags', async () => {
     const src = await readSrc();
-    expect(src).toMatch(/logError\(\s*['"]photoReviews\.submitPhotoReview['"]/);
-    expect(src).toMatch(/logError\(\s*['"]photoReviews\.moderatePhotoReview['"]/);
-    expect(src).toMatch(/logError\(\s*['"]photoReviews\.getPhotoGallery['"]/);
+    expect(src).toMatch(/logError\(\s*['"]photoReviews:submitPhotoReview['"]/);
+    expect(src).toMatch(/logError\(\s*['"]photoReviews:moderatePhotoReview['"]/);
+    expect(src).toMatch(/logError\(\s*['"]photoReviews:getPhotoGallery['"]/);
   });
 });
