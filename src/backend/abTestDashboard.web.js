@@ -359,7 +359,7 @@ export const autoStopSignificantExperiments = webMethod(
 
         // Multi-variant experiments: auto-stop only supports 2-variant significance testing
         if (variants.length > 2) {
-          console.warn(`[abTestDashboard] autoStop: "${test.testName}" has ${variants.length} variants — skipping (only 2-variant tests supported)`);
+          logError(`abTestDashboard:autoStop-skipped test=${test.testName} variants=${variants.length}`, null);
           continue;
         }
 
@@ -387,7 +387,7 @@ export const autoStopSignificantExperiments = webMethod(
           });
 
           stopped.push({ testName: cleanName, winner });
-          console.log(`[abTestDashboard] Auto-stopped "${cleanName}" — winner: ${winner} (${sig.confidence}% confidence)`);
+          logError(`abTestDashboard:autoStop-completed test=${cleanName} winner=${winner} confidence=${sig.confidence}`, null);
         } catch (itemErr) {
           logError('abTestDashboard.autoStopSignificantExperiments', itemErr);
         }

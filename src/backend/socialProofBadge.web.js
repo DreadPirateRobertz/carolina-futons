@@ -14,6 +14,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 
@@ -54,7 +55,7 @@ export const getNeighborCount = webMethod(
         isNational: !zipPrefix,
       };
     } catch (err) {
-      console.error('[socialProofBadge] getNeighborCount failed:', err);
+      logError('socialProofBadge:getNeighborCount', err);
       return { count: 0, zipPrefix: null, isNational: true, error: true };
     }
   }

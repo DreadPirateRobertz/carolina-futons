@@ -96,7 +96,7 @@ export const getChatGreeting = webMethod(
       const flag = await getSecret('GAMIFICATION_CHATBOT_ENABLED');
       flagEnabled = flag === 'true';
     } catch (err) {
-      console.warn('[gamificationChatbot] getChatGreeting: flag fetch failed, defaulting to disabled:', err?.message);
+      logError('gamificationChatbot:getChatGreeting-flagFetchFailed', err);
       flagEnabled = false;
     }
     if (!flagEnabled) return { enabled: false };

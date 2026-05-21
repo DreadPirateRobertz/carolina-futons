@@ -4,6 +4,7 @@
  * CF-ela
  */
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 export const MEMBER_POINTS_LEDGER_COLLECTION = 'MemberPointsLedger';
 
@@ -67,7 +68,7 @@ export async function getPointsHistory(memberId, limit = 20, offset = 0) {
       .find({ suppressAuth: true });
     return { success: true, entries: result.items, total: result.totalCount };
   } catch (err) {
-    console.error('[memberPointsLedger] getPointsHistory error:', err);
+    logError('memberPointsLedger:getPointsHistory', err);
     return { success: false, entries: [], error: err.message };
   }
 }
