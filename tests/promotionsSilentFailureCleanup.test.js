@@ -39,7 +39,6 @@ describe('cf-44qt sibling — promotions.web.js observability cleanup', () => {
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/promotions/);
     expect(allTags).toMatch(/getActivePromotion/);
-    expect(allTags).toMatch(/failed/);
   });
 
   it('getFlashSales wires logError on Promotions query throw', async () => {

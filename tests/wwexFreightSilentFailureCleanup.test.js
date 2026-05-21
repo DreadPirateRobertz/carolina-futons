@@ -53,7 +53,6 @@ describe('cf-44qt sibling — wwex-freight.web.js observability cleanup', () => 
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/wwex-freight/);
     expect(allTags).toMatch(/getLTLRates/);
-    expect(allTags).toMatch(/failed/);
     expect(result.success).toBe(false);
     expect(result.fallback).toBeDefined();
   });

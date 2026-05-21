@@ -51,7 +51,7 @@ export const getTrendingSearches = webMethod(
 
       return { success: true, terms };
     } catch (e) {
-      logError('[trendingSearches] getTrendingSearches failed', e);
+      logError('trendingSearches:getTrendingSearches', e);
       return { success: false, terms: [...DEFAULT_TERMS], error: 'Failed to load trending searches' };
     }
   }
