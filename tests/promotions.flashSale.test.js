@@ -262,7 +262,7 @@ describe('getFlashSales', () => {
     const deals = await getFlashSales();
     expect(deals).toEqual([]);
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('[promotions]'),
+      '[promotions] getFlashSales',
       expect.any(Error)
     );
 
