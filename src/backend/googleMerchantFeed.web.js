@@ -3,6 +3,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const STORE_NAME = 'Carolina Futons';
@@ -274,7 +275,7 @@ ${items}
 
       return xml;
     } catch (err) {
-      console.error('Error generating Google Merchant feed:', err);
+      logError('googleMerchantFeed:generateFeed', err);
       return null;
     }
   }
@@ -329,7 +330,7 @@ export const getFeedData = webMethod(
         };
       });
     } catch (err) {
-      console.error('Error generating feed data:', err);
+      logError('googleMerchantFeed:generateFeedData', err);
       return [];
     }
   }
