@@ -184,7 +184,7 @@ export const createBirthdayCoupon = webMethod(
           active: true,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] MemberCoupons insert failed for birthday coupon:', insertErr.message);
+        logError('couponsService:issueBirthdayCoupon-memberCouponsInsertFailed', insertErr);
       }
 
       return {
@@ -250,7 +250,7 @@ export const createTierUpgradeCoupon = webMethod(
           active: true,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] MemberCoupons insert failed for tier upgrade coupon:', insertErr.message);
+        logError('couponsService:issueTierUpgradeCoupon-memberCouponsInsertFailed', insertErr);
       }
 
       return {
@@ -335,8 +335,7 @@ export const generateRecoveryCoupon = webMethod(
           expiresAt: expiresAtISO,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] RecoveryCoupons insert failed for cartId:', cartId,
-          '— idempotency not guaranteed on retry:', insertErr.message);
+        logError(`couponsService:generateRecoveryCoupon-recoveryCouponsInsertFailed cartId=${cartId}`, insertErr);
       }
 
       // Track in MemberCoupons for DB-level member scoping in getActiveCoupons
@@ -357,8 +356,7 @@ export const generateRecoveryCoupon = webMethod(
           active: true,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] MemberCoupons insert failed for recovery coupon cartId:', cartId,
-          ':', insertErr.message);
+        logError(`couponsService:generateRecoveryCoupon-memberCouponsInsertFailed cartId=${cartId}`, insertErr);
       }
 
       return {
@@ -425,7 +423,7 @@ export const createCartRecoveryCoupon = webMethod(
           active: true,
         });
       } catch (insertErr) {
-        console.warn('[couponsService] MemberCoupons insert failed for cart recovery coupon:', insertErr.message);
+        logError('couponsService:issueCartRecoveryCoupon-memberCouponsInsertFailed', insertErr);
       }
 
       return {
@@ -457,8 +455,7 @@ async function generateCode(prefix) {
       if (!existing.items || existing.items.length === 0) return code;
     } catch (e) {
       // Collision check failed — returning unchecked code; collision is statistically unlikely
-      console.warn('[couponsService] generateCode collision check failed (attempt', attempt, '):', e.message,
-        '— returning unchecked code');
+      logError(`couponsService:generateCode-collisionCheckFailed attempt=${attempt}`, e);
       return code;
     }
   }

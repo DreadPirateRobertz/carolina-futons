@@ -31,6 +31,11 @@ vi.mock('wix-members-backend', () => ({
   currentMember: { getMember: () => mockGetMember() },
 }));
 
+// cf-n4wy: swatchKitService migrated console.warn no-member guard →
+// canonical logError. Mock so the cf-2ag auth-required test can assert
+// the tag namespace.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 import {
   orderContainsSwatchKit,
   isQualifyingOrder,
@@ -42,6 +47,7 @@ import {
   QUALIFYING_ORDER_MIN,
   CREDIT_EXPIRY_DAYS,
 } from '../src/backend/swatchKitService.web.js';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -257,15 +263,16 @@ describe('getSwatchKitCreditStatus', () => {
   it.each([
     ['null', null],
     ['no _id', {}],
-  ])('returns auth_required + warns when getMember returns %s (cf-2ag)', async (_label, memberValue) => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  ])('returns auth_required + logs canonical tag when getMember returns %s (cf-2ag)', async (_label, memberValue) => {
+    vi.mocked(logError).mockClear();
     mockGetMember.mockResolvedValue(memberValue);
     const result = await getSwatchKitCreditStatus();
     expect(result).toEqual({ hasPendingCredit: false, error: 'auth_required' });
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[swatchKitService] getSwatchKitCreditStatus: no member on session'),
+    // cf-n4wy: canonical logError tag replaces the previous bracket-prefix console.warn
+    expect(logError).toHaveBeenCalledWith(
+      'swatchKitService:getSwatchKitCreditStatus-noMember',
+      null,
     );
-    warnSpy.mockRestore();
   });
 
   it('returns pending credit details when found', async () => {

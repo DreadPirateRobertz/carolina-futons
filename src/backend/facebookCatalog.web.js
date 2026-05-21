@@ -19,6 +19,7 @@ import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { notifyOwner } from 'backend/notificationService.web';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -493,7 +494,7 @@ export function buildCatalogBatch(products) {
       });
       processed++;
     } catch (err) {
-      console.error('[facebookCatalog] buildCatalogBatch product error:', err);
+      logError('facebookCatalog:buildCatalogBatch', err);
       failed++;
       errors.push({
         productId: product?._id || 'unknown',
@@ -544,7 +545,7 @@ export const refreshFacebookCatalog = webMethod(
       try {
         await notifyOwner(subject, msg);
       } catch (notifyErr) {
-        console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
+        logError('facebookCatalog:refreshFacebookCatalog-notifyOwnerFailed', notifyErr);
       }
     }
 
@@ -573,16 +574,16 @@ export const refreshFacebookCatalog = webMethod(
 
       if (failed > 0) {
         const msg = `${failed} product(s) failed catalog validation. Errors: ${JSON.stringify(errors.slice(0, 5))}`;
-        console.warn('[facebookCatalog] refreshFacebookCatalog failures:', msg);
+        logError(`facebookCatalog:refreshFacebookCatalog-failures msg=${msg}`, null);
         await safeNotify('facebook catalog sync — validation failures', msg);
       }
 
       const summary = { success: failed === 0, processed, failed, errors };
-      console.log('[facebookCatalog] refreshFacebookCatalog complete:', JSON.stringify({ processed, failed }));
+      logError(`facebookCatalog:refreshFacebookCatalog-complete processed=${processed} failed=${failed}`, null);
       return summary;
     } catch (err) {
       const msg = `catalog refresh failed: ${err?.message ?? String(err)}`;
-      console.error('[facebookCatalog] refreshFacebookCatalog error:', msg);
+      logError(`facebookCatalog:refreshFacebookCatalog msg=${msg}`, null);
       await safeNotify('facebook catalog sync — cron error', msg);
       return { success: false, processed, failed, errors: [msg] };
     }
@@ -652,7 +653,7 @@ export const exportCustomerAudienceData = webMethod(
         customers: Array.from(customerMap.values()),
       };
     } catch (err) {
-      console.error('exportCustomerAudienceData error:', err);
+      logError('facebookCatalog:exportCustomerAudienceData', err);
       return { success: false, customers: [], error: 'Failed to export audience data' };
     }
   }

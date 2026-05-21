@@ -18,6 +18,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
+
+// cf-n4wy: emailService migrated console.warn (auto-reply non-blocking +
+// skip-on-empty-contactId) → canonical logError. Mock so non-blocking
+// tests can assert tag namespace instead of console.warn.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 import {
   __getEmailLog,
   __reset as resetCrm,
@@ -25,6 +30,7 @@ import {
 } from './__mocks__/wix-crm-backend.js';
 
 import { sendEmail } from '../src/backend/emailService.web.js';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 const flushMicrotasks = async () => {
   // Drain multiple turns: cf-hafn auto-reply does
@@ -118,7 +124,7 @@ describe('cf-hafn · sendEmail customer auto-reply', () => {
 
 describe('cf-hafn · auto-reply is non-blocking', () => {
   it('still returns success when the auto-reply triggered email fails', async () => {
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     // Fail the SECOND emailContact call (the auto-reply) but let the first
     // (owner notification) succeed. Without skip-count support in the mock,
     // simulate via spying on the imported triggeredEmails.
@@ -136,29 +142,28 @@ describe('cf-hafn · auto-reply is non-blocking', () => {
 
     expect(result.success).toBe(true); // owner email + CMS row already happened
     expect(__getEmailLog().some((e) => e.templateId === 'VJBU6zD')).toBe(true);
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('customer auto-reply failed'),
-      expect.any(String),
+    // cf-n4wy: canonical logError tag replaces the console.warn assertion
+    expect(logError).toHaveBeenCalledWith(
+      'emailService:sendCustomerContactAutoReply-nonblocking',
+      expect.any(Error),
     );
-    consoleWarn.mockRestore();
     vi.restoreAllMocks();
   });
 
   it('skips auto-reply when appendOrCreateContact returns empty', async () => {
     const crm = await import('wix-crm-backend');
     vi.spyOn(crm.contacts, 'appendOrCreateContact').mockResolvedValue({});
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
 
     const result = await sendEmail(validSubmission());
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
     expect(__getEmailLog().some((e) => e.templateId === 'VJBOnfD')).toBe(false);
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('customer auto-reply skipped'),
-      expect.any(Object),
+    expect(logError).toHaveBeenCalledWith(
+      'emailService:sendCustomerContactAutoReply-skippedEmptyContactId',
+      null,
     );
-    consoleWarn.mockRestore();
     vi.restoreAllMocks();
   });
 });

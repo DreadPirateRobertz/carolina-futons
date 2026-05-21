@@ -7,6 +7,11 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { __seed, __reset, __setQueryError } from './__mocks__/wix-data.js';
 
+// cf-n4wy: facebookCatalog migrated console.warn/error → canonical logError.
+// Mock the module so refresh-failure/refresh-error assertions can target tags.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 // ── jobs.config cron registration ─────────────────────────────────────────
 
 describe('Facebook Catalog — Cron Registration', () => {
@@ -98,16 +103,14 @@ describe('refreshFacebookCatalog — failure alert', () => {
 
   beforeEach(() => {
     __reset();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('reports failed > 0 and logs a warning when products fail validation', async () => {
+  it('reports failed > 0 and logs canonical failures tag when products fail validation', async () => {
     // Seed products that fail catalog validation (missing name, price, image)
     __seed('Stores/Products', [
       { _id: 'bad-1', name: '', price: null, slug: '' },
@@ -119,10 +122,10 @@ describe('refreshFacebookCatalog — failure alert', () => {
     expect(result.failed).toBeGreaterThan(0);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.success).toBe(false);
-    // Warning should be logged when failures occur
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('[facebookCatalog]'),
-      expect.stringContaining('failed'),
+    // cf-n4wy: canonical logError tag replaces the previous console.warn
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('facebookCatalog:refreshFacebookCatalog-failures'),
+      null,
     );
   });
 
@@ -136,19 +139,24 @@ describe('refreshFacebookCatalog — failure alert', () => {
 
     expect(result.failed).toBe(0);
     expect(result.success).toBe(true);
-    expect(console.warn).not.toHaveBeenCalled();
+    // No -failures tag should fire on a clean run (a -complete info tag is allowed)
+    const failureTagCalls = vi.mocked(logError).mock.calls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes('-failures'),
+    );
+    expect(failureTagCalls).toEqual([]);
   });
 
-  it('returns success: false and logs error when wixData.query throws', async () => {
+  it('returns success: false and logs canonical refresh tag when wixData.query throws', async () => {
     __setQueryError('Stores/Products', new Error('DB connection timeout'));
 
     const result = await refreshFacebookCatalog();
 
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('[facebookCatalog]'),
-      expect.stringContaining('catalog refresh failed'),
+    // cf-n4wy: outer catch logs via canonical logError
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('facebookCatalog:refreshFacebookCatalog'),
+      null,
     );
   });
 });
