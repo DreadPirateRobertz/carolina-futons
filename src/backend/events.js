@@ -45,10 +45,10 @@ async function _postRevalidateWebhook(body) {
       body: payload,
     });
     if (!res.ok) {
-      console.warn('[events] revalidate webhook returned', res.status);
+      logError(`events:revalidate-webhookStatus status=${res.status}`, null);
     }
   } catch (err) {
-    console.warn('[events] revalidate webhook failed (non-fatal):', err?.message ?? err);
+    logError('events:revalidate-webhookFailed', err);
   }
 }
 
@@ -66,7 +66,7 @@ async function logFailedEvent(entry) {
       resolved: false,
     });
   } catch (dlErr) {
-    console.warn('[events] Dead-letter queue write also failed:', dlErr.message);
+    logError('events:writeFailedEvent-dlqFailed', dlErr);
   }
 }
 
@@ -119,7 +119,7 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
       recoveryEmailSent: false,
     });
   } catch (err) {
-    logError(`events:wixEcom_onCartAbandoned-dropped checkoutId=${checkoutId || 'unknown'} email=${redactEmail(buyerEmail)}`, err);
+    logError(`events:wixEcom_onAbandonedCart-failed checkoutId=${checkoutId || 'unknown'} email=${redactEmail(buyerEmail)}`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutCreated',
       checkoutId: checkoutId || 'unknown',
@@ -154,7 +154,7 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
       status: 'recovered',
     });
   } catch (err) {
-    logError(`events:markCartRecovered checkoutId=${checkoutId || 'unknown'}`, err);
+    logError(`events:markCartRecovered-failed checkoutId=${checkoutId || 'unknown'}`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutRecovered',
       checkoutId: checkoutId || 'unknown',
@@ -196,7 +196,7 @@ export async function wixMembers_onMemberCreated(event) {
     const { triggerWelcomeSequence } = await import('backend/emailAutomation.web');
     await triggerWelcomeSequence(contactId, email, firstName);
   } catch (err) {
-    logError('events:welcomeSequence', err);
+    logError('events:wixMembers_onMemberCreated-welcomeSequenceFailed', err);
   }
 
   // CF-9swp: Seed welcome points (endowed progress) for new members
@@ -204,7 +204,7 @@ export async function wixMembers_onMemberCreated(event) {
     const { seedWelcomePoints } = await import('backend/gamificationEventReceiver.web');
     await seedWelcomePoints(contactId);
   } catch (err) {
-    logError('events:seedWelcomePoints', err);
+    logError('events:wixMembers_onMemberCreated-seedPointsFailed', err);
   }
 }
 
@@ -249,14 +249,14 @@ export async function wixEcom_onOrderCreated(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'confirmed');
   } catch (err) {
-    logError('events:orderStatusWebhook-confirmed', err);
+    logError('events:wixEcom_onOrderApproved-webhookFailed', err);
   }
 
   try {
     const { triggerPostPurchaseSequence } = await import('backend/emailAutomation.web');
     await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems, { memberId });
   } catch (err) {
-    logError('events:postPurchaseSequence', err);
+    logError('events:wixEcom_onOrderApproved-postPurchaseFailed', err);
   }
 
   if (memberId) {
@@ -275,7 +275,7 @@ export async function wixEcom_onOrderCreated(event) {
           const { checkAndTriggerTierMilestone } = await import('backend/emailAutomation.web');
           await checkAndTriggerTierMilestone(memberId, email, firstName, newTotal, oldTotal);
         } catch (err) {
-          logError('events:tierMilestoneCheck', err);
+          logError('events:wixEcom_onOrderApproved-tierMilestoneFailed', err);
         }
       }
 
@@ -288,7 +288,7 @@ export async function wixEcom_onOrderCreated(event) {
         await recordChallengeProgress({ memberId, challengeId: challenge.challengeId });
       }
     } catch (err) {
-      logError('events:gamificationOnOrder', err);
+      logError('events:wixEcom_onOrderApproved-gamificationFailed', err);
     }
 
     // cf-bu2: complete any pending referral attribution for web checkouts
@@ -296,7 +296,7 @@ export async function wixEcom_onOrderCreated(event) {
       const { _processReferralOnOrderCreated } = await import('backend/referralService.web');
       await _processReferralOnOrderCreated(memberId, orderNumber);
     } catch (err) {
-      logError('events:referralOnOrder', err);
+      logError('events:wixEcom_onOrderApproved-referralFailed', err);
     }
   }
 
@@ -306,7 +306,7 @@ export async function wixEcom_onOrderCreated(event) {
       const { checkSwatchAttribution } = await import('backend/swatchAttribution.web');
       await checkSwatchAttribution(email, orderNumber, Number(total));
     } catch (err) {
-      logError('events:swatchAttributionCheck', err);
+      logError('events:wixEcom_onOrderApproved-swatchAttributionFailed', err);
     }
   }
 
@@ -316,11 +316,11 @@ export async function wixEcom_onOrderCreated(event) {
     if (orderContainsSwatchKit(order.lineItems || [])) {
       const result = await recordSwatchKitPurchase(orderNumber, memberId, email, []);
       if (!result?.success && !result?.alreadyIssued) {
-        logError(`events:swatchKitCredit-silentFailure orderNumber=${orderNumber}`, new Error(String(result?.error || 'unknown')));
+        logError(`events:wixEcom_onOrderApproved-swatchKitCreditFailedSilent orderNumber=${orderNumber} reason=${result?.error || 'unknown'}`, null);
       }
     }
   } catch (err) {
-    logError('events:swatchKitCreditIssuance', err);
+    logError('events:wixEcom_onOrderApproved-swatchKitCreditThrew', err);
   }
 }
 
@@ -343,7 +343,7 @@ export async function wixEcom_onOrderApproved(event) {
     const { receiveGamificationEvent } = await import('backend/gamificationEventReceiver.web');
     await receiveGamificationEvent('gamification_order_complete', { orderTotal }, memberId);
   } catch (err) {
-    logError('events:wixEcom_onOrderApproved-gamificationEarn', err);
+    logError('events:wixEcom_onOrderApproved-earnFailed', err);
   }
 }
 
@@ -365,7 +365,7 @@ export async function wixEcom_onOrderFulfilled(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'shipped');
   } catch (err) {
-    logError('events:orderStatusWebhook-shipped', err);
+    logError('events:wixEcom_onOrderShipped-webhookFailed', err);
   }
 
   if (!memberId) return;
@@ -374,7 +374,7 @@ export async function wixEcom_onOrderFulfilled(event) {
     const { handleOrderFulfilled } = await import('backend/notificationOrchestrator.web');
     await handleOrderFulfilled({ memberId, orderNumber, trackingNumber });
   } catch (err) {
-    logError('events:onOrderFulfilled-sms', err);
+    logError('events:wixEcom_onOrderFulfilled-smsFailed', err);
   }
 }
 
@@ -393,7 +393,7 @@ export async function wixEcom_onFulfillmentCreated(event) {
     const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
     handleFulfillmentShippingNotification(event);
   } catch (err) {
-    logError('events:onFulfillmentCreated', err);
+    logError('events:wixEcom_onFulfillmentCreated-failed', err);
   }
 }
 
@@ -414,7 +414,7 @@ export async function wixEcom_onFulfillmentUpdated(event) {
     const { handleFulfillmentShippingNotification } = await import('backend/emailAutomation.web');
     handleFulfillmentShippingNotification(event);
   } catch (err) {
-    logError('events:onFulfillmentUpdated', err);
+    logError('events:wixEcom_onFulfillmentUpdated-failed', err);
   }
 }
 
@@ -431,7 +431,7 @@ export async function wixEcom_onOrderDelivered(event) {
     const { handleOrderDelivered } = await import('backend/emailAutomation.web');
     handleOrderDelivered(event);
   } catch (err) {
-    logError('events:onOrderDelivered', err);
+    logError('events:wixEcom_onOrderDelivered-failed', err);
   }
 }
 
@@ -449,7 +449,7 @@ export async function wixEcom_onOrderCanceled(event) {
     const { handleOrderStatusChange } = await import('backend/orderStatusWebhook.web');
     await handleOrderStatusChange(order, 'cancelled');
   } catch (err) {
-    logError('events:orderStatusWebhook-cancelled', err);
+    logError('events:wixEcom_onOrderCanceled-webhookFailed', err);
   }
 
   if (!email) return;
@@ -458,7 +458,7 @@ export async function wixEcom_onOrderCanceled(event) {
     const { cancelSequenceForOrder } = await import('backend/emailAutomation.web');
     await cancelSequenceForOrder(email, orderNumber);
   } catch (err) {
-    logError('events:cancelCareSequence', err);
+    logError('events:wixEcom_onOrderCanceled-careSequenceFailed', err);
   }
 }
 
@@ -473,7 +473,7 @@ export async function wixStores_onProductCreated(event) {
   const productId = product._id || '';
 
   if (!productId) {
-    console.warn('[events] wixStores_onProductCreated received event without product ID');
+    logError('events:wixStores_onProductCreated-missingId', null);
     return;
   }
 
@@ -490,7 +490,7 @@ export async function wixStores_onProductCreated(event) {
       imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
     });
   } catch (err) {
-    logError('events:contentOrchestration-newProduct', err);
+    logError('events:wixStores_onProductCreated-orchestrationFailed', err);
     await logFailedEvent({
       handler: 'wixStores_onProductCreated',
       productId,
@@ -511,7 +511,7 @@ export async function wixStores_onProductUpdated(event) {
   const productId = product._id || '';
 
   if (!productId) {
-    console.warn('[events] wixStores_onProductUpdated received event without product ID');
+    logError('events:wixStores_onProductUpdated-missingId', null);
     return;
   }
 
@@ -537,7 +537,7 @@ export async function wixStores_onProductUpdated(event) {
       newPrice,
     });
   } catch (err) {
-    logError('events:contentOrchestration-priceDrop', err);
+    logError('events:wixStores_onProductUpdated-priceDropOrchestrationFailed', err);
     await logFailedEvent({
       handler: 'wixStores_onProductUpdated',
       productId,
@@ -581,7 +581,7 @@ export async function wixStores_onInventoryVariantUpdated(event) {
 
     // Check for soft failure (returned { success: false } without throwing)
     if (result && !result.success) {
-      logError(`events:restockNotifications-resultFailure productId=${productId}`, new Error(String(result.error || 'unknown')));
+      logError(`events:dispatchRestockNotifications-failure productId=${productId} reason=${result.error || 'unknown'}`, null);
       await logFailedEvent({
         handler: 'wixStores_onInventoryVariantUpdated',
         productId: productId || 'unknown',
@@ -604,10 +604,10 @@ export async function wixStores_onInventoryVariantUpdated(event) {
         });
       }
     } catch (orchErr) {
-      logError('events:contentOrchestration-restock', orchErr);
+      logError('events:dispatchRestockNotifications-orchestrationFailed', orchErr);
     }
   } catch (err) {
-    logError(`events:restockNotifications productId=${productId || 'unknown'}`, err);
+    logError(`events:dispatchRestockNotifications productId=${productId || 'unknown'}`, err);
     await logFailedEvent({
       handler: 'wixStores_onInventoryVariantUpdated',
       productId: productId || 'unknown',
@@ -643,7 +643,7 @@ export async function wixMembers_onMemberUpdated(event) {
 
   const parsed = _parseBirthdayMonthDay(birthday);
   if (!parsed) {
-    console.warn('[events] wixMembers_onMemberUpdated: unparseable birthday for member', memberId, ':', birthday);
+    logError(`events:wixMembers_onMemberUpdated-unparseableBirthday memberId=${memberId}`, null);
     return;
   }
 
@@ -652,7 +652,7 @@ export async function wixMembers_onMemberUpdated(event) {
     // so we must spread the existing record to avoid destroying other fields.
     const existing = await wixData.get('Members/PrivateMembersData', memberId);
     if (!existing) {
-      console.warn('[events] wixMembers_onMemberUpdated: no PrivateMembersData record for member', memberId);
+      logError(`events:wixMembers_onMemberUpdated-noPrivateMembersData memberId=${memberId}`, null);
       return;
     }
     await wixData.update('Members/PrivateMembersData', {
@@ -661,7 +661,7 @@ export async function wixMembers_onMemberUpdated(event) {
       birthday_day: parsed.day,
     });
   } catch (err) {
-    logError(`events:syncBirthdayFields member=${memberId}`, err);
+    logError(`events:wixMembers_onMemberUpdated-syncFailed memberId=${memberId}`, err);
     await logFailedEvent({
       handler: 'wixMembers_onMemberUpdated',
       error: err.message,
