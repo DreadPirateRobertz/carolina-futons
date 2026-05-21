@@ -31,6 +31,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sendBatchReminders } from 'backend/challengeReminderService.web';
+import { logError } from 'backend/utils/errorHandler';
 
 const ORDERS_COLLECTION = 'Stores/Orders';
 const PAGE_SIZE = 100;
@@ -113,7 +114,7 @@ export const scanLifecycleMilestones = webMethod(
         results,
       };
     } catch (err) {
-      console.error('[lifecycleCron] scanLifecycleMilestones failed:', err?.message);
+      logError('lifecycleCron:scanLifecycleMilestones-failed', err);
       return { success: false, ordersScanned: 0, milestonesFound: 0, results: [] };
     }
   }
@@ -197,14 +198,14 @@ export const runDailyChallengeReminders = webMethod(
             await sendPushToMember(record.memberId, PUSH_EVENTS.CHALLENGE_REMINDER, {});
           }
         } catch (pushErr) {
-          console.error(`[lifecycleCron] challenge reminder push failed for ${record.memberId}:`, pushErr?.message);
+          logError(`lifecycleCron:runDailyChallengeReminders-reminderFailed memberId=${record.memberId}`, pushErr);
         }
       };
 
       const { sent, failed } = await sendBatchReminders('daily', sendFn);
       return { success: true, sent, failed };
     } catch (err) {
-      console.error('[lifecycleCron] runDailyChallengeReminders failed:', err?.message);
+      logError('lifecycleCron:runDailyChallengeReminders-failed', err);
       return { success: false, sent: 0, failed: 0 };
     }
   }

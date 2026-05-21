@@ -352,7 +352,7 @@ export const notifyOwner = webMethod(
     try {
       const ownerId = await getSecret('SITE_OWNER_CONTACT_ID');
       if (!ownerId) {
-        console.warn('[notificationService] notifyOwner: SITE_OWNER_CONTACT_ID secret not set — falling back to console');
+        logError('notificationService:notifyOwner-secretMissing', null);
       } else {
         await triggeredEmails.emailContact(resolveTemplateId('owner_alert'), ownerId, {
           variables: { subject: safeSubject, message: safeMessage },
@@ -361,11 +361,11 @@ export const notifyOwner = webMethod(
       }
     } catch (emailErr) {
       // Fall through to console fallback if email delivery fails
-      console.warn('[notificationService] notifyOwner email failed, falling back to console:', emailErr?.message);
+      logError('notificationService:notifyOwner-emailFailed', emailErr);
     }
 
     // Console fallback — ensures the alert surfaces in Wix logs even without email config
-    console.error(`[notificationService] OWNER ALERT — ${safeSubject}: ${safeMessage}`);
+    logError(`notificationService:notifyOwner-ownerAlert subject=${safeSubject}`, null);
     return { success: true, method: 'console' };
   }
 );

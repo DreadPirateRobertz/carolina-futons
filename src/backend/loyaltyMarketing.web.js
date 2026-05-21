@@ -101,7 +101,7 @@ export const getEnrollmentPrompt = webMethod(
         },
       };
     } catch (err) {
-      console.error('[loyaltyMarketing] getEnrollmentPrompt error:', err);
+      logError('loyaltyMarketing:getEnrollmentPrompt-failed', err);
       return { success: false, shouldPrompt: false, benefits: null };
     }
   }
@@ -426,7 +426,7 @@ export const enrollMember = webMethod(
 
       return { success: true, welcomePoints: totalWelcome, account };
     } catch (err) {
-      console.error('[loyaltyMarketing] enrollMember error:', err);
+      logError('loyaltyMarketing:enrollMember-failed', err);
       return { success: false, welcomePoints: 0, account: null, error: 'Enrollment failed' };
     }
   }

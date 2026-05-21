@@ -7,6 +7,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { getStockStatus, signUpBackInStock } from 'backend/inventoryService.web';
 import { validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── getProductInventory ───────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ export const getProductInventory = webMethod(
 
       return { success: true, status, quantity };
     } catch (e) {
-      console.error('[liveInventory] getProductInventory failed:', e);
+      logError('liveInventory:getProductInventory-failed', e);
       return { success: false, error: 'Failed to fetch inventory' };
     }
   }
@@ -62,7 +63,7 @@ export const registerStockNotification = webMethod(
 
       return await signUpBackInStock({ productId, email });
     } catch (e) {
-      console.error('[liveInventory] registerStockNotification failed:', e);
+      logError('liveInventory:registerStockNotification-failed', e);
       return { success: false, error: 'Failed to register notification' };
     }
   }

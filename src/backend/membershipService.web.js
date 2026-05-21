@@ -15,6 +15,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { orders, plans } from 'wix-pricing-plans.v2';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 /** Plan slug identifiers — must match Wix Dashboard plan slugs. */
 export const PLAN_SLUGS = {
@@ -58,7 +59,7 @@ async function getActiveOrder() {
       o.status === 'ACTIVE' && CF_PLUS_SLUG_SET.has(o.planSlug)
     ) || null;
   } catch (err) {
-    console.error('[membershipService] Error fetching orders:', err);
+    logError('membershipService:getActiveOrder-failed', err);
     return null;
   }
 }
@@ -80,7 +81,7 @@ export const getMembershipPlans = webMethod(
       const allPlans = result.plans || [];
       return allPlans.filter(p => CF_PLUS_SLUG_SET.has(p.slug) && p.active);
     } catch (err) {
-      console.error('[membershipService] Error listing plans:', err);
+      logError('membershipService:getMembershipPlans-failed', err);
       return [];
     }
   }

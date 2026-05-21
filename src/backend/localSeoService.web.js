@@ -21,6 +21,7 @@ import {
 } from 'backend/utils/localSeoData';
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
+import { logError } from 'backend/utils/errorHandler';
 
 const CMS_COLLECTION = 'LocalSeoCities';
 
@@ -118,7 +119,7 @@ export const getLocalPage = webMethod(
       try {
         featuredProducts = await _fetchProductsByCity(cityData, 4);
       } catch (e) {
-        console.warn('[localSeoService] Failed to fetch featured products for page:', cleanSlug, e.message, e);
+        logError('localSeoService:getLocalPage-featuredProductsFailed', e);
       }
 
       return {
@@ -167,7 +168,7 @@ export const getLocalPage = webMethod(
         },
       };
     } catch (err) {
-      console.error('[localSeoService] Error loading local page:', slug, err.name, err.message, err);
+      logError('localSeoService:getLocalPage-failed', err);
       return { success: false, error: 'Failed to load local page.', page: null };
     }
   }
@@ -282,7 +283,7 @@ export const getFeaturedProductsForCity = webMethod(
       const products = await _fetchProductsByCity(cityData, limit);
       return { success: true, products };
     } catch (err) {
-      console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);
+      logError('localSeoService:getFeaturedProductsForCity-failed', err);
       return { success: false, error: 'Failed to load featured products.', products: [] };
     }
   }
@@ -331,7 +332,7 @@ export const getRelatedCityLinks = webMethod(
 
       return { success: true, links };
     } catch (err) {
-      console.error('[localSeoService] Error loading related city links:', slug, err.name, err.message, err);
+      logError('localSeoService:getRelatedCityLinks-failed', err);
       return { success: false, error: 'Failed to load related city links.', links: [] };
     }
   }
@@ -359,7 +360,7 @@ export const getAllLocalSlugs = webMethod(
       const allSlugs = [...new Set([...staticSlugs, ...cmsSlugs])];
       return { success: true, slugs: allSlugs };
     } catch (err) {
-      console.error('[localSeoService] Error getting local slugs:', err.name, err.message, err);
+      logError('localSeoService:getAllLocalSlugs-failed', err);
       return { success: false, slugs: [] };
     }
   }

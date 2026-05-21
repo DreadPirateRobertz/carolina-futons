@@ -30,7 +30,8 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { contacts } from 'wix-crm-backend';
-import { sanitize, validateEmail, redactEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Resolve (or create) a Wix CRM contact for an email address.
@@ -99,7 +100,7 @@ export async function _resolveContactIdInternal(email, firstName) {
     // CRM upstream failure — caller decides whether to retry. Logged with
     // the email so support can correlate; never log full PII beyond what
     // the caller already has access to (the email).
-    console.error('[contactResolver] appendOrCreateContact failed for', cleanEmail, '— error:', err?.message ?? err);
+    logError('contactResolver:_resolveContactIdInternal-appendOrCreateFailed', err);
     return null;
   }
 
@@ -108,7 +109,7 @@ export async function _resolveContactIdInternal(email, firstName) {
   // resolution covers both.
   const contactId = result?.contactId || result?.contact?._id || result?._id;
   if (!contactId) {
-    console.warn('[contactResolver] appendOrCreateContact returned no contactId for', redactEmail(cleanEmail));
+    logError('contactResolver:_resolveContactIdInternal-noContactId', null);
     return null;
   }
   return contactId;
