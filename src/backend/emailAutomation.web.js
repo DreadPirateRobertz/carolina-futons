@@ -160,11 +160,16 @@ const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
 // Carts at or above this total qualify for the free shipping note in step 2.
 const CART_FREE_SHIPPING_THRESHOLD = 150;
 
-// ── Event Handlers (auto-register in backend/) ───────────────────────
+// ── Dead event-handler stubs (test backward-compat) ──────────────────
+// Wix Velo auto-registers event handlers ONLY from backend/events.js.
+// These functions are never invoked by Wix. They are kept exported here
+// solely so pre-existing tests that imported them directly continue to
+// pass without a mass-refactor. Real implementations live in events.js.
+// Do NOT add business logic here — it will never run in production.
 
 /**
- * Triggered when a new site member is created.
- * Queues the welcome email series.
+ * @deprecated Real handler: events.js#wixMembers_onMemberCreated.
+ * Kept for test backward-compat (cf-m6t0).
  */
 export function wixMembers_onMemberCreated(event) {
   const member = event.entity || event;
@@ -179,8 +184,10 @@ export function wixMembers_onMemberCreated(event) {
 }
 
 /**
- * Triggered when an order is created.
- * Queues the post-purchase care sequence.
+ * @deprecated Real handler: events.js#wixEcom_onOrderCreated (which sends
+ * order confirmation + queues post-purchase sequence). sendOrderConfirmation
+ * has been removed from this stub — it now lives in events.js (cf-m6t0 F3).
+ * Kept for test backward-compat.
  */
 export function wixEcom_onOrderCreated(event) {
   const order = event.entity || event;
@@ -197,15 +204,6 @@ export function wixEcom_onOrderCreated(event) {
   }));
 
   if (!email) return;
-
-  sendOrderConfirmation({
-    contactId,
-    email,
-    firstName,
-    orderNumber: String(orderNumber),
-    total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-    itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-  }).catch(err => logError('emailAutomation:orderConfirmation-send', err));
 
   // CF-fzsd: Queue post-purchase care sequence at order creation so slug
   // extraction from lineItems is available (Day 7 review URL uses product slug).

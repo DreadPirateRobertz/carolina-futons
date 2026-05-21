@@ -59,9 +59,10 @@ describe('cf-g79m — emailAutomation.web.js logError tag normalization', () => 
     // catch site forgets the prefix.
     const tagPattern = /\blogError\s*\(\s*['"`]([^'"`]+)['"`]/g;
     const tags = Array.from(SRC.matchAll(tagPattern), (m) => m[1]);
-    // Sanity floor: at least 25 logError calls present (19 cf-uydr +
-    // 6 cf-g79m). The exact count may drift up as new code lands.
-    expect(tags.length).toBeGreaterThanOrEqual(25);
+    // Sanity floor: at least 24 logError calls present (19 cf-uydr +
+    // 6 cf-g79m − 1 cf-m6t0: emailAutomation:orderConfirmation-send removed
+    // from dead wixEcom_onOrderCreated stub; call moved to events.js).
+    expect(tags.length).toBeGreaterThanOrEqual(24);
     const nonPrefixed = tags.filter((t) => !t.startsWith('emailAutomation:'));
     expect(
       nonPrefixed,

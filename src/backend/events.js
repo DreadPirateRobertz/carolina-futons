@@ -22,6 +22,7 @@
  */
 import wixData from 'wix-data';
 import { sanitize, redactEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── CWF ISR Revalidate Helper ─────────────────────────────────────────
 
@@ -227,6 +228,21 @@ export async function wixEcom_onOrderCreated(event) {
   }));
 
   if (!email) return;
+
+  // cf-m6t0 (F3): branded order confirmation — was in dead code at emailAutomation.web.js#wixEcom_onOrderCreated
+  try {
+    const { sendOrderConfirmation } = await import('backend/emailService.web');
+    await sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    });
+  } catch (err) {
+    logError('events:sendOrderConfirmation', err);
+  }
 
   // CF-hfao: mobile push notification for order confirmation
   try {
