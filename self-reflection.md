@@ -1,5 +1,77 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-21 — Third reflection (02:15 MT)
+
+### What worked well
+- **Rebase conflict resolution speed**: PR #896 worktree was mid-rebase with conflicts in 4 files. Resolved by keeping both cfw-66o.5 featured-row and cfw-66o.3 description test blocks in plp-page.test.tsx, then `git rebase --continue` handled the remaining 3 commits cleanly. Total time ~15 min.
+- **JSON validity check before merge**: Always ran `python3 -c "import json; json.load(open(...))"` after any seed-data.json conflict. Caught that the 54-row count was correct even though `_about` comment said 55.
+- **Idle crew detection + immediate bead creation**: Mayor urgent nudge received, checked cfutons_web open beads in one command, identified the gap (morgott/rennala had no open beads), created cfw-e90 + cfw-nlv, dispatched in the same turn. Zero extra round-trips.
+- **Parallel state checking**: Checked PR #896 CI (green), PR #900 CI (still running), PR #912 merge status all in parallel before committing to a merge plan.
+
+### What to improve
+- **Worktree rebase state detection**: Before trying `gh pr merge`, should have checked git branch status (`git branch -a`) to detect the detached HEAD / rebasing state. Wasted one failed merge attempt.
+- **Stray conflict marker mystery**: `grep` showed markers at specific line numbers but Read showed clean content. Spent time debugging — root cause was that the file had been partially edited (conflict regions resolved but git index not updated). Pattern: if `git status` shows UU but grep finds nothing, just `git add` and proceed.
+- **54 vs 55 row count mismatch**: `_about` says 55 rows but actual count is 54. Should have investigated and corrected the `_about` comment before merging, not left it as a known mismatch. Creates confusion for future debugging.
+
+### Pattern notes
+- **Rebase over merge for PR branches**: When a PR branch has conflicts with main, rebase (not merge) to keep linear history. `git rebase --continue` handles multi-step rebases cleanly once conflicts are resolved per-commit.
+- **UU files in worktrees**: After resolving conflict content in UU files, always `git add` immediately — git won't track the resolution until staged. Then `git rebase --continue` can proceed.
+- **Both test blocks when both features exist**: When two PRs each add a describe block to the same test file and they conflict, the resolution is always to keep BOTH blocks. Never drop a test block to resolve a merge conflict.
+
+## Session 2026-05-21 — Second reflection (01:07 MT)
+
+### What worked well
+- **Merge conflict resolution (PR #907)**: seed-data.json conflict between cfw-66o.4 (8 shop rows) and cfw-66o.11 (11 about rows) — detected quickly, resolved with Python to combine both row sets, pushed, CI re-queued. Total time ~10 min.
+- **Transposed store hours caught**: PR #905 review agent caught visit.hours.sun-tue = "10am-5pm" / wed-sat = "Closed" — exactly backwards. Store is Wed-Sat 10-5 per MEMORY.md. Blocked before merge saved a live-site error.
+- **XSS/URL injection caught**: PR #904 reviewer caught getSiteContent returning raw CMS strings used directly as href values — no scheme validation. `javascript:` URLs from a compromised CMS entry would execute on click. Fixed before merge.
+- **Test contract mismatch caught (PR #900)**: Reviewer found FEATURED_CATEGORY stubs using "Editor picks" (no apostrophe) and shortened body copy vs real categories.ts values. Stubs were documenting wrong fallback contracts.
+- **Efficient context recovery post-compaction**: PR #894 already merged (missed it initially), discovered via `gh pr list --state merged`. All CI state recovered in ~5 tool calls.
+
+### What to improve
+- **PR #896 duplicate import**: PR #902 merged to main while PR #896 was in CI — both added `import { getSiteContent }` to same file. TypeScript caught it, godfrey needs to rebase. Could have caught this proactively by checking the files modified in both PRs before merging #902.
+- **cfw-66o.10 closure confusion**: Bead closed with "Closed" reason, no PR referenced, homepage value-prop was actually already wired (from cfw-34q/cfw-9uw). Spent time investigating before confirming. Pattern: before flagging a "missing" closed bead, grep the component for getSiteContent calls.
+- **Too many PRs in concurrent CI**: 7 PRs with e2e in_progress simultaneously. Some are taking 30+ min. Vercel build conservation standing order suggests batching — but for e2e runner slots, also need to stagger pushes.
+
+### Pattern notes
+- **Seed-data.json conflict resolution**: When two PRs both add rows to seed-data.json, take both sides. Update _about metadata row count = sum of both. Update test toHaveLength() to match.
+- **Store hours canonical source**: MEMORY.md says Wed-Sat 10-5, Sun-Tue closed. Any seed/doc writing store hours should use this. Flag immediately if inverted.
+- **cfw-66o.10 was done by cfw-34q/cfw-9uw**: home.value-props.* in getSiteContent was added by those beads, not a missing gap. Confirmed via grep.
+
+## Session 2026-05-21 (cfw-66o convoy + stale queue recovery)
+
+### What worked well
+- **Reviewer stale-checkout memory paid off**: When PR #893 came back from morgott ("reviewer findings don't hold up"), the memory entry `feedback_reviewer_stale_checkout.md` immediately explained why — reviewer was on wrong local branch. Posted correction fast, no re-review needed.
+- **Conflict resolution speed**: PR #897 had a merge conflict in brenda-admin-guide.md. Rather than bouncing back to miquella, took 4 minutes to resolve locally, push, and admin-merge. Zero idle time.
+- **Test failure diagnosis**: PR #899 CI failure (E469 / unstable_cache) — root-caused to missing vi.mock in plp-page.test.tsx in one log scan. Sent morgott exact fix one-liner without requiring a back-and-forth.
+- **Proactive CI trigger**: PR #894 was sitting with no CI run (last run from 2026-05-09). Noticed, ran `gh workflow run CI --ref <branch>` manually rather than waiting for blaidd to re-push.
+
+### What to improve
+- **Triggered CI twice**: Ran `gh workflow run CI` for PR #894 twice in rapid succession (didn't check if first one had started). Two in_progress runs are wasteful. Check `gh run list --branch <name>` before triggering a second dispatch.
+- **Hamburger "Murphy Beds" lint risk**: Left a potential test mismatch unchecked (hamburger test still shows "Murphy Beds" as context line after blaidd's fix). Should have verified with `gh pr diff 894 | grep -C10 "Murphy Beds"` before moving on. CI will catch it but I could have flagged it proactively.
+- **Stale queue hit again**: radahn, rennala, blaidd all had "closed" beads in queue (cfw-cus/cfw-l0m/cfw-oav/cfw-98s). This is the third session with stale bead collisions. Root cause: we create beads, crew does work, closes bead, but the bead stays assigned in bd list. Need a periodic `bd list | grep in_progress → bd show <id> | verify Status` sweep at session start.
+
+### Pattern notes
+- **plp-page.test.tsx mock pattern**: Any new getSiteContent call in `[category]/page.tsx` requires `vi.mock('@/lib/cms/site-content', () => ({ getSiteContent: vi.fn(async (_k, f) => f ?? '') }))` in plp-page.test.tsx. Both PR #896 (godfrey) and PR #899 (morgott) hit this same gap. May need to document in CLAUDE.md or a test-pattern doc.
+- **Admin-merge pattern for docs PRs**: Docs-only PRs with pre-existing e2e failures and no required checks → admin-merge without waiting for e2e. PR #897 (docs-only) was cleanly admin-mergeable.
+
+## Session 2026-05-20 (context compaction recovery + crew dispatch)
+
+### What worked well
+- **Fast queue diagnosis**: After compaction, efficiently checked mol status → mail → bd ready → cfutons_web beads → assignees in a few parallel rounds. Had full dispatch picture in ~8 tool calls.
+- **Pre-cutover scoping for rennala**: Correctly authorized RETIRED banners + retro skeleton while blocking the git tag (requires 30-day post-cutover window). Clean scope boundary.
+- **cfw-66o sub-bead creation**: Recognized epic had no open sub-beads for crew, created two targeted tasks (hardcoded copy audit + Brenda admin guide) with concrete file lists and acceptance criteria. Matched owner descriptions in epic spec exactly.
+
+### What to improve
+- **Redundant work happened**: Session before compaction did significant logError migration work (cf-7s1j) that turned out to already be in main (blaidd PR #1572). The work ran anyway because context was lost. Better pre-work check: `git log --oneline main | grep <bead-id>` before starting any migration bead.
+- **Thin-queue response speed**: WATCHDOG fired with idle crew. Recovery took a full context compaction + restart cycle before crew got dispatched. If I had acted on cf-tm1e blockage faster and pivoted crew to cfw-66o sub-beads in the prior session, no idle gap.
+
+### Pattern notes
+- **Session death vs idle**: When WATCHDOG says "IDLE: crew-X" and that crew has in_progress beads, it's usually a dead session, not missing work. Nudge to resume before reassigning.
+- **bd ready shows epics as open**: Parent epics (cf-3qt, cf-xe2) appear in bd ready even when all work is blocked/waiting on Stilgar. Filter by type=task for actual assignable work.
+- **Polecat beads in cfutons_web**: Many dormant (◇) cfutons_web beads are assigned to polecats (rust/chrome/shiny/dust/nitro). These are Linux-only. Don't reassign to crew unless polecat is confirmed dead.
+
+
+
 ## Session 2026-05-16 (387faae7 — merge drain + ISR unlock dispatch)
 
 ### What worked well
