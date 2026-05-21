@@ -992,3 +992,22 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - bd comments vs bd comment: always `bd comments add <bead-id> "message"` not `bd comment`.
 - Date -u to verify actual UTC, then convert to MT (MDT=UTC-6 in May, MST=UTC-7 in Nov-Mar).
 - When merging two specs on the same topic from different crew: note the discrepancy in the 5-crew review and flag for Stilgar consolidation, don't block the merge.
+
+## Session 2026-05-21 (6e859f1f — CFW audit + logError wave QA)
+
+### What worked well
+- **CFW Playwright audit was structured and fast**: Tested 6 features in sequence (variant swatch, size, cart, checkout, search, PLP filter, wishlist). Used JS eval to extract exact src/price before and after clicks instead of relying on screenshots alone. Surfaced the image-not-changing bug in 2 tool calls.
+- **Root cause diagnosis on CI failures**: When `contactResolver.cfxdji.test.js` failed on 2 unrelated PRs, traced to the branches having modified the test to expect `logError` but not migrating the source. Found by comparing `grep -n "logError"` in source vs test imports. Fastest fix = revert the test to main's version, open a dedicated contactResolver migration PR.
+- **Bracket vs colon pattern identified quickly**: Same pattern appeared in #1543 (radahn) and #1533 (godfrey) — test checked `[cartRecovery]` bracket style, source used `cartRecovery:` colon namespace. Dispatched targeted fixes with exact line numbers.
+- **Image bug root cause hypothesis**: CSP preload log always points to Cherry image hash even after finish change, confirming the bug is server-side (PDP component doesn't re-derive displayedImage from selected variant state after client-side swatch click, not a JS error).
+
+### What to improve
+- **Don't assume mayor's slug is a valid route**: `/products/rio-futon-frame` returned 404 — should have verified by checking PLP product URLs first before spending a navigation cycle on a dead slug.
+- **stale statusCheckRollup can mislead**: #1448 showed `test (22):FAILURE` in statusCheckRollup but the LATEST CI run was SUCCESS. Must always cross-check with `gh run list --branch <branch>` sorted by date before concluding a PR is blocked.
+
+### Pattern notes
+- **CFW PDP bug confirmed (2026-05-21)**: Variant swatch click → URL updates + legend label updates, but main product image hash is unchanged for any variant (Finish AND Size). Price DOES update for Size changes but NOT for Finish changes. Likely cause: `displayedImage` not derived from `selectedVariant.media` in the PDP React component.
+- **Structural audit tests expect bracket format**: Wave of cf-44qt sibling PRs were auto-generated with tests checking `logError('[module] fn', ...)` bracket style, but source migrations use `logError('module:fn', ...)` colon-namespace. When these disagree, fix the TEST to match colon-namespace (canonical format for the wave).
+- **contactResolver.web.js still uses console.error (as of 2026-05-21)**: `src/backend/contacts/contactResolver.web.js:102` — not yet migrated to logError. Some branches preemptively updated the test to expect logError without migrating the source. Correct approach: dedicated migration PR for the source + test together.
+- **CFW e2e CANCELLED = normal**: Stilgar manual cancel pattern. lint+tests ✅ = admin-mergeable. Never block on cancelled e2e.
+- **cfw PRs 858/861/864 merged**: All three `logWarn` migration PRs from the async→sync API rebase are merged.
