@@ -20,6 +20,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'Members/StyleQuizResults';
 const BASE_URL = 'https://www.carolinafutons.com';
@@ -55,7 +56,7 @@ export const saveQuizResult = webMethod(
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error('[styleQuizService] getMember error:', err);
+      logError('styleQuizService:saveResult-memberFailed', err);
       return { error: 'auth_failed' };
     }
 
@@ -82,7 +83,7 @@ export const saveQuizResult = webMethod(
         existingShareId = existing.items[0].shareId;
       }
     } catch (err) {
-      console.error('[styleQuizService] query error on upsert check:', err);
+      logError('styleQuizService:saveResult-queryFailed', err);
     }
 
     const shareId = existingShareId || generateShareId();
@@ -102,7 +103,7 @@ export const saveQuizResult = webMethod(
         await wixData.insert(COLLECTION, record);
       }
     } catch (err) {
-      console.error('[styleQuizService] save error:', err);
+      logError('styleQuizService:saveResult', err);
       return { error: 'save_failed' };
     }
 
@@ -133,7 +134,7 @@ export const getMyResult = webMethod(
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error('[styleQuizService] getMember error:', err);
+      logError('styleQuizService:getMyResult-memberFailed', err);
       return { error: 'auth_failed' };
     }
 
@@ -160,7 +161,7 @@ export const getMyResult = webMethod(
         completedAt: item.completedAt,
       };
     } catch (err) {
-      console.error('[styleQuizService] getMyResult error:', err);
+      logError('styleQuizService:getMyResult', err);
       return { error: 'fetch_failed' };
     }
   }
@@ -201,7 +202,7 @@ export const getSharedResult = webMethod(
         completedAt: item.completedAt,
       };
     } catch (err) {
-      console.error('[styleQuizService] getSharedResult error:', err);
+      logError('styleQuizService:getSharedResult', err);
       return { error: 'fetch_failed' };
     }
   }

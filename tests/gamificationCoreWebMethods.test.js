@@ -303,9 +303,8 @@ describe('cf-1y7 null-member guard cascade', () => {
         lastActivityDate: null,
         error: 'auth_required',
       });
-      // cf-n4wy: migrated to canonical logError tag
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getStreakData-noMemberId',
+        'gamificationCore:getStreakData-unauthenticated',
         null,
       );
     });
@@ -333,7 +332,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       expect(result.tierName).toBe('Trail Blazer'); // computeTierInfo(0) baseline preserved
       expect(result.error).toBe('auth_required');
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getMemberTier-noMemberId',
+        'gamificationCore:getMemberTier-unauthenticated',
         null,
       );
     });
@@ -351,7 +350,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       const result = await getActiveChallenges(null);
       expect(result).toEqual({ challenges: [], error: 'auth_required' });
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getActiveChallenges-noMemberId',
+        'gamificationCore:getActiveChallenges-unauthenticated',
         null,
       );
     });
@@ -389,17 +388,13 @@ describe('cf-1y7 null-member guard cascade', () => {
   });
 
   describe('getActivityFeed (Array-return, observability via canonical logError)', () => {
-    // Consumer compat: this handler returns Array, so error-object shape would
-    // be a breaking change. We preserve Array return but log at the two
-    // silent branches via canonical logError so auth/IDOR leaks surface in
-    // Wix runtime logs (cf-n4wy migrated from console.warn).
     it('logs auth_required tag when no member is authenticated', async () => {
       vi.mocked(logError).mockClear();
       __mockMemberId = null;
       const result = await getActivityFeed('mem-1');
       expect(result).toEqual([]);
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getActivityFeed-authRequired',
+        'gamificationCore:getActivityFeed-unauthenticated',
         null,
       );
     });
