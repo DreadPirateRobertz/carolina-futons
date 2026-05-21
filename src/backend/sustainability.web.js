@@ -40,6 +40,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -112,7 +113,7 @@ export const getSustainabilityInfo = webMethod(
         },
       };
     } catch (err) {
-      console.error('[sustainability] Error getting sustainability info:', err);
+      logError('[sustainability] getSustainabilityInfo failed', err);
       return { success: false, error: 'Failed to load sustainability info.', sustainability: null };
     }
   }
@@ -165,7 +166,7 @@ export const calculateCarbonOffset = webMethod(
         },
       };
     } catch (err) {
-      console.error('[sustainability] Error calculating carbon offset:', err);
+      logError('[sustainability] calculateCarbonOffset failed', err);
       return { success: false, error: 'Failed to calculate offset.', offset: null };
     }
   }
@@ -233,7 +234,7 @@ export const submitTradeIn = webMethod(
         },
       };
     } catch (err) {
-      console.error('[sustainability] Error submitting trade-in:', err);
+      logError('[sustainability] submitTradeIn failed', err);
       return { success: false, error: 'Failed to submit trade-in request.' };
     }
   }
@@ -279,7 +280,7 @@ export const getTradeInStatus = webMethod(
         requests: result.items.map(formatTradeIn),
       };
     } catch (err) {
-      console.error('[sustainability] Error getting trade-in status:', err);
+      logError('[sustainability] getTradeInStatus failed', err);
       return { success: false, error: 'Failed to load trade-in status.', requests: [] };
     }
   }
