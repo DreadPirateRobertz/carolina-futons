@@ -2,6 +2,7 @@
 // Queries FabricSwatches CMS collection for swatch data
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 // Get available swatches for a product, optionally filtered by color family
 export const getProductSwatches = webMethod(
@@ -35,7 +36,7 @@ export const getProductSwatches = webMethod(
         careInstructions: item.careInstructions,
       }));
     } catch (err) {
-      console.error('Error fetching product swatches:', err);
+      logError('[swatchService] getProductSwatches', err);
       return [];
     }
   }
@@ -51,7 +52,7 @@ export const getAllSwatchFamilies = webMethod(
 
       return results.items || [];
     } catch (err) {
-      console.error('Error fetching swatch families:', err);
+      logError('[swatchService] getSwatchFamilies', err);
       return [];
     }
   }
@@ -71,7 +72,7 @@ export const getSwatchCount = webMethod(
 
       return results;
     } catch (err) {
-      console.error('Error counting swatches:', err);
+      logError('[swatchService] countSwatches', err);
       return 0;
     }
   }
@@ -96,7 +97,7 @@ export const getSwatchPreviewColors = webMethod(
         swatchName: item.swatchName,
       }));
     } catch (err) {
-      console.error('Error fetching swatch preview colors:', err);
+      logError('[swatchService] getSwatchPreviewColors', err);
       return [];
     }
   }
