@@ -22,6 +22,7 @@
  */
 import wixData from 'wix-data';
 import { sanitize, redactEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── CWF ISR Revalidate Helper ─────────────────────────────────────────
 
@@ -240,7 +241,7 @@ export async function wixEcom_onOrderCreated(event) {
       itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
     });
   } catch (err) {
-    console.error('[events] sendOrderConfirmation failed:', err);
+    logError('events:sendOrderConfirmation', err);
   }
 
   // CF-hfao: mobile push notification for order confirmation
