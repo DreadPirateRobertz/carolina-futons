@@ -63,7 +63,7 @@ export const getCustomizationOptions = webMethod(
         })),
       };
     } catch (err) {
-      logError('[customizationService] getCustomizationOptions', err);
+      logError('customizationService:getCustomizationOptions', err);
       return empty;
     }
   }
@@ -136,7 +136,7 @@ export const saveConfiguration = webMethod(
       const result = await wixData.insert('SavedCustomizations', record);
       return result;
     } catch (err) {
-      logError('[customizationService] saveCustomizationConfig', err);
+      logError('customizationService:saveCustomizationConfig', err);
       return { error: 'Failed to save configuration' };
     }
   }
@@ -177,7 +177,7 @@ export const getSavedConfigurations = webMethod(
         _createdDate: item._createdDate,
       }));
     } catch (err) {
-      logError('[customizationService] getSavedConfigurations', err);
+      logError('customizationService:getSavedConfigurations', err);
       return [];
     }
   }
@@ -203,7 +203,7 @@ export const getConfigurationById = webMethod(
 
       return result;
     } catch (err) {
-      logError('[customizationService] getConfiguration', err);
+      logError('customizationService:getConfiguration', err);
       return null;
     }
   }
