@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __onInsert } from './__mocks__/wix-data.js';
 
-const { mockEmailContact, mockQueryContacts } = vi.hoisted(() => {
+const { mockEmailContact, mockQueryContacts, mockAppendOrCreateContact } = vi.hoisted(() => {
   const mockEmailContact = vi.fn(async () => ({}));
   const mockQueryContacts = vi.fn(() => ({
     eq: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     find: vi.fn(async () => ({ items: [] })),
   }));
-  return { mockEmailContact, mockQueryContacts };
+  // cf-gg0j: appendOrCreateContact replaces queryContacts for swatch confirmation
+  const mockAppendOrCreateContact = vi.fn(async () => ({ contactId: 'contact-456' }));
+  return { mockEmailContact, mockQueryContacts, mockAppendOrCreateContact };
 });
 
 vi.mock('wix-web-module', () => ({
@@ -18,7 +20,7 @@ vi.mock('wix-web-module', () => ({
 
 vi.mock('wix-crm-backend', () => ({
   triggeredEmails: { emailContact: mockEmailContact },
-  contacts: { queryContacts: mockQueryContacts },
+  contacts: { queryContacts: mockQueryContacts, appendOrCreateContact: mockAppendOrCreateContact },
 }));
 
 vi.mock('wix-secrets-backend', () => ({
@@ -53,6 +55,7 @@ beforeEach(() => {
   __reset();
   mockEmailContact.mockClear();
   mockQueryContacts.mockClear();
+  mockAppendOrCreateContact.mockClear();
 });
 
 // ── sendEmail ──────────────────────────────────────────────────
@@ -184,13 +187,8 @@ describe('submitSwatchRequest', () => {
     expect(call[2].variables.message).toContain('Swatches requested:');
   });
 
-  it('sends customer confirmation email when contact found', async () => {
-    const contactItem = { _id: 'contact-456' };
-    mockQueryContacts.mockReturnValueOnce({
-      eq: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      find: vi.fn(async () => ({ items: [contactItem] })),
-    });
+  it('sends customer confirmation email via appendOrCreateContact (cf-gg0j)', async () => {
+    // mockAppendOrCreateContact defaults to { contactId: 'contact-456' }
     await submitSwatchRequest(validSwatch);
     // Second emailContact call is the confirmation
     expect(mockEmailContact).toHaveBeenCalledTimes(2);
@@ -208,9 +206,10 @@ describe('submitSwatchRequest', () => {
     );
   });
 
-  it('does not send confirmation when no contact found', async () => {
+  it('does not send confirmation when appendOrCreateContact returns no contactId', async () => {
+    mockAppendOrCreateContact.mockResolvedValueOnce({}); // no contactId — e.g. network hiccup
     await submitSwatchRequest(validSwatch);
-    // Only the owner notification, no confirmation
+    // Only the owner notification fires; confirmation silently skipped
     expect(mockEmailContact).toHaveBeenCalledTimes(1);
     expect(mockEmailContact).toHaveBeenCalledWith(
       'VJBU6zD', // dashboard ID for contact_form_submission
@@ -220,13 +219,7 @@ describe('submitSwatchRequest', () => {
   });
 
   it('confirmation email failure does NOT fail the overall request', async () => {
-    const contactItem = { _id: 'contact-456' };
-    mockQueryContacts.mockReturnValueOnce({
-      eq: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      find: vi.fn(async () => ({ items: [contactItem] })),
-    });
-    // First call (owner notify) succeeds, second call (confirmation) fails
+    // appendOrCreateContact succeeds; first emailContact (owner) succeeds; second (confirmation) fails
     mockEmailContact
       .mockResolvedValueOnce({})
       .mockRejectedValueOnce(new Error('confirmation send failed'));

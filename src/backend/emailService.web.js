@@ -367,16 +367,19 @@ export const submitSwatchRequest = webMethod(
       }
 
       // Send customer confirmation email (best-effort — don't fail the request if this fails)
+      // cf-gg0j: use appendOrCreateContact so new visitors (no CRM contact yet) also receive
+      // the swatch confirmation. Was queryContacts — silently skipped for first-time emails.
       try {
-        const contactResult = await contacts.queryContacts()
-          .eq('primaryInfo.email', cleanEmail)
-          .limit(1)
-          .find();
-        if (contactResult.items.length > 0) {
+        const swatchContactResult = await contacts.appendOrCreateContact({
+          name: cleanName ? { first: cleanName } : undefined,
+          emails: [{ email: cleanEmail }],
+        });
+        const swatchContactId = swatchContactResult?.contactId || swatchContactResult?._id;
+        if (swatchContactId) {
           // cf-obsb: dispatch via TEMPLATE_ID_MAP-resolved Wix dashboard ID.
           await triggeredEmails.emailContact(
             resolveTemplateId('swatch_confirmation'),
-            contactResult.items[0]._id,
+            swatchContactId,
             {
               variables: {
                 customerName: cleanName,
