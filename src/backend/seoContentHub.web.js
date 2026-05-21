@@ -164,7 +164,7 @@ export const getContentHub = webMethod(
         },
       };
     } catch (err) {
-      logError('seoContentHub:getContentHub', err);
+      logError('[seoContentHub] Error getting content hub', err);
       return { success: false, error: 'Failed to load content hub.', hub: null };
     }
   }
@@ -218,7 +218,7 @@ export const getPillarGuide = webMethod(
         relatedGuides,
       };
     } catch (err) {
-      logError('seoContentHub:getPillarGuide', err);
+      logError('[seoContentHub] Error getting pillar guide', err);
       return { success: false, error: 'Failed to load guide.', guide: null, relatedGuides: [] };
     }
   }
@@ -238,7 +238,7 @@ export const getPillarGuideSlugs = webMethod(
         slugs: PILLAR_GUIDES.map(g => g.slug),
       };
     } catch (err) {
-      logError('seoContentHub:getAllSlugs', err);
+      logError('[seoContentHub] Error getting slugs', err);
       return { success: false, error: 'Failed to load slugs.', slugs: [] };
     }
   }
@@ -305,7 +305,7 @@ export const getHubSchema = webMethod(
 
       return { success: true, collectionSchema, itemListSchema, breadcrumbSchema };
     } catch (err) {
-      logError('seoContentHub:generateHubSchema', err);
+      logError('[seoContentHub] Error generating hub schema', err);
       return { success: false, error: 'Failed to generate hub schema.', collectionSchema: '', itemListSchema: '', breadcrumbSchema: '' };
     }
   }
@@ -360,7 +360,7 @@ export const getGuideSchema = webMethod(
 
       return { success: true, breadcrumbSchema, navigationSchema };
     } catch (err) {
-      logError('seoContentHub:generateGuideSchema', err);
+      logError('[seoContentHub] Error generating guide schema', err);
       return { success: false, error: 'Failed to generate guide schema.', breadcrumbSchema: '', navigationSchema: '' };
     }
   }
@@ -396,7 +396,7 @@ export const getSitemapEntries = webMethod(
 
       return { success: true, entries };
     } catch (err) {
-      logError('seoContentHub:generateSitemapEntries', err);
+      logError('[seoContentHub] Error generating sitemap entries', err);
       return { success: false, error: 'Failed to generate sitemap.', entries: [] };
     }
   }

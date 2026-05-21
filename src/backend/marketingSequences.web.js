@@ -27,7 +27,9 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { enqueueEmail } from 'backend/emailQueueService.web';
-import { logError } from 'backend/utils/errorHandler';
+import { logError as _logErrorCanonical } from 'backend/utils/errorHandler';
+
+function logError(msg, err) { _logErrorCanonical(`[marketingSequences] ${msg}`, err); }
 
 export const EMAIL_SEQUENCES_COLLECTION = 'EmailSequences';
 
