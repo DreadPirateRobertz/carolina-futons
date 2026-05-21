@@ -84,10 +84,10 @@ const FILES = {
   'gamificationCore.web.js': {
     requiresImport: true,
     tags: [
-      'gamificationCore:getActiveChallenges-noMemberId',
-      'gamificationCore:getStreakData-noMemberId',
-      'gamificationCore:getMemberTier-noMemberId',
-      'gamificationCore:getActivityFeed-authRequired',
+      'gamificationCore:getActiveChallenges-unauthenticated',
+      'gamificationCore:getStreakData-unauthenticated',
+      'gamificationCore:getMemberTier-unauthenticated',
+      'gamificationCore:getActivityFeed-unauthenticated',
       'gamificationCore:getActivityFeed-forbidden',
     ],
   },
@@ -130,8 +130,8 @@ const FILES = {
   'styleQuiz.web.js': {
     requiresImport: true,
     tags: [
-      'styleQuiz:getRecommendations',
-      'styleQuiz:captureLeadForm',
+      'styleQuiz:getQuizRecommendations-failed',
+      'styleQuiz:captureQuizLead',
     ],
   },
 };

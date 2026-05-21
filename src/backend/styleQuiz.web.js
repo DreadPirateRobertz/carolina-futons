@@ -156,7 +156,7 @@ export const getQuizRecommendations = webMethod(
       scored.sort((a, b) => b.score - a.score);
       return scored.slice(0, 5);
     } catch (err) {
-      logError('styleQuiz:getRecommendations', err);
+      logError('styleQuiz:getQuizRecommendations-failed', err);
       return [];
     }
   }
@@ -351,7 +351,7 @@ export const captureQuizLead = webMethod(
       logAuditEvent('NewsletterSubscribers', 'quiz_lead', cleaned);
       return { success: true };
     } catch (err) {
-      logError('styleQuiz:captureLeadForm', err);
+      logError('styleQuiz:captureQuizLead', err);
       return { success: false, message: 'Capture failed. Please try again.' };
     }
   }

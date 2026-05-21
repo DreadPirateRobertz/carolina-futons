@@ -39,7 +39,7 @@ describe('cf-44qt sibling — customizationService.web.js console.error → logE
     ];
     for (const label of labels) {
       const re = new RegExp(
-        `logError\\(\\s*['"]\\[customizationService\\] ${label}['"]`,
+        `logError\\(\\s*['"]customizationService:${label}['"]`,
       );
       expect(SRC).toMatch(re);
     }
