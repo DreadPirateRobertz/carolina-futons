@@ -1,5 +1,23 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-21 — Fourth reflection (08:15 MT)
+
+### What worked well
+- **cfw-66o epic drove to completion**: All 13 subtasks merged in a single session. Epic was open; all PRs (#896 #900 #902 #904 #907 #909 #911 #915 #916 #917 #918 #919) merged sequentially with conflict resolution handled inline. Zero re-work on final state.
+- **cfw-cpn rebase conflict resolution**: PR #919 had a conflict in docs/site-content-audit.md between HEAD (minimal §1) and THEIRS (comprehensive §1 with value-props/about/contact). Correctly identified THEIRS as the desired result, resolved cleanly by taking THEIRS block, admin-merged same turn.
+- **Double-assignment catch**: Detected radahn was double-assigned (cfw-66o.14 + cfw-lz3) immediately after context recovery. Reassigned cfw-lz3 to miquella without disrupting radahn's in-flight work.
+- **CI state recovery after compaction**: Both PR #916 (merged) and PR #914 (closed, replaced by #916) sorted out quickly by checking `gh pr list --state all --limit 15` — the v2 rebased PR was #916, not #914. Saved from merging stale data.
+- **Crew queue not empty on epic close**: When cfw-66o closed, immediately created cfw-4ul (morgott), cfw-hjp (rennala), cfw-8j2 (godfrey), cfw-x0s (radahn) rather than leaving crew idle. Queue continuity maintained.
+
+### What to improve
+- **Stale run ID in context**: Carried CI run ID `26213161352` from previous session into this one. The run returned 404 (already completed/deleted from GH). Pattern: always re-query `gh pr view <num> --json statusCheckRollup` fresh rather than relying on stored run IDs.
+- **cfw-lz3 description stale PR numbers**: Created cfw-lz3 pointing at PR #914 (closed). Had to update it to #916. Should have verified PR merged status before finalizing bead description.
+
+### Pattern notes
+- **Re-query PR state on session resume**: Always `gh pr list --state all --limit 15` to get current PR numbers/states. Never carry run IDs across context boundaries.
+- **Epic closure checklist**: When all subtasks close → check `bd show <epic-id>` → if auto-closed, nudge mayor. If not auto-closed, `bd close <epic-id> --reason "..."`.
+- **Conflict resolution: comprehensive > minimal for docs**: When a docs PR conflict is HEAD=minimal vs THEIRS=comprehensive, take THEIRS — more content is almost always the right direction for living docs.
+
 ## Session 2026-05-21 — Third reflection (02:15 MT)
 
 ### What worked well
