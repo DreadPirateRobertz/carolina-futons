@@ -40,7 +40,6 @@ import {
 } from 'wix-crm-backend';
 
 // cf-xknq: priceDropCron migrated console.error → canonical logError
-vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 
 import {
   detectPriceDrops,
@@ -51,7 +50,6 @@ import {
   _PRICE_DROP_NOTIFICATIONS_COLLECTION,
   _emailPriceAlertSubscribers,
 } from '../src/backend/priceDropCron.web.js';
-import { logError } from '../src/backend/utils/errorHandler.js';
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
