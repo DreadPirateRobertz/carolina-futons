@@ -28,6 +28,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'GuestOrders';
 
@@ -93,7 +94,7 @@ export const saveGuestSession = webMethod(
 
       return { success: true, _id: saved._id };
     } catch (err) {
-      console.error('[guestCheckout] saveGuestSession failed:', err?.message);
+      logError('[guestCheckout] saveGuestSession failed', err);
       return { success: false, error: 'Unable to save guest session' };
     }
   }
@@ -153,13 +154,13 @@ export const linkGuestOrdersToMember = webMethod(
           );
           linkedCount++;
         } catch (err) {
-          console.error('[guestCheckout] Failed to link guest order:', item._id, err?.message);
+          logError(`[guestCheckout] linkGuestOrdersToMember per-order failed for ${item._id}`, err);
         }
       }
 
       return { success: true, linkedCount };
     } catch (err) {
-      console.error('[guestCheckout] linkGuestOrdersToMember failed:', err?.message);
+      logError('[guestCheckout] linkGuestOrdersToMember failed', err);
       return { success: false, linkedCount: 0 };
     }
   }
@@ -206,7 +207,7 @@ export const getGuestOrdersByEmail = webMethod(
 
       return { success: true, orders };
     } catch (err) {
-      console.error('[guestCheckout] getGuestOrdersByEmail failed:', err?.message);
+      logError('[guestCheckout] getGuestOrdersByEmail failed', err);
       return { success: false, orders: [] };
     }
   }
