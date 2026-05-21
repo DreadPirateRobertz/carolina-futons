@@ -19,6 +19,22 @@
 - **cf-44qt wave boundary**: errorMonitoring.web.js, notificationService.web.js, errorHandler.js, safeParse.js — all have intentional console.* calls as last-resort fallbacks in the logging stack itself. These are excluded from the migration wave permanently.
 - **Two-PR split on events.js worked**: #1547 (26 sites) + #1548 (batch-S ×33) both merged cleanly. Split-PR strategy on large files avoids monster diffs that CI chokes on.
 
+## Session 2026-05-21 (continued — WATCHDOG 8-idle dispatch + cfw test fixes)
+
+### What worked well
+- **Multi-file test fix in one pass**: Analyzed 4 failing test files in cfw PR #884, identified root cause (Sentry vs logError abstraction mismatch), and fixed all 4 with minimal changes. Key: reading the logError implementation first revealed it internally calls console.error in non-production — simplified the fixes.
+- **Pre-existing CI failure triage**: Recognized that #1565's CI failures were NOT caused by the PR itself but by pre-existing SilentFailureCleanup test failures in main. Avoided wasting time trying to fix code that was already correct. Rebase resolved the merge-base issue.
+- **Merging green PRs without delay**: #1551, #1553, #1566 all all-green — admin-merged immediately without waiting. Cleared the queue while CI was running on other PRs.
+
+### What to improve
+- **#1569 regression missed**: PR #1569 was admin-merged before I could review it. It introduced dot-format and bracket-format regressions (opposite direction of the colon-namespace standard). Should have closed it immediately when I saw the diff. Instead it landed in main. Now needs a follow-on correction PR.
+- **Over-analysis paralysis on CI failures**: Spent too many turns tracing the SilentFailureCleanup test chain (5+ investigation steps). Could have just created the cf-crdn fix bead sooner and dispatched blaidd.
+
+### Pattern notes
+- **logError in non-production calls console.error**: `logError(scope, msg, err?)` internally calls `console.error("[scope] msg", err)` in all environments. Sentry is only called in production via lazy import. Tests that spied on console.error still work — tests that asserted Sentry.captureException needed updating when source switched from captureWithId to logError.
+- **Test env leakage via vi.stubEnv**: When a test calls `vi.stubEnv("NODE_ENV", "production")` and the assertion FAILS, `vi.unstubAllEnvs()` in the same test body never runs. This leaks the env stub to subsequent tests. Fix: wrap in try/finally.
+- **SilentFailureCleanup test contract**: Tests that use `allTags.toMatch(/failed/)` were written assuming all logError tags contained "failed". The colon-namespace format (`module:function`) doesn't require "failed". These tests need updating as files migrate to colon format.
+
 ## Session 2026-05-16 (387faae7 — merge drain + ISR unlock dispatch)
 
 ### What worked well
