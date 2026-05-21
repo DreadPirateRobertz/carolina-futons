@@ -203,12 +203,14 @@ describe('submitSwatchRequest', () => {
 
     expect(result).toEqual({ success: true });
     const emails = __getEmailLog();
-    expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('VJBU6zD'); // dashboard ID for contact_form_submission
-    expect(emails[0].options.variables.subject).toContain('Fabric Swatch Request');
-    expect(emails[0].options.variables.subject).toContain('Eureka Futon Frame');
-    expect(emails[0].options.variables.message).toContain('Natural Oak');
-    expect(emails[0].options.variables.message).toContain('Espresso');
+    // cf-gg0j: appendOrCreateContact now fires swatch_confirmation for all visitors,
+    // so log has owner notification + customer confirmation (≥2). Find by templateId.
+    const ownerEmail = emails.find(e => e.templateId === 'VJBU6zD');
+    expect(ownerEmail, 'owner notification email should fire').toBeDefined();
+    expect(ownerEmail.options.variables.subject).toContain('Fabric Swatch Request');
+    expect(ownerEmail.options.variables.subject).toContain('Eureka Futon Frame');
+    expect(ownerEmail.options.variables.message).toContain('Natural Oak');
+    expect(ownerEmail.options.variables.message).toContain('Espresso');
   });
 
   it('persists swatch request to CMS with correct status', async () => {

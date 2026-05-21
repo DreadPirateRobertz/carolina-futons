@@ -18,6 +18,7 @@ vi.mock('backend/utils/sanitize', () => ({
 
 let _emailsSent = [];
 let _contactsQueryResult = { items: [] };
+let _appendOrCreateResult = { contactId: 'customer-contact-id' };
 vi.mock('wix-crm-backend', () => ({
   triggeredEmails: {
     emailContact: vi.fn(async (templateId, contactId, opts) => {
@@ -32,6 +33,8 @@ vi.mock('wix-crm-backend', () => ({
         }),
       }),
     }),
+    // cf-gg0j: appendOrCreateContact replaces queryContacts for swatch confirmation
+    appendOrCreateContact: async () => _appendOrCreateResult,
   },
 }));
 
@@ -57,6 +60,7 @@ beforeEach(async () => {
   _collections = {};
   _emailsSent = [];
   _contactsQueryResult = { items: [] };
+  _appendOrCreateResult = { contactId: 'customer-contact-id' };
   vi.resetModules();
   mod = await import('../src/backend/emailService.web.js');
 });
@@ -76,10 +80,11 @@ describe('sendEmail', () => {
       subject: 'Question', message: 'Need help with my order',
     });
     expect(r.success).toBe(true);
-    expect(_emailsSent).toHaveLength(1);
-    expect(_emailsSent[0].templateId).toBe('VJBU6zD'); // dashboard ID for contact_form_submission
-    expect(_emailsSent[0].contactId).toBe('owner-contact-id');
-    expect(_emailsSent[0].opts.variables.customerName).toBe('Jane Doe');
+    // appendOrCreateContact now fires customer auto-reply too; find owner email by templateId
+    const ownerEmail = _emailsSent.find(e => e.templateId === 'VJBU6zD');
+    expect(ownerEmail, 'owner notification should fire').toBeDefined();
+    expect(ownerEmail.contactId).toBe('owner-contact-id');
+    expect(ownerEmail.opts.variables.customerName).toBe('Jane Doe');
     expect(_collections['ContactSubmissions']).toHaveLength(1);
     expect(_collections['ContactSubmissions'][0].status).toBe('new');
   });
@@ -115,8 +120,8 @@ describe('submitSwatchRequest', () => {
     expect(_emailsSent[0].opts.variables.subject).toContain('Swatch Request');
   });
 
-  it('sends customer confirmation if contact exists', async () => {
-    _contactsQueryResult = { items: [{ _id: 'customer-contact-id' }] };
+  it('sends customer confirmation via appendOrCreateContact (cf-gg0j)', async () => {
+    // appendOrCreateContact returns 'customer-contact-id' by default (see _appendOrCreateResult)
     await mod.submitSwatchRequest({
       name: 'Jane', email: 'jane@test.com', address: '123 Main St',
       productName: 'Futon', swatchNames: ['Red'],
