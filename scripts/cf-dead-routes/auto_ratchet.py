@@ -102,9 +102,14 @@ def decide_ratchet(baseline: Path, live: dict[str, int]) -> dict | None:
         "Ratcheting the floor DOWN (this PR) tightens the gate; never raises it.",
         "Cleanup wave drift gets caught on the next PR after this lands.",
         "",
-        "**Manual merge — never auto-merge.** 5-agent review still applies per",
-        "mayor's 2026-05-15 standing order, but the diff is mechanical + the",
-        "rationale is canonical (matches `_meta.ratchet_pattern` in baseline.json).",
+        "**Auto-merge enabled (cf-69fi.fu3):** this PR carries the `auto-merge-ratchet`",
+        "label and has `gh pr merge --auto --squash` set at creation. It will merge",
+        "automatically once all required CI checks pass.",
+        "",
+        "5-agent review still applies per mayor's 2026-05-15 standing order. The diff",
+        "is mechanical (only `baseline.json`, counts strictly down) but reviewers must",
+        "use **Request Changes** — not just a comment — to block the auto-merge if",
+        "something looks wrong.",
     ])
 
     return {

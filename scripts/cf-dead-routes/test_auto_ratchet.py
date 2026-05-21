@@ -180,6 +180,30 @@ def test_pr_body_omits_unchanged_axis(tmp_path):
     assert "unused_can_delete:" not in body  # unchanged, don't mention
 
 
+def test_pr_body_auto_merge_notice(tmp_path):
+    """cf-69fi.fu3: PR body must tell reviewers that auto-merge is enabled and
+    that 'Request Changes' (exact casing — markdown bold) is the correct veto."""
+    ar = _import_ar()
+    baseline = tmp_path / "b.json"
+    _write_baseline(baseline, dead=5, ucd=0)
+    decision = ar.decide_ratchet(baseline=baseline, live={"dead": 3, "unused_can_delete": 0})
+    body = decision["pr_body"]
+    assert "auto-merge" in body
+    assert "Request Changes" in body
+
+
+def test_pr_body_no_longer_says_manual_merge(tmp_path):
+    """cf-69fi.fu3: the old 'Manual merge — never auto-merge' line must be gone
+    now that auto-merge is opted in for narrow ratchet PRs."""
+    ar = _import_ar()
+    baseline = tmp_path / "b.json"
+    _write_baseline(baseline, dead=5, ucd=0)
+    decision = ar.decide_ratchet(baseline=baseline, live={"dead": 3, "unused_can_delete": 0})
+    body = decision["pr_body"]
+    assert "never auto-merge" not in body
+    assert "Manual merge" not in body
+
+
 # ── Write contract ───────────────────────────────────────────────
 
 
