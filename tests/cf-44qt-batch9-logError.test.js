@@ -77,7 +77,7 @@ describe('cf-44qt batch9 — 5-module logError migration', () => {
     );
   });
 
-  it('contacts/contactResolver.web.js: appendOrCreateContact template label with cleanEmail interp', () => {
+  it('contacts/contactResolver.web.js: appendOrCreateContact template label with redacted email', () => {
     const src = read('src/backend/contacts/contactResolver.web.js');
     expect(src).toMatch(
       /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,

@@ -35,6 +35,7 @@ import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { dispatchBusEvent } from 'backend/utils/eventBusDispatcher';
+import { logError } from 'backend/utils/errorHandler';
 
 export const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 // ── MemberPoints: two activity fields, do not conflate ──────────────────────
@@ -758,7 +759,7 @@ export const getActiveChallenges = webMethod(
       // through (stale session, misconfiguration). Surface it as a distinct
       // error instead of returning "no challenges" — that's silent-failure
       // masquerade. See cf-1y7 (cf-2ag cascade).
-      logError('gamificationCore:getActiveChallenges-noMemberId', null);
+      logError('gamificationCore:getActiveChallenges-unauthenticated', null);
       return { challenges: [], error: 'auth_required' };
     }
 
@@ -1089,7 +1090,7 @@ export const getStreakData = webMethod(
       // Velo SiteMember gate leak — distinguishable from "authed but no streak
       // yet" (which also returns zeros, but without the error field).
       // See cf-1y7 (cf-2ag cascade).
-      logError('gamificationCore:getStreakData-noMemberId', null);
+      logError('gamificationCore:getStreakData-unauthenticated', null);
       return { currentStreak: 0, longestStreak: 0, lastActivityDate: null, error: 'auth_required' };
     }
     const record = await findMemberRecord(memberId);
@@ -1208,7 +1209,7 @@ export const getMemberTier = webMethod(
       // Velo SiteMember gate leak — return the baseline Trail Blazer shape
       // but signal the auth anomaly so widgets can gate tier benefits display.
       // See cf-1y7 (cf-2ag cascade).
-      logError('gamificationCore:getMemberTier-noMemberId', null);
+      logError('gamificationCore:getMemberTier-unauthenticated', null);
       return { ...computeTierInfo(0), error: 'auth_required' };
     }
     const record = await findMemberRecord(memberId);
@@ -1248,7 +1249,7 @@ export const getActivityFeed = webMethod(
       // Velo SiteMember gate leak. Array return preserved for consumer compat;
       // observability lives in the warn so Wix runtime logs surface the leak.
       // See cf-1y7 (cf-2ag cascade).
-      logError('gamificationCore:getActivityFeed-authRequired', null);
+      logError('gamificationCore:getActivityFeed-unauthenticated', null);
       return [];
     }
     if (caller._id !== memberId) {

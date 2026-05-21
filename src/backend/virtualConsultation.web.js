@@ -139,7 +139,7 @@ export const getDesigners = webMethod(
 
       return { success: true, designers };
     } catch (err) {
-      logError('[virtualConsultation] getDesigners', err);
+      logError('virtualConsultation:getDesigners', err);
       return { success: false, error: 'Failed to load designers.', designers: [] };
     }
   }
@@ -204,7 +204,7 @@ export const getAvailableConsultationSlots = webMethod(
 
       return { success: true, slots };
     } catch (err) {
-      logError('[virtualConsultation] getSlots', err);
+      logError('virtualConsultation:getAvailableSlots', err);
       return { success: false, error: 'Failed to load available slots.', slots: [] };
     }
   }
@@ -324,7 +324,7 @@ export const bookConsultation = webMethod(
           createdAt: new Date(),
         });
       } catch (emailErr) {
-        console.warn('[virtualConsultation] Confirmation email failed:', emailErr.message);
+        logError('virtualConsultation:bookConsultation-emailFailed', emailErr);
       }
 
       return { success: true, bookingId: inserted._id, videoCallUrl };
@@ -332,7 +332,7 @@ export const bookConsultation = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] bookConsultation', err);
+      logError('virtualConsultation:bookConsultation', err);
       return { success: false, error: 'Failed to book consultation.' };
     }
   }
@@ -372,7 +372,7 @@ export const cancelConsultation = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] cancelConsultation', err);
+      logError('virtualConsultation:cancelConsultation', err);
       return { success: false, error: 'Failed to cancel consultation.' };
     }
   }
@@ -398,7 +398,7 @@ export const getMyConsultations = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.', consultations: [] };
       }
-      logError('[virtualConsultation] getConsultations', err);
+      logError('virtualConsultation:getMyConsultations', err);
       return { success: false, error: 'Failed to load consultations.', consultations: [] };
     }
   }
@@ -452,7 +452,7 @@ export const uploadRoomPhoto = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] uploadPhoto', err);
+      logError('virtualConsultation:uploadPhoto', err);
       return { success: false, error: 'Failed to upload photo.' };
     }
   }
@@ -516,7 +516,7 @@ export const getConsultationDetails = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] getConsultationDetails', err);
+      logError('virtualConsultation:getConsultationDetails', err);
       return { success: false, error: 'Failed to load consultation details.' };
     }
   }
@@ -600,7 +600,7 @@ export const submitConsultationIntake = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] submitIntake', err);
+      logError('virtualConsultation:submitIntakeForm', err);
       return { success: false, error: 'Failed to submit intake form.' };
     }
   }
@@ -633,7 +633,7 @@ export const getConsultationIntake = webMethod(
       if (err.message === 'Authentication required') {
         return { success: false, error: 'Authentication required.' };
       }
-      logError('[virtualConsultation] getIntake', err);
+      logError('virtualConsultation:getIntakeForm', err);
       return { success: false, error: 'Failed to load intake form.' };
     }
   }

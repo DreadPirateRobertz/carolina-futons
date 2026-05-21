@@ -126,7 +126,7 @@ export const getQuestProgress = webMethod(
       const record = result.items[0];
       const parsed = parseOrNull(record.progressData);
       if (parsed === null && record.progressData !== 'null') {
-        console.warn('[questProgressService] getQuestProgress: corrupt progressData for record', record._id);
+        logError(`questProgressService:getQuestProgress-corrupt id=${record._id}`, null);
       }
       return { success: true, progressData: parsed, status: record.status };
     } catch (err) {

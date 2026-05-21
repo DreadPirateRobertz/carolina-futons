@@ -102,7 +102,7 @@ async function resolveSwatchNames(swatchIds) {
       wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
         .then(r => {
           const name = r.items[0]?.name;
-          if (!name) logError(`swatchRequest:resolveSwatchNames-notFound id=${id}`, null);
+          if (!name) logError(`swatchRequest:buildSwatchList-notFound id=${id}`, null);
           return name || id;
         })
     )
@@ -243,10 +243,10 @@ export const submitSwatchRequest = webMethod(
             productSlug: cleanSlug || null,
           });
         } catch (emailErr) {
-          logError('swatchRequest:submitSwatchRequest-nurtureQueueFailed', emailErr);
+          logError('swatchRequest:submitSwatchRequest-nurtureEmailFailed', emailErr);
         }
       } else {
-        logError('swatchRequest:submitSwatchRequest-skippedEmptyContactId', null);
+        logError(`swatchRequest:submitSwatchRequest-noContactId email=${contact.email}`, null);
       }
 
       // cf-obsb Path A: send the customer-facing swatch confirmation email
@@ -262,7 +262,7 @@ export const submitSwatchRequest = webMethod(
           swatchNames,
           productName: productNameForEmail,
         }).catch((emailErr) => {
-          logError('swatchRequest:submitSwatchRequest-confirmationSendFailed', emailErr);
+          logError('swatchRequest:submitSwatchRequest-confirmationFailed', emailErr);
         });
       }
 

@@ -182,8 +182,8 @@ describe('getQuestProgress — retrieval', () => {
     expect(result.status).toBeNull();
   });
 
-  it('returns null progressData for corrupt stored JSON (with warn log)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('returns null progressData for corrupt stored JSON (with error log)', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __seed('QuestProgress', [{
       _id: 'qp-bad', memberId: 'mem-1', questId: 'quest-corrupt',
       progressData: 'NOT_VALID_JSON', status: 'active', updatedAt: new Date(),
@@ -191,8 +191,8 @@ describe('getQuestProgress — retrieval', () => {
     const result = await getQuestProgress('quest-corrupt');
     expect(result.success).toBe(true);
     expect(result.progressData).toBeNull();
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('corrupt'), expect.anything());
-    warnSpy.mockRestore();
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('questProgressService:getQuestProgress-corrupt'), expect.anything());
+    errorSpy.mockRestore();
   });
 
   it('returns auth_required when member session is absent', async () => {
