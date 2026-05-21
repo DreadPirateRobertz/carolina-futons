@@ -118,15 +118,16 @@ describe('_postRevalidateWebhook (via wixStores_onProductUpdated)', () => {
     ).resolves.not.toThrow();
   });
 
-  it('logs an error when fetch returns non-ok', async () => {
+  it('logs a warning (not error) when fetch returns non-ok', async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 500 });
-    const { logError } = await import('../src/backend/utils/errorHandler.js');
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { wixStores_onProductUpdated } = await import('../src/backend/events.js');
     await wixStores_onProductUpdated({ entity: { _id: 'p1' } });
-    expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('webhookStatus'),
-      null,
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[events] revalidate webhook returned',
+      500,
     );
+    consoleSpy.mockRestore();
   });
 });
 
