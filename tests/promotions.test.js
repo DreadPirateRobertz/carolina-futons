@@ -482,7 +482,7 @@ describe('getActivePromotion', () => {
     const promo = await getActivePromotion();
     expect(promo).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('[promotions]'),
+      expect.stringContaining('promotions:'),
       expect.any(Error)
     );
 
@@ -793,7 +793,7 @@ describe('getFlashSales', () => {
     const result = await getFlashSales();
     expect(result).toEqual([]);
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('[promotions]'),
+      expect.stringContaining('promotions:'),
       expect.any(Error)
     );
 
