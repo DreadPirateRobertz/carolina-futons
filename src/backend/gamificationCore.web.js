@@ -35,7 +35,6 @@ import { recordChallengeCompleteEvent } from 'backend/loyaltyService.web';
 import { insertLedgerEntry } from 'backend/utils/memberPointsLedger';
 import { insertAnalyticsEvent } from 'backend/utils/analyticsEvents';
 import { dispatchBusEvent } from 'backend/utils/eventBusDispatcher';
-import { logError } from 'backend/utils/errorHandler';
 
 export const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 // ── MemberPoints: two activity fields, do not conflate ──────────────────────
