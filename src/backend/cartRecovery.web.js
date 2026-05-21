@@ -222,7 +222,7 @@ async function getLoyaltyContext(contactId, cartTotal) {
       hasLoyalty: 'true',
     };
   } catch (err) {
-    console.warn('[cartRecovery] getLoyaltyContext failed — sending without loyalty data:', err.message);
+    logError('cartRecovery:getLoyaltyContext-failed', err);
     return empty;
   }
 }

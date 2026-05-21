@@ -49,8 +49,8 @@ describe('cf-44qt sibling — cartRecovery.web.js console.error → logError', (
     }
   });
 
-  it('logError invocation count matches the 6 migrated sites (no over-migration drift)', () => {
+  it('logError invocation count matches the 7 migrated sites (no over-migration drift)', () => {
     const matches = SRC.match(/logError\s*\(/g) || [];
-    expect(matches.length).toBe(6);
+    expect(matches.length).toBe(7);
   });
 });
