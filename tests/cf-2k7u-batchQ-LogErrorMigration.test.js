@@ -84,20 +84,20 @@ const FILES = {
   'gamificationCore.web.js': {
     requiresImport: true,
     tags: [
-      'gamificationCore:getActiveChallenges-unauthenticated',
-      'gamificationCore:getStreakData-unauthenticated',
-      'gamificationCore:getMemberTier-unauthenticated',
-      'gamificationCore:getActivityFeed-unauthenticated',
+      'gamificationCore:getActiveChallenges-noMemberId',
+      'gamificationCore:getStreakData-noMemberId',
+      'gamificationCore:getMemberTier-noMemberId',
+      'gamificationCore:getActivityFeed-authRequired',
       'gamificationCore:getActivityFeed-forbidden',
     ],
   },
   'swatchRequest.web.js': {
     requiresImport: true,
     tags: [
-      'swatchRequest:buildSwatchList-notFound',
-      'swatchRequest:submitSwatchRequest-nurtureEmailFailed',
-      'swatchRequest:submitSwatchRequest-noContactId',
-      'swatchRequest:submitSwatchRequest-confirmationFailed',
+      'swatchRequest:resolveSwatchNames-notFound',
+      'swatchRequest:submitSwatchRequest-nurtureQueueFailed',
+      'swatchRequest:submitSwatchRequest-skippedEmptyContactId',
+      'swatchRequest:submitSwatchRequest-confirmationSendFailed',
       'swatchRequest:submitSwatchRequest',
     ],
   },

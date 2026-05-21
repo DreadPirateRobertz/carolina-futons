@@ -32,20 +32,17 @@ describe('cf-44qt sibling — seoContentHub.web.js console.error → logError', 
     );
   });
 
-  it('source file uses logError for all 6 expected sites with canonical [seoContentHub] prefix', () => {
-    const labels = [
-      'Error getting content hub',
-      'Error getting pillar guide',
-      'Error getting slugs',
-      'Error generating hub schema',
-      'Error generating guide schema',
-      'Error generating sitemap entries',
+  it('source file uses logError for all 6 expected sites with canonical seoContentHub: prefix', () => {
+    const tags = [
+      'seoContentHub:getContentHub',
+      'seoContentHub:getPillarGuide',
+      'seoContentHub:getAllSlugs',
+      'seoContentHub:generateHubSchema',
+      'seoContentHub:generateGuideSchema',
+      'seoContentHub:generateSitemapEntries',
     ];
-    for (const label of labels) {
-      const re = new RegExp(
-        `logError\\(\\s*['"]\\[seoContentHub\\] ${label.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}['"]`,
-      );
-      expect(SRC).toMatch(re);
+    for (const tag of tags) {
+      expect(SRC).toMatch(new RegExp(`logError\\(\\s*['"]${tag}['"]`));
     }
   });
 

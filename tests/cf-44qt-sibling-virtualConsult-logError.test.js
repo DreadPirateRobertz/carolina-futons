@@ -34,28 +34,26 @@ describe('cf-44qt sibling — virtualConsultation.web.js console.error → logEr
     );
   });
 
-  it('source file uses logError for all 9 expected sites with canonical [virtualConsultation] prefix', () => {
-    const labels = [
-      'getDesigners',
-      'getSlots',
-      'bookConsultation',
-      'cancelConsultation',
-      'getConsultations',
-      'uploadPhoto',
-      'getConsultationDetails',
-      'submitIntake',
-      'getIntake',
+  it('source file uses logError for all 10 expected sites with canonical virtualConsultation: prefix', () => {
+    const tags = [
+      'virtualConsultation:getDesigners',
+      'virtualConsultation:getAvailableSlots',
+      'virtualConsultation:bookConsultation-emailFailed',
+      'virtualConsultation:bookConsultation',
+      'virtualConsultation:cancelConsultation',
+      'virtualConsultation:getMyConsultations',
+      'virtualConsultation:uploadPhoto',
+      'virtualConsultation:getConsultationDetails',
+      'virtualConsultation:submitIntakeForm',
+      'virtualConsultation:getIntakeForm',
     ];
-    for (const label of labels) {
-      const re = new RegExp(
-        `logError\\(\\s*['"]\\[virtualConsultation\\] ${label}['"]`,
-      );
-      expect(SRC).toMatch(re);
+    for (const tag of tags) {
+      expect(SRC).toMatch(new RegExp(`logError\\(\\s*['"\`]${tag}`));
     }
   });
 
-  it('logError invocation count: 9 migrated + 2 pre-existing addConsultationNotes = 11 total', () => {
+  it('logError invocation count: 10 migrated + 2 pre-existing addConsultationNotes = 12 total', () => {
     const matches = SRC.match(/logError\s*\(/g) || [];
-    expect(matches.length).toBe(11);
+    expect(matches.length).toBe(12);
   });
 });

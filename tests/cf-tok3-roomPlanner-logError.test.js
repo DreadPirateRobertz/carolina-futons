@@ -27,13 +27,13 @@ describe('cf-tok3 roomPlanner — console.error → logError migration', () => {
     );
   });
 
-  it('all 6 webMethods route through roomPlanner.* context tags', async () => {
+  it('all 6 webMethods route through roomPlanner:* context tags', async () => {
     const src = await readSrc();
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.createRoomLayout['"]/);
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.addProductToLayout['"]/);
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.getLayoutPreview['"]/);
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.shareLayout['"]/);
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.saveLayout['"]/);
-    expect(src).toMatch(/logError\(\s*['"]roomPlanner\.getProductDimensions['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:createRoomLayout['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:addProductToLayout['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:getLayoutPreview['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:shareLayout['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:saveLayout['"]/);
+    expect(src).toMatch(/logError\(\s*['"]roomPlanner:getProductDimensions['"]/);
   });
 });
