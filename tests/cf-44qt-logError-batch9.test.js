@@ -108,7 +108,7 @@ describe('guideSeoService — logError migration', () => {
     const r = await getRelatedProducts('futon-frames', 6);
     expect(r.success).toBe(false);
     expect(mockLogError).toHaveBeenCalledWith(
-      expect.stringContaining('guideSeoService'),
+      'guideSeoService:getRelatedProducts',
       expect.any(Error),
     );
   });
