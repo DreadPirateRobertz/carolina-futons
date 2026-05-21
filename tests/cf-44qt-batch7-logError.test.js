@@ -45,10 +45,12 @@ describe('cf-44qt batch7 — 6-module logError migration', () => {
     );
   });
 
-  it.each(FILES)('$path uses the canonical [$module] prefix on logError calls', ({ path, module }) => {
+  it.each(FILES)('$path uses the module name on at least one logError call', ({ path, module }) => {
     const src = read(path);
-    // At least one logError call carries the [module] bracketed prefix.
-    const re = new RegExp(`logError\\(\\s*['"\`]\\[${module}\\]`);
+    // Accept either bracket-style [module] or colon-namespace module: format —
+    // files migrated before this batch may have been normalised to colon format
+    // by a concurrent cascade PR.
+    const re = new RegExp(`logError\\(\\s*['"\`](?:\\[${module}\\]|${module}[:\\s])`);
     expect(src).toMatch(re);
   });
 
