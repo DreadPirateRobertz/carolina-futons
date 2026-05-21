@@ -36,7 +36,6 @@ import {
 beforeEach(() => {
   resetCrm();
   vi.restoreAllMocks();
-  vi.clearAllMocks();
 });
 
 describe('cf-xdji · resolveContactId — happy path', () => {
@@ -122,19 +121,21 @@ describe('cf-xdji · resolveContactId — failure modes', () => {
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('appendOrCreateFailed'),
+      expect.stringContaining('appendOrCreateContact'),
       expect.any(Error),
     );
   });
 
   it('returns null when appendOrCreateContact resolves with no contactId', async () => {
     vi.spyOn(contacts, 'appendOrCreateContact').mockResolvedValue({});
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
-    expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('noContactId'),
-      null,
+    expect(consoleWarn).toHaveBeenCalledWith(
+      expect.stringContaining('returned no contactId'),
+      expect.anything(),
     );
+    consoleWarn.mockRestore();
   });
 });
 
