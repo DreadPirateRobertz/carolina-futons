@@ -20,6 +20,9 @@
  * - Error resilience: wixData failures return success:false
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   __reset,
   __seed,
@@ -85,7 +88,7 @@ beforeEach(() => {
   __resetCrm();
   __setMember({ _id: 'system' });
   __setRoles([{ title: 'Admin' }]);
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.mocked(logError).mockClear();
   vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -482,9 +485,9 @@ describe('detectPriceDrops — error resilience', () => {
     __setQueryError('Stores/Products', new Error('boom'));
 
     await detectPriceDrops();
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('[priceDropCron] detectPriceDrops failed:'),
-      expect.any(String)
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('[priceDropCron] detectPriceDrops failed'),
+      expect.any(Error)
     );
   });
 });
