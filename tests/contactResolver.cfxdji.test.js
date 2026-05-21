@@ -25,6 +25,9 @@ import {
   contacts,
 } from './__mocks__/wix-crm-backend.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 import {
   resolveContactId,
   _resolveContactIdInternal,
@@ -115,15 +118,12 @@ describe('cf-xdji · resolveContactId — validation', () => {
 describe('cf-xdji · resolveContactId — failure modes', () => {
   it('returns null when appendOrCreateContact throws', async () => {
     vi.spyOn(contacts, 'appendOrCreateContact').mockRejectedValue(new Error('CRM unavailable'));
-    const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
-    // Logged with the email + 'failed' substring so support can correlate
-    // a queue-side "no contact ID for recipient" with the upstream cause.
-    const logged = consoleErr.mock.calls.flat().map(String).join('\n');
-    expect(logged).toContain('shopper@example.com');
-    expect(logged).toContain('appendOrCreateContact failed');
-    consoleErr.mockRestore();
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('appendOrCreateContact'),
+      expect.any(Error),
+    );
   });
 
   it('returns null when appendOrCreateContact resolves with no contactId', async () => {
