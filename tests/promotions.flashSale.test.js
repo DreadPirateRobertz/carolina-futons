@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import wixData, { __seed } from './__mocks__/wix-data.js';
 import { getFlashSales } from '../src/backend/promotions.web.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 const now = new Date();
 const yesterday = new Date(now.getTime() - 86400000);
 const tomorrow = new Date(now.getTime() + 86400000);
@@ -252,24 +255,21 @@ describe('getFlashSales', () => {
   });
 
   it('returns empty array and logs error when CMS query throws', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => {
       throw new Error('CMS unavailable');
     });
 
     const deals = await getFlashSales();
     expect(deals).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching flash sales:',
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('[promotions]'),
       expect.any(Error)
     );
 
     querySpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   it('returns empty array when query().find() rejects', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => ({
       eq() { return this; },
       le() { return this; },
@@ -283,7 +283,6 @@ describe('getFlashSales', () => {
     expect(deals).toEqual([]);
 
     querySpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   it('handles null/undefined fields gracefully', async () => {
