@@ -233,7 +233,7 @@ export const submitReview = webMethod(
 
       return { success: true, reviewId: saved._id };
     } catch (err) {
-      logError('[reviewsService] submitReview failed', err);
+      logError('reviewsService:submitReview-failed', err);
       return { success: false, error: 'Unable to submit review. Please try again.' };
     }
   }
@@ -260,7 +260,7 @@ export const markHelpful = webMethod(
       await wixData.update(COLLECTION, review);
       return { success: true, helpful: review.helpful };
     } catch (err) {
-      logError('[reviewsService] markHelpful failed', err);
+      logError('reviewsService:markHelpful-failed', err);
       return { success: false };
     }
   }
@@ -305,7 +305,7 @@ export const flagReview = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('[reviewsService] flagReview failed', err);
+      logError('reviewsService:flagReview-failed', err);
       return { success: false, error: 'Failed to flag review' };
     }
   }
@@ -334,7 +334,7 @@ export const getPendingReviews = webMethod(
         total: result.totalCount,
       };
     } catch (err) {
-      logError('[reviewsService] getPendingReviews failed', err);
+      logError('reviewsService:getPendingReviews-failed', err);
       return { success: false, reviews: [], total: 0 };
     }
   }
@@ -390,7 +390,7 @@ export const moderateReview = webMethod(
       logAuditEvent(COLLECTION, `moderate_${action}`, rid, { previousStatus, newStatus });
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      logError('[reviewsService] moderateReview failed', err);
+      logError('reviewsService:moderateReview-failed', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
@@ -448,7 +448,7 @@ export const getCategoryReviewSummaries = webMethod(
 
       return summaries;
     } catch (err) {
-      logError('[reviewsService] getCategoryReviewSummaries failed', err);
+      logError('reviewsService:getCategoryReviewSummaries-failed', err);
       return {};
     }
   }
@@ -476,7 +476,7 @@ async function checkVerifiedPurchase(memberId, productId) {
     }
     return false;
   } catch (err) {
-    logError('[reviewsService] verifiedPurchaseCheck failed', err);
+    logError('reviewsService:verifiedPurchaseCheck-failed', err);
     return false;
   }
 }
@@ -573,7 +573,7 @@ export const submitVideoReview = webMethod(
 
       return { success: true, reviewId: inserted._id };
     } catch (err) {
-      logError('[reviewsService] submitVideoReview failed', err);
+      logError('reviewsService:submitVideoReview-failed', err);
       return { success: false, error: 'Failed to submit video review.' };
     }
   }
@@ -615,7 +615,7 @@ export const getVideoReviews = webMethod(
 
       return { success: true, reviews, totalCount: result.totalCount };
     } catch (err) {
-      logError('[reviewsService] getVideoReviews failed', err);
+      logError('reviewsService:getVideoReviews-failed', err);
       return { success: false, error: 'Failed to load video reviews.', reviews: [] };
     }
   }
@@ -654,13 +654,13 @@ export const moderateVideoReview = webMethod(
         try {
           await receiveGamificationEvent('video_review_approved', { memberId: review.memberId });
         } catch (e) {
-          logError('[reviewsService] moderateVideoReview gamification-trigger failed', e);
+          logError('reviewsService:moderateVideoReview-gamificationTriggerFailed', e);
         }
       }
 
       return { success: true };
     } catch (err) {
-      logError('[reviewsService] moderateVideoReview failed', err);
+      logError('reviewsService:moderateVideoReview-failed', err);
       return { success: false, error: 'Failed to moderate video review.' };
     }
   }
@@ -744,7 +744,7 @@ export const getFeaturedReviews = webMethod(
 
       return { success: true, reviews };
     } catch (err) {
-      logError('[reviewsService] getFeaturedReviews failed', err);
+      logError('reviewsService:getFeaturedReviews-failed', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
