@@ -16,6 +16,7 @@ import {
   getCategoryIcon,
 } from 'public/assemblyGuideHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { logError } from 'backend/utils/errorHandler';
 
 let allGuides = [];
 let currentCategory = null;
@@ -44,7 +45,7 @@ async function loadGuides() {
     showLoading(false);
     announce($w, `${allGuides.length} assembly guide${allGuides.length !== 1 ? 's' : ''} available`);
   } catch (err) {
-    console.error('Error loading assembly guides:', err);
+    logError('assemblyGuides:loadGuides', err);
     showLoading(false);
     showEmpty('Unable to load assembly guides. Please try again later.');
   }
