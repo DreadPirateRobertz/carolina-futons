@@ -17,6 +17,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __reset as __resetData } from './__mocks__/wix-data.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 const mockHandleFulfillmentShippingNotification = vi.fn();
 const mockHandleOrderDelivered = vi.fn();
 
@@ -32,6 +34,7 @@ vi.mock('backend/emailAutomation.web', () => ({
   cancelSequenceForOrder: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   wixEcom_onFulfillmentCreated,
   wixEcom_onFulfillmentUpdated,
@@ -73,13 +76,11 @@ describe('cf-fovb · wixEcom_onFulfillmentCreated wiring', () => {
     mockHandleFulfillmentShippingNotification.mockImplementationOnce(() => {
       throw new Error('downstream boom');
     });
-    const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(wixEcom_onFulfillmentCreated(fulfillmentEvent())).resolves.toBeUndefined();
-    expect(consoleErr).toHaveBeenCalledWith(
-      expect.stringContaining('Error handling fulfillment created'),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('wixEcom_onFulfillmentCreated-failed'),
       expect.any(Error),
     );
-    consoleErr.mockRestore();
   });
 });
 
@@ -101,13 +102,11 @@ describe('cf-fovb · wixEcom_onFulfillmentUpdated wiring', () => {
     mockHandleFulfillmentShippingNotification.mockImplementationOnce(() => {
       throw new Error('downstream boom');
     });
-    const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(wixEcom_onFulfillmentUpdated(fulfillmentEvent())).resolves.toBeUndefined();
-    expect(consoleErr).toHaveBeenCalledWith(
-      expect.stringContaining('Error handling fulfillment updated'),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('wixEcom_onFulfillmentUpdated-failed'),
       expect.any(Error),
     );
-    consoleErr.mockRestore();
   });
 
   it('Created and Updated dispatch the SAME helper (single source of truth)', async () => {
