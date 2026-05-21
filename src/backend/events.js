@@ -22,7 +22,7 @@
  */
 import wixData from 'wix-data';
 import { sanitize, redactEmail } from 'backend/utils/sanitize';
-import { logError } from 'backend/utils/errorHandler';
+import { logError, logWarn } from 'backend/utils/errorHandler';
 
 // ── CWF ISR Revalidate Helper ─────────────────────────────────────────
 
@@ -45,7 +45,7 @@ async function _postRevalidateWebhook(body) {
       body: payload,
     });
     if (!res.ok) {
-      console.warn('[events] revalidate webhook returned', res.status);
+      logWarn('events:revalidate-webhookStatus', res.status);
     }
   } catch (err) {
     logError('events:revalidate-webhookFailed', err);

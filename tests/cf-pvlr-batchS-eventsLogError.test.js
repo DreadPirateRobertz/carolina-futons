@@ -23,7 +23,7 @@ const SRC = fs.readFileSync(
 
 const EXPECTED_TAGS = [
   // Revalidate webhook + DLQ
-  // Note: revalidate-webhookStatus is intentionally console.warn (non-error warning path)
+  // NOTE: revalidate-webhookStatus is logWarn (non-ok HTTP = warning, not error)
   'events:revalidate-webhookFailed',
   'events:writeFailedEvent-dlqFailed',
   // Abandoned cart
@@ -77,12 +77,9 @@ function tagPattern(tag) {
 }
 
 describe('cf-pvlr (cf-44qt batch-S): events.js console.* → logError', () => {
-  it('contains exactly one intentional console.warn (non-ok revalidate webhook — warning not error)', () => {
-    // The revalidate-webhook non-ok path is a WARNING (transient delivery failure),
-    // not an error. logError is reserved for unexpected failures; logWarn does not
-    // exist in errorHandler. One console.warn is intentionally kept here.
+  it('contains no raw console.* calls (all migrated to logError or logWarn)', () => {
     const calls = SRC.match(/console\.(error|warn|log|debug|info)\s*\(/g) || [];
-    expect(calls).toEqual(['console.warn(']);
+    expect(calls).toEqual([]);
   });
 
   it('imports logError from backend/utils/errorHandler', () => {
@@ -95,7 +92,17 @@ describe('cf-pvlr (cf-44qt batch-S): events.js console.* → logError', () => {
     expect(SRC).toMatch(tagPattern(tag));
   });
 
-  it('summary: 32 sites migrated to logError (1 intentional console.warn retained)', () => {
+  it('summary: 32 logError sites (revalidate-webhookStatus moved to logWarn)', () => {
     expect(EXPECTED_TAGS).toHaveLength(32);
+  });
+
+  it('uses logWarn (not logError) for the non-ok revalidate webhook response', () => {
+    expect(SRC).toMatch(/logWarn\s*\(\s*['"]events:revalidate-webhookStatus['"]/);
+  });
+
+  it('imports logWarn from backend/utils/errorHandler', () => {
+    expect(SRC).toMatch(
+      /import\s+\{[^}]*\blogWarn\b[^}]*\}\s+from\s+['"]backend\/utils\/errorHandler/,
+    );
   });
 });

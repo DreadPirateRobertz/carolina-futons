@@ -32,6 +32,17 @@ export function logError(context, error, { silent = false } = {}) {
 }
 
 /**
+ * Log a warning — for non-fatal conditions that are noteworthy but not errors
+ * (e.g. a non-2xx HTTP response from a fire-and-forget webhook).
+ *
+ * @param {string} context - Canonical tag in `module:operation(-reason)?` form
+ * @param {*} data - Supplementary value (status code, count, etc.)
+ */
+export function logWarn(context, data) {
+  console.warn(`[${context}]`, data != null ? data : '');
+}
+
+/**
  * Wrap an async function with consistent error handling and fallback.
  * Use for backend webMethods where errors should return a safe default
  * rather than throwing.
