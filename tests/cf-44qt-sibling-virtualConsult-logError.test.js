@@ -54,8 +54,8 @@ describe('cf-44qt sibling — virtualConsultation.web.js console.error → logEr
     }
   });
 
-  it('logError invocation count matches the 9 migrated sites (no over-migration drift)', () => {
+  it('logError invocation count: 9 migrated + 2 pre-existing addConsultationNotes = 11 total', () => {
     const matches = SRC.match(/logError\s*\(/g) || [];
-    expect(matches.length).toBe(9);
+    expect(matches.length).toBe(11);
   });
 });
