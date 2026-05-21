@@ -7,6 +7,7 @@ const mockGetSecret = vi.fn();
 vi.mock('wix-secrets-backend', () => ({ getSecret: (...a) => mockGetSecret(...a) }));
 vi.mock('wix-data', () => ({ default: { insert: vi.fn(), get: vi.fn(), update: vi.fn() } }));
 vi.mock('backend/utils/sanitize', () => ({ sanitize: (v) => v }));
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 vi.mock('backend/contentOrchestrator.web', () => ({ triggerEventOrchestration: vi.fn() }));
 vi.mock('backend/emailAutomation.web', () => ({ triggerRestockNotifications: vi.fn() }));
 
@@ -117,16 +118,15 @@ describe('_postRevalidateWebhook (via wixStores_onProductUpdated)', () => {
     ).resolves.not.toThrow();
   });
 
-  it('logs a warning (not error) when fetch returns non-ok', async () => {
+  it('logs an error when fetch returns non-ok', async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 500 });
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { logError } = await import('../src/backend/utils/errorHandler.js');
     const { wixStores_onProductUpdated } = await import('../src/backend/events.js');
     await wixStores_onProductUpdated({ entity: { _id: 'p1' } });
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[events] revalidate webhook returned'),
-      500,
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('webhookStatus'),
+      null,
     );
-    warnSpy.mockRestore();
   });
 });
 
