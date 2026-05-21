@@ -2697,7 +2697,7 @@ export async function post_contactSubmissions(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[contactSubmissions] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:contactSubmissions-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -2798,7 +2798,7 @@ export async function post_mailingListSignups(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[mailingListSignups] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:mailingListSignups-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -3042,7 +3042,7 @@ export async function post_notifyMe(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[notifyMe] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:notifyMe-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -3152,7 +3152,7 @@ export async function get_deliveryZone(request) {
     // so ops can distinguish wrapper-validation 400s from service-validation
     // 400s without a stack.
     if (result && typeof result.error === 'string' && result.error.length > 0) {
-      console.warn('[deliveryZone] service emitted error envelope:', result.error);
+      logError('http-functions:deliveryZone-serviceError', new Error(result.error));
       return badRequest({
         body: JSON.stringify({ success: false, error: result.error }),
         headers: JSON_HEADERS,
@@ -3198,7 +3198,7 @@ export async function post_sampleRequests(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[sampleRequests] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:sampleRequests-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -3516,7 +3516,7 @@ export async function post_recordSpinGrant(request) {
       // (cfw forgot to forward the Bearer token). cf-yvs4: return 401 not
       // 200 so cfw's velo-client.ts surfaces the failure as a thrown
       // VeloRpcError rather than the silent lying-status it gets today.
-      console.warn('[recordSpinGrant] getMember failed — treating as unauthenticated:', err && err.message);
+      logError('http-functions:recordSpinGrant-unauthenticated', err);
       return response({
         status: 401,
         body: JSON.stringify({ success: false, error: 'Authentication required' }),
@@ -3619,7 +3619,7 @@ export async function post_submitSurvey(request) {
   try {
     member = await currentMember.getMember();
   } catch (err) {
-    console.warn('[submitSurvey] getMember failed — treating as unauthenticated:', err && err.message);
+    logError('http-functions:submitSurvey-unauthenticated', err);
     return response({
       status: 401,
       body: JSON.stringify({ success: false, error: 'Authentication required' }),

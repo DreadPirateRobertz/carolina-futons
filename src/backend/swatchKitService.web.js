@@ -99,7 +99,7 @@ export const recordSwatchKitPurchase = webMethod(
         return { success: true, creditId: existing.items[0].creditId, alreadyIssued: true };
       }
     } catch (err) {
-      console.warn('[swatchKitService] idempotency check failed, proceeding:', err?.message);
+      logError('swatchKitService:recordSwatchKitPurchase-idempotencyFailed', err);
     }
 
     // Issue $5 store credit via storeCreditService
@@ -164,7 +164,7 @@ export const getSwatchKitCreditStatus = webMethod(
       // through (stale session, misconfiguration). Surface it as a distinct
       // error instead of returning "no credit" — that's silent-failure
       // masquerade. See cf-2ag.
-      console.warn('[swatchKitService] getSwatchKitCreditStatus: no member on session (cf-2ag)');
+      logError('swatchKitService:getSwatchKitCreditStatus-noMember', null);
       return { hasPendingCredit: false, error: 'auth_required' };
     }
 
