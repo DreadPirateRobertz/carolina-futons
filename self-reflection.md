@@ -992,3 +992,23 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - bd comments vs bd comment: always `bd comments add <bead-id> "message"` not `bd comment`.
 - Date -u to verify actual UTC, then convert to MT (MDT=UTC-6 in May, MST=UTC-7 in Nov-Mar).
 - When merging two specs on the same topic from different crew: note the discrepancy in the 5-crew review and flag for Stilgar consolidation, don't block the merge.
+
+## Session 2026-05-16 — Second reflection (08:14 MT, post-context-compact)
+
+### What worked well
+- Context recovery was fast: gt mol status + bd list + gh pr list gave full picture in 3 parallel calls.
+- Memory file for cf-44qt test-pin risk written cleanly — MEMORY.md index entry kept tight.
+- Pre-existing console.error test pin risk caught by morgott (#1395) and relayed to blaidd/godfrey before they hit the same wall.
+- ISR trio merged cleanly despite #715 branch having cf-0klm consent files in diff (pre-dated #714 merge). Git auto-resolved; flagged in 5-crew review.
+- enforce_admins bypass applied correctly — cfutons needs it, cfw doesn't.
+
+### Gaps
+- cf-tm1e BLOCKED on Stilgar visual check — should have escalated earlier in session rather than letting it sit on hook.
+- cfw #715 e2e ran 50+ min before cancel (unusual vs 25-min norm). Should have checked `gh run view` annotations sooner to distinguish active playwright from stale runner.
+- Mayor cross-sync nudge missed the cf-44qt convoy status detail — sent "3 crew dispatched" without file batch count. Future: always include "N files / M batches / avg lines per PR" in convoy status.
+- No verification on Vercel cache headers post-#715 deploy (CI still in_progress). Need to nudge godfrey to check `x-vercel-cache` on PDP once deployment stabilizes.
+
+### Pattern notes
+- convoy nudges to mayor: include (1) crew names, (2) file batch counts, (3) files remaining, (4) PR naming pattern
+- After ISR-related merges: always nudge godfrey with explicit "verify x-vercel-cache: PRERENDER on /products/[slug]" — don't assume auto-close.
+- cf-44qt pre-existing test pins: check test file for `console.error` assertions BEFORE submitting PR.
