@@ -7,6 +7,7 @@
  */
 
 import { SITE_URL, STORE_PHONE, STORE_GEO, STORE_ADDRESS, CITY_GEO } from 'backend/utils/localSeoData';
+import { logError } from 'backend/utils/errorHandler';
 
 // '@type' is kept here (not in STORE_ADDRESS) so the plain address object stays
 // schema-agnostic. Do not add '@type' to STORE_ADDRESS — it would override this.
@@ -49,7 +50,7 @@ export function generateLocalBusinessSchema(city, products = []) {
   // (Hendersonville) when city is null, slug is missing, or slug is not in CITY_GEO.
   const cityGeoEntry = hasCity && city.slug ? CITY_GEO[city.slug] : null;
   if (hasCity && city.slug && !cityGeoEntry) {
-    console.warn('[localSeo] generateLocalBusinessSchema: no CITY_GEO entry for slug:', city.slug, '— falling back to STORE_GEO');
+    logError(`localSeo:generateLocalBusinessSchema-missingCityGeo slug=${city.slug}`, null);
   }
   const cityGeo = cityGeoEntry || STORE_GEO;
 

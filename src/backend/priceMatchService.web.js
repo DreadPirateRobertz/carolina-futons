@@ -234,7 +234,7 @@ export const submitPriceMatchRequest = webMethod(
           productName: record.productName,
         });
       } catch (mirrorErr) {
-        console.warn('[priceMatchService] ContactSubmissions mirror failed:', mirrorErr?.message ?? mirrorErr);
+        logError('priceMatchService:submitPriceMatchRequest-mirrorFailed', mirrorErr);
       }
 
       return {
