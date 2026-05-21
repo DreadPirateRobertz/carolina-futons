@@ -124,7 +124,7 @@ export async function sendLifecycleEmails() {
 
     return { success: true, totalScanned: ordersScanned, queued, skipped };
   } catch (err) {
-    logError('[lifecycleEmailSender] sendLifecycleEmails', err);
+    logError('lifecycleEmailSender:sendLifecycleEmails', err);
     return { success: false, totalScanned: 0, queued: 0, skipped: 0, error: 'Failed to send lifecycle emails.' };
   }
 }
