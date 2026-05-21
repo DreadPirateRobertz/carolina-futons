@@ -45,7 +45,7 @@ async function _postRevalidateWebhook(body) {
       body: payload,
     });
     if (!res.ok) {
-      logError(`events:revalidate-webhookStatus status=${res.status}`, null);
+      console.warn('[events] revalidate webhook returned', res.status);
     }
   } catch (err) {
     logError('events:revalidate-webhookFailed', err);
