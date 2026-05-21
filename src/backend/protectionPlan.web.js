@@ -23,6 +23,7 @@ import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 const SELECTIONS_COLLECTION = 'ProtectionPlanSelections';
 
@@ -137,7 +138,7 @@ export const getProtectionPlans = webMethod(
 
       return { success: true, plans };
     } catch (err) {
-      console.error('[protectionPlan] getProtectionPlans error:', err);
+      logError('protectionPlan:getProtectionPlans', err);
       return { success: false, plans: [] };
     }
   }
@@ -215,7 +216,7 @@ export const addProtectionPlan = webMethod(
         },
       };
     } catch (err) {
-      console.error('[protectionPlan] addProtectionPlan error:', err);
+      logError('protectionPlan:addProtectionPlan', err);
       return { success: false };
     }
   }
@@ -252,7 +253,7 @@ export const removeProtectionPlan = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[protectionPlan] removeProtectionPlan error:', err);
+      logError('protectionPlan:removeProtectionPlan', err);
       return { success: false };
     }
   }
@@ -300,7 +301,7 @@ export const getProtectionPlanSummary = webMethod(
         },
       };
     } catch (err) {
-      console.error('[protectionPlan] getProtectionPlanSummary error:', err);
+      logError('protectionPlan:getProtectionPlanSummary', err);
       return { success: false, data: { selections: [], totalProtectionCost: 0 } };
     }
   }
