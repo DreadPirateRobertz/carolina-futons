@@ -99,7 +99,7 @@ export const recordSwatchKitPurchase = webMethod(
         return { success: true, creditId: existing.items[0].creditId, alreadyIssued: true };
       }
     } catch (err) {
-      logError('swatchKitService:recordSwatchKitPurchase-idempotencyFailed', err);
+      logError('swatchKitService:issueSwatchKitCredit-idempotencyCheckFailed', err);
     }
 
     // Issue $5 store credit via storeCreditService
@@ -113,12 +113,12 @@ export const recordSwatchKitPurchase = webMethod(
         orderReference: cleanOrderId,
       });
       if (!creditResult?.success) {
-        logError('[swatchKitService] recordSwatchKitPurchase issueStoreCredit returned failure', new Error(JSON.stringify(creditResult || {})));
+        logError('swatchKitService:issueSwatchKitCredit-creditFailed', new Error(JSON.stringify(creditResult || {})));
         return { success: false, error: 'credit_issuance_failed' };
       }
       creditId = creditResult.creditId || '';
     } catch (err) {
-      logError('[swatchKitService] recordSwatchKitPurchase issueStoreCredit threw', err);
+      logError('swatchKitService:issueSwatchKitCredit-creditThrew', err);
       return { success: false, error: 'credit_issuance_failed' };
     }
 
@@ -140,7 +140,7 @@ export const recordSwatchKitPurchase = webMethod(
       });
     } catch (err) {
       // Non-fatal — credit is real even if CMS write fails
-      logError(`[swatchKitService] recordSwatchKitPurchase CMS-insert failed after credit issued — MANUAL RECONCILIATION orderId=${cleanOrderId} creditId=${creditId}`, err);
+      logError(`swatchKitService:issueSwatchKitCredit-cmsInsertFailedManualReconcile orderId=${cleanOrderId} creditId=${creditId}`, err);
     }
 
     return { success: true, creditId };
@@ -191,7 +191,7 @@ export const getSwatchKitCreditStatus = webMethod(
         amount: SWATCH_KIT_CREDIT_AMOUNT,
       };
     } catch (err) {
-      logError('[swatchKitService] getSwatchKitCreditStatus failed', err);
+      logError('swatchKitService:getSwatchKitCreditStatus', err);
       return { hasPendingCredit: false, error: 'lookup_failed' };
     }
   }
@@ -230,7 +230,7 @@ export const markCreditApplied = webMethod(
       });
       return { success: true };
     } catch (err) {
-      logError('[swatchKitService] markCreditApplied failed', err);
+      logError('swatchKitService:markCreditApplied', err);
       return { success: false, error: 'update_failed' };
     }
   }
