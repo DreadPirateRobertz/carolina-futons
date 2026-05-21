@@ -54,19 +54,15 @@ describe('cf-44qt batch7 — 6-module logError migration', () => {
     expect(src).toMatch(re);
   });
 
-  // marketingSequences keeps its local logError(msg, err) helper but now
-  // routes through the canonical errorHandler. Pin both the import + the
-  // wrapper-routes-through-canonical contract.
-  it('marketingSequences.web.js routes its local logError helper through the canonical errorHandler', () => {
+  // marketingSequences: local wrapper removed, direct canonical import with
+  // namespaced colon tags.
+  it('marketingSequences.web.js uses canonical logError with no local wrapper', () => {
     const src = read('src/backend/marketingSequences.web.js');
-    // Canonical import (aliased to _logErrorCanonical to avoid the
-    // collision with the local helper).
     expect(src).toMatch(
-      /import\s*{\s*logError\s+as\s+_logErrorCanonical\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
+      /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
-    // Local helper now delegates to canonical.
-    expect(src).toMatch(/_logErrorCanonical\(\s*`\[marketingSequences\]/);
-    // No bare console.error anywhere.
+    expect(src).not.toMatch(/^function\s+logError\s*\(/m);
+    expect(src).toMatch(/logError\(\s*'marketingSequences:/);
     expect(src).not.toMatch(/console\.error/);
   });
 });
