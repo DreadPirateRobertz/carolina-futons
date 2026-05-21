@@ -75,7 +75,7 @@ export const trackProductView = webMethod(
       }
     } catch (err) {
       // Analytics tracking is non-critical — log but don't throw
-      logError('analyticsHelpers.trackProductView failed', err);
+      logError('analyticsHelpers.trackProductView.failed', err);
     }
   }
 );
@@ -108,7 +108,7 @@ export const trackAddToCart = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      logError('analyticsHelpers.trackAddToCart failed', err);
+      logError('analyticsHelpers.trackAddToCart.failed', err);
     }
   }
 );
@@ -144,7 +144,7 @@ export const trackSocialShare = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      logError('analyticsHelpers.trackSocialShare', err);
+      logError('analyticsHelpers.trackSocialShare.failed', err);
     }
   }
 );
@@ -199,7 +199,7 @@ export const getMostViewedProducts = webMethod(
         })
         .filter(Boolean);
     } catch (err) {
-      logError('analyticsHelpers.getMostViewedProducts', err);
+      logError('analyticsHelpers.getMostViewedProducts.failed', err);
       return [];
     }
   }
@@ -254,7 +254,7 @@ export const getTrendingProducts = webMethod(
         })
         .filter(Boolean);
     } catch (err) {
-      logError('analyticsHelpers.getTrendingProducts', err);
+      logError('analyticsHelpers.getTrendingProducts.failed', err);
       return [];
     }
   }
@@ -452,7 +452,7 @@ export const trackPurchase = webMethod(
         await wixData.update('ProductAnalytics', record);
       }
     } catch (err) {
-      logError('analyticsHelpers.trackPurchase', err);
+      logError('analyticsHelpers.trackPurchase.failed', err);
     }
   }
 );
