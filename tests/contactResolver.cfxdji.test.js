@@ -122,7 +122,7 @@ describe('cf-xdji · resolveContactId — failure modes', () => {
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('appendOrCreateContact'),
+      expect.stringContaining('appendOrCreateFailed'),
       expect.any(Error),
     );
   });
