@@ -36,7 +36,7 @@ export const getProductSwatches = webMethod(
         careInstructions: item.careInstructions,
       }));
     } catch (err) {
-      logError('[swatchService] getProductSwatches', err);
+      logError('swatchService:getProductSwatches', err);
       return [];
     }
   }
@@ -52,7 +52,7 @@ export const getAllSwatchFamilies = webMethod(
 
       return results.items || [];
     } catch (err) {
-      logError('[swatchService] getSwatchFamilies', err);
+      logError('swatchService:getAllSwatchFamilies', err);
       return [];
     }
   }
@@ -72,7 +72,7 @@ export const getSwatchCount = webMethod(
 
       return results;
     } catch (err) {
-      logError('[swatchService] countSwatches', err);
+      logError('swatchService:getSwatchCount', err);
       return 0;
     }
   }
@@ -97,7 +97,7 @@ export const getSwatchPreviewColors = webMethod(
         swatchName: item.swatchName,
       }));
     } catch (err) {
-      logError('[swatchService] getSwatchPreviewColors', err);
+      logError('swatchService:getSwatchPreviewColors', err);
       return [];
     }
   }

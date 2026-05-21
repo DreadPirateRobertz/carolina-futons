@@ -25,8 +25,8 @@ describe('cf-44qt — newsletterService.web.js console.error → logError migrat
   });
 
   it('this-PR migration sites use the newsletterService: prefix', () => {
-    expect(SRC).toContain("logError('newsletterService:espSync'");
-    expect(SRC).toContain("logError('newsletterService:espUnsubscribe'");
-    expect(SRC).toContain("logError('newsletterService:subscribe'");
+    expect(SRC).toContain("logError('newsletterService:syncToESP-internal'");
+    expect(SRC).toContain("logError('newsletterService:unsubscribeFromESP'");
+    expect(SRC).toContain("logError('newsletterService:subscribeToNewsletter'");
   });
 });

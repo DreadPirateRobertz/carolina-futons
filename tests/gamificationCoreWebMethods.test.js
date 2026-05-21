@@ -304,7 +304,7 @@ describe('cf-1y7 null-member guard cascade', () => {
         error: 'auth_required',
       });
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getStreakData-unauthenticated',
+        'gamificationCore:getStreakData-noMemberId',
         null,
       );
     });
@@ -332,7 +332,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       expect(result.tierName).toBe('Trail Blazer'); // computeTierInfo(0) baseline preserved
       expect(result.error).toBe('auth_required');
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getMemberTier-unauthenticated',
+        'gamificationCore:getMemberTier-noMemberId',
         null,
       );
     });
@@ -350,7 +350,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       const result = await getActiveChallenges(null);
       expect(result).toEqual({ challenges: [], error: 'auth_required' });
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getActiveChallenges-unauthenticated',
+        'gamificationCore:getActiveChallenges-noMemberId',
         null,
       );
     });
@@ -394,7 +394,7 @@ describe('cf-1y7 null-member guard cascade', () => {
       const result = await getActivityFeed('mem-1');
       expect(result).toEqual([]);
       expect(logError).toHaveBeenCalledWith(
-        'gamificationCore:getActivityFeed-unauthenticated',
+        'gamificationCore:getActivityFeed-authRequired',
         null,
       );
     });

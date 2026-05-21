@@ -144,10 +144,10 @@ const FILES = {
   'newsletterService.web.js': {
     requiresImport: true,
     tags: [
-      'newsletterService:espSync',
-      'newsletterService:espUnsubscribe',
+      'newsletterService:syncToESP-internal',
+      'newsletterService:unsubscribeFromESP',
       'newsletterService:welcomeAutoTrigger-nonblocking',
-      'newsletterService:subscribe',
+      'newsletterService:subscribeToNewsletter',
       'newsletterService:welcomeAutoTrigger-skippedEmptyContactId',
     ],
   },

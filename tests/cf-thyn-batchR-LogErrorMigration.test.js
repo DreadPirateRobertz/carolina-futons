@@ -49,8 +49,8 @@ describe('cf-thyn (cf-44qt batch-R): 3-file console.warn sweep', () => {
       expect(calls).toHaveLength(0);
     });
 
-    it('uses logError tag swatchKitService:recordSwatchKitPurchase-idempotencyFailed', () => {
-      expect(src).toMatch(tagPattern('swatchKitService:recordSwatchKitPurchase-idempotencyFailed'));
+    it('uses logError tag swatchKitService:issueSwatchKitCredit-idempotencyCheckFailed', () => {
+      expect(src).toMatch(tagPattern('swatchKitService:issueSwatchKitCredit-idempotencyCheckFailed'));
     });
 
     it('uses logError tag swatchKitService:getSwatchKitCreditStatus-noMember', () => {

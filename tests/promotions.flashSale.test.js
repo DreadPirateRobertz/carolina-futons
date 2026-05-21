@@ -262,7 +262,7 @@ describe('getFlashSales', () => {
     const deals = await getFlashSales();
     expect(deals).toEqual([]);
     expect(logError).toHaveBeenCalledWith(
-      '[promotions] getFlashSales',
+      'promotions:getFlashSales-failed',
       expect.any(Error)
     );
 

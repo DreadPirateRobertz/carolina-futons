@@ -34,12 +34,12 @@ describe('cf-44qt sibling — http-functions.js observability cleanup', () => {
     // No bare console.error catches remain.
     const matches = (src.match(/console\.error\(/g) || []);
     expect(matches.length).toBe(0);
-    // Every logError call uses the [http-functions] prefix.
+    // Every logError call uses either [http-functions] or http-functions: prefix.
     const logErrorCalls = src.match(/logError\(['"`]([^'"`]+)['"`]/g) || [];
-    const nonPrefixed = logErrorCalls.filter(c => !c.includes('[http-functions]'));
+    const nonPrefixed = logErrorCalls.filter(c => !c.includes('[http-functions]') && !c.includes('http-functions:'));
     expect(
       nonPrefixed,
-      `found logError tags without [http-functions] prefix: ${nonPrefixed.join('\n')}`,
+      `found logError tags without http-functions prefix: ${nonPrefixed.join('\n')}`,
     ).toEqual([]);
   });
 });

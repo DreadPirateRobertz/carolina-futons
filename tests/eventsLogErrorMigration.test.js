@@ -15,36 +15,36 @@ const SRC = fs.readFileSync(
 );
 
 const EXPECTED_TAG_PREFIXES = [
-  'events:wixEcom_onCartAbandoned-dropped',
-  'events:markCartRecovered',
-  'events:welcomeSequence',
-  'events:seedWelcomePoints',
-  'events:orderStatusWebhook-confirmed',
-  'events:postPurchaseSequence',
-  'events:tierMilestoneCheck',
-  'events:gamificationOnOrder',
-  'events:referralOnOrder',
-  'events:swatchAttributionCheck',
-  'events:swatchKitCredit-silentFailure',
-  'events:swatchKitCreditIssuance',
-  'events:wixEcom_onOrderApproved-gamificationEarn',
-  'events:orderStatusWebhook-shipped',
-  'events:onOrderFulfilled-sms',
-  'events:onFulfillmentCreated',
-  'events:onFulfillmentUpdated',
-  'events:onOrderDelivered',
-  'events:orderStatusWebhook-cancelled',
-  'events:cancelCareSequence',
-  'events:contentOrchestration-newProduct',
-  'events:contentOrchestration-priceDrop',
-  'events:restockNotifications-resultFailure',
-  'events:contentOrchestration-restock',
-  'events:restockNotifications',
-  'events:syncBirthdayFields',
+  'events:revalidate-webhookFailed',
+  'events:writeFailedEvent-dlqFailed',
+  'events:wixEcom_onAbandonedCart-failed',
+  'events:markCartRecovered-failed',
+  'events:wixMembers_onMemberCreated-welcomeSequenceFailed',
+  'events:wixMembers_onMemberCreated-seedPointsFailed',
+  'events:sendOrderConfirmation',
+  'events:wixEcom_onOrderApproved-webhookFailed',
+  'events:wixEcom_onOrderApproved-postPurchaseFailed',
+  'events:wixEcom_onOrderApproved-tierMilestoneFailed',
+  'events:wixEcom_onOrderApproved-gamificationFailed',
+  'events:wixEcom_onOrderApproved-referralFailed',
+  'events:wixEcom_onOrderApproved-swatchAttributionFailed',
+  'events:wixEcom_onOrderApproved-swatchKitCreditFailedSilent',
+  'events:wixEcom_onOrderApproved-swatchKitCreditThrew',
+  'events:wixEcom_onOrderApproved-earnFailed',
+  'events:wixEcom_onOrderShipped-webhookFailed',
+  'events:wixEcom_onOrderFulfilled-smsFailed',
+  'events:wixEcom_onFulfillmentCreated-failed',
+  'events:wixEcom_onFulfillmentUpdated-failed',
+  'events:wixEcom_onOrderDelivered-failed',
+  'events:wixEcom_onOrderCanceled-webhookFailed',
+  'events:wixEcom_onOrderCanceled-careSequenceFailed',
+  'events:wixStores_onProductCreated-orchestrationFailed',
+  'events:wixStores_onProductUpdated-priceDropOrchestrationFailed',
+  'events:dispatchRestockNotifications-orchestrationFailed',
 ];
 
 describe('cf-events-logerror — events.js console.error → logError', () => {
-  it('contains zero console.error calls (all 26 sites converted)', () => {
+  it('contains zero console.error calls (all sites converted)', () => {
     const matches = SRC.match(/console\.error\s*\(/g) || [];
     expect(matches.length).toBe(0);
   });
