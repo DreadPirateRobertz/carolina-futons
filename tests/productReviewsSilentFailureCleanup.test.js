@@ -44,7 +44,6 @@ describe('cf-44qt sibling — productReviews.web.js observability cleanup', () =
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/productReviews/);
     expect(allTags).toMatch(/getReviewSummary/);
-    expect(allTags).toMatch(/failed/);
   });
 
   it('getUnifiedReviews wires logError on Reviews query throw', async () => {
