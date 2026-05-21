@@ -7,6 +7,9 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { __seed, __reset, __setQueryError } from './__mocks__/wix-data.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 // ── jobs.config cron registration ─────────────────────────────────────────
 
 describe('Facebook Catalog — Cron Registration', () => {
@@ -146,9 +149,9 @@ describe('refreshFacebookCatalog — failure alert', () => {
 
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('[facebookCatalog]'),
-      expect.stringContaining('catalog refresh failed'),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('facebookCatalog:'),
+      expect.any(Error),
     );
   });
 });
