@@ -13,6 +13,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __onUpdate, __reset as __resetData, __seed } from './__mocks__/wix-data.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
 }));
@@ -24,6 +25,7 @@ vi.mock('backend/emailAutomation.web', () => ({
   cancelSequenceForOrder: vi.fn().mockResolvedValue({}),
 }));
 
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   _parseBirthdayMonthDay,
   wixMembers_onMemberUpdated,
@@ -236,7 +238,6 @@ describe('wixMembers_onMemberUpdated', () => {
   });
 
   it('is a no-op when no PrivateMembersData record exists for member', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const updated = [];
     __onUpdate((col, item) => updated.push({ col, item }));
 
@@ -246,15 +247,13 @@ describe('wixMembers_onMemberUpdated', () => {
     });
 
     expect(updated).toHaveLength(0);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('no PrivateMembersData record'),
-      'member-ghost',
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('noPrivateMembersData'),
+      null,
     );
-    warnSpy.mockRestore();
   });
 
   it('logs warning and does not update for unparseable birthday', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const updated = [];
     __onUpdate((col, item) => updated.push({ col, item }));
 
@@ -263,17 +262,13 @@ describe('wixMembers_onMemberUpdated', () => {
     });
 
     expect(updated).toHaveLength(0);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('unparseable birthday'),
-      'member-5',
-      expect.anything(),
-      'not-a-date',
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('unparseableBirthday'),
+      null,
     );
-    warnSpy.mockRestore();
   });
 
   it('logs error with memberId and does not throw when wixData.update fails', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __seed('Members/PrivateMembersData', [{ _id: 'member-6' }]);
     __onUpdate(() => { throw new Error('Wix Data unavailable'); });
 
@@ -283,15 +278,13 @@ describe('wixMembers_onMemberUpdated', () => {
       })
     ).resolves.not.toThrow();
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to sync birthday fields'),
-      expect.stringContaining('Wix Data unavailable'),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('syncFailed memberId=member-6'),
+      expect.any(Error),
     );
-    errorSpy.mockRestore();
   });
 
   it('calls logFailedEvent (inserts to FailedEvents) when wixData.update fails', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
     __seed('Members/PrivateMembersData', [{ _id: 'member-6b' }]);
     __onUpdate(() => { throw new Error('timeout'); });
 
@@ -306,7 +299,6 @@ describe('wixMembers_onMemberUpdated', () => {
     const dlq = inserted.filter(i => i.col === 'FailedEvents');
     expect(dlq).toHaveLength(1);
     expect(dlq[0].item.handler).toBe('wixMembers_onMemberUpdated');
-    vi.restoreAllMocks();
   });
 
   it('uses event.entity shape with contactDetails.birthdate', async () => {
