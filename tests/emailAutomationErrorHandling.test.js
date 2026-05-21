@@ -39,9 +39,14 @@ vi.mock('wix-web-module', () => ({
   webMethod: (_perm, fn) => fn,
 }));
 
+// cf-n3ii: emailAutomation migrated console.warn → canonical logError.
+// Mock the errorHandler module so warn-context tests can assert tag bodies.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 const { triggerRestockNotifications, triggerReviewThanks } = await import(
   '../src/backend/emailAutomation.web.js'
 );
+const { logError } = await import('../src/backend/utils/errorHandler.js');
 
 beforeEach(() => {
   __resetData();
@@ -103,11 +108,12 @@ describe('triggerRestockNotifications — per-subscriber error handling', () => 
     vi.restoreAllMocks();
   });
 
-  it('logs per-subscriber failures with redacted subscriber context', async () => {
-    // cf-ewnw: warn line now redacts the subscriber email via
+  it('logs per-subscriber failures with redacted subscriber context (via canonical logError tag)', async () => {
+    // cf-ewnw: tag body now redacts the subscriber email via
     // sanitize.redactEmail to "lo***@test.com" so monitoring/syslog
     // doesn't capture raw PII. Plaintext must NOT appear.
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // cf-n3ii: warn migrated to canonical logError tag.
+    vi.mocked(logError).mockClear();
     __onInsert((col) => {
       if (col === 'EmailQueue') throw new Error('Queue write failed');
     });
@@ -116,11 +122,11 @@ describe('triggerRestockNotifications — per-subscriber error handling', () => 
       { _id: 'sub-log', email: 'log@test.com', productName: 'Futon', contactId: 'c1' },
     ]);
 
-    expect(warnSpy).toHaveBeenCalled();
-    const warnArgs = warnSpy.mock.calls[0].join(' ');
-    expect(warnArgs).toContain('lo***@test.com');
-    expect(warnArgs).not.toContain('log@test.com');
-    warnSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
+    const tag = vi.mocked(logError).mock.calls[0][0];
+    expect(tag).toContain('emailAutomation:triggerRestockNotifications-notifyFailed');
+    expect(tag).toContain('lo***@test.com');
+    expect(tag).not.toContain('log@test.com');
   });
 
   it('outer catch returns consistent shape with failed field', async () => {
