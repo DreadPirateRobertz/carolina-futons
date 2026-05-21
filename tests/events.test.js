@@ -19,6 +19,12 @@ vi.mock('backend/emailAutomation.web', () => ({
   handleOrderDelivered: mockHandleOrderDelivered,
 }));
 
+// cf-m6t0: mock emailService for sendOrderConfirmation
+const mockSendOrderConfirmation = vi.fn().mockResolvedValue({ success: true });
+vi.mock('backend/emailService.web', () => ({
+  sendOrderConfirmation: mockSendOrderConfirmation,
+}));
+
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
   // cf-ewnw: log-side PII redaction helper.
@@ -441,6 +447,73 @@ describe('wixEcom_onOrderCreated', () => {
     await expect(
       wixEcom_onOrderCreated({
         entity: { number: 'ORD-ERR', buyerInfo: { email: 'err@test.com' }, lineItems: [] },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderCreated — sendOrderConfirmation (cf-m6t0 F3) ──────
+
+describe('wixEcom_onOrderCreated — sendOrderConfirmation (cf-m6t0)', () => {
+  it('calls sendOrderConfirmation with order details', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-CF3',
+        buyerInfo: { email: 'alice@test.com', contactId: 'c-alice' },
+        billingInfo: { firstName: 'Alice' },
+        priceSummary: { total: { amount: 899 } },
+        lineItems: [
+          { productName: { original: 'Eureka Futon' }, quantity: 1, price: { amount: 899 } },
+        ],
+      },
+    });
+
+    expect(mockSendOrderConfirmation).toHaveBeenCalledWith({
+      contactId: 'c-alice',
+      email: 'alice@test.com',
+      firstName: 'Alice',
+      orderNumber: 'ORD-CF3',
+      total: '$899.00',
+      itemSummary: '1× Eureka Futon',
+    });
+  });
+
+  it('formats multiple line items as comma-joined summary', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-CF3B',
+        buyerInfo: { email: 'bob@test.com', contactId: 'c-bob' },
+        priceSummary: { total: { amount: 1198 } },
+        lineItems: [
+          { productName: { original: 'Albany Frame' }, quantity: 1, price: { amount: 699 } },
+          { name: 'Mattress', quantity: 1, price: { amount: 499 } },
+        ],
+      },
+    });
+
+    expect(mockSendOrderConfirmation).toHaveBeenCalledWith(
+      expect.objectContaining({ itemSummary: '1× Albany Frame, 1× Mattress' })
+    );
+  });
+
+  it('skips sendOrderConfirmation when email is empty', async () => {
+    await wixEcom_onOrderCreated({
+      entity: { number: 'ORD-CF3C', buyerInfo: {} },
+    });
+
+    expect(mockSendOrderConfirmation).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when sendOrderConfirmation rejects', async () => {
+    mockSendOrderConfirmation.mockRejectedValueOnce(new Error('CRM timeout'));
+
+    await expect(
+      wixEcom_onOrderCreated({
+        entity: {
+          number: 'ORD-CF3D',
+          buyerInfo: { email: 'err@test.com', contactId: 'c-err' },
+          lineItems: [],
+        },
       })
     ).resolves.not.toThrow();
   });
