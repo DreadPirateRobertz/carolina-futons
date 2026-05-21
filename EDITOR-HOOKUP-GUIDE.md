@@ -1,3 +1,6 @@
+> **RETIRED** — Wix Studio retired post cf-3qt Phase 8 cutover. Archive reference only.
+> Active codebase: [carolina-futons-web](https://github.com/DreadPirateRobertz/carolina-futons-web)
+
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
 **Generated**: 2026-03-15 | **Last Updated**: 2026-05-05 (v4.6 — Post-cf-3qt session refresh: (a) confirmed PushTokens / SpinGrants / MobileChallengeCompletions / CrossRigSyncLog present on STAGING_SITE per Wix Data API verification 2026-05-05; (b) flagged cf-c6g5 — STAGING_SITE Triggered Emails dashboard is empty, 20 templates need batch-copy from prod, all email touchpoints currently 500; (c) added Diagnostic Endpoints section (`/_functions/contactSubmissionsDiagnostic`, /api/auth/diag pending quartz); (d) added Repo Drift lessons from cf-w1lg (cfutons monorepo ↔ carolina-futons-stage3-velo divergence — cfw → Velo HTTP calls 404 until publish); (e) Hookup-coverage snapshot from cf-ah0m + cf-o2kq parity audit: 255 features, 201✓ / 28~ / 25✗ / 1?; (f) Phase 8 cutover prep link. Previous: v4.5 — CMS collections 32→36: added Landings, PressMentions, PressKitAssets, ComparisonFeatures (cf-3qt Phase 4/5). v4.4 — CMS 28→32: PushTokens, SpinGrants, MobileChallengeCompletions, CrossRigSyncLog. v4.3 — Phase 8 COMPLETE. v4.2 — Night shift 5 merges.)
