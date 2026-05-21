@@ -1028,6 +1028,23 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Date -u to verify actual UTC, then convert to MT (MDT=UTC-6 in May, MST=UTC-7 in Nov-Mar).
 - When merging two specs on the same topic from different crew: note the discrepancy in the 5-crew review and flag for Stilgar consolidation, don't block the merge.
 
+## Session 2026-05-21 (6e859f1f part 2 — cfw test fix sequence after context compact)
+
+### What worked well
+- **PR sequencing to unblock main**: cfw main broke after #884 admin-merge (4 test files). Diagnosed correctly: source migrated to logError but tests still asserted Sentry. Split fix across #888 (3 files) + rebased #887 (1 file). Correct sequence: #888 first (unblocks #887's og-metadata failure), then #887 rebase, then admin-merge both. Main CI clean in one pass.
+- **Duplicate PR detection**: #889 appeared after #887+#888 were already merged, covering the same 4 files. Closed immediately with accurate "superseded by" reasoning — no confusion about which merge was canonical.
+- **Pre-existing vs regression triage**: Distinguished cfutons main's pre-existing TDD-stub failures from PR #1569 regressions. Created cf-7s1j for blaidd instead of trying to fix 15+ source files in one session.
+- **Dependency graph on run IDs**: Realized that the failing annotations on run 26205212680 were from the OLD swatch-request.test.ts (before #887 merged), not from my test changes in #888. Avoided creating a spurious fix PR.
+
+### What to improve
+- **Check which test file each annotation belongs to BEFORE creating fix branches**: In the batch-4 sequence, I created both #888 and confirmed #887 before checking that #887's CI failure (og-metadata) was also being fixed by #888. Better: annotate dependency → "merge #888 first, then #887 CI should go green."
+- **Admin-merge timing**: The mayor admin-merged #1571 (cf-crdn) while CI was still in-progress with failures. This pushed new pre-existing test failures into main. I should have explicitly flagged "CI still failing — do NOT admin-merge yet" in the PR comment before starting other work.
+
+### Pattern notes
+- **vi.resetAllMocks() in beforeEach + vi.stubEnv() test isolation**: When vi.stubEnv("NODE_ENV", "production") is called AFTER vi.resetAllMocks(), the mock vi.fn() is cleared but still the same object. Dynamic imports of swatch-request.ts use cached module — logError binding is stable across the reset. Tests should work, but NODE_ENV must be stubbed BEFORE the action is imported to avoid cached env reads.
+- **cfw swatch-request.test.ts PR #887 pattern**: Uses `vi.mocked(logError)` after `const { logError } = await import(...)`. This works because logError IS a vi.fn() at mock definition time. Clearing with vi.resetAllMocks() clears call count but preserves the vi.fn() reference.
+- **Pre-existing cfutons test failures (2026-05-21)**: ~20 test files failing on main — mix of pending TDD stubs (batch P, R, M implementations not yet done) and format regressions from #1569. These are tracked in cf-7s1j for blaidd.
+
 ## Session 2026-05-21 (6e859f1f — CFW audit + logError wave QA)
 
 ### What worked well
