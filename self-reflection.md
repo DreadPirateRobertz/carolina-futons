@@ -1,5 +1,24 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-21 (cf-44qt wave close + CFW Playwright audit)
+
+### What worked well
+- **Stale-conflict detection at scale**: 13 PRs showed CONFLICTING in GitHub but most were stale cache — already merged. Verified each with `gh pr view` before dispatching rebase work. Saved 8+ unnecessary crew dispatches.
+- **Regression catch on #1458**: Noticed branch source diffs would *downgrade* main's colon-namespace back to bracket format before dispatching. Closed immediately rather than letting crew waste a rebase cycle. Salvaged the test file as cf-d24u.
+- **Wave-complete detection**: Checked remaining console.error files before creating more migration beads. Found errorMonitoring/notificationService/errorHandler all have intentional last-resort fallbacks. Declared wave done instead of creating false work.
+- **Duplicate PR handling (cf-d24u)**: Two crew members (rennala #1560, millicent #1559) submitted simultaneously. Evaluated both, picked the forward-compatible one (stringContaining for unmigrated guideSeoService), closed duplicate with clear rationale. No recrimination.
+- **CFW audit depth**: Playwright audit confirmed Stilgar's image-swap bug AND found that the preload `<link>` never updates on finish change — pointing directly to SSR vs client state mismatch. Root cause hypothesis in the report was actionable without further investigation.
+
+### What to improve
+- **Dispatch collision on cf-d24u**: Told millicent about cf-d24u via nudge AND assigned rennala to it via bd update — without locking the bead first. Two crew worked the same task. Fix: always `bd update <id> --assignee <crew>` before sending the nudge, so the bead is claimed before the crew hears about it.
+- **Reassignment without checking assignee**: Dispatched morgott to cf-h345 which was already fully shipped (all 4 tracks). Should check `git log --oneline origin/main | grep cf-h345` before dispatching to implementation beads that look "in_progress."
+- **Context loss recovery speed**: After compaction, re-ran several conflict checks that had already been done. Should read the session state summary more carefully before re-checking known quantities.
+
+### Pattern notes
+- **GitHub CONFLICTING is a lag indicator**: After force-push rebase, GitHub takes 30-90s to recompute merge status. A PR showing CONFLICTING right after a push is almost always stale cache, not a real conflict. Wait or verify via `git merge-base` locally before re-dispatching.
+- **cf-44qt wave boundary**: errorMonitoring.web.js, notificationService.web.js, errorHandler.js, safeParse.js — all have intentional console.* calls as last-resort fallbacks in the logging stack itself. These are excluded from the migration wave permanently.
+- **Two-PR split on events.js worked**: #1547 (26 sites) + #1548 (batch-S ×33) both merged cleanly. Split-PR strategy on large files avoids monster diffs that CI chokes on.
+
 ## Session 2026-05-16 (387faae7 — merge drain + ISR unlock dispatch)
 
 ### What worked well
