@@ -39,14 +39,14 @@ describe('cf-44qt batch9 — 5-module logError migration', () => {
     expect(read(path)).not.toMatch(/console\.error/);
   });
 
-  it('lifecycleCron.web.js: 3 expected labels with canonical [lifecycleCron] prefix', () => {
+  it('lifecycleCron.web.js: 3 expected labels with canonical lifecycleCron: prefix', () => {
     const src = read('src/backend/lifecycleCron.web.js');
     expect(src).toMatch(
       /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
-    expect(src).toMatch(/logError\(\s*['"]\[lifecycleCron\] scanLifecycleMilestones['"]/);
-    expect(src).toMatch(/logError\(\s*['"]\[lifecycleCron\] runDailyChallengeReminders['"]/);
-    expect(src).toMatch(/logError\(\s*`\[lifecycleCron\] challengeReminderPush \$\{record\.memberId\}`/);
+    expect(src).toMatch(/logError\(\s*['"]lifecycleCron:scanLifecycleMilestones['"]/);
+    expect(src).toMatch(/logError\(\s*['"]lifecycleCron:runDailyChallengeReminders['"]/);
+    expect(src).toMatch(/logError\(\s*`lifecycleCron:runDailyChallengeReminders-pushFailed/);
   });
 
   it('promotions.web.js: 2 expected labels with canonical [promotions] prefix (added)', () => {
@@ -73,7 +73,7 @@ describe('cf-44qt batch9 — 5-module logError migration', () => {
       /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
     expect(src).toMatch(
-      /logError\(\s*['"]\[lifecycleEmailSender\] sendLifecycleEmails['"]/,
+      /logError\(\s*['"]lifecycleEmailSender:sendLifecycleEmails['"]/,
     );
   });
 
@@ -83,7 +83,7 @@ describe('cf-44qt batch9 — 5-module logError migration', () => {
       /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
     expect(src).toMatch(
-      /logError\(\s*`\[contactResolver\] appendOrCreateContact \$\{cleanEmail\}`/,
+      /logError\(\s*`contactResolver:appendOrCreateContact/,
     );
   });
 });

@@ -25,9 +25,12 @@ import {
   contacts,
 } from './__mocks__/wix-crm-backend.js';
 
+// cf-i8b4: contactResolver migrated console.error|warn → canonical logError.
+// Mock the errorHandler module so failure-mode tests can spy on logError
+// calls directly (replaces the previous console.error/warn spies).
 vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
-import { logError } from '../src/backend/utils/errorHandler.js';
 
+import { logError } from '../src/backend/utils/errorHandler.js';
 import {
   resolveContactId,
   _resolveContactIdInternal,
@@ -36,6 +39,7 @@ import {
 beforeEach(() => {
   resetCrm();
   vi.restoreAllMocks();
+  vi.mocked(logError).mockClear();
 });
 
 describe('cf-xdji · resolveContactId — happy path', () => {
@@ -116,26 +120,28 @@ describe('cf-xdji · resolveContactId — validation', () => {
 });
 
 describe('cf-xdji · resolveContactId — failure modes', () => {
-  it('returns null when appendOrCreateContact throws', async () => {
+  it('returns null when appendOrCreateContact throws — logged via canonical logError', async () => {
     vi.spyOn(contacts, 'appendOrCreateContact').mockRejectedValue(new Error('CRM unavailable'));
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
+    // cf-i8b4: tag carries module:fn namespace + a redactEmail() value so
+    // support can correlate without storing plaintext PII in log buckets.
     expect(logError).toHaveBeenCalledWith(
-      expect.stringContaining('appendOrCreateContact'),
+      expect.stringContaining('contactResolver:appendOrCreateContact'),
       expect.any(Error),
     );
+    const tag = vi.mocked(logError).mock.calls[0][0];
+    expect(tag).toContain('email=sh***@example.com');
   });
 
-  it('returns null when appendOrCreateContact resolves with no contactId', async () => {
+  it('returns null when appendOrCreateContact resolves with no contactId — logged via canonical logError', async () => {
     vi.spyOn(contacts, 'appendOrCreateContact').mockResolvedValue({});
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = await resolveContactId('shopper@example.com');
     expect(result).toBeNull();
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('returned no contactId'),
-      expect.anything(),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('contactResolver:appendOrCreateContact-noContactId'),
+      null,
     );
-    consoleWarn.mockRestore();
   });
 });
 

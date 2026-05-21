@@ -82,7 +82,7 @@ export const getShowroomStatus = webMethod(
         isLive,
       };
     } catch (err) {
-      logError('liveShowroom.getShowroomStatus', err);
+      logError('liveShowroom:getShowroomStatus', err);
       return { onDisplay: false, camera: null, isLive: false };
     }
   }
@@ -124,7 +124,7 @@ export const getLiveDisplayProducts = webMethod(
 
       return { productIds: [...productIds], cameras };
     } catch (err) {
-      logError('liveShowroom.getLiveDisplayProducts', err);
+      logError('liveShowroom:getLiveDisplayProducts', err);
       return { productIds: [], cameras: [] };
     }
   }
@@ -201,7 +201,7 @@ export const reserveShowroomPiece = webMethod(
         },
       };
     } catch (err) {
-      logError('liveShowroom.reserveShowroomPiece', err);
+      logError('liveShowroom:reserveShowroomPiece', err);
       return { success: false, reservation: null, error: err?.message || 'Reservation failed' };
     }
   }
@@ -271,7 +271,7 @@ export const cameraHeartbeat = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('liveShowroom.cameraHeartbeat', err);
+      logError('liveShowroom:cameraHeartbeat', err);
       return { success: false };
     }
   }

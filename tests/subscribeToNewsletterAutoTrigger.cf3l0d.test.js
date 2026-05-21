@@ -31,6 +31,11 @@ vi.mock('backend/emailAutomation.web', () => ({
   triggerWelcomeSequence: vi.fn().mockResolvedValue({ success: true, queued: 3 }),
 }));
 
+// cf-i8b4: newsletterService migrated non-blocking welcome-trigger
+// console.warn calls → canonical logError. Spy on the module so we can
+// assert tag namespace without touching console.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 import { __reset as resetData } from './__mocks__/wix-data.js';
 import { __reset as resetCrm } from './__mocks__/wix-crm-backend.js';
 import { __reset as resetMarketing } from './__mocks__/wix-marketing-backend.js';
@@ -41,6 +46,7 @@ import { __reset as resetMember, __setMember } from './__mocks__/wix-members-bac
 import { subscribeToNewsletter } from '../src/backend/newsletterService.web.js';
 import { resolveContactId } from 'backend/contacts/contactResolver.web';
 import { triggerWelcomeSequence } from 'backend/emailAutomation.web';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 beforeEach(() => {
   resetData();
@@ -53,6 +59,7 @@ beforeEach(() => {
   vi.mocked(resolveContactId).mockReset();
   vi.mocked(triggerWelcomeSequence).mockReset();
   vi.mocked(triggerWelcomeSequence).mockResolvedValue({ success: true, queued: 3 });
+  vi.mocked(logError).mockClear();
 });
 
 // Drain the .catch microtask queue that swallows non-blocking trigger errors,
@@ -91,48 +98,42 @@ describe('cf-3l0d · subscribeToNewsletter auto-triggers welcome series', () => 
 
   it('still returns success when resolveContactId throws (non-blocking)', async () => {
     vi.mocked(resolveContactId).mockRejectedValue(new Error('CRM unavailable'));
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await subscribeToNewsletter('shopper@example.com');
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
     expect(vi.mocked(triggerWelcomeSequence)).not.toHaveBeenCalled();
-    // Warning is logged so silent-failure-hunter sees it.
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('welcome auto-trigger failed'),
-      expect.any(String),
+    // cf-i8b4: logged via canonical logError so silent-failure-hunter sees it.
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('newsletterService:welcomeAutoTrigger-nonblocking'),
+      expect.any(Error),
     );
-    consoleWarn.mockRestore();
   });
 
   it('still returns success when triggerWelcomeSequence throws (non-blocking)', async () => {
     vi.mocked(resolveContactId).mockResolvedValue('contact-abc');
     vi.mocked(triggerWelcomeSequence).mockRejectedValue(new Error('queue insert failed'));
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await subscribeToNewsletter('shopper@example.com');
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
-    consoleWarn.mockRestore();
   });
 
   it('skips triggerWelcomeSequence when resolveContactId returns empty', async () => {
-    // resolveContactId returns '' — defensive branch in the helper warns and
-    // exits without invoking the welcome trigger.
+    // resolveContactId returns '' — defensive branch in the helper logs the
+    // skip via canonical logError and exits without invoking the welcome trigger.
     vi.mocked(resolveContactId).mockResolvedValue('');
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await subscribeToNewsletter('shopper@example.com');
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
     expect(vi.mocked(triggerWelcomeSequence)).not.toHaveBeenCalled();
-    expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('welcome auto-trigger skipped'),
-      expect.any(Object),
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('newsletterService:welcomeAutoTrigger-skippedEmptyContactId'),
+      null,
     );
-    consoleWarn.mockRestore();
   });
 });

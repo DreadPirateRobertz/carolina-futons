@@ -115,11 +115,11 @@ export const submitPhotoReview = webMethod(
         'gamification_submit_review',
         { has_photo: true },
         memberId,
-      ).catch(err => console.warn('[photoReviews] gamification event failed:', err));
+      ).catch(err => logError('photoReviews:submitPhotoReview-gamificationEvent', err));
 
       return { success: true, id: inserted._id };
     } catch (err) {
-      logError('photoReviews.submitPhotoReview', err);
+      logError('photoReviews:submitPhotoReview', err);
       return { success: false, error: 'Failed to submit photo review.' };
     }
   }
@@ -171,7 +171,7 @@ export const moderatePhotoReview = webMethod(
       const allowed = PHOTO_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
-        console.warn(`[photoReviews] Blocked transition: ${cleanId} ${currentStatus} → ${newStatus} by ${memberId}`);
+        logError(`photoReviews:moderatePhotoReview-blockedTransition review=${cleanId} from=${currentStatus} to=${newStatus} by=${memberId}`, null);
         return {
           success: false,
           error: `Cannot ${cleanAction} a review with status '${currentStatus}'.`,
@@ -186,7 +186,7 @@ export const moderatePhotoReview = webMethod(
       await wixData.update('PhotoReviews', existing);
       return { success: true, previousStatus, newStatus };
     } catch (err) {
-      logError('photoReviews.moderatePhotoReview', err);
+      logError('photoReviews:moderatePhotoReview', err);
       return { success: false, error: 'Failed to moderate review.' };
     }
   }
@@ -231,7 +231,7 @@ export const getPhotoGallery = webMethod(
 
       return { success: true, photos };
     } catch (err) {
-      logError('photoReviews.getPhotoGallery', err);
+      logError('photoReviews:getPhotoGallery', err);
       return { success: false, error: 'Failed to load gallery.', photos: [] };
     }
   }

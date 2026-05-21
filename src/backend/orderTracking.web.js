@@ -170,7 +170,7 @@ export const lookupOrder = webMethod(
         notificationsEnabled,
       };
     } catch (err) {
-      logError('orderTracking.lookupOrder', err);
+      logError('orderTracking:lookupOrder', err);
       return { success: false, error: 'Unable to retrieve order information. Please try again.' };
     }
   }
@@ -244,7 +244,7 @@ export const subscribeToNotifications = webMethod(
       logAuditEvent('TrackingNotifications', 'subscribe', cleanEmail, { orderNumber: cleanOrderNumber });
       return { success: true, alreadySubscribed: false };
     } catch (err) {
-      logError('orderTracking.subscribeToNotifications', err);
+      logError('orderTracking:subscribeToNotifications', err);
       return { success: false, error: 'Unable to subscribe. Please try again.' };
     }
   }
@@ -282,7 +282,7 @@ export const unsubscribeFromNotifications = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('orderTracking.unsubscribeFromNotifications', err);
+      logError('orderTracking:unsubscribeFromNotifications', err);
       return { success: false, error: 'Unable to unsubscribe. Please try again.' };
     }
   }
@@ -334,7 +334,7 @@ export const getTrackingTimeline = webMethod(
         timeline,
       };
     } catch (err) {
-      logError('orderTracking.getTrackingTimeline', err);
+      logError('orderTracking:getTrackingTimeline', err);
       return { success: false, error: 'Unable to retrieve tracking information' };
     }
   }
