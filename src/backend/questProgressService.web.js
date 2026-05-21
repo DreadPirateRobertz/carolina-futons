@@ -18,6 +18,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'QuestProgress';
 const ACTIVE_QUESTS_LIMIT = 50;
@@ -87,7 +88,7 @@ export const saveQuestProgress = webMethod(
       }
       return { success: true };
     } catch (err) {
-      console.error('[questProgressService] saveQuestProgress failed:', err);
+      logError('questProgressService:saveQuestProgress', err);
       return { success: false, error: 'Unable to save quest progress' };
     }
   }
@@ -129,7 +130,7 @@ export const getQuestProgress = webMethod(
       }
       return { success: true, progressData: parsed, status: record.status };
     } catch (err) {
-      console.error('[questProgressService] getQuestProgress failed:', err);
+      logError('questProgressService:getQuestProgress', err);
       return { success: false, error: 'Unable to retrieve quest progress' };
     }
   }
@@ -166,7 +167,7 @@ export const getActiveQuests = webMethod(
 
       return { success: true, quests };
     } catch (err) {
-      console.error('[questProgressService] getActiveQuests failed:', err);
+      logError('questProgressService:getActiveQuests', err);
       return { success: false, error: 'Unable to retrieve active quests' };
     }
   }
