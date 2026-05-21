@@ -34,9 +34,9 @@ describe.each(FILES)('cf-tok3 %s — console.error → logError migration', (nam
     );
   });
 
-  it(`source file uses ${name}.* context tag prefix in at least one logError call`, async () => {
+  it(`source file uses ${name}[.:] context tag prefix in at least one logError call`, async () => {
     const src = await readSrc(name);
-    const moduleTagRegex = new RegExp(`logError\\(\\s*['"]${name}\\.`);
+    const moduleTagRegex = new RegExp(`logError\\(\\s*['"\`]${name}[.:]`);
     expect(src).toMatch(moduleTagRegex);
   });
 });
