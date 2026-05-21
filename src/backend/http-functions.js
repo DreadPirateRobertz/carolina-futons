@@ -1,6 +1,7 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
 import { ok, notFound, serverError, forbidden, badRequest, unauthorized, response } from 'wix-http-functions';
+import { logError } from 'backend/utils/errorHandler';
 import { currentMember } from 'wix-members-backend';
 import { accounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
 import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
@@ -101,7 +102,7 @@ export function get_googleShoppingFeed(request) {
       });
     })
     .catch(err => {
-      console.error('HTTP function error (googleShoppingFeed):', err);
+      logError('[http-functions] googleShoppingFeed failed', err);
       return serverError({
         body: 'Internal server error',
         headers: { 'Content-Type': 'text/plain' },
@@ -229,7 +230,7 @@ export async function get_productSitemap() {
     try {
       productItems = await fetchAllProducts();
     } catch (err) {
-      console.error('[productSitemap] Product fetch failed — serving static pages only, all product URLs missing:', err?.message ?? err);
+      logError('[http-functions] productSitemap product-fetch failed — serving static pages only', err);
     }
 
     const productUrls = productItems.map(p => ({
@@ -263,7 +264,7 @@ export async function get_productSitemap() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (productSitemap):', err);
+    logError('[http-functions] productSitemap failed', err);
     return serverError({
       body: 'Error generating sitemap',
       headers: { 'Content-Type': 'text/plain' },
@@ -311,7 +312,7 @@ export async function get_blogSitemap() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (blogSitemap):', err);
+    logError('[http-functions] blogSitemap failed', err);
     return serverError({
       body: 'Error generating blog sitemap',
       headers: { 'Content-Type': 'text/plain' },
@@ -384,7 +385,7 @@ export function get_blogRssFeed() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (blogRssFeed):', err);
+    logError('[http-functions] blogRssFeed failed', err);
     return serverError({
       body: 'Error generating RSS feed',
       headers: { 'Content-Type': 'text/plain' },
@@ -454,7 +455,7 @@ export async function get_facebookCatalogFeed() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (facebookCatalogFeed):', err);
+    logError('[http-functions] facebookCatalogFeed failed', err);
     return serverError({
       body: 'Error generating Facebook catalog feed',
       headers: { 'Content-Type': 'text/plain' },
@@ -509,7 +510,7 @@ export async function get_facebookCustomAudience(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (facebookCustomAudience):', err);
+    logError('[http-functions] facebookCustomAudience failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -569,7 +570,7 @@ export async function get_pinterestProductFeed() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (pinterestProductFeed):', err);
+    logError('[http-functions] pinterestProductFeed failed', err);
     return serverError({
       body: 'Error generating Pinterest product feed',
       headers: { 'Content-Type': 'text/plain' },
@@ -704,7 +705,7 @@ export async function get_checkWishlistAlerts(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (checkWishlistAlerts):', err);
+    logError('[http-functions] checkWishlistAlerts failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -744,7 +745,7 @@ export async function get_triggerBrowseRecoveryCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (triggerBrowseRecoveryCron):', err);
+    logError('[http-functions] triggerBrowseRecoveryCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -784,7 +785,7 @@ export async function get_triggerCartRecoveryCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (triggerCartRecoveryCron):', err);
+    logError('[http-functions] triggerCartRecoveryCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -856,7 +857,7 @@ export async function get_processEmailQueueCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (processEmailQueueCron):', err);
+    logError('[http-functions] processEmailQueueCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -895,7 +896,7 @@ export async function get_triggerReengagementCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (triggerReengagementCron):', err);
+    logError('[http-functions] triggerReengagementCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -935,7 +936,7 @@ export async function get_scanAndTriggerWinbackCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (scanAndTriggerWinbackCron):', err);
+    logError('[http-functions] scanAndTriggerWinbackCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -979,7 +980,7 @@ export async function get_runReviewRequestEmailsCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (runReviewRequestEmailsCron):', err);
+    logError('[http-functions] runReviewRequestEmailsCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1022,7 +1023,7 @@ export async function get_processPostPurchaseCareCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (processPostPurchaseCareCron):', err);
+    logError('[http-functions] processPostPurchaseCareCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1063,7 +1064,7 @@ export async function get_processContentScheduleCron(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (processContentScheduleCron):', err);
+    logError('[http-functions] processContentScheduleCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1115,7 +1116,7 @@ export async function get_campaignAnalytics(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (campaignAnalytics):', err);
+    logError('[http-functions] campaignAnalytics failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1174,7 +1175,7 @@ export async function post_stampedWebhook(request) {
     try {
       const { getSecret } = await import('wix-secrets-backend');
       webhookSecret = await getSecret('STAMPED_WEBHOOK_SECRET');
-    } catch (err) { console.error('[http-functions] stampedWebhook: failed to fetch STAMPED_WEBHOOK_SECRET:', err); }
+    } catch (err) { logError('[http-functions] stampedWebhook STAMPED_WEBHOOK_SECRET-fetch failed', err); }
 
     const requestSecret = request.headers['x-stamped-secret'] || request.headers['x-stamped-webhook-secret'];
     if (!webhookSecret || !requestSecret || !timingSafeEqual(requestSecret, webhookSecret)) {
@@ -1220,7 +1221,7 @@ export async function post_stampedWebhook(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('[http-functions] stampedWebhook error:', err);
+    logError('[http-functions] stampedWebhook failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1321,7 +1322,7 @@ export async function post_klaviyoWebhook(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (klaviyoWebhook):', err);
+    logError('[http-functions] klaviyoWebhook failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1345,7 +1346,7 @@ export async function get_sitemapXml() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (sitemapXml):', err);
+    logError('[http-functions] sitemapXml failed', err);
     return serverError({
       body: 'Error generating sitemap',
       headers: { 'Content-Type': 'text/plain' },
@@ -1373,7 +1374,7 @@ export async function get_loyalty(request) {
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error(`HTTP function error (loyalty): getMember() failed for memberId=${memberId}:`, err);
+      logError(`[http-functions] loyalty getMember-failed memberId=${memberId}`, err);
       return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
     }
     if (!member) {
@@ -1385,7 +1386,7 @@ export async function get_loyalty(request) {
 
     const account = await accounts.getMyAccount();
     if (!account) {
-      console.error(`HTTP function error (loyalty): no loyalty account for memberId=${memberId}`);
+      logError(`[http-functions] loyalty no-account memberId=${memberId}`, new Error('no loyalty account'));
       return notFound({ body: json({ error: 'Loyalty account not found' }), headers: jsonHeaders });
     }
 
@@ -1401,7 +1402,7 @@ export async function get_loyalty(request) {
         pointCost: r.pointCost,
       }));
     } catch (err) {
-      console.error(`HTTP function error (loyalty): listRewards() failed for memberId=${memberId}:`, err);
+      logError(`[http-functions] loyalty listRewards-failed memberId=${memberId}`, err);
       // Degrade gracefully — return account data with empty rewards
     }
 
@@ -1416,7 +1417,7 @@ export async function get_loyalty(request) {
       headers: jsonHeaders,
     });
   } catch (err) {
-    console.error(`HTTP function error (loyalty): memberId=${memberId || 'unknown'}:`, err);
+    logError(`[http-functions] loyalty failed memberId=${memberId || 'unknown'}`, err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }
@@ -1434,7 +1435,7 @@ export function get_robotsTxt() {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (robotsTxt):', err);
+    logError('[http-functions] robotsTxt failed', err);
     return serverError({
       body: 'Error generating robots.txt',
       headers: { 'Content-Type': 'text/plain' },
@@ -1498,7 +1499,7 @@ export function get_topicCluster(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (topicCluster):', err.name, err.message, err);
+    logError(`[http-functions] topicCluster failed name=${err?.name} message=${err?.message}`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'Failed to load topic cluster.' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1576,7 +1577,7 @@ export async function get_generateReferralLink() {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('HTTP function error (generateReferralLink):', err);
+    logError('[http-functions] generateReferralLink failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1681,7 +1682,7 @@ export async function post_trackReferral(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('HTTP function error (trackReferral):', err);
+    logError('[http-functions] trackReferral failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
@@ -1724,7 +1725,7 @@ export async function get_bundles(request) {
     }
     return ok({ body: JSON.stringify(result.bundles), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (get_bundles):', err);
+    logError('[http-functions] get_bundles failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1763,7 +1764,7 @@ export async function post_addBundleToCart(request) {
 
     return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (addBundleToCart):', err);
+    logError('[http-functions] addBundleToCart failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1795,7 +1796,7 @@ export async function get_productQA(request) {
 
     return ok({ body: JSON.stringify(result.data), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (get_productQA):', err);
+    logError('[http-functions] get_productQA failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1841,7 +1842,7 @@ export async function post_submitQuestion(request) {
 
     return ok({ body: JSON.stringify({ success: true, data: result.data }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (post_submitQuestion):', err);
+    logError('[http-functions] post_submitQuestion failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1899,7 +1900,7 @@ export async function post_answerQuestion(request) {
 
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (post_answerQuestion):', err);
+    logError('[http-functions] post_answerQuestion failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1968,7 +1969,7 @@ export async function post_gamificationEvent(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (post_gamificationEvent):', err);
+    logError('[http-functions] post_gamificationEvent failed', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -1993,7 +1994,7 @@ export async function get_activeChallenges(request) {
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error(`HTTP function error (activeChallenges): getMember() failed for memberId=${memberId}:`, err);
+      logError(`[http-functions] activeChallenges getMember-failed memberId=${memberId}`, err);
       return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
     }
     if (!member) {
@@ -2032,7 +2033,7 @@ export async function get_activeChallenges(request) {
 
     return ok({ body: json(result), headers: jsonHeaders });
   } catch (err) {
-    console.error(`HTTP function error (activeChallenges): memberId=${memberId || 'unknown'}:`, err);
+    logError(`[http-functions] activeChallenges failed memberId=${memberId || 'unknown'}`, err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }
@@ -2069,7 +2070,7 @@ export async function post_challengeProgress(request) {
     try {
       member = await currentMember.getMember();
     } catch (err) {
-      console.error(`HTTP function error (challengeProgress): getMember() failed for memberId=${memberId}:`, err);
+      logError(`[http-functions] challengeProgress getMember-failed memberId=${memberId}`, err);
       return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
     }
     if (!member) {
@@ -2090,7 +2091,7 @@ export async function post_challengeProgress(request) {
 
     return ok({ body: json(result), headers: jsonHeaders });
   } catch (err) {
-    console.error('HTTP function error (challengeProgress):', err);
+    logError('[http-functions] challengeProgress failed', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }
@@ -2150,7 +2151,7 @@ export async function get_cleanupRateLimitCron(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (cleanupRateLimitCron):', err);
+    logError('[http-functions] cleanupRateLimitCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
@@ -2207,7 +2208,7 @@ export async function get_processNotificationQueueCron(request) {
         retried++;
         delivered++;
       } catch (err) {
-        console.error('HTTP function error (notificationQueueCron — retry failed):', err);
+        logError('[http-functions] notificationQueueCron — retry failed failed', err);
         await markFailed(row._id, row.retries);
         retried++;
         failed++;
@@ -2225,7 +2226,7 @@ export async function get_processNotificationQueueCron(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (processNotificationQueueCron):', err);
+    logError('[http-functions] processNotificationQueueCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
@@ -2309,7 +2310,7 @@ export async function get_leaderboard(request) {
       }));
       return ok({ body: json({ members, type, limit: safeLimit }), headers: PUBLIC_HEADERS });
     } catch (err) {
-      console.error('HTTP function error (leaderboard/public):', err);
+      logError('[http-functions] leaderboard/public failed', err);
       return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
     }
   }
@@ -2319,7 +2320,7 @@ export async function get_leaderboard(request) {
   try {
     member = await currentMember.getMember();
   } catch (err) {
-    console.error('HTTP function error (leaderboard): getMember() failed:', err);
+    logError('[http-functions] leaderboard getMember-failed', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
   if (!member) {
@@ -2353,7 +2354,7 @@ export async function get_leaderboard(request) {
     const result = await _loyaltyServiceModule.getLeaderboard({ limit: rawLimit, period });
     return ok({ body: json(result), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (leaderboard):', err);
+    logError('[http-functions] leaderboard failed', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -2430,7 +2431,7 @@ export async function get_badges(request) {
 
     return ok({ body: json({ memberId, badges, totalCount: badges.length }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (badges):', err);
+    logError('[http-functions] badges failed', err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -2517,7 +2518,7 @@ export async function post_busEvent(request) {
       status: 'received',
     });
   } catch (err) {
-    console.error('HTTP function error (busEvent — EventTraceLog write):', err);
+    logError('[http-functions] busEvent — EventTraceLog write failed', err);
     // Non-fatal: continue even if logging fails
   }
 
@@ -2550,7 +2551,7 @@ export async function get_cmsGarbageCollect(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (cmsGarbageCollect):', err);
+    logError('[http-functions] cmsGarbageCollect failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
@@ -2590,7 +2591,7 @@ export async function get_sendMonthlyLoyaltyStatements(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (sendMonthlyLoyaltyStatements):', err);
+    logError('[http-functions] sendMonthlyLoyaltyStatements failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
@@ -2631,7 +2632,7 @@ export async function get_weeklyBlogDigestCron(request) {
       headers: JSON_HEADERS,
     });
   } catch (err) {
-    console.error('HTTP function error (weeklyBlogDigestCron):', err);
+    logError('[http-functions] weeklyBlogDigestCron failed', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: JSON_HEADERS,
@@ -2696,7 +2697,7 @@ export async function post_contactSubmissions(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[contactSubmissions] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:contactSubmissions-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -2725,7 +2726,7 @@ export async function post_contactSubmissions(request) {
     // Defensive: webMethod proxy can theoretically resolve to undefined on
     // backend infrastructure failures. Treat as 500 — it's not a client bug.
     if (!result) {
-      console.error('[contactSubmissions] sendEmail resolved without a result envelope');
+      logError('[http-functions] contactSubmissions sendEmail resolved without a result envelope', new Error('missing result envelope'));
       return serverError({
         body: JSON.stringify({ success: false, error: 'Internal server error' }),
         headers: JSON_HEADERS,
@@ -2755,7 +2756,7 @@ export async function post_contactSubmissions(request) {
 
     return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (contactSubmissions):', err);
+    logError('[http-functions] contactSubmissions failed', err);
     return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -2797,7 +2798,7 @@ export async function post_mailingListSignups(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[mailingListSignups] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:mailingListSignups-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -2807,7 +2808,7 @@ export async function post_mailingListSignups(request) {
     });
 
     if (!result) {
-      console.error('[mailingListSignups] subscribeToNewsletter resolved without a result envelope');
+      logError('[http-functions] mailingListSignups subscribeToNewsletter resolved without a result envelope', new Error('missing result envelope'));
       return serverError({
         body: JSON.stringify({ success: false, error: 'Internal server error' }),
         headers: JSON_HEADERS,
@@ -2826,7 +2827,7 @@ export async function post_mailingListSignups(request) {
 
     return ok({ body: JSON.stringify({ success: true, discountCode: result.discountCode }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (mailingListSignups):', err);
+    logError('[http-functions] mailingListSignups failed', err);
     return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -2906,7 +2907,7 @@ export async function post_trackCustomEvent(request) {
     const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
       ? crypto.randomUUID()
       : `tce-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    console.error(`HTTP function error (post_trackCustomEvent) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_trackCustomEvent errorId=${errorId}:`, err);
     return serverError({ body: JSON.stringify({ success: false, error: 'server_error', errorId }), headers: JSON_HEADERS });
   }
 }
@@ -2996,7 +2997,7 @@ export async function post_wishlistService(request) {
     const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
       ? crypto.randomUUID()
       : `wld-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    console.error(`HTTP function error (post_wishlistService:${method}) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_wishlistService:${method} errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3041,7 +3042,7 @@ export async function post_notifyMe(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[notifyMe] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:notifyMe-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -3071,7 +3072,7 @@ export async function post_notifyMe(request) {
     const errorId = (typeof crypto !== 'undefined' && crypto.randomUUID)
       ? crypto.randomUUID()
       : `nm-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    console.error(`HTTP function error (notifyMe) errorId=${errorId}:`, err);
+    logError(`[http-functions] notifyMe errorId=${errorId}:`, err);
     return serverError({ body: JSON.stringify({ success: false, error: 'server_error', errorId }), headers: JSON_HEADERS });
   }
 }
@@ -3116,7 +3117,7 @@ export async function post_unsubscribe(request) {
     await unsubscribeContact(decoded.email, decoded.seq);
     return ok({ body: JSON.stringify({ success: true, email: decoded.email }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('[unsubscribe] post_unsubscribe error:', err);
+    logError('[http-functions] post_unsubscribe failed', err);
     return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -3151,7 +3152,7 @@ export async function get_deliveryZone(request) {
     // so ops can distinguish wrapper-validation 400s from service-validation
     // 400s without a stack.
     if (result && typeof result.error === 'string' && result.error.length > 0) {
-      console.warn('[deliveryZone] service emitted error envelope:', result.error);
+      logError('http-functions:deliveryZone-serviceError', new Error(result.error));
       return badRequest({
         body: JSON.stringify({ success: false, error: result.error }),
         headers: JSON_HEADERS,
@@ -3159,7 +3160,7 @@ export async function get_deliveryZone(request) {
     }
     return ok({ body: JSON.stringify({ success: true, ...result }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (deliveryZone):', err);
+    logError('[http-functions] deliveryZone failed', err);
     return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -3197,7 +3198,7 @@ export async function post_sampleRequests(request) {
       const bodyText = await request.body.text();
       body = JSON.parse(bodyText);
     } catch (parseErr) {
-      console.warn('[sampleRequests] body parse failed:', parseErr?.message ?? parseErr);
+      logError('http-functions:sampleRequests-bodyParseFailed', parseErr);
       return badRequest({ body: JSON.stringify({ success: false, error: 'Invalid JSON body' }), headers: JSON_HEADERS });
     }
 
@@ -3222,7 +3223,7 @@ export async function post_sampleRequests(request) {
     });
 
     if (!result) {
-      console.error('[sampleRequests] submitSwatchRequest resolved without a result envelope');
+      logError('[http-functions] sampleRequests submitSwatchRequest resolved without a result envelope', new Error('missing result envelope'));
       return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
     }
 
@@ -3236,7 +3237,7 @@ export async function post_sampleRequests(request) {
 
     return ok({ body: JSON.stringify({ success: true, requestId: result.requestId }), headers: JSON_HEADERS });
   } catch (err) {
-    console.error('HTTP function error (sampleRequests):', err);
+    logError('[http-functions] sampleRequests failed', err);
     return serverError({ body: JSON.stringify({ success: false, error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
@@ -3411,7 +3412,7 @@ async function _veloDispatch(request, registry, scope) {
     return ok({ body: JSON.stringify(result == null ? null : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_${scope}:${methodName}) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_${scope}:${methodName} errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3515,7 +3516,7 @@ export async function post_recordSpinGrant(request) {
       // (cfw forgot to forward the Bearer token). cf-yvs4: return 401 not
       // 200 so cfw's velo-client.ts surfaces the failure as a thrown
       // VeloRpcError rather than the silent lying-status it gets today.
-      console.warn('[recordSpinGrant] getMember failed — treating as unauthenticated:', err && err.message);
+      logError('http-functions:recordSpinGrant-unauthenticated', err);
       return response({
         status: 401,
         body: JSON.stringify({ success: false, error: 'Authentication required' }),
@@ -3542,7 +3543,7 @@ export async function post_recordSpinGrant(request) {
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_recordSpinGrant) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_recordSpinGrant errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3618,7 +3619,7 @@ export async function post_submitSurvey(request) {
   try {
     member = await currentMember.getMember();
   } catch (err) {
-    console.warn('[submitSurvey] getMember failed — treating as unauthenticated:', err && err.message);
+    logError('http-functions:submitSurvey-unauthenticated', err);
     return response({
       status: 401,
       body: JSON.stringify({ success: false, error: 'Authentication required' }),
@@ -3647,7 +3648,7 @@ export async function post_submitSurvey(request) {
     }
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_submitSurvey) errorId=${errorId} ownership lookup failed:`, err);
+    logError(`[http-functions] post_submitSurvey errorId=${errorId} ownership lookup failed:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3672,7 +3673,7 @@ export async function post_submitSurvey(request) {
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_submitSurvey) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_submitSurvey errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3722,7 +3723,7 @@ export async function post_queueWelcomeEmail(request) {
     return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_queueWelcomeEmail) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_queueWelcomeEmail errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3832,7 +3833,7 @@ export async function post_lookupOrder(request) {
     return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_lookupOrder) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_lookupOrder errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,
@@ -3911,7 +3912,7 @@ export async function post_submitCommunityPhoto(request) {
     return ok({ body: JSON.stringify(result == null ? { success: true } : result), headers: JSON_HEADERS });
   } catch (err) {
     const errorId = _veloDispatchErrorId();
-    console.error(`HTTP function error (post_submitCommunityPhoto) errorId=${errorId}:`, err);
+    logError(`[http-functions] post_submitCommunityPhoto errorId=${errorId}:`, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'server_error', errorId }),
       headers: JSON_HEADERS,

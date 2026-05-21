@@ -31,6 +31,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 export const SWATCH_KIT_SKU = 'SWATCH-KIT-001';
 export const SWATCH_KIT_PRICE = 5;
@@ -98,7 +99,7 @@ export const recordSwatchKitPurchase = webMethod(
         return { success: true, creditId: existing.items[0].creditId, alreadyIssued: true };
       }
     } catch (err) {
-      console.warn('[swatchKitService] idempotency check failed, proceeding:', err?.message);
+      logError('swatchKitService:issueSwatchKitCredit-idempotencyCheckFailed', err);
     }
 
     // Issue $5 store credit via storeCreditService
@@ -112,12 +113,12 @@ export const recordSwatchKitPurchase = webMethod(
         orderReference: cleanOrderId,
       });
       if (!creditResult?.success) {
-        console.error('[swatchKitService] issueStoreCredit returned failure:', creditResult);
+        logError('swatchKitService:issueSwatchKitCredit-creditFailed', new Error(JSON.stringify(creditResult || {})));
         return { success: false, error: 'credit_issuance_failed' };
       }
       creditId = creditResult.creditId || '';
     } catch (err) {
-      console.error('[swatchKitService] issueStoreCredit threw:', err?.message);
+      logError('swatchKitService:issueSwatchKitCredit-creditThrew', err);
       return { success: false, error: 'credit_issuance_failed' };
     }
 
@@ -139,7 +140,7 @@ export const recordSwatchKitPurchase = webMethod(
       });
     } catch (err) {
       // Non-fatal — credit is real even if CMS write fails
-      console.error('[swatchKitService] CMS insert failed after credit issued — MANUAL RECONCILIATION:', { orderId: cleanOrderId, creditId, err: err?.message });
+      logError(`swatchKitService:issueSwatchKitCredit-cmsInsertFailedManualReconcile orderId=${cleanOrderId} creditId=${creditId}`, err);
     }
 
     return { success: true, creditId };
@@ -163,7 +164,7 @@ export const getSwatchKitCreditStatus = webMethod(
       // through (stale session, misconfiguration). Surface it as a distinct
       // error instead of returning "no credit" — that's silent-failure
       // masquerade. See cf-2ag.
-      console.warn('[swatchKitService] getSwatchKitCreditStatus: no member on session (cf-2ag)');
+      logError('swatchKitService:getSwatchKitCreditStatus-noMember', null);
       return { hasPendingCredit: false, error: 'auth_required' };
     }
 
@@ -190,7 +191,7 @@ export const getSwatchKitCreditStatus = webMethod(
         amount: SWATCH_KIT_CREDIT_AMOUNT,
       };
     } catch (err) {
-      console.error('[swatchKitService] getSwatchKitCreditStatus failed:', err?.message);
+      logError('swatchKitService:getSwatchKitCreditStatus', err);
       return { hasPendingCredit: false, error: 'lookup_failed' };
     }
   }
@@ -229,7 +230,7 @@ export const markCreditApplied = webMethod(
       });
       return { success: true };
     } catch (err) {
-      console.error('[swatchKitService] markCreditApplied failed:', err?.message);
+      logError('swatchKitService:markCreditApplied', err);
       return { success: false, error: 'update_failed' };
     }
   }

@@ -22,6 +22,7 @@
 
 import wixData from 'wix-data';
 import { scanLifecycleMilestones } from 'backend/lifecycleCron.web';
+import { logError } from 'backend/utils/errorHandler';
 
 export const SENT_LIFECYCLE_MAILS_COLLECTION = 'SentLifecycleMails';
 export const LIFECYCLE_EMAIL_QUEUE_TYPE = 'lifecycle';
@@ -123,7 +124,7 @@ export async function sendLifecycleEmails() {
 
     return { success: true, totalScanned: ordersScanned, queued, skipped };
   } catch (err) {
-    console.error('[lifecycleEmailSender] sendLifecycleEmails failed:', err);
+    logError('lifecycleEmailSender:sendLifecycleEmails', err);
     return { success: false, totalScanned: 0, queued: 0, skipped: 0, error: 'Failed to send lifecycle emails.' };
   }
 }

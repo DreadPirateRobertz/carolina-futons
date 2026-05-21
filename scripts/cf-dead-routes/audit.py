@@ -68,9 +68,9 @@ NON_WM_FN_RE = re.compile(
 # must still catch it. Three separate patterns keep the kind labels
 # accurate without backtracking.
 #
-# `export const NAME = [async] (args) =>` — arrow function
+# `export const NAME = [async] (args) =>` or `export const NAME = [async] x =>`
 NON_WM_ARROW_RE = re.compile(
-    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?\([^)]*\)\s*=>",
+    r"^export\s+const\s+(\w+)\s*=\s*(async\s+)?(?:\([^)]*\)|\w+)\s*=>",
     re.MULTILINE,
 )
 # `export const NAME = [async] function` — function expression assigned to const
@@ -178,6 +178,12 @@ def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str,
     root = backend_root if backend_root is not None else BACKEND
     out: dict[str, dict] = {}
     skipped: list[tuple[str, str]] = []
+
+    def _record(name: str, line: int, kind: str, file_str: str) -> None:
+        # Function-declaration takes priority over later const-rebindings.
+        if name not in out:
+            out[name] = {"file": file_str, "line": line, "kind": kind}
+
     for fp in root.rglob("*.web.js"):
         try:
             text = fp.read_text(errors="ignore")
@@ -197,24 +203,17 @@ def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str,
         except ValueError:
             file_str = str(fp)
 
-        def _record(name: str, line: int, kind: str) -> None:
-            # Function-declaration takes priority over later const-rebindings
-            # (same module rebinding a function-declared name is rare and
-            # the declaration is the load-bearing entry).
-            if name not in out:
-                out[name] = {"file": file_str, "line": line, "kind": kind}
-
         for m in NON_WM_FN_RE.finditer(text):
             is_async = m.group(1) is not None
             name = m.group(2)
             line = text[: m.start()].count("\n") + 1
-            _record(name, line, "async function" if is_async else "function")
+            _record(name, line, "async function" if is_async else "function", file_str)
         # cf-5dto.fu1: arrow shape — modern refactor target
         for m in NON_WM_ARROW_RE.finditer(text):
             name = m.group(1)
             is_async = m.group(2) is not None
             line = text[: m.start()].count("\n") + 1
-            _record(name, line, "async arrow" if is_async else "arrow")
+            _record(name, line, "async arrow" if is_async else "arrow", file_str)
         # cf-5dto.fu1: function-expression assigned to const
         for m in NON_WM_FN_EXPR_RE.finditer(text):
             name = m.group(1)
@@ -224,6 +223,7 @@ def collect_non_webmethod_exports(backend_root: Path | None = None) -> dict[str,
                 name,
                 line,
                 "async function expression" if is_async else "function expression",
+                file_str,
             )
     if skipped:
         # Surface via stderr — operator + CI both see the failure mode.

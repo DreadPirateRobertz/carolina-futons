@@ -13,6 +13,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // Map quiz answers to product collection queries and scoring criteria
 const ROOM_CATEGORY_MAP = {
@@ -155,7 +156,7 @@ export const getQuizRecommendations = webMethod(
       scored.sort((a, b) => b.score - a.score);
       return scored.slice(0, 5);
     } catch (err) {
-      console.error('Error getting quiz recommendations:', err);
+      logError('styleQuiz:getQuizRecommendations-failed', err);
       return [];
     }
   }
@@ -350,7 +351,7 @@ export const captureQuizLead = webMethod(
       logAuditEvent('NewsletterSubscribers', 'quiz_lead', cleaned);
       return { success: true };
     } catch (err) {
-      console.error('Quiz lead capture error:', err);
+      logError('styleQuiz:captureQuizLead', err);
       return { success: false, message: 'Capture failed. Please try again.' };
     }
   }

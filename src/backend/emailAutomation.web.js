@@ -160,11 +160,16 @@ const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
 // Carts at or above this total qualify for the free shipping note in step 2.
 const CART_FREE_SHIPPING_THRESHOLD = 150;
 
-// ── Event Handlers (auto-register in backend/) ───────────────────────
+// ── Dead event-handler stubs (test backward-compat) ──────────────────
+// Wix Velo auto-registers event handlers ONLY from backend/events.js.
+// These functions are never invoked by Wix. They are kept exported here
+// solely so pre-existing tests that imported them directly continue to
+// pass without a mass-refactor. Real implementations live in events.js.
+// Do NOT add business logic here — it will never run in production.
 
 /**
- * Triggered when a new site member is created.
- * Queues the welcome email series.
+ * @deprecated Real handler: events.js#wixMembers_onMemberCreated.
+ * Kept for test backward-compat (cf-m6t0).
  */
 export function wixMembers_onMemberCreated(event) {
   const member = event.entity || event;
@@ -179,8 +184,10 @@ export function wixMembers_onMemberCreated(event) {
 }
 
 /**
- * Triggered when an order is created.
- * Queues the post-purchase care sequence.
+ * @deprecated Real handler: events.js#wixEcom_onOrderCreated (which sends
+ * order confirmation + queues post-purchase sequence). sendOrderConfirmation
+ * has been removed from this stub — it now lives in events.js (cf-m6t0 F3).
+ * Kept for test backward-compat.
  */
 export function wixEcom_onOrderCreated(event) {
   const order = event.entity || event;
@@ -197,15 +204,6 @@ export function wixEcom_onOrderCreated(event) {
   }));
 
   if (!email) return;
-
-  sendOrderConfirmation({
-    contactId,
-    email,
-    firstName,
-    orderNumber: String(orderNumber),
-    total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
-    itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
-  }).catch(err => logError('emailAutomation:orderConfirmation-send', err));
 
   // CF-fzsd: Queue post-purchase care sequence at order creation so slug
   // extraction from lineItems is available (Day 7 review URL uses product slug).
@@ -398,7 +396,7 @@ export const triggerWelcomeSequence = webMethod(
         discountCode = await getSecret('WELCOME_DISCOUNT_CODE');
         discountAvailable = !!discountCode;
       } catch (e) {
-        console.warn('[emailAutomation] Welcome discount unavailable, emails will omit discount:', e.message);
+        logError('emailAutomation:triggerWelcomeSequence-discountUnavailable', e);
       }
 
       const abVariant = selectABVariant(cleanEmail);
@@ -501,7 +499,7 @@ export const triggerWelcomeSeries = webMethod(
         discountCode = await getSecret('WELCOME_DISCOUNT_CODE');
         discountAvailable = !!discountCode;
       } catch (e) {
-        console.warn('[emailAutomation] Welcome discount unavailable:', e.message);
+        logError('emailAutomation:triggerWelcomeSeries-discountUnavailable', e);
       }
 
       // cf-xdji item-2: resolve a CRM contactId before queueing so
@@ -510,7 +508,7 @@ export const triggerWelcomeSeries = webMethod(
       // with "No contact ID for recipient" (cf-icww F1).
       const cleanContactId = await _resolveContactIdInternal(cleanEmail, cleanName);
       if (!cleanContactId) {
-        console.warn('[emailAutomation] triggerWelcomeSeries skipped — resolveContactId returned null for', redactEmail(cleanEmail));
+        logError(`emailAutomation:triggerWelcomeSeries-skippedEmptyContactId email=${redactEmail(cleanEmail)}`, null);
         return { success: false, queued: 0 };
       }
 
@@ -602,7 +600,7 @@ export const triggerPostPurchaseSequence = webMethod(
       const assemblyGuideUrl = `${SITE_URL_BASE}/getting-it-home#assembly`;
       // Deep-link to product review form: use slug from first line item that has one
       const primarySlug = extractPrimarySlug(lineItems);
-      if (!primarySlug) console.warn('[emailAutomation] No product slug for order', cleanOrderNumber, '— review link degraded to member-page');
+      if (!primarySlug) logError(`emailAutomation:triggerPostPurchaseSequence-noSlug order=${cleanOrderNumber}`, null);
       const reviewUrl = primarySlug
         ? `${SITE_URL_BASE}/product-page/${primarySlug}#reviews`
         : `${SITE_URL_BASE}/member-page#reviews`;
@@ -904,7 +902,7 @@ export const triggerAbandonedCartRecovery = webMethod(
           parsedItems = typeof cart.lineItems === 'string'
             ? JSON.parse(cart.lineItems)
             : (cart.lineItems || []);
-        } catch (e) { console.warn('[emailAutomation] Malformed lineItems for cart', cart.checkoutId, ':', e.message); parsedItems = []; }
+        } catch (e) { logError(`emailAutomation:triggerAbandonedCartRecovery-malformedLineItems cart=${cart.checkoutId}`, e); parsedItems = []; }
         const itemSummary = parsedItems
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
@@ -926,7 +924,7 @@ export const triggerAbandonedCartRecovery = webMethod(
         // that processQueue would reject for missing contactId.
         const cartContactId = await _resolveContactIdInternal(cartEmail);
         if (!cartContactId) {
-          console.warn('[emailAutomation] cart_recovery: resolveContactId returned null for', cartEmail, '— skipping cart', cart.checkoutId);
+          logError(`emailAutomation:triggerAbandonedCartRecovery-skippedEmptyContactId email=${redactEmail(cartEmail)} cart=${cart.checkoutId}`, null);
           continue;
         }
 
@@ -1054,7 +1052,7 @@ export const triggerReengagement = webMethod(
         discountCode = await getSecret('RECOVERY_DISCOUNT_CODE');
         discountAvailable = !!discountCode;
       } catch (e) {
-        console.warn('[emailAutomation] Reengagement discount unavailable, emails will omit discount:', e.message);
+        logError('emailAutomation:triggerReengagement-discountUnavailable', e);
       }
 
       for (const mp of dormant.items) {
@@ -1073,7 +1071,7 @@ export const triggerReengagement = webMethod(
           contactId = m?.contactId || '';
           firstName = m?.firstName || m?.nickname || '';
         } catch (e) {
-          console.warn('[emailAutomation] Reengagement member lookup failed:', mp.memberId, e.message);
+          logError(`emailAutomation:triggerReengagement-memberLookupFailed member=${mp.memberId}`, e);
           continue;
         }
 
@@ -1427,7 +1425,7 @@ function selectABVariant(email = '') {
 async function cancelSequenceForOrder(email, orderNumber) {
   if (!email) return;
   if (!orderNumber) {
-    console.warn('[emailAutomation] cancelSequenceForOrder called without orderNumber — skipping to avoid bulk cancellation');
+    logError('emailAutomation:cancelSequenceForOrder-missingOrderNumber', null);
     return;
   }
 
@@ -1503,7 +1501,7 @@ export const triggerRestockNotifications = webMethod(
           notified++;
         } catch (subErr) {
           failed++;
-          console.warn(`[emailAutomation] Failed to notify subscriber ${redactEmail(sub.email)} for product ${productId}:`, subErr.message);
+          logError(`emailAutomation:triggerRestockNotifications-notifyFailed email=${redactEmail(sub.email)} product=${productId}`, subErr);
         }
       }
 
@@ -1787,7 +1785,7 @@ export async function checkAndTriggerTierMilestone(memberId, email, firstName, n
       // the helper can't resolve so processQueue doesn't reject the row.
       const milestoneContactId = await _resolveContactIdInternal(cleanEmail, cleanName);
       if (!milestoneContactId) {
-        console.warn('[emailAutomation] tier_milestone: resolveContactId returned null for', cleanEmail, '— skipping', milestone.milestoneKey);
+        logError(`emailAutomation:checkAndTriggerTierMilestone-skippedEmptyContactId email=${redactEmail(cleanEmail)} milestone=${milestone.milestoneKey}`, null);
         continue;
       }
 

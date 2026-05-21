@@ -7,6 +7,7 @@
  */
 import { webMethod, Permissions } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ export const getShowroomBookingUrl = webMethod(Permissions.Anyone, async () => {
       serviceName: 'Book a Showroom Visit',
     };
   } catch (err) {
-    console.error('[showroomService] getShowroomBookingUrl failed:', err);
+    logError('showroomService:getShowroomBookingUrl', err);
     return { error: 'Unable to load booking URL. Please try again.' };
   }
 });
@@ -85,7 +86,7 @@ export const getShowroomEligibleIds = webMethod(Permissions.Anyone, async (produ
       .filter(p => p && isShowroomEligible(p))
       .map(p => p._id);
   } catch (err) {
-    console.error('[showroomService] getShowroomEligibleIds failed:', err);
+    logError('showroomService:getShowroomEligibleIds', err);
     return [];
   }
 });
@@ -124,7 +125,7 @@ export const getShowroomSectionData = webMethod(Permissions.Anyone, async () => 
       mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SHOWROOM_INFO.mapEmbedQuery)}`,
     };
   } catch (err) {
-    console.error('[showroomService] getShowroomSectionData failed:', err);
+    logError('showroomService:getShowroomSectionData', err);
     return { error: 'Unable to load showroom info.' };
   }
 });

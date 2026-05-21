@@ -15,6 +15,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 /**
  * Get customization options (swatches + pricing rules) for a product.
@@ -62,7 +63,7 @@ export const getCustomizationOptions = webMethod(
         })),
       };
     } catch (err) {
-      console.error('Error fetching customization options:', err);
+      logError('customizationService:getCustomizationOptions', err);
       return empty;
     }
   }
@@ -135,7 +136,7 @@ export const saveConfiguration = webMethod(
       const result = await wixData.insert('SavedCustomizations', record);
       return result;
     } catch (err) {
-      console.error('Error saving customization config:', err);
+      logError('customizationService:saveCustomizationConfig', err);
       return { error: 'Failed to save configuration' };
     }
   }
@@ -176,7 +177,7 @@ export const getSavedConfigurations = webMethod(
         _createdDate: item._createdDate,
       }));
     } catch (err) {
-      console.error('Error fetching saved configurations:', err);
+      logError('customizationService:getSavedConfigurations', err);
       return [];
     }
   }
@@ -202,7 +203,7 @@ export const getConfigurationById = webMethod(
 
       return result;
     } catch (err) {
-      console.error('Error fetching configuration:', err);
+      logError('customizationService:getConfiguration', err);
       return null;
     }
   }

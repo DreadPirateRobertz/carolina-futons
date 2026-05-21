@@ -29,6 +29,7 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ─── Input Sanitization ────────────────────────────────────────────
 
@@ -97,7 +98,7 @@ export const scheduleReviewRequest = webMethod(
 
       return { success: true, requestId: inserted._id };
     } catch (err) {
-      console.error('Error scheduling review request:', err);
+      logError('dataService:scheduleReviewRequest', err);
       return { success: false };
     }
   }
@@ -123,7 +124,7 @@ export const getPendingReviewRequests = webMethod(
         .find();
       return result.items;
     } catch (err) {
-      console.error('Error fetching pending review requests:', err);
+      logError('dataService:fetchPendingReviewRequests', err);
       return [];
     }
   }
@@ -175,7 +176,7 @@ export const submitReview = webMethod(
       logAuditEvent('ReviewRequests', 'submit_review', record.customerEmail, { rating });
       return { success: true };
     } catch (err) {
-      console.error('Error submitting review:', err);
+      logError('dataService:submitReview', err);
       return { success: false };
     }
   }

@@ -28,6 +28,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { safeParse } from 'backend/utils/safeParse';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Default office hours (EST) ──────────────────────────────────────
 
@@ -171,7 +172,7 @@ export const getOfficeHoursStatus = webMethod(
         nextOpen: getNextOpenTime(officeHours, now),
       };
     } catch (err) {
-      console.error('getOfficeHoursStatus error:', err);
+      logError('liveChat:getOfficeHoursStatus', err);
       return {
         isOnline: false,
         message: 'Leave a message and we\'ll get back to you soon!',
@@ -218,7 +219,7 @@ export const getCannedResponses = webMethod(
         responses: DEFAULT_CANNED_RESPONSES,
       };
     } catch (err) {
-      console.error('getCannedResponses error:', err);
+      logError('liveChat:getCannedResponses', err);
       return { success: true, responses: DEFAULT_CANNED_RESPONSES };
     }
   }
@@ -271,7 +272,7 @@ export const matchCannedResponse = webMethod(
 
       return { matched: false };
     } catch (err) {
-      console.error('matchCannedResponse error:', err);
+      logError('liveChat:matchCannedResponse', err);
       return { matched: false };
     }
   }
@@ -339,7 +340,7 @@ export const createSupportTicket = webMethod(
         message: 'Your message has been received! We\'ll get back to you soon.',
       };
     } catch (err) {
-      console.error('createSupportTicket error:', err);
+      logError('liveChat:createSupportTicket', err);
       return { success: false, error: 'Unable to submit message. Please try again.' };
     }
   }
@@ -413,13 +414,13 @@ export const getChatContext = webMethod(
               status: o.fulfillmentStatus || 'PROCESSING',
             }));
           } catch (e) {
-            // Order lookup failed — continue without order context
+            logError('liveChat:getChatContext-ordersFailed', e);
           }
         }
 
       return { success: true, context };
     } catch (err) {
-      console.error('getChatContext error:', err);
+      logError('liveChat:getChatContext', err);
       return { success: true, context: { page: '', userName: '', userEmail: '', isLoggedIn: false, recentOrders: [] } };
     }
   }

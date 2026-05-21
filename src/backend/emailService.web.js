@@ -92,7 +92,7 @@ export async function _checkEmailRateLimit(key, opts = {}) {
     });
     return { allowed: true };
   } catch (err) {
-    console.warn('[emailService] Rate limit check failed, allowing request:', err?.message);
+    logError('emailService:checkEmailRateLimit-failedOpen', err);
     return { allowed: true };
   }
 }
@@ -117,15 +117,12 @@ async function _resolveSiteOwnerContactId() {
   try {
     const id = await getSecret('SITE_OWNER_CONTACT_ID');
     if (!id) {
-      console.warn('[emailService] SITE_OWNER_CONTACT_ID secret returned empty — owner notification skipped');
+      logError('emailService:resolveSiteOwnerContactId-secretEmpty', null);
       return null;
     }
     return id;
   } catch (err) {
-    console.warn(
-      '[emailService] SITE_OWNER_CONTACT_ID secret missing or unreadable — owner notification skipped:',
-      err?.message ?? err,
-    );
+    logError('emailService:resolveSiteOwnerContactId-secretUnreadable', err);
     return null;
   }
 }
@@ -230,7 +227,7 @@ export const sendEmail = webMethod(
         subject: cleanSubject,
         message: cleanMessage,
       }).catch((err) => {
-        console.warn('[emailService] customer auto-reply failed (non-blocking):', err?.message ?? err);
+        logError('emailService:sendCustomerContactAutoReply-nonblocking', err);
       });
 
       logAuditEvent('ContactSubmissions', 'send_email', cleanEmail, { subject: cleanSubject });
@@ -269,7 +266,7 @@ async function _sendCustomerContactAutoReply({ email, name, subject, message }) 
   });
   const customerContactId = contactResult?.contactId || contactResult?._id;
   if (!customerContactId) {
-    console.warn('[emailService] customer auto-reply skipped — appendOrCreateContact returned empty', { email });
+    logError('emailService:sendCustomerContactAutoReply-skippedEmptyContactId', null);
     return;
   }
   // cf-hafn: dispatch via the Wix dashboard ID resolved from
@@ -367,16 +364,19 @@ export const submitSwatchRequest = webMethod(
       }
 
       // Send customer confirmation email (best-effort — don't fail the request if this fails)
+      // cf-gg0j: use appendOrCreateContact so new visitors (no CRM contact yet) also receive
+      // the swatch confirmation. Was queryContacts — silently skipped for first-time emails.
       try {
-        const contactResult = await contacts.queryContacts()
-          .eq('primaryInfo.email', cleanEmail)
-          .limit(1)
-          .find();
-        if (contactResult.items.length > 0) {
+        const swatchContactResult = await contacts.appendOrCreateContact({
+          name: cleanName ? { first: cleanName } : undefined,
+          emails: [{ email: cleanEmail }],
+        });
+        const swatchContactId = swatchContactResult?.contactId || swatchContactResult?._id;
+        if (swatchContactId) {
           // cf-obsb: dispatch via TEMPLATE_ID_MAP-resolved Wix dashboard ID.
           await triggeredEmails.emailContact(
             resolveTemplateId('swatch_confirmation'),
-            contactResult.items[0]._id,
+            swatchContactId,
             {
               variables: {
                 customerName: cleanName,

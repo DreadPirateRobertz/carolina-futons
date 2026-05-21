@@ -373,7 +373,7 @@ export const lookupReturn = webMethod(
 
       // Rate limit by email to prevent order enumeration
       if (!(await _checkRateLimit(cleanEmail))) {
-        console.warn('[returnsService] Rate limit exceeded for lookupReturn:', redactEmail(cleanEmail));
+        logError(`returnsService:lookupReturn-rateLimitExceeded email=${redactEmail(cleanEmail)}`, null);
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
 
@@ -443,7 +443,7 @@ export const submitGuestReturn = webMethod(
 
       // Rate limit by email to prevent order enumeration
       if (!(await _checkRateLimit(cleanEmail))) {
-        console.warn('[returnsService] Rate limit exceeded for submitGuestReturn:', redactEmail(cleanEmail));
+        logError(`returnsService:submitGuestReturn-rateLimitExceeded email=${redactEmail(cleanEmail)}`, null);
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
 

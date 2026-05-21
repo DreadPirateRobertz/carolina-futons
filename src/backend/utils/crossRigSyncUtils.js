@@ -9,6 +9,7 @@
  */
 import wixData from 'wix-data';
 import { sendPushToMember, skipIfOptedOut, PUSH_EVENTS } from 'backend/pushNotificationService.web';
+import { logError } from 'backend/utils/errorHandler';
 
 export const SYNC_LOG_COLLECTION = 'CrossRigSyncLog';
 const ALLOWED_SOURCE_RIGS = ['cfutons_mobile'];
@@ -49,7 +50,7 @@ export async function syncMobilePoints(memberId, points, eventType, sourceRig) {
     );
     return { success: true, points };
   } catch (err) {
-    console.error('[crossRigSyncUtils] syncMobilePoints error:', err);
+    logError('crossRigSyncUtils:syncMobilePoints', err);
     return { success: false, error: err.message };
   }
 }
@@ -69,7 +70,7 @@ export async function syncBadgeEarnedToPush(memberId, badgeId) {
     const { sent } = await sendPushToMember(memberId, PUSH_EVENTS.BADGE_EARNED, { badgeId });
     return { success: true, pushSent: sent };
   } catch (err) {
-    console.error('[crossRigSyncUtils] syncBadgeEarnedToPush error:', err);
+    logError('crossRigSyncUtils:syncBadgeEarnedToPush', err);
     return { success: false, error: err.message };
   }
 }

@@ -102,7 +102,7 @@ async function resolveSwatchNames(swatchIds) {
       wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
         .then(r => {
           const name = r.items[0]?.name;
-          if (!name) console.warn(`[swatchRequest] Swatch not found in CMS: ${id}`);
+          if (!name) logError('swatchRequest:resolveSwatchNames-notFound', null);
           return name || id;
         })
     )
@@ -243,10 +243,10 @@ export const submitSwatchRequest = webMethod(
             productSlug: cleanSlug || null,
           });
         } catch (emailErr) {
-          console.error('[swatchRequest] Failed to enqueue nurture emails:', emailErr);
+          logError('swatchRequest:submitSwatchRequest-nurtureQueueFailed', emailErr);
         }
       } else {
-        console.warn('[swatchRequest] Skipping swatch nurture queue — upsertContact returned no contactId for', contact.email);
+        logError('swatchRequest:submitSwatchRequest-skippedEmptyContactId', null);
       }
 
       // cf-obsb Path A: send the customer-facing swatch confirmation email
@@ -262,13 +262,13 @@ export const submitSwatchRequest = webMethod(
           swatchNames,
           productName: productNameForEmail,
         }).catch((emailErr) => {
-          console.warn('[swatchRequest] swatch_confirmation send failed (non-blocking):', emailErr?.message ?? emailErr);
+          logError('swatchRequest:submitSwatchRequest-confirmationSendFailed', emailErr);
         });
       }
 
       return { success: true, requestId: inserted._id };
     } catch (err) {
-      console.error('[swatchRequest] submitSwatchRequest error:', err);
+      logError('swatchRequest:submitSwatchRequest', err);
       return { success: false, error: err.message || 'Failed to submit swatch request.' };
     }
   }

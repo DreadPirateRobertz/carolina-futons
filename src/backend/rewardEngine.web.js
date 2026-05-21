@@ -17,15 +17,12 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 import { validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
 
 const STYLING_CALL_BOOKING_URL = 'https://calendly.com/carolinafutons-brenda/styling-call';
-
-function logError(msg, err) {
-  console.error(`[rewardEngine] ${msg}`, err?.message ?? err ?? '');
-}
 
 /**
  * Generate CF-XXXXXXXX coupon code (same alphabet as rewardsStore — excludes O/0/I/1).
@@ -54,7 +51,7 @@ async function generateUniqueCouponCode() {
       .find({ suppressAuth: true });
     if (existing.items.length === 0) return code;
   }
-  logError('generateUniqueCouponCode — exhausted 5 retries, returning unchecked code');
+  logError('rewardEngine:generateUniqueCouponCode-exhausted5Retries', new Error('returning unchecked code'));
   return generateCouponCode();
 }
 
@@ -122,7 +119,7 @@ export const deliverTierPerks = webMethod(
           skipped.push(perk.type);
           continue;
         }
-        logError(`insert failed for ${cleanId} perk ${perk.type}`, err);
+        logError(`rewardEngine:deliverTierPerks-insert member=${cleanId} perk=${perk.type}`, err);
         failed.push(perk.type);
         continue;
       }
@@ -135,7 +132,7 @@ export const deliverTierPerks = webMethod(
       try {
         await sendTierPerkEmail(cleanId, newTier, delivered);
       } catch (err) {
-        logError(`email failed for ${cleanId}`, err);
+        logError(`rewardEngine:deliverTierPerks-email member=${cleanId}`, err);
       }
     }
 

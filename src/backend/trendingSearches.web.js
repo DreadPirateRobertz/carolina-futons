@@ -12,6 +12,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'TrendingSearches';
 
@@ -50,7 +51,7 @@ export const getTrendingSearches = webMethod(
 
       return { success: true, terms };
     } catch (e) {
-      console.error('[trendingSearches] getTrendingSearches failed:', e);
+      logError('trendingSearches:getTrendingSearches', e);
       return { success: false, terms: [...DEFAULT_TERMS], error: 'Failed to load trending searches' };
     }
   }

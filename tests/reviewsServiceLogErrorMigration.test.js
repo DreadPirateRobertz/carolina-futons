@@ -58,11 +58,12 @@ describe('cf-m7yg: reviewsService.web.js logError migration', () => {
     }
   });
 
-  it(`total logError call count is at least ${EXPECTED_TAGS.length + 4} (6 migrated + 4 pre-existing)`, () => {
-    // Floor: the 4 pre-existing logError calls (submitReview / markHelpful /
-    // flagReview / getPendingReviews error catches) are out-of-scope for this
-    // batch but still must persist. 6 new + 4 pre-existing = 10 minimum.
+  it(`total logError call count is at least ${EXPECTED_TAGS.length + 4} (6 migrated + many normalized)`, () => {
     const calls = SRC.match(/logError\s*\(/g) || [];
     expect(calls.length).toBeGreaterThanOrEqual(EXPECTED_TAGS.length + 4);
+  });
+
+  it('contains no bracket-style [reviewsService] logError tags (cf-xv1g drift guard)', () => {
+    expect(SRC).not.toMatch(/logError\s*\(\s*['"`]\[reviewsService\]/);
   });
 });

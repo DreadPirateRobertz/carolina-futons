@@ -192,7 +192,7 @@ export const addBundleToCart = webMethod(
           alreadyApplied = currentCart?.appliedCoupon?.code === bundle.couponCode;
         } catch (cartErr) {
           // Non-fatal: if we can't read cart state, attempt coupon apply anyway
-          console.warn('[bundleDeals] getCurrentCart failed (non-fatal):', cartErr.message);
+          logError('bundleDeals:getCurrentCart-failed', cartErr);
         }
         if (!alreadyApplied) {
           try {
@@ -200,7 +200,7 @@ export const addBundleToCart = webMethod(
             couponApplied = true;
           } catch (couponErr) {
             // Non-fatal: products are already in cart; log and continue
-            console.warn('[bundleDeals] Coupon apply failed (non-fatal):', bundle.couponCode, couponErr.message);
+            logError(`bundleDeals:couponApply-failed coupon=${bundle.couponCode}`, couponErr);
           }
         }
       }

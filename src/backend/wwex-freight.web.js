@@ -23,6 +23,7 @@
 
 import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
+import { logError } from 'backend/utils/errorHandler';
 
 /** WWEX SpeedFreight SOAP endpoint */
 const WWEX_ENDPOINT = 'https://api.wwex.com/SpeedFreight/RateQuote';
@@ -141,7 +142,7 @@ export async function getLTLRates(originZip, destZip, packages) {
     });
 
     if (!response.ok) {
-      console.error('WWEX API error:', response.status);
+      logError(`wwex-freight:getLTLRates-apiError status=${response.status}`, null);
       return {
         success: false,
         error: `WWEX API returned ${response.status}`,
@@ -156,7 +157,7 @@ export async function getLTLRates(originZip, destZip, packages) {
     return { success: true, rates };
 
   } catch (err) {
-    console.error('WWEX getLTLRates error:', err);
+    logError('wwex-freight:getLTLRates', err);
     return {
       success: false,
       error: err.message || 'WWEX rate lookup failed',

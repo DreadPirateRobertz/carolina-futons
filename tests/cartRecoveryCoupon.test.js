@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+// cf-n4wy: couponsService migrated console.warn (RecoveryCoupons insert) → logError
 vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
 
 import { generateRecoveryCoupon } from '../src/backend/couponsService.web.js';
@@ -304,16 +305,14 @@ describe('generateRecoveryCoupon — RecoveryCoupons insert failure', () => {
     expect(coupons.createCoupon).toHaveBeenCalledOnce();
   });
 
-  it('logs a warning when RecoveryCoupons insert fails', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('logs canonical logError tag when RecoveryCoupons insert fails', async () => {
+    vi.mocked(logError).mockClear();
     vi.spyOn(wixData, 'insert').mockRejectedValueOnce(new Error('Insert timeout'));
     await generateRecoveryCoupon({ cartId: 'cart-warn', email: 'buyer@example.com' });
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[couponsService]'),
-      expect.anything(),
-      expect.anything(),
-      expect.anything(),
+    // cf-n4wy: canonical logError tag replaces the previous console.warn
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('couponsService:generateRecoveryCoupon-recoveryCouponsInsertFailed'),
+      expect.any(Error),
     );
-    warnSpy.mockRestore();
   });
 });

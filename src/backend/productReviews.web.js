@@ -13,6 +13,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const REVIEWS_COLLECTION = 'Reviews';
 const PHOTO_REVIEWS_COLLECTION = 'PhotoReviews';
@@ -68,7 +69,7 @@ export const getReviewSummary = webMethod(
       // Skip null/NaN ratings — they propagate as NaN through Math.round/min/max and corrupt sums and breakdowns
       const validRatings = allRatings.filter(r => r != null && !isNaN(Number(r)));
       if (validRatings.length < allRatings.length) {
-        console.warn(`[productReviews] Skipped ${allRatings.length - validRatings.length} reviews with invalid ratings for product ${pid}`);
+        logError(`productReviews:getReviewSummary-invalidRatings skipped=${allRatings.length - validRatings.length} product=${pid}`, null);
       }
 
       if (validRatings.length === 0) {
@@ -104,7 +105,7 @@ export const getReviewSummary = webMethod(
         recommendRate,
       };
     } catch (err) {
-      console.error('[productReviews] getReviewSummary error:', err);
+      logError('productReviews:getReviewSummary', err);
       return {
         averageRating: 0, totalReviews: 0, totalPhotos: 0,
         breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, recommendRate: 0,
@@ -223,7 +224,7 @@ export const getUnifiedReviews = webMethod(
         hasMore: safeOffset + safeLimit < total,
       };
     } catch (err) {
-      console.error('[productReviews] getUnifiedReviews error:', err);
+      logError('productReviews:getUnifiedReviews', err);
       return { reviews: [], total: 0, hasMore: false };
     }
   }
@@ -290,7 +291,7 @@ export const getReviewHighlights = webMethod(
         reviewCount: summary.totalReviews,
       };
     } catch (err) {
-      console.error('[productReviews] getReviewHighlights error:', err);
+      logError('productReviews:getReviewHighlights', err);
       return { topReview: null, topPhoto: null, averageRating: 0, reviewCount: 0 };
     }
   }
@@ -360,7 +361,7 @@ export const getBatchReviewSummaries = webMethod(
 
       return summaries;
     } catch (err) {
-      console.error('[productReviews] getBatchReviewSummaries error:', err);
+      logError('productReviews:getBatchReviewSummaries', err);
       return {};
     }
   }
@@ -434,7 +435,7 @@ export const getModerationQueue = webMethod(
         total: combined.length,
       };
     } catch (err) {
-      console.error('[productReviews] getModerationQueue error:', err);
+      logError('productReviews:getModerationQueue', err);
       return { reviews: [], total: 0 };
     }
   }

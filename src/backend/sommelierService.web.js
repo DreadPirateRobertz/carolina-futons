@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -157,7 +158,7 @@ export const getRecommendations = webMethod(
 
       return { success: true, recommendations: scored };
     } catch (err) {
-      console.error('[sommelierService] getRecommendations error:', err);
+      logError('sommelierService:getRecommendations', err);
       return { success: false, recommendations: [], error: 'internal_error' };
     }
   }
@@ -209,7 +210,7 @@ export const savePreferences = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[sommelierService] savePreferences error:', err);
+      logError('sommelierService:savePreferences', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -249,7 +250,7 @@ export const getMyPreferences = webMethod(
         return { success: true, prefs: null };
       }
     } catch (err) {
-      console.error('[sommelierService] getMyPreferences error:', err);
+      logError('sommelierService:getMyPreferences', err);
       return { success: false, prefs: null, error: 'internal_error' };
     }
   }

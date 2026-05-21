@@ -17,6 +17,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
+import { logError } from 'backend/utils/errorHandler';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 
@@ -218,7 +219,7 @@ export const getProductSitemapEntries = webMethod(
 
       return { success: true, entries, xml, count: entries.length };
     } catch (err) {
-      console.error('[sitemapEnhancer] getProductSitemapEntries error:', err);
+      logError('sitemapEnhancer:getProductSitemapEntries', err);
       return { success: false, entries: [], xml: '', count: 0, error: 'Failed to generate sitemap.' };
     }
   }

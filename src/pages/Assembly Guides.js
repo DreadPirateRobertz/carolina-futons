@@ -44,7 +44,9 @@ async function loadGuides() {
     showLoading(false);
     announce($w, `${allGuides.length} assembly guide${allGuides.length !== 1 ? 's' : ''} available`);
   } catch (err) {
-    console.error('Error loading assembly guides:', err);
+    import('backend/errorMonitoring.web').then(({ logError }) => {
+      logError({ message: err.message, stack: err.stack, page: 'Assembly Guides', context: 'assemblyGuides:loadGuides' });
+    }).catch(() => console.error('assemblyGuides:loadGuides', err));
     showLoading(false);
     showEmpty('Unable to load assembly guides. Please try again later.');
   }

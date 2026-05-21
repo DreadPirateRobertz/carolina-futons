@@ -91,7 +91,7 @@ async function requireMemberWithEmail() {
 async function queueEmail(templateId, recipientEmail, variables) {
   const cleanEmail = sanitize(recipientEmail, 254);
   if (!validateEmail(cleanEmail)) {
-    console.warn(`[warrantyService] queueEmail skipped — invalid recipientEmail for template ${templateId}`);
+    logError(`warrantyService:queueEmail-invalidRecipient template=${templateId}`, null);
     return;
   }
   try {

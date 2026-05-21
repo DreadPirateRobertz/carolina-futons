@@ -13,6 +13,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { getActiveTokensForMember, deactivateToken } from 'backend/pushTokenRegistry.web';
+import { logError } from 'backend/utils/errorHandler';
 
 export const PUSH_EVENTS = {
   BADGE_EARNED:       'badge_earned',
@@ -90,7 +91,7 @@ export async function sendPushToMember(memberId, event, payload = {}) {
           }
         }
       } catch (err) {
-        console.error('[pushNotificationService] FCM error:', err);
+        logError('pushNotificationService:sendPush-fcmError', err);
         failed++;
       }
     })

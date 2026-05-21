@@ -12,6 +12,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logAuditEvent } from 'backend/utils/auditLog';
+import { logError } from 'backend/utils/errorHandler';
 
 // ─── Office Hours Config ─────────────────────────────────────────
 
@@ -83,7 +84,7 @@ export const isOnline = webMethod(
 
       return { online, nextOpen, message };
     } catch (err) {
-      console.error('Error checking online status:', err);
+      logError('liveChatService:checkOnlineStatus', err);
       return { online: false, nextOpen: null, message: 'Chat is currently unavailable.' };
     }
   }
@@ -167,7 +168,7 @@ export const sendMessage = webMethod(
       logAuditEvent('ChatMessages', 'insert', record.sessionId);
       return { success: true, messageId: inserted._id };
     } catch (err) {
-      console.error('Error sending chat message:', err);
+      logError('liveChatService:sendChatMessage', err);
       return { success: false, error: 'Failed to send message' };
     }
   }
@@ -207,7 +208,7 @@ export const getChatHistory = webMethod(
         read: item.read,
       }));
     } catch (err) {
-      console.error('Error fetching chat history:', err);
+      logError('liveChatService:fetchChatHistory', err);
       return [];
     }
   }
@@ -258,7 +259,7 @@ export const createSupportTicket = webMethod(
       logAuditEvent('SupportTickets', 'submit', email.trim());
       return { success: true, ticketId: inserted._id };
     } catch (err) {
-      console.error('Error creating support ticket:', err);
+      logError('liveChatService:createSupportTicket', err);
       return { success: false, error: 'Failed to create ticket' };
     }
   }

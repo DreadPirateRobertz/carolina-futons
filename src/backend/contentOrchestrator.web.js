@@ -17,6 +17,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { logError } from 'backend/utils/errorHandler';
 
 const VALID_EVENT_TYPES = ['new_arrival', 'price_drop', 'back_in_stock', 'seasonal', 'blog_published'];
 
@@ -181,7 +182,7 @@ export const triggerManualOrchestration = webMethod(
       if (options.dryRun) response.dryRun = true;
       return response;
     } catch (err) {
-      console.error('[contentOrchestrator] Error in triggerManualOrchestration:', err);
+      logError('contentOrchestrator:triggerManualOrchestration', err);
       return { success: false, error: err.message || 'Orchestration failed.', scheduled: [] };
     }
   }
@@ -212,7 +213,7 @@ export const triggerEventOrchestration = webMethod(
 
       return { success: true, scheduled: result.scheduled, skipped: result.skipped };
     } catch (err) {
-      console.error('[contentOrchestrator] Error in triggerEventOrchestration:', err);
+      logError('contentOrchestrator:triggerEventOrchestration', err);
       return { success: false, error: err.message || 'Event orchestration failed.', scheduled: [] };
     }
   }
@@ -243,7 +244,7 @@ export const previewOrchestration = webMethod(
 
       return { success: true, planned, wouldSkip: result.skipped };
     } catch (err) {
-      console.error('[contentOrchestrator] Error in previewOrchestration:', err);
+      logError('contentOrchestrator:previewOrchestration', err);
       return { success: false, error: err.message || 'Preview failed.', planned: [] };
     }
   }
@@ -286,7 +287,7 @@ export const getOrchestrationDashboard = webMethod(
         stats,
       };
     } catch (err) {
-      console.error('[contentOrchestrator] Error getting dashboard:', err);
+      logError('contentOrchestrator:getOrchestrationDashboard', err);
       return { success: false, error: err.message || 'Dashboard failed.', pending: [], config: {}, stats: {} };
     }
   }
@@ -309,7 +310,7 @@ export const getOrchestrationHistory = webMethod(
         .find();
       return { success: true, events: result.items };
     } catch (err) {
-      console.error('[contentOrchestrator] Error getting history:', err);
+      logError('contentOrchestrator:getOrchestrationHistory', err);
       return { success: false, error: err.message || 'Failed to get history.', events: [] };
     }
   }
@@ -327,7 +328,7 @@ export const getOrchestrationConfig = webMethod(
       const config = await getConfig();
       return { success: true, config };
     } catch (err) {
-      console.error('[contentOrchestrator] Error getting config:', err);
+      logError('contentOrchestrator:getOrchestrationConfig', err);
       return { success: false, error: err.message || 'Failed to get config.', config: {} };
     }
   }
@@ -367,7 +368,7 @@ export const updateOrchestrationConfig = webMethod(
 
       return { success: true };
     } catch (err) {
-      console.error('[contentOrchestrator] Error updating config:', err);
+      logError('contentOrchestrator:updateOrchestrationConfig', err);
       return { success: false, error: err.message || 'Failed to update config.' };
     }
   }

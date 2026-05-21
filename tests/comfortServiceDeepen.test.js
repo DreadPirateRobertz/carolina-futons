@@ -7,6 +7,9 @@ import {
   getComfortProducts,
 } from '../src/backend/comfortService.web.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 // Shared fixtures
 const COMFORT_LEVELS = [
   {
@@ -88,15 +91,13 @@ describe('getComfortLevels (deepen)', () => {
   });
 
   it('returns empty array when ComfortLevels query throws', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __setQueryError('ComfortLevels', new Error('CMS timeout'));
     const levels = await getComfortLevels();
     expect(levels).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('comfortService'),
-      expect.any(String),
+      expect.any(Error),
     );
-    consoleSpy.mockRestore();
   });
 
   it('preserves stable sort when multiple items share the same sortOrder', async () => {
@@ -157,25 +158,21 @@ describe('getProductComfort (deepen)', () => {
   });
 
   it('returns null on ProductComfort query error', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __setQueryError('ProductComfort', new Error('Network error'));
     const comfort = await getProductComfort('prod-1');
     expect(comfort).toBeNull();
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('comfortService'),
-      expect.any(String),
+      expect.any(Error),
     );
-    consoleSpy.mockRestore();
   });
 
   it('returns null on ComfortLevels query error (after successful mapping lookup)', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     // Seed ProductComfort normally, but make ComfortLevels query fail
     __setQueryError('ComfortLevels', new Error('CMS down'));
     const comfort = await getProductComfort('prod-1');
     expect(comfort).toBeNull();
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
   });
 
   it('does not leak sortOrder or _createdDate from comfort level', async () => {
@@ -245,24 +242,20 @@ describe('getComfortProducts (deepen)', () => {
   });
 
   it('returns empty array on ComfortLevels query error', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __setQueryError('ComfortLevels', new Error('DB unavailable'));
     const ids = await getComfortProducts('plush');
     expect(ids).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(logError).toHaveBeenCalledWith(
       expect.stringContaining('comfortService'),
-      expect.any(String),
+      expect.any(Error),
     );
-    consoleSpy.mockRestore();
   });
 
   it('returns empty array on ProductComfort query error', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     __setQueryError('ProductComfort', new Error('Query failed'));
     const ids = await getComfortProducts('plush');
     expect(ids).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(logError).toHaveBeenCalled();
   });
 
   it('returns only string values — no objects or extra CMS data', async () => {

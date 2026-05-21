@@ -123,7 +123,7 @@ export const scheduleSurvey = webMethod(
         createdAt: new Date(),
       });
     } catch (emailErr) {
-      console.warn('[surveyService] Email queue insert failed:', emailErr.message);
+      logError('surveyService:queueEmail-insertFailed', emailErr);
       // Non-fatal — survey record was created; email can be retried
     }
 

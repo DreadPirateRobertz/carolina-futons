@@ -60,7 +60,7 @@ export const backfillBirthdayFields = webMethod(
 
         const parsed = _parseBirthdayMonthDay(birthday);
         if (!parsed) {
-          console.warn('[birthdayMigration] Unparseable birthday for member', member._id, ':', birthday);
+          logError(`birthdayMigration:unparseableBirthday member=${member._id}`, null);
           skipped++;
           continue;
         }
@@ -88,7 +88,7 @@ export const backfillBirthdayFields = webMethod(
       lastSeenId = page.items[page.items.length - 1]._id;
     }
 
-    console.log(`[birthdayMigration] Complete — processed:${processed} updated:${updated} skipped:${skipped} errors:${errors}`);
+    logError(`birthdayMigration:complete processed=${processed} updated=${updated} skipped=${skipped} errors=${errors}`, null);
     return { processed, updated, skipped, errors };
   }
 );

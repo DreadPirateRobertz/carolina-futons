@@ -28,6 +28,11 @@ import {
 import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 
+// cf-n4wy: styleConsultant migrated console.warn (photo URL conversion) →
+// canonical logError. Mock the errorHandler module so the photo-URL test
+// can assert on the canonical tag instead of console.warn.
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+
 import {
   getStyleConsultation,
   _getProductRecommendations,
@@ -35,6 +40,7 @@ import {
   _callClaudeVision,
   _wixMediaToCdnUrl,
 } from '../src/backend/styleConsultant.web.js';
+import { logError } from '../src/backend/utils/errorHandler.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -641,9 +647,9 @@ describe('_callClaudeVision — real implementation', () => {
     expect(result.explanation).toBe('');
   });
 
-  it('omits image block and warns when photo URL cannot be converted to CDN URL', async () => {
+  it('omits image block and logs canonical tag when photo URL cannot be converted to CDN URL', async () => {
     const captured = [];
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.mocked(logError).mockClear();
     __setHandler((_url, opts) => {
       captured.push(JSON.parse(opts.body));
       return makeClaudeResponse(['modern'], 'Modern.');
@@ -654,11 +660,13 @@ describe('_callClaudeVision — real implementation', () => {
 
     const content = captured[0].messages[0].content;
     expect(content.every(b => b.type !== 'image')).toBe(true);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[styleConsultant]'),
-      expect.stringContaining('wix:document://')
+    // cf-n4wy: canonical logError tag with the photoUrl in the tag body
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('styleConsultant:callClaudeVision-photoUrlConversionFailed'),
+      null,
     );
-    warnSpy.mockRestore();
+    const tag = vi.mocked(logError).mock.calls[0][0];
+    expect(tag).toContain('wix:document://');
   });
 
   it('uses generic text prompt when photo conversion fails (no "room photo" reference)', async () => {

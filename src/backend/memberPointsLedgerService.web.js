@@ -11,6 +11,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { logError } from 'backend/utils/errorHandler';
 
 const COLLECTION = 'MemberPointsLedger';
 const DEFAULT_LIMIT = 20;
@@ -81,7 +82,7 @@ export const getMyPointsHistory = webMethod(
         hasMore,
       };
     } catch (err) {
-      console.error('[memberPointsLedgerService] getMyPointsHistory error:', err);
+      logError('memberPointsLedgerService:getMyPointsHistory', err);
       return { success: false, entries: [], error: 'Unable to fetch points history' };
     }
   }

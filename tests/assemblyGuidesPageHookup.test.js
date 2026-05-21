@@ -68,6 +68,8 @@ vi.mock('backend/assemblyGuides.web', () => ({
   getCareTips: (...args) => getCareTips(...args),
 }));
 
+vi.mock('backend/errorMonitoring.web', () => ({ logError: vi.fn() }));
+
 const trackEvent = vi.fn();
 vi.mock('public/engagementTracker', () => ({
   trackEvent: (...args) => trackEvent(...args),
