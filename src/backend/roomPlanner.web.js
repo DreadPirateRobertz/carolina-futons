@@ -107,7 +107,7 @@ export const createRoomLayout = webMethod(
       const inserted = await wixData.insert('RoomLayouts', record);
       return { success: true, id: inserted._id, shareId };
     } catch (err) {
-      logError('roomPlanner:createRoomLayout', err);
+      logError('roomPlanner.createRoomLayout', err);
       return { success: false, error: 'Failed to create layout.' };
     }
   }
@@ -194,7 +194,7 @@ export const addProductToLayout = webMethod(
         dimensions: { width: actualWidth, depth: actualHeight, label: dims.label },
       };
     } catch (err) {
-      logError('roomPlanner:addProductToLayout', err);
+      logError('roomPlanner.addProductToLayout', err);
       return { success: false, error: 'Failed to update layout.' };
     }
   }
@@ -256,7 +256,7 @@ export const getLayoutPreview = webMethod(
         },
       };
     } catch (err) {
-      logError('roomPlanner:getLayoutPreview', err);
+      logError('roomPlanner.getLayoutPreview', err);
       return { success: false, error: 'Failed to load layout.', layout: null };
     }
   }
@@ -295,7 +295,7 @@ export const shareLayout = webMethod(
 
       return { success: true, shareUrl };
     } catch (err) {
-      logError('roomPlanner:shareLayout', err);
+      logError('roomPlanner.shareLayout', err);
       return { success: false, error: 'Failed to update sharing.' };
     }
   }
@@ -336,7 +336,7 @@ export const saveLayout = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('roomPlanner:saveLayout', err);
+      logError('roomPlanner.saveLayout', err);
       return { success: false, error: 'Failed to save layout.' };
     }
   }
@@ -362,7 +362,7 @@ export const getProductDimensions = webMethod(
 
       return { success: true, products };
     } catch (err) {
-      logError('roomPlanner:getProductDimensions', err);
+      logError('roomPlanner.getProductDimensions', err);
       return { success: false, error: 'Failed to load dimensions.', products: [] };
     }
   }

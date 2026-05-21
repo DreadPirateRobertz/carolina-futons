@@ -17,7 +17,9 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { getNewPerksOnPromotion, PERK_TYPES, TIER_PERK_CATALOG, TIER_THRESHOLDS, getTierForPoints } from 'public/gamificationTokens.js';
 import { validateId } from 'backend/utils/sanitize';
-import { logError } from 'backend/utils/errorHandler';
+import { logError as _logErrorCanonical } from 'backend/utils/errorHandler';
+
+function logError(msg, err) { _logErrorCanonical(`[rewardEngine] ${msg}`, err); }
 
 const DELIVERIES_COLLECTION = 'TierPerkDeliveries';
 const MEMBER_POINTS_COLLECTION = 'MemberPoints';
