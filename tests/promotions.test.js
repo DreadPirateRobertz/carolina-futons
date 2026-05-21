@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import wixData, { __seed } from './__mocks__/wix-data.js';
 import { getActivePromotion, getFlashSales } from '../src/backend/promotions.web.js';
 
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+import { logError } from '../src/backend/utils/errorHandler.js';
+
 const now = new Date();
 const yesterday = new Date(now.getTime() - 86400000);
 const tomorrow = new Date(now.getTime() + 86400000);
@@ -472,24 +475,21 @@ describe('getActivePromotion', () => {
   // ── Error handling ─────────────────────────────────────────────────
 
   it('returns null and logs error when CMS query throws', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => {
       throw new Error('CMS unavailable');
     });
 
     const promo = await getActivePromotion();
     expect(promo).toBeNull();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching active promotion:',
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('[promotions]'),
       expect.any(Error)
     );
 
     querySpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   it('returns null when query().find() rejects', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => ({
       eq() { return this; },
       le() { return this; },
@@ -503,7 +503,6 @@ describe('getActivePromotion', () => {
     expect(promo).toBeNull();
 
     querySpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   // ── Product count / limit ──────────────────────────────────────────
@@ -787,20 +786,18 @@ describe('getFlashSales', () => {
   });
 
   it('returns empty array on wixData error', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => {
       throw new Error('CMS error');
     });
 
     const result = await getFlashSales();
     expect(result).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Error fetching flash sales:',
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('[promotions]'),
       expect.any(Error)
     );
 
     querySpy.mockRestore();
-    consoleSpy.mockRestore();
   });
 
   it('sanitizes categorySlug input (dirty chars stripped)', async () => {
