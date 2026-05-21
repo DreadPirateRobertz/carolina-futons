@@ -240,6 +240,22 @@ def test_collect_non_webmethod_exports_finds_function_expression_const(tmp_path)
     assert out["asyncCalc"]["kind"] == "async function expression"
 
 
+def test_collect_non_webmethod_exports_finds_no_paren_single_param_arrow(tmp_path):
+    """`export const FOO = x => ...` — single-param no-paren arrow (cf-9eqp)."""
+    audit = _import_audit()
+    backend = tmp_path / "src" / "backend"
+    backend.mkdir(parents=True)
+    (backend / "noparen.web.js").write_text(textwrap.dedent("""
+        export const double = x => x * 2;
+        export const triple = async x => x * 3;
+    """))
+    out = audit.collect_non_webmethod_exports(backend)
+    assert "double" in out, "single-param no-paren arrow not detected"
+    assert out["double"]["kind"] == "arrow"
+    assert "triple" in out
+    assert out["triple"]["kind"] == "async arrow"
+
+
 def test_collect_non_webmethod_exports_does_not_match_value_const_or_call(tmp_path):
     """Negative-case pin: must NOT match value-const or function-call-result.
     Guards against the broadened regex accidentally swallowing constants."""
@@ -432,13 +448,11 @@ def test_allowlist_does_not_short_circuit_cfw_high_signal():
 # ── Main() integration smoke (CR finding 1) ────────────────────────────
 
 
-def test_main_emits_non_webmethod_inventory_to_stderr(tmp_path, capsys):
+def test_main_emits_non_webmethod_inventory_to_stderr(tmp_path, monkeypatch, capsys):
     """The whole point of collect_non_webmethod_exports is that operators
     SEE it via the production tool. miquella code-reviewer caught that v1
     of the PR defined the helper but never wired it into main(). v5 now
     invokes it from main() and prints the count to stderr."""
-    audit = _import_audit()
-
     # Build a minimal fixture repo
     src = tmp_path / "src" / "backend"
     src.mkdir(parents=True)
@@ -450,9 +464,8 @@ def test_main_emits_non_webmethod_inventory_to_stderr(tmp_path, capsys):
     (tmp_path / "src" / "backend" / "http-functions.js").write_text("")
     (tmp_path / "src" / "backend" / "events.js").write_text("")
 
-    # Point audit at the fixture
-    import os as _os
-    _os.environ["CFUTONS_ROOT"] = str(tmp_path)
+    # Point audit at the fixture — monkeypatch restores original value on teardown
+    monkeypatch.setenv("CFUTONS_ROOT", str(tmp_path))
     Path("/tmp/cf-dead-routes").mkdir(exist_ok=True)
     audit = _import_audit()  # reload with new ROOT
 
