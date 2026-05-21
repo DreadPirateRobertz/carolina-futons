@@ -113,7 +113,7 @@ export const submitVideoReview = webMethod(
 
       return { success: true, reviewId: record._id };
     } catch (err) {
-      logError('[videoReviewService] submitVideoReview failed', err);
+      logError('videoReviewService:submitVideoReview', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -161,7 +161,7 @@ export const getVideoReviews = webMethod(
 
       return { success: true, reviews, totalCount: result.totalCount ?? reviews.length };
     } catch (err) {
-      logError('[videoReviewService] getVideoReviews failed', err);
+      logError('videoReviewService:getVideoReviews', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
@@ -210,7 +210,7 @@ export const moderateVideoReview = webMethod(
 
       return { success: true };
     } catch (err) {
-      logError('[videoReviewService] moderateVideoReview failed', err);
+      logError('videoReviewService:moderateVideoReview', err);
       return { success: false, error: 'internal_error' };
     }
   }
@@ -251,7 +251,7 @@ export const getProductVideoReviews = webMethod(
 
       return { success: true, reviews };
     } catch (err) {
-      logError('[videoReviewService] getProductVideoReviews failed', err);
+      logError('videoReviewService:getProductVideoReviews', err);
       return { success: false, reviews: [], error: 'internal_error' };
     }
   }
@@ -280,7 +280,7 @@ export const getVideoReviewCount = webMethod(
 
       return { success: true, count };
     } catch (err) {
-      logError('[videoReviewService] getVideoReviewCount failed', err);
+      logError('videoReviewService:getVideoReviewCount', err);
       return { success: false, count: 0, error: 'internal_error' };
     }
   }
