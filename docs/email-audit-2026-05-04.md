@@ -1,4 +1,44 @@
-# Email Touchpoint Audit — 2026-05-04 (refreshed 2026-05-05; cf-6k6u corrections 2026-05-05 PM)
+# Email Touchpoint Audit — 2026-05-04 (refreshed 2026-05-05; cf-6k6u corrections 2026-05-05 PM; staging verification 2026-05-20)
+
+> **2026-05-20 staging verification addendum** (rennala, cf-icww):
+>
+> ## STAGING_SITE verification — data-layer results (2026-05-20)
+>
+> STAGING_SITE id: `3af610bf-06fb-410d-a406-c1258fa84372`. Accessed via Wix MCP REST API.
+>
+> ### EmailQueue baseline
+> - **Total records:** 61 (59 welcome-series from 2026-05-05 godfrey diagnostic probe + 2 legacy seed rows)
+> - **Sent:** 2 (legacy seed rows from 2026-03-11/14; `tpl-cart-recovery-1` + `tpl-post-purchase-1` old-format IDs)
+> - **Failed:** 0
+> - **Pending:** 59 — all past `scheduledFor`, **cron NOT processing** on STAGING_SITE. Emails will not send until cron jobs are enabled on staging.
+> - **Non-welcome sequences (post_purchase, cart_recovery, browse_recovery, reengagement, winback):** 0 records — no test events (orders, carts, fulfillments) have ever been fired on this STAGING_SITE.
+>
+> ### F1 fix confirmed (data layer)
+> All 59 post-fix EmailQueue rows have non-empty `recipientContactId` (e.g. `10d661ff-7c69-4318-bb10-2b35632040d0`). Proves `_resolveContactIdInternal` ran successfully at queue-write time. Variables are populated (`discountCode`, `firstName`, `email`, `discountPercent`). **F1: PASS at data layer.**
+>
+> ### TEMPLATE_ID_MAP verified
+> `src/backend/emailTemplates.web.js#TEMPLATE_ID_MAP` confirmed populated for all P0/P1 templates. All P0 templates have Wix CRM dashboard IDs: `order_confirmation: 'VJBTjjZ'`, `order_shipped: 'VJBTpK1'`, `delivery_confirmation: 'VJBTuXp'`, `freight_shipped: 'VJBUKCa'`. Dispatch calls will resolve correctly when the event path fires.
+>
+> ### Cron stall — blocking live send verification
+> The staging cron is not running. Without a live-backend publish + cron enable, the remaining 8-step acceptance test plan (§Verification gaps) cannot be executed. Stilgar must publish backend to STAGING_SITE and enable cron before inbox-level verification can proceed. Filed in cf-w1u1.
+>
+> ## Code-level finding status as of 2026-05-20
+>
+> | Finding | Code status on `main` | Evidence |
+> |---------|----------------------|----------|
+> | F1 — welcome series empty recipientContactId | ✅ FIXED | `emailAutomation.web.js` calls `_resolveContactIdInternal` before queuing; confirmed in STAGING_SITE EmailQueue data |
+> | F2 — subscribeToNewsletter no welcome | ✅ FIXED (cf-3l0d) | `newsletterService.web.js` now calls `resolveContactId` and queues welcome_series_1..5 at the success branch |
+> | F3 — order_confirmation never sends | ❌ **STILL BROKEN** | `sendOrderConfirmation` call is still in `emailAutomation.web.js#wixEcom_onOrderCreated` (dead code). `events.js#wixEcom_onOrderCreated` does NOT call `sendOrderConfirmation`. cf-i23b bead CLOSED 2026-05-05 but no merged PR on main. **Bead-trail drift — flag to mayor.** |
+> | F4 — shipping notifications never fire | ✅ FIXED (cf-fovb PR #1202) | `events.js#wixEcom_onFulfillmentCreated` delegates to `emailAutomation.web.js#handleFulfillmentShippingNotification` |
+> | F5 — delivery/Day-14/NPS never fire | ✅ FIXED (cf-jmmk PR #1141) | `events.js#wixEcom_onOrderDelivered` delegates to `handleOrderDelivered` |
+> | F6 — no contact form auto-reply | ✅ FIXED (cf-hafn) | `emailService.web.js#_sendCustomerContactAutoReply` wired; template `contact_form_auto_reply: 'VJBOnfD'` in TEMPLATE_ID_MAP |
+> | F7 — swatch confirmation skipped for new visitors | ❌ **STILL BROKEN** | `emailService.web.js#submitSwatchRequest` still uses `contacts.queryContacts()` — fires only if contact pre-exists. cf-xdji resolved the helper but item 2 (apply `appendOrCreateContact` at swatch site) never landed |
+>
+> ### F3 remediation (URGENT — P0 gap, open 2026-05-15)
+> One-line fix needed in `src/backend/events.js#wixEcom_onOrderCreated`: add `sendOrderConfirmation(...)` call after the existing `if (!email) return` guard. Delete dormant copy in `emailAutomation.web.js`. cf-i23b bead was closed 2026-05-05 citing "MR created: cf-wisp-edi" but no commit on main. Melania notified via mail — awaiting re-dispatch.
+>
+> ### F7 remediation (P2 gap)
+> `emailService.web.js#submitSwatchRequest` line ~372: replace `contacts.queryContacts().eq(...)` with `contacts.appendOrCreateContact({ emails: [{ email }], name: { first: cleanName } })` — same pattern used by `_sendCustomerContactAutoReply`. New visitor now gets the confirmation. Tracked as follow-up to cf-xdji item 2.
 
 > **cf-6k6u correction summary** (radahn 5-agent review on merged PR #1140):
 > 1. **Row 14 winback template IDs were fabricated.** Earlier revision listed `lifecycle_winback_30d/60d/90d`. Those template IDs do not exist. Real winback templates load at runtime from the `EmailSequences` Wix Data collection via `marketingSequences.web.js#loadActiveSteps('winback')`. Static analysis cannot enumerate them. Row 14 has been corrected.
