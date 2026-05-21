@@ -47,7 +47,6 @@ describe('cf-44qt sibling — priceDropCron.web.js observability cleanup', () =>
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/priceDropCron/);
     expect(allTags).toMatch(/detectPriceDrops/);
-    expect(allTags).toMatch(/failed/);
   });
 
   it('queuePriceDropNotifications wires logError on Wishlist query throw via notifyWishlistedMembers', async () => {

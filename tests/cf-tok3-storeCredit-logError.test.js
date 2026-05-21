@@ -29,11 +29,11 @@ describe('cf-tok3 storeCreditService — console.error → logError migration', 
 
   it('all 6 webMethods route through storeCreditService.* context tags', async () => {
     const src = await readSrc();
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.issueStoreCredit['"]/);
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.getMyStoreCredit['"]/);
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.applyStoreCredit['"]/);
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.getStoreCreditHistory['"]/);
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.giftStoreCredit['"]/);
-    expect(src).toMatch(/logError\(\s*['"]storeCreditService\.getExpiringCredits['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:issueStoreCredit['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:getMyStoreCredit['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:applyStoreCredit['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:getStoreCreditHistory['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:giftStoreCredit['"]/);
+    expect(src).toMatch(/logError\(\s*['"]storeCreditService:getExpiringCredits['"]/);
   });
 });

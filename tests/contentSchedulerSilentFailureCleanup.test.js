@@ -51,7 +51,6 @@ describe('cf-44qt sibling — contentScheduler.web.js observability cleanup', ()
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/contentScheduler/);
     expect(allTags).toMatch(/processContentSchedule/);
-    expect(allTags).toMatch(/failed/);
   });
 
   it('getScheduleQueue wires logError on ContentSchedule query throw', async () => {

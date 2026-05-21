@@ -80,7 +80,7 @@ export const getActivePromotion = webMethod(
         products,
       };
     } catch (err) {
-      logError('[promotions] getActivePromotion', err);
+      logError('promotions:getActivePromotion-failed', err);
       return null;
     }
   }
@@ -135,7 +135,7 @@ export const getFlashSales = webMethod(
         ctaText: promo.ctaText,
       }));
     } catch (err) {
-      logError('[promotions] getFlashSales', err);
+      logError('promotions:getFlashSales-failed', err);
       return [];
     }
   }

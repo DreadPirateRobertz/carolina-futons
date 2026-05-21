@@ -156,7 +156,7 @@ async function _syncToESPInternal(email, source) {
 
     return { synced: true };
   } catch (err) {
-    logError('newsletterService:espSync', err);
+    logError('newsletterService:syncToESP-internal', err);
     return { synced: false, reason: 'sync_failed' };
   }
 }
@@ -257,7 +257,7 @@ export const unsubscribeFromESP = webMethod(
 
       return { unsubscribed: true };
     } catch (err) {
-      logError('newsletterService:espUnsubscribe', err);
+      logError('newsletterService:unsubscribeFromESP', err);
       return { unsubscribed: false, reason: 'unsubscribe_failed' };
     }
   }
@@ -359,7 +359,7 @@ export const subscribeToNewsletter = webMethod(
       logAuditEvent('NewsletterSubscribers', 'subscribe', cleaned, { source });
       return { success: true, discountCode: DISCOUNT_CODE };
     } catch (err) {
-      logError('newsletterService:subscribe', err);
+      logError('newsletterService:subscribeToNewsletter', err);
       return { success: false, message: 'Subscription failed. Please try again.' };
     }
   }

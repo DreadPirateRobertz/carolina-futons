@@ -49,21 +49,22 @@ describe('cf-44qt batch9 — 5-module logError migration', () => {
     expect(src).toMatch(/logError\(\s*`lifecycleCron:runDailyChallengeReminders-pushFailed/);
   });
 
-  it('promotions.web.js: 2 expected labels with canonical [promotions] prefix (added)', () => {
+  it('promotions.web.js: 2 expected labels with canonical promotions: prefix', () => {
     const src = read('src/backend/promotions.web.js');
     expect(src).toMatch(
       /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
-    expect(src).toMatch(/logError\(\s*['"]\[promotions\] getActivePromotion['"]/);
-    expect(src).toMatch(/logError\(\s*['"]\[promotions\] getFlashSales['"]/);
+    expect(src).toMatch(/logError\(\s*['"]promotions:getActivePromotion-failed['"]/);
+    expect(src).toMatch(/logError\(\s*['"]promotions:getFlashSales-failed['"]/);
   });
 
-  it('rewardEngine.web.js: local logError wrapper routes through canonical via _logErrorCanonical alias', () => {
+  it('rewardEngine.web.js: canonical logError with no local wrapper', () => {
     const src = read('src/backend/rewardEngine.web.js');
     expect(src).toMatch(
-      /import\s*{\s*logError\s+as\s+_logErrorCanonical\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
+      /import\s*{\s*logError\s*}\s*from\s*['"]backend\/utils\/errorHandler['"]/,
     );
-    expect(src).toMatch(/_logErrorCanonical\(\s*`\[rewardEngine\]/);
+    expect(src).not.toMatch(/^function\s+logError\s*\(/m);
+    expect(src).toMatch(/logError\(\s*['"`]rewardEngine:/);
     expect(src).not.toMatch(/console\.error/);
   });
 

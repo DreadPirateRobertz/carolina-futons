@@ -30,18 +30,15 @@ describe('cf-44qt sibling — swatchService.web.js console.error → logError', 
     );
   });
 
-  it('source file uses logError for all 4 expected sites with canonical [swatchService] prefix (added)', () => {
-    const labels = [
-      'getProductSwatches',
-      'getSwatchFamilies',
-      'countSwatches',
-      'getSwatchPreviewColors',
+  it('source file uses logError for all 4 expected sites with canonical swatchService: prefix', () => {
+    const tags = [
+      'swatchService:getProductSwatches',
+      'swatchService:getAllSwatchFamilies',
+      'swatchService:getSwatchCount',
+      'swatchService:getSwatchPreviewColors',
     ];
-    for (const label of labels) {
-      const re = new RegExp(
-        `logError\\(\\s*['"]\\[swatchService\\] ${label}['"]`,
-      );
-      expect(SRC).toMatch(re);
+    for (const tag of tags) {
+      expect(SRC).toContain(`logError('${tag}'`);
     }
   });
 

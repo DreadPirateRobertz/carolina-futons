@@ -29,18 +29,15 @@ describe('cf-44qt sibling — conversionDashboard.web.js console.error → logEr
     );
   });
 
-  it('source file uses logError for all 4 expected sites with canonical [conversionDashboard] prefix', () => {
-    const labels = [
-      'getConversionFunnel',
-      'getDailyConversionTrend',
-      'getCategoryConversion',
-      'getDashboardSummary',
+  it('source file uses logError for all 4 expected sites with canonical conversionDashboard: prefix', () => {
+    const tags = [
+      'conversionDashboard:getConversionFunnel',
+      'conversionDashboard:getDailyConversionTrend',
+      'conversionDashboard:getCategoryConversion',
+      'conversionDashboard:getDashboardSummary',
     ];
-    for (const label of labels) {
-      const re = new RegExp(
-        `logError\\(\\s*['"]\\[conversionDashboard\\] ${label}['"]`,
-      );
-      expect(SRC).toMatch(re);
+    for (const tag of tags) {
+      expect(SRC).toMatch(new RegExp(`logError\\(\\s*['"]${tag}['"]`));
     }
   });
 

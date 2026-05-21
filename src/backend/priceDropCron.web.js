@@ -112,7 +112,7 @@ export const detectPriceDrops = webMethod(
         emailsQueued,
       };
     } catch (err) {
-      logError('[priceDropCron] detectPriceDrops failed', err);
+      logError('priceDropCron:detectPriceDrops', err);
       return { success: false, productsScanned: 0, dropsDetected: 0, notificationsSent: 0, emailsQueued: 0 };
     }
   }
@@ -140,7 +140,7 @@ export const queuePriceDropNotifications = webMethod(
       const sent = await notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop);
       return { success: true, notificationsSent: sent };
     } catch (err) {
-      logError('[priceDropCron] queuePriceDropNotifications failed', err);
+      logError('priceDropCron:queuePriceDropNotifications', err);
       return { success: false, notificationsSent: 0 };
     }
   }
@@ -283,7 +283,7 @@ async function notifyWishlistedMembers(productId, oldPrice, newPrice, pctDrop) {
       );
       sent++;
     } catch (err) {
-      logError(`[priceDropCron] queuePriceDropNotifications per-member notify failed for ${wishItem.memberId}`, err);
+      logError(`priceDropCron:queuePriceDropNotifications-notifyMemberFailed memberId=${wishItem.memberId}`, err);
     }
   }
 
@@ -356,7 +356,7 @@ async function emailPriceAlertSubscribers(productId, productName, productSlug, o
       );
       sent++;
     } catch (emailErr) {
-      logError(`[priceDropCron] sendPriceDropEmail per-subscriber failed for ${sub.memberId}`, emailErr);
+      logError(`priceDropCron:queuePriceDropNotifications-sendEmailFailed memberId=${sub.memberId}`, emailErr);
     }
   }
 
