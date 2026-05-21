@@ -101,7 +101,7 @@ export const getConversionFunnel = webMethod(
         },
       };
     } catch (err) {
-      logError('conversionDashboard:getConversionFunnel', err);
+      logError('[conversionDashboard] getConversionFunnel', err);
       return { success: false, funnel: null };
     }
   }
@@ -157,7 +157,7 @@ export const getDailyConversionTrend = webMethod(
 
       return { success: true, trend };
     } catch (err) {
-      logError('conversionDashboard:getDailyConversionTrend', err);
+      logError('[conversionDashboard] getDailyConversionTrend', err);
       return { success: false, trend: [] };
     }
   }
@@ -212,7 +212,7 @@ export const getCategoryConversion = webMethod(
 
       return { success: true, categories };
     } catch (err) {
-      logError('conversionDashboard:getCategoryConversion', err);
+      logError('[conversionDashboard] getCategoryConversion', err);
       return { success: false, categories: [] };
     }
   }
@@ -251,7 +251,7 @@ export const getDashboardSummary = webMethod(
         },
       };
     } catch (err) {
-      logError('conversionDashboard:getDashboardSummary', err);
+      logError('[conversionDashboard] getDashboardSummary', err);
       return { success: false, summary: null };
     }
   }
