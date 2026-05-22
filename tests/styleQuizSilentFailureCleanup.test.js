@@ -48,7 +48,7 @@ describe('cf-44qt sibling — styleQuiz.web.js observability cleanup', () => {
     expect(logErrorSpy).toHaveBeenCalled();
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/styleQuiz/);
-    expect(allTags).toMatch(/getRecommendations/);
+    expect(allTags).toMatch(/getQuizRecommendations/);
   });
 
   it('captureQuizLead wires logError on NewsletterSubscribers insert throw', async () => {
@@ -59,6 +59,6 @@ describe('cf-44qt sibling — styleQuiz.web.js observability cleanup', () => {
     expect(logErrorSpy).toHaveBeenCalled();
     const allTags = logErrorSpy.mock.calls.map((c) => c[0]).join('|');
     expect(allTags).toMatch(/styleQuiz/);
-    expect(allTags).toMatch(/captureLeadForm/);
+    expect(allTags).toMatch(/captureQuizLead/);
   });
 });
