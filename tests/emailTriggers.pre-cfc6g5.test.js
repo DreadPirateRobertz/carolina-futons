@@ -206,7 +206,7 @@ describe('welcome_series (welcome_series_1..5)', () => {
     expect(queued.every(r => typeof r.recipientContactId === 'string' && r.recipientContactId.length > 0)).toBe(true);
   });
 
-  it.todo('cf-3l0d (F2) integration: subscribeToNewsletter auto-triggers the welcome flow — covered in tests/newsletterService.* (kept here as cross-reference)');
+  it.todo('cf-3l0d (F2) integration: subscribeToNewsletter auto-triggers the welcome flow — covered in tests/subscribeToNewsletterAutoTrigger.cf3l0d.test.js (kept here as cross-reference)');
   it.todo('staging E2E (blocked on staging Velo backend): welcome_series_1 lands in halworker85+test inbox within 60s');
 });
 
@@ -273,34 +273,42 @@ describe('post_purchase (post_purchase_1..3)', () => {
     return triggerPostPurchaseSequence(PP_CONTACT_ID, PP_EMAIL, PP_FIRST, '1042', 1499, PP_LINE_ITEMS);
   }
 
-  it('triggerPostPurchaseSequence queues post_purchase_1 at +72h (Day 3 care guide)', async () => {
+  // Source-of-truth delays read dynamically from _SEQUENCES so a future
+  // business retune of post_purchase.steps[n].delayHours doesn't silently
+  // drift past the test (welcome block uses the same pattern).
+  function expectedOffsetForStep(stepNumber) {
+    const step = _SEQUENCES.post_purchase.steps.find(s => s.step === stepNumber);
+    return step.delayHours * 60 * 60 * 1000;
+  }
+
+  it('triggerPostPurchaseSequence queues post_purchase_1 at Day 3 (care guide)', async () => {
     const before = Date.now();
     await fireSequence();
     const step1 = __getInserted('EmailQueue').find(r => r.sequenceStep === 1);
     expect(step1).toBeDefined();
     expect(step1.templateId).toBe('post_purchase_1');
     expect(step1.sequenceType).toBe('post_purchase');
-    const expectedOffset = 72 * 60 * 60 * 1000;
+    const expectedOffset = expectedOffsetForStep(1);
     expect(step1.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
     expect(step1.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
   });
 
-  it('queues post_purchase_2 at +168h (Day 7 review request)', async () => {
+  it('queues post_purchase_2 at Day 7 (review request)', async () => {
     const before = Date.now();
     await fireSequence();
     const step2 = __getInserted('EmailQueue').find(r => r.sequenceStep === 2);
     expect(step2.templateId).toBe('post_purchase_2');
-    const expectedOffset = 168 * 60 * 60 * 1000;
+    const expectedOffset = expectedOffsetForStep(2);
     expect(step2.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
     expect(step2.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
   });
 
-  it('queues post_purchase_3 at +720h (Day 30 cross-sell)', async () => {
+  it('queues post_purchase_3 at Day 30 (cross-sell)', async () => {
     const before = Date.now();
     await fireSequence();
     const step3 = __getInserted('EmailQueue').find(r => r.sequenceStep === 3);
     expect(step3.templateId).toBe('post_purchase_3');
-    const expectedOffset = 720 * 60 * 60 * 1000;
+    const expectedOffset = expectedOffsetForStep(3);
     expect(step3.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
     expect(step3.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
   });
@@ -330,7 +338,7 @@ describe('post_purchase_review_reward', () => {
   // as steps 1..3; the legacy "triggerReviewRewardPrompt" name in the
   // original todo refers to this same step.
 
-  it('post_purchase_review_reward queues as step 4 at +336h (Day 14)', async () => {
+  it('post_purchase_review_reward queues as step 4 at Day 14 (CF-qy79)', async () => {
     const before = Date.now();
     await triggerPostPurchaseSequence(
       'contact-rr-001',
@@ -344,7 +352,8 @@ describe('post_purchase_review_reward', () => {
     expect(step4).toBeDefined();
     expect(step4.templateId).toBe('post_purchase_review_reward');
     expect(step4.sequenceType).toBe('post_purchase');
-    const expectedOffset = 336 * 60 * 60 * 1000;
+    const step = _SEQUENCES.post_purchase.steps.find(s => s.step === 4);
+    const expectedOffset = step.delayHours * 60 * 60 * 1000;
     expect(step4.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
     expect(step4.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
   });
@@ -377,7 +386,7 @@ describe('post_purchase_referral', () => {
   // delayHours: 360 (Day 15 — CF-6p0o). Per-source comment, this corrects
   // the original cf-icww audit-row's "+21d" estimate to the actual cadence.
 
-  it('post_purchase_referral queues as step 5 at +360h (Day 15)', async () => {
+  it('post_purchase_referral queues as step 5 at Day 15 (CF-6p0o; corrects legacy +21d audit-row estimate)', async () => {
     const before = Date.now();
     await triggerPostPurchaseSequence(
       'contact-ref-001',
@@ -390,7 +399,8 @@ describe('post_purchase_referral', () => {
     const step5 = __getInserted('EmailQueue').find(r => r.sequenceStep === 5);
     expect(step5).toBeDefined();
     expect(step5.templateId).toBe('post_purchase_referral');
-    const expectedOffset = 360 * 60 * 60 * 1000;
+    const step = _SEQUENCES.post_purchase.steps.find(s => s.step === 5);
+    const expectedOffset = step.delayHours * 60 * 60 * 1000;
     expect(step5.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
     expect(step5.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
   });
@@ -502,15 +512,16 @@ describe('reengagement (reengagement_1..3)', () => {
     expect(queued.every(r => r.recipientEmail === DORMANT_EMAIL)).toBe(true);
   });
 
-  it('steps schedule at +0h / +168h / +504h (cf-bpt Day 0 / 7 / 21 cadence)', async () => {
+  it('steps schedule at the _SEQUENCES.reengagement cadence (cf-bpt Day 0 / 7 / 21)', async () => {
     seedDormantMember();
     const before = Date.now();
     await triggerReengagement();
     const queued = __getInserted('EmailQueue').sort((a, b) => a.sequenceStep - b.sequenceStep);
-    const expectedOffsetsHours = [0, 168, 504];
-    for (let i = 0; i < queued.length; i++) {
-      const expectedOffset = expectedOffsetsHours[i] * 60 * 60 * 1000;
-      const actualOffset = queued[i].scheduledFor.getTime() - before;
+    expect(queued).toHaveLength(_SEQUENCES.reengagement.steps.length);
+    for (const row of queued) {
+      const step = _SEQUENCES.reengagement.steps.find(s => s.step === row.sequenceStep);
+      const expectedOffset = step.delayHours * 60 * 60 * 1000;
+      const actualOffset = row.scheduledFor.getTime() - before;
       expect(actualOffset).toBeGreaterThanOrEqual(expectedOffset - 1000);
       expect(actualOffset).toBeLessThanOrEqual(expectedOffset + 5000);
     }
