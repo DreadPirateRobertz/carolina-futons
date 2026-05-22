@@ -155,6 +155,24 @@ No DNS changes are needed for rollback in either case.
 
 Tracked separately in **cf-xe2** (full Wix exit — Velo → Vercel Functions, Stores → headless commerce, CMS → Sanity/Payload). Do not pull forward into Phase 9.
 
+### 3.4 Intentional feature deltas — cfw does NOT replicate
+
+Surfaces that exist on the Wix Studio site and are **deliberately not migrated** to cfw. Each row is a feature regression by intent — Stilgar should confirm the regression is acceptable via the listed visual-check before cutover, but the cfw side is treated as ground truth absent contrary evidence.
+
+| # | Wix surface | cfw state | Decision | Tracking bead | Stilgar visual-check status |
+|---|---|---|---|---|---|
+| 3.4.1 | **Referral redemption history** — per-row ledger of past rewards earned + spent on `/account/my-account/referral-page` (assumed; `@wix/loyalty` typically exposes `getMemberLoyaltyAccount` history rows) | ⛔ Not surfaced. `ReferralDashboard` (`src/components/referral/ReferralDashboard.tsx`) renders only aggregates: `pendingRewards $total` + `earnedRewards $total`. No per-row history. | **⛔→⛔ INTENTIONAL** (fallback assumption pending Stilgar visual check). Aggregates cover the core use case; per-row ledger is a Wix-template default with low engagement signal. Deferred to cf-xe2 if reintroduction is ever needed. | cf-tm1e | **PENDING** — mailed 2026-05-15. If Stilgar confirms ⛔→⛔, this row closes. If Stilgar confirms ⛔→✅ (regression), file P2 implementation bead. |
+| 3.4.2 | **Referred friends list** — names + signup dates of referees on the same Wix referral page | ⛔ Not surfaced. cfw shows aggregate `totalReferrals` integer count only. | **⛔→⛔ INTENTIONAL** (fallback). The count is the actionable signal; per-name list raises PII surface area without strong engagement value. Deferred to cf-xe2. | cf-tm1e | **PENDING** — mailed 2026-05-15. If ⛔→✅, file P3 implementation bead. |
+| 3.4.3 | **Loyalty tier display** (Bronze / Silver / Gold or template equivalent) — surfaced on `/account/my-account/referral-page` and/or `/loyalty` on Wix via `@wix/loyalty` `getMemberLoyaltyAccount().tier` | ⛔ Not surfaced. No `/loyalty` route in cfw. No `/rewards` route. No `tier` prop on `ReferralDashboard`. Zero `@wix/loyalty` SDK references in cfw source. | **⛔→⛔ INTENTIONAL** (fallback). cfw has no tier engine; the entire loyalty-tier concept is out of scope until cf-xe2 introduces a replacement loyalty system. | cf-tm1e | **PENDING** — mailed 2026-05-15. If ⛔→✅, escalate to cf-xe2 / file a P3 follow-on bead for a stub tier surface. |
+
+**Procedure when Stilgar's visual check returns:**
+
+1. Each row: confirm ⛔→⛔ (intentional) OR flip to ⛔→✅ (real regression).
+2. For ⛔→⛔ rows: tick the bead and leave the row here as the audit record.
+3. For ⛔→✅ rows: file an implementation bead at the listed priority, link it here, and reopen `cf-tm1e` until the regression is fixed.
+
+This subsection is the **single audit record** for the 3 referral surfaces — do not duplicate elsewhere. The promo-pages parity addendum (`carolina-futons-web/docs/qa/promo-pages-parity-2026-05-15.md`) cross-references here.
+
 ---
 
 ## 4. Wix Premium plan downgrade evaluation
