@@ -1,14 +1,21 @@
 /**
  * @file emailTriggers.pre-cfc6g5.test.js
- * @description Pre-work scaffold for cf-w1u1 (E2E test all email triggers).
+ * @description cf-w1u1 — per-trigger templateId + variable shape coverage.
  *
- * cf-c6g5 (P0) holds 13 Wix Triggered Email templates that Stilgar must
- * create in the dashboard. cf-w1u1 (P1) is the post-cf-c6g5 verification
- * that every trigger code path actually fires the right templateId with
- * the right variables. This file is the scaffolding for cf-w1u1: the
- * fixtures, mocks, and per-trigger describe blocks are wired up so that
- * when cf-c6g5 lands, dev replaces each `it.todo` with a real assertion
- * body using the shared setup.
+ * Originally a pre-work scaffold sequenced behind cf-c6g5 (template
+ * registration in the staging Wix CRM Triggered Emails dashboard). cf-c6g5
+ * closed 2026-05-10 (all 28 templates registered + published); supporting
+ * fix-beads cf-hafn / cf-fovb / cf-xdji / cf-3l0d / cf-m3tj all CLOSED by
+ * 2026-05-21. The unit-level wire/templateId/variable-shape todos this
+ * file held are now filled in against the mock layer — they verify that
+ * each trigger queues into EmailQueue with the templateId that maps to a
+ * registered Wix dashboard ID via emailTemplates.TEMPLATE_ID_MAP.
+ *
+ * Staging-side E2E todos (template renders + lands in halworker85+test
+ * inbox) remain `it.todo` — gated on the staging Velo backend becoming
+ * reachable (staging.carolinafutons.com currently does not resolve;
+ * Stilgar publish blocker). Once staging is up, godfrey's runbook in
+ * tests/qa/email-triggers-e2e-2026-05-21.md drives the runtime pass.
  *
  * Inventory drawn from `docs/email-audit-2026-05-04.md` (rennala) — 13
  * trigger families that map to the cf-c6g5 13 templates:
@@ -28,22 +35,25 @@
  *   13. wishlist_price_drop        (wishlist_price_drop)        — checkWishlistAlerts
  *
  * Each describe block has:
- *   - 1 it() that asserts the TRIGGER CODE PATH fires `emailContact`
- *     with the expected templateId + variable shape. Runs today against
- *     the wix-crm-backend mock — no live templates required. Catches
- *     regressions in code wiring before Stilgar's templates are touched.
- *   - 1+ it.todo() that mark the post-cf-c6g5 staging-side checks
- *     (template renders, lands in inbox). Becomes real once cf-c6g5
- *     unblocks; left as todo to surface in CI as "pending E2E coverage."
+ *   - it() that asserts the TRIGGER CODE PATH inserts into EmailQueue
+ *     with the expected templateId + variable shape, against the
+ *     wix-data / wix-crm-backend / wix-secrets-backend mocks.
+ *   - it.todo() for the staging-side checks (template renders, lands in
+ *     inbox) — converted to real assertions by the operator following
+ *     tests/qa/email-triggers-e2e-2026-05-21.md once staging is reachable.
  *
- * Note on audit gaps F1/F2/F3/F4:
- *   - welcome_series exit-intent + member-self-trigger paths fail to
- *     send (F1, recipientContactId blank). Skip-marked below until
- *     cf-icww.followup-f1 lands.
- *   - subscribeToNewsletter doesn't queue welcome (F2). Same handling.
- *   - order_confirmation (F3) + order_shipped/freight_shipped (F4) are
- *     the dormant-handler bug — wired in events.js per cf-i23b/cf-icdc
- *     after PR landings; revisit the live trigger once those merge.
+ * Audit gap status (cf-icww F-series — all fix beads CLOSED 2026-05-10):
+ *   - F1 welcome contactId resolution → cf-xdji (closed) wires
+ *     _resolveContactIdInternal into triggerWelcomeSeries.
+ *   - F2 subscribeToNewsletter→welcome → cf-3l0d (closed) wires
+ *     _triggerWelcomeFlowInternal into subscribeToNewsletter. Coverage
+ *     stays in tests/newsletterService.* — kept as todo here so we don't
+ *     duplicate the integration.
+ *   - F3 order_confirmation dormant → cf-i23b (merged). events.js wire
+ *     test stays todo (events.js is the call site, exercised by
+ *     tests/events.test.js).
+ *   - F4 order_shipped/freight_shipped → cf-icdc + cf-fovb (closed).
+ *     Same — events.js wire stays todo here.
  *
  * cf-w1u1.
  */
@@ -58,21 +68,22 @@ import {
 import {
   __reset as __resetData,
   __seed,
+  __getInserted,
 } from './__mocks__/wix-data.js';
-import { __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
+import {
+  __reset as __resetSecrets,
+  __setSecrets,
+} from './__mocks__/wix-secrets-backend.js';
 
-// Keep the import surface stable so the post-cf-c6g5 fill-in can swap
-// `it.todo` → `it` without re-importing. Some triggers run via cron paths
-// rather than direct webMethod export — those tests will reach in via the
-// cron handler, also already exported.
 import {
   triggerWelcomeSeries,
   triggerPostPurchaseSequence,
   triggerReengagement,
   triggerRestockNotifications,
-  // dormant in current main per F3/F4 — kept here so the post-merge
-  // wiring (cf-i23b / cf-icdc) gets immediate coverage from the
-  // todo→it flip; remove if the export shape changes.
+  _SEQUENCES,
+  // events.js wire tests for these stay todo (call site is events.js, not
+  // emailAutomation.web.js — exercised by tests/events.test.js post cf-i23b
+  // / cf-icdc / cf-fovb).
   // eslint-disable-next-line no-unused-vars
   wixEcom_onOrderCreated as _wixEcom_onOrderCreated,
   // eslint-disable-next-line no-unused-vars
@@ -126,6 +137,12 @@ beforeEach(() => {
   __resetData();
   __resetSecrets();
   vi.clearAllMocks();
+  // Welcome / reengagement read these secrets; absent values just produce
+  // an empty discountCode in the queued variables.
+  __setSecrets({
+    WELCOME_DISCOUNT_CODE: 'WELCOME10',
+    RECOVERY_DISCOUNT_CODE: 'COMEBACK15',
+  });
   // Seed the shared collections most triggers query before they fire.
   __seed('Members/PublicData', [
     {
@@ -135,130 +152,422 @@ beforeEach(() => {
     },
   ]);
   __seed('Orders', [FIXTURE_ORDER]);
+  __seed('EmailQueue', []);
+  __seed('Unsubscribes', []);
 });
 
 // ── 1/13 — welcome_series ──────────────────────────────────────────────────
 
 describe('welcome_series (welcome_series_1..5)', () => {
-  it.todo('cf-c6g5: sends welcome_series_1 immediately on member signup (events.js#wixMembers_onMemberCreated)');
-  it.todo('cf-c6g5: queues welcome_series_2 at +2d, _3 at +5d, _4 at +9d, _5 at +14d');
-  it.todo('cf-c6g5: variables include {firstName, unsubscribeUrl}');
-  it.todo('cf-c6g5: F1 fix verified — exit-intent path sends with resolved contactId (cf-icww.followup-f1)');
-  it.todo('cf-c6g5: F2 fix verified — subscribeToNewsletter calls triggerWelcomeSeries (cf-icww.followup-f2)');
-  it.todo('cf-c6g5: staging E2E — welcome_series_1 lands in halworker85+test inbox within 60s');
+  const WELCOME_EMAIL = 'cf-w1u1-welcome@halworker85.gmail.com';
+  const WELCOME_NAME = 'Brenda';
+
+  it('triggerWelcomeSeries queues welcome_series_1 at +0h (immediate send step)', async () => {
+    await triggerWelcomeSeries(WELCOME_EMAIL, WELCOME_NAME);
+    const queued = __getInserted('EmailQueue');
+    const step1 = queued.find(r => r.sequenceStep === 1);
+    expect(step1).toBeDefined();
+    expect(step1.templateId).toBe('welcome_series_1');
+    expect(step1.sequenceType).toBe('welcome');
+  });
+
+  it('queues all 5 welcome_series_* steps at the SEQUENCES.welcome cadence', async () => {
+    const before = Date.now();
+    await triggerWelcomeSeries(WELCOME_EMAIL, WELCOME_NAME);
+    const queued = __getInserted('EmailQueue').sort((a, b) => a.sequenceStep - b.sequenceStep);
+    expect(queued).toHaveLength(5);
+    const expectedTemplateIds = _SEQUENCES.welcome.steps.map(s => s.templateId);
+    expect(queued.map(r => r.templateId)).toEqual(expectedTemplateIds);
+    // Each scheduledFor offset matches its sequence step's delayHours.
+    for (const row of queued) {
+      const step = _SEQUENCES.welcome.steps.find(s => s.step === row.sequenceStep);
+      const expectedOffset = step.delayHours * 60 * 60 * 1000;
+      const actualOffset = row.scheduledFor.getTime() - before;
+      expect(actualOffset).toBeGreaterThanOrEqual(expectedOffset - 1000);
+      expect(actualOffset).toBeLessThanOrEqual(expectedOffset + 5000);
+    }
+  });
+
+  it('queued variables include {firstName, discountCode, email} (registry-aligned shape)', async () => {
+    await triggerWelcomeSeries(WELCOME_EMAIL, WELCOME_NAME);
+    const step1 = __getInserted('EmailQueue').find(r => r.sequenceStep === 1);
+    expect(step1.variables).toMatchObject({
+      firstName: WELCOME_NAME,
+      discountCode: 'WELCOME10',
+      email: WELCOME_EMAIL,
+    });
+  });
+
+  it('F1 fix (cf-xdji) — recipientContactId resolved (non-empty) via _resolveContactIdInternal', async () => {
+    const result = await triggerWelcomeSeries(WELCOME_EMAIL, WELCOME_NAME);
+    expect(result.success).toBe(true);
+    const queued = __getInserted('EmailQueue');
+    expect(queued.length).toBeGreaterThan(0);
+    expect(queued.every(r => typeof r.recipientContactId === 'string' && r.recipientContactId.length > 0)).toBe(true);
+  });
+
+  it.todo('cf-3l0d (F2) integration: subscribeToNewsletter auto-triggers the welcome flow — covered in tests/newsletterService.* (kept here as cross-reference)');
+  it.todo('staging E2E (blocked on staging Velo backend): welcome_series_1 lands in halworker85+test inbox within 60s');
 });
 
 // ── 2/13 — cart_recovery ───────────────────────────────────────────────────
 
 describe('cart_recovery (cart_recovery_1..3)', () => {
-  it.todo('cf-c6g5: triggerCartRecoveryCron picks up abandoned cart and queues cart_recovery_1');
-  it.todo('cf-c6g5: cart_recovery_2 fires at +24h if cart still abandoned');
-  it.todo('cf-c6g5: cart_recovery_3 fires at +72h with last-chance copy + coupon');
-  it.todo('cf-c6g5: variables include {firstName, cartItems, cartTotal, recoveryUrl, couponCode?}');
-  it.todo('cf-c6g5: skipped if cart converts to order between queue and send');
-  it.todo('cf-c6g5: staging E2E — cart_recovery_1 lands in halworker85+test inbox + click-through tracked');
+  // triggerAbandonedCartRecovery + the cartRecoveryCron live in
+  // src/backend/cartRecovery.web.js — kept out of this file's import
+  // surface. Coverage is in tests/cartRecoveryFlow.integration.test.js
+  // and tests/emailAutomation.test.js (via triggerAbandonedCartRecovery).
+  // These todos guard the per-step templateId mapping and the staging E2E.
+  it.todo('cart_recovery_1/2/3 templateId mapping (covered by tests/cartRecoveryFlow.integration.test.js — kept as cross-reference)');
+  it.todo('cart_recovery_2 +24h / cart_recovery_3 +72h scheduling (cron cadence — see cartRecovery.web.js)');
+  it.todo('variables include {firstName, cartItems, cartTotal, recoveryUrl, couponCode?}');
+  it.todo('skipped if cart converts to order between queue and send (dedup query in cartRecoveryCron)');
+  it.todo('staging E2E (blocked on staging Velo backend): cart_recovery_1 lands in halworker85+test inbox + click-through tracked');
 });
 
 // ── 3/13 — order_confirmation ──────────────────────────────────────────────
 
 describe('order_confirmation', () => {
-  it.todo('cf-c6g5 + cf-i23b merged: events.js#wixEcom_onOrderCreated calls sendOrderConfirmation');
-  it.todo('cf-c6g5: variables include {firstName, orderNumber, total, itemSummary}');
-  it.todo('cf-c6g5: dormant duplicate in emailAutomation.web.js removed (F3 cleanup verified)');
-  it.todo('cf-c6g5: staging E2E — order_confirmation lands within 60s of test order');
+  // cf-i23b (closed) wires events.js#wixEcom_onOrderCreated →
+  // sendOrderConfirmation in src/backend/events.js. Per-call-site coverage
+  // lives in tests/events.test.js — these todos guard the templateId map
+  // and staging E2E only.
+  it.todo('events.js#wixEcom_onOrderCreated → order_confirmation direct-send (covered by tests/events.test.js)');
+  it.todo('variables include {firstName, orderNumber, total, itemSummary, estimatedDays, email}');
+  it.todo('staging E2E (blocked on staging Velo backend): order_confirmation lands within 60s of test order');
 });
 
 // ── 4/13 — order_shipped ───────────────────────────────────────────────────
 
 describe('order_shipped (parcel)', () => {
-  it.todo('cf-c6g5 + cf-icdc merged: events.js#wixEcom_onFulfillmentCreated parcel-branch calls sendShippingNotification');
-  it.todo('cf-c6g5: variables include {orderNumber, trackingNumber, carrier, trackingLink}');
-  it.todo('cf-c6g5: freight_shipped fires from the LTL branch with carrier-specific copy');
-  it.todo('cf-c6g5: staging E2E — manual fulfillment with UPS tracking → order_shipped within 60s');
+  // cf-icdc + cf-fovb (both closed) wire events.js#wixEcom_onFulfillmentCreated
+  // → sendShippingNotification / sendFreightShippingNotification in
+  // src/backend/events.js. Branch selection is carrier-driven (LTL list).
+  it.todo('events.js#wixEcom_onFulfillmentCreated parcel-branch → order_shipped (covered by tests/events.test.js)');
+  it.todo('variables include {firstName, orderNumber, trackingNumber, carrier, trackingUrl, email}');
+  it.todo('freight_shipped fires from the LTL branch with carrier-specific copy (cf-fovb wiring)');
+  it.todo('staging E2E (blocked on staging Velo backend): UPS-tracked fulfillment → order_shipped lands within 60s');
 });
 
 // ── 5/13 — delivery_confirmation ───────────────────────────────────────────
 
 describe('delivery_confirmation', () => {
-  // Audit row 8 says delivery_confirmation is wired through events.js
-  // (post-cf-jmmk PR #1141), not via the dormant `wixEcom_onOrderDelivered`
-  // export in emailAutomation.web.js. The post-cf-c6g5 fill-in for this
-  // block reaches in via events.js or via the underlying handleOrderDelivered
-  // helper — left as todo so we don't pin the wrong call site here.
-  it.todo('cf-c6g5: events.js#wixEcom_onOrderDelivered → delivery_confirmation fires');
-  it.todo('cf-c6g5: variables include {firstName, orderNumber, deliveryDate}');
-  it.todo('cf-c6g5: dormant duplicate `wixEcom_onOrderDelivered` in emailAutomation.web.js removed (F3/F4 sweep)');
-  it.todo('cf-c6g5: staging E2E — onOrderDelivered fires → delivery_confirmation lands within 60s');
+  // cf-jmmk wired delivery_confirmation through events.js#wixEcom_onOrderDelivered.
+  // The dormant `wixEcom_onOrderDelivered` re-export in emailAutomation.web.js
+  // remains as a thin shim for in-tree callers (see source comment at the
+  // export); the live dispatch is in events.js.
+  it.todo('events.js#wixEcom_onOrderDelivered → delivery_confirmation direct-send (covered by tests/events.test.js + tests/lifecycleEmailSender.test.js)');
+  it.todo('variables include {firstName, orderNumber, deliveryDate, email}');
+  it.todo('staging E2E (blocked on staging Velo backend): onOrderDelivered → delivery_confirmation lands within 60s');
 });
 
 // ── 6/13 — post_purchase (1..3 + review_reward) ────────────────────────────
 
 describe('post_purchase (post_purchase_1..3)', () => {
-  it.todo('cf-c6g5: triggerPostPurchaseSequence queues post_purchase_1 at +3d post-delivery');
-  it.todo('cf-c6g5: post_purchase_2 at +7d (care guide)');
-  it.todo('cf-c6g5: post_purchase_3 at +30d (long-term ownership tips)');
-  it.todo('cf-c6g5: dedup guard prevents duplicate sends across order-created + order-delivered (audit row 9 concern)');
-  it.todo('cf-c6g5: variables include {firstName, productName, careGuideUrl, reviewUrl}');
+  const PP_CONTACT_ID = 'contact-pp-001';
+  const PP_EMAIL = 'cf-w1u1-postpurchase@halworker85.gmail.com';
+  const PP_FIRST = 'Brenda';
+  const PP_LINE_ITEMS = [{ name: 'Wilderness Log Frame', slug: 'wilderness-log', quantity: 1 }];
+
+  async function fireSequence() {
+    return triggerPostPurchaseSequence(PP_CONTACT_ID, PP_EMAIL, PP_FIRST, '1042', 1499, PP_LINE_ITEMS);
+  }
+
+  it('triggerPostPurchaseSequence queues post_purchase_1 at +72h (Day 3 care guide)', async () => {
+    const before = Date.now();
+    await fireSequence();
+    const step1 = __getInserted('EmailQueue').find(r => r.sequenceStep === 1);
+    expect(step1).toBeDefined();
+    expect(step1.templateId).toBe('post_purchase_1');
+    expect(step1.sequenceType).toBe('post_purchase');
+    const expectedOffset = 72 * 60 * 60 * 1000;
+    expect(step1.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
+    expect(step1.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
+  });
+
+  it('queues post_purchase_2 at +168h (Day 7 review request)', async () => {
+    const before = Date.now();
+    await fireSequence();
+    const step2 = __getInserted('EmailQueue').find(r => r.sequenceStep === 2);
+    expect(step2.templateId).toBe('post_purchase_2');
+    const expectedOffset = 168 * 60 * 60 * 1000;
+    expect(step2.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
+    expect(step2.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
+  });
+
+  it('queues post_purchase_3 at +720h (Day 30 cross-sell)', async () => {
+    const before = Date.now();
+    await fireSequence();
+    const step3 = __getInserted('EmailQueue').find(r => r.sequenceStep === 3);
+    expect(step3.templateId).toBe('post_purchase_3');
+    const expectedOffset = 720 * 60 * 60 * 1000;
+    expect(step3.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
+    expect(step3.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
+  });
+
+  it('queued variables include {firstName, orderNumber, total, productNames, reviewUrl, assemblyGuideUrl, email}', async () => {
+    await fireSequence();
+    const step1 = __getInserted('EmailQueue').find(r => r.sequenceStep === 1);
+    expect(step1.variables).toMatchObject({
+      firstName: PP_FIRST,
+      orderNumber: '1042',
+      total: '1499',
+      productNames: 'Wilderness Log Frame',
+      email: PP_EMAIL,
+    });
+    expect(step1.variables.reviewUrl).toMatch(/wilderness-log#reviews$/);
+    expect(step1.variables.assemblyGuideUrl).toMatch(/#assembly$/);
+  });
+
+  it.todo('dedup guard across order-created + order-delivered call sites (audit row 9; integration-level)');
 });
 
 // ── 7/13 — post_purchase_review_reward ─────────────────────────────────────
 
 describe('post_purchase_review_reward', () => {
-  it.todo('cf-c6g5: triggerReviewRewardPrompt fires +14d post-delivery with reward coupon');
-  it.todo('cf-c6g5: variables include {firstName, productName, reviewUrl, couponCode, couponValue}');
-  it.todo('cf-c6g5: dedup — only one reward email per order, even with multiple line items');
+  // post_purchase_review_reward is step 4 of triggerPostPurchaseSequence,
+  // delayHours: 336 (Day 14 — CF-qy79). It rides the same queue insert path
+  // as steps 1..3; the legacy "triggerReviewRewardPrompt" name in the
+  // original todo refers to this same step.
+
+  it('post_purchase_review_reward queues as step 4 at +336h (Day 14)', async () => {
+    const before = Date.now();
+    await triggerPostPurchaseSequence(
+      'contact-rr-001',
+      'cf-w1u1-rr@halworker85.gmail.com',
+      'Brenda',
+      '1042',
+      1499,
+      [{ name: 'Wilderness Log Frame', slug: 'wilderness-log' }],
+    );
+    const step4 = __getInserted('EmailQueue').find(r => r.sequenceStep === 4);
+    expect(step4).toBeDefined();
+    expect(step4.templateId).toBe('post_purchase_review_reward');
+    expect(step4.sequenceType).toBe('post_purchase');
+    const expectedOffset = 336 * 60 * 60 * 1000;
+    expect(step4.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
+    expect(step4.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
+  });
+
+  it('variables include {firstName, orderNumber, productNames, reviewUrl}', async () => {
+    await triggerPostPurchaseSequence(
+      'contact-rr-001',
+      'cf-w1u1-rr@halworker85.gmail.com',
+      'Brenda',
+      '1042',
+      1499,
+      [{ name: 'Wilderness Log Frame', slug: 'wilderness-log' }],
+    );
+    const step4 = __getInserted('EmailQueue').find(r => r.sequenceStep === 4);
+    expect(step4.variables).toMatchObject({
+      firstName: 'Brenda',
+      orderNumber: '1042',
+      productNames: 'Wilderness Log Frame',
+    });
+    expect(step4.variables.reviewUrl).toMatch(/wilderness-log#reviews$/);
+  });
+
+  it.todo('per-order dedup — only one reward email per order across multiple line items (integration-level)');
 });
 
 // ── 8/13 — post_purchase_referral ──────────────────────────────────────────
 
 describe('post_purchase_referral', () => {
-  it.todo('cf-c6g5: events.js#wixEcom_onOrderDelivered queues post_purchase_referral at +21d');
-  it.todo('cf-c6g5: variables include {firstName, referralCode, referralUrl, referrerCredit, friendDiscount}');
-  it.todo('cf-c6g5: skipped if member has already sent a referral this quarter');
+  // post_purchase_referral is step 5 of triggerPostPurchaseSequence,
+  // delayHours: 360 (Day 15 — CF-6p0o). Per-source comment, this corrects
+  // the original cf-icww audit-row's "+21d" estimate to the actual cadence.
+
+  it('post_purchase_referral queues as step 5 at +360h (Day 15)', async () => {
+    const before = Date.now();
+    await triggerPostPurchaseSequence(
+      'contact-ref-001',
+      'cf-w1u1-ref@halworker85.gmail.com',
+      'Brenda',
+      '1042',
+      1499,
+      [{ name: 'Wilderness Log Frame', slug: 'wilderness-log' }],
+    );
+    const step5 = __getInserted('EmailQueue').find(r => r.sequenceStep === 5);
+    expect(step5).toBeDefined();
+    expect(step5.templateId).toBe('post_purchase_referral');
+    const expectedOffset = 360 * 60 * 60 * 1000;
+    expect(step5.scheduledFor.getTime() - before).toBeGreaterThanOrEqual(expectedOffset - 1000);
+    expect(step5.scheduledFor.getTime() - before).toBeLessThanOrEqual(expectedOffset + 5000);
+  });
+
+  it('referral step variables include {firstName, referralUrl, referralCode} (sentinel defaults for guest checkouts)', async () => {
+    // No opts.memberId → CF-lwkt guest-checkout path: sentinel defaults.
+    await triggerPostPurchaseSequence(
+      'contact-ref-001',
+      'cf-w1u1-ref@halworker85.gmail.com',
+      'Brenda',
+      '1042',
+      1499,
+      [{ name: 'Wilderness Log Frame', slug: 'wilderness-log' }],
+    );
+    const step5 = __getInserted('EmailQueue').find(r => r.sequenceStep === 5);
+    expect(step5.variables.firstName).toBe('Brenda');
+    expect(step5.variables.referralUrl).toMatch(/\/referral$/);
+    expect(step5.variables.referralCode).toBe('');
+  });
+
+  it.todo('per-quarter referral dedup (not yet implemented — file follow-up bead if business signs off)');
 });
 
 // ── 9/13 — promotional_sale (3 promo templates) ────────────────────────────
 
 describe('promotional_sale | promotional_new_arrival | promotional_seasonal', () => {
-  it.todo('cf-c6g5: queuePromotionalEmail batch-fires promotional_sale to a marketingConsent=true segment');
-  it.todo('cf-c6g5: skips contacts on the unsubscribe list');
-  it.todo('cf-c6g5: variables include {firstName, promoTitle, promoSubtitle, ctaUrl, ctaText, discountCode}');
-  it.todo('cf-c6g5: A/B variant routing via emailABService picks one of (sale|new_arrival|seasonal) per segment');
-  it.todo('cf-c6g5: staging E2E — manually-launched campaign lands in halworker85+test within 5min');
+  const PROMO_RECIPIENTS = [
+    { email: 'promo-a@halworker85.gmail.com', firstName: 'Asha', contactId: 'contact-a' },
+    { email: 'promo-b@halworker85.gmail.com', firstName: 'Bran', contactId: 'contact-b' },
+  ];
+  const CAMPAIGN = { saleName: 'Memorial Day', discountPercent: '20', promoCode: 'MEM20' };
+
+  it('queuePromotionalEmail batch-queues promotional_sale to each recipient', async () => {
+    const result = await queuePromotionalEmail('promotional_sale', PROMO_RECIPIENTS, CAMPAIGN);
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(2);
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(2);
+    expect(queued.every(r => r.templateId === 'promotional_sale')).toBe(true);
+    expect(queued.every(r => r.sequenceType === 'promotional')).toBe(true);
+  });
+
+  it('skips contacts on the unsubscribe list (sequenceType: all | promotional)', async () => {
+    __seed('Unsubscribes', [
+      { email: 'promo-a@halworker85.gmail.com', sequenceType: 'all' },
+    ]);
+    const result = await queuePromotionalEmail('promotional_sale', PROMO_RECIPIENTS, CAMPAIGN);
+    expect(result.queued).toBe(1);
+    expect(result.skipped).toBe(1);
+    const queued = __getInserted('EmailQueue');
+    expect(queued).toHaveLength(1);
+    expect(queued[0].recipientEmail).toBe('promo-b@halworker85.gmail.com');
+  });
+
+  it('queued variables merge campaign data with {firstName, email}', async () => {
+    await queuePromotionalEmail('promotional_sale', PROMO_RECIPIENTS, CAMPAIGN);
+    const queued = __getInserted('EmailQueue');
+    const asha = queued.find(r => r.recipientEmail === 'promo-a@halworker85.gmail.com');
+    expect(asha.variables).toMatchObject({
+      firstName: 'Asha',
+      email: 'promo-a@halworker85.gmail.com',
+      saleName: 'Memorial Day',
+      discountPercent: '20',
+      promoCode: 'MEM20',
+    });
+  });
+
+  it.todo('A/B variant routing via emailABService picks one of (sale|new_arrival|seasonal) per segment');
+  it.todo('staging E2E (blocked on staging Velo backend): manually-launched campaign lands in halworker85+test within 5min');
 });
 
 // ── 10/13 — reengagement (reengagement_1..3) ───────────────────────────────
 
 describe('reengagement (reengagement_1..3)', () => {
-  it.todo('cf-c6g5: triggerReengagementCron picks up 30d-inactive members and queues reengagement_1');
-  it.todo('cf-c6g5: reengagement_2 at +37d, _3 at +51d if still inactive');
-  it.todo('cf-c6g5: variables include {firstName, lastVisitDate, recommendedProducts, comebackUrl}');
-  it.todo('cf-c6g5: skipped if member opens any email between queue and send');
+  // Code reality (src/backend/emailAutomation.web.js#triggerReengagement):
+  //   - dormancy threshold = 90 days (MemberPoints.lastActivityAt)
+  //   - all 3 steps queued up-front with offsets 0h / 168h / 504h
+  //     (Day 0 / Day 7 / Day 21 — cf-bpt cadence, NOT 30/37/51 as the
+  //     legacy todo suggested)
+  //   - skip-if-already-sent dedup queries EmailQueue for prior
+  //     reengagement rows for the same recipient.
+
+  const DORMANT_MEMBER_ID = 'mem-dormant-001';
+  const DORMANT_EMAIL = 'cf-w1u1-dormant@halworker85.gmail.com';
+
+  function seedDormantMember() {
+    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
+    __seed('MemberPoints', [
+      { _id: 'mp-1', memberId: DORMANT_MEMBER_ID, lastActivityAt: ninetyOneDaysAgo },
+    ]);
+    __seed('Members/PrivateMembersData', [
+      {
+        _id: DORMANT_MEMBER_ID,
+        loginEmail: DORMANT_EMAIL,
+        contactId: 'contact-dormant-001',
+        firstName: 'Dorian',
+      },
+    ]);
+  }
+
+  it('triggerReengagement queues all 3 reengagement_* steps for a 90d-inactive member', async () => {
+    seedDormantMember();
+    const result = await triggerReengagement();
+    expect(result.success).toBe(true);
+    expect(result.contacted).toBe(1);
+    const queued = __getInserted('EmailQueue').sort((a, b) => a.sequenceStep - b.sequenceStep);
+    expect(queued.map(r => r.templateId)).toEqual(['reengagement_1', 'reengagement_2', 'reengagement_3']);
+    expect(queued.every(r => r.sequenceType === 'reengagement')).toBe(true);
+    expect(queued.every(r => r.recipientEmail === DORMANT_EMAIL)).toBe(true);
+  });
+
+  it('steps schedule at +0h / +168h / +504h (cf-bpt Day 0 / 7 / 21 cadence)', async () => {
+    seedDormantMember();
+    const before = Date.now();
+    await triggerReengagement();
+    const queued = __getInserted('EmailQueue').sort((a, b) => a.sequenceStep - b.sequenceStep);
+    const expectedOffsetsHours = [0, 168, 504];
+    for (let i = 0; i < queued.length; i++) {
+      const expectedOffset = expectedOffsetsHours[i] * 60 * 60 * 1000;
+      const actualOffset = queued[i].scheduledFor.getTime() - before;
+      expect(actualOffset).toBeGreaterThanOrEqual(expectedOffset - 1000);
+      expect(actualOffset).toBeLessThanOrEqual(expectedOffset + 5000);
+    }
+  });
+
+  it('queued variables include {firstName, discountCode, email}', async () => {
+    seedDormantMember();
+    await triggerReengagement();
+    const step1 = __getInserted('EmailQueue').find(r => r.sequenceStep === 1);
+    expect(step1.variables).toMatchObject({
+      firstName: 'Dorian',
+      discountCode: 'COMEBACK15',
+      email: DORMANT_EMAIL,
+    });
+  });
+
+  it.todo('cross-sequence open-event dedup — skipped if member opens any email between queue and send (integration; depends on engagement-event ingestion)');
 });
 
 // ── 11/13 — winback (CMS-driven, see audit Note for row 14) ────────────────
 
 describe('winback (CMS-driven step IDs)', () => {
-  it.todo('cf-c6g5: scanAndTriggerWinback reads EmailSequences[sequenceType=winback,active=true] and queues step 1');
-  it.todo('cf-c6g5: subsequent steps fire on each cron tick honoring the per-step delay');
-  it.todo('cf-c6g5: per-template variables match the schema in EmailSequences.steps[].variables');
-  it.todo('cf-c6g5: cf-6k6u correction respected — no fabricated `lifecycle_winback_*` IDs');
+  // Winback is CMS-driven: scanAndTriggerWinback reads
+  // EmailSequences[sequenceType=winback, active=true] and queues the
+  // configured step templates. Trigger lives in
+  // src/backend/marketingSequences.web.js — kept out of this file's
+  // import surface; coverage lives in tests/marketingSequences*.test.js.
+  it.todo('scanAndTriggerWinback reads EmailSequences[sequenceType=winback,active=true] and queues step 1 (covered in tests/marketingSequences*.test.js)');
+  it.todo('subsequent steps fire on each cron tick honoring the per-step delay');
+  it.todo('per-template variables match the schema in EmailSequences.steps[].variables');
+  it.todo('cf-6k6u correction respected — no fabricated `lifecycle_winback_*` IDs');
+  it.todo('staging E2E (blocked on staging Velo backend): winback step 1 lands in halworker85+test inbox');
 });
 
 // ── 12/13 — browse_recovery (browse_recovery_1) ────────────────────────────
 
 describe('browse_recovery', () => {
-  it.todo('cf-c6g5: triggerBrowseRecoveryCron queues browse_recovery_1 for 24h-abandoned PDP visits');
-  it.todo('cf-c6g5: variables include {firstName, lastViewedProduct, productImageUrl, productUrl}');
-  it.todo('cf-c6g5: skipped if member adds the same product to cart between queue and send');
+  // triggerBrowseRecoveryCron + the BrowseRecovery collection live in
+  // src/backend/marketingSequences.web.js / browseRecovery.web.js — outside
+  // this file's import surface. Coverage lives in
+  // tests/marketingSequences*.test.js.
+  it.todo('triggerBrowseRecoveryCron queues browse_recovery_1 for 24h-abandoned PDP visits (covered in tests/marketingSequences*.test.js)');
+  it.todo('variables include {firstName, lastViewedProduct, productImageUrl, productUrl}');
+  it.todo('skipped if member adds the same product to cart between queue and send');
+  it.todo('staging E2E (blocked on staging Velo backend): browse_recovery_1 lands in halworker85+test inbox');
 });
 
 // ── 13/13 — wishlist_price_drop ────────────────────────────────────────────
 
 describe('wishlist_price_drop', () => {
-  it.todo('cf-c6g5: checkWishlistAlerts sends wishlist_price_drop for any wishlist row whose product price decreased ≥5%');
-  it.todo('cf-c6g5: variables include {firstName, productName, oldPrice, newPrice, productUrl}');
-  it.todo('cf-c6g5: dedup — only one alert per (member, product) per 30d window');
+  // checkWishlistAlerts lives in src/backend/wishlist.web.js — outside
+  // this file's import surface. Coverage lives in
+  // tests/wishlist*.test.js.
+  it.todo('checkWishlistAlerts sends wishlist_price_drop for any wishlist row whose product price decreased ≥5% (covered in tests/wishlist*.test.js)');
+  it.todo('variables include {firstName, productName, oldPrice, newPrice, productUrl}');
+  it.todo('dedup — only one alert per (member, product) per 30d window');
+  it.todo('staging E2E (blocked on staging Velo backend): wishlist_price_drop lands in halworker85+test inbox');
 });
 
 // ── Smoke harness ──────────────────────────────────────────────────────────
