@@ -59,6 +59,15 @@ All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships vi
 
 **HEALTHY** (Wix Headless identity SDK, separate from Velo): /signup register, /account/forgot-password reset-link.
 
+**HEALTHY — Pass 4 additions (internal cfw API, not Velo):**
+- PDP ZIP estimator: Kingston × NC(28792)→white-glove 1-2d, CA(90210)→LTL 5-7d, MA/CT/VT/NH/ME/NJ/RI leading-zero ZIPs all → LTL 3-5d (mid zone, CORRECT)
+- /getting-it-home: ZIP 28792 → "Store Local · Curbside $39 · White-glove $99 · 2-4 business days"
+
+**cf-wihs P1 status update (PDP path):** All 5 northeast leading-zero ZIPs route correctly via /api/delivery-zone (mid zone, 3-5 days). Bug either ALREADY FIXED or LIMITED TO checkout-side path (Wix `getShippingZone`, currently can't be exercised due to Velo-cluster gate). Recommended jasper verify and narrow/close bead.
+
+**Pass 4 new bead (NOT Velo cluster):**
+- **cf-kuc9 P2** — Cart drawer coupon entry leaks raw Wix SDK JSON error payload on invalid code (e.g. `{"applicationError":{"code":"ERROR_COUPON_..."}}`). UX + info-leak smell. Adjacent (P3 candidate, not filed): /cart PAGE has no coupon entry — only cart DRAWER does.
+
 Screenshots: `crew/miquella/qa-forms-*.png` (12 PNGs at 1280 + 390 viewports).
 
 ---
