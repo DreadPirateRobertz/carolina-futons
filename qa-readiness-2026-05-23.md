@@ -34,7 +34,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 - [ ] **cf-csxt P0** — /cart renders thumbnail + line price + subtotal + estimated total. (Currently OPEN. quartz implementing pending godfrey spec.)
 - [ ] **cf-zq3m P0** — /newsletter signup returns 2xx in prod. (Currently OPEN. rennala dead, owner reassignment pending.)
 - [ ] **cf-lsv4 P0** — overlay suppression on /compare + other pages. (Currently OPEN. obsidian.)
-- [ ] **cf-qyaf P0** — Mesa 5000 PDP ATC state confirmed (intentional in-store-only per Stilgar standing order OR genuine bug + Brenda backfill). (Stilgar action queue.)
+- [x] **cf-qyaf P0** ✅ CLOSED via **PR #980** (cf-x4j8 fallback UI: in-store-only PDP for Mesa 1000/3000/5000; `isInStoreOnly` predicate disjoint from cf-pdp-g4 call-for-price; PdpInStoreOnlyCta server component with tel link). blaidd pair-implemented after quartz offline. **Follow-on:** `cf-tat7` P3 — "Price locked 14 days" copy still renders in no-price state; should swap to "In-store only". Owner godfrey, cf-ukc6 batched.
 - [x] **cfw-o45 P1** — /account ↔ /dashboard redirect loop ✅ MERGED via PR #968.
 - [ ] **cfw-fpnu** — pre-verify sign-in 502 (opal **PR #976.2 pending**, edge-runtime fix). Stress-test criterion: pre-verify sign-in returns clean "verification required" state, not 502.
 - [ ] **Wix verify-email config** — verify-link delivery to halworker85 inbox. BLOCKED on Stilgar config (escalated). Without this, post-verify sign-in step of canonical register flow can't be exercised.
@@ -60,7 +60,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 - [ ] 1. cf-g3z6 Sedona/Asheville price intent
 - [ ] 2. cf-v275 /shop/sofa-beds path
 - [ ] 3. cf-oi01 Wix-config vs Path B
-- [ ] 4. cf-qyaf Mesa 5000 intent
+- [x] 4. ✅ cf-qyaf Mesa 5000 intent — RESOLVED via PR #980 (in-store-only fallback UI; standing order confirmed)
 - [ ] 5. cf-zq3m newsletter restart authorize
 - [ ] 6. cf-3qt.8 DNS cutover go
 - [ ] 7. cf-3qt.8.31 UptimeRobot API key
