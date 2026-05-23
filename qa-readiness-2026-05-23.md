@@ -52,7 +52,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 - [ ] blaidd: /, /shop hub, 5 PLPs, /search, /compare — screenshots in `crew/blaidd/`
 - [ ] godfrey: 8 PDPs × Full/Queen × Cherry/Chocolate × mobile/desktop — screenshots in `crew/godfrey/`
 - [x] morgott: /account anon + /signup + register flow + sign-in success/fail ✅ — `crew/morgott/auth-tour-2026-05-23.md` + 8 PNGs (`auth-tour-*.png` — naming-spec deviation acceptable, doc is canonical)
-- [ ] millicent: /reviews + /sitemap.xml + /robots.txt + /faq + /contact + footer — screenshots in `crew/millicent/`
+- [x] millicent: /reviews + /sitemap.xml + /robots.txt + /faq + /contact + footer + /asdf + /500 ✅ — `crew/millicent/qa-tour-full-2026-05-23.md` + 20 PNGs in canonical convention
 - [ ] **Defect filing discipline:** every finding → bead with route+viewport+repro+screenshot+priority
 
 ### Stilgar morning decisions (7 items — full list in "Stilgar action queue" section below)
@@ -103,6 +103,25 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 ---
 
 ## Incoming defect reports (synthesis-mode)
+
+### millicent — SEO + nav + footer + /reviews + rennala-residual (received 2026-05-23 evening)
+
+**Doc:** `crew/millicent/qa-tour-full-2026-05-23.md` (+ 20 PNGs in canonical `qa-tour-<route>-<viewport>.png` convention) ✅
+**Coverage:** /reviews, /sitemap.xml, /robots.txt, /asdf (404), /500 literal, /faq, /contact, footer × all entries
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| cf-2539 | P3 | melania | /500 literal path returns HTTP 500 on prod (Next.js default global-error chrome, branded `error.tsx` never reached). Dev returns 404. Cross-linked to cf-ofiw + cfw-gpde. |
+
+**Verified PASS (no defect):**
+- /sitemap.xml + /robots.txt (structural + content)
+- /asdf 404 (branded not-found.tsx reached correctly in prod)
+- /faq + /contact (structural + SEO)
+- footer 15/15 links return 200
+
+**Cross-reference:** cfw-gpde evidence (/reviews empty placeholder, GBP creds not provisioned) was captured during this tour. radahn nudged for GBP creds (wait-idle).
+
+**millicent standing-by for next or re-tour at higher fidelity (form submissions, filter interactions).**
 
 ### morgott — auth-flow tour (received 2026-05-23 evening)
 
