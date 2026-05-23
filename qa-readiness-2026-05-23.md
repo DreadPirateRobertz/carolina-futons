@@ -16,12 +16,60 @@ Proactive exhaustive sweep before tomorrow's stress test. Every page, every butt
 | blaidd | /, /shop hub, 5 PLPs, /search empty+query, /compare 0/1/2/4-product states | DISPATCHED 2026-05-23 |
 | godfrey | 8+ PDPs (Kingston/Albany/Sunrise/Mesa/Murphy/Solstice/Wilderness/Charleston) × Full/Queen × Cherry/Chocolate × mobile+desktop | DISPATCHED 2026-05-23 (parallel with cf-csxt spec) |
 | morgott | /account anon, /signup, post-disposable-register flow, sign-in success+fail | DISPATCHED 2026-05-23 |
-| rennala | /faq, /about, /press, /contact, /our-story, footer links every entry | ⚠️ DEAD — gap flagged to melania (blaidd already covered /press + /our-story) |
-| millicent | /reviews (gated on radahn GBP creds), /sitemap.xml, /robots.txt | DISPATCHED 2026-05-23 |
+| rennala | (DEAD — residual scope reassigned) | ⚠️ DEAD; residual → millicent |
+| millicent | /reviews (gated on radahn GBP creds), /sitemap.xml, /robots.txt + **rennala residual: /faq + /contact + footer** | DISPATCHED 2026-05-23 + residual added |
 
 **Coordinator (miquella):** synthesize incoming findings into this dashboard. File every defect via bead pattern (route+viewport+repro+screenshot+priority). Screenshots required at `crew/<name>/qa-tour-<route>-<viewport>.png`.
 
 **Viewport matrix:** mobile 390×844 (iPhone) + 360×800 (Android); desktop 1280×800 + 1920×1080.
+
+---
+
+## 🚦 STRESS-TEST READINESS CHECKLIST (Stilgar morning gate)
+
+Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings land.
+
+### Must-pass (go/no-go blockers)
+
+- [ ] **cf-csxt P0** — /cart renders thumbnail + line price + subtotal + estimated total. (Currently OPEN. quartz implementing pending godfrey spec.)
+- [ ] **cf-zq3m P0** — /newsletter signup returns 2xx in prod. (Currently OPEN. rennala dead, owner reassignment pending.)
+- [ ] **cf-lsv4 P0** — overlay suppression on /compare + other pages. (Currently OPEN. obsidian.)
+- [ ] **cf-qyaf P0** — Mesa 5000 PDP ATC state confirmed (intentional in-store-only per Stilgar standing order OR genuine bug + Brenda backfill). (Stilgar action queue.)
+- [x] **cfw-o45 P1** — /account ↔ /dashboard redirect loop ✅ MERGED via PR #968.
+
+### Should-pass (P1 fix or accept-and-document)
+
+- [ ] **cf-1h68** — header scroll flash (jasper)
+- [ ] **cf-8wkc** — SaleLightbox pointer-events blocking (obsidian)
+- [ ] **cf-o0wt** — /compare table mobile clip (obsidian, Stilgar finding)
+- [ ] **cf-3qt.8** — DNS cutover go-decision (Stilgar action queue, gates Vercel Pro + cutover window)
+- [ ] **cf-3qt.8.31** — UptimeRobot API key (Stilgar action queue, post-cutover monitoring)
+
+### Coverage (proactive tour)
+
+- [ ] blaidd: /, /shop hub, 5 PLPs, /search, /compare — screenshots in `crew/blaidd/`
+- [ ] godfrey: 8 PDPs × Full/Queen × Cherry/Chocolate × mobile/desktop — screenshots in `crew/godfrey/`
+- [ ] morgott: /account anon + /signup + register flow + sign-in success/fail — screenshots in `crew/morgott/`
+- [ ] millicent: /reviews + /sitemap.xml + /robots.txt + /faq + /contact + footer — screenshots in `crew/millicent/`
+- [ ] **Defect filing discipline:** every finding → bead with route+viewport+repro+screenshot+priority
+
+### Stilgar morning decisions (7 items — full list in "Stilgar action queue" section below)
+
+- [ ] 1. cf-g3z6 Sedona/Asheville price intent
+- [ ] 2. cf-v275 /shop/sofa-beds path
+- [ ] 3. cf-oi01 Wix-config vs Path B
+- [ ] 4. cf-qyaf Mesa 5000 intent
+- [ ] 5. cf-zq3m newsletter restart authorize
+- [ ] 6. cf-3qt.8 DNS cutover go
+- [ ] 7. cf-3qt.8.31 UptimeRobot API key
+
+### Standing-order confirmations (intentional, do not regress)
+
+- [x] CF Customer Warranty = 15 years universally (CANONICAL block in `manufacturer-mapping-2026-05-22.md`)
+- [x] Mesa 1000/3000/5000 = in-store-only (no PDP price expected; "Call for current pricing" copy correct)
+- [x] /products/pulsar displays "Moonshadow" (slug-name divergence intentional)
+- [x] /shop/sale empty + Spring Sale modal hardcoded = redirect handed off (cf-b7mu → onyx)
+- [x] cf-ukc6 conservation — NO QA-tour Vercel pushes, fix-PRs only
 
 ---
 
@@ -34,7 +82,7 @@ Proactive exhaustive sweep before tomorrow's stress test. Every page, every butt
 | **Beads filed today (cfutons_web)** | 12 (cfw-o45, cfw-hl4, cfw-pe7, cfw-bgb, cfw-ob6a, cfw-w8ee, cfw-ytzx, cfw-87m, cfw-gpde, cfw-jo5q, cfw-2jm3, cfw-y17d) |
 | **Beads closed today** | 6 (cf-tm1e, cf-wyc0, cf-r7gc, cfw-o45, cfw-hl4, cfw-jo5q, cfw-2jm3) |
 | **Open P0** | 3 (cf-csxt, cf-qyaf, cf-zq3m) |
-| **Open P1** | 4 (cf-1h68, cf-8wkc, cf-3qt.8, cf-3qt.8.31) |
+| **Open P1** | 5 (cf-1h68, cf-8wkc, cf-3qt.8, cf-3qt.8.31, **cf-o0wt** /compare mobile clip — Stilgar finding) |
 | **Open P2** | 8 |
 | **Open P3+** | 11 |
 
