@@ -10,7 +10,7 @@
 
 | Bead | Owner | Status | Blocks |
 |---|---|---|---|
-| cfw-o45 | opal (Linux) | OPEN | ALL sign-in QA |
+| cfw-o45 | opal (Linux) | ✅ MERGED via PR #968 admin-merge ~2026-05-23 | (CLEARED) — ALL sign-in QA unblocked |
 | cf-csxt | quartz (Linux) — godfrey writing spec, miquella reviewing | OPEN | purchase-flow QA |
 | cf-lsv4 | obsidian (Linux) | OPEN | reduces QA friction |
 | cf-zq3m | rennala (Mac) | OPEN | newsletter signup QA |
@@ -23,7 +23,7 @@
 | Crew | Family | Status |
 |---|---|---|
 | godfrey | PDP × 10 products × Full/Queen × Finish × ATC | ✅ cf-flmv re-verify done; standby for cf-csxt review (miquella reviewer) — pinged 2026-05-23 |
-| blaidd | Account flow (post-cfw-o45) | warranty BLOCKED; ✅ /reviews + /press + /our-story tour DONE (360/390/1280/1920, 12 PNGs) — 4 beads filed, see below |
+| blaidd | Account flow (post-cfw-o45) | ✅ /reviews+/press+/our-story tour DONE (4 beads); cfw-o45 now MERGED → account flow UNBLOCKED, live tour in progress |
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
 | morgott | /design-a-room → cfw-y17d | ✅ /design-a-room + cf-r7gc done; ROUTED 2026-05-23 to cfw-y17d (/our-story permanentRedirect cleanup from blaidd) |
 | rennala | Forms (contact / newsletter / swatch) + /search | ❌ DEAD per watchdog 2026-05-23; mayor restart pending |
