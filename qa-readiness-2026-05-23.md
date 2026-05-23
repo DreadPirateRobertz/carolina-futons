@@ -13,16 +13,20 @@ melania applied Fix B to `/Users/hal/gt/scripts/nudge-linux.sh` ~09:21 UTC; veri
 
 **Next infra step:** gt nudge (Mac-internal Go path) audit — same shape may apply (per melania).
 
-## SEO POLISH CONVOY ✅ EXPANDED to 7 beads — routed to onyx
+## SEO POLISH CONVOY ✅ EXPANDED to 9+ beads — routed to onyx
 
 Single Linux PR via **onyx** (per melania 2026-05-23):
 - cf-9us5 P3 — STATIC_PATHS += '/compare' in `src/app/sitemap.ts`
 - cf-l7iv P3 — 6 PLP+hub meta descriptions rewritten (147-160 chars, voice-matched)
 - cf-xvif P3 — CollectionPage+ItemList JSON-LD via new `buildCollectionPageSchema`
 - cf-ofiw P3 — sitemap dev-port fallback + not-found.tsx metadata (part (c) DEFERRED)
-- **cf-djsh P1** (joined 17:13 UTC) — og:url missing on 6/8 audited routes; mirror /getting-it-home + /spring-sale pattern
-- **cf-o6fr P1** (joined 17:13 UTC) — og:type missing on same 6 routes; same fix as cf-djsh (single openGraph patch)
-- **cf-qv8v P1** (joined 17:13 UTC) — PDP Product JSON-LD missing sku + brand + aggregateRating; extend `buildProductSchema()` with manufacturer-as-brand (Stilgar canonical 2026-05-22: N&D / KD Frames / Otis Bed / Sealy / Log-Futon-Co)
+- cf-djsh P1 — og:url missing on 6/8 audited routes; mirror /getting-it-home + /spring-sale pattern
+- cf-o6fr P1 — og:type missing on same 6 routes; same fix as cf-djsh (single openGraph patch)
+- cf-qv8v P1 — PDP Product JSON-LD missing sku + brand + aggregateRating; extend `buildProductSchema()` with manufacturer-as-brand
+- **cf-cg38 P2** (joined 17:17 UTC) — 5/5 unpriced PDPs leak price=0.00+InStock in JSON-LD (Asheville/Sedona + Mesa 1000/3000/5000). Same `buildProductSchema()` fix surface as cf-qv8v
+- **cf-0yhu P1** (joined 17:17 UTC) — All blog posts missing og:image — extend blog generateMetadata to derive openGraph.images from coverImage
+
+**Proposed 10th bead** (awaiting melania greenlight): **cf-4dmb P2** — /search result-card $0.00 leak. Same `isInStoreOnly()` predicate cf-cg38 introduces. Single touch-up across two components (`SearchResultCard` + `buildProductSchema`).
 
 ---
 
