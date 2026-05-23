@@ -25,7 +25,7 @@
 | godfrey | PDP × 10 products × Full/Queen × Finish × ATC | unstarted (per coordinator visibility) |
 | blaidd | Account flow (post-cfw-o45) | BLOCKED on cfw-o45 |
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
-| morgott | /design-a-room | unstarted |
+| morgott | /design-a-room | ✅ COMPLETE — 4 beads filed (jasper), see below |
 | rennala | Forms (contact / newsletter / swatch) + /search | unstarted |
 | millicent | SEO + nav + footer | unstarted |
 | radahn | Search/filter UX deep dive | unstarted |
@@ -77,6 +77,30 @@ Mobile sweep on remaining 5 PLPs deferred — desktop pass is the higher-signal 
 Already-closed during session: cf-tm1e (referral parity), cf-wyc0 (white-glove threshold intentional).
 
 Already-blocked: cf-oi01 (E2E real-shipping, Wix-side config gap, mailed Stilgar).
+
+---
+
+---
+
+## Incoming crew reports
+
+### morgott — /design-a-room (received 2026-05-23 via nudge)
+
+**Doc:** `crew/morgott/qa-design-a-room-deep-dive-2026-05-23.md` (+ screenshots `qa-dar-{1280,1920,390}-*` + `qa-design-a-room-{initial,dark-rustic-murphy}.png`)
+**Viewports covered:** 1280×800, 1920×1080, 390×844, 360×800 ✅ full mandate matrix
+**cf-ukc6 compliance:** ✅ read-only
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| cfw-ob6a | P2 | jasper | `max-w-[65ch]` article clips widget sections at desktop (content is 27% of 1920 viewport). Source: `src/app/design-a-room/page.tsx:92` |
+| cfw-w8ee | P2 | jasper | Mobile horizontal scroll: +41px at 390, +71px at 360. Room plan canvas leaks past `overflow-x-auto` wrapper |
+| cfw-ytzx | P3 | jasper | 11 interactive controls (style/product switchers + drag palette) are 30px tall — fail WCAG 2.5.5 44×44 |
+| cfw-87m | P3 | jasper | UPDATED — scenes are programmatic inline SVG, 2 scene-SVG preloads + 2 empty-href preloads fetch unused files |
+
+**Verified OK:** Style+Product 9-combo switcher, theme toggle persists via `cf-theme` localStorage, scene re-renders on switcher click.
+**Coverage gap (no bead, recommendation only):** Drag-drop e2e — Playwright synthetic dnd dispatch fails on Chrome HTML5 native dnd. Recommendation in morgott's doc §7: `e2e/design-a-room-drag-drop.spec.ts` using real `page.mouse.move/down/up`.
+**cf-lsv4 re-confirmation:** overlays (Sale + Pwa + Consent) still render on /design-a-room — dismissal persists via `cf-promo-dismissed`.
+**morgott status:** holding for next-route from melania (no autonomous reassignment — that's melania's prerogative).
 
 ---
 
