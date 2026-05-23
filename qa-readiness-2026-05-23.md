@@ -13,13 +13,16 @@ melania applied Fix B to `/Users/hal/gt/scripts/nudge-linux.sh` ~09:21 UTC; veri
 
 **Next infra step:** gt nudge (Mac-internal Go path) audit — same shape may apply (per melania).
 
-## SEO POLISH CONVOY ✅ READY — routed to onyx
+## SEO POLISH CONVOY ✅ EXPANDED to 7 beads — routed to onyx
 
-All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships via **onyx**:
+Single Linux PR via **onyx** (per melania 2026-05-23):
 - cf-9us5 P3 — STATIC_PATHS += '/compare' in `src/app/sitemap.ts`
 - cf-l7iv P3 — 6 PLP+hub meta descriptions rewritten (147-160 chars, voice-matched)
 - cf-xvif P3 — CollectionPage+ItemList JSON-LD via new `buildCollectionPageSchema`
-- cf-ofiw P3 — sitemap dev-port fallback + not-found.tsx metadata (part (c) error.tsx Client/Server split DEFERRED)
+- cf-ofiw P3 — sitemap dev-port fallback + not-found.tsx metadata (part (c) DEFERRED)
+- **cf-djsh P1** (joined 17:13 UTC) — og:url missing on 6/8 audited routes; mirror /getting-it-home + /spring-sale pattern
+- **cf-o6fr P1** (joined 17:13 UTC) — og:type missing on same 6 routes; same fix as cf-djsh (single openGraph patch)
+- **cf-qv8v P1** (joined 17:13 UTC) — PDP Product JSON-LD missing sku + brand + aggregateRating; extend `buildProductSchema()` with manufacturer-as-brand (Stilgar canonical 2026-05-22: N&D / KD Frames / Otis Bed / Sealy / Log-Futon-Co)
 
 ---
 
