@@ -31,8 +31,9 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 
 ### Must-pass (go/no-go blockers)
 
-- [ ] **cf-csxt P0** — /cart renders thumbnail + line price + subtotal + estimated total. (Currently OPEN. quartz implementing pending godfrey spec.)
-- [ ] **cf-zq3m P0** — /newsletter signup returns 2xx in prod. (Currently OPEN. rennala dead, owner reassignment pending.)
+- [x] **cf-csxt P0** ✅ **CLOSED via PR #986**. quartz shipped. Follow-on: **cfw-j064 P1** (wix:image:// regression) is the actively-open child to track.
+- [ ] **cf-zq3m P0** — /newsletter signup returns 2xx in prod. Still **Stilgar-Velo-publish-gated** (config-side blocker, not code).
+- [ ] **cfw-j064 P1** — wix:image:// regression (cf-csxt follow-on child, actively-open).
 - [ ] **cf-lsv4 P0** — overlay suppression on /compare + other pages. (Currently OPEN. obsidian.)
 - [x] **cf-qyaf P0** ✅ CLOSED via **PR #980** (cf-x4j8 fallback UI: in-store-only PDP for Mesa 1000/3000/5000; `isInStoreOnly` predicate disjoint from cf-pdp-g4 call-for-price; PdpInStoreOnlyCta server component with tel link). blaidd pair-implemented after quartz offline. **Follow-on:** `cf-tat7` P3 — "Price locked 14 days" copy still renders in no-price state; should swap to "In-store only". Owner godfrey, cf-ukc6 batched.
 - [x] **cfw-o45 P1** — /account ↔ /dashboard redirect loop ✅ MERGED via PR #968.
@@ -84,7 +85,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 | **Beads filed today (cfutons)** | 11 (cf-b7mu, cf-ogzg, cf-swqw, cf-g3z6, cf-v275, cf-csxt, cf-qyaf, cf-5dph, cf-8wkc, cf-1h68, cf-t19r) |
 | **Beads filed today (cfutons_web)** | 12 (cfw-o45, cfw-hl4, cfw-pe7, cfw-bgb, cfw-ob6a, cfw-w8ee, cfw-ytzx, cfw-87m, cfw-gpde, cfw-jo5q, cfw-2jm3, cfw-y17d) |
 | **Beads closed today** | 6 (cf-tm1e, cf-wyc0, cf-r7gc, cfw-o45, cfw-hl4, cfw-jo5q, cfw-2jm3) |
-| **Open P0** | 2 (cf-csxt, cf-zq3m) — cf-qyaf ✅ closed via PR #980; cf-uwhv ✅ closed (false-positive, already fixed by PR #988) |
+| **Open P0** | 1 (cf-zq3m, Stilgar-Velo-publish-gated) — cf-qyaf/PR #980, cf-csxt/PR #986, cf-uwhv (false-positive)/PR #988 all ✅ closed. cfw-j064 P1 is the actively-open cart child. |
 | **Open P1** | 5 (cf-1h68, cf-8wkc, cf-3qt.8, cf-3qt.8.31, **cf-o0wt** /compare mobile clip — Stilgar finding) |
 | **Open P2** | 8 |
 | **Open P3+** | 11 |
