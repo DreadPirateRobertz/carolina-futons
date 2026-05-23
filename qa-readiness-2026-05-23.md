@@ -7,6 +7,24 @@
 
 ---
 
+## STILGAR FULL-SITE TOUR (issued 2026-05-23 evening)
+
+Proactive exhaustive sweep before tomorrow's stress test. Every page, every button, mobile+desktop, screenshot every key state.
+
+| Crew | Scope | Status |
+|---|---|---|
+| blaidd | /, /shop hub, 5 PLPs, /search empty+query, /compare 0/1/2/4-product states | DISPATCHED 2026-05-23 |
+| godfrey | 8+ PDPs (Kingston/Albany/Sunrise/Mesa/Murphy/Solstice/Wilderness/Charleston) × Full/Queen × Cherry/Chocolate × mobile+desktop | DISPATCHED 2026-05-23 (parallel with cf-csxt spec) |
+| morgott | /account anon, /signup, post-disposable-register flow, sign-in success+fail | DISPATCHED 2026-05-23 |
+| rennala | /faq, /about, /press, /contact, /our-story, footer links every entry | ⚠️ DEAD — gap flagged to melania (blaidd already covered /press + /our-story) |
+| millicent | /reviews (gated on radahn GBP creds), /sitemap.xml, /robots.txt | DISPATCHED 2026-05-23 |
+
+**Coordinator (miquella):** synthesize incoming findings into this dashboard. File every defect via bead pattern (route+viewport+repro+screenshot+priority). Screenshots required at `crew/<name>/qa-tour-<route>-<viewport>.png`.
+
+**Viewport matrix:** mobile 390×844 (iPhone) + 360×800 (Android); desktop 1280×800 + 1920×1080.
+
+---
+
 ## Headline metrics
 
 | Metric | Count |
