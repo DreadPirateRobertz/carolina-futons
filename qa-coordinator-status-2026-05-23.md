@@ -135,7 +135,7 @@ Stilgar's canonical resolutions applied to `crew/melania/manufacturer-mapping-20
 
 Manufacturer buckets post-resolution: N&D 71 / Log-Futon-Co 5 / KD Frames 3 / Otis Bed 3 (+2 via live PDP) / Sealy 1 = 85 total.
 
-**cf-moyb closure path:** closes after godfrey lands SiteContent + /about updates aligning the customer-facing 15-year copy across all surfaces (site-banner / FAQ / About / SiteContent CMS keys).
+**cf-moyb closure path:** godfrey **PR #971** in flight (15-year SiteContent + /about banner). cf-moyb closes on PR #971 land.
 
 Note: the mapping doc is in melania's workspace (untracked locally) — she commits from her side when she next acts.
 
