@@ -23,6 +23,28 @@ All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships vi
 
 ---
 
+## FORMS AUDIT (issued Stilgar 10:25 + Mayor 10:55, miquella exec 2026-05-23 16:30-16:52 UTC)
+
+| Form | State | Verdict | Bead |
+|---|---|---|---|
+| /contact 'Send a message' | empty submit | ✅ HTML5 :invalid fires on 4 required fields | (note: no auto-focus to first invalid — a11y cleanup) |
+| /contact 'Send a message' | valid submit | ❌ FAILS: "We couldn't send that — please try again in a moment." | **cf-ousj P1** (NEW) |
+| /contact Turnstile banner | reading | ℹ️ "Security verification is temporarily unavailable" — matches melania's note that Turnstile lifts next deploy. Intent, not regression. | — |
+| Newsletter footer (/) | valid submit | ❌ FAILS: "We couldn't save that right now — please try again shortly." | cf-zq3m P0 (evidence added) |
+| /search | empty (no query) | ✅ Search input + "Try one of these: Futon frames / Mattresses / Murphy beds / Buying guides" — clean | — |
+| /search?q=kingston | valid query | ✅ "1 result for 'kingston'", tab filters All/Products/Pages/Articles render | — |
+| /search?q=zzzz... | no-results | ✅ "No results for 'zzzz...'. We couldn't find products, pages, or articles..." — clean | — |
+| /search?q=mattress | result-card | ❌ Mesa 5000 in-store-only renders **'$0.00'** instead of 'Call for pricing' or omit-price | **cf-4dmb P2** (NEW) |
+| /swatch-request | empty submit | ✅ Server-side validation: inline field-level errors per required field. Better UX than HTML5. | — |
+| /swatch-request | valid submit | ❌ FAILS: "We couldn't submit that — please try again in a moment." | **cf-tusv P1** (NEW) |
+| /contact mobile 390 | layout | ⚠️ Inputs 38px height, Subscribe button 40px — fail WCAG 2.5.5 44x44. Same shared input-class as /account+/signup. | cfw-433u P3 (scope expanded) |
+
+**Three prod-form failures with identical 'try again' copy pattern** (cf-zq3m / cf-ousj / cf-tusv) → strong hypothesis of SAME Velo /_functions/* backend gate. Single Stilgar-Velo-publish unblock likely fixes all three.
+
+Screenshots: `crew/miquella/qa-forms-*.png` (12 PNGs at 1280 + 390 viewports).
+
+---
+
 ## STILGAR FULL-SITE TOUR (issued 2026-05-23 evening)
 
 Proactive exhaustive sweep before tomorrow's stress test. Every page, every button, mobile+desktop, screenshot every key state.
