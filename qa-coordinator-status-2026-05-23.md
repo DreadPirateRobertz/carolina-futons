@@ -22,13 +22,13 @@
 ### Mac
 | Crew | Family | Status |
 |---|---|---|
-| godfrey | PDP × 10 products × Full/Queen × Finish × ATC | unstarted (per coordinator visibility) |
-| blaidd | Account flow (post-cfw-o45) | BLOCKED on cfw-o45 |
+| godfrey | PDP × 10 products × Full/Queen × Finish × ATC | ✅ cf-flmv re-verify done; standby for cf-csxt review (miquella reviewer) — pinged 2026-05-23 |
+| blaidd | Account flow (post-cfw-o45) | warranty BLOCKED; /reviews tour next — pinged 2026-05-23 |
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
-| morgott | /design-a-room | ✅ COMPLETE — 4 beads filed (jasper), see below |
-| rennala | Forms (contact / newsletter / swatch) + /search | unstarted |
+| morgott | /design-a-room | ✅ COMPLETE — 4 beads filed (jasper); awaiting melania next-route (pinged 2026-05-23) |
+| rennala | Forms (contact / newsletter / swatch) + /search | ❌ DEAD per watchdog 2026-05-23; mayor restart pending |
 | millicent | SEO + nav + footer | ⚠️ PARTIAL — cf-5dph P3 filed (desktop/mobile Sale-link divergence; convoy candidate with cf-b7mu+cf-ogzg) |
-| radahn | Search/filter UX deep dive | unstarted |
+| radahn | Search/filter UX deep dive | pinged 2026-05-23 — awaiting confirmation |
 | melania | SHIPPING API + ZIP validation E2E | unstarted |
 
 ### Linux
