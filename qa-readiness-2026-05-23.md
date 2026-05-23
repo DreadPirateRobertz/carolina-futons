@@ -36,6 +36,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 - [ ] **cf-lsv4 P0** — overlay suppression on /compare + other pages. (Currently OPEN. obsidian.)
 - [x] **cf-qyaf P0** ✅ CLOSED via **PR #980** (cf-x4j8 fallback UI: in-store-only PDP for Mesa 1000/3000/5000; `isInStoreOnly` predicate disjoint from cf-pdp-g4 call-for-price; PdpInStoreOnlyCta server component with tel link). blaidd pair-implemented after quartz offline. **Follow-on:** `cf-tat7` P3 — "Price locked 14 days" copy still renders in no-price state; should swap to "In-store only". Owner godfrey, cf-ukc6 batched.
 - [x] **cfw-o45 P1** — /account ↔ /dashboard redirect loop ✅ MERGED via PR #968.
+- [ ] **cf-uwhv P0** 🚨 **NEW** (miquella a11y audit 2026-05-23) — anon /account → /dashboard crashes with React #310. **BLOCKS ALL SIGN-IN QA** for stress test. cfw-o45 fix removed the loop but anon flow now crashes the destination. Repro verified twice. Screenshots in `crew/miquella/qa-a11y-{account-anon,dashboard-react-310}-crash.png` (commit `b2e7d747`).
 - [ ] **cfw-fpnu** — pre-verify sign-in 502 (opal **PR #976.2 pending**, edge-runtime fix). Stress-test criterion: pre-verify sign-in returns clean "verification required" state, not 502.
 - [ ] **Wix verify-email config** — verify-link delivery to halworker85 inbox. BLOCKED on Stilgar config (escalated). Without this, post-verify sign-in step of canonical register flow can't be exercised.
 
@@ -83,7 +84,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 | **Beads filed today (cfutons)** | 11 (cf-b7mu, cf-ogzg, cf-swqw, cf-g3z6, cf-v275, cf-csxt, cf-qyaf, cf-5dph, cf-8wkc, cf-1h68, cf-t19r) |
 | **Beads filed today (cfutons_web)** | 12 (cfw-o45, cfw-hl4, cfw-pe7, cfw-bgb, cfw-ob6a, cfw-w8ee, cfw-ytzx, cfw-87m, cfw-gpde, cfw-jo5q, cfw-2jm3, cfw-y17d) |
 | **Beads closed today** | 6 (cf-tm1e, cf-wyc0, cf-r7gc, cfw-o45, cfw-hl4, cfw-jo5q, cfw-2jm3) |
-| **Open P0** | 3 (cf-csxt, cf-qyaf, cf-zq3m) |
+| **Open P0** | 3 (cf-csxt, cf-zq3m, **cf-uwhv** /account React #310 — NEW miquella a11y audit) — cf-qyaf ✅ closed via PR #980 |
 | **Open P1** | 5 (cf-1h68, cf-8wkc, cf-3qt.8, cf-3qt.8.31, **cf-o0wt** /compare mobile clip — Stilgar finding) |
 | **Open P2** | 8 |
 | **Open P3+** | 11 |
@@ -103,6 +104,25 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 ---
 
 ## Incoming defect reports (synthesis-mode)
+
+### miquella — a11y audit (self-executed 2026-05-23)
+
+**Scope:** /, PDP Kingston, /cart populated, /compare 2-prod, /account anon, /signup
+**Method:** Playwright MCP browser_evaluate — aria-label coverage, heading hierarchy, alt-text, landmarks, skip-link, table semantics
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| **cf-uwhv** | **P0** | unassigned 🚨 | Anon /account → /dashboard crashes with React #310. Blocks ALL sign-in QA. Possible post-PR-#968 regression OR cfw-o45 fix removed loop but didn't add anon sign-in form. |
+| cf-c6e3 | P3 | unassigned | 4-finding a11y cleanup (single PR ≤50 LOC): (F1) homepage 2 H1s, (F2) footer social anchors missing aria-label, (F3) newsletter email inputs use placeholder-as-label, (F4) /compare Remove buttons share generic "Remove" text |
+
+**Routes verified CLEAN:**
+- /signup — H1 + labeled email/password + accessible submit ✓
+- /cart populated — H1 + 3 live regions + focusable proceed-checkout `<a>` ✓
+- PDP Kingston — 1 H1 + all 24 images alt'd + 8/8 radios aria-labeled + ATC accessible ✓
+- /compare table — caption + aria-label + 13/13 TH scope'd ✓
+- Site-wide: skip link, main, nav, banner, contentinfo all present ✓
+
+---
 
 ### blaidd — expanded full-site tour: /, /shop hub, 5 PLPs, /search, /compare (received 2026-05-23)
 
