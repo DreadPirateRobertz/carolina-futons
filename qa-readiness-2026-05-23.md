@@ -36,6 +36,8 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 - [ ] **cf-lsv4 P0** — overlay suppression on /compare + other pages. (Currently OPEN. obsidian.)
 - [ ] **cf-qyaf P0** — Mesa 5000 PDP ATC state confirmed (intentional in-store-only per Stilgar standing order OR genuine bug + Brenda backfill). (Stilgar action queue.)
 - [x] **cfw-o45 P1** — /account ↔ /dashboard redirect loop ✅ MERGED via PR #968.
+- [ ] **cfw-fpnu** — pre-verify sign-in 502 (opal **PR #976.2 pending**, edge-runtime fix). Stress-test criterion: pre-verify sign-in returns clean "verification required" state, not 502.
+- [ ] **Wix verify-email config** — verify-link delivery to halworker85 inbox. BLOCKED on Stilgar config (escalated). Without this, post-verify sign-in step of canonical register flow can't be exercised.
 
 ### Should-pass (P1 fix or accept-and-document)
 
@@ -118,14 +120,23 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 
 **Clean paths (no defect):** /account anon, sign-in wrong-creds.
 
-### ⚠️ FRAMING CONFLICT — escalation to Stilgar + melania
+### ✅ CANONICAL REGISTER FLOW (melania 2026-05-23 — supersedes any prior framing)
 
-My nudge to morgott said "register → land on /dashboard" but the actual staging flow lands on "Check your email" (verification-required gate). Two reads:
+**cf-3qt.3 cfw-side spec — this is the stress-test pass criterion:**
 
-1. Staging Wix has verify-email-required enabled — current expected behavior, matches `cfw-fpnu` blocker note (Wix verify-email pipeline unblock from Stilgar).
-2. My expected behavior reflects the post-cf-3qt-cutover state (verify-email disabled or auto-sign-in after register). If THAT's the spec, "current verifies-first-then-sign-in" is itself a defect worth filing.
+1. Register POST → **200 + "Check your email" UI** (verify-required state). **NOT** → /dashboard.
+2. User clicks verify link in halworker85 inbox (or wherever delivery routes).
+3. POST-verify sign-in → 200 + redirect /dashboard.
+4. PRE-verify sign-in (current `cfw-fpnu` bug) → SHOULD return clean "verification required" state, currently returns **502**.
 
-Stilgar/melania had different framings 30m apart per morgott's observation. Needs canonical from one of them so stress-test pass/fail criterion is unambiguous.
+**Stress-test pass criteria:**
+- ✓ `/api/auth/register` returns 200 + `email_verification_required` state shape
+- ✓ UI shows "Check your email" screen + has "Back to sign in" option
+- ✓ Verify-email arrives + link works (currently **BLOCKED on Stilgar config** — escalated)
+- ✓ Post-verify sign-in completes + lands on /dashboard
+- ✗ Pre-verify sign-in does NOT 502 (`cfw-fpnu`, opal **PR #976.2 pending** — opal's edge-runtime fix)
+
+**My earlier dispatch wording ("register → /dashboard") was outdated framing — corrected here.** Stress-test now has unambiguous criterion. morgott's tour findings (cfw-7zoq + cfw-433u + refinements to cfw-fpnu) all align with this canonical spec.
 
 ---
 
