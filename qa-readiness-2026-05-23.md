@@ -49,7 +49,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 
 - [ ] blaidd: /, /shop hub, 5 PLPs, /search, /compare — screenshots in `crew/blaidd/`
 - [ ] godfrey: 8 PDPs × Full/Queen × Cherry/Chocolate × mobile/desktop — screenshots in `crew/godfrey/`
-- [ ] morgott: /account anon + /signup + register flow + sign-in success/fail — screenshots in `crew/morgott/`
+- [x] morgott: /account anon + /signup + register flow + sign-in success/fail ✅ — `crew/morgott/auth-tour-2026-05-23.md` + 8 PNGs (`auth-tour-*.png` — naming-spec deviation acceptable, doc is canonical)
 - [ ] millicent: /reviews + /sitemap.xml + /robots.txt + /faq + /contact + footer — screenshots in `crew/millicent/`
 - [ ] **Defect filing discipline:** every finding → bead with route+viewport+repro+screenshot+priority
 
@@ -97,6 +97,35 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 | **cf-lsv4** | obsidian (Linux) | OPEN P0 | overlay suppression — confirmed still live by morgott + blaidd |
 | **cf-zq3m** | rennala (Mac) | ⚠️ OWNER DEAD per watchdog | mayor restart pending — Stilgar may need to reassign or authorize Velo-side fix |
 | **cf-qyaf** | unassigned | OPEN P0 | Mesa 5000 PDP unbuyable — likely intentional in-store-only (Stilgar standing order); Stilgar to confirm |
+
+---
+
+## Incoming defect reports (synthesis-mode)
+
+### morgott — auth-flow tour (received 2026-05-23 evening)
+
+**Doc:** `crew/morgott/auth-tour-2026-05-23.md` (+ 8 PNGs)
+**Coverage:** /account anon + /signup + register flow + sign-in success/fail × mobile + desktop ✅
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| cfw-7zoq | P3 | opal | sign-in error copy can't differentiate wrong-password from unverified-email — same copy "Sign-in failed. Please try again." for both 401-bad-creds AND 401-unverified. UX gap becomes dominant once cfw-fpnu unblocks. |
+| cfw-433u | P3 | jasper | /account + /signup input fields render 38px tall on mobile 390 — below WCAG 2.5.5 44×44. Submit buttons pass at 48px. Likely shared input class; parallel to cfw-ytzx (/design-a-room). |
+
+**Refinements to existing beads (no new bead filed; notes added to source doc for opal/jasper):**
+- **cfw-fpnu** scope-refined: 502 fires ONLY on valid-but-unverified login. Register and wrong-creds bail before the SDK call. opal's failing-test should pin the unverified-login path specifically.
+- **cfw-w8ee** root-cause-refined: /account at mobile 390 has same 431px body width as /design-a-room → H-overflow is **SITE-WIDE layout-shell**, NOT room-plan-canvas-specific (original bead blame was wrong). Fixer should debug from layout shell, not RoomPlannerCanvas.
+
+**Clean paths (no defect):** /account anon, sign-in wrong-creds.
+
+### ⚠️ FRAMING CONFLICT — escalation to Stilgar + melania
+
+My nudge to morgott said "register → land on /dashboard" but the actual staging flow lands on "Check your email" (verification-required gate). Two reads:
+
+1. Staging Wix has verify-email-required enabled — current expected behavior, matches `cfw-fpnu` blocker note (Wix verify-email pipeline unblock from Stilgar).
+2. My expected behavior reflects the post-cf-3qt-cutover state (verify-email disabled or auto-sign-in after register). If THAT's the spec, "current verifies-first-then-sign-in" is itself a defect worth filing.
+
+Stilgar/melania had different framings 30m apart per morgott's observation. Needs canonical from one of them so stress-test pass/fail criterion is unambiguous.
 
 ---
 
