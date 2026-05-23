@@ -27,7 +27,7 @@
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
 | morgott | /design-a-room | ✅ COMPLETE — 4 beads filed (jasper), see below |
 | rennala | Forms (contact / newsletter / swatch) + /search | unstarted |
-| millicent | SEO + nav + footer | unstarted |
+| millicent | SEO + nav + footer | ⚠️ PARTIAL — cf-5dph P3 filed (desktop/mobile Sale-link divergence; convoy candidate with cf-b7mu+cf-ogzg) |
 | radahn | Search/filter UX deep dive | unstarted |
 | melania | SHIPPING API + ZIP validation E2E | unstarted |
 
@@ -101,6 +101,19 @@ Already-blocked: cf-oi01 (E2E real-shipping, Wix-side config gap, mailed Stilgar
 **Coverage gap (no bead, recommendation only):** Drag-drop e2e — Playwright synthetic dnd dispatch fails on Chrome HTML5 native dnd. Recommendation in morgott's doc §7: `e2e/design-a-room-drag-drop.spec.ts` using real `page.mouse.move/down/up`.
 **cf-lsv4 re-confirmation:** overlays (Sale + Pwa + Consent) still render on /design-a-room — dismissal persists via `cf-promo-dismissed`.
 **morgott status:** holding for next-route from melania (no autonomous reassignment — that's melania's prerogative).
+
+---
+
+---
+
+## Convoy candidates (cross-bead clusters surfacing during mandate)
+
+**Sale-link / source-of-truth convoy** — all relate to the "what is 'sale' in cfw" question:
+- `cf-b7mu` P2 — mega-menu `/shop/sale` → `/spring-sale` redirect (immediate fix, handed off to onyx)
+- `cf-5dph` P3 — desktop mega-menu `/shop/sale` vs mobile drawer `/shop/mattresses-sale` route divergence (millicent surfaced 2026-05-23)
+- `cf-ogzg` P3 — full unification: SaleLightbox hardcode + isProductOnSale variant-priced exclusion + HomeSaleStrip + /spring-sale
+
+Convoy these together after cf-b7mu redirect ships. melania noted 2026-05-23 as tomorrow's convoy candidate.
 
 ---
 
