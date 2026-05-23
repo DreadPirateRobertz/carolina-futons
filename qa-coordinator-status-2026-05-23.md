@@ -25,10 +25,10 @@
 | godfrey | PDP × 10 products × Full/Queen × Finish × ATC | ✅ cf-flmv re-verify done; standby for cf-csxt review (miquella reviewer) — pinged 2026-05-23 |
 | blaidd | Account flow (post-cfw-o45) | warranty BLOCKED; ✅ /reviews + /press + /our-story tour DONE (360/390/1280/1920, 12 PNGs) — 4 beads filed, see below |
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
-| morgott | /design-a-room | ✅ COMPLETE + cf-r7gc paired with godfrey (non-repro confirmed on Vercel; TDD spec to jasper). Truly IDLE — needs melania next-route |
+| morgott | /design-a-room → cfw-y17d | ✅ /design-a-room + cf-r7gc done; ROUTED 2026-05-23 to cfw-y17d (/our-story permanentRedirect cleanup from blaidd) |
 | rennala | Forms (contact / newsletter / swatch) + /search | ❌ DEAD per watchdog 2026-05-23; mayor restart pending |
 | millicent | SEO + nav + footer | ⚠️ PARTIAL — cf-5dph P3 filed (desktop/mobile Sale-link divergence; convoy candidate with cf-b7mu+cf-ogzg) |
-| radahn | Search/filter UX deep dive | pinged 2026-05-23 — awaiting confirmation |
+| radahn | Search/filter UX deep dive | ACTIVE — confirmed doing GBP work (relates to cfw-gpde reviews-creds gap) per melania 2026-05-23 |
 | melania | SHIPPING API + ZIP validation E2E | unstarted |
 
 ### Linux
@@ -142,6 +142,8 @@ Convoy these together after cf-b7mu redirect ships. melania noted 2026-05-23 as 
 2. **Watch for godfrey cf-csxt spec** — apply the 6-point review checklist (see this session's earlier prep).
 3. **Mobile pass on remaining 5 PLPs** — after critical-path gates clear.
 4. **Escalation triggers** — any P0/P1 surfaced by crew goes immediately to melania + Stilgar.
+
+**Crew busy state (per melania 2026-05-23):** No truly idle crew. Watchdog noise from cross-timing is non-actionable. Coordinator continues steady-state aggregation.
 
 ## Notes on conservation discipline
 
