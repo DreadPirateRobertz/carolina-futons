@@ -23,7 +23,7 @@
 | Crew | Family | Status |
 |---|---|---|
 | godfrey | PDP × 10 products × Full/Queen × Finish × ATC | ✅ cf-flmv re-verify done; standby for cf-csxt review (miquella reviewer) — pinged 2026-05-23 |
-| blaidd | Account flow (post-cfw-o45) | warranty BLOCKED; /reviews tour next — pinged 2026-05-23 |
+| blaidd | Account flow (post-cfw-o45) | warranty BLOCKED; ✅ /reviews + /press + /our-story tour DONE (360/390/1280/1920, 12 PNGs) — 4 beads filed, see below |
 | **miquella** | /shop indexes + 6 PLPs + COORDINATOR | **IN PROGRESS** — see below |
 | morgott | /design-a-room | ✅ COMPLETE + cf-r7gc paired with godfrey (non-repro confirmed on Vercel; TDD spec to jasper). Truly IDLE — needs melania next-route |
 | rennala | Forms (contact / newsletter / swatch) + /search | ❌ DEAD per watchdog 2026-05-23; mayor restart pending |
@@ -106,11 +106,30 @@ Already-blocked: cf-oi01 (E2E real-shipping, Wix-side config gap, mailed Stilgar
 
 ---
 
+### blaidd — /reviews + /press + /our-story (received 2026-05-23 via nudge)
+
+**Report addendum:** `8776aff` (blaidd workspace)
+**Screenshots:** `crew/blaidd/{page}-{w}.png` × 12 (3 pages × 4 widths)
+**Viewports covered:** 360×800, 390×844, 1280×800, 1920×1080 ✅ full mandate matrix
+**Note:** blaidd's primary family was Account flow but cfw-o45 blocks that — she pivoted to static-page tour while waiting
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| cfw-gpde | P2 | blaidd | /reviews shows empty 'no reviews' placeholder on production — GBP API credentials not provisioned |
+| cfw-jo5q | P2 | blaidd | SaleLightbox fires site-wide instead of homepage-only — comment says home, code says everywhere (loops into sale-convoy below) |
+| cfw-2jm3 | P3 | blaidd | /press hardcodes '15-year warranty' alongside `BUSINESS.warrantyYears` — DRY violation |
+| cfw-y17d | P3 | blaidd | /our-story uses permanentRedirect() in page component — defeats stated SEO link-equity consolidation |
+
+**cfw-jo5q is convoy-adjacent** — adds to the SaleLightbox cluster (currently hardcoded products + site-wide trigger).
+
+---
+
 ## Convoy candidates (cross-bead clusters surfacing during mandate)
 
 **Sale-link / source-of-truth convoy** — all relate to the "what is 'sale' in cfw" question:
 - `cf-b7mu` P2 — mega-menu `/shop/sale` → `/spring-sale` redirect (immediate fix, handed off to onyx)
-- `cf-5dph` P3 — desktop mega-menu `/shop/sale` vs mobile drawer `/shop/mattresses-sale` route divergence (millicent surfaced 2026-05-23)
+- `cf-5dph` P3 — desktop mega-menu `/shop/sale` vs mobile drawer `/shop/mattresses-sale` route divergence (millicent 2026-05-23)
+- `cfw-jo5q` P2 — SaleLightbox fires site-wide instead of homepage-only — comment says home, code says everywhere (blaidd 2026-05-23)
 - `cf-ogzg` P3 — full unification: SaleLightbox hardcode + isProductOnSale variant-priced exclusion + HomeSaleStrip + /spring-sale
 
 Convoy these together after cf-b7mu redirect ships. melania noted 2026-05-23 as tomorrow's convoy candidate.
