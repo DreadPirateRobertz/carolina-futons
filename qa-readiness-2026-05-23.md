@@ -49,7 +49,7 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 
 ### Coverage (proactive tour)
 
-- [ ] blaidd: /, /shop hub, 5 PLPs, /search, /compare — screenshots in `crew/blaidd/`
+- [x] blaidd: /, /shop hub, 5 PLPs, /search empty+query, /compare 0/1/2/4-prod ✅ — `crew/blaidd/qa-tour-expanded-2026-05-22.md` + 52 PNGs (commit `24ea91e` on cfutons_web/main)
 - [ ] godfrey: 8 PDPs × Full/Queen × Cherry/Chocolate × mobile/desktop — screenshots in `crew/godfrey/`
 - [x] morgott: /account anon + /signup + register flow + sign-in success/fail ✅ — `crew/morgott/auth-tour-2026-05-23.md` + 8 PNGs (`auth-tour-*.png` — naming-spec deviation acceptable, doc is canonical)
 - [x] millicent: /reviews + /sitemap.xml + /robots.txt + /faq + /contact + footer + /asdf + /500 ✅ — `crew/millicent/qa-tour-full-2026-05-23.md` + 20 PNGs in canonical convention
@@ -103,6 +103,34 @@ Go/no-go for tomorrow's e-commerce stress test. Updated as crew tour findings la
 ---
 
 ## Incoming defect reports (synthesis-mode)
+
+### blaidd — expanded full-site tour: /, /shop hub, 5 PLPs, /search, /compare (received 2026-05-23)
+
+**Report:** `crew/blaidd/qa-tour-expanded-2026-05-22.md` (commit `24ea91e` on cfutons_web/main)
+**Screenshots:** 52 PNGs at `crew/blaidd/qa-tour-{route}-{viewport}.png` (local only — cf-ukc6 conservation)
+**Coverage matrix:** 13 routes × 4 viewports (360 / 390 / 1280 / 1920) ✅
+
+| Bead | Pri | Owner | Finding |
+|---|---|---|---|
+| cfw-uavy | P3 | blaidd | /compare table cuts off columns on 360/390 — only 1 product column visible on first paint (4-prod case has Eureka + Albany + Autumn off-screen). `overflow-x-auto + min-w-[640px]` is scrollable but no swipe-right affordance. Three fix options in bead. Stacks with cf-o0wt (compare mobile clip P1, Stilgar finding) — same surface, different framing. |
+
+**Reconfirmed existing beads (no new bead, evidence captured during tour):**
+- `cfw-k83f` P1 — futon-frames 16-of-22 thumbnails blank, irrespective of viewport → confirms Wix-data hypothesis (not PLP-card responsive)
+- `cfw-lygi` P2 — sofa-beds empty (cross-ref to cf-v275)
+- `cfw-ntlh` P4 — /compare empty-state fictional slugs
+- `cfw-gpde` P2 — homepage empty reviews (cross-ref to millicent's evidence)
+- `cfw-54au` P3 — about ShopTheRoom missing portofino
+
+**Verified live across all viewports (non-regression):**
+- ✓ cf-moyb / cfw-2jm3 — 15-year warranty unified copy
+- ✓ cf-lsv4 — no SaleLightbox overlay anywhere
+
+**Did NOT find:**
+- New layout breakage at 1920 vs 1280
+- New copy defects
+- Console-error regressions outside the pre-existing CSP report-only noise
+
+---
 
 ### millicent — SEO + nav + footer + /reviews + rennala-residual (received 2026-05-23 evening)
 
@@ -185,6 +213,10 @@ These items need Stilgar's call before the corresponding work can ship/close:
 ---
 
 ## Convoy candidates (cluster for batched merges)
+
+**Compare-table mobile convoy** — 2 beads, same surface, different framings:
+- `cf-o0wt` P1 — /compare table on mobile clips second product (Stilgar finding, obsidian-assigned)
+- `cfw-uavy` P3 — /compare table cuts off columns on 360/390, no swipe affordance (blaidd, no owner yet)
 
 **Sale source-of-truth convoy** — 4 beads, one theme: "what does 'sale' mean in cfw":
 - `cf-b7mu` P2 — mega-menu `/shop/sale` → `/spring-sale` redirect (1-line nav fix, handed off to onyx)
