@@ -45,7 +45,19 @@ All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships vi
 | /survey NPS | valid submit | ❌ FAILS: "couldn't save your response — please try again shortly." | **cf-y2wg P1** (NEW) |
 | /survey mobile 390 | layout | ⚠️ NPS radios 40×40 — below WCAG 2.5.5 44×44 | cfw-433u P3 (scope expanded) |
 
-**FIVE prod-form failures with identical 'try again' copy pattern** (cf-zq3m + cf-ousj + cf-tusv + cf-ac5d + cf-y2wg) → strong hypothesis of SAME Velo /_functions/* backend gate. Single Stilgar-Velo-publish unblock likely fixes all five simultaneously. Escalated to Stilgar via melania 2026-05-23.
+| /signup empty submit | invalid | ✅ HTML5 :invalid on email + password + confirm-password | — |
+| /signup password mismatch | inline | ✅ "Passwords do not match." — no submit attempt | — |
+| /signup valid submit | unique-email | ✅ **SUCCESS** — H1 changes to "Check your email", canonical register-flow step matches melania spec exactly | — (Wix Headless identity SDK, NOT Velo) |
+| /account/forgot-password | valid submit | ✅ **SUCCESS** — "If an account exists for <email>, a password reset link is on its way. The link is good for 3 hours." (good security copy, doesn't leak email-existence) | — (Wix Headless identity SDK) |
+| PDP `/products/kingston-futon-frame` Q&A 'Ask a question' | valid submit | ❌ FAILS: "We couldn't save that — please try again." | **cf-118u P1** (NEW) |
+| /spring-sale | 2 forms | ℹ️ Header + footer Newsletter signup (both same cf-zq3m surface) — no new form | — |
+
+**SIX prod-form failures with identical 'try again' copy pattern** (cf-zq3m + cf-ousj + cf-tusv + cf-ac5d + cf-y2wg + cf-118u) → strong hypothesis of SAME Velo /_functions/* backend gate. melania confirmed 2026-05-23: her publish ran ✅ but /_functions/* still 404 site-wide. Stilgar / GitHub-integration check needed for the Velo-to-staging deploy step. Once cleared, ALL 6 forms should pass together. Coordinator test: pick ANY ONE of the 6 routes post-Velo-deploy → success on one = success on all.
+
+**ORTHOGONAL** (not Velo-cluster, separate root cause):
+- `cfw-fkoh` P1 — Style Quiz returns zero recommendations (CORS-blocked from cfw origin). Owned by morgott → jasper.
+
+**HEALTHY** (Wix Headless identity SDK, separate from Velo): /signup register, /account/forgot-password reset-link.
 
 Screenshots: `crew/miquella/qa-forms-*.png` (12 PNGs at 1280 + 390 viewports).
 
