@@ -7,6 +7,22 @@
 
 ---
 
+## ✅ INFRA FIX VERIFIED — nudge-linux.sh Fix B live
+
+melania applied Fix B to `/Users/hal/gt/scripts/nudge-linux.sh` ~09:21 UTC; verified live ~09:32 UTC via a nudge containing the literal word "Enter" embedded in the message body. Pre-fix: the "Enter" substring would have been interpreted by tmux as a key press mid-message, corrupting delivery. Post-fix (`-l` literal mode + separate `C-m` send-keys): message arrived intact end-to-end. Mac→Linux nudge path now reliable across all 8 affected crew. Diagnosis credit: miquella.
+
+**Next infra step:** gt nudge (Mac-internal Go path) audit — same shape may apply (per melania).
+
+## SEO POLISH CONVOY ✅ READY — routed to onyx
+
+All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships via **onyx**:
+- cf-9us5 P3 — STATIC_PATHS += '/compare' in `src/app/sitemap.ts`
+- cf-l7iv P3 — 6 PLP+hub meta descriptions rewritten (147-160 chars, voice-matched)
+- cf-xvif P3 — CollectionPage+ItemList JSON-LD via new `buildCollectionPageSchema`
+- cf-ofiw P3 — sitemap dev-port fallback + not-found.tsx metadata (part (c) error.tsx Client/Server split DEFERRED)
+
+---
+
 ## STILGAR FULL-SITE TOUR (issued 2026-05-23 evening)
 
 Proactive exhaustive sweep before tomorrow's stress test. Every page, every button, mobile+desktop, screenshot every key state.
