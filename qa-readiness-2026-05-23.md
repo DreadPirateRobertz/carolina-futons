@@ -37,9 +37,15 @@ All 4 beads prepped + diff'd by miquella from Mac side; single Linux PR ships vi
 | /search?q=mattress | result-card | ❌ Mesa 5000 in-store-only renders **'$0.00'** instead of 'Call for pricing' or omit-price | **cf-4dmb P2** (NEW) |
 | /swatch-request | empty submit | ✅ Server-side validation: inline field-level errors per required field. Better UX than HTML5. | — |
 | /swatch-request | valid submit | ❌ FAILS: "We couldn't submit that — please try again in a moment." | **cf-tusv P1** (NEW) |
-| /contact mobile 390 | layout | ⚠️ Inputs 38px height, Subscribe button 40px — fail WCAG 2.5.5 44x44. Same shared input-class as /account+/signup. | cfw-433u P3 (scope expanded) |
+| /contact mobile 390 | layout | ⚠️ Inputs 38px, Subscribe button 40px — fail WCAG 2.5.5 44x44 | cfw-433u P3 (scope expanded) |
+| /warranty/register | auth-gate | ✅ Redirects to /account?next=/warranty/register — sign-in form renders cleanly | — (post-cfw-o45 working) |
+| /warranty/claim | auth-gate | ✅ Redirects to /account?next=/warranty/claim — sign-in form renders cleanly | — (post-cfw-o45 working) |
+| /track-order (bare) | no query | ℹ️ Instructional copy only, NO manual lookup form. Link-driven UX (auth via ?n=&e= compound) | side-note in cf-ac5d |
+| /track-order ?n=&e= | with params | ❌ FAILS: "We couldn't reach the order-tracking service right now." | **cf-ac5d P1** (NEW) |
+| /survey NPS | valid submit | ❌ FAILS: "couldn't save your response — please try again shortly." | **cf-y2wg P1** (NEW) |
+| /survey mobile 390 | layout | ⚠️ NPS radios 40×40 — below WCAG 2.5.5 44×44 | cfw-433u P3 (scope expanded) |
 
-**Three prod-form failures with identical 'try again' copy pattern** (cf-zq3m / cf-ousj / cf-tusv) → strong hypothesis of SAME Velo /_functions/* backend gate. Single Stilgar-Velo-publish unblock likely fixes all three.
+**FIVE prod-form failures with identical 'try again' copy pattern** (cf-zq3m + cf-ousj + cf-tusv + cf-ac5d + cf-y2wg) → strong hypothesis of SAME Velo /_functions/* backend gate. Single Stilgar-Velo-publish unblock likely fixes all five simultaneously. Escalated to Stilgar via melania 2026-05-23.
 
 Screenshots: `crew/miquella/qa-forms-*.png` (12 PNGs at 1280 + 390 viewports).
 
