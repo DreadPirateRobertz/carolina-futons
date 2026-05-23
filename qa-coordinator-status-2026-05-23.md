@@ -124,6 +124,23 @@ Already-blocked: cf-oi01 (E2E real-shipping, Wix-side config gap, mailed Stilgar
 
 ---
 
+## Warranty + manufacturer (Stilgar resolution 2026-05-23)
+
+Stilgar's canonical resolutions applied to `crew/melania/manufacturer-mapping-2026-05-22.md`:
+
+- **CF Customer Warranty = 15 years** universally (CF house warranty overrides per-manufacturer years).
+- **Manufacturer column = internal-only**, not customer-facing.
+- **5 log-futon SKUs resolved to Log-Futon-Co** (`charleston-platform-bed`, `denali-log-futon`, `mountainaire-log-futon`, `northern-exposure-log-futon`, `wilderness-log-futon`).
+- **N&D = Futon Collection only** (no Daybed) — confirmed.
+
+Manufacturer buckets post-resolution: N&D 71 / Log-Futon-Co 5 / KD Frames 3 / Otis Bed 3 (+2 via live PDP) / Sealy 1 = 85 total.
+
+**cf-moyb closure path:** closes after godfrey lands SiteContent + /about updates aligning the customer-facing 15-year copy across all surfaces (site-banner / FAQ / About / SiteContent CMS keys).
+
+Note: the mapping doc is in melania's workspace (untracked locally) — she commits from her side when she next acts.
+
+---
+
 ## Convoy candidates (cross-bead clusters surfacing during mandate)
 
 **Sale-link / source-of-truth convoy** — all relate to the "what is 'sale' in cfw" question:
