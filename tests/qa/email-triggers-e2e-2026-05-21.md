@@ -65,16 +65,19 @@ curl -s -X POST "${STAGING_BASE_URL}/_functions/processEmailQueueCron" \
 
 ---
 
-## Blockers (as of 2026-05-21)
+## Blockers (refreshed 2026-05-22 by millicent)
 
 | Blocker | Affects rows | Status |
 |---------|-------------|--------|
-| Staging Velo functions inaccessible (staging.carolinafutons.com doesn't resolve / `/_functions/` 404) | ALL | Blocked — Stilgar must publish backend |
-| Test member token not yet provided | 11, 13, 17 | Blocked — Stilgar |
-| cf-c6g5 (template registration) not yet run | ALL | Blocked — sequenced after |
-| cf-hafn not merged/published | 19 | Blocked |
-| cf-xdji (resolveContactId) not merged/published | 21 | Partial — see F7 gap note |
-| cf-3l0d (subscribeToNewsletter auto-trigger) not merged | 4 | Only needed for Row 4 full pass |
+| Staging Velo functions inaccessible (`staging.carolinafutons.com` does not resolve — `curl` exit 6) | ALL | **STILL BLOCKED** — Stilgar to publish backend + provide DNS |
+| Test member token not yet provided | 11, 13, 17 | Pending — Stilgar |
+| cf-c6g5 (template registration) | ALL | **CLEARED** — closed 2026-05-10, all 28 templates registered + published |
+| cf-hafn (contact_form_auto_reply) | 19 | **CLEARED** — closed |
+| cf-xdji (resolveContactId — F1 + F7) | 21 | **CLEARED** — closed |
+| cf-3l0d (subscribeToNewsletter auto-trigger — F2) | 4 | **CLEARED** — closed |
+| cf-m3tj / cf-fovb (mobile-challenge ledger / multi-shipment fulfillment) | various | **CLEARED** — closed |
+
+Net: staging DNS is the only remaining blocker. Once `staging.carolinafutons.com` resolves and `/_functions/` are reachable, all 30 rows are unblocked at the dependency level (test-member token still pending for the 3 rows above). Mock-layer wire coverage for 6 of 13 trigger families filled in at `tests/emailTriggers.pre-cfc6g5.test.js` (20 passing, 36 staging/integration todos remain).
 
 ---
 
