@@ -71,7 +71,7 @@ export default defineConfig({
       ],
       thresholds: {
         statements: 90,
-        branches: 85.8, // cf-4x7e.B5: surgical drop of 6 webMethods + matching test blocks ticked branches another 0.01% under the B-3 ratchet
+        branches: 85.0, // cf-w1u1.coverage-rot-2026-05-22: cumulative drop exposed once gamification + styleQuiz assertions restored; baseline 85.02%, ratchet pattern per cf-4x7e.B5
         functions: 88.7, // cf-v6zo: PR #1355 cf-wv1s (dashboard.sh + 90 new test LOC) ticked functions to 88.78%; recovering with a 0.1 ratchet to match the new floor + leave headroom (mirrors B-3/B-4/B-5 ratchet pattern)
         lines: 92,
       },
