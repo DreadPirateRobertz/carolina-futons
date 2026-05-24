@@ -235,7 +235,9 @@ async function _handleSubmit() {
 
     if (result.success) {
       clearAll();
-      $w('#swatchFormSuccess').expand();
+      // Fade form out, fade success panel in (matches /contact pattern)
+      try { $w('#swatchFormOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+      $w('#swatchFormSuccess').show('fade', { duration: 300 });
       announce('Your swatch request has been submitted successfully.');
     } else {
       throw new Error(result.error || 'Submission failed. Please try again.');

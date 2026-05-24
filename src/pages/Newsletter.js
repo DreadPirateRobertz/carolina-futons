@@ -97,14 +97,14 @@ function initSignupForm() {
           currency: 'USD',
         });
 
-        // Show success state
-        try { emailInput.hide(); } catch (e) {}
-        try { nameInput.hide(); } catch (e) {}
-        submitBtn.hide();
+        // Show success state — fade form out, fade success panel in (matches /contact pattern)
         const code = result.discountCode || 'WELCOME10';
         successMsg.text =
           `You're in! Check your inbox for your 10% welcome discount. ` +
           `Use code ${code} at checkout.`;
+        try { emailInput.hide('fade', { duration: 200 }); } catch (e) {}
+        try { nameInput.hide('fade', { duration: 200 }); } catch (e) {}
+        try { submitBtn.hide('fade', { duration: 200 }); } catch (e) { submitBtn.hide(); }
         successMsg.show('fade', { duration: 300 });
         announce($w, 'Successfully subscribed to newsletter');
       } catch (err) {
