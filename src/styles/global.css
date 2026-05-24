@@ -465,6 +465,7 @@ h4.font_4,
   border: 1px solid var(--cf-footer-input-border) !important;
   border-radius: 4px !important;
   padding: 10px 14px !important;
+  min-height: 44px !important;
 }
 
 .footer .button,
@@ -632,6 +633,7 @@ h4.font_4,
 [data-hook="form-root"] textarea,
 [data-hook="form-root"] select {
   font-size: 15px !important;
+  min-height: 44px !important;
 }
 
 [data-hook="form-root"] button[type="submit"],
@@ -1290,6 +1292,18 @@ h4.font_4,
 [data-hook="quiz-next-button"]:hover,
 [data-hook="quiz-submit-button"]:hover {
   background-color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   26b. TEXT INPUT TOUCH TARGETS — WCAG 2.5.5 (cf-thv3)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Standalone Wix TextInput components (newsletter page, style-quiz email gate).
+   Scoped to exclude checkout/returns/order-tracking which have dedicated sections. */
+[data-hook="text-field-root"] input,
+[data-hook="text-field-input"] {
+  min-height: 44px !important;
 }
 
 
