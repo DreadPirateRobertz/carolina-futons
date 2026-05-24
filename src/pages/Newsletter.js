@@ -47,7 +47,11 @@ function initSignupForm() {
     try { nameInput.accessibility.ariaLabel = 'Your first name (optional)'; } catch (e) {}
     try { submitBtn.accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
 
-    // Placeholder text
+    // Visible field labels — always shown, unlike placeholders which disappear on focus.
+    try { emailInput.label = 'Email address'; } catch (e) {}
+    try { nameInput.label = 'First name (optional)'; } catch (e) {}
+
+    // Placeholder text (supplementary hint, shown before typing)
     try { emailInput.placeholder = 'your@email.com'; } catch (e) {}
     try { nameInput.placeholder = 'First name (optional)'; } catch (e) {}
 

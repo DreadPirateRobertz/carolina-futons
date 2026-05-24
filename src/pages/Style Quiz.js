@@ -99,6 +99,9 @@ function initQuiz() {
   try { makeClickable($w('#quizEmailSubmitBtn'), () => submitEmailGate(), { ariaLabel: 'Submit email and continue' }); } catch (e) {}
   try { makeClickable($w('#quizEmailSkipBtn'), () => skipEmailGate(), { ariaLabel: 'Skip and continue' }); } catch (e) {}
 
+  // Visible label on the email gate input so context is always shown (not placeholder-only)
+  try { $w('#quizEmailInput').label = 'Email address'; } catch (e) {}
+
   renderStep();
 }
 
