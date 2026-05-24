@@ -234,6 +234,24 @@ describe('initMobileDrawer', () => {
     expect(desktopNav.hide).not.toHaveBeenCalled();
   });
 
+  // cf-9big: drawer open must use slide animation (not fade) to match close slide direction
+  it('open uses slide animation, not fade', () => {
+    const overlay = { show: vi.fn(), hide: vi.fn(), style: {}, accessibility: {}, onClick: vi.fn() };
+    const $w = createMock$w({ '#mobileMenuOverlay': overlay });
+    const drawer = initMobileDrawer($w, '/');
+    drawer.open();
+    expect(overlay.show).toHaveBeenCalledWith('slide', expect.objectContaining({ direction: 'left' }));
+  });
+
+  // cf-9big: active route link gets aria-current="page" on mobile
+  it('active mobile nav link gets ariaCurrent="page"', () => {
+    const navEl = { text: '', style: {}, accessibility: {}, onClick: vi.fn() };
+    const elements = { '#mobileNavHome': navEl };
+    const $w = createMock$w(elements);
+    initMobileDrawer($w, '/');
+    expect(navEl.accessibility.ariaCurrent).toBe('page');
+  });
+
   // cf-3zs3: if #mobileMenuButton throws, #desktopNavBar must still be hidden on mobile
   it('on mobile: hides #desktopNavBar even when #mobileMenuButton.show throws', async () => {
     const { isMobile } = await import('public/mobileHelpers');

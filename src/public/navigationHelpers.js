@@ -241,7 +241,7 @@ export function initMobileDrawer($w, currentPath) {
     if (isOpen) return;
     isOpen = true;
     try {
-      $w('#mobileMenuOverlay').show('fade', { duration: transitions.medium });
+      $w('#mobileMenuOverlay').show('slide', { direction: 'left', duration: transitions.medium });
       try { $w('#mobileMenuButton').accessibility.ariaExpanded = true; } catch (e) { console.warn('[navigationHelpers] mobileDrawer ariaExpanded open:', e); }
       lockScroll();
       addEscHandler();
@@ -321,6 +321,9 @@ export function initMobileDrawer($w, currentPath) {
 
       el.text = config.label;
       el.style.color = (desktopId === activeNavId) ? colors.sunsetCoral : colors.espresso;
+      if (desktopId === activeNavId) {
+        try { el.accessibility.ariaCurrent = 'page'; } catch (e) { console.warn('[navigationHelpers] mobileDrawer ariaCurrent:', e); }
+      }
 
       el.onClick(() => {
         import('wix-location-frontend').then(({ to }) => {

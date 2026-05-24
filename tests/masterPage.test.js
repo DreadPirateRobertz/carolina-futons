@@ -405,8 +405,8 @@ describe('Navigation Helpers', () => {
       const ctrl = initMobileDrawer(getEl);
       ctrl.open();
       expect(getEl('#mobileMenuOverlay').show).toHaveBeenCalledWith(
-        'fade',
-        expect.objectContaining({ duration: 250 })
+        'slide',
+        expect.objectContaining({ direction: 'left', duration: 250 })
       );
     });
 
