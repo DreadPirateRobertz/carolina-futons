@@ -274,6 +274,7 @@ async function submitEmailGate() {
   if (!email) {
     try { $w('#quizEmailError').text = 'Please enter your email'; } catch (e) {}
     try { $w('#quizEmailError').expand(); } catch (e) {}
+    try { $w('#quizEmailInput').style.borderColor = '#DC2626'; } catch (e) {}
     announce($w, 'Please enter your email address');
     return;
   }
@@ -283,9 +284,11 @@ async function submitEmailGate() {
   if (!emailPattern.test(email)) {
     try { $w('#quizEmailError').text = 'Please enter a valid email address'; } catch (e) {}
     try { $w('#quizEmailError').expand(); } catch (e) {}
+    try { $w('#quizEmailInput').style.borderColor = '#DC2626'; } catch (e) {}
     announce($w, 'Please enter a valid email address');
     return;
   }
+  try { $w('#quizEmailInput').style.borderColor = ''; } catch (e) {}
 
   try { $w('#quizEmailError').collapse(); } catch (e) {}
   try { $w('#quizEmailSubmitBtn').disable(); } catch (e) {}

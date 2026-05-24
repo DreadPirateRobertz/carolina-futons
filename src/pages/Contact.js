@@ -88,8 +88,17 @@ function initContactForm() {
             message: '#contactMessageError',
             phone: '#contactPhoneError',
           };
+          const inputMap = {
+            name: '#contactName',
+            email: '#contactEmail',
+            message: '#contactMessage',
+            phone: '#contactPhone',
+          };
           if (errorMap[err.field]) {
             showFieldError(errorMap[err.field], err.message);
+          }
+          if (inputMap[err.field]) {
+            try { $w(inputMap[err.field]).style.borderColor = '#DC2626'; } catch (e) {}
           }
         }
         announce($w, 'Please fix the errors in the form');
@@ -153,6 +162,9 @@ function showFieldError(elementId, message) {
 function hideAllErrors() {
   ['#contactNameError', '#contactEmailError', '#contactMessageError', '#contactPhoneError', '#contactError'].forEach(id => {
     try { $w(id).hide(); } catch (e) {}
+  });
+  ['#contactName', '#contactEmail', '#contactMessage', '#contactPhone'].forEach(id => {
+    try { $w(id).style.borderColor = ''; } catch (e) {}
   });
 }
 

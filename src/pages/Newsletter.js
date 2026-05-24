@@ -63,10 +63,12 @@ function initSignupForm() {
           errorMsg.show();
           announce($w, 'Please enter a valid email address');
         } catch (e) {}
+        try { emailInput.style.borderColor = '#DC2626'; } catch (e) {}
         return;
       }
 
       try { errorMsg.hide(); } catch (e) {}
+      try { emailInput.style.borderColor = ''; } catch (e) {}
       submitBtn.disable();
       submitBtn.label = 'Subscribing...';
 

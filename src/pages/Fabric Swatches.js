@@ -190,6 +190,18 @@ async function _handleSubmit() {
   if (validationError) {
     $w('#swatchFormError').text = validationError;
     $w('#swatchFormError').expand();
+    const fieldErrors = {
+      '#swatchFirstName': !form.firstName,
+      '#swatchLastName':  !form.lastName,
+      '#swatchEmail':     !form.email || !EMAIL_RE.test(form.email),
+      '#swatchAddress1':  !form.address1,
+      '#swatchCity':      !form.city,
+      '#swatchState':     !form.state,
+      '#swatchZip':       !ZIP_RE.test(form.zip),
+    };
+    Object.entries(fieldErrors).forEach(([id, hasError]) => {
+      try { $w(id).style.borderColor = hasError ? '#DC2626' : ''; } catch (e) {}
+    });
     return;
   }
 
@@ -197,6 +209,9 @@ async function _handleSubmit() {
   $w('#swatchSubmitBtn').label = 'Sending...';
   $w('#swatchSubmitBtn').disable();
   $w('#swatchFormError').collapse();
+  ['#swatchFirstName','#swatchLastName','#swatchEmail','#swatchAddress1','#swatchCity','#swatchState','#swatchZip'].forEach(id => {
+    try { $w(id).style.borderColor = ''; } catch (e) {}
+  });
 
   // Read product slug from URL query param
   const productSlug = wixLocationFrontend.query?.product || undefined;
