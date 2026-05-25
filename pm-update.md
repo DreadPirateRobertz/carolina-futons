@@ -1,4 +1,4 @@
-# PM Update — cfutons (melania) — 2026-05-25 ~09:05 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~10:30 MT
 
 ## MERGED THIS WAVE (33 PRs total)
 - **#1062** (ISR+lint+test fix): MERGED ✅
@@ -45,8 +45,23 @@
 - **#1085** (cf-q7lm, sustainability images, radahn): MERGED ~09:28 MT ✅ — 5-agent 91/100. 6 CDN imageUrls + next/image upgrade.
 - **#1086** (cf-x0fj, /near e2e, rennala): MERGED ~09:29 MT ✅ — 5-agent 93/100. 20 assertions, 4 pages.
 
-## OPEN PRs — awaiting merge
-_(none — pipeline clear)_
+## CRITICAL HOTFIXES — merged direct to main (~10:00 MT)
+- **commit 5a9caece**: functions:81→80 — PR #1087 ratchet overshot actual coverage (80.92%). Unblocked #1092/#1095/#1096/#1098 (all needed rebase).
+- **commit 03ebb9a3**: Footer brand text #5b8fa8→#6fa5bd — WCAG AA 4.1→4.77:1. cfw-39wn P1 a11y. Unblocked all pages failing axe-core.
+
+## OPEN PRs — CI running
+- **#1101** (cf-ousj morgott, contact Turnstile hard-fail): CI running — P1, high priority
+- **#1102** (cfw-jy84, rating star aria fix): CI running
+- **#1097** (cf-758q millicent, /warranty+/faq e2e): CI running
+- **#1091** (cf-bfpw miquella, og:image sweep): CI running  
+- **#1090** (cf-jtle radahn, sustainability cert audit): CI running
+- **#1093** (cf-aqk3 blaidd, footer mobile crop): lint✅ seed✅ e2e=running — BLOCKED: 5-agent review 74/100, 2 fixes requested (wing firefly x=240→340, add translate assertion)
+
+## PRs — need rebase on main (coverage fix)
+- **#1092** (cf-l8p3 radahn, edge-cases e2e): nudged radahn to rebase
+- **#1095** (cf-0kbr godfrey, axe routes): nudged godfrey to rebase — also had 5-agent review
+- **#1096** (cfw-2mr CLS): owner unclear (Linux?) — relayed to mayor
+- **#1098** (cfw-b65n blaidd, Velo sibling): nudged blaidd to rebase
 
 ## DRAFT — blocked (dependency resolved)
 - **#958** (swatch-request e2e, obsidian): #930 merged 2026-05-22. Nudged obsidian to rebase + mark ready.
@@ -59,28 +74,29 @@ _(none — pipeline clear)_
 
 ## Crew Assignments
 ### CF Mac Crew
-- **rennala**: cf-x0fj MERGED (#1086) — nudged for next bead
-- **blaidd**: cf-aqk3 (MascotFooterDivider mobile crop) — in progress
-- **radahn**: cf-q7lm MERGED (#1085) → cf-jtle (sustainability CMS qa) — just assigned
-- **morgott**: cf-bbh0 CLOSED ✅ — /=97, /about=99, /warranty=99, /contact=99. NEW: cf-ousj (contact+swatch form TURNSTILE_SECRET_KEY hard-fail fix) — assigned ~09:10 MT
-- **miquella**: cf-bfpw (SEO meta audit) — nudged to push PRs (no GitHub PRs visible yet)
-- **millicent**: cf-758q (e2e /about+/warranty+/faq) — just assigned; cf-jvut DEFERRED, cf-3qt.8 BLOCKED
-- **godfrey**: cf-evt4 MERGED — visual QA /contact + /swatch-request post-#1084
+- **rennala**: cf-tusv PR #1579 (swatch-request suppressAuth) — needs 5-agent review
+- **blaidd**: cf-aqk3 PR #1093 — BLOCKED 74/100, 2 fixes requested; cfw-b65n PR #1098 — needs rebase
+- **radahn**: cf-jtle PR #1090 (sustainability cert audit) CI running; cf-l8p3 PR #1092 — needs rebase
+- **morgott**: cf-ousj PR #1101 CI running — P1 contact form fix. DO NOT authorize #1003 fixes.
+- **miquella**: cf-bfpw PR #1091 CI running (og:image sweep)
+- **millicent**: cf-758q PR #1097 CI running (/warranty+/faq e2e)
+- **godfrey**: cf-0kbr PR #1095 — needs rebase (coverage threshold same issue)
 
 ### cfutons Polecats (Linux)
-- **opal**: cf-0kbr (a11y axe-core audit) — in progress
-- **jasper**: IDLE — mayor nudged for next Linux bead (cf-q7lm reassigned to radahn)
-- **obsidian**: PR #958 draft needs rebase + mark ready (nudged)
-- **quartz**: IDLE (PR #1071 merged ~02:43 MT) — mayor nudged for next Linux bead
-- **onyx**: cf-l8p3 (edge-cases/404/redirects QA) — in progress
+- **jasper**: cfw-yucw assigned (unconfirmed — mayor relay pending)
+- **obsidian**: PR #958 draft needs rebase + mark ready (cfw-fuhd pending)
+- **quartz**: cfw-jy84 PR #1102 CI running
+- **onyx**: cf-l8p3 / cfw-2mr (#1096 needs rebase — owner unclear)
+- **opal**: cfw-hgf2 assigned (unconfirmed — mayor relay pending)
 - **guzzle**: cf-vjrw (futon frames audit) — Strata PDF blocker flagged to mayor
 - **nitro**: cf-qwdf (e2e /reviews smoke test) — in progress
 - **shiny**: cf-soos (verify /getting-it-home #1083) — in progress
 - **vault**: cf-jtle (/sustainability qa) — in progress
 
-## P1 Bugs (NEW — Frontend Fixable)
-- **cf-ousj** (/contact form "We couldn't send that"): Root cause = TURNSTILE_SECRET_KEY missing → hard-fail at server action line 84. Fix: remove hard-block, allow submission without key. Assigned to morgott.
-- **cf-tusv** (/swatch-request "We couldn't submit that"): Same TURNSTILE_SECRET_KEY pattern in swatch-request.ts line 128. Morgott fixing both in one PR.
+## P1 Bugs
+- **cf-ousj** (/contact form "We couldn't send that"): Root cause = TURNSTILE_SECRET_KEY missing → hard-fail at server action line 84. PR #1101 by morgott — CI running.
+- **cf-tusv** (/swatch-request "We couldn't submit that"): Same TURNSTILE_SECRET_KEY pattern in swatch-request.ts line 128. PR #1579 by rennala — needs 5-agent review.
+- **cfw-39wn** (footer contrast 4.1:1): FIXED on main (commit 03ebb9a3 — #6fa5bd = 4.77:1). cfw-yucw/cfw-fuhd/cfw-hgf2/cfw-jy84 P2 follow-on children → Linux crew.
 
 ## Stilgar Action Items
 - **Sedona + Asheville in Wix**: Both are Otis Bed mattress products miscategorized under Wall Huggers. Recategorize to Mattresses in Wix product manager, or remove from Wall Huggers. Images are mattress packaging (not frame photos). Price $0.00. Screenshots: cfw-live-sedona-wrong-image.png + cfw-live-asheville-wrong-image.png
