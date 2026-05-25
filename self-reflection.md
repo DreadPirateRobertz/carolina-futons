@@ -1,5 +1,18 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Seventeenth reflection (~09:45 MT)
+
+### What worked well
+- **Wave merge execution**: 5 PRs (#1138-1142) merged cleanly in one batch after e2e passed timeout threshold. Verified lint✅ seed✅ Vercel✅ before merging, closed all 5 beads immediately.
+- **PR #1142 e2e path filter**: Recognized that quartz's coverage-only fix (src/__tests__/) bypassed the path filter → e2e skipped → all green in 5s. Merged cleanly without waiting.
+- **Temp worktree recovery**: Caught the wrong-branch commit to shiny's branch, created a temp worktree on main, cherry-picked the content, pushed cleanly. Removed temp worktree after push.
+
+### Gaps
+- **Wrong-branch commit (recurring)**: Committed pm-update.md to `polecat/shiny/cf-xdji@mos2s0vr` instead of `main`. Root cause: `~/gt/cfutons/refinery/rig` was a worktree that shiny switched to their branch. The feedback memory says "ALWAYS run `git branch --show-current` before `git add/commit`" — I DID check, and it returned `polecat/shiny/cf-xdji@mos2s0vr`. But I committed anyway! The check result must have been visible in the tool output; I need to actually READ it and abort if not main.
+
+### Pattern note
+- `git branch --show-current` returning anything other than `main` in the refinery/rig worktree means a crew member switched branches there. STOP and create a temp worktree for main instead of committing to the feature branch.
+
 ## Session 2026-05-25 — Sixteenth reflection (~09:45 MT)
 
 ### What worked well
