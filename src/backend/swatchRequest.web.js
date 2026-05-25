@@ -99,7 +99,7 @@ function validateSwatchIds(ids) {
 async function resolveSwatchNames(swatchIds) {
   const results = await Promise.all(
     swatchIds.map(id =>
-      wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
+      wixData.query('FabricSwatches').eq('_id', id).limit(1).find({ suppressAuth: true })
         .then(r => {
           const name = r.items[0]?.name;
           if (!name) logError('swatchRequest:resolveSwatchNames-notFound', null);
@@ -159,7 +159,7 @@ async function enqueueSwatch({ contactId, email, swatchNames, productSlug }) {
         lastError: '',
         abVariant: null,
         createdAt: now,
-      });
+      }, { suppressAuth: true });
     })
   );
 }
@@ -225,7 +225,7 @@ export const submitSwatchRequest = webMethod(
         ...(cleanSlug ? { productSlug: cleanSlug } : {}),
       };
 
-      const inserted = await wixData.insert('SwatchRequests', record);
+      const inserted = await wixData.insert('SwatchRequests', record, { suppressAuth: true });
 
       // Enqueue nurture emails — log failure but don't fail the request
       // (CMS record is already saved; email can be retried independently).
@@ -288,12 +288,12 @@ export const markSwatchShipped = webMethod(
       const cleanId = sanitize(String(requestId || ''), 100).trim();
       if (!cleanId) return { success: false, error: 'requestId is required' };
 
-      const result = await wixData.query('SwatchRequests').eq('_id', cleanId).limit(1).find();
+      const result = await wixData.query('SwatchRequests').eq('_id', cleanId).limit(1).find({ suppressAuth: true });
       const request = result.items[0];
       if (!request) return { success: false, error: 'Swatch request not found' };
 
       // Update status to shipped
-      await wixData.update('SwatchRequests', { ...request, status: 'shipped', shippedAt: new Date() });
+      await wixData.update('SwatchRequests', { ...request, status: 'shipped', shippedAt: new Date() }, { suppressAuth: true });
 
       // Fire-and-forget: queue follow-up sequence — don't fail the status update if email queuing fails
       const nameParts = (request.contactName || '').split(' ');
