@@ -1,68 +1,89 @@
-# PM Update — cfutons (melania) — 2026-05-24 ~18:45 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~02:35 MT
 
-## Session Summary
-Full PR sweep complete. 16 PRs reviewed. 1 approved. 15 need author fixes (recurring: bead IDs in describe/it labels, multi-line comments).
+## MERGED THIS WAVE (30 PRs total)
+- **#1062** (ISR+lint+test fix): MERGED ✅
+- **#1064** (cf-lrm9, subcategoryMatches): MERGED ✅
+- **#1043** (cf-ogzg, sale unification): MERGED ✅
+- **#1028** (cf-jgo7, JSON-LD): MERGED ✅
+- **#1032** (cf-r8z1, compare landmark a11y): MERGED ✅
+- **#1017** (cf-kxij, h1→h2 fix): MERGED ✅
+- **#1018** (cf-h37b, finish chip wrap): MERGED ✅
+- **#1010** (cfw-uc7l, og:image): MERGED ✅
+- **#1029** (cf-djsh, og:url, radahn): MERGED ✅
+- **#1021** (cf-ataj, sitemap, quartz): MERGED ✅
+- **#1066** (cf-qyq1, footer sky, godfrey): MERGED ✅ (Stilgar P0 — Option A)
+- **#1070** (cf-hrwm+cfw-54au, LocalBusiness JSON-LD+portofino, blaidd): MERGED ✅
+- **#1002** (cfw-tablet-header): MERGED ✅
+- **#990** (cfw-tney, 404 title): MERGED ✅
+- **#1008** (cf-7ofg, aria-hidden, godfrey): MERGED ✅
+- **#1069** (cfw-y94q, lint fix): MERGED ✅
+- **#1072** (ci coverage ratchet, auto): MERGED ✅
+- **#1073** (ci coverage ratchet, auto): MERGED ✅
+- **#1033** (cf-ei7c, cart Remove, opal): MERGED ✅
+- **#1077** (LivingFooterScene time:0 hotfix): MERGED ✅ (unblocked #1071, #1075, #1076)
+- **#1074** (cf-hrwm follow-on, /near index+JSON-LD+TrustBar, blaidd): MERGED ✅
+- **#1075** (cf-tdq9, ThemeToggle mobile, godfrey): MERGED ✅
+- **#1060** (cf-6vj1, CompareBar mobile clearance, morgott): MERGED ~01:03 MT ✅
+- **#1078** (cfw-b65n, Velo success body inspect, crew): MERGED ~01:03 MT ✅
+- **#1080** (cfw-mny, keyboard journey E2E, crew): MERGED ~01:07 MT ✅
+- **#1081** (cf-qyq1 Option B open-sky footer): MERGED ~01:13 MT ✅ (Stilgar P0 directive)
+- **#1082** (cf-j4ue, warranty data, rennala): MERGED ✅ — 5-agent 92/100. All 44 products mapped. Mesa 3000 = no warranty per Stilgar.
+- **#1083** (cf-7mx5, getting-it-home four→five states): MERGED ✅ — 5-agent 98/100. 1-word copy fix.
+- **#1027** (cf-q5cy, email-verify, morgott): MERGED ✅ — 5-agent 91/100 after 3 blocks. priceRange restored, PdpTrustSignals restored, max-h restored.
+- **#1079** (cfw-d5gg, Q&A Velo POST body.success, jasper): MERGED ~02:24 MT ✅ — 5-agent 88/100.
+- Session earlier: #987, #996, #997, #1007, #1016 ✅
 
-## PR Status — cfw (carolina-futons-web)
+## DOCS SHIPPED
+- **CFutons Frontend Integration Guide**: LIVE ✅
+  - https://github.com/DreadPirateRobertz/carolina-futons-web/blob/main/docs/cfutons-frontend-integration-guide.md
+  - Sent to mayor for Stilgar. Stilgar directive complete.
 
-### APPROVED — ready for next merge batch
-- **#1018** (godfrey, cf-h37b): VariantPicker grid 3+2 for 5-chip finish groups ✅
+## OPEN PRs — awaiting merge
+- **#1071** (cfw-y2wg, survey NPS, quartz): lint ✅ seed ✅ e2e IN_PROGRESS (run 26390444286, started 08:09 UTC). 5-agent 90/100 scored. MERGE ON GREEN.
+- **#1084** (cf-evt4, Turnstile error-callback, godfrey): MERGE CONFLICT — CI never triggered. Godfrey nudged to rebase on main.
 
-### REQUEST_CHANGES — waiting on author fixes
-- **#1039** (cf-5dph): MEGA_MENU_DATA must re-key `/shop/mattresses-sale` → `/shop/sale`; Header.test.tsx:112 not updated
-- **#1043** (cf-ogzg): 5× bead IDs in it() labels, 1× in describe(); unchecked boxes; SALE_END_DATE time-bomb; mixed-scope (cf-djsh og:url pages conflict with #1029)
-- **#1040** (cf-2ymq): multi-line JSX comment (8 lines), describe bead ID, dep conflict with #1011
-- **#1034** (cf-f5e5): describe bead ID `cf-f5e5:` in nested describe
-- **#1029** (cf-djsh): shop/page.tsx still has `url: "/shop"` (4th attempt) — needs `SITE_URL` import + template literal
-- **#1028** (cf-jgo7): 3× bead IDs in describe labels, unchecked boxes
-- **#1027** (cf-q5cy): 1× bead ID in test label, unchecked boxes, swipe tests may be wrong scope
-- **#1021** (cf-ataj): /registry still in STATIC_PATHS (it's noindex), bead ID comment block
-- **#1017** (cf-kxij): bead ID in it() label + 4-line JSX comment block → 1 line
-- **#1016** (cf-kuc9): 2-line comment block → 1 line
-- **#1013** (cfw-pqt7): 4× multi-line comment blocks in e2e spec
-- **#1012** (cf-k2zm): 15-line TSDoc → 1-line brief
-- **#1011** (cfw-mny.2): describe bead ID, dep conflict with #1040
-- **#1010** (cfw-uc7l): 2× describe bead IDs
-- **#1008** (cf-7ofg): describe bead ID + PR number in it() label
-- **#1007** (cfw-04if): 2× describe bead IDs
+## DRAFT — blocked (dependency resolved)
+- **#958** (swatch-request e2e, obsidian): #930 merged 2026-05-22. Nudged obsidian to rebase + mark ready.
 
-### COMMENTS / FLAGGED
-- **#1041** (cf-v275 remove sofa-beds): code clean, 3 unchecked test-plan boxes — needs author to check after verify
+## NEEDS OWN FIX (DO NOT TOUCH)
+- **#1003** (cart-image-scheme): lint FAIL — Stilgar's branch, DO NOT TOUCH.
 
-### NEEDS REBASE
-- **#1032** (cf-r8z1, obsidian): CONFLICTING — obsidian nudged to rebase
-- **#1033** (cf-ei7c, onyx): UNKNOWN merge state — onyx nudged
+## BLOCKED (credential prerequisite)
+- **#954** (checkout E2E): unchecked Stilgar credential box. DO NOT admin-merge.
 
-## Blocking Issues
+## Crew Assignments
+### CF Mac Crew
+- **rennala**: cf-x0fj (e2e/near-pages) — in progress
+- **blaidd**: cf-aqk3 (MascotFooterDivider mobile crop) — in progress; cf-z0h3 (cart setQuantity) queued
+- **radahn**: cf-7wug (AggregateRating+Review JSON-LD) — in progress; cf-bbh0 (Lighthouse) queued
+- **morgott**: IDLE — nudged to take cf-z0h3 (cart setQuantity persist, P1)
+- **miquella**: cf-bfpw (SEO meta audit) — in progress
+- **millicent**: cf-jvut (E2E gamification test) — in progress
 
-### cf-xymh (P0 — Wix payment provider)
-NO payment provider on staging Wix Stores → "We can't accept online payments" at checkout.
-**Requires Stilgar/Brenda admin action**: Wix Studio → Stores → Settings → Accept Payments → connect provider.
-Mayor nudged. CANNOT be code-fixed.
-
-### cf-djsh / PR #1029 vs #1043 conflict
-PR #1043 (cf-ogzg) includes 20+ og:url page fixes that overlap with PR #1029 (cf-djsh).
-These two PRs will conflict. Resolution needed: either drop og:url hunks from #1043, or close #1029 as superseded.
-Godfrey is now assignee for cf-djsh; godfrey nudged to fix /shop/page.tsx.
-
-## Crew Status
-- **radahn**: cf-djsh PR #1029 → REQUEST_CHANGES (4th time, same /shop URL issue)
-- **godfrey**: cf-djsh (in_progress, now assignee); cf-3qt.8.31 (blocked); PR #1018 approved
-- **obsidian**: cf-r8z1 needs rebase; cf-k2zm needs TSDoc trim
-- **onyx**: cf-ei7c rebase needed; cf-kxij needs label fixes
-- **miquella**: cf-ogzg PR #1043 needs fixes; cf-5dph PR #1039 needs MEGA_MENU_DATA fix
-- **quartz**: cf-ataj PR #1021 needs /registry removal
-- **opal**: cf-2ymq PR #1040 needs multi-line comment trim + dep conflict
-- **jasper**: cf-6zba (Charleston price) — Linux, status unknown
-- **miquella** (alt): cf-oi01 (E2E payments test) — blocked on cf-xymh
-
-## Recurring Pattern Alert
-**Every PR this session**: bead IDs in describe/it test labels. Need CONTRIBUTING.md rule added.
+### cfutons Polecats (Linux)
+- **opal**: cf-0kbr (a11y axe-core audit) — in progress
+- **jasper**: IDLE (PR #1079 merged) — cf-q7lm (sustainability material images) pending mayor reassign
+- **obsidian**: PR #958 draft needs rebase + mark ready (nudged)
+- **quartz**: PR #1071 e2e running — near merge
+- **onyx**: cf-l8p3 (edge-cases/404/redirects QA) — in progress
+- **guzzle**: cf-vjrw (futon frames audit) — branch pushed, Strata PDF blocker flagged to mayor
+- **nitro**: cf-qwdf (e2e /reviews smoke test) — in progress
+- **shiny**: cf-soos (verify /getting-it-home #1083) — in progress
+- **vault**: cf-jtle (/sustainability qa) — in progress
 
 ## Stilgar Action Items
-1. **cf-xymh**: Connect payment provider in Wix admin (P0 blocker)
-2. Design direction on cf-2ymq: literal `#3a2518` approved for QuizCtaSection? (PR #1040 uses it)
+- **Sedona + Asheville in Wix**: Both are Otis Bed mattress products miscategorized under Wall Huggers. Recategorize to Mattresses in Wix product manager, or remove from Wall Huggers. Images are mattress packaging (not frame photos). Price $0.00. Screenshots: cfw-live-sedona-wrong-image.png + cfw-live-asheville-wrong-image.png
+- **Strata Furniture warranty duration**: Blocked by 2013 binary PDF — guzzle/morgott. Flagged to mayor.
+- **Wix payment P0** (cf-xymh): Requires direct Wix dashboard action.
 
-## Next Merge Batch (waiting on fixes)
-When crew fixes arrive, merge in groups of 3-5 per Vercel build conservation rule (cf-ukc6).
-Candidates when ready: #1018 (approved), + 2-3 others once REQUEST_CHANGES resolved.
+## Data Gaps
+- **3 featured slugs** (kingston/sedona/asheville-futon-frame): mfr unconfirmed, need Wix product record
+- Trelli Full=Queen=$773: intentional flat pricing?
+- Venice King=$709 < Queen=$759: intentional?
+- Rosemary/BlackPepper "Gray": no source images — remove or upload?
+
+## P0 Status
+- **cf-xymh** (Wix payment): Requires Stilgar direct Wix dashboard action. Flagged.
+
+## Key Cascade Fixed
+**TimeOfDayState**: PR #1077 hotfix on main. Rebase fix: `git rebase --skip` if duplicate time:0 commit.
