@@ -52,6 +52,10 @@ vi.mock('backend/styleQuiz.web', () => ({
 }));
 vi.mock('backend/surveyService.web', () => ({
   submitSurveyResponse: vi.fn(),
+  // cf-y2wg: http-functions.js imports the collection-name constant
+  // from surveyService.web so the IDOR pre-check and the webMethod
+  // hit the SAME collection. Mock has to expose it too.
+  SURVEY_COLLECTION: 'SurveyResponses',
 }));
 vi.mock('backend/spinRedemptionService.web', () => ({
   grantSpin: vi.fn(),
@@ -75,7 +79,7 @@ import { getActiveChallenges, getLeaderboard as gamificationGetLeaderboard, reco
 import { getMyLoyaltyAccount, redeemReward } from 'backend/loyaltyService.web';
 import { getMyPushPreferences } from 'backend/pushNotificationService.web';
 import { captureQuizLead } from 'backend/styleQuiz.web';
-import { submitSurveyResponse } from 'backend/surveyService.web';
+import { submitSurveyResponse, SURVEY_COLLECTION } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import { __seed, __reset as __resetData } from './__mocks__/wix-data.js';
@@ -345,7 +349,9 @@ describe('cf-vtx5 · post_submitSurvey', () => {
   beforeEach(() => {
     // Default: authenticated member + a Survey row owned by them at order-1.
     __setMember({ _id: 'member-77', loginEmail: 'm@e.com' });
-    __seed('Survey', [{ _id: 'srv-1', memberId: 'member-77', orderId: 'order-1' }]);
+    // cf-y2wg: seed the SAME collection the webMethod writes to —
+    // not a separate 'Survey' that doesn't exist in prod.
+    __seed(SURVEY_COLLECTION, [{ _id: 'srv-1', memberId: 'member-77', orderId: 'order-1' }]);
   });
 
   it('shims cfw shape {score, comments, orderId} → webMethod {orderId, npsScore, comment}', async () => {
@@ -384,7 +390,7 @@ describe('cf-vtx5 · post_submitSurvey', () => {
     // Pre-check passes (caller has a member + matching orderId), so the
     // webMethod is invoked and surfaces its own auth_required envelope.
     __setMember({ _id: 'member-77', loginEmail: 'm@e.com' });
-    __seed('Survey', [{ _id: 'sv-1', memberId: 'member-77', orderId: 'order-1' }]);
+    __seed(SURVEY_COLLECTION, [{ _id: 'sv-1', memberId: 'member-77', orderId: 'order-1' }]);
     const res = await post_submitSurvey(flatReq({ score: 5, orderId: 'order-1' }));
     expect(res.status).toBe(401);
   });
@@ -397,6 +403,29 @@ describe('cf-vtx5 · post_submitSurvey', () => {
     expect(res.status).toBe(404);
     expect(JSON.parse(res.body)).toMatchObject({ success: false, error: expect.stringMatching(/no survey/i) });
     expect(vi.mocked(submitSurveyResponse)).not.toHaveBeenCalled();
+  });
+
+  // cf-y2wg: regression pin — wrapper MUST query the same collection
+  // the webMethod operates on. Pre-fix, http-functions.js hard-coded
+  // 'Survey' while surveyService.web.js wrote to 'SurveyResponses',
+  // so the IDOR pre-check 404'd every legitimate caller and no
+  // submission ever reached the webMethod in prod. Constant is
+  // imported from surveyService.web; if a future contributor changes
+  // either side independently this test fails.
+  it('cf-y2wg: IDOR pre-check queries the SAME collection the webMethod writes to', async () => {
+    expect(SURVEY_COLLECTION).toBe('SurveyResponses');
+    // Seed ONLY the wrong (legacy 'Survey') collection — the wrapper
+    // must NOT find the row there.
+    __resetData();
+    __setMember({ _id: 'member-77', loginEmail: 'm@e.com' });
+    __seed('Survey', [{ _id: 'old', memberId: 'member-77', orderId: 'order-1' }]);
+    const res1 = await post_submitSurvey(flatReq({ score: 8, orderId: 'order-1' }));
+    expect(res1.status).toBe(404);
+    // Re-seed under the canonical name — the wrapper finds it.
+    __seed(SURVEY_COLLECTION, [{ _id: 'new', memberId: 'member-77', orderId: 'order-1' }]);
+    vi.mocked(submitSurveyResponse).mockResolvedValue({ success: true });
+    const res2 = await post_submitSurvey(flatReq({ score: 8, orderId: 'order-1' }));
+    expect(res2.status).toBe(200);
   });
 
   it('cf-yvs4: returns 401 when no SiteMember context', async () => {

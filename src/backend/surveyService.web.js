@@ -25,7 +25,12 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { logError } from 'backend/utils/errorHandler';
 
-const SURVEY_COLLECTION = 'SurveyResponses';
+// cf-y2wg: exported so the post_submitSurvey HTTP wrapper in
+// http-functions.js queries the SAME collection the webMethod writes
+// to. Pre-cf-y2wg the wrapper hard-coded 'Survey' and the webMethod
+// hard-coded 'SurveyResponses'; the IDOR pre-check looked at a
+// non-existent collection and silently 404'd every submission.
+export const SURVEY_COLLECTION = 'SurveyResponses';
 const MAX_COMMENT_LENGTH = 1000;
 const NPS_MIN = 0;
 const NPS_MAX = 10;
