@@ -1,3 +1,40 @@
+# PM Update — cfutons (melania) — 2026-05-25 ~10:00 MT
+
+## SESSION UPDATE ~09:30-10:00 MT
+
+### MERGED
+- **#1578** (cf-y2wg, survey IDOR): MERGED ✅ — carolina-futons repo. cf-y2wg CLOSED.
+
+### REVIEWED (pending CI green → merge)
+- **#1143** (cfw-yz7j, debug_hour): 90/100 APPROVED. Awaiting /ultrareview + e2e.
+- **#1146** (cfw-7svm, Heron+drop LivingFooterBg): 92/100 APPROVED. CI queued. cfw-7svm CLOSED.
+- **#1147** (cfw-38ij, 7 dropped cfw-mjre specs): 94/100 APPROVED. CI queued.
+
+### WILDLIFE RESOLUTION
+- Bears were never missing — LivingFooterScene has them. Gap = Phase 7 birds (never implemented).
+- PR #1146: Heron silhouette added to MascotFooterDivider night scene. LivingFooterBg dropped.
+- cfw-si04 (full birds+hawk+vultures): radahn assigned, scope pending Stilgar confirmation.
+- PR #1137 (dawn extension): HELD.
+
+### CI WAVE — e2e IN PROGRESS (~50min elapsed)
+- **#1138** (cf-c4lh0.5), **#1139** (cf-c4lh0.7), **#1140** (cf-c4lh0.9), **#1141** (cfw-5kdt): lint✅ seed✅ e2e⏳
+- **#1143** (cfw-yz7j), **#1144** (cf-c4lh0.10): lint✅ seed✅ e2e⏳
+- **#1145** (cf-c4lh0.12), **#1146** (cfw-7svm), **#1147** (cfw-38ij): CI queued
+- **#1142** (cfw-j064): coverage FAIL — quartz fixing 4 missing test cases
+- **#1118** (cf-cm5xq): merge conflict — millicent rebasing (38 commits behind)
+- **#1003**: miquella pushed fixes to Stilgar's branch. CI running. DO NOT admin-merge.
+
+### CREW DISPATCH (10:00 MT)
+**Mac:** millicent→cf-jvut(gamification e2e), radahn→cf-7wug(queued), godfrey→cfw-75e(welcome email), blaidd→cfw-ob6a(queued), morgott→cfw-lygi(/shop/sofa-beds)
+**Linux:** jasper=cfw-fkoh, obsidian=cfw-w8ee+PR#1143-standby, quartz=cfw-j064+coverage-fix, onyx=cfw-vma9
+
+### HOLDS
+- **#1096** (CLS): naive sum algorithm — blocked.
+- **#1137** (dawn): per Stilgar.
+- **#954** (checkout E2E): credential blocked.
+
+---
+
 # PM Update — cfutons (melania) — 2026-05-25 ~07:08 MT
 
 ## MERGED THIS WAVE (33 PRs total)
