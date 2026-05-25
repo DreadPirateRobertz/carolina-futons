@@ -1,6 +1,6 @@
-# PM Update — cfutons (melania) — 2026-05-25 ~02:43 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~09:05 MT
 
-## MERGED THIS WAVE (30 PRs total)
+## MERGED THIS WAVE (33 PRs total)
 - **#1062** (ISR+lint+test fix): MERGED ✅
 - **#1064** (cf-lrm9, subcategoryMatches): MERGED ✅
 - **#1043** (cf-ogzg, sale unification): MERGED ✅
@@ -33,12 +33,17 @@
 - **#1079** (cfw-d5gg, Q&A Velo POST body.success, jasper): MERGED ~02:24 MT ✅ — 5-agent 88/100.
 - **#1071** (cfw-y2wg, survey NPS Bearer auth, quartz): MERGED ~02:43 MT ✅ — 5-agent 90/100. e2e=pre-existing email-triggers-blocked.spec.ts.
 - **#1084** (cf-evt4, TurnstileWidget imperative API, godfrey): MERGED ~02:41 MT ✅ — 5-agent 88/100. Post-merge: visual QA /contact + /swatch-request.
+- **#1087** (ci coverage ratchet functions 80→81, auto): MERGED ~09:00 MT ✅
 - Session earlier: #987, #996, #997, #1007, #1016 ✅
 
 ## DOCS SHIPPED
 - **CFutons Frontend Integration Guide**: LIVE ✅
   - https://github.com/DreadPirateRobertz/carolina-futons-web/blob/main/docs/cfutons-frontend-integration-guide.md
   - Sent to mayor for Stilgar. Stilgar directive complete.
+
+## MERGED THIS WAVE (35 PRs total — additions)
+- **#1085** (cf-q7lm, sustainability images, radahn): MERGED ~09:28 MT ✅ — 5-agent 91/100. 6 CDN imageUrls + next/image upgrade.
+- **#1086** (cf-x0fj, /near e2e, rennala): MERGED ~09:29 MT ✅ — 5-agent 93/100. 20 assertions, 4 pages.
 
 ## OPEN PRs — awaiting merge
 _(none — pipeline clear)_
@@ -54,23 +59,28 @@ _(none — pipeline clear)_
 
 ## Crew Assignments
 ### CF Mac Crew
-- **rennala**: cf-x0fj (e2e/near-pages) — in progress
-- **blaidd**: cf-aqk3 (MascotFooterDivider mobile crop) — in progress; cf-z0h3 (cart setQuantity) queued
-- **radahn**: cf-7wug (AggregateRating+Review JSON-LD) — in progress; cf-bbh0 (Lighthouse) queued
-- **morgott**: cf-bbh0 (Lighthouse audit P1) — assigned. cf-z0h3 was stale (already merged as PR #1046).
-- **miquella**: cf-bfpw (SEO meta audit) — in progress
-- **millicent**: cf-jvut (E2E gamification test) — in progress
+- **rennala**: cf-x0fj MERGED (#1086) — nudged for next bead
+- **blaidd**: cf-aqk3 (MascotFooterDivider mobile crop) — in progress
+- **radahn**: cf-q7lm MERGED (#1085) → cf-jtle (sustainability CMS qa) — just assigned
+- **morgott**: cf-bbh0 CLOSED ✅ — /=97, /about=99, /warranty=99, /contact=99. NEW: cf-ousj (contact+swatch form TURNSTILE_SECRET_KEY hard-fail fix) — assigned ~09:10 MT
+- **miquella**: cf-bfpw (SEO meta audit) — nudged to push PRs (no GitHub PRs visible yet)
+- **millicent**: cf-758q (e2e /about+/warranty+/faq) — just assigned; cf-jvut DEFERRED, cf-3qt.8 BLOCKED
+- **godfrey**: cf-evt4 MERGED — visual QA /contact + /swatch-request post-#1084
 
 ### cfutons Polecats (Linux)
 - **opal**: cf-0kbr (a11y axe-core audit) — in progress
-- **jasper**: IDLE (PR #1079 merged) — cf-q7lm (sustainability material images) pending mayor reassign
+- **jasper**: IDLE — mayor nudged for next Linux bead (cf-q7lm reassigned to radahn)
 - **obsidian**: PR #958 draft needs rebase + mark ready (nudged)
-- **quartz**: PR #1071 e2e running — near merge
+- **quartz**: IDLE (PR #1071 merged ~02:43 MT) — mayor nudged for next Linux bead
 - **onyx**: cf-l8p3 (edge-cases/404/redirects QA) — in progress
-- **guzzle**: cf-vjrw (futon frames audit) — branch pushed, Strata PDF blocker flagged to mayor
+- **guzzle**: cf-vjrw (futon frames audit) — Strata PDF blocker flagged to mayor
 - **nitro**: cf-qwdf (e2e /reviews smoke test) — in progress
 - **shiny**: cf-soos (verify /getting-it-home #1083) — in progress
 - **vault**: cf-jtle (/sustainability qa) — in progress
+
+## P1 Bugs (NEW — Frontend Fixable)
+- **cf-ousj** (/contact form "We couldn't send that"): Root cause = TURNSTILE_SECRET_KEY missing → hard-fail at server action line 84. Fix: remove hard-block, allow submission without key. Assigned to morgott.
+- **cf-tusv** (/swatch-request "We couldn't submit that"): Same TURNSTILE_SECRET_KEY pattern in swatch-request.ts line 128. Morgott fixing both in one PR.
 
 ## Stilgar Action Items
 - **Sedona + Asheville in Wix**: Both are Otis Bed mattress products miscategorized under Wall Huggers. Recategorize to Mattresses in Wix product manager, or remove from Wall Huggers. Images are mattress packaging (not frame photos). Price $0.00. Screenshots: cfw-live-sedona-wrong-image.png + cfw-live-asheville-wrong-image.png
