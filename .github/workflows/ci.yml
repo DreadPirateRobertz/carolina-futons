@@ -330,3 +330,32 @@ jobs:
         run: npm run e2e:a11y
         env:
           E2E_BASE_URL: https://halworker85.wixstudio.com/my-site
+
+  # ── E2E SEO — robots.txt + sitemap (cf-nf96) ────────────────────────────────
+  # Pre-DNS cutover: verify robots.txt and sitemap.xml are correctly served.
+  # Non-blocking (continue-on-error: true).
+  e2e-seo-metadata:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run robots.txt + sitemap smoke tests
+        run: npm run e2e:seo
+        env:
+          E2E_BASE_URL: https://halworker85.wixstudio.com/my-site
