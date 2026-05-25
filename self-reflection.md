@@ -1,5 +1,21 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Eighteenth reflection (~10:45 MT)
+
+### What worked well
+- **Post-merge conflict detection**: When #1147 rebase introduced old hamburger labels on top of #1145, a new PR (#1152) appeared immediately. Caught the regression and queued the fix without needing to manually verify — the crew caught it first.
+- **Conflict resolution pattern**: Two separate #1147 rebases in sequence (first time missed the updated remote tip, second time caught it). The `--force-with-lease` rejection was a safety signal that prompted re-fetch before proceeding.
+- **Multiple PRs same file**: When #1149 and #1147 both modified `about-page.spec.ts`, I consistently resolved conflicts by keeping HEAD's version (the more specific `p.filter()` locator from #1149). The per-commit conflict resolution in rebase worked correctly.
+- **Parallel bead closes**: Closed 5 beads in one batch (cfw-w8ee, cfw-2qp, cfw-75e, cfw-epn, cf-cm5xq) immediately after their PRs merged, matching the standing order.
+- **PR #1150 vs #1151 decision**: Chose #1151 (5-line targeted fix) over #1150 (60-line comprehensive fix) for cf-c4lh0.11. Both fix the same root cause; picking the smaller PR is lower risk and less likely to introduce new issues.
+
+### Gaps
+- **Rebase regression**: When I rebased #1147 onto main after #1145 had renamed labels, I only resolved the `about-page.spec.ts` conflict and missed that the same PR also modified `mobile-hamburger.spec.ts` with old labels. Always check ALL conflicted files after a rebase, not just the first CONFLICT reported.
+- **PR quantity**: By session end: 6 PRs merged (#1118, #1145, #1147, #1148, #1149 + already counted #1138-1144), 3 new follow-up PRs created (#1150, #1151, #1152) — net 3 new open PRs from rebasing churn.
+
+### Pattern note
+- After rebasing a branch, do `git diff origin/main...HEAD -- '*.spec.ts' | grep -E '^\+.*"[A-Z]'` to check for hardcoded string literals that may have been stale relative to HEAD before submitting.
+
 ## Session 2026-05-25 — Seventeenth reflection (~09:45 MT)
 
 ### What worked well
