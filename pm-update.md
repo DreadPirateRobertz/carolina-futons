@@ -57,7 +57,7 @@ _(none — pipeline clear)_
 - **rennala**: cf-x0fj (e2e/near-pages) — in progress
 - **blaidd**: cf-aqk3 (MascotFooterDivider mobile crop) — in progress; cf-z0h3 (cart setQuantity) queued
 - **radahn**: cf-7wug (AggregateRating+Review JSON-LD) — in progress; cf-bbh0 (Lighthouse) queued
-- **morgott**: IDLE — nudged to take cf-z0h3 (cart setQuantity persist, P1)
+- **morgott**: cf-bbh0 (Lighthouse audit P1) — assigned. cf-z0h3 was stale (already merged as PR #1046).
 - **miquella**: cf-bfpw (SEO meta audit) — in progress
 - **millicent**: cf-jvut (E2E gamification test) — in progress
 
