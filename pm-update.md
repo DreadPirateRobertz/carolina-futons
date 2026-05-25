@@ -1,28 +1,49 @@
-# PM Update — cfutons (melania) — 2026-05-25 ~09:40 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~09:51 MT
 
-## SESSION UPDATE ~09:35-09:45 MT
+## SESSION UPDATE ~09:35-09:51 MT
 
 ### MERGED (wave flush)
-- **#1138** (cf-c4lh0.5, --cf-muted contrast token): MERGED ✅ ~09:40 MT
-- **#1139** (cf-c4lh0.7, /1991/ strict mode fix): MERGED ✅ ~09:40 MT
-- **#1140** (cf-c4lh0.9, ReviewFilter role=img): MERGED ✅ ~09:40 MT
-- **#1141** (cfw-5kdt, malformed-email 422): MERGED ✅ ~09:40 MT
-- **#1142** (cfw-j064, cart wix:image→CDN+variantLabel): MERGED ✅ ~09:35 MT (all green)
+- **#1138** (cf-c4lh0.5, --cf-muted contrast): MERGED ✅
+- **#1139** (cf-c4lh0.7, /1991/ strict mode): MERGED ✅
+- **#1140** (cf-c4lh0.9, ReviewFilter role=img): MERGED ✅
+- **#1141** (cfw-5kdt, malformed-email 422): MERGED ✅
+- **#1142** (cfw-j064, cart wix:image→CDN): MERGED ✅
+- **#1144** (cf-c4lh0.10, FAQ accordion): MERGED ✅ ~09:44 MT
+- **#1136** (cf-2nyjm, og:url near pages): MERGED ✅ by Stilgar ~09:03 MT
 
 ### BEADS CLOSED
-- cf-c4lh0.5, cf-c4lh0.7, cf-c4lh0.9, cfw-5kdt, cfw-j064 — all closed post-merge
+- cf-c4lh0.5, cf-c4lh0.7, cf-c4lh0.9, cfw-5kdt, cfw-j064, cf-c4lh0.10 — all closed post-merge
 
-### PENDING MERGE (lint✅ seed✅ Vercel✅, e2e runner-queued)
-- **#1143** (cfw-yz7j, debug_hour): Awaiting mayor /ultrareview + e2e completion
-- **#1144** (cf-c4lh0.10, FAQ accordion): e2e runner-queued
-- **#1145** (cf-c4lh0.12, mobile nav labels): e2e runner-queued
-- **#1146** (cfw-7svm, Heron+drop LivingFooterBg): e2e runner-queued, awaiting Stilgar QA
-- **#1147** (cfw-38ij, 7 dropped specs): e2e runner-queued
-- **#1136** (cf-2nyjm, og:url near pages, rennala): lint✅ seed✅ e2e runner-queued
+### NEW PRs
+- **#1148** (cfw-w8ee, RoomPlanner mobile overflow, obsidian): 93/100 reviewed. CI queued.
+- **#1149** (CMS-resilient 1991 locator, follow-up): 95/100 reviewed. CI queued.
+
+### PENDING MERGE (lint✅ seed✅ Vercel✅, awaiting e2e or timeout)
+- **#1143** (cfw-yz7j, debug_hour): Awaiting mayor /ultrareview — nudged mayor.
+- **#1145** (cf-c4lh0.12, mobile nav labels): CI all queued (runner constrained)
+- **#1146** (cfw-7svm, Heron+drop LivingFooterBg): e2e ~20min elapsed. Awaiting Stilgar QA.
+- **#1147** (cfw-38ij, 7 dropped specs): CI kicked via workflow_dispatch — queued.
+- **#1148** (cfw-w8ee, RoomPlanner overflow): CI queued.
+- **#1149** (CMS-resilient 1991): CI queued.
+- **#1118** (cf-cm5xq, /visit axe): CI kicked via empty commit push.
+
+### Stilgar Actions
+- **PR #1003** (cart-image-scheme): ALL CI GREEN. Ready for Stilgar to merge.
+- **PR #1143**: Needs /ultrareview before merge (mayor alerted).
+- **PR #1146**: Heron night scene preview live — awaiting Stilgar visual QA then merge.
+
+### BEADS CONFIRMED CLOSED (earlier, not yet listed)
+- cf-bbh0 (Lighthouse audit): CLOSED — morgott completed, all pages pass.
 
 ### RENNALA
-- Idle; cfw-voj9 (auth rate-limits register+forgot-password) is her active bead. Nudged.
-- PR #1136 awaiting merge; she's clear to start cfw-voj9 implementation.
+- PR #1136 MERGED. cfw-voj9 (auth rate-limits) is active bead. Nudged to start.
+
+### Crew (Mac) — known bead state
+- millicent: cf-jvut (gamification E2E), PR #1118 CI kicked
+- radahn: cf-7wug (AggregateRating JSON-LD), cf-si04 (birds/wildlife) queued
+- godfrey: cfw-75e (welcome email)
+- blaidd: cfw-ob6a (design-a-room max-w desktop)
+- morgott: cfw-lygi (/shop/sofa-beds), cf-bbh0 CLOSED
 
 ### MILLICENT
 - PR #1118 CI not triggering after force-push rebase. Nudged to add empty commit.
