@@ -1,2 +1,4 @@
 # packages/ uses React + Wix SDK types incompatible with root ESLint config
 packages/
+# TypeScript e2e specs use TS syntax; root ESLint config has no TS parser (cf-hcjq)
+e2e/*.spec.ts

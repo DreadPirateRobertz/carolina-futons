@@ -300,3 +300,33 @@ jobs:
         run: npm run test:e2e
         env:
           E2E_BASE_URL: https://halworker85.wixstudio.com/my-site
+
+  # ── E2E a11y — /compare (cf-hcjq) ──────────────────────────────────────────
+  # axe-core WCAG 2.1 AA sweep on the staging /compare page via Playwright.
+  # Non-blocking (continue-on-error: true) — external Wix staging pages may
+  # have transient Wix-platform violations outside of app code.
+  e2e-a11y-compare:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run /compare a11y sweep
+        run: npm run e2e:a11y
+        env:
+          E2E_BASE_URL: https://halworker85.wixstudio.com/my-site

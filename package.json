@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@vitest/coverage-v8": "^4.1.5",
     "@wix/cli": "^1.1.183",
     "@wix/eslint-plugin-cli": "^1.0.0",
@@ -34,6 +35,7 @@
     "parity:screenshots": "node parity/screenshot-harness.js",
     "parity:functional": "playwright test --config parity/playwright.config.js parity/functional",
     "parity:gsc-pull": "node scripts/gsc-url-pull.js",
-    "parity:redirect-map": "node scripts/build-redirect-map.js"
+    "parity:redirect-map": "node scripts/build-redirect-map.js",
+    "e2e:a11y": "playwright test --config e2e/playwright.config.js"
   }
 }
