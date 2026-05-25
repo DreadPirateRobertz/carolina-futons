@@ -20,6 +20,7 @@ import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 import { triggerSwatchFollowupSequence } from 'backend/emailAutomation.web';
 import { sendSwatchConfirmationEmail } from 'backend/emailService.web';
+import { resolveContactId } from 'backend/contacts/contactResolver.web';
 import { logError } from 'backend/utils/errorHandler';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 
@@ -112,6 +113,10 @@ async function resolveSwatchNames(swatchIds) {
 
 /**
  * Upsert a CRM contact and return contactId.
+ *
+ * cf-xdji (F7): handle both response shapes — current `{ contactId }` and
+ * legacy `{ contact: { _id } }`. Reading only `result.contactId` left new
+ * visitors with an empty contactId, which Wix Email Marketing silently drops.
  */
 async function upsertContact(contact) {
   const result = await contacts.appendOrCreateContact({
@@ -126,7 +131,7 @@ async function upsertContact(contact) {
       country: 'US',
     }],
   });
-  return result.contactId;
+  return result?.contactId || result?.contact?._id || '';
 }
 
 /**
@@ -203,8 +208,13 @@ export const submitSwatchRequest = webMethod(
       // Resolve swatch names
       const swatchNames = await resolveSwatchNames(cleanIds);
 
-      // Upsert CRM contact
-      const contactId = await upsertContact(contact);
+      // Upsert CRM contact. cf-xdji (F7): if the address-rich upsert returns
+      // no contactId for any reason, fall back to the email-only resolver so
+      // the swatch confirmation is never queued with an empty contactId.
+      let contactId = await upsertContact(contact);
+      if (!contactId) {
+        contactId = await resolveContactId(contact.email, contact.firstName);
+      }
 
       // Insert request record
       const record = {
