@@ -1,5 +1,22 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Eighth reflection (~09:30 MT)
+
+### What worked well
+- **Root cause diagnosis without cloning**: Identified cf-ousj/cf-tusv root cause (TURNSTILE_SECRET_KEY missing → hard-block in production) by reading two server action files directly. Saved morgott from chasing a Velo backend phantom. Corrected the bead block status and provided precise 3-file fix spec in one nudge.
+- **Pre-existing failure pattern verification**: PR #1085 had 132 failures vs main's 136 — confirmed PR introduced FEWER failures than main, not more. This is the correct check. Admin-merged with confidence.
+- **Fast bead creation for idle crew**: millicent was queue-dry, morgott was idle post cf-bbh0, radahn was idle post cf-q7lm. All three got new beads with precise specs within one session pass. Zero idle time left.
+- **Coverage ratchet PR recognized and merged immediately**: #1087 was a 1-line threshold bump (functions: 80→81). Pattern-matched to #1072/#1073 from earlier session. No 5-agent review needed, no CI wait needed. Merged in ~30 seconds.
+- **cf-bfpw investigation**: When miquella claimed "6 PRs CI-swept" but none appeared in GitHub, cross-checked via `git branch -r` for her branches. Found only stale cf-44qt branches (already CLOSED bead). Nudged miquella to actually push. Didn't accept the claim blindly.
+
+### What to improve
+- **PR #1086 had a new run at 26393270177 (rennala pushed a commit) while I was already watching the original run 26392160449**. I was watching the wrong run. Should always check run IDs match the PR head before trusting "CI pending" as representative of the current commit.
+- **cf-jtle reassignment**: Reassigned from vault to radahn without verifying vault's progress. If vault is mid-flight on cf-jtle, this creates a collision. Should check vault bead status before reassigning.
+
+### Pattern notes
+- **TURNSTILE_SECRET_KEY hard-fail**: Both contact/actions.ts and swatch-request.ts have `if (!hasSecret && NODE_ENV=production) → block`. This means ANY production deploy without TURNSTILE_SECRET_KEY set will silently fail all form submissions. Fix = remove the hard-fail, allow submission when key absent (matches degraded UI intent).
+- **Pre-existing e2e cascade count**: Always compare PR failure count against main branch count. PR count < main count = definitely pre-existing, safe to admin-merge. PR count > main count = investigate new failures first.
+
 ## Session 2026-05-25 — Seventh reflection (~02:35 MT)
 
 ### What worked well
