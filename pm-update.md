@@ -1,4 +1,33 @@
-# PM Update — cfutons (melania) — 2026-05-25 ~10:00 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~09:40 MT
+
+## SESSION UPDATE ~09:35-09:45 MT
+
+### MERGED (wave flush)
+- **#1138** (cf-c4lh0.5, --cf-muted contrast token): MERGED ✅ ~09:40 MT
+- **#1139** (cf-c4lh0.7, /1991/ strict mode fix): MERGED ✅ ~09:40 MT
+- **#1140** (cf-c4lh0.9, ReviewFilter role=img): MERGED ✅ ~09:40 MT
+- **#1141** (cfw-5kdt, malformed-email 422): MERGED ✅ ~09:40 MT
+- **#1142** (cfw-j064, cart wix:image→CDN+variantLabel): MERGED ✅ ~09:35 MT (all green)
+
+### BEADS CLOSED
+- cf-c4lh0.5, cf-c4lh0.7, cf-c4lh0.9, cfw-5kdt, cfw-j064 — all closed post-merge
+
+### PENDING MERGE (lint✅ seed✅ Vercel✅, e2e runner-queued)
+- **#1143** (cfw-yz7j, debug_hour): Awaiting mayor /ultrareview + e2e completion
+- **#1144** (cf-c4lh0.10, FAQ accordion): e2e runner-queued
+- **#1145** (cf-c4lh0.12, mobile nav labels): e2e runner-queued
+- **#1146** (cfw-7svm, Heron+drop LivingFooterBg): e2e runner-queued, awaiting Stilgar QA
+- **#1147** (cfw-38ij, 7 dropped specs): e2e runner-queued
+- **#1136** (cf-2nyjm, og:url near pages, rennala): lint✅ seed✅ e2e runner-queued
+
+### RENNALA
+- Idle; cfw-voj9 (auth rate-limits register+forgot-password) is her active bead. Nudged.
+- PR #1136 awaiting merge; she's clear to start cfw-voj9 implementation.
+
+### MILLICENT
+- PR #1118 CI not triggering after force-push rebase. Nudged to add empty commit.
+
+---
 
 ## SESSION UPDATE ~09:30-10:00 MT
 
