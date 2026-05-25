@@ -46,7 +46,7 @@ import * as _pushNotificationServiceModule from 'backend/pushNotificationService
 // block (`import * as wishlistServiceModule from 'backend/wishlistService.web';`).
 // Don't re-import here.
 import * as _styleQuizModule from 'backend/styleQuiz.web';
-import { submitSurveyResponse } from 'backend/surveyService.web';
+import { submitSurveyResponse, SURVEY_COLLECTION } from 'backend/surveyService.web';
 import { grantSpin } from 'backend/spinRedemptionService.web';
 import { submitCommunityPhoto } from 'backend/communityPhoto.web';
 // cf-bkxh: namespace import for giftRegistry dispatcher.
@@ -3634,7 +3634,10 @@ export async function post_submitSurvey(request) {
     });
   }
   try {
-    const lookup = await wixData.query('Survey')
+    // cf-y2wg: single source of truth on collection name — was hard-
+    // coded 'Survey' and silently mismatched the webMethod's
+    // SurveyResponses, returning 404 for every legitimate caller.
+    const lookup = await wixData.query(SURVEY_COLLECTION)
       .eq('memberId', member._id)
       .eq('orderId', orderId)
       .limit(1)
