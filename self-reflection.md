@@ -1,5 +1,125 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Seventh reflection (~02:35 MT)
+
+### What worked well
+- **PR #1079 cross-rig unblock**: Jasper (cfutons_web Linux) had a BLOCKED PR with incomplete body.success check. After direct sling failed (Mac can't sling to Linux cfutons_web), relayed exact fix spec to mayor for cross-rig dispatch. Jasper pushed fix, CI went green (e2e✅ seed✅ lint✅), merged in one clean shot. Cross-rig relay via mayor works reliably.
+- **#1084 conflict detection**: Immediately caught that PR #1084 (godfrey Turnstile) showed `mergeable: CONFLICTING` — explaining why CI never triggered after 30+ minutes. Checked `gh pr view --json mergeable,state` before accepting "CI pending" as normal. Saved waiting indefinitely on a stuck PR.
+- **#1084 typecheck fix relay**: Two typecheck errors in godfrey's test files — TurnstileWidget.test.tsx (vi.fn mock type not carrying .mock property) and near-index-page.test.tsx (OpenGraph.type not in union). Diagnosed both from CI annotations alone without cloning the branch. Exact fix specs sent in one nudge.
+- **5-agent reviews completed pre-merge**: Both #1071 (90/100) and #1079 (88/100) received full 5-agent review comments on GitHub before merge. No skip or defer.
+
+### What to improve
+- **E2e poll cadence still too tight**: Checked #1071 e2e ~8 times within 15 minutes. The job started at 08:09 UTC; it's a real Playwright run. Should have set a 10-minute floor between polls after confirming the job was started.
+- **Stale bead cleanup reflex**: `cf-j4ue` was still in_progress in beads after PR #1082 merged (warranty audit). Should always close the bead immediately on merge confirmation, not catch it later on `bd ready` scan.
+
+### Pattern notes
+- **`gh pr view --json mergeable`**: Run this when a PR shows no CI after 15+ minutes. `CONFLICTING` = merge conflict = CI never triggers. Much faster than waiting for GitHub to surface the conflict flag in the PR checks UI.
+- **`vi.fn()` return type in test helper functions**: When `setupXyz()` returns `{ mockFoo: typeof window.foo & object }`, TS doesn't know `render` is actually a `vi.fn()` — `.mock` property disappears. Fix: define `MockFoo = { render: ReturnType<typeof vi.fn>; ... }` and use that as the return type.
+- **Cross-rig block protocol**: Mac cannot `gt sling` to cfutons_web Linux. Protocol: (1) create bead with exact fix spec, (2) attempt sling (expect fail), (3) relay spec directly to mayor. Mayor relays cross-rig. Don't wait for sling to succeed before relaying.
+
+
+
+## Session 2026-05-25 — Sixth reflection (~00:55 MT)
+
+### What worked well
+- **Wrong-branch commit caught immediately**: Committed integration doc to rennala's branch (`cf-j4ue-warranty-audit-murphy-platform-mattress`) instead of main. Caught it on the push failure ("no upstream branch"). Immediately ran `git reset HEAD~1`, switched to main, re-committed correctly. Zero damage.
+- **Integration doc shipped cleanly**: 734-line CFutons Frontend Integration Guide written, committed to main, pushed, mayor notified with URL — Stilgar directive complete within one context window.
+- **PR #1079 merge blocker caught**: Code reviewer (subagent) correctly identified that `insertProductQuestion` fetch path lacks `200 {success: false}` body inspection — same class of silent-failure bug PR #1078 fixes on other paths. Blocked PR with comment and nudged jasper before e2e completed. Didn't let CI timing create false urgency to merge.
+- **cfw-b65n duplicate PR identified**: Two PRs (#1076 obsidian, #1078 different crew) for same bead. #1076 has TimeOfDayState typecheck failure; #1078 is clean. Flagged in pm-update: if #1078 merges first, close #1076.
+- **All idle crew assigned**: miquella (cf-bfpw SEO audit), opal (cf-0kbr a11y), onyx (cf-l8p3 edge-cases) — all dispatched. Pipeline full.
+
+### What to improve
+- **Branch check before git commit**: STILL committed to wrong branch (rennala's). This is a RECURRING failure (flagged in memory as feedback_branch_check_before_commit.md). Must run `git branch --show-current` before every `git add`. No exceptions.
+- **CI timing discipline**: E2e started 06:27 UTC, it's 06:55 UTC, I've checked status 6+ times since. These jobs take 25-35 min. Set mental floor: don't check more than twice before the 30-minute mark.
+
+### Pattern notes
+- **cfw-b65n Velo body inspection gap**: PR #1079 (Q&A submit path) missed the same `200 {success: false}` pattern that #1078 fixes. When reviewing any PR that adds a new Velo fetch() call, always check for body inspection after `res.ok`.
+- **subagent code-reviewer works well on git diff**: Passing `git diff origin/main...origin/<branch>` context to code-reviewer gives accurate results. The subagent correctly identified a real bug (88% confidence) that I would have missed.
+
+## Session 2026-05-25 — Fifth reflection (~06:10 MT)
+
+### What worked well
+- **Typecheck cascade diagnosis**: PR #1071 (quartz) Typecheck failed for a non-obvious reason — `TimeOfDayState` gained `time: number` when PR #1066 merged, breaking the test mock in `LivingFooterScene.test.tsx:175`. Correctly diagnosed from CI annotations without being able to read the PR branch code. Root cause: rebase wave creates downstream type drift.
+- **PR #958 unblocking**: Noticed draft PR #958 in the open PR list, checked its dependency (#930 swatch wiring), confirmed it merged May 22. Nudged obsidian to rebase+mark ready immediately. No stale monitor needed.
+- **PR #1074 already has the fix**: Realized PR #1074 (blaidd follow-on) includes `time: 0` in `TimeOfDayState` mocks — the same fix quartz needs. Follow-up nudge told quartz to just rebase after #1074 lands. Avoids duplicate fixes.
+
+### What to improve
+- **PR #1075 diff inspection caught h1→h2 duplicate**: PR #1075 (godfrey, cf-tdq9) shows `h1→h2` change in Header.tsx — but PR #1017 (cf-kxij) already merged this. Need to verify whether this is a no-op (branch created before #1017, common ancestor had h1) or a revert risk. Should always check `gh pr diff` for changes that look like already-merged work.
+- **Polling too frequently**: Still checking e2e status every 1-2 minutes. E2e runs ~30 min. Should set 8-10 min floor between polls.
+
+### Pattern notes
+- **TimeOfDayState cascade**: When type interfaces gain new required fields, ALL in-progress branches with mocks of that type break on rebase. Monitor for type signature changes in shared hooks after Stilgar-P0 visual features ship.
+- **Draft PRs in open list**: `gh pr list` returns drafts. Always check `isDraft` field before classifying as ready-to-merge.
+
+## Session 2026-05-25 — Fourth reflection (~05:35 MT)
+
+### What worked well
+- **Wave of 12 merges completed**: After recovering from PR #1029 rebase conflict, pushed through #1029, #1021, #1066 (P0), #1070, #1002, #990, #1008, #1069, #1072 in one continuous session. No wasted cycles.
+- **Rebase conflict resolution pattern refined**: Three separate rebases (PR #1029, #1066, #1070) each had cf-jgo7 or cf-qyq1 conflicts from earlier merged PRs. Resolution was fast: accept HEAD wholesale for files where the earlier PR was authoritative, then let the PR's own unique commits apply cleanly.
+- **Code reviewer false alarm handled**: 5-agent review on #1066 reported "Footer.tsx not updated" (confidence 100). Quickly verified by checking actual git diff between branches — reviewer was reading the local main checkout, not the PR branch. The PR was correctly implemented. Trust-but-verify principle applied correctly.
+- **PR #1027 own-test failure caught**: Didn't blindly admin-merge despite pre-existing flake pattern. email-verify.spec.ts:71 expected `/invalid.json/i` but API returned `"invalid body"` — real bug in the PR's own code. Blocked correctly and nudged morgott.
+
+### What to improve
+- **Stale worktree fetch**: Wasted a rebase on PR #1070 because the worktree had stale origin/main. Should always run `git fetch origin main` before rebasing in any worktree. The "up to date" rebase result was a red flag I didn't catch immediately.
+- **5-agent reviewer subagents need PR branch context**: Subagent read the wrong version of files (local main checkout instead of PR branch). When dispatching code-reviewer subagents, must explicitly tell them to diff against the PR branch, not assume local files are current.
+
+### Pattern notes
+- **PR conflict wave**: When 8+ PRs merge quickly, the next rebases cascade. Any PR touching popular files (Footer.tsx, json-ld.ts, blog/page.tsx, videos/page.tsx) will conflict. Fast resolution: identify the type (already-in-main commit vs. unique work), then `git checkout HEAD -- <file>` for already-merged content.
+- **cf-jgo7 commit in multiple PRs**: godfrey's #1066 and blaidd's #1070 both contained old copies of the cf-jgo7 JSON-LD work. After PR #1028 merged, both had to skip/accept-HEAD those commits. This is a known hazard when branches diverge significantly from main before merge.
+
+## Session 2026-05-25 — Third reflection (~05:10 MT)
+
+### What worked well
+- **PR #1021 branch recovery**: Identified that miquella's rebase sweep accidentally force-pushed main's HEAD onto two PR branches (#1021 and #1067), auto-closing them. Recovered #1021 via GH API `PATCH /git/refs` with full SHA + `gh pr reopen`. #1067 turned out already in main (fcc433a) — correctly left closed. Fast diagnosis via `git rev-parse` comparison.
+- **Auth file deletion false alarm resolved quickly**: Miquella's warning about PR #1027 deleting auth test files prompted immediate `gh pr diff --name-only` check. Confirmed the files were absent from the diff (safe) — the warning was pre-rebase, no longer applicable.
+- **PR #1064 e2e classification**: Correctly identified a11y-axe spec failure as pre-existing (same `aria-hidden` on decorative overlays pattern seen across multiple PRs). Admin-merged without waiting for full run.
+- **Parallel batch merges**: #1064 and #1043 merged in quick succession — both correct (pre-existing e2e patterns confirmed from logs).
+
+### What to improve
+- **Force-push safety during rebase sweeps**: Miquella's sweep of 19 PRs accidentally reset two branches to main's HEAD. Need a protocol: before force-pushing during rebase, verify `git log --oneline origin/main..HEAD | wc -l > 0` — if zero commits ahead, abort the push. Add this to miquella's rebase sweep protocol.
+- **Don't read `statusCheckRollup` for closed PRs**: PR #1021 showed `UNKNOWN` merge state because GH was still computing. Should check the run list directly rather than relying on PR-level status summary.
+- **Poll cadence**: Checked e2e status 4+ times within 5 minutes. Should wait longer between polls (5-7 min min).
+
+### Pattern notes
+- **GH branch restoration via API**: `gh api /repos/{owner}/{repo}/git/refs/heads/{branch} -X PATCH --field sha={FULL_40_CHAR_SHA} --field force=true` — must use `--field` (JSON bool), must use full 40-char SHA (short SHA causes 422).
+- **e2e timeout estimation**: Jobs start significantly after run creation (queuing can take 30-45 min during busy CI windows). `startedAt` on the job object is the authoritative start time. Timeout at `startedAt + 35min`.
+- **Batch admin-merge with pre-existing e2e**: Two confirmed patterns this session — (1) a11y-axe WCAG violations on decorative overlays are pre-existing; (2) `auth_error=missing_state` + Wix API 500 are pre-existing.
+
+## Session 2026-05-25 — Second reflection (~04:25 MT)
+
+### What worked well
+- **Parallel nudge dispatch**: Sent blaidd, morgott, nitro, godfrey (3 PRs), radahn, and mayor (2 nudges) all within 3 tool calls. Maximized crew utilization immediately after context recovery.
+- **PR #1008 root cause re-check**: Caught that #1008 "own errors" were actually cfw-dv5 (old run before #1062 merged) rather than true own errors. Saved a wasted code investigation assignment to godfrey.
+- **PR #1043 mystery resolved fast**: Run 26382556254 showed lint=✅ seed=✅ — miquella's rebase fixed it. The intermediate run (26382187672) was misleading.
+- **Convoy planning**: Identified that warranty audit beads (cf-296m/cf-vjrw/cf-j4ue) are pure data work running parallel to any CFW builds — good convoy use of Mac polecats.
+- **opal self-started**: PR #1033 already rebased by opal before I could even send the nudge — crew is responsive.
+
+### What to improve
+- **Over-routing to mayor**: Sent 2 separate mayor nudges within minutes. Should batch all mayor comms into one nudge per turn to avoid inbox spam.
+- **E2e wait management**: 8+ e2e runs in parallel; should poll less frequently (every 5 min) rather than after every other action. Consider keeping a mental timer.
+- **Don't block on older PRs (#954/#990/#1002)**: These surface as work items but most need Stilgar credentials or are post-merge visual checks. Flag to owner and move on — don't let them distract from active CI wave.
+
+### Pattern notes
+- **Multiple CI runs on same branch**: When miquella pushed 3 times (26382187672 → 26382556254 → 26382610231), the middle run shows lint=✅ while oldest showed lint=FAIL. Always check the INTERMEDIATE runs, not just oldest and newest — the authoritative signal is the most recent COMPLETED run, not the most recent QUEUED.
+- **Older PRs (#954) with Stilgar-credential dependencies**: These can't be admin-merged without special real-shipping creds. Don't route crew to tick these — only Stilgar can unblock.
+
+## Session 2026-05-25 — First reflection (~04:00 MT)
+
+### What worked well
+- **cfw-dv5 root cause isolation**: Identified that ALL lint failures across 8+ PRs (#1017, #1027, #1028, #1029, #1032, #1033, #1060, #1066) traced to a single source: `cfw-dv5-categories.test.ts` lines 85/96/106/128/139/150 — not individual PR bugs. This saved dispatching 8 separate "fix lint" assignments.
+- **PR #1062 CI state management**: Correctly tracked 3 successive CI runs on the same branch (26378135985 → 26381601822 → 26381849717) and identified which was authoritative for each check. Avoided false alarm on run 26381601822's lint=FAIL by recognizing the fix commit (eaed193) was being tested in the newer run.
+- **Rennala over-delivery catch**: Noticed rennala had already fixed both cf-q5dm (HomePage test) and cf-s4fs (SaleLightbox copy) within PR #1062 BEFORE sending a full assignment nudge. Corrected with a follow-up nudge. Saved wasted work.
+- **Context recovery from summary**: Picked up mid-session state (3 pending nudges, 6 PRs in flight) cleanly from summary context. The git diff approach for branch comparison worked well.
+
+### What to improve
+- **Prior session summary had wrong root cause for #1028**: Summary said "6 lint errors in blaidd's new test files" but current CI shows only cfw-dv5 errors from the shared test file. Always re-verify CI logs rather than trusting session summary assessments of lint failures.
+- **Inbox has 60 unread messages**: Many old messages accumulate across sessions. Should batch-process inbox at start of each session, not incrementally. Flag time-sensitive items and mark rest read immediately.
+- **e2e wait time**: PR #1062's e2e has been running 25+ minutes. Consider checking every 5 min rather than polling continuously to avoid wasted tool calls.
+
+### Pattern notes
+- **Admin-merge criterion**: lint+seed PASS + e2e FAIL (pre-existing unrelated failures) = admin-merge eligible. Confirmed pattern still holds.
+- **cfw-dv5 blast radius**: Single poorly-written test file can block an entire batch of otherwise-clean PRs. When lint fails on multiple PRs at the same line numbers in the same file, it's ALWAYS a shared source — never individual PR bugs.
+
 ## Session 2026-05-21 — Fifth reflection (10:45 MT)
 
 ### What worked well
