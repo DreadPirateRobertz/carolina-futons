@@ -1,5 +1,21 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Ninth reflection (~10:45 MT)
+
+### What worked well
+- **CSS comment `*/` bug diagnosis**: PR #1105 e2e failed with "Unknown word 10". Recognized pattern immediately: `bg-cf-*/10` in CSS block comment causes `*/` to close the comment, leaving `10` as invalid CSS content. Diagnosed from 2 lines of log output without reading the file. Specific fix spec sent to opal in one nudge.
+- **Coverage ratchet PR #1104 sequencing**: When PR #1104 appeared (functions: 80→81 ratchet), recognized the risk of merging it before pending rebases (#1092, #1095, #1096, #1098). Put it on HOLD with a comment rather than merging immediately. Verified actual coverage was ≥81% from ratchet job log before confirming the hold was temporary, not permanent.
+- **PR #1090 docs test-plan pattern**: Caught that the 3 unchecked test-plan items all require Stilgar input and would permanently block merge under standing policy. Correct fix: reframe as "follow-on actions" section so docs PR can land immediately while bead tracking continues.
+- **Linux crew bead delivery**: cfw-yucw (#1103), cfw-hgf2 (#1105), cfw-fuhd (#1106), cfw-jy84 (#1102) all got PRs within ~15 min of the session resuming. Mayor relay/Linux crew executed fast.
+
+### What to improve
+- **Wrong CI run IDs in parallel checks**: When running 4 `gh pr checks` commands in parallel with `&`, the output interleaves and I incorrectly attributed run 26393924188 to PR #1092. Recheck sequentially when run ID identity matters (e.g., "has this PR been rebased?").
+- **cfw-2mr owner unknown**: Asked mayor about PR #1096 owner 3+ times without resolution. Should have read the PR branch name pattern or git blame to identify crew member rather than waiting on mayor relay.
+
+### Pattern notes
+- **CSS block comment pitfall**: CSS variable comments should never contain `*/` (even in `bg-cf-*/10` contexts). Pattern to watch for in globals.css diffs.
+- **Coverage ratchet sequencing**: Merge order matters. Coverage ratchet PR must be held until all pending PRs have rebased on main — otherwise they fail against the new higher threshold. Sequence: (1) notify crew to rebase, (2) wait for green, (3) merge ratchet, (4) merge all batched PRs together.
+
 ## Session 2026-05-25 — Eighth reflection (~09:30 MT)
 
 ### What worked well
