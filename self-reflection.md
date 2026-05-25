@@ -1,5 +1,39 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-25 — Sixteenth reflection (~09:45 MT)
+
+### What worked well
+- **Footer wildlife investigation**: Correctly identified the gap (birds not bears) by reading LivingFooterScene.tsx directly rather than trusting the summary that said MascotFooterDivider was "deleted." Always verify git state from the source of truth.
+- **Pre-existing test failure pattern**: PR #1578 had test failures — checked main CI, confirmed same failures there, admin-merged cleanly. Pattern: always verify whether test failures exist on main before blocking a PR.
+- **Coverage failure diagnosis**: PR #1142 failing "lint" was actually a unit test coverage failure (83.95% < 84%). Read the job step breakdown rather than accepting the check-name at face value. Nudged quartz with exact 4 missing test cases.
+- **Parallel CI polling**: Checked 7 PRs at once rather than 7 sequential queries.
+- **cfw-si04 bead creation**: Created with full spec (source file path, lines, implementation plan, mobile constraints, acceptance criteria) before dispatching. Radahn gets complete context.
+
+### Gaps
+- **Summary state vs actual state**: Summary said MascotFooterDivider was "deleted from current tree" — it wasn't. The summary was generated from mid-investigation state. Lesson: summaries capture a moment; always re-verify file existence and import graphs from live git state, not from summaries.
+- **PR #1578 was in cfutons (carolina-futons) repo, not cfw**: When I first tried `gh pr view 1578` without `-R`, it went to the refinery rig repo and worked correctly because the rig IS carolina-futons. But the earlier context summary showed "#1578" in the cfw open PR list — this was because the summary was from a gh pr list run against the local repo. Context collapsed different repos' PR numbers together.
+
+### Pattern notes
+- "deleted from tree" claims need verification: `gh api repos/.../contents/path?ref=main` → if 404, truly gone. If 200, it exists. Never trust in-memory summary on file existence.
+- Multi-shard test failures: `test (20)` and `test (22)` are vitest shards, not two different test suites. When both fail with the same test files, it's usually one failing suite split across shards.
+
+## Session 2026-05-25 — Fifteenth reflection (~08:35 MT)
+
+### What worked well
+- **Polecat idle response**: Mayor flagged 4 idle polecats; assigned all 4 to cf-c4lh0 sub-beads within 3 minutes. Created appropriately-scoped sub-beads (not too broad, not too narrow), marked in_progress, nudged all 4 immediately. No deliberation loop.
+- **Batch merge wave**: 6 PRs merged back-to-back (#1118, #1119, #1121, #1125, #1128, #1135) by tracking CI in parallel — all gone within 8 minutes of being green.
+- **Merge conflict detection**: Caught PR #1118 merge conflict immediately when admin-merge failed ("not mergeable"). Routed to millicent with rebase instructions rather than trying to force it.
+- **Bead hygiene**: Closed 6 beads immediately after their PRs merged (same turn, not deferred).
+- **Mayor PM-pull cadence**: Responded to mayor's 08:28 and 08:38 pulls within 2 minutes, concise status bullets, no padding.
+
+### Gaps
+- **cfw-fs7g blind spot**: cfw-fs7g is on the Linux rig's DB — I can't `bd show` it from melania. I nudged onyx for status but had to admit to mayor "bead not in my DB." Need a protocol for cross-rig bead lookups: either (a) ask mayor to relay BD info, or (b) check the PR/branch directly via gh.
+- **cf-cm5xq double-close confusion**: cf-cm5xq appeared in `bd ready` even though PR #1118 had a merge conflict. Bead state was "open" but PR was unmergeable. The bead system doesn't track PR merge conflicts — always verify actual PR state before reporting bead as "closeable."
+
+### Pattern notes
+- Cross-rig bead lookup: when a bead ID is not found in `bd show`, it's on a different rig's Dolt. Options: (1) `gt nudge mayor "bd show <id> output?"`, (2) search `gh pr list` for the bead ID string, (3) nudge the assigned crew member directly.
+- Polecat idle assignment: 4 idle → create sub-beads under existing epic rather than creating top-level beads. Keeps the hierarchy clean and lets the epic track aggregate progress.
+
 ## Session 2026-05-25 — Fourteenth reflection (~07:28 MT)
 
 ### What worked well
