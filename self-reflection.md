@@ -1,5 +1,19 @@
 # Melania Self-Reflection Log
 
+## Session 2026-05-21 — Fifth reflection (10:45 MT)
+
+### What worked well
+- **cfw-66o series driven to completion**: All 15 wiring subtasks (swatch, returns, guides, sustainability, design-a-room, videos, registry, survey) shipped in sequence. ~80 CMS keys wired. Brenda admin guide §10–§14 drafted.
+- **Seed sync protocol**: When seed count conflicts cascaded across 5 PRs (#941/#944/#947/#949 + #935), established a coordinated merge-and-cascade protocol rather than filing individual wrong-count fixes. Clear sequence: radahn merges #930→#935, I signal exact rebase counts to all authors.
+- **godfrey's CRITICAL catch on PR #932**: Two CRITICALs (revalidateTag dedup, missing unstable_cache wrapper) caught before merge on Customer Q&A widget. Miquella immediately redirected to cfw-2mu fixes.
+- **Blaidd's e2e velocity**: 7 e2e specs shipped in one session (contact, CategoryPills, visit, sustainability, design-a-room, returns, guides). Kept blaidd moving with sequential assignments.
+- **Watchdog response time**: Both DEAD and THIN_QUEUE alerts resolved within one turn — restarted blaidd, refilled queue with 4+ pipeline beads.
+
+### What to improve
+- **Stale PR #930 CI blocking downstream work**: PR #930 (swatch-request) has been CI-QUEUED for an extended period, blocking cfw-1xt and contributing to the seed sync pile-up. Should have escalated CI lag to mayor/Stilgar earlier.
+- **bd comments add broken for cross-rig IDs**: `bd comments add cfw-cu8` failed consistently while `bd show cfw-cu8` worked. Use nudge as fallback — but should investigate if there's a rig-prefix needed.
+- **Seed count conflicts preventable**: Multiple PRs branched from main@55 before #938 merged. Should establish a "wait for seed-modifying PR to merge before branching new seed-modifying work" rule.
+
 ## Session 2026-05-21 — Fourth reflection (08:15 MT)
 
 ### What worked well
@@ -1102,3 +1116,23 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - convoy nudges to mayor: include (1) crew names, (2) file batch counts, (3) files remaining, (4) PR naming pattern
 - After ISR-related merges: always nudge godfrey with explicit "verify x-vercel-cache: PRERENDER on /products/[slug]" — don't assume auto-close.
 - cf-44qt pre-existing test pins: check test file for `console.error` assertions BEFORE submitting PR.
+
+## Session 2026-05-24 — First reflection (post-compaction recovery)
+
+### What worked well
+- Context recovery was fast: gt prime + bd show cf-5dph gave full picture. Recognized cf-5dph was already code-resolved (both nav links /shop/mattresses-sale) but had PR #1039 open with correct direction (→ /shop/sale).
+- Caught critical mega-menu regression in PR #1039: MegaMenu.tsx looks up MEGA_MENU_DATA[href] — changing nav href to /shop/sale without re-keying the data object would have silently removed the hover panel.
+- Full sweep of 16 open PRs in one session. Clear pattern: bead IDs in describe/it labels are the #1 recurring violation. Sent REQUEST_CHANGES on all 16 with specific line-by-line fix instructions.
+- PR #1018 (godfrey, VariantPicker grid) approved cleanly — no violations.
+- Correctly identified that PR #1043 (miquella, cf-ogzg) contains mixed-scope changes (cf-ogzg sale config + cf-djsh og:url), which conflicts with PR #1029 (radahn/godfrey, cf-djsh).
+
+### Gaps
+- Closed cf-5dph too early (thought it was resolved) before checking for open PRs. Had to re-open. Always check for open PRs before closing a bead.
+- PR count is high (16 open) and most need author fixes for the same bead-ID-in-label pattern. Should write a pattern rule into EDITOR_HOOKUP_GUIDE or CONTRIBUTING.md to reduce recurrence.
+- SALE_END_DATE time-bomb test in PR #1043 — this will silently break CI post-sale. Worth adding to a standing checklist.
+
+### Pattern notes
+- Bead ID in describe/it labels: EVERY PR this session had this. The rule needs to be posted in CONTRIBUTING.md or a pre-commit hook.
+- Multi-line comment blocks: second most common violation. One line max — WHY only.
+- PR #1029 now on 4th REQUEST_CHANGES for the same /shop relative URL. When a PR author misses the same fix 4 times, consider taking over the fix directly or escalating to another crew.
+- cf-5dph pattern: "both surfaces already match" does NOT mean "done" if the canonical URL question is still open. Check whether the matching URL is the RIGHT URL before closing.
