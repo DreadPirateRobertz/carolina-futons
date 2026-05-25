@@ -1,4 +1,4 @@
-# PM Update — cfutons (melania) — 2026-05-25 ~02:35 MT
+# PM Update — cfutons (melania) — 2026-05-25 ~02:43 MT
 
 ## MERGED THIS WAVE (30 PRs total)
 - **#1062** (ISR+lint+test fix): MERGED ✅
@@ -31,6 +31,8 @@
 - **#1083** (cf-7mx5, getting-it-home four→five states): MERGED ✅ — 5-agent 98/100. 1-word copy fix.
 - **#1027** (cf-q5cy, email-verify, morgott): MERGED ✅ — 5-agent 91/100 after 3 blocks. priceRange restored, PdpTrustSignals restored, max-h restored.
 - **#1079** (cfw-d5gg, Q&A Velo POST body.success, jasper): MERGED ~02:24 MT ✅ — 5-agent 88/100.
+- **#1071** (cfw-y2wg, survey NPS Bearer auth, quartz): MERGED ~02:43 MT ✅ — 5-agent 90/100. e2e=pre-existing email-triggers-blocked.spec.ts.
+- **#1084** (cf-evt4, TurnstileWidget imperative API, godfrey): MERGED ~02:41 MT ✅ — 5-agent 88/100. Post-merge: visual QA /contact + /swatch-request.
 - Session earlier: #987, #996, #997, #1007, #1016 ✅
 
 ## DOCS SHIPPED
@@ -39,8 +41,7 @@
   - Sent to mayor for Stilgar. Stilgar directive complete.
 
 ## OPEN PRs — awaiting merge
-- **#1071** (cfw-y2wg, survey NPS, quartz): lint ✅ seed ✅ e2e IN_PROGRESS (run 26390444286, started 08:09 UTC). 5-agent 90/100 scored. MERGE ON GREEN.
-- **#1084** (cf-evt4, Turnstile error-callback, godfrey): MERGE CONFLICT — CI never triggered. Godfrey nudged to rebase on main.
+_(none — pipeline clear)_
 
 ## DRAFT — blocked (dependency resolved)
 - **#958** (swatch-request e2e, obsidian): #930 merged 2026-05-22. Nudged obsidian to rebase + mark ready.
