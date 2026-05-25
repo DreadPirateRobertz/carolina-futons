@@ -1368,3 +1368,25 @@ Background review agents for PR #666 and #667 were launched before compaction an
 - Multi-line comment blocks: second most common violation. One line max — WHY only.
 - PR #1029 now on 4th REQUEST_CHANGES for the same /shop relative URL. When a PR author misses the same fix 4 times, consider taking over the fix directly or escalating to another crew.
 - cf-5dph pattern: "both surfaces already match" does NOT mean "done" if the canonical URL question is still open. Check whether the matching URL is the RIGHT URL before closing.
+
+## Session 2026-05-25 ~08:00-08:30 MT — PR triage wave (10th entry)
+
+### What worked well
+- Parallel review dispatch: 4 agents reviewing 13 PRs simultaneously was highly efficient. All 4 agents returned substantive findings within ~3-4 minutes.
+- Caught the premature coverage ratchet (#1124) immediately — would have broken main CI.
+- PR #1132 (plp-fixture murphy count) correctly identified as high-confidence fix — approved 95/100 and merged. Fixes 11/84 pre-existing e2e failures.
+- Correctly blocked PR #1096 (CLS measurement) — the deprecated naive-sum algorithm was a real bug that would have given false confidence in CLS compliance.
+- Admin-merge batching was clean: 7 PRs merged in one session. All were pure test/doc additions with lint+seed+Vercel green.
+- Review agent for #1119 found a critical false-negative bug (noindex assertion tests impossible XML string `</loc>/cart</loc>`). High value catch.
+- PR #1128 (cart-a11y) silent-failure catch: 3 tests that always pass on empty cart. These would have permanently masked aria-label regressions.
+
+### Gaps
+- Committed pm-update.md to wrong branch (cf-tusv-swatch-suppressauth) AGAIN. This is the third time this session pattern has occurred. I knew the rule, stated the rule, and still violated it. The root cause: I run `git add && git commit` without first checking `git branch --show-current`. The fix is mechanical: always run `git branch --show-current` as the FIRST command in any git commit sequence.
+- Prematurely closed cf-hcjq before verifying PR #1121 outcome. Caught and reopened, but this is a pattern — closing beads before confirming PR is merged/approved.
+- Did not identify owner of PRs #1096 and #1003 (cfw-2mr, cart-image). These are not rennala's work but I don't know which crew member owns them. Should have cross-referenced with cfutons_web bead DB.
+
+### Pattern notes
+- Zero-assertion tests are a recurring issue: PRs #1121 (compare), #1128 (cart) both had `if (count > 0)` guards that silently pass on empty state. This pattern is a testing anti-pattern — should add to review checklist.
+- Seeded-state tests need DOM confirmation before axe scan. Three PRs had this issue. Pattern rule: after seeding localStorage and navigating, ALWAYS assert a DOM element that confirms the seed was consumed before running axe-core.
+- CLS tests: if writing CLS e2e tests, always use web-vitals `onCLS()` (session-window) not naive sum.
+- e2e 84 pre-existing failures: this is technical debt that needs systematic triage. Current visible categories: Wix SDK not connected in CI, real UI regressions, fixture data gaps (partly fixed by #1132).
