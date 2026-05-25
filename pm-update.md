@@ -81,16 +81,27 @@
 - **commit 903cdb1a** (~06:05 MT): functions:81→80 4th overshot — ratchet bot fired again after #1114 merged, overwrote cb808cbf fix. PR #1113 CI re-running.
 - **commit 20dae4bb** (~07:25 MT): REVERT of false-alarm fix — actual functions coverage is 81.02% (bot log confirmed). Ratchet PR #1124 functions:81 is CORRECT. No overshot this time. Floor advances to 81.
 
-## OPEN PRs — CI status (~07:15 MT)
+## OPEN PRs — CI status (~07:42 MT)
 - **#1113**: MERGED ~06:12 MT ✅ — 97/100. ratchet statements:83→84, functions:80 confirmed.
 - **#1115**: MERGED ~06:41 MT ✅ — 95/100. Stilgar-cancelled. FaqBrowser /faq WCAG fix.
 - **#1116**: MERGED ~06:44 MT ✅ — 88/100. Stilgar-cancelled. /reviews smoke landed.
 - **#1117** (cf-i1fq, /near/[city] JSON-LD + axe, rennala): MERGED ~07:05 MT ✅ — 90/100. Stilgar-cancelled.
-- **#1118** (cf-cm5xq, /visit axe+title, millicent): lint✅ seed✅ e2e IN_PROGRESS. 5-agent 97/100. Awaiting e2e.
+- **#1118** (cf-cm5xq, /visit axe+title, millicent): lint✅ seed✅ e2e IN_PROGRESS (>45min). Awaiting timeout/cancel. 97/100.
 - **#1119** (cf-nf96, robots.txt+sitemap, morgott): lint✅ seed✅ e2e IN_PROGRESS. BLOCKED — 2 fixes needed (noindex false-negative + kingston CI). Morgott nudged.
-- **#1120** (cf-a5gjz, CI timeout 45→60, rennala): seed✅ Vercel✅ lint+e2e IN_PROGRESS. 5-agent 97/100.
-- **#1121** (cf-hcjq, /compare axe, blaidd): seed✅ Vercel✅ lint+e2e IN_PROGRESS. 5-agent 91/100.
-- **#1124** (ratchet chore): functions overshot fixed (12cb47ea). CI running. Ready to merge when green.
+- **#1120** (cf-a5gjz, CI timeout 45→60, rennala): lint✅ seed✅ Vercel✅ e2e IN_PROGRESS (60min timeout). 97/100.
+- **#1121** (cf-hcjq, /compare axe, blaidd): lint✅ seed✅ Vercel✅ e2e IN_PROGRESS. 91/100.
+- **#1122** (rennala cf-mivdu dup): CLOSED. #1125 preferred.
+- **#1123** (cf-32me, SEO noindex diagnosis + legal-pages e2e, radahn): ALL CI PENDING. 96/100.
+- **#1124** (ratchet functions:81): CORRECT — actual 81.02%. CI running (new run on 20dae4bb). Ready to merge when green.
+- **#1125** (cf-mivdu, PDP JSON-LD e2e, rennala): lint✅ seed✅ Vercel✅ e2e IN_PROGRESS. 94/100.
+- **#1126** (cf-68j16, /about smoke, miquella): seed✅ Vercel✅ lint+e2e IN_PROGRESS. 93/100. (#1127 closed dup)
+- **#1127** (miquella dup): CLOSED.
+- **#1128** (cf-140z, /cart axe, jasper): lint✅ seed✅ Vercel✅ e2e IN_PROGRESS. 92/100.
+- **#1129** (godfrey cf-2yipc dup): CLOSED. Legal-pages covered by #1123.
+- **#1130** (cf-39gt, PLP+compare axe, quartz): ALL CI PENDING. 91/100.
+- **#1131** (cf-xqj5, home WCAG 2.1 AA, opal): seed✅ Vercel✅ lint+e2e PENDING. 95/100.
+- **#1132** (cfw-mjre, plp-fixture-smoke 11 failures fix): ALL CI PENDING. 94/100.
+- **#1133** (cf-m2pas, /search axe parametric, godfrey): ALL CI PENDING. 99/100.
 - **#1096** (cfw-2mr CLS): FAIL — OPAL's PR, Linux SSH down. DO NOT touch.
 - **#958** (swatch-request e2e, obsidian): draft FAIL — needs rebase + ready.
 
@@ -103,15 +114,26 @@
 ## BLOCKED (credential prerequisite)
 - **#954** (checkout E2E): unchecked Stilgar credential box. DO NOT admin-merge.
 
-## Crew Assignments (~07:08 MT)
+## Crew Assignments (~07:42 MT)
 ### CF Mac Crew
-- **rennala**: cf-i1fq PR #1117 MERGED ✅. **Now: cf-mivdu** (P2 — PDP Product JSON-LD e2e, dispatched ~07:06 MT)
-- **blaidd**: cf-hcjq (P2 — axe-core /compare page) — in progress
-- **radahn**: cf-32me (P1 SEO=69 investigation) — in progress
-- **morgott**: cf-nf96 PR #1119 OPEN — 5-agent 85/100, 2 fixes needed (noindex pattern + kingston CI). Awaiting fix push.
-- **miquella**: cf-68j16 (P2 — e2e /about page smoke) — in progress
-- **millicent**: cf-nj16 PR #1116 MERGED ✅. **Now: cf-cm5xq** (P2 — add /visit to axe parametric loop + page title, dispatched ~06:44 MT)
-- **godfrey**: cf-2yipc (P2 — e2e /privacy+/terms+/accessibility smoke) — in progress. cf-0kbr follow-on PR #1115 MERGED ✅
+- **rennala**: cf-mivdu PR #1125 OPEN — lint✅ seed✅ e2e IN_PROGRESS. 94/100.
+- **blaidd**: cf-hcjq PR #1121 OPEN — lint✅ seed✅ e2e IN_PROGRESS. 91/100.
+- **radahn**: cf-32me PR #1123 OPEN — ALL CI PENDING. 96/100. SEO=69 diagnosed (Vercel preview noindex).
+- **morgott**: cf-nf96 PR #1119 OPEN — BLOCKED: 2 fixes needed. Nudged.
+- **miquella**: cf-68j16 PR #1126 OPEN (closed #1127 dup) — seed✅ lint+e2e PENDING. 93/100.
+- **millicent**: cf-cm5xq PR #1118 OPEN — lint✅ seed✅ e2e IN_PROGRESS (>45min). 97/100.
+- **godfrey**: cf-2yipc COMPLETE (via #1123). **Now: cf-m2pas** (/search axe parametric, dispatched ~07:30 MT) → PR #1133 OPEN, ALL CI PENDING. 99/100.
+
+### cfutons Polecats (Linux)
+- **jasper**: cf-140z PR #1128 OPEN — lint✅ seed✅ Vercel✅ e2e IN_PROGRESS. 92/100.
+- **quartz**: cf-39gt PR #1130 OPEN — ALL CI PENDING. 91/100.
+- **opal**: cf-xqj5 PR #1131 OPEN — seed✅ Vercel✅ lint+e2e PENDING. 95/100.
+- **obsidian**: PR #958 (swatch-request e2e, draft) — nudged to rebase+ready.
+- **onyx**: cfw-2mr (#1096) — OPAL's PR, Linux SSH down. DO NOT TOUCH.
+- **guzzle**: cf-vjrw (futon frames audit) — Strata PDF blocker flagged to mayor.
+- **shiny**: cf-soos (verify /getting-it-home #1083) — in progress.
+- **vault**: cf-g05i (PDP axe-core WCAG 2.1 AA sweep) — in progress.
+- **nitro**: cf-qwdf CLOSED (superseded by #1116). Idle.
 
 ### cfutons Polecats (Linux)
 - **jasper**: cf-140z (cart a11y axe, P2) — Mayor dispatching.
